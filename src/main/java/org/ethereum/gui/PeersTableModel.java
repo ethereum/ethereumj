@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import com.maxmind.geoip.Location;
-import com.maxmind.geoip2.model.CityResponse;
 import org.ethereum.geodb.IpGeoDB;
 import org.ethereum.util.Utils;
 
@@ -27,8 +26,6 @@ public class PeersTableModel  extends AbstractTableModel {
 
         generateRandomData();
     }
-
-
 
     public String getColumnName(int column) {
 
@@ -59,7 +56,6 @@ public class PeersTableModel  extends AbstractTableModel {
             URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode + ".png");
             ImageIcon flagIcon = new ImageIcon(flagURL);
 
-
             return flagIcon;
         }
 
@@ -77,7 +73,6 @@ public class PeersTableModel  extends AbstractTableModel {
 
                 flagIcon = Utils.getImageIcon("disconnected.png");
             }
-
 
             return flagIcon;
         }
