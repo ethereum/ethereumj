@@ -1,14 +1,19 @@
 package org.ethereum.gui;
 
-import org.ethereum.net.client.ClientPeer;
-import org.fife.ui.rsyntaxtextarea.*;
-import org.fife.ui.rtextarea.RTextScrollPane;
+import java.awt.BorderLayout;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.IOException;
-import java.util.TimerTask;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+import org.ethereum.net.client.ClientPeer;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 /**
  * A simple example showing how to modify the fonts and colors used in an
@@ -26,7 +31,6 @@ public class ConnectionConsole extends JFrame implements PeerListener{
     private static final long serialVersionUID = 1L;
 
     private RSyntaxTextArea textArea;
-
 
     public ConnectionConsole() {
 
@@ -59,28 +63,21 @@ public class ConnectionConsole extends JFrame implements PeerListener{
 
                 Thread t = new Thread() {
                     public void run() {
-//                        new ClientPeer(thisConsole).connect("54.201.28.117", 30303);
-                        new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
+                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
+//                    	new ClientPeer(thisConsole).connect("54.201.28.117", 30303);
+//                      new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
                     }
                 };
                 t.start();
-
-
-
             }
-
         });
-
     }
 
     @Override
     public void console(final String output) {
 
-
-        SwingUtilities.invokeLater(new Runnable()
-        {
-            public void run()
-            {
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
                 textArea.append(output);
                 textArea.append("\n");
                 textArea.setCaretPosition(textArea.getText().length());

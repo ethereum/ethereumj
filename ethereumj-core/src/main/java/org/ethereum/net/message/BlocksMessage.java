@@ -1,13 +1,12 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.RLP;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.vo.BlockData;
 import org.ethereum.net.vo.TransactionData;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * www.ethereumJ.com
@@ -24,8 +23,6 @@ public class BlocksMessage extends Message {
     public BlocksMessage(RLPList rawData) {
         super(rawData);
     }
-
-
 
     public void parseRLP() {
 

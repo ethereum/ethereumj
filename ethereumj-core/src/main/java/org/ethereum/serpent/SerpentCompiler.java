@@ -15,29 +15,27 @@ import java.io.FileReader;
  * User: Roman Mandeleil
  * Created on: 29/04/14 12:34
  */
-public class SerpentCompiler{
+public class SerpentCompiler {
 
-    public static String compile(String code) throws FileNotFoundException, RecognitionException {
+	public static String compile(String code) throws FileNotFoundException,
+			RecognitionException {
 
-        CharStream stream =
-                new ANTLRStringStream(code);
+		CharStream stream = new ANTLRStringStream(code);
 
-        SerpentLexer lex = new SerpentLexer(stream);
-        CommonTokenStream tokens = new CommonTokenStream(lex);
-        SerpentParser parser = new SerpentParser(tokens);
+		SerpentLexer lex = new SerpentLexer(stream);
+		CommonTokenStream tokens = new CommonTokenStream(lex);
+		SerpentParser parser = new SerpentParser(tokens);
 
+		String userDir = System.getProperty("user.dir");
+		String templateFileName = userDir
+				+ "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
-        String userDir = System.getProperty("user.dir");
-        String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
+		StringTemplateGroup template = new StringTemplateGroup(new FileReader(
+				templateFileName), AngleBracketTemplateLexer.class);
+		parser.setTemplateLib(template);
 
-        StringTemplateGroup template = new StringTemplateGroup(new FileReader(templateFileName),
-                AngleBracketTemplateLexer.class);
-        parser.setTemplateLib(template);
+		SerpentParser.program_return retVal = parser.program();
 
-        SerpentParser.program_return retVal = parser.program();
-
-
-
-        return retVal.getTemplate().toString().trim();
-    }
+		return retVal.getTemplate().toString().trim();
+	}
 }
