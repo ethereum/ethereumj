@@ -17,7 +17,7 @@ import java.net.URL;
  * User: Roman Mandeleil
  * Created on: 24/04/14 20:11
  */
-public class IpGeoDB {
+public class IpGeoDB {   // change
 
     static{
         try {
