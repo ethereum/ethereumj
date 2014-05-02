@@ -1,0 +1,48 @@
+group Python;
+
+program(globals,functions) ::= <<
+<functions; separator="\n">
+>>
+
+variable(type,name) ::= " "
+
+globalVariable ::= variable
+
+function(type,name,args,locals,stats) ::= <<
+def <name>(<args; separator=", ">):
+    <stats>
+>>
+
+type_int() ::= "int"
+
+type_char() ::= "char"
+
+type_user_object(name) ::= "<name>"
+
+parameter(type,name) ::= "<name>"
+
+statement(expr) ::= "<expr>"
+
+statementList(locals,stats) ::= <<
+    <stats; separator="\n">
+>>
+
+// python has a weird FOR, use a WHILE. :)
+forLoop(e1,e2,e3,locals,stats) ::= <<
+<e1>
+while ( <e2> ):
+	<stats; separator="\n">
+	<e3>
+>>
+
+assign(lhs,rhs) ::= "<lhs> = <rhs>"
+
+equals(left,right) ::= "<left> == <right>"
+
+lessThan(left,right) ::= "<left> \< <right>"
+
+add(left,right) ::= "<left> + <right>"
+
+refVar(id) ::= "<id>"
+
+iconst(value) ::= "<value>"
