@@ -1,0 +1,85 @@
+package org.ethereum.net.message;
+
+import org.ethereum.net.RLP;
+import org.ethereum.net.rlp.RLPItem;
+import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.Utils;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * www.ethereumJ.com
+ * User: Roman Mandeleil
+ * Created on: 06/04/14 14:56
+ */
+public class GetChainMessage extends Message {
+
+    private final byte commandCode = 0x14;
+    List<byte[]> blockHashList = new ArrayList<byte[]>();
+    BigInteger blockNum;
+
+
+    public GetChainMessage(RLPList rawData) {
+        super(rawData);
+    }
+
+    @Override
+    public void parseRLP() {
+
+        RLPList paramsList = (RLPList) rawData.getElement(0);
+
+        if (((RLPItem)(paramsList).getElement(0)).getData()[0] != commandCode){
+
+            throw new Error("GetChain: parsing for mal data");
+        }
+
+
+        int size = paramsList.size();
+        for (int i = 1; i < size - 1; ++i){
+
+            blockHashList.add(((RLPItem) paramsList.getElement(i)).getData());
+        }
+
+        // the last element is the num of requested blocks
+        byte[] blockNumB = ((RLPItem)paramsList.getElement(size - 1)).getData();
+        this.blockNum = new BigInteger(blockNumB);
+
+        this.parsed = true;
+        // todo: what to do when mal data ?
+    }
+
+    @Override
+    public byte[] getPayload() {
+        return null;
+    }
+
+    public List<byte[]> getBlockHashList() {
+        if (!parsed) parseRLP();
+        return blockHashList;
+    }
+
+    public BigInteger getBlockNum() {
+        if (!parsed) parseRLP();
+        return blockNum;
+    }
+
+
+    public String toString(){
+
+        if (!parsed) parseRLP();
+
+        StringBuffer sb = new StringBuffer();
+        for (byte[] blockHash : blockHashList){
+
+            sb.append("").append(Utils.toHexString(blockHash)).append(", ");
+        }
+
+        sb.append(" blockNum=").append(blockNum);
+
+        return "GetChain Message [" + sb.toString() + " ]";
+
+    }
+}
