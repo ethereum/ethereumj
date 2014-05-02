@@ -17,7 +17,7 @@ import java.math.BigInteger;
  */
 public class BlockTest {
 
-    @Test /* Creating genesis hash */
+    @Test /* Creating genesis hash not ready yet */
     public void test1() throws IOException {
 
 /*
