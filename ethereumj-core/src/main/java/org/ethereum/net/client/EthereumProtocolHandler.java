@@ -136,6 +136,12 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     }
 
 
+    /**
+     * The message relieved here
+     * @param ctx
+     * @param msg
+     * @throws Exception
+     */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
 
@@ -207,15 +213,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             System.out.println("[Recv: GETPEERS]" );
             if (peerListener != null) peerListener.console("[Recv: GETPEERS]");
 
+            String answer = "2240089100000134F9013111F84A8456084B1482765FB84072FD5DBC7F458FB0A52354E25234CEA90A51EA09858A21406056D9B9E0826BB153527E4C4CBEC53B46B0245E6E8503EEABDBF0F1789D7C5C78BBF2B1FDD9090CF84A8455417E2D82765FB840CE73F1F1F1F16C1B3FDA7B18EF7BA3CE17B6F1F1F1F141D3C6C654B7AE88B239407FF1F1F1F119025D785727ED017B6ADD21F1F1F1F1000001E321DBC31824BAF84A8436C91C7582765FB840D592C570B5082D357C30E61E3D8F26317BFD7A3A2A00A36CFB7254FEE80830F26DDFBD6A99712552F3D77314DB4AB58B9989F25699C4997A0F62489D4B86CB4DF84A8436CC0A2982765FB840E34C6E3EAC28CFD3DC930A5AEFD9552FEBCD72C33DFC74D8E4C7CF8A7BA71AE53316ADDBD241EB051ED0871C2B62825E66A45DC6A0E752A7F1C22ABEF9ABDE32";
 
-            String answer = "22 40 08 91 00 00 00 50 F8 4E 11 F8 4B C5 36 81 " +
-                    "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
-                    "FC 03 13 EF DE BA 86 9D 21 94 E7 9E 7C B2 B5 22 " +
-                    "F7 82 FF A0 39 2C BB AB 8D 1B AC 30 12 08 B1 37 " +
-                    "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " +
-                    "17 08 9F EA F8 4C 21 B0 ";
-
-            byte[] answerBytes = Utils.hexStringToByteArr(answer);
+            byte[] answerBytes = Hex.decode(answer);
 
             ByteBuf buffer = ctx.alloc().buffer(answerBytes.length);
             buffer.writeBytes(answerBytes);
@@ -223,6 +223,8 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             // send getpeers
             answer = "22 40 08 91 00 00 00 02 C1 10 ";
+            answerBytes = Hex.decode(answer);
+            buffer = ctx.alloc().buffer(answerBytes.length);
 
             answerBytes = Utils.hexStringToByteArr(answer);
 

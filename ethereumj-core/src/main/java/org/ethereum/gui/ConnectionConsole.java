@@ -60,7 +60,9 @@ public class ConnectionConsole extends JFrame implements PeerListener{
                 Thread t = new Thread() {
                     public void run() {
 //                        new ClientPeer(thisConsole).connect("54.201.28.117", 30303);
-                        new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
+//                        new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
+                        new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
+//                        new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
                     }
                 };
                 t.start();
