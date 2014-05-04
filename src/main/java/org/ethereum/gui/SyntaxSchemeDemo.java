@@ -1,12 +1,27 @@
 package org.ethereum.gui;
 
-import java.awt.*;
-import java.awt.event.*;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.IOException;
-import javax.swing.*;
 
-import org.fife.ui.rtextarea.*;
-import org.fife.ui.rsyntaxtextarea.*;
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
+import javax.swing.JPanel;
+import javax.swing.SwingUtilities;
+
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Theme;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 /**
  * A simple example showing how to modify the fonts and colors used in an
@@ -76,7 +91,6 @@ public class SyntaxSchemeDemo extends JFrame implements ActionListener {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setLocationRelativeTo(null);
-
     }
 
     /**
@@ -109,7 +123,6 @@ public class SyntaxSchemeDemo extends JFrame implements ActionListener {
                 Font.ITALIC, 12);
 
         textArea.revalidate();
-
     }
 
     /**
@@ -154,5 +167,4 @@ public class SyntaxSchemeDemo extends JFrame implements ActionListener {
             }
         });
     }
-
 }

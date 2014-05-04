@@ -6,8 +6,6 @@ package org.ethereum.net;
  * Created on: 04/04/14 00:51
  */
 public class MessageDeserializer {
-
-
     /**
      * Get exactly one message payload
      */
@@ -21,42 +19,33 @@ public class MessageDeserializer {
             // It's a list with a payload more than 55 bytes
             // data[0] - 0xF7 = how many next bytes allocated
             // for  the length of the list
-        if ((msgData[pos] & 0xFF) >= 0xF7){
+        	if ((msgData[pos] & 0xFF) >= 0xF7){
 
                 byte lenghtOfLenght = (byte) (msgData[pos] -  0xF7);
                 byte pow = (byte) (lenghtOfLenght - 1);
 
                 int length = 0;
-
                 for (int i = 1; i <= lenghtOfLenght; ++i){
-
                     length += msgData[pos + i] << (8 *  pow);
                     pow--;
                 }
 
                 // now we can parse an item for data[1]..data[length]
                 System.out.println("-- level: [" + level + "] Found big list length: " + length);
-
                 deserialize(msgData, level + 1, pos + lenghtOfLenght + 1, pos + lenghtOfLenght +  length);
-
                 pos += lenghtOfLenght + length + 1 ;
                 continue;
             }
-
 
             // It's a list with a payload less than 55 bytes
             if ((msgData[pos] & 0xFF) >= 0xC0 && (msgData[pos] & 0xFF) < 0xF7){
 
                 byte length = (byte) (msgData[pos] -  0xC0);
-
                 System.out.println("-- level: [" + level + "] Found small list length: " + length);
-
                 deserialize(msgData, level + 1, pos + 1, pos + length + 1);
-
                 pos += 1 + length;
                 continue;
             }
-
 
             //  It's an item  with a payload more than 55 bytes
             //  data[0] - 0xB7 = how much next bytes allocated for
@@ -67,18 +56,13 @@ public class MessageDeserializer {
                 byte pow = (byte) (lenghtOfLenght - 1);
 
                 int length = 0;
-
                 for (int i = 1; i <= lenghtOfLenght; ++i){
-
                     length += msgData[pos + i] << (8 *  pow);
                     pow--;
                 }
-
-
                 // now we can parse an item for data[1]..data[length]
                 System.out.println("-- level: [" + level + "] Found big item length: " + length);
                 pos += lenghtOfLenght + length + 1 ;
-
                 continue;
             }
 
@@ -88,10 +72,8 @@ public class MessageDeserializer {
             if ((msgData[pos] & 0xFF) > 0x80 && (msgData[pos] & 0xFF) < 0xB7) {
 
                 byte length = (byte) (msgData[pos] -  0x80);
-
                 System.out.println("-- level: [" + level + "] Found small item length: " + length);
                 pos += 1 + length;
-
                 continue;
             }
 
@@ -108,14 +90,6 @@ public class MessageDeserializer {
                 pos += 1;
                 continue;
             }
-
-
-
         }
-
-
-
-
     }
-
 }

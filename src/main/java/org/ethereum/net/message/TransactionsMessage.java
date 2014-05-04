@@ -1,5 +1,7 @@
 package org.ethereum.net.message;
 
+import static org.ethereum.net.Command.TRANSACTIONS;
+import org.ethereum.net.Command;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.vo.TransactionData;
@@ -14,7 +16,6 @@ import java.util.List;
  */
 public class TransactionsMessage extends Message {
 
-    private final byte commandCode = 0x12;
     private List<TransactionData> transactions = new ArrayList<TransactionData>();
 
     public TransactionsMessage() {
@@ -26,28 +27,23 @@ public class TransactionsMessage extends Message {
 
     @Override
     public void parseRLP() {
-
         RLPList paramsList = (RLPList) rawData.getElement(0);
 
-        if ((((RLPItem)(paramsList).getElement(0)).getData()[0] & 0xFF) != commandCode){
-
+        if ( Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0] & 0xFF) != TRANSACTIONS){
             throw new Error("TransactionMessage: parsing for mal data");
         }
 
         transactions = new ArrayList<TransactionData>();
         int size = paramsList.getList().size();
         for (int i = 1; i < size; ++i){
-
             RLPList rlpTxData = (RLPList) paramsList.getElement(i);
             TransactionData tx = new TransactionData(rlpTxData);
             transactions.add(tx);
         }
-
         parsed = true;
     }
 
     public List<TransactionData> getTransactions() {
-
         if (!parsed) parseRLP();
         return transactions;
     }
@@ -58,16 +54,11 @@ public class TransactionsMessage extends Message {
     }
 
     public String toString(){
-
-        if(!parsed)parseRLP();
-
+        if(!parsed) parseRLP();
         StringBuffer sb = new StringBuffer();
-
         for (TransactionData transactionData : transactions){
-
             sb.append("   ").append(transactionData).append("\n");
         }
-
         return "Transactions Message [\n" + sb.toString() + " ]";
     }
 }

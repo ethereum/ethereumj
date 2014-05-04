@@ -2,7 +2,8 @@ package org.ethereum.net.message;
 
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
-
+import org.ethereum.net.Command;
+import static org.ethereum.net.Command.DISCONNECT;
 
 /**
  * www.ethereumJ.com
@@ -11,7 +12,6 @@ import org.ethereum.net.rlp.RLPList;
  */
 public class DisconnectMessage extends Message {
 
-    private final byte commandCode = 0x1;
     private byte reason;
 
     public static byte REASON_DISCONNECT_REQUESTED  = 0x00;
@@ -24,7 +24,6 @@ public class DisconnectMessage extends Message {
     public static byte REASON_INCOMPATIBLE_PROTOCOL = 0x07;
     public static byte REASON_PEER_QUITING          = 0x08;
 
-
     public DisconnectMessage(RLPList rawData) {
         super(rawData);
     }
@@ -34,24 +33,19 @@ public class DisconnectMessage extends Message {
 
         RLPList paramsList = (RLPList) rawData.getElement(0);
 
-        if (((RLPItem)(paramsList).getElement(0)).getData()[0] != commandCode){
-
+        if (Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0]) != DISCONNECT){
             throw new Error("Disconnect: parsing for mal data");
         }
 
         byte[] reasonB = ((RLPItem)paramsList.getElement(1)).getData();
         if (reasonB == null){
-
             this.reason = 0;
         } else {
-
             this.reason = reasonB[0];
         }
-
         this.parsed = true;
         // todo: what to do when mal data ?
     }
-
 
     @Override
     public byte[] getPayload() {
@@ -64,9 +58,8 @@ public class DisconnectMessage extends Message {
     }
 
     public String toString(){
-
         if (!parsed) parseRLP();
         return "Disconnect Message [ reason=" + reason + " ]";
-
     }
 }
+

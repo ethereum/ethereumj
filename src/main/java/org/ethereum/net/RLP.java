@@ -11,9 +11,6 @@ import java.util.Queue;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
 
-/**
-
- */
 public class RLP {
 
     public static byte decodeOneByteItem(byte[] data, int index) {

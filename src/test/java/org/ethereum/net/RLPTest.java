@@ -4,7 +4,6 @@ import org.spongycastle.util.encoders.Hex;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -145,14 +144,13 @@ public class RLPTest {
         byte[] expected5 = {(byte)0x82, (byte)0x4E, (byte)0xEA};
         data = RLP.encodeShort((short)20202);
         assertArrayEquals(expected5, data);
-
     }
 
     @Test /** encode string */
     public void test6(){
 
         byte[] data = RLP.encodeString("");
-        Assert.assertArrayEquals(new byte[]{(byte)0x80}, data);
+        assertArrayEquals(new byte[]{(byte)0x80}, data);
 
         byte[] expected = { (byte)0x90, (byte)0x45, (byte)0x74, (byte)0x68, (byte)0x65, (byte)0x72, (byte)0x65,
                             (byte)0x75, (byte)0x6D, (byte)0x4A, (byte)0x20, (byte)0x43, (byte)0x6C,
@@ -161,7 +159,7 @@ public class RLPTest {
         String test = "EthereumJ Client";
         data = RLP.encodeString(test);
 
-        Assert.assertArrayEquals(expected, data);
+        assertArrayEquals(expected, data);
 
         String test2 = "Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++";
 
@@ -174,7 +172,7 @@ public class RLPTest {
                  (byte)0x2F, (byte)0x67, (byte)0x2B, (byte)0x2B};
 
         data = RLP.encodeString(test2);
-        Assert.assertArrayEquals(expected2, data);
+        assertArrayEquals(expected2, data);
 
         String test3 = "Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++Ethereum(++)/ZeroGox/v0.5.0/ncurses/Linux/g++";
 
@@ -196,9 +194,8 @@ public class RLPTest {
                 (byte)0x2F, (byte)0x67, (byte)0x2B, (byte)0x2B};
 
         data = RLP.encodeString(test3);
-        Assert.assertArrayEquals(expected3, data);
+        assertArrayEquals(expected3, data);
     }
-
 
     @Test /** encode byte array */
     public void test7(){
@@ -212,7 +209,7 @@ public class RLPTest {
 
         String expected = "B8 40 " + byteArr;
 
-        Assert.assertArrayEquals(Utils.hexStringToByteArr(expected),
+        assertArrayEquals(Utils.hexStringToByteArr(expected),
                 RLP.encodeElement(byteArray));
     }
 
@@ -242,11 +239,9 @@ public class RLPTest {
         byte[] header = RLP.encodeList(
                 prevHash, uncleList, coinbase);
 
-        Assert.assertEquals("f856a000000000000000000000000000000000000000000000000000000000000000001dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000",
+        assertEquals("f856a000000000000000000000000000000000000000000000000000000000000000001dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000",
                 Hex.toHexString(header));
     }
-
-
 
     @Test
     public void test10(){
@@ -256,7 +251,6 @@ public class RLPTest {
 
         Queue<Integer> index = new LinkedList<Integer>();
         RLP.fullTraverse(payload, 0, 0, payload.length, 1, index);
-
 
         // TODO: assert lenght overflow while parsing list in RLP
     }
@@ -273,7 +267,6 @@ public class RLPTest {
         RLPList.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
     }
-
 
     @Test /* very long peers msg */
     public void test12(){
@@ -313,7 +306,4 @@ public class RLPTest {
         RLPList.recursivePrint(rlpList);
         // TODO: add some asserts in place of just printing the rlpList
     }
-
 }
-
-
