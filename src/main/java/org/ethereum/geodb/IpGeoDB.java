@@ -1,16 +1,11 @@
 package org.ethereum.geodb;
 
+import java.io.File;
+import java.net.InetAddress;
+import java.net.URL;
+
 import com.maxmind.geoip.Location;
 import com.maxmind.geoip.LookupService;
-import com.maxmind.geoip2.DatabaseReader;
-import com.maxmind.geoip2.exception.GeoIp2Exception;
-import com.maxmind.geoip2.model.CityResponse;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.URISyntaxException;
-import java.net.URL;
 
 /**
  * www.ethereumJ.com

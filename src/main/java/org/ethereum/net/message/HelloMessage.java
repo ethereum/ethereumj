@@ -29,7 +29,6 @@ public class HelloMessage extends Message {
         super(rawData);
     }
 
-
     public HelloMessage(byte protocolVersion, byte networkId, String clientId, byte capabilities, short peerPort, byte[] peerId) {
         this.protocolVersion = protocolVersion;
         this.networkId = networkId;
@@ -38,7 +37,6 @@ public class HelloMessage extends Message {
         this.peerPort = peerPort;
         this.peerId = peerId;
     }
-
 
     @Override
     public void parseRLP() {

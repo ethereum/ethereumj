@@ -1,14 +1,12 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.RLP;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * www.ethereumJ.com
@@ -20,7 +18,6 @@ public class GetChainMessage extends Message {
     private final byte commandCode = 0x14;
     List<byte[]> blockHashList = new ArrayList<byte[]>();
     BigInteger blockNum;
-
 
     public GetChainMessage(RLPList rawData) {
         super(rawData);
@@ -35,7 +32,6 @@ public class GetChainMessage extends Message {
 
             throw new Error("GetChain: parsing for mal data");
         }
-
 
         int size = paramsList.size();
         for (int i = 1; i < size - 1; ++i){

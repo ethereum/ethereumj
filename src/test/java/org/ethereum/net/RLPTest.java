@@ -22,9 +22,6 @@ import static org.junit.Assert.assertEquals;
  */
 public class RLPTest {
 
-
-
-
     @Test
     public void test1() throws UnknownHostException {
 
@@ -35,16 +32,11 @@ public class RLPTest {
                 "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " +
                 "17 08 9F EA F8 4C 21 B0";
 
-
-
         byte[] payload = Utils.hexStringToByteArr(peersPacket);
-
 
         byte[] ip = RLP.decodeIP4Bytes(payload, 5);
 
         assertEquals(InetAddress.getByAddress(ip).toString(),("/54.204.10.41"));
-
-
     }
 
     @Test
@@ -57,14 +49,10 @@ public class RLPTest {
                 "E0 DE 49 98 33 4F 3B CF 73 FA 11 7E F2 13 F8 74 " +
                 "17 08 9F EA F8 4C 21 B0";
 
-
-
         byte[] payload = Utils.hexStringToByteArr(peersPacket);
         int oneInt =  RLP.decodeInt(payload, 11);
 
         assertEquals(oneInt, 30303);
-
-
     }
 
 
@@ -120,7 +108,6 @@ public class RLPTest {
         nextIndex = RLP.getNextElementIndex(payload, nextIndex);
         nextIndex = RLP.getFirstListElement(payload, nextIndex);
         assertEquals(-1, nextIndex);
-
     }
 
 
@@ -171,7 +158,6 @@ public class RLPTest {
         byte[] data = RLP.encodeString("");
         Assert.assertArrayEquals(new byte[]{(byte)0x80}, data);
 
-
         byte[] expected = { (byte)0x90, (byte)0x45, (byte)0x74, (byte)0x68, (byte)0x65, (byte)0x72, (byte)0x65,
                             (byte)0x75, (byte)0x6D, (byte)0x4A, (byte)0x20, (byte)0x43, (byte)0x6C,
                             (byte)0x69, (byte)0x65, (byte)0x6E, (byte)0x74};
@@ -221,7 +207,6 @@ public class RLPTest {
     @Test /** encode byte array */
     public void test7(){
 
-
         String byteArr = "CE 73 66 0A 06 62 6C 1B 3F DA 7B 18 EF 7B A3 CE " +
                          "17 B6 BF 60 4F 95 41 D3 C6 C6 54 B7 AE 88 B2 39 " +
                          "40 7F 65 9C 78 F4 19 02 5D 78 57 27 ED 01 7B 6A " +
@@ -233,19 +218,15 @@ public class RLPTest {
 
         Assert.assertArrayEquals(Utils.hexStringToByteArr(expected),
                 RLP.encodeElement(byteArray));
-
     }
 
     @Test /** encode list */
     public void test8(){
     }
 
-
-
     @Test /** found bug encode list affects element value,
               hhh... not really at  the end but keep the test */
     public void test9(){
-
 
    /* 2 */    byte[] prevHash =
                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -265,10 +246,8 @@ public class RLPTest {
         byte[] header = RLP.encodeList(
                 prevHash, uncleList, coinbase);
 
-
         Assert.assertEquals("f856a000000000000000000000000000000000000000000000000000000000000000001dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000",
                 Hex.toHexString(header));
-
     }
 
 

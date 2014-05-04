@@ -1,13 +1,9 @@
 package org.ethereum.net.rlp;
 
-import org.bouncycastle.util.Arrays;
-import org.bouncycastle.util.encoders.Hex;
-import org.ethereum.util.Utils;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.ethereum.util.Utils;
 
 /**
  * www.ethereumJ.com
@@ -18,7 +14,6 @@ public class RLPList implements RLPElement{
 
     byte[] rlpData;
     List<RLPElement> list;
-
 
     public RLPList() {
         this.list = new ArrayList<RLPElement>();
@@ -46,32 +41,29 @@ public class RLPList implements RLPElement{
         this.rlpData = rlpData;
     }
 
-
     public byte[] getRLPData(){
-
         return rlpData;
     }
 
+	public static void recursivePrint(RLPElement element) {
 
-    public static void recursivePrint(RLPElement element){
+		if (element == null)
+			throw new Error("RLPElement object can't be null");
+		if (element instanceof RLPList) {
 
-        if (element == null) throw new Error("RLPElement object can't be null");
-        if (element instanceof RLPList){
+			RLPList rlpList = (RLPList) element;
+			
+			System.out.print("[");
+			
+			for (RLPElement singleElement : rlpList.getList()) {
+				recursivePrint(singleElement);
+			}
+			System.out.print("]");
+		} else {
 
-            RLPList rlpList = (RLPList)element;
-            System.out.print("[");
-            for (RLPElement singleElement : rlpList.getList()){
+			String hex = Utils.toHexString(((RLPItem) element).getData());
 
-                recursivePrint(singleElement);
-            }
-            System.out.print("]");
-        }  else {
-
-            String hex = Utils.toHexString(((RLPItem) element).getData());
-
-            System.out.print(hex + ", ");
-
-        }
-
-    }
+			System.out.print(hex + ", ");
+		}
+	}
 }

@@ -1,8 +1,6 @@
 package org.ethereum.manager;
 
 import com.maxmind.geoip.Location;
-import com.maxmind.geoip2.model.CityResponse;
-import com.maxmind.geoip2.record.Country;
 import org.ethereum.geodb.IpGeoDB;
 import org.ethereum.net.vo.PeerData;
 
