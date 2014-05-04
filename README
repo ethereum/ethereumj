@@ -1,7 +1,17 @@
-Java implementation of Ethereum.
+## Ethereum Java Client
 
-**Website:** http://www.ethereum.org
+By Roman Mandaleil & Nick Savers 2014.
 
-**Whitepaper:** https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
+Based on a design by Vitalik Buterin.
 
-**Yellow Paper:** http://gavwood.com/Paper.pdf
+### Website
+
+http://www.ethereum.org
+
+### Whitepaper
+
+https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
+
+### Yellow Paper
+
+http://gavwood.com/Paper.pdf
