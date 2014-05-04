@@ -1,11 +1,10 @@
 package org.ethereum.net.vo;
 
-import org.bouncycastle.util.encoders.Hex;
+import org.spongycastle.util.encoders.Hex;
 import org.ethereum.net.rlp.RLPList;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.Arrays;
 
 /**
  * www.ethereumJ.com
