@@ -35,8 +35,7 @@ public class ECKeyTest {
 	private String address = "8a40bfaa73256b60764c1bf40675a99083efb075";
 	
 	private String exampleMessage = new String("This is an example of a signed message.");
-	private String bitcoinSigBase64 = "HIb1Pb2tCwt/f15R9c/nlCgQrFTAxIt7TooOqG4B8ODNSaUdTtcW1N2E9bH+mF9HGjfd88H8QOyG0sPZtp2uaCQ=";
-	private String ethereumSigBase64 = "HD5AsBr4wuH6UU9tXuSJhUvgfGayfwoY0cKT03sFUjnpQsupHznd/3mCIRfLuNHlRCVGdAyHecdyM8IVZMtc1I8=";
+	private String sigBase64 = "HD5AsBr4wuH6UU9tXuSJhUvgfGayfwoY0cKT03sFUjnpQsupHznd/3mCIRfLuNHlRCVGdAyHecdyM8IVZMtc1I8=";
 	
 	@Test
 	public void testHashCode() {
@@ -100,19 +99,6 @@ public class ECKeyTest {
 	}
 
 	@Test
-	public void testSignBitcoin() throws IOException {
-		// TODO: Understand why key must be decompressed for this to work 
-		ECKey key = ECKey.fromPrivate(privateKey).decompress();
-        System.out.println("Secret: " + Hex.toHexString(key.getPrivKeyBytes()));
-        System.out.println("Pubkey: " + Hex.toHexString(key.getPubKey()));
-        String output = key.signBitcoinMessage(exampleMessage);
-        
-        System.out.println("Signtr: " + output + " (Base64) - length: " + output.length());
-        
-        assertEquals(bitcoinSigBase64, output);
-	}
-	
-	@Test
 	public void testEthereumSign() throws IOException {
 		// TODO: Understand why key must be decompressed for this to work 
 		ECKey key = ECKey.fromPrivate(privateKey).decompress();
@@ -123,7 +109,7 @@ public class ECKeyTest {
         ECDSASignature signature = key.sign(messageHash);
         String output = signature.toBase64();
         System.out.println("Signtr\t: " + output + " (Base64, length: " + output.length() + ")");
-        assertEquals(ethereumSigBase64, output);
+        assertEquals(sigBase64, output);
 	}
 	
     @Test
@@ -151,16 +137,6 @@ public class ECKeyTest {
 			key.verify(HashUtil.sha3(rawtx), sig);
 		} catch (SignatureException e) {
 			fail();
-		}
-    }
-    
-    @Test
-    public void testVerifyBitcoinMessage() {
-    	ECKey key = ECKey.fromPublicOnly(pubKey);
-    	try {
-			key.verifyBitcoinMessage(exampleMessage, bitcoinSigBase64);
-		} catch (SignatureException e) {
-	    	fail();
 		}
     }
     
@@ -257,21 +233,13 @@ public class ECKeyTest {
     }
 	
 	@Test
-	public void testSignedBitcoinMessageToKey() throws SignatureException {
-    	ECKey key = ECKey.signedBitcoinMessageToKey("This is an example of a signed message.", bitcoinSigBase64);
-    	assertNotNull(key);
-    	assertArrayEquals(pubKey, key.getPubKey());
-	}
-	
-	@Test
 	public void testSignedMessageToKey() throws SignatureException {
 		byte[] messageHash = HashUtil.sha3(exampleMessage.getBytes());
-    	ECKey key = ECKey.signatureToKey(messageHash, ethereumSigBase64);
+    	ECKey key = ECKey.signatureToKey(messageHash, sigBase64);
     	assertNotNull(key);
     	assertArrayEquals(pubKey, key.getPubKey());
 	}
-	
-	
+		
 	@Test
 	public void testGetPrivKeyBytes() {
 		ECKey key = new ECKey();
