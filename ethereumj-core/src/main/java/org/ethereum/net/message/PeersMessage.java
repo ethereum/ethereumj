@@ -1,19 +1,12 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.RLP;
-import org.ethereum.net.message.Message;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.PeerData;
-
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.ethereum.net.rlp.RLPItem;
+import org.ethereum.net.rlp.RLPList;
+import org.ethereum.net.vo.PeerData;
 
 /**
  * www.ethereumJ.com
@@ -37,7 +30,6 @@ public class PeersMessage extends Message {
         parsed = false;
     }
 
-
     @Override
     public void parseRLP() {
 
@@ -47,7 +39,6 @@ public class PeersMessage extends Message {
 
             throw new Error("PeersMessage: parsing for mal data");
         }
-
 
         for (int i = 1; i < paramsList.size(); ++i){
 
@@ -82,7 +73,6 @@ public class PeersMessage extends Message {
     public byte[] getPayload() {
         return null;
     }
-
 
     public List<PeerData> getPeers() {
 

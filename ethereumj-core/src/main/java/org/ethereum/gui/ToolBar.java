@@ -33,7 +33,6 @@ public class ToolBar extends JFrame {
 
         this.setContentPane(cp);
 
-
         java.net.URL imageURL_1 = ClassLoader.getSystemResource("buttons/feedly.png");
         ImageIcon image_1 = new ImageIcon(imageURL_1);
 
@@ -42,8 +41,6 @@ public class ToolBar extends JFrame {
 
         java.net.URL imageURL_3 = ClassLoader.getSystemResource("buttons/browser.png");
         ImageIcon image_3 = new ImageIcon(imageURL_3);
-
-
 
         JToggleButton editorToggle = new JToggleButton("");
         editorToggle.setIcon(image_1);
@@ -97,20 +94,12 @@ public class ToolBar extends JFrame {
                 PeersTableMain mainFrame	= new PeersTableMain();
                 mainFrame.setVisible( true );
 //                mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-
             }
         });
-
 
         cp.add(editorToggle);
         cp.add(logToggle);
         cp.add(peersToggle);
-
-
-
-
-
     }
 
     public static void main(String args[]){
@@ -120,7 +109,6 @@ public class ToolBar extends JFrame {
                 new ToolBar().setVisible(true);
             }
         });
-
     }
 
 }

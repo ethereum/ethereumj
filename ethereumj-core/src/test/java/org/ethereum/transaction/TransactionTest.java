@@ -28,10 +28,8 @@ public class TransactionTest {
     @Test /* sign transaction  https://tools.ietf.org/html/rfc6979 */
     public void test1() throws NoSuchProviderException, NoSuchAlgorithmException, InvalidKeyException, IOException {
 
-
         //python taken exact data
         String txRLPRawData = "a9e880872386f26fc1000085e8d4a510008203e89413978aee95f38490e9769c39b2773ed763d9cd5f80";
-
 
 //        String txRLPRawData = "f82804881bc16d674ec8000094cd2a3d9f938e13cd947ec05abc7fe734df8dd8268609184e72a0006480";
         String cowPrivKey   = "c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4";
@@ -39,18 +37,15 @@ public class TransactionTest {
         byte[] data    = Hex.decode(txRLPRawData);
         byte[] privKey = Hex.decode(cowPrivKey);
 
-
         // step 1: serialize + RLP encode
         // step 2: hash = sha3(step1)
         byte[] txHash = Utils.sha3(data);
-
 
         X9ECParameters curvParams = SECNamedCurves.getByName("secp256k1");
 
 //        z = hash_to_int(msghash)
 //        k = deterministic_generate_k(msghash,priv)
         BigInteger txHashInt = new BigInteger(1, txHash );
-
 
 /*
         v = '\x01' * 32
@@ -84,7 +79,6 @@ public class TransactionTest {
         hmac.init(secretKey);
         hmac.reset();
 
-
         ByteArrayOutputStream baos = new ByteArrayOutputStream(v.length + 1 + privKey.length + txHash.length);
         baos.write(v);
         baos.write(new byte[]{00});
@@ -101,8 +95,6 @@ public class TransactionTest {
 
     }
 
-
-
     @Test  /* achieve public key of the sender */
     public void test2(){
 
@@ -118,11 +110,6 @@ public class TransactionTest {
 
         String txHash = Hex.toHexString(Utils.sha3(rawTxBytes));
         System.out.println(txHash);
-
-
-
-
-
     }
 
 }

@@ -62,7 +62,6 @@ public class ClientPeer {
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
 
-
         } catch (InterruptedException ie){
 
            System.out.println("-- ClientPeer: catch (InterruptedException ie) --");

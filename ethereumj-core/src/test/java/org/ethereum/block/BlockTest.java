@@ -127,8 +127,6 @@ public class BlockTest {
         System.out.println(Hex.toHexString(hash));
 
         System.out.println("ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cf");
-
-
     }
 
     @Test /* got from go guy */
@@ -136,7 +134,6 @@ public class BlockTest {
 
         byte[] goGenesisBytes = Hex.decode("f8a4f8a0a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794000000000000000000000000000000000000000080a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347834000008080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0");
         System.out.println( Hex.toHexString( Utils.sha3(goGenesisBytes) ) );
-
     }
 
 
@@ -155,8 +152,6 @@ public class BlockTest {
         RLPList.recursivePrint(rlpList);
 
     }
-
-
 }
 
 
