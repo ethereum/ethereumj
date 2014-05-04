@@ -1,4 +1,7 @@
+.idea
 *.class
+
+*.xlsx
 
 # Package Files #
 *.jar
