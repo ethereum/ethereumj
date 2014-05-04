@@ -1,6 +1,7 @@
 package org.ethereum.net;
 
-import org.bouncycastle.util.encoders.Hex;
+import org.spongycastle.util.encoders.Hex;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
 import org.junit.Assert;
@@ -15,11 +16,6 @@ import java.util.Queue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
-/**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 07/04/14 12:57
- */
 public class RLPTest {
 
     @Test
@@ -235,7 +231,7 @@ public class RLPTest {
                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
               prevHash = RLP.encodeElement(prevHash);
 
-   /* 2 */    byte[] uncleList = Utils.sha3(RLP.encodeList(new byte[]{}));
+   /* 2 */    byte[] uncleList = HashUtil.sha3(RLP.encodeList(new byte[]{}));
 
    /* 3 */    byte[] coinbase =
                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

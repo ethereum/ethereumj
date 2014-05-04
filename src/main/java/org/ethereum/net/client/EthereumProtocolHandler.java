@@ -6,7 +6,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
-import org.bouncycastle.util.encoders.Hex;
+import org.spongycastle.util.encoders.Hex;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.RLP;
@@ -83,8 +83,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
                     System.out.println("No ping answer for [30 sec]");
                     throw new Error("No ping return for 30 [sec]");
-
-
                     // TODO: shutdown the handler
                 }
 

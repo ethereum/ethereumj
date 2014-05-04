@@ -1,5 +1,6 @@
 package org.ethereum.net.vo;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.rlp.RLPElement;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
@@ -56,11 +57,10 @@ public class BlockData {
 
     }
 
-
     // [parent_hash,  uncles_hash, coinbase, state_root, tx_list_hash, difficulty, timestamp, extradata, nonce]
     private void parseRLP(){
 
-        this.hash = Utils.sha3(rawData.getRLPData());
+        this.hash = HashUtil.sha3(rawData.getRLPData());
 
         List params = ((RLPList) rawData.getElement(0)).getList();
 

@@ -1,99 +1,62 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.ethereum</groupId>
+	<artifactId>EthereumJ</artifactId>
+	<packaging>jar</packaging>
+	<version>0.0.1-SNAPSHOT</version>
+	<name>EthereumJ</name>
+	<url>http://maven.apache.org</url>
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<!-- Third-party dependencies -->
+		<junit.version>4.11</junit.version>
+		<slf4j.version>1.7.7</slf4j.version>
+		<leveldb.version>0.7</leveldb.version>
+		<spongycastle.version>1.50.0.0</spongycastle.version>
+		<generated.sourceDirectory>gen</generated.sourceDirectory>
+	</properties>
 
-    <groupId>EthereumJ</groupId>
-    <artifactId>EthereumJ</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-
-    <repositories>
-        <repository>
-            <id>repository.jboss.org</id>
-            <name>JBoss Releases Repository</name>
-            <url>http://repository.jboss.org/maven2</url>
-        </repository>
-    </repositories>
-    <pluginRepositories>
-        <pluginRepository>
-            <id>repository.jboss.org</id>
-            <name>JBoss Releases Repository</name>
-            <url>http://repository.jboss.org/maven2</url>
-        </pluginRepository>
-    </pluginRepositories>
-
-
-
-    <dependencies>
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.10</version>
-        </dependency>
-
+	<dependencies>
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-all</artifactId>
             <version>4.0.17.Final</version>
         </dependency>
-
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcpg-jdk15on</artifactId>
-            <version>1.49</version>
-            <classifier>sources</classifier>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-ext-jdk15on</artifactId>
-            <version>1.49</version>
-            <classifier>sources</classifier>
-        </dependency>
-
-
-        <dependency>
-            <groupId>org.bouncycastle</groupId>
-            <artifactId>bcprov-jdk15on</artifactId>
-            <version>1.49</version>
-            <classifier>sources</classifier>
-        </dependency>
-
-
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>	
+		<!-- Spongy Castle for SHA3 and SECP256K1 -->
+		<dependency>
+		    <groupId>com.madgag.spongycastle</groupId>
+		    <artifactId>core</artifactId>
+		    <version>${spongycastle.version}</version>
+		</dependency>
         <dependency>
             <groupId>com.fifesoft</groupId>
             <artifactId>rsyntaxtextarea</artifactId>
             <version>2.5.0</version>
         </dependency>
-
         <dependency>
             <groupId>com.maxmind.geoip2</groupId>
             <artifactId>geoip2</artifactId>
             <version>0.6.0</version>
         </dependency>
-
         <dependency>
             <groupId>com.maxmind.geoip</groupId>
             <artifactId>geoip-api</artifactId>
             <version>1.2.11</version>
         </dependency>
 
-<!--
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr</artifactId>
-            <version>3.5.2</version>
-        </dependency>
--->
-
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr</artifactId>
             <version>3.1.3</version>
+            <!-- <version>3.5.2</version> -->
         </dependency>
-
 
         <dependency>
             <groupId>org.antlr</groupId>
@@ -107,6 +70,20 @@
             <version>2.5.3</version>
         </dependency>
 
+		<!-- Consumers are expected to provide their own SLF4J adapters 
+			such as logback, slf4j-log4j12, slf4j-jcl and so on see http://www.slf4j.org/faq.html -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-jdk14</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>runtime</scope>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
     </dependencies>
 	<build>
 	    <plugins>

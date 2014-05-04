@@ -1,30 +1,20 @@
 package org.ethereum.serpent;
 
-import junit.framework.Assert;
 import org.antlr.runtime.ANTLRStringStream;
 import org.antlr.runtime.CharStream;
 import org.antlr.runtime.CommonTokenStream;
 import org.antlr.runtime.RecognitionException;
 import org.antlr.stringtemplate.StringTemplateGroup;
 import org.antlr.stringtemplate.language.AngleBracketTemplateLexer;
-import org.bouncycastle.util.encoders.Hex;
 import org.ethereum.util.Utils;
 import org.junit.Test;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Queue;
 
-/**
-* www.ethereumJ.com
-* User: Roman Mandeleil
-* Created on: 27/04/14 14:35
-*/
+import static org.junit.Assert.*;
+
 public class TestCompile {
-
 
 /*  bin_expr
             ['+', 2, 1, ['<1>', '<0>', 'ADD']],     V
@@ -40,9 +30,7 @@ public class TestCompile {
     @Test  /* Test one symbol */
     public void test0() throws FileNotFoundException, RecognitionException {
 
-        CharStream stream =
-                new ANTLRStringStream("" +
-                        "A");
+        CharStream stream = new ANTLRStringStream("" + "A");
 
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
@@ -58,11 +46,8 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A", retVal.getTemplate().toString());
-
+        assertEquals("A", retVal.getTemplate().toString());
     }
-
-
 
     @Test  /* Test ADD 1*/
     public void test1() throws FileNotFoundException, RecognitionException {
@@ -85,8 +70,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B ADD", retVal.getTemplate().toString());
-
+        assertEquals("A B ADD", retVal.getTemplate().toString());
     }
 
     @Test  /* Test ADD 2*/
@@ -110,8 +94,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B ADD C1 ADD", retVal.getTemplate().toString());
-
+        assertEquals("A B ADD C1 ADD", retVal.getTemplate().toString());
     }
 
     @Test  /* Test SUB 1*/
@@ -135,8 +118,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B SUB", retVal.getTemplate().toString());
-
+        assertEquals("A B SUB", retVal.getTemplate().toString());
     }
 
     @Test  /* Test MUL 1*/
@@ -150,7 +132,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -160,8 +141,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B MUL", retVal.getTemplate().toString());
-
+        assertEquals("A B MUL", retVal.getTemplate().toString());
     }
 
 
@@ -176,7 +156,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -186,7 +165,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B DIV", retVal.getTemplate().toString());
+        assertEquals("A B DIV", retVal.getTemplate().toString());
 
     }
 
@@ -211,7 +190,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B EXP", retVal.getTemplate().toString());
+        assertEquals("A B EXP", retVal.getTemplate().toString());
 
     }
 
@@ -236,7 +215,9 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B MOD", retVal.getTemplate().toString());
+
+
+        assertEquals("A B MOD", retVal.getTemplate().toString());
     }
 
     @Test  /* Test SDIV 1*/
@@ -260,7 +241,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B SDIV", retVal.getTemplate().toString());
+        assertEquals("A B SDIV", retVal.getTemplate().toString());
 
     }
 
@@ -285,7 +266,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B SMOD", retVal.getTemplate().toString());
+        assertEquals("A B SMOD", retVal.getTemplate().toString());
 
     }
 
@@ -311,7 +292,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B DIV C SUB D ADD ET MUL", retVal.getTemplate().toString());
+        assertEquals("A B DIV C SUB D ADD ET MUL", retVal.getTemplate().toString());
 
     }
 
@@ -336,7 +317,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("A B DIV C SUB D ADD ET MUL ET2 MOD RO EXP RO2 ADD COOL SDIV HOT SMOD",
+        assertEquals("A B DIV C SUB D ADD ET MUL ET2 MOD RO EXP RO2 ADD COOL SDIV HOT SMOD",
                 retVal.getTemplate().toString());
 
     }
@@ -372,7 +353,7 @@ public class TestCompile {
 
         SerpentParser.cond_expr_return retVal = parser.cond_expr();
 
-        Assert.assertEquals("A B ADD B A ADD EQ",
+        assertEquals("A B ADD B A ADD EQ",
                 retVal.getTemplate().toString());
 
     }
@@ -398,7 +379,7 @@ public class TestCompile {
 
         SerpentParser.cond_expr_return retVal = parser.cond_expr();
 
-        Assert.assertEquals("A C ADD C A ADD LT",
+        assertEquals("A C ADD C A ADD LT",
                 retVal.getTemplate().toString());
 
     }
@@ -424,7 +405,7 @@ public class TestCompile {
 
         SerpentParser.cond_expr_return retVal = parser.cond_expr();
 
-        Assert.assertEquals("A C ADD C A ADD GT NOT",
+        assertEquals("A C ADD C A ADD GT NOT",
                 retVal.getTemplate().toString());
 
     }
@@ -451,7 +432,7 @@ public class TestCompile {
 
         SerpentParser.cond_expr_return retVal = parser.cond_expr();
 
-        Assert.assertEquals("A C ADD C A ADD GT",
+        assertEquals("A C ADD C A ADD GT",
                 retVal.getTemplate().toString());
 
     }
@@ -478,7 +459,7 @@ public class TestCompile {
 
         SerpentParser.cond_expr_return retVal = parser.cond_expr();
 
-        Assert.assertEquals("A C ADD C A ADD LT NOT",
+        assertEquals("A C ADD C A ADD LT NOT",
                 retVal.getTemplate().toString());
 
     }
@@ -504,7 +485,7 @@ public class TestCompile {
 
         SerpentParser.unr_expr_return retVal = parser.unr_expr();
 
-        Assert.assertEquals("A NOT",
+        assertEquals("A NOT",
                 retVal.getTemplate().toString());
 
     }
@@ -531,7 +512,7 @@ public class TestCompile {
 
         SerpentParser.unr_expr_return retVal = parser.unr_expr();
 
-        Assert.assertEquals("A NOT NOT",
+        assertEquals("A NOT NOT",
                 retVal.getTemplate().toString());
 
     }
@@ -557,7 +538,7 @@ public class TestCompile {
 
         SerpentParser.unr_expr_return retVal = parser.unr_expr();
 
-        Assert.assertEquals("A NOT NOT",
+        assertEquals("A NOT NOT",
                 retVal.getTemplate().toString());
 
     }
@@ -583,7 +564,7 @@ public class TestCompile {
 
         SerpentParser.unr_expr_return retVal = parser.unr_expr();
 
-        Assert.assertEquals("A NOT",
+        assertEquals("A NOT",
                 retVal.getTemplate().toString());
 
     }
@@ -610,7 +591,7 @@ public class TestCompile {
 
         SerpentParser.program_return retVal = parser.program();
 
-        Assert.assertEquals("10 0 MSTORE 20 32 MSTORE 30 64 MSTORE",
+        assertEquals("10 0 MSTORE 20 32 MSTORE 30 64 MSTORE",
                 retVal.getTemplate().toString().trim());
 
     }
@@ -636,7 +617,7 @@ public class TestCompile {
 
         SerpentParser.program_return retVal = parser.program();
 
-        Assert.assertEquals("10 0 MSTORE 20 32 MSTORE 30 0 MSTORE 40 32 MSTORE",
+        assertEquals("10 0 MSTORE 20 32 MSTORE 30 0 MSTORE 40 32 MSTORE",
                 retVal.getTemplate().toString().trim());
 
     }
@@ -662,7 +643,7 @@ public class TestCompile {
 
         SerpentParser.if_else_stmt_return retVal = parser.if_else_stmt();
 
-        Assert.assertEquals("",
+        assertEquals("",
                 retVal.getTemplate().toString().trim());
 
     }
@@ -688,7 +669,7 @@ public class TestCompile {
 
         SerpentParser.storage_load_return retVal = parser.storage_load();
 
-        Assert.assertEquals("0 SLOAD",
+        assertEquals("0 SLOAD",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -713,7 +694,7 @@ public class TestCompile {
 
         SerpentParser.storage_load_return retVal = parser.storage_load();
 
-        Assert.assertEquals("100 SLOAD",
+        assertEquals("100 SLOAD",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -738,7 +719,7 @@ public class TestCompile {
 
         SerpentParser.storage_save_return retVal = parser.storage_save();
 
-        Assert.assertEquals("200 100 SSTORE",
+        assertEquals("200 100 SSTORE",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -763,7 +744,7 @@ public class TestCompile {
 
         SerpentParser.storage_save_return retVal = parser.storage_save();
 
-        Assert.assertEquals("200 3 4 ADD SSTORE",
+        assertEquals("200 3 4 ADD SSTORE",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -789,7 +770,7 @@ public class TestCompile {
 
         SerpentParser.storage_save_return retVal = parser.storage_save();
 
-        Assert.assertEquals("200 100 ADD 100 SSTORE", // todo: have to optimize it somewhere in the future
+        assertEquals("200 100 ADD 100 SSTORE", // todo: have to optimize it somewhere in the future
                 retVal.getTemplate().toString().trim());
     }
 
@@ -814,7 +795,7 @@ public class TestCompile {
 
         SerpentParser.msg_load_return retVal = parser.msg_load();
 
-        Assert.assertEquals("0 32 MULL CALLDATALOAD",
+        assertEquals("0 32 MULL CALLDATALOAD",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -839,7 +820,7 @@ public class TestCompile {
 
         SerpentParser.msg_load_return retVal = parser.msg_load();
 
-        Assert.assertEquals("10 20 ADD 32 MUL CALLDATALOAD",
+        assertEquals("10 20 ADD 32 MUL CALLDATALOAD",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -864,7 +845,7 @@ public class TestCompile {
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
-        Assert.assertEquals("0 32 MUL CALLDATALOAD 2 32 MUL CALLDATALOAD ADD",
+        assertEquals("0 32 MUL CALLDATALOAD 2 32 MUL CALLDATALOAD ADD",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -891,7 +872,7 @@ public class TestCompile {
 
         SerpentParser.storage_save_return retVal = parser.storage_save();
 
-        Assert.assertEquals("1 32 MUL CALLDATALOAD 0 32 MUL CALLDATALOAD SSTORE",
+        assertEquals("1 32 MUL CALLDATALOAD 0 32 MUL CALLDATALOAD SSTORE",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -916,7 +897,7 @@ public class TestCompile {
 
         SerpentParser.unr_expr_return retVal = parser.unr_expr();
 
-        Assert.assertEquals("0 32 MUL CALLDATALOAD SLOAD NOT",
+        assertEquals("0 32 MUL CALLDATALOAD SLOAD NOT",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -941,7 +922,7 @@ public class TestCompile {
 
         SerpentParser.test_1_return retVal = parser.test_1();
 
-        Assert.assertEquals("20 0 MSTORE 20 32 MSTORE 32 MLOAD",
+        assertEquals("20 0 MSTORE 20 32 MSTORE 32 MLOAD",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -966,7 +947,7 @@ public class TestCompile {
 
         SerpentParser.test_1_return retVal = parser.test_1();
 
-        Assert.assertEquals("20 0 MSTORE 20 32 MSTORE 20 64 MSTORE 64 MLOAD",
+        assertEquals("20 0 MSTORE 20 32 MSTORE 20 64 MSTORE 64 MLOAD",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -996,7 +977,7 @@ public class TestCompile {
 
         SerpentParser.if_else_stmt_return retVal = parser.if_else_stmt();
 
-        Assert.assertEquals("",
+        assertEquals("",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -1038,7 +1019,7 @@ public class TestCompile {
 
         SerpentParser.gen_body_return retVal = parser.gen_body();
 
-        Assert.assertEquals("",
+        assertEquals("",
                 retVal.getTemplate().toString().trim());
     }
 
@@ -1065,16 +1046,7 @@ public class TestCompile {
 
         SerpentParser.hex_num_return retVal = parser.hex_num();
 
-        Assert.assertEquals(Utils.hexStringToDecimalString(hexNum),
+        assertEquals(Utils.hexStringToDecimalString(hexNum),
                 retVal.getTemplate().toString().trim());
-
-
-
     }
-
-
-
-
-
-
 }

@@ -1,5 +1,6 @@
 package org.ethereum.net.vo;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
@@ -64,7 +65,7 @@ public class TransactionData {
 
         if (rawData.size() == 9){  // Simple transaction
 
-            this.hash = Utils.sha3(rawData.getRLPData());
+            this.hash = HashUtil.sha3(rawData.getRLPData());
             this.nonce =          ((RLPItem) rawData.getElement(0)).getData();
             this.value =          ((RLPItem) rawData.getElement(1)).getData();
             this.receiveAddress = ((RLPItem) rawData.getElement(2)).getData();
@@ -77,7 +78,7 @@ public class TransactionData {
 
         } else if (rawData.size() == 10){ // Contract creation transaction
 
-            this.hash = Utils.sha3(rawData.getRLPData());
+            this.hash = HashUtil.sha3(rawData.getRLPData());
             this.nonce =          ((RLPItem) rawData.getElement(0)).getData();
             this.value =          ((RLPItem) rawData.getElement(1)).getData();
             this.receiveAddress = ((RLPItem) rawData.getElement(2)).getData();

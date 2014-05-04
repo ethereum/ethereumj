@@ -1,20 +1,15 @@
 package org.ethereum.block;
 
-import org.bouncycastle.util.encoders.Hex;
+import org.spongycastle.util.encoders.Hex;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.RLP;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.vo.BlockData;
-import org.ethereum.util.Utils;
 import org.junit.Test;
 
 import java.io.IOException;
 import java.math.BigInteger;
 
-/**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 19/04/14 13:30
- */
 public class BlockTest {
 
     @Test /* Creating genesis hash not ready yet */
@@ -37,8 +32,6 @@ public class BlockTest {
 */
 
 /*
-
-
         ( 0(256) - parentHash
         SHA3(RLP(emptyList)) - hashes of transactions
         0(160) - coinbase
@@ -56,14 +49,9 @@ public class BlockTest {
 	block.appendRaw(RLPEmptyList);
 	block.appendRaw(RLPEmptyList);
 
-
  */
-
-
         // gennesis hash
         //ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cf
-
-
 
     /* 1 */    byte[] prevHash =
                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -72,7 +60,7 @@ public class BlockTest {
                  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
         prevHash = RLP.encodeElement(prevHash);
 
-   /* 2 */    byte[] uncleList = RLP.encodeElement(Utils.sha3(RLP.encodeList(new byte[]{})));
+   /* 2 */    byte[] uncleList = RLP.encodeElement(HashUtil.sha3(RLP.encodeList(new byte[]{})));
 
    /* 3 */    byte[] coinbase =
                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -86,7 +74,7 @@ public class BlockTest {
                                     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
               rootState = RLP.encodeElement(rootState);
 
-   /* 5 */      byte[] transactionsRoot = RLP.encodeElement(Utils.sha3(RLP.encodeList(new byte[]{})));
+   /* 5 */      byte[] transactionsRoot = RLP.encodeElement(HashUtil.sha3(RLP.encodeList(new byte[]{})));
 
   /* 6 */  BigInteger difficulty = new BigInteger("2");
            difficulty = difficulty.pow(22);
@@ -99,9 +87,7 @@ public class BlockTest {
            extradata = RLP.encodeElement(extradata);
 
   /* 9 */  byte[] nonce = {42};
-           nonce = RLP.encodeElement( Utils.sha3(nonce)  );
-
-
+           nonce = RLP.encodeElement(HashUtil.sha3(nonce));
 
         byte[] header = RLP.encodeList( prevHash,
                 uncleList,
@@ -115,14 +101,13 @@ public class BlockTest {
 
 //	block.appendList(9) << h256() << sha3EmptyList << h160() << stateRoot << sha3EmptyList << c_genesisDifficulty << (uint)0 << string() << sha3(bytes(1, 42));
 
-
         byte[] txList     = RLP.encodeList(new byte[]{});
         byte[] unclesList = RLP.encodeList(new byte[]{});
 
         byte[] genesis = RLP.encodeList(header, txList, unclesList);
         System.out.println(Hex.toHexString(genesis));
 
-        byte[] hash = Utils.sha3(genesis);
+        byte[] hash = HashUtil.sha3(genesis);
 
         System.out.println(Hex.toHexString(hash));
 
@@ -133,9 +118,8 @@ public class BlockTest {
     public void test2(){
 
         byte[] goGenesisBytes = Hex.decode("f8a4f8a0a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794000000000000000000000000000000000000000080a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347834000008080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0");
-        System.out.println( Hex.toHexString( Utils.sha3(goGenesisBytes) ) );
+        System.out.println( Hex.toHexString( HashUtil.sha3(goGenesisBytes) ) );
     }
-
 
     @Test /* create BlockData from part of  real RLP BLOCKS message */
     public void test3(){
@@ -148,13 +132,9 @@ public class BlockTest {
         RLP.parseObjects(payload, rlpList);
 
         BlockData blockData = new BlockData(rlpList);
-
         RLPList.recursivePrint(rlpList);
-
     }
 }
-
-
 
 /*
 [[ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cf, 1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347, 3854aaf203ba5f8d49b1ec221329c7aebcf050d3, 990dc3b5acbee04124361d958fe51acb582593613fc290683940a0769549d3ed, 9bfe4817d274ea3eb8672e9fe848c3885b53bbbd1d7c26e6039f90fb96b942b0, 3ff000, 533f16b7, null, 00000000000000000000000000000000000000000000000077377adff6c227db, ]
