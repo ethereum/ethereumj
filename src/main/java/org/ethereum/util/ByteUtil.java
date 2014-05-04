@@ -3,7 +3,6 @@ package org.ethereum.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import com.google.common.primitives.UnsignedInteger;
@@ -11,10 +10,6 @@ import com.google.common.primitives.UnsignedLongs;
 
 public class ByteUtil {
 
-    /** The string that prefixes all text messages signed using Bitcoin keys. */
-    public static final String BITCOIN_SIGNED_MESSAGE_HEADER = "Bitcoin Signed Message:\n";
-    public static final byte[] BITCOIN_SIGNED_MESSAGE_HEADER_BYTES = BITCOIN_SIGNED_MESSAGE_HEADER.getBytes();
-	
     /**
      * Creates a copy of bytes and appends b to the end of it
      */
@@ -24,20 +19,6 @@ public class ByteUtil {
         return result;
     }
 
-//    /**
-//     * Returns the given byte array hex encoded.
-//     */
-//    public static String bytesToHexString(byte[] bytes) {
-//        StringBuffer buf = new StringBuffer(bytes.length * 2);
-//        for (byte b : bytes) {
-//            String s = Integer.toString(0xFF & b, 16);
-//            if (s.length() < 2)
-//                buf.append('0');
-//            buf.append(s);
-//        }
-//        return buf.toString();
-//    }
-    
     /**
      * The regular {@link java.math.BigInteger#toByteArray()} method isn't quite what we often need: it appends a
      * leading zero to indicate that the number is positive and may need padding.
@@ -57,30 +38,11 @@ public class ByteUtil {
         System.arraycopy(biBytes, start, bytes, numBytes - length, length);
         return bytes;        
     }
-        
-    /**
-     * <p>Given a textual message, returns a byte buffer formatted as follows:</p>
-     *
-     * <tt><p>[24] "Bitcoin Signed Message:\n" [message.length as a varint] message</p></tt>
-     */
-    public static byte[] formatForBitcoinSigning(String message) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bos.write(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES.length);
-            bos.write(BITCOIN_SIGNED_MESSAGE_HEADER_BYTES);
-            byte[] messageBytes = message.getBytes(Charset.forName("UTF-8"));
-            bos.write(encodeInt(messageBytes.length));
-            bos.write(messageBytes);
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);  // Cannot happen.
-        }
-    }
     
     /**
      * <p>Given a textual message, returns a byte buffer formatted as follows:</p>
      */
-    public static byte[] formatForEthereumSigning(byte[] message) {
+    public static byte[] formatForSigning(byte[] message) {
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();
             bos.write(encodeInt(message.length));
