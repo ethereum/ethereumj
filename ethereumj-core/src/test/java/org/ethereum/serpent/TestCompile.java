@@ -36,7 +36,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -59,7 +58,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -84,7 +82,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -107,7 +104,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -166,7 +162,6 @@ public class TestCompile {
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
         assertEquals("A B DIV", retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test EXP 1*/
@@ -180,7 +175,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -191,7 +185,6 @@ public class TestCompile {
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
         assertEquals("A B EXP", retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test MOD 1*/
@@ -205,7 +198,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -214,8 +206,6 @@ public class TestCompile {
         parser.setTemplateLib(template);
 
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
-
-
 
         assertEquals("A B MOD", retVal.getTemplate().toString());
     }
@@ -231,7 +221,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -242,7 +231,6 @@ public class TestCompile {
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
         assertEquals("A B SDIV", retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test SMOD 1*/
@@ -256,7 +244,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -267,9 +254,7 @@ public class TestCompile {
         SerpentParser.bin_expr_return retVal = parser.bin_expr();
 
         assertEquals("A B SMOD", retVal.getTemplate().toString());
-
     }
-
 
     @Test  /* Test multi binary operators 1*/
     public void test10() throws FileNotFoundException, RecognitionException {
@@ -281,7 +266,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -307,7 +291,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -319,9 +302,7 @@ public class TestCompile {
 
         assertEquals("A B DIV C SUB D ADD ET MUL ET2 MOD RO EXP RO2 ADD COOL SDIV HOT SMOD",
                 retVal.getTemplate().toString());
-
     }
-
 
 /*
             ['==', 2, 1, ['<1>', '<0>', 'EQ']],         V
@@ -343,7 +324,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -355,7 +335,6 @@ public class TestCompile {
 
         assertEquals("A B ADD B A ADD EQ",
                 retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test '<' 1*/
@@ -369,7 +348,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -381,7 +359,6 @@ public class TestCompile {
 
         assertEquals("A C ADD C A ADD LT",
                 retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test '<=' 1*/
@@ -395,7 +372,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -407,9 +383,7 @@ public class TestCompile {
 
         assertEquals("A C ADD C A ADD GT NOT",
                 retVal.getTemplate().toString());
-
     }
-
 
     @Test  /* Test '>' 1*/
     public void test15() throws FileNotFoundException, RecognitionException {
@@ -422,7 +396,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -434,7 +407,6 @@ public class TestCompile {
 
         assertEquals("A C ADD C A ADD GT",
                 retVal.getTemplate().toString());
-
     }
 
 
@@ -449,7 +421,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -461,7 +432,6 @@ public class TestCompile {
 
         assertEquals("A C ADD C A ADD LT NOT",
                 retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test '!' 1 */
@@ -475,7 +445,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -487,7 +456,6 @@ public class TestCompile {
 
         assertEquals("A NOT",
                 retVal.getTemplate().toString());
-
     }
 
 
@@ -502,7 +470,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -514,7 +481,6 @@ public class TestCompile {
 
         assertEquals("A NOT NOT",
                 retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test '!' 3 */
@@ -528,7 +494,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -540,7 +505,6 @@ public class TestCompile {
 
         assertEquals("A NOT NOT",
                 retVal.getTemplate().toString());
-
     }
 
     @Test  /* Test '!' 4 */
@@ -554,7 +518,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -566,7 +529,6 @@ public class TestCompile {
 
         assertEquals("A NOT",
                 retVal.getTemplate().toString());
-
     }
 
 
@@ -581,7 +543,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -593,7 +554,6 @@ public class TestCompile {
 
         assertEquals("10 0 MSTORE 20 32 MSTORE 30 64 MSTORE",
                 retVal.getTemplate().toString().trim());
-
     }
 
     @Test  /* Test set var '=' 2 */
@@ -606,7 +566,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -633,7 +592,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -645,7 +603,6 @@ public class TestCompile {
 
         assertEquals("",
                 retVal.getTemplate().toString().trim());
-
     }
 
     @Test  /* Test contract.storage[x] 1 */
@@ -658,7 +615,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -684,7 +640,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -709,7 +664,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -733,7 +687,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -760,7 +713,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -784,7 +736,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -810,7 +761,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -834,7 +784,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -862,7 +811,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -886,7 +834,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -912,7 +859,6 @@ public class TestCompile {
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
 
-
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
 
@@ -936,7 +882,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -962,11 +907,9 @@ public class TestCompile {
                         "else:\n" +
                         "    return(0)\n");
 
-
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -981,10 +924,8 @@ public class TestCompile {
                 retVal.getTemplate().toString().trim());
     }
 
-
     @Test  /* Test complex contract with if_else_stmt inside else body */
     public void test36() throws FileNotFoundException, RecognitionException {
-
 
         CharStream stream =
                 new ANTLRStringStream("" +
@@ -1008,7 +949,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";
@@ -1035,7 +975,6 @@ public class TestCompile {
         SerpentLexer lex = new SerpentLexer(stream);
         CommonTokenStream tokens = new CommonTokenStream(lex);
         SerpentParser parser = new SerpentParser(tokens);
-
 
         String userDir = System.getProperty("user.dir");
         String templateFileName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent2Asm.stg";

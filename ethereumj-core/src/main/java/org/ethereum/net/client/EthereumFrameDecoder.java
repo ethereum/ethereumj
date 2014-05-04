@@ -2,12 +2,8 @@ package org.ethereum.net.client;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelOutboundBuffer;
 import io.netty.handler.codec.ByteToMessageDecoder;
-import io.netty.handler.codec.ReplayingDecoder;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,7 +12,6 @@ import java.util.List;
  * Created on: 13/04/14 21:51
  */
 public class EthereumFrameDecoder extends ByteToMessageDecoder {
-
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
@@ -36,10 +31,8 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
             ctx.close();
         }
 
-
         // Don't have the full packet yet
         if (msgSize > in.readableBytes()) {
-
             in.resetReaderIndex();
             return;
         }

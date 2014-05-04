@@ -37,4 +37,8 @@ public enum Command {
             return Command.UNKNOWN;
         return type;
     }
+    
+    public byte asByte() {
+    	return (byte) cmd;
+    }
 }

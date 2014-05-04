@@ -12,8 +12,7 @@ public abstract class Message {
     RLPList rawData;
     boolean parsed = false;
 
-
-    public  Message(){}
+	public Message() {}
 
     public Message(RLPList rawData) {
         this.rawData = rawData;
@@ -21,7 +20,6 @@ public abstract class Message {
     }
 
     public abstract void parseRLP();
-
     public abstract byte[] getPayload();
 
 }

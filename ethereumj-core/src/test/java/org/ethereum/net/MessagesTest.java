@@ -1,18 +1,24 @@
 package org.ethereum.net;
 
-import org.spongycastle.util.encoders.Hex;
-import org.ethereum.net.message.*;
+import static org.junit.Assert.*;
+
+import java.net.UnknownHostException;
+import java.util.List;
+
+import org.ethereum.net.message.BlocksMessage;
+import org.ethereum.net.message.DisconnectMessage;
+import org.ethereum.net.message.GetChainMessage;
+import org.ethereum.net.message.HelloMessage;
+import org.ethereum.net.message.NotInChainMessage;
+import org.ethereum.net.message.PeersMessage;
+import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.vo.BlockData;
 import org.ethereum.net.vo.PeerData;
 import org.ethereum.net.vo.TransactionData;
 import org.ethereum.util.Utils;
 import org.junit.Test;
-
-import java.net.UnknownHostException;
-import java.util.List;
-
-import static org.junit.Assert.*;
+import org.spongycastle.util.encoders.Hex;
 
 public class MessagesTest {
 
@@ -157,7 +163,6 @@ public class MessagesTest {
 
     }
 
-
     @Test /* Peers msg parsing performance*/
     public void test_7() throws UnknownHostException {
 
@@ -179,7 +184,7 @@ public class MessagesTest {
     }
 
     /* TRANSACTIONS */
-
+    
     @Test  /* Transactions message 1 */
     public void test_8(){
 
@@ -229,7 +234,6 @@ public class MessagesTest {
 
         assertEquals("0FF91628D04B215EBCCFD5F4FC34CC1B45DF32F6B4609FBB0DE42E8522264467",
                 Utils.toHexString( tx.getSignatureS() ).toUpperCase());
-
     }
 
 
@@ -284,8 +288,7 @@ public class MessagesTest {
                 Utils.toHexString( tx.getSignatureS() ).toUpperCase());
 
 
-        tx =
-                transactionsMessage.getTransactions().get(2);
+        tx = transactionsMessage.getTransactions().get(2);
 
         assertEquals("B0251A1BB20B44459DB5B5444AB53EDD9E12C46D0BA07FA401A797BEB967D53C",
                 Utils.toHexString( tx.getHash() ).toUpperCase());

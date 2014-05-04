@@ -4,6 +4,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.net.Command.GET_CHAIN;
+import org.ethereum.net.Command;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
@@ -15,7 +17,6 @@ import org.ethereum.util.Utils;
  */
 public class GetChainMessage extends Message {
 
-    private final byte commandCode = 0x14;
     List<byte[]> blockHashList = new ArrayList<byte[]>();
     BigInteger blockNum;
 
@@ -28,14 +29,12 @@ public class GetChainMessage extends Message {
 
         RLPList paramsList = (RLPList) rawData.getElement(0);
 
-        if (((RLPItem)(paramsList).getElement(0)).getData()[0] != commandCode){
-
+        if (Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0]) != GET_CHAIN){
             throw new Error("GetChain: parsing for mal data");
         }
 
         int size = paramsList.size();
         for (int i = 1; i < size - 1; ++i){
-
             blockHashList.add(((RLPItem) paramsList.getElement(i)).getData());
         }
 
@@ -62,20 +61,16 @@ public class GetChainMessage extends Message {
         return blockNum;
     }
 
-
     public String toString(){
 
         if (!parsed) parseRLP();
 
         StringBuffer sb = new StringBuffer();
         for (byte[] blockHash : blockHashList){
-
             sb.append("").append(Utils.toHexString(blockHash)).append(", ");
         }
 
         sb.append(" blockNum=").append(blockNum);
-
         return "GetChain Message [" + sb.toString() + " ]";
-
     }
 }

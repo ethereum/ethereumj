@@ -1,8 +1,11 @@
 package org.ethereum.manager;
 
 import com.maxmind.geoip.Location;
+
 import org.ethereum.geodb.IpGeoDB;
+import org.ethereum.net.vo.BlockData;
 import org.ethereum.net.vo.PeerData;
+import org.ethereum.net.vo.TransactionData;
 
 import java.util.*;
 
@@ -15,26 +18,18 @@ public class MainData {
 
     private Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
 
-    private List blocks = Collections.synchronizedList(new ArrayList());
-    private List transactions = Collections.synchronizedList(new ArrayList());
-
     public static MainData instance = new MainData();
 
-    public void addPeers(List newPeers){
+    public void addPeers(List<PeerData> newPeers){
         this.peers.addAll(newPeers);
-
-
         for (PeerData peerData : this.peers){
-
             Location location = IpGeoDB.getLocationForIp(peerData.getInetAddress());
             if (location != null)
                 System.out.println("Hello: " + " [" + peerData.getInetAddress().toString()
                         + "] " + location.countryName);
-
         }
     }
 
-    public void addBlocks(List blocks){}
-    public void addTransactions(List transactions){}
-
+    public void addBlocks(List<BlockData> blocks) {}
+    public void addTransactions(List<TransactionData> transactions) {}
 }

@@ -1,6 +1,7 @@
 package org.ethereum.net.message;
 
 import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.net.Command.HELLO;
 import org.ethereum.net.RLP;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
@@ -14,8 +15,6 @@ import java.nio.ByteBuffer;
  */
 public class HelloMessage extends Message {
 
-    private final byte commandCode = 0x00;
-
     private byte protocolVersion;
     private byte networkId;
     private String clientId;
@@ -23,9 +22,7 @@ public class HelloMessage extends Message {
     private short peerPort;
     private byte[] peerId;
 
-
     public HelloMessage(RLPList rawData) {
-
         super(rawData);
     }
 
@@ -46,32 +43,27 @@ public class HelloMessage extends Message {
         // the message does no distinguish between the 0 and null so here I check command code for null
         // todo: find out if it can be 00
         if (((RLPItem)(paramsList).getElement(0)).getData() != null){
-
             throw new Error("HelloMessage: parsing for mal data");
         }
 
-
         this.protocolVersion  =            ((RLPItem) paramsList.getElement(1)).getData()[0];
 
-        byte[] networkIdBytes = ((RLPItem) paramsList.getElement(2)).getData();
-        this.networkId        = networkIdBytes == null ? 0 : networkIdBytes[0] ;
+        byte[] networkIdBytes = 			((RLPItem) paramsList.getElement(2)).getData();
+        this.networkId        = 			networkIdBytes == null ? 0 : networkIdBytes[0] ;
 
         this.clientId         = new String(((RLPItem) paramsList.getElement(3)).getData());
         this.capabilities     =            ((RLPItem) paramsList.getElement(4)).getData()[0];
 
         ByteBuffer bb = ByteBuffer.wrap(((RLPItem) paramsList.getElement(5)).getData());
-        this.peerPort         = bb.getShort();
-
+        this.peerPort         = 			bb.getShort();
         this.peerId           =            ((RLPItem) paramsList.getElement(6)).getData();
-
         this.parsed = true;
         // todo: what to do when mal data ?
     }
 
-
     public byte[] getPayload(){
 
-        byte[] command         = RLP.encodeByte(this.commandCode);
+        byte[] command         = RLP.encodeByte(HELLO.asByte());
         byte[] protocolVersion = RLP.encodeByte(this.protocolVersion);
         byte[] networkId       = RLP.encodeByte(this.networkId);
         byte[] clientId        = RLP.encodeString(this.clientId);
@@ -85,52 +77,43 @@ public class HelloMessage extends Message {
         return data;
     }
 
-
     public byte getCommandCode() {
-
         if (!parsed) parseRLP();
-        return commandCode;
+        return HELLO.asByte();
     }
 
     public byte getProtocolVersion() {
-
         if (!parsed) parseRLP();
         return protocolVersion;
     }
 
     public byte getNetworkId() {
-
         if (!parsed) parseRLP();
         return networkId;
     }
 
     public String getClientId() {
-
         if (!parsed) parseRLP();
         return clientId;
     }
 
     public byte getCapabilities() {
-
         if (!parsed) parseRLP();
         return capabilities;
     }
 
     public short getPeerPort() {
-
         if (!parsed) parseRLP();
         return peerPort;
     }
 
     public byte[] getPeerId() {
-
         if (!parsed) parseRLP();
         return peerId;
     }
 
     public String toString(){
-
-        return "Hello Message [ command=" + this.commandCode + " " +
+        return "Hello Message [ command=" + HELLO.asByte() + " " +
                 " protocolVersion=" + this.protocolVersion + " " +
                 " networkId=" + this.networkId + " " +
                 " clientId= " + this.clientId + " " +
@@ -138,7 +121,6 @@ public class HelloMessage extends Message {
                 " peerPort= " + this.peerPort + " " +
                 " peerId= " + Hex.toHexString(this.peerId) + " " +
                 "]";
-
     }
 }
 
