@@ -65,7 +65,7 @@ public class StaticMessages {
 
         byte[] peerIdBytes = Utils.hexStringToByteArr(peerId);
 
-        HELLO_MESSAGE = new HelloMessage((byte)0x0C, (byte)0x00, "EthereumJ [v0.0.1] pure java [by Roman Mandeleil]",
+        HELLO_MESSAGE = new HelloMessage((byte)0x0E, (byte)0x00, "EthereumJ [v0.0.1] pure java [by Roman Mandeleil]",
                 (byte)0b00000111, (short)30303, peerIdBytes);
 
 /*

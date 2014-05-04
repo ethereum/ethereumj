@@ -6,9 +6,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
+
 import org.bouncycastle.util.encoders.Hex;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
+import org.ethereum.net.Command;
 import org.ethereum.net.RLP;
 import org.ethereum.net.message.*;
 import org.ethereum.net.rlp.RLPList;
@@ -17,6 +19,7 @@ import org.ethereum.util.Utils;
 
 import java.util.*;
 
+import static org.ethereum.net.Command.*;
 
 /**
  * www.ethereumJ.com
@@ -58,9 +61,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
         // TODO: send hello
         // TODO: send ping schedule another ping
-
         // TODO: ByteBuf vs Stream vs new byte ???
-
 
         final ByteBuf buffer = ctx.alloc().buffer(HELLO_MESSAGE.length + 8);
 
@@ -68,7 +69,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         buffer.writeBytes(HELLO_MESSAGE_LEN);
         buffer.writeBytes(HELLO_MESSAGE);
         ctx.writeAndFlush(buffer);
-
 
         // sample for pinging in background
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -121,7 +121,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 sendGetChain(ctx);
             }
         }, 10000);
-
 /*
         timer.schedule(new TimerTask() {
 
@@ -132,23 +131,19 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
         }, 10000);
 */
-
     }
 
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
-
         byte[] payload = (byte[]) msg;
 
         System.out.print("msg: ");
         Utils.printHexStringForByteArray(payload);
 
         byte command = RLP.getCommandCode(payload);
-
         // got HELLO
-        if ((int) (command & 0xFF) == 0x00) {
+        if (Command.fromInt(command) == HELLO) {
 
             System.out.println("[Recv: HELLO]" );
             RLPList rlpList = new RLPList();
@@ -164,12 +159,10 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             System.out.println(helloMessage.toString());
             if (peerListener != null) peerListener.console(helloMessage.toString());
-
         }
 
-
         // got DISCONNECT
-        if ((int) (command & 0xFF) == 0x01) {
+        if (Command.fromInt(command) == DISCONNECT) {
 
             System.out.println("[Recv: DISCONNECT]");
             if (peerListener != null) peerListener.console("[Recv: DISCONNECT]");
@@ -180,33 +173,26 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             System.out.println(disconnectMessage);
             if (peerListener != null) peerListener.console(disconnectMessage.toString());
-
         }
 
         // got PING send pong
-        if ((int) (command & 0xFF) == 0x02) {
-
+        if (Command.fromInt(command) == PING) {
             System.out.println("[Recv: PING]");
             if (peerListener != null) peerListener.console("[Recv: PING]");
-
             sendPong(ctx);
         }
 
         // got PONG mark it
-        if ((int) (command & 0xFF) == 0x03) {
-
+        if (Command.fromInt(command) == PONG) {
             System.out.println("[Recv: PONG]" );
             if (peerListener != null) peerListener.console("[Recv: PONG]");
-
             this.lastPongTime = System.currentTimeMillis();
         }
 
         // got GETPEERS send peers
-        if ((int) (command & 0xFF) == 0x10) {
-
+        if (Command.fromInt(command) == GET_PEERS) {
             System.out.println("[Recv: GETPEERS]" );
             if (peerListener != null) peerListener.console("[Recv: GETPEERS]");
-
 
             String answer = "22 40 08 91 00 00 00 50 F8 4E 11 F8 4B C5 36 81 " +
                     "CC 0A 29 82 76 5F B8 40 D8 D6 0C 25 80 FA 79 5C " +
@@ -225,14 +211,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             answer = "22 40 08 91 00 00 00 02 C1 10 ";
 
             answerBytes = Utils.hexStringToByteArr(answer);
-
             buffer = ctx.alloc().buffer(answerBytes.length);
             buffer.writeBytes(answerBytes);
             ctx.writeAndFlush(buffer);
         }
 
         // got PEERS
-        if ((int) (command & 0xFF) == 0x11) {
+        if (Command.fromInt(command) == PEERS) {
 
             System.out.println("[Recv: PEERS]");
             if (peerListener != null) peerListener.console("[Recv: PEERS]");
@@ -248,7 +233,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         // got TRANSACTIONS
-        if ((int) (command & 0xFF) == 0x12) {
+        if (Command.fromInt(command) == TRANSACTIONS) {
 
             System.out.println("Recv: TRANSACTIONS]");
             if (peerListener != null) peerListener.console("Recv: TRANSACTIONS]");
@@ -265,7 +250,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         // got BLOCKS
-        if ((int) (command & 0xFF) == 0x13) {
+        if (Command.fromInt(command) == BLOCKS) {
             System.out.println("[Recv: BLOCKS]");
             if (peerListener != null) peerListener.console("[Recv: BLOCKS]");
 
@@ -281,7 +266,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         // got GETCHAIN
-        if ((int) (command & 0xFF) == 0x14) {
+        if (Command.fromInt(command) == GET_CHAIN) {
             System.out.println("[Recv: GET_CHAIN]");
             if (peerListener != null) peerListener.console("[Recv: GET_CHAIN]");
 
@@ -294,7 +279,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         // got NOTINCHAIN
-        if ((int) (command & 0xFF) == 0x15) {
+        if (Command.fromInt(command) == NOT_IN_CHAIN) {
             System.out.println("[Recv: NOT_IN_CHAIN]");
             if (peerListener != null) peerListener.console("[Recv: NOT_IN_CHAIN]");
 
@@ -307,7 +292,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         // got GETTRANSACTIONS
-        if ((int) (command & 0xFF) == 0x16) {
+        if (Command.fromInt(command) == GET_TRANSACTIONS) {
             System.out.println("[Recv: GET_TRANSACTIONS]");
             if (peerListener != null) peerListener.console("[Recv: GET_TRANSACTIONS]");
 
