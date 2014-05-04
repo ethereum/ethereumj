@@ -367,18 +367,6 @@ public class ECKey implements Serializable {
     }
     
     /**
-     * Signs a text message using the standard Bitcoin messaging signing format and returns the signature as a base64
-     * encoded string.
-     *
-     * @throws IllegalStateException if this ECKey does not have the private part.
-     */
-    public String signBitcoinMessage(String message) {
-        byte[] data = ByteUtil.formatForBitcoinSigning(message);
-        byte[] hash = HashUtil.doubleDigest(data);
-        return sign(hash).toBase64();
-    }
-    
-    /**
      * Takes the sha3 hash (32 bytes) of data and returns the ECDSA signature
      *
      * @throws IllegalStateException if this ECKey does not have the private part.
@@ -400,23 +388,6 @@ public class ECKey implements Serializable {
             throw new RuntimeException("Could not construct a recoverable key. This should never happen.");
         sig.v = (byte) (recId + 27 + (isCompressed() ? 4 : 0));
         return sig;
-    }
-
-    /**
-     * Given a piece of text and a message signature encoded in base64, returns an ECKey
-     * containing the public key that was used to sign it. This can then be compared to the expected public key to
-     * determine if the signature was correct.
-     * 
-     * @param message a piece of human readable text that was signed
-     * @param signatureBase64 The Bitcoin-format message signature in base64
-     * @throws SignatureException If the public key could not be recovered or if there was a signature format error.
-     */
-    public static ECKey signedBitcoinMessageToKey(String message, String signatureBase64) throws SignatureException {
-        byte[] messageBytes = ByteUtil.formatForBitcoinSigning(message);
-        // Note that the C++ code doesn't actually seem to specify any character encoding. Presumably it's whatever
-        // JSON-SPIRIT hands back. Assume UTF-8 for now.
-        byte[] messageHash = HashUtil.doubleDigest(messageBytes);
-        return signatureToKey(messageHash, signatureBase64);
     }
     
     /**
@@ -534,16 +505,6 @@ public class ECKey implements Serializable {
         } else
             return false;
         return true;
-    }
-
-    /**
-     * Convenience wrapper around {@link ECKey#signedBitcoinMessageToKey(String, String)}. If the key derived from the
-     * signature is not the same as this one, throws a SignatureException.
-     */
-    public void verifyBitcoinMessage(String message, String signatureBase64) throws SignatureException {
-        ECKey key = ECKey.signedBitcoinMessageToKey(message, signatureBase64);
-        if (!key.pub.equals(pub))
-            throw new SignatureException("Signature did not match for message");
     }
 
     /**
