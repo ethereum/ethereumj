@@ -44,16 +44,7 @@ public class PeersMessage extends Message {
 
             RLPList peerParams = (RLPList)paramsList.getElement(i);
 
-            RLPItem ip_a = (RLPItem)((RLPList) peerParams.getElement(0)).getElement(0);
-            RLPItem ip_b = (RLPItem)((RLPList) peerParams.getElement(0)).getElement(1);
-            RLPItem ip_c = (RLPItem)((RLPList) peerParams.getElement(0)).getElement(2);
-            RLPItem ip_d = (RLPItem)((RLPList) peerParams.getElement(0)).getElement(3);
-            byte ipA = ip_a.getData() == null ? 0 : ip_a.getData()[0];
-            byte ipB = ip_b.getData() == null ? 0 : ip_b.getData()[0];
-            byte ipC = ip_c.getData() == null ? 0 : ip_c.getData()[0];
-            byte ipD = ip_d.getData() == null ? 0 : ip_d.getData()[0];
-
-            byte[] ip = new byte[]{ipA, ipB, ipC, ipD};
+            byte[] ip = ((RLPItem) peerParams.getElement(0)).getData();
 
             byte[] shortData = ((RLPItem) peerParams.getElement(1)).getData();
 
