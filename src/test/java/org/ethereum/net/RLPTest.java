@@ -2,6 +2,7 @@ package org.ethereum.net;
 
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.net.rlp.RLP;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
 import org.junit.Test;

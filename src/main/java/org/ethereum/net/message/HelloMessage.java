@@ -1,8 +1,10 @@
 package org.ethereum.net.message;
 
 import org.spongycastle.util.encoders.Hex;
+
 import static org.ethereum.net.Command.HELLO;
-import org.ethereum.net.RLP;
+
+import org.ethereum.net.rlp.RLP;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
 
