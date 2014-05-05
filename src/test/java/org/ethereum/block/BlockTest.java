@@ -2,7 +2,7 @@ package org.ethereum.block;
 
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.net.RLP;
+import org.ethereum.net.rlp.RLP;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.vo.Block;
 import org.junit.Test;
