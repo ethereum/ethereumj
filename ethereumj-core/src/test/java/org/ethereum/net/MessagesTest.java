@@ -11,6 +11,7 @@ import org.ethereum.net.message.GetChainMessage;
 import org.ethereum.net.message.HelloMessage;
 import org.ethereum.net.message.NotInChainMessage;
 import org.ethereum.net.message.PeersMessage;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.net.rlp.RLP;
 import org.ethereum.net.rlp.RLPList;
@@ -90,8 +91,7 @@ public class MessagesTest {
         DisconnectMessage disconnectMessage = new DisconnectMessage(rlpList);
         System.out.println(disconnectMessage);
 
-        assertEquals(disconnectMessage.getReason(),
-                DisconnectMessage.REASON_DISCONNECT_REQUESTED);
+        assertEquals(disconnectMessage.getReason(), ReasonCode.DISCONNECT_REQUESTED);
     }
 
     @Test /* DisconnectMessage 2 */
@@ -105,8 +105,7 @@ public class MessagesTest {
         DisconnectMessage disconnectMessage = new DisconnectMessage(rlpList);
         System.out.println(disconnectMessage);
 
-        assertEquals(disconnectMessage.getReason(),
-                DisconnectMessage.REASON_TCP_ERROR);
+        assertEquals(disconnectMessage.getReason(), ReasonCode.TCP_ERROR);
     }
 
     /* PEERS */
