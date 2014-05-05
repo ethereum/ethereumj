@@ -35,7 +35,7 @@ import org.ethereum.net.message.PeersMessage;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.BlockData;
+import org.ethereum.net.vo.Block;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
@@ -266,7 +266,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             RLP.parseObjects(payload, rlpList);
 
             BlocksMessage blocksMessage = new BlocksMessage(rlpList);
-            List<BlockData> blockList = blocksMessage.getBlockDataList();
+            List<Block> blockList = blocksMessage.getBlockDataList();
 
             MainData.instance.addBlocks(blockList);
             System.out.println(blocksMessage);

@@ -27,7 +27,6 @@ import java.util.Arrays;
 
 import javax.annotation.Nullable;
 
-import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.asn1.sec.SECNamedCurves;
@@ -296,6 +295,12 @@ public class ECKey implements Serializable {
         
         public static ECDSASignature fromComponents(byte[] r, byte[] s) {
             return new ECDSASignature(new BigInteger(r), new BigInteger(s));
+        }
+        
+        public static ECDSASignature fromComponents(byte[] r, byte[] s, byte v) {
+            ECDSASignature signature = new ECDSASignature(new BigInteger(r), new BigInteger(s));
+            signature.v = v;
+            return signature;
         }
 
         /**

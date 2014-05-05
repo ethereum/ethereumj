@@ -3,9 +3,9 @@ package org.ethereum.manager;
 import com.maxmind.geoip.Location;
 
 import org.ethereum.geodb.IpGeoDB;
-import org.ethereum.net.vo.BlockData;
+import org.ethereum.net.vo.Block;
 import org.ethereum.net.vo.PeerData;
-import org.ethereum.net.vo.TransactionData;
+import org.ethereum.net.vo.Transaction;
 
 import java.util.*;
 
@@ -30,6 +30,6 @@ public class MainData {
         }
     }
 
-    public void addBlocks(List<BlockData> blocks) {}
-    public void addTransactions(List<TransactionData> transactions) {}
+    public void addBlocks(List<Block> blocks) {}
+    public void addTransactions(List<Transaction> transactions) {}
 }

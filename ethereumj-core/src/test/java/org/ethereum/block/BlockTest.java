@@ -4,7 +4,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.RLP;
 import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.BlockData;
+import org.ethereum.net.vo.Block;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -131,7 +131,7 @@ public class BlockTest {
         RLPList rlpList = new RLPList();
         RLP.parseObjects(payload, rlpList);
 
-        BlockData blockData = new BlockData(rlpList);
+        Block blockData = new Block(rlpList);
         RLPList.recursivePrint(rlpList);
     }
 }

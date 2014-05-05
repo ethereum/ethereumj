@@ -1,7 +1,6 @@
 package org.ethereum.net.vo;
 
 import org.spongycastle.util.encoders.Hex;
-import org.ethereum.net.rlp.RLPList;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -13,39 +12,27 @@ import java.net.UnknownHostException;
  */
 public class PeerData {
 
-    RLPList rawData;
-    boolean parsed = false;
+	private byte[] ip;
+	private short  port;
+	private byte[] peerId;
 
-    byte[] ip;
-    short  port;
-    byte[] peerId;
-
-    transient boolean isOnline = false;
-    transient long    lastCheckTime = 0;
-
-    public PeerData(RLPList rlpList){
-        rawData = rlpList;
-        parsed = false;
-    }
+	private transient boolean isOnline = false;
+	private transient long    lastCheckTime = 0;
 
     public PeerData(byte[] ip, short port, byte[] peerId) {
         this.ip = ip;
         this.port = port;
         this.peerId = peerId;
-        parsed = true;
     }
 
     public InetAddress getInetAddress(){
-
         InetAddress addr = null;
-
         try {
             addr = InetAddress.getByAddress(ip);
         } catch (UnknownHostException e) {
             e.printStackTrace();
             throw new Error("malformed ip");
         }
-
         return addr;
     }
 
@@ -76,7 +63,6 @@ public class PeerData {
     public void setLastCheckTime(long lastCheckTime) {
         this.lastCheckTime = lastCheckTime;
     }
-
 
     @Override
     public String toString() {
