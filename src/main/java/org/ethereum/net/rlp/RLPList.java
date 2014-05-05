@@ -20,12 +20,10 @@ public class RLPList implements RLPElement{
     }
 
     public void addItem(RLPElement element){
-
         list.add(element);
     }
 
     public RLPElement getElement(int index){
-
         return list.get(index);
     }
 
@@ -52,17 +50,13 @@ public class RLPList implements RLPElement{
 		if (element instanceof RLPList) {
 
 			RLPList rlpList = (RLPList) element;
-			
-			System.out.print("[");
-			
+			System.out.print("[");			
 			for (RLPElement singleElement : rlpList.getList()) {
 				recursivePrint(singleElement);
 			}
 			System.out.print("]");
 		} else {
-
 			String hex = Utils.toHexString(((RLPItem) element).getData());
-
 			System.out.print(hex + ", ");
 		}
 	}

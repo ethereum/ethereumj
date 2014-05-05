@@ -61,7 +61,6 @@ public class BlocksMessage extends Message {
                 sb.append("[").append(transactionData).append("]\n");
             }
         }
-
         return "Blocks Message [\n" +
                   sb.toString()
                 + " ]";

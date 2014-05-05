@@ -122,7 +122,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         timer.schedule(new TimerTask() {
 
             public void run() {
-
                 System.out.println("[Send: TX]");
                 sendTx(ctx);
             }
