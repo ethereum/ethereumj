@@ -11,21 +11,41 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 13/04/14 19:34
+ * The block in Ethereum is the collection of relevant pieces of information 
+ * (known as the blockheader), H, together with information corresponding to
+ * the comprised transactions, R, and a set of other blockheaders U that are known 
+ * to have a parent equal to the present block’s parent’s parent 
+ * (such blocks are known as uncles).
  */
 public class Block {
+
+	private static int LIMIT_FACTOR = (int) Math.pow(2, 16);
+	private static double EMA_FACTOR = 1.5;
+	/* A scalar value equal to the current limit of gas expenditure per block */
+	private static int GAS_LIMIT = (int) Math.pow(10, 6);
 
 	private RLPList rawData;
     private boolean parsed = false;
 
     private byte[] hash;
+    
+    /* The SHA3 256-bit hash of the parent block, in its entirety */
     private byte[] parentHash;
+    /* The SHA3 256-bit hash of the uncles list portion of this block */
     private byte[] unclesHash;
+    /* The 160-bit address to which all fees collected from the 
+     * successful mining of this block be transferred; formally */
     private byte[] coinbase;
+    /* The SHA3 256-bit hash of the root node of the state trie, 
+     * after all transactions are executed and finalisations applied */
     private byte[] stateHash;
-    private byte[] txListHash;
+    /* The SHA3 256-bit hash of the root node of the trie structure 
+     * populated with each transaction in the transactions list portion
+     * of the block */
+    private byte[] txTrieHash;
+    /* A scalar value corresponding to the difficulty level of this block. 
+     * This can be calculated from the previous block’s difficulty level 
+     * and the timestamp */
     private byte[] difficulty;
 
     private long timestamp;
@@ -40,12 +60,12 @@ public class Block {
         this.parsed = false;
     }
 
-    public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] stateHash, byte[] txListHash, byte[] difficulty, long timestamp, byte[] extraData, byte[] nonce, List<Transaction> transactionsList, List<Block> uncleList) {
+    public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] stateHash, byte[] txTrieHash, byte[] difficulty, long timestamp, byte[] extraData, byte[] nonce, List<Transaction> transactionsList, List<Block> uncleList) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
         this.coinbase = coinbase;
         this.stateHash = stateHash;
-        this.txListHash = txListHash;
+        this.txTrieHash = txTrieHash;
         this.difficulty = difficulty;
         this.timestamp = timestamp;
         this.extraData = extraData;
@@ -66,7 +86,7 @@ public class Block {
         this.unclesHash      = ((RLPItem) params.get(1)).getData();
         this.coinbase        = ((RLPItem) params.get(2)).getData();
         this.stateHash       = ((RLPItem) params.get(3)).getData();
-        this.txListHash      = ((RLPItem) params.get(4)).getData();
+        this.txTrieHash      = ((RLPItem) params.get(4)).getData();
         this.difficulty      = ((RLPItem) params.get(5)).getData();
 
         byte[] tsBytes       = ((RLPItem) params.get(6)).getData();
@@ -76,12 +96,10 @@ public class Block {
 
         // parse transactions
         List<RLPElement> transactions = ((RLPList) rawData.getElement(1)).getList();
-
         for (RLPElement rlpTx : transactions){
             Transaction tx = new Transaction((RLPList)rlpTx);
             this.transactionsList.add(tx);
         }
-
         // parse uncles
         List<RLPElement> uncleBlocks = ((RLPList) rawData.getElement(2)).getList();
         for (RLPElement rawUncle : uncleBlocks){
@@ -96,6 +114,11 @@ public class Block {
         return hash;
     }
 
+    public Block getParent() {
+    	// TODO: Implement
+    	return null;
+    }
+    
     public byte[] getParentHash() {
         if (!parsed) parseRLP();
         return parentHash;
@@ -116,9 +139,9 @@ public class Block {
         return stateHash;
     }
 
-    public byte[] getTxListHash() {
+    public byte[] getTxTrieHash() {
         if (!parsed) parseRLP();
-        return txListHash;
+        return txTrieHash;
     }
 
     public byte[] getDifficulty() {
@@ -152,7 +175,6 @@ public class Block {
     }
 
     // [parent_hash,  uncles_hash, coinbase, state_root, tx_list_hash, difficulty, timestamp, extradata, nonce]
-
     @Override
     public String toString() {
         if (!parsed) parseRLP();
@@ -162,11 +184,37 @@ public class Block {
                 ", unclesHash=" + Utils.toHexString(unclesHash) +
                 ", coinbase=" + Utils.toHexString(coinbase) +
                 ", stateHash=" + Utils.toHexString(stateHash) +
-                ", txListHash=" + Utils.toHexString(txListHash) +
+                ", txTrieHash=" + Utils.toHexString(txTrieHash) +
                 ", difficulty=" + Utils.toHexString(difficulty) +
                 ", timestamp=" + timestamp +
                 ", extraData=" + Utils.toHexString(extraData) +
                 ", nonce=" + Utils.toHexString(nonce) +
                 ']';
     }
+    
+	/**
+	 * Because every transaction published into the blockchain imposes on the
+	 * network the cost of needing to download and verify it, there is a need
+	 * for some regulatory mechanism to prevent abuse.
+	 * 
+	 *  To solve this we simply institute a floating cap:
+	 *   
+	 *  	No block can have more operations than BLK_LIMIT_FACTOR times 
+	 *  	the long-term exponential moving average. 
+	 *  
+	 *  Specifically:
+	 *  
+	 *  	blk.oplimit = floor((blk.parent.oplimit * (EMAFACTOR - 1) 
+	 *  		+ floor(GAS_LIMIT * BLK_LIMIT_FACTOR)) / EMA_FACTOR)
+	 * 
+	 * BLK_LIMIT_FACTOR and EMA_FACTOR are constants that will be set 
+	 * to 65536 and 1.5 for the time being, but will likely be changed 
+	 * after further analysis.
+	 * 
+	 * @return
+	 */
+	public double getOplimit() {
+		return Math.floor((this.getParent().getOplimit() * (EMA_FACTOR - 1) 
+						+ Math.floor(GAS_LIMIT * LIMIT_FACTOR)) / EMA_FACTOR);
+	}
 }

@@ -36,6 +36,18 @@
 			<version>${spongycastle.version}</version>
 		</dependency>
 		<dependency>
+		    <groupId>org.iq80.leveldb</groupId>
+		    <artifactId>leveldb</artifactId>
+		    <version>${leveldb.version}</version>
+		</dependency>
+		<!-- Added Cedarsoft for DeepEqual function  -->
+		<dependency>
+		  <groupId>com.cedarsoftware</groupId>
+		  <artifactId>java-util</artifactId>
+		  <version>1.8.0</version>
+		  <scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>com.fifesoft</groupId>
 			<artifactId>rsyntaxtextarea</artifactId>
 			<version>2.5.0</version>

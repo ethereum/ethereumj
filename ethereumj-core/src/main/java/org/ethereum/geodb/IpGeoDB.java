@@ -16,11 +16,9 @@ public class IpGeoDB {   // change
 
     static{
         try {
-
             URL geiIpDBFile = ClassLoader.getSystemResource("GeoLiteCity.dat");
             File file = new File(geiIpDBFile.toURI());
             cl = new LookupService(file);
-
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -28,17 +26,14 @@ public class IpGeoDB {   // change
 
     private static LookupService cl;
 
-
     public static Location getLocationForIp(InetAddress ip){
         try {
             return cl.getLocation(ip);
         } catch (Throwable e) {
-
             // todo: think about this exception, maybe you can do something more reasonable
             System.out.println(e.getMessage());
 //            e.printStackTrace();
         }
-
         return null;
     }
 }

@@ -29,7 +29,7 @@ public class TransactionsMessage extends Message {
     public void parseRLP() {
         RLPList paramsList = (RLPList) rawData.getElement(0);
 
-        if ( Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0] & 0xFF) != TRANSACTIONS){
+        if (Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0] & 0xFF) != TRANSACTIONS) {
             throw new Error("TransactionMessage: parsing for mal data");
         }
 
@@ -53,7 +53,7 @@ public class TransactionsMessage extends Message {
         return null;
     }
 
-    public String toString(){
+    public String toString() {
         if(!parsed) parseRLP();
         StringBuffer sb = new StringBuffer();
         for (Transaction transactionData : transactions){

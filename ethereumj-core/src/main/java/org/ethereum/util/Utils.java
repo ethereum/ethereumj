@@ -49,9 +49,7 @@ public class Utils {
     }
 
     public static void printHexStringForByte(byte data){
-
         System.out.print("[");
-
         String hexNum = Integer.toHexString ((int) data & 0xFF);
         if (((int) data & 0xFF) < 16) {
             hexNum = "0" + hexNum;
@@ -62,10 +60,8 @@ public class Utils {
     }
 
     public static void printHexStringForByteArray(byte[] data){
-
         System.out.print("[");
         for (int i = 0; i < data.length; ++i){
-
             String hexNum = Integer.toHexString ((int) data[i] & 0xFF);
             if (((int) data[i] & 0xFF) < 16) {
                 hexNum = "0" + hexNum;
@@ -78,7 +74,6 @@ public class Utils {
     }
 
     public static ImageIcon getImageIcon(String resource){
-
         URL imageURL = ClassLoader.getSystemResource(resource);
         ImageIcon image = new ImageIcon(imageURL);
         return image;

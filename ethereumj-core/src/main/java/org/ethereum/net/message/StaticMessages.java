@@ -46,9 +46,7 @@ public class StaticMessages {
                                                 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x03,
                                                 (byte) 0xC2, (byte) 0x01, (byte) 0x08};
 
-
     public static final byte[] GET_CHAIN = {
-
             (byte) 0x22,  (byte) 0x40,  (byte) 0x08,  (byte) 0x91,  (byte) 0x00,  (byte) 0x00,  (byte) 0x00,  (byte) 0x27,
             (byte) 0xF8,  (byte) 0x25,  (byte) 0x14,  (byte) 0xA0,  (byte) 0xAB,  (byte) 0x6B,  (byte) 0x9A,  (byte) 0x56,  (byte) 0x13,
             (byte) 0x97,  (byte) 0x0F,  (byte) 0xAA,  (byte) 0x77,  (byte) 0x1B,  (byte) 0x12,  (byte) 0xD4,  (byte) 0x49,
