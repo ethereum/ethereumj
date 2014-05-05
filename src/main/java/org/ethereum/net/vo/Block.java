@@ -7,7 +7,6 @@ import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,10 +15,10 @@ import java.util.List;
  * User: Roman Mandeleil
  * Created on: 13/04/14 19:34
  */
-public class BlockData {
+public class Block {
 
-    RLPList rawData;
-    boolean parsed = false;
+	private RLPList rawData;
+    private boolean parsed = false;
 
     private byte[] hash;
     private byte[] parentHash;
@@ -33,15 +32,15 @@ public class BlockData {
     private byte[] extraData;
     private byte[] nonce;
 
-    List<TransactionData> transactionsList = new ArrayList<TransactionData>();
-    List<BlockData> uncleList = new ArrayList<BlockData>();
+    List<Transaction> transactionsList = new ArrayList<Transaction>();
+    List<Block> uncleList = new ArrayList<Block>();
 
-    public BlockData(RLPList rawData) {
+    public Block(RLPList rawData) {
         this.rawData = rawData;
         this.parsed = false;
     }
 
-    public BlockData(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] stateHash, byte[] txListHash, byte[] difficulty, long timestamp, byte[] extraData, byte[] nonce, List<TransactionData> transactionsList, List uncleList) {
+    public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] stateHash, byte[] txListHash, byte[] difficulty, long timestamp, byte[] extraData, byte[] nonce, List<Transaction> transactionsList, List<Block> uncleList) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
         this.coinbase = coinbase;
@@ -54,7 +53,6 @@ public class BlockData {
         this.transactionsList = transactionsList;
         this.uncleList = uncleList;
         this.parsed = true;
-
     }
 
     // [parent_hash,  uncles_hash, coinbase, state_root, tx_list_hash, difficulty, timestamp, extradata, nonce]
@@ -76,24 +74,18 @@ public class BlockData {
         this.extraData       = ((RLPItem) params.get(7)).getData();
         this.nonce           = ((RLPItem) params.get(8)).getData();
 
-
         // parse transactions
         List<RLPElement> transactions = ((RLPList) rawData.getElement(1)).getList();
-
         for (RLPElement rlpTx : transactions){
-
-            TransactionData tx = new TransactionData((RLPList)rlpTx);
+            Transaction tx = new Transaction((RLPList)rlpTx);
             this.transactionsList.add(tx);
         }
-
         // parse uncles
         List<RLPElement> uncleBlocks = ((RLPList) rawData.getElement(2)).getList();
         for (RLPElement rawUncle : uncleBlocks){
-
-            BlockData blockData = new BlockData((RLPList)rawUncle);
+            Block blockData = new Block((RLPList)rawUncle);
             this.uncleList.add(blockData);
         }
-
         this.parsed = true;
     }
 
@@ -148,12 +140,12 @@ public class BlockData {
         return nonce;
     }
 
-    public List<TransactionData> getTransactionsList() {
+    public List<Transaction> getTransactionsList() {
         if (!parsed) parseRLP();
         return transactionsList;
     }
 
-    public List<BlockData> getUncleList() {
+    public List<Block> getUncleList() {
         if (!parsed) parseRLP();
         return uncleList;
     }

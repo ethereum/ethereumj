@@ -8,8 +8,8 @@ import static org.ethereum.net.Command.BLOCKS;
 import org.ethereum.net.Command;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.BlockData;
-import org.ethereum.net.vo.TransactionData;
+import org.ethereum.net.vo.Block;
+import org.ethereum.net.vo.Transaction;
 
 /**
  * www.ethereumJ.com
@@ -18,7 +18,7 @@ import org.ethereum.net.vo.TransactionData;
  */
 public class BlocksMessage extends Message {
 
-    private List<BlockData> blockDataList = new ArrayList<BlockData>();
+    private List<Block> blockDataList = new ArrayList<Block>();
 
     public BlocksMessage(RLPList rawData) {
         super(rawData);
@@ -34,7 +34,7 @@ public class BlocksMessage extends Message {
 
         for (int i = 1; i < paramsList.size(); ++i){
             RLPList rlpData = ((RLPList)paramsList.getElement(i));
-            BlockData blockData = new BlockData(rlpData);
+            Block blockData = new Block(rlpData);
             this.blockDataList.add(blockData);
         }
         parsed = true;
@@ -45,7 +45,7 @@ public class BlocksMessage extends Message {
         return null;
     }
 
-    public List<BlockData> getBlockDataList() {
+    public List<Block> getBlockDataList() {
         if (!parsed) parseRLP();
         return blockDataList;
     }
@@ -53,11 +53,11 @@ public class BlocksMessage extends Message {
 	public String toString() {
 
         StringBuffer sb = new StringBuffer();
-        for (BlockData blockData : this.getBlockDataList()){
+        for (Block blockData : this.getBlockDataList()){
             sb.append("   ").append( blockData.toString() ).append("\n");
 
-            List<TransactionData> transactions = blockData.getTransactionsList();
-            for (TransactionData transactionData : transactions){
+            List<Transaction> transactions = blockData.getTransactionsList();
+            for (Transaction transactionData : transactions){
                 sb.append("[").append(transactionData).append("]\n");
             }
         }

@@ -13,9 +13,9 @@ import org.ethereum.net.message.NotInChainMessage;
 import org.ethereum.net.message.PeersMessage;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.BlockData;
+import org.ethereum.net.vo.Block;
 import org.ethereum.net.vo.PeerData;
-import org.ethereum.net.vo.TransactionData;
+import org.ethereum.net.vo.Transaction;
 import org.ethereum.util.Utils;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -76,7 +76,6 @@ public class MessagesTest {
                 Utils.toHexString(helloMessage.getPeerId()).toUpperCase() );
     }
 
-
     /* DISCONNECT_MESSAGE */
 
     @Test /* DisconnectMessage 1 */
@@ -109,7 +108,6 @@ public class MessagesTest {
                 DisconnectMessage.REASON_TCP_ERROR);
     }
 
-
     /* PEERS */
 
     @Test /*  PeersMessage 1*/
@@ -131,7 +129,6 @@ public class MessagesTest {
         assertEquals(30303, peerData.getPort());
         assertEquals("82A8A5831D3B4FB76CF130CDC8A2B162A85D005D82A1DCC9B73239035EADE6347EDE2FFC86571ABE348EA38699CE886AA3D425FE58182C433434AB4CFD7B5B88",
                 Utils.toHexString( peerData.getPeerId() ).toUpperCase());
-
     }
 
     @Test /*  PeersMessage 2 */
@@ -160,7 +157,6 @@ public class MessagesTest {
         assertEquals(30303, peerData.getPort());
         assertEquals("F6155F1A60143B7D9D5D1A440D7D52FE6809F69E0C6F1E0024457E0D71DD88ADE3B13AAA940C89AC0610952B48BD832C42E343A13E61FFDB06010CFFC345E053",
                 Utils.toHexString( peerData.getPeerId() ).toUpperCase());
-
     }
 
     @Test /* Peers msg parsing performance*/
@@ -199,7 +195,7 @@ public class MessagesTest {
 
         assertEquals(1, transactionsMessage.getTransactions().size());
 
-        TransactionData tx =
+        Transaction tx =
                 transactionsMessage.getTransactions().get(0);
 
         assertEquals("558A3797E0DD3FBFAF761F1ADD6749C7D5DB313FDAC5CBA59F40E28AF7BBACD1",
@@ -236,7 +232,6 @@ public class MessagesTest {
                 Utils.toHexString( tx.getSignatureS() ).toUpperCase());
     }
 
-
     @Test  /* Transactions message 2 */
     public void test_9(){
 
@@ -251,7 +246,7 @@ public class MessagesTest {
 
         assertEquals(3, transactionsMessage.getTransactions().size());
 
-        TransactionData tx =
+        Transaction tx =
                 transactionsMessage.getTransactions().get(0);
 
         assertEquals("4B7D9670A92BF120D5B43400543B69304A14D767CF836A7F6ABFF4EDDE092895",
@@ -287,7 +282,6 @@ public class MessagesTest {
         assertEquals("6D254E662BF7450DD8D835160CBB053463FED0B53F2CDD7F3EA8731919C8E8CC",
                 Utils.toHexString( tx.getSignatureS() ).toUpperCase());
 
-
         tx = transactionsMessage.getTransactions().get(2);
 
         assertEquals("B0251A1BB20B44459DB5B5444AB53EDD9E12C46D0BA07FA401A797BEB967D53C",
@@ -322,9 +316,7 @@ public class MessagesTest {
 
         assertEquals("1E87172A861F6C37B5A9E3A5D0D7393152A7FBE41530E5BB8AC8F35433E5931B",
                 Utils.toHexString(tx.getSignatureS()).toUpperCase());
-
     }
-
 
     /* BLOCKS */
 
@@ -339,12 +331,12 @@ public class MessagesTest {
         RLP.parseObjects(payload, rlpList);
 
         BlocksMessage blocksMessage = new BlocksMessage(rlpList);
-        List<BlockData> list = blocksMessage.getBlockDataList();
+        List<Block> list = blocksMessage.getBlockDataList();
         System.out.println(blocksMessage);
 
         assertEquals(1, list.size());
 
-        BlockData block = list.get(0);
+        Block block = list.get(0);
 
         assertEquals("36A24B56C6104E5A5C0E70B0553F1A4D6109D065D718D7443A6A475EC8C83905",
                 Utils.toHexString(block.getHash()).toUpperCase());
@@ -373,7 +365,6 @@ public class MessagesTest {
                 Utils.toHexString(block.getNonce()).toUpperCase());
     }
 
-
     @Test /* BlocksMessage really big message parsing */
     public void test11(){
 
@@ -384,13 +375,13 @@ public class MessagesTest {
         RLP.parseObjects(payload, rlpList);
 
         BlocksMessage blocksMessage = new BlocksMessage(rlpList);
-        List<BlockData> list = blocksMessage.getBlockDataList();
+        List<Block> list = blocksMessage.getBlockDataList();
         System.out.println(blocksMessage);
 
 
         assertEquals(32, list.size());
 
-        BlockData block = list.get(31);
+        Block block = list.get(31);
 
         assertEquals("518916DFB79C390BD7BFF75712174512C2F96BEC42A3F573355507AD1588CE0C",
                 Utils.toHexString(block.getHash()).toUpperCase());
@@ -419,10 +410,7 @@ public class MessagesTest {
                 Utils.toHexString(block.getNonce()).toUpperCase());
 
         System.out.println(blocksMessage);
-
     }
-
-
 
     /* GET_CHAIN */
 
@@ -449,11 +437,7 @@ public class MessagesTest {
 
         assertEquals("03AF21F3939C29C231200B1F790F16421A8923254CBF2A90455B9B8F28BE4562",
                 Utils.toHexString( getChainMessage.getBlockHashList().get(25) ).toUpperCase());
-
-
-
     }
-
 
     /* NOT_IN_CHAIN */
 
@@ -472,7 +456,5 @@ public class MessagesTest {
         assertEquals("E5E441F0877116011CCDECE2501A50B40C40418377037E16D0282B2B5E347138",
                 Utils.toHexString(notInChainMessage.getHash()).toUpperCase());
     }
-
-
 }
 
