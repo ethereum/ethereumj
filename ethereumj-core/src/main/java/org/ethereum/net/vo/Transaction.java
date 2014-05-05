@@ -7,35 +7,49 @@ import org.ethereum.net.rlp.RLPList;
 import org.ethereum.util.Utils;
 
 /**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 21/04/14 09:19
+ * A transaction (formally, T ) is a single cryptographically 
+ * signed instruction sent by an actor external to Ethereum. 
+ * An external actor can be a person (via a mobile device or desktop computer) 
+ * or could be from a piece of automated software running on a server. 
+ * There are two types of transactions: those which result in message calls 
+ * and those which result in the creation of new contracts.
  */
 public class Transaction {
 
     private RLPList rawData;
     private boolean parsed = false;
 
-// creation contract tx or simple send tx
-// [ nonce, value, receiveAddress, gasPrice, gasDeposit, data, signatureV, signatureR, signatureS ]
-// or
-// [ nonce, endowment, 0, gasPrice, gasDeposit (for init), body, init, signatureV, signatureR, signatureS ]
-
+    /* creation contract tx or simple send tx
+     * [ nonce, value, receiveAddress, gasPrice, gasDeposit, data, signatureV, signatureR, signatureS ]
+     * or
+     * [ nonce, endowment, 0, gasPrice, gasDeposit (for init), body, init, signatureV, signatureR, signatureS ]
+     */
+    
+    /* SHA3 hash of the rlpEncoded transaction */
     private byte[] hash;
+    /* a counter used to make sure each transaction can only be processed once */
     private byte[] nonce;
+    /* the amount of ether to transfer (calculated as wei) */
     private byte[] value;
-
-    // In creation transaction the receive address is - 0
-    private byte[] receiveAddress;
+    /* the address of the destination account 
+     * In creation transaction the receive address is - 0 */
+    private byte[] receiveAddress;   
+	/* the amount of ether to pay as a transaction fee 
+	 * to the miner for each unit of gas */
     private byte[] gasPrice;
-    private byte[] gas;
-
-    // Contract creation [data] will hold the contract
-    // for other transaction [data] can hold data
+	/* the amount of "gas" to allow for the computation. 
+	 * Gas is the fuel of the computational engine; 
+	 * every computational step taken and every byte added 
+	 * to the state or transaction list consumes some gas. */
+    private byte[] gasLimit;
+	/* An unlimited size byte array specifying 
+	 * either input [data] of the message call 
+	 * or the [body] for a new contract */
     private byte[] data;
+	/* Initialisation code for a new contract */
     private byte[] init;
-
-    // Signature
+	/* the elliptic curve signature 
+	 * (including public key recovery bits) */
     private ECDSASignature signature;
 
     public Transaction(RLPList rawData) {
@@ -48,7 +62,7 @@ public class Transaction {
         this.value = value;
         this.receiveAddress = recieveAddress;
         this.gasPrice = gasPrice;
-        this.gas = gas;
+        this.gasLimit = gas;
         this.data = data;
         this.signature = ECDSASignature.fromComponents(r, s, v);
         parsed = true;
@@ -61,7 +75,7 @@ public class Transaction {
         this.value =          ((RLPItem) rawData.getElement(1)).getData();
         this.receiveAddress = ((RLPItem) rawData.getElement(2)).getData();
         this.gasPrice =       ((RLPItem) rawData.getElement(3)).getData();
-        this.gas =            ((RLPItem) rawData.getElement(4)).getData();
+        this.gasLimit =       ((RLPItem) rawData.getElement(4)).getData();
         this.data =           ((RLPItem) rawData.getElement(5)).getData();
 
         if (rawData.size() == 9){  // Simple transaction
@@ -113,9 +127,9 @@ public class Transaction {
         return gasPrice;
     }
 
-    public byte[] getGas() {
+    public byte[] getGasLimit() {
         if (!parsed) rlpParse();
-        return gas;
+        return gasLimit;
     }
 
     public byte[] getData() {
@@ -141,7 +155,7 @@ public class Transaction {
                 ", value=" + Utils.toHexString(value) +
                 ", receiveAddress=" + Utils.toHexString(receiveAddress) +
                 ", gasPrice=" + Utils.toHexString(gasPrice) +
-                ", gas=" + Utils.toHexString(gas) +
+                ", gas=" + Utils.toHexString(gasLimit) +
                 ", data=" + Utils.toHexString(data) +
                 ", init=" + Utils.toHexString(init) +
                 ", signatureV=" + signature.v +
