@@ -12,6 +12,7 @@ import org.ethereum.net.message.HelloMessage;
 import org.ethereum.net.message.NotInChainMessage;
 import org.ethereum.net.message.PeersMessage;
 import org.ethereum.net.message.TransactionsMessage;
+import org.ethereum.net.rlp.RLP;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.vo.Block;
 import org.ethereum.net.vo.PeerData;
