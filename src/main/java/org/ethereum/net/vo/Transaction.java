@@ -1,6 +1,7 @@
 package org.ethereum.net.vo;
 
 import org.ethereum.crypto.ECKey.ECDSASignature;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
@@ -19,10 +20,10 @@ public class Transaction {
     private RLPList rawData;
     private boolean parsed = false;
 
-    /* creation contract tx or simple send tx
-     * [ nonce, value, receiveAddress, gasPrice, gasDeposit, data, signatureV, signatureR, signatureS ]
-     * or
-     * [ nonce, endowment, 0, gasPrice, gasDeposit (for init), body, init, signatureV, signatureR, signatureS ]
+    /* creation contract tx
+     * [ nonce, endowment, 0, gasPrice, gasDeposit (for init), body, init, signature(v, r, s) ]
+     * or simple send tx
+     * [ nonce, value, receiveAddress, gasPrice, gasDeposit, data, signature(v, r, s) ]
      */
     
     /* SHA3 hash of the rlpEncoded transaction */
@@ -146,7 +147,32 @@ public class Transaction {
         if (!parsed) rlpParse();
         return signature;
     }
+    
+	/********* 
+	 * Crypto
+	 */
+    
+	public ECKey getKey() {
+		byte[] hash = this.getHash();	
+		return ECKey.recoverFromSignature(signature.v, signature, hash, true);
+	}
+	
+	public byte[] sender() {
+		ECKey eckey = this.getKey();
+		// Validate the returned key.
+		// Return null if public key isn't in a correct format
+		if (!eckey.isPubKeyCanonical()) {
+			return null;
+		}
+		return eckey.getAddress();
+	}
 
+	public void sign(byte[] privKeyBytes) throws Exception {
+		byte[] hash = this.getHash();
+		ECKey key = ECKey.fromPrivate(privKeyBytes);
+		this.signature = key.sign(hash);
+	}
+	
     @Override
     public String toString() {
         if (!parsed) rlpParse();
