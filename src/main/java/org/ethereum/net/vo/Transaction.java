@@ -1,5 +1,6 @@
 package org.ethereum.net.vo;
 
+import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
@@ -35,25 +36,21 @@ public class Transaction {
     private byte[] init;
 
     // Signature
-    private byte   signatureV;
-    private byte[] signatureR;
-    private byte[] signatureS;
+    private ECDSASignature signature;
 
     public Transaction(RLPList rawData) {
         this.rawData = rawData;
         parsed = false;
     }
 
-    public Transaction(byte[] nonce, byte[] value, byte[] recieveAddress, byte[] gasPrice, byte[] gas, byte[] data, byte signatureV, byte[] signatureR, byte[] signatureS) {
+    public Transaction(byte[] nonce, byte[] value, byte[] recieveAddress, byte[] gasPrice, byte[] gas, byte[] data, byte v, byte[] r, byte[] s) {
         this.nonce = nonce;
         this.value = value;
         this.receiveAddress = recieveAddress;
         this.gasPrice = gasPrice;
         this.gas = gas;
         this.data = data;
-        this.signatureV = signatureV;
-        this.signatureR = signatureR;
-        this.signatureS = signatureS;
+        this.signature = ECDSASignature.fromComponents(r, s, v);
         parsed = true;
     }
 
@@ -68,16 +65,16 @@ public class Transaction {
         this.data =           ((RLPItem) rawData.getElement(5)).getData();
 
         if (rawData.size() == 9){  // Simple transaction
-            this.signatureV =     ((RLPItem) rawData.getElement(6)).getData()[0];
-            this.signatureR =     ((RLPItem) rawData.getElement(7)).getData();
-            this.signatureS =     ((RLPItem) rawData.getElement(8)).getData();
-
+        	byte v =     ((RLPItem) rawData.getElement(6)).getData()[0];
+            byte[] r =     ((RLPItem) rawData.getElement(7)).getData();
+            byte[] s =     ((RLPItem) rawData.getElement(8)).getData();
+            this.signature = ECDSASignature.fromComponents(r, s, v);
         } else if (rawData.size() == 10){ // Contract creation transaction
             this.init =           ((RLPItem) rawData.getElement(6)).getData();
-            this.signatureV =     ((RLPItem) rawData.getElement(7)).getData()[0];
-            this.signatureR =     ((RLPItem) rawData.getElement(8)).getData();
-            this.signatureS =     ((RLPItem) rawData.getElement(9)).getData();
-
+            byte v =     ((RLPItem) rawData.getElement(7)).getData()[0];
+            byte[] r =     ((RLPItem) rawData.getElement(8)).getData();
+            byte[] s =     ((RLPItem) rawData.getElement(9)).getData();
+            this.signature = ECDSASignature.fromComponents(r, s, v);
         } else throw new Error("Wrong tx data element list size");
 
         this.parsed = true;
@@ -131,19 +128,9 @@ public class Transaction {
         return init;
     }
 
-    public byte getSignatureV() {
+    public ECDSASignature getSignature() {
         if (!parsed) rlpParse();
-        return signatureV;
-    }
-
-    public byte[] getSignatureR() {
-        if (!parsed) rlpParse();
-        return signatureR;
-    }
-
-    public byte[] getSignatureS() {
-        if (!parsed) rlpParse();
-        return signatureS;
+        return signature;
     }
 
     @Override
@@ -157,9 +144,9 @@ public class Transaction {
                 ", gas=" + Utils.toHexString(gas) +
                 ", data=" + Utils.toHexString(data) +
                 ", init=" + Utils.toHexString(init) +
-                ", signatureV=" + signatureV +
-                ", signatureR=" + Utils.toHexString(signatureR) +
-                ", signatureS=" + Utils.toHexString(signatureS) +
+                ", signatureV=" + signature.v +
+                ", signatureR=" + Utils.toHexString(signature.r.toByteArray()) +
+                ", signatureS=" + Utils.toHexString(signature.s.toByteArray()) +
                 ']';
     }
 }

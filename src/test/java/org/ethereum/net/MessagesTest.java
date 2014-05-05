@@ -223,13 +223,13 @@ public class MessagesTest {
                 Utils.toHexString( tx.getInit() ).toUpperCase());
 
         assertEquals("1B",
-                Utils.toHexString( new byte[] {tx.getSignatureV()} ).toUpperCase());
+                Utils.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
 
         assertEquals("5E3868194605F1647593B842725818CCFA6A38651A728715133A8E97CDCFAC54",
-                Utils.toHexString( tx.getSignatureR() ).toUpperCase());
+                Utils.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
 
         assertEquals("0FF91628D04B215EBCCFD5F4FC34CC1B45DF32F6B4609FBB0DE42E8522264467",
-                Utils.toHexString( tx.getSignatureS() ).toUpperCase());
+                Utils.toHexString( tx.getSignature().s.toByteArray() ).toUpperCase());
     }
 
     @Test  /* Transactions message 2 */
@@ -274,13 +274,13 @@ public class MessagesTest {
                 Utils.toHexString( tx.getInit() ).toUpperCase());
 
         assertEquals("1C",
-                Utils.toHexString( new byte[] {tx.getSignatureV()} ).toUpperCase());
+                Utils.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
 
         assertEquals("7F6EB94576346488C6253197BDE6A7E59DDC36F2773672C849402AA9C402C3C4",
-                Utils.toHexString( tx.getSignatureR() ).toUpperCase());
+                Utils.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
 
         assertEquals("6D254E662BF7450DD8D835160CBB053463FED0B53F2CDD7F3EA8731919C8E8CC",
-                Utils.toHexString( tx.getSignatureS() ).toUpperCase());
+                Utils.toHexString( tx.getSignature().s.toByteArray() ).toUpperCase());
 
         tx = transactionsMessage.getTransactions().get(2);
 
@@ -309,13 +309,13 @@ public class MessagesTest {
                 Utils.toHexString( tx.getInit() ).toUpperCase());
 
         assertEquals("1B",
-                Utils.toHexString( new byte[] {tx.getSignatureV()} ).toUpperCase());
+                Utils.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
 
         assertEquals("D05887574456C6DE8F7A0D172342C2CBDD4CF7AFE15D9DBB8B75B748BA6791C9",
-                Utils.toHexString( tx.getSignatureR() ).toUpperCase());
+                Utils.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
 
         assertEquals("1E87172A861F6C37B5A9E3A5D0D7393152A7FBE41530E5BB8AC8F35433E5931B",
-                Utils.toHexString(tx.getSignatureS()).toUpperCase());
+                Utils.toHexString(tx.getSignature().s.toByteArray()).toUpperCase());
     }
 
     /* BLOCKS */
