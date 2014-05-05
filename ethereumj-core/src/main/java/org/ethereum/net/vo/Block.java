@@ -32,8 +32,8 @@ public class Block {
     private byte[] extraData;
     private byte[] nonce;
 
-    List<Transaction> transactionsList = new ArrayList<Transaction>();
-    List<Block> uncleList = new ArrayList<Block>();
+    private List<Transaction> transactionsList = new ArrayList<Transaction>();
+    private List<Block> uncleList = new ArrayList<Block>();
 
     public Block(RLPList rawData) {
         this.rawData = rawData;
@@ -151,7 +151,6 @@ public class Block {
     }
 
     // [parent_hash,  uncles_hash, coinbase, state_root, tx_list_hash, difficulty, timestamp, extradata, nonce]
-
     @Override
     public String toString() {
         if (!parsed) parseRLP();
