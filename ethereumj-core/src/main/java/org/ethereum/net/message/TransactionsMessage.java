@@ -4,7 +4,7 @@ import static org.ethereum.net.Command.TRANSACTIONS;
 import org.ethereum.net.Command;
 import org.ethereum.net.rlp.RLPItem;
 import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.TransactionData;
+import org.ethereum.net.vo.Transaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class TransactionsMessage extends Message {
 
-    private List<TransactionData> transactions = new ArrayList<TransactionData>();
+    private List<Transaction> transactions = new ArrayList<Transaction>();
 
     public TransactionsMessage() {
     }
@@ -33,17 +33,17 @@ public class TransactionsMessage extends Message {
             throw new Error("TransactionMessage: parsing for mal data");
         }
 
-        transactions = new ArrayList<TransactionData>();
+        transactions = new ArrayList<Transaction>();
         int size = paramsList.getList().size();
         for (int i = 1; i < size; ++i){
             RLPList rlpTxData = (RLPList) paramsList.getElement(i);
-            TransactionData tx = new TransactionData(rlpTxData);
+            Transaction tx = new Transaction(rlpTxData);
             transactions.add(tx);
         }
         parsed = true;
     }
 
-    public List<TransactionData> getTransactions() {
+    public List<Transaction> getTransactions() {
         if (!parsed) parseRLP();
         return transactions;
     }
@@ -56,7 +56,7 @@ public class TransactionsMessage extends Message {
     public String toString(){
         if(!parsed) parseRLP();
         StringBuffer sb = new StringBuffer();
-        for (TransactionData transactionData : transactions){
+        for (Transaction transactionData : transactions){
             sb.append("   ").append(transactionData).append("\n");
         }
         return "Transactions Message [\n" + sb.toString() + " ]";

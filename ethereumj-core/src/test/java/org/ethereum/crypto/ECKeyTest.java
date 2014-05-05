@@ -117,8 +117,7 @@ public class ECKeyTest {
     	ECKey key = ECKey.fromPublicOnly(pubKey);
         BigInteger r = new BigInteger("28157690258821599598544026901946453245423343069728565040002908283498585537001");
         BigInteger s = new BigInteger("30212485197630673222315826773656074299979444367665131281281249560925428307087");
-        ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray());
-        sig.v = 28;
+        ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray(), (byte) 28);
         key.verify(HashUtil.sha3(exampleMessage.getBytes()), sig);
     }
     
@@ -126,8 +125,7 @@ public class ECKeyTest {
     public void testVerifySignature2() {
         BigInteger r = new BigInteger("c52c114d4f5a3ba904a9b3036e5e118fe0dbb987fe3955da20f2cd8f6c21ab9c", 16);
         BigInteger s = new BigInteger("6ba4c2874299a55ad947dbc98a25ee895aabf6b625c26c435e84bfd70edf2f69", 16);
-        ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray());
-        sig.v = 0x1b;
+        ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray(), (byte) 0x1b);
         byte[] rawtx = Hex.decode("f82804881bc16d674ec8000094cd2a3d9f938e13cd947ec05abc7fe734df8dd8268609184e72a0006480");
 		try {
 			ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), sig.toBase64());

@@ -1,4 +1,4 @@
-package org.ethereum.net;
+package org.ethereum.net.rlp;
 
 import java.io.UnsupportedEncodingException;
 import java.math.BigInteger;
@@ -7,9 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Queue;
-
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
 
 public class RLP {
 
