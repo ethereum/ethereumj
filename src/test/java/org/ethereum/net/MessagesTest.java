@@ -11,6 +11,7 @@ import org.ethereum.net.message.GetChainMessage;
 import org.ethereum.net.message.HelloMessage;
 import org.ethereum.net.message.NotInChainMessage;
 import org.ethereum.net.message.PeersMessage;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.net.rlp.RLP;
 import org.ethereum.net.rlp.RLPList;
@@ -77,7 +78,6 @@ public class MessagesTest {
                 Utils.toHexString(helloMessage.getPeerId()).toUpperCase() );
     }
 
-
     /* DISCONNECT_MESSAGE */
 
     @Test /* DisconnectMessage 1 */
@@ -91,8 +91,7 @@ public class MessagesTest {
         DisconnectMessage disconnectMessage = new DisconnectMessage(rlpList);
         System.out.println(disconnectMessage);
 
-        assertEquals(disconnectMessage.getReason(),
-        		DisconnectMessage.REASON_DISCONNECT_REQUESTED);
+        assertEquals(disconnectMessage.getReason(), ReasonCode.DISCONNECT_REQUESTED);
     }
 
     @Test /* DisconnectMessage 2 */
@@ -106,8 +105,7 @@ public class MessagesTest {
         DisconnectMessage disconnectMessage = new DisconnectMessage(rlpList);
         System.out.println(disconnectMessage);
 
-        assertEquals(disconnectMessage.getReason(),
-        		DisconnectMessage.REASON_TCP_ERROR);
+        assertEquals(disconnectMessage.getReason(), ReasonCode.TCP_ERROR);
     }
 
     /* PEERS */
@@ -216,7 +214,7 @@ public class MessagesTest {
                 Utils.toHexString( tx.getGasPrice() ).toUpperCase());
 
         assertEquals("64",
-                Utils.toHexString( tx.getGas() ).toUpperCase());
+                Utils.toHexString( tx.getGasLimit() ).toUpperCase());
 
         assertEquals("NULL",
                 Utils.toHexString( tx.getData() ).toUpperCase());
@@ -267,7 +265,7 @@ public class MessagesTest {
                 Utils.toHexString( tx.getGasPrice() ).toUpperCase());
 
         assertEquals("2710",
-                Utils.toHexString( tx.getGas() ).toUpperCase());
+                Utils.toHexString( tx.getGasLimit() ).toUpperCase());
 
         assertEquals("606956330C0D630000003359366000530A0D630000003359602060005301356000533557604060005301600054630000000C58",
                 Utils.toHexString( tx.getData() ).toUpperCase());
@@ -302,7 +300,7 @@ public class MessagesTest {
                 Utils.toHexString( tx.getGasPrice() ).toUpperCase());
 
         assertEquals("2710",
-                Utils.toHexString( tx.getGas() ).toUpperCase());
+                Utils.toHexString( tx.getGasLimit() ).toUpperCase());
 
         assertEquals("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000002D0ACEEE7E5AB874E22CCF8D1A649F59106D74E8",
                 Utils.toHexString( tx.getData() ).toUpperCase());
@@ -317,8 +315,7 @@ public class MessagesTest {
                 Utils.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
 
         assertEquals("1E87172A861F6C37B5A9E3A5D0D7393152A7FBE41530E5BB8AC8F35433E5931B",
-                Utils.toHexString( tx.getSignature().s.toByteArray() ).toUpperCase());
-
+                Utils.toHexString(tx.getSignature().s.toByteArray()).toUpperCase());
     }
 
     /* BLOCKS */
@@ -357,7 +354,7 @@ public class MessagesTest {
                 Utils.toHexString(block.getStateHash()).toUpperCase());
 
         assertEquals("1DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347",
-                Utils.toHexString(block.getTxListHash()).toUpperCase());
+                Utils.toHexString(block.getTxTrieHash()).toUpperCase());
 
         assertEquals("02471A26", Utils.toHexString(block.getDifficulty()).toUpperCase());
         assertEquals(1398260220, block.getTimestamp());
@@ -401,7 +398,7 @@ public class MessagesTest {
                 Utils.toHexString(block.getStateHash()).toUpperCase());
 
         assertEquals("9BFE4817D274EA3EB8672E9FE848C3885B53BBBD1D7C26E6039F90FB96B942B0",
-                Utils.toHexString(block.getTxListHash()).toUpperCase());
+                Utils.toHexString(block.getTxTrieHash()).toUpperCase());
 
         assertEquals("3FF000", Utils.toHexString(block.getDifficulty()).toUpperCase());
         assertEquals(1396643511, block.getTimestamp());

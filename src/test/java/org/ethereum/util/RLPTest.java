@@ -1,4 +1,4 @@
-package org.ethereum.net;
+package org.ethereum.util;
 
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.crypto.HashUtil;
