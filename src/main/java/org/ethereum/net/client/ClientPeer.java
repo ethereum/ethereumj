@@ -31,7 +31,6 @@ public class ClientPeer {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
-
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
@@ -58,18 +57,14 @@ public class ClientPeer {
 
             // Start the client.
             ChannelFuture f = b.connect(host, port).sync(); // (5)
-
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
 
         } catch (InterruptedException ie){
-
            System.out.println("-- ClientPeer: catch (InterruptedException ie) --");
            ie.printStackTrace();
         } finally {
             workerGroup.shutdownGracefully();
         }
-
-
     }
 }

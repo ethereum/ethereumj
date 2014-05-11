@@ -70,7 +70,6 @@ public class Transaction {
     }
 
     public void rlpParse(){
-
         this.hash = HashUtil.sha3(rawData.getRLPData());
         this.nonce =          ((RLPItem) rawData.getElement(0)).getData();
         this.value =          ((RLPItem) rawData.getElement(1)).getData();
@@ -91,7 +90,6 @@ public class Transaction {
             byte[] s =     ((RLPItem) rawData.getElement(9)).getData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
         } else throw new Error("Wrong tx data element list size");
-
         this.parsed = true;
     }
 
@@ -148,6 +146,10 @@ public class Transaction {
         return signature;
     }
     
+	public boolean isContract() {
+		return this.receiveAddress.length == 0;
+	}
+
 	/********* 
 	 * Crypto
 	 */
@@ -172,7 +174,7 @@ public class Transaction {
 		ECKey key = ECKey.fromPrivate(privKeyBytes);
 		this.signature = key.sign(hash);
 	}
-	
+
     @Override
     public String toString() {
         if (!parsed) rlpParse();

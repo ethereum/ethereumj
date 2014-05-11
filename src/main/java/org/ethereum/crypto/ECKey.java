@@ -293,14 +293,14 @@ public class ECKey implements Serializable {
             this.s = s;
         }
         
-        public static ECDSASignature fromComponents(byte[] r, byte[] s) {
+        private static ECDSASignature fromComponents(byte[] r, byte[] s) {
             return new ECDSASignature(new BigInteger(r), new BigInteger(s));
         }
         
         public static ECDSASignature fromComponents(byte[] r, byte[] s, byte v) {
-            ECDSASignature signature = new ECDSASignature(new BigInteger(r), new BigInteger(s));
-            signature.v = v;
-            return signature;
+        	ECDSASignature signature = fromComponents(r, s);
+        	signature.v = v;
+        	return signature;
         }
 
         /**
