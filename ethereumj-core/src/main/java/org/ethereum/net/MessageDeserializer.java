@@ -9,7 +9,7 @@ public class MessageDeserializer {
     /**
      * Get exactly one message payload
      */
-    public static void deserialize(byte [] msgData, int level, int startPos, int endPos){
+    private static void deserialize(byte [] msgData, int level, int startPos, int endPos){
 
         if (msgData == null || msgData.length == 0) return ;
         int pos = startPos;

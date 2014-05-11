@@ -66,13 +66,13 @@ public class PeerData {
 
     @Override
     public String toString() {
-        return "Peer: [ ip=" + getInetAddress()+ ", port=" + getPort() + ", peerId=" + Hex.toHexString( getPeerId() ) + "]";
+        return "Peer: [ip=" + getInetAddress() + ", port=" + getPort() + ", peerId=" + Hex.toHexString(getPeerId()) + "]";
     }
 
     @Override
     public boolean equals(Object obj) {
-        PeerData peerData2 = (PeerData)obj;
-        return this.getInetAddress().equals(peerData2.getInetAddress());
+        PeerData peerData = (PeerData) obj;
+        return this.getInetAddress().equals(peerData.getInetAddress());
     }
 
     @Override

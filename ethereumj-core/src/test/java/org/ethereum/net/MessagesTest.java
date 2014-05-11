@@ -378,7 +378,6 @@ public class MessagesTest {
         List<Block> list = blocksMessage.getBlockDataList();
         System.out.println(blocksMessage);
 
-
         assertEquals(32, list.size());
 
         Block block = list.get(31);

@@ -30,7 +30,7 @@ public enum Command {
     private Command(int cmd) {
         this.cmd = cmd;
     }
-        
+
     public static Command fromInt(int i) {
     	Command type = intToTypeMap.get(Integer.valueOf(i));
         if (type == null) 

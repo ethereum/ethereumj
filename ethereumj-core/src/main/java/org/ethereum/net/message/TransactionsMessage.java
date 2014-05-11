@@ -56,7 +56,7 @@ public class TransactionsMessage extends Message {
     public String toString() {
         if(!parsed) parseRLP();
         StringBuffer sb = new StringBuffer();
-        for (Transaction transactionData : transactions) {
+        for (Transaction transactionData : transactions){
             sb.append("   ").append(transactionData).append("\n");
         }
         return "Transactions Message [\n" + sb.toString() + " ]";

@@ -23,7 +23,7 @@ public class Block {
 	private static double EMA_FACTOR = 1.5;
 	/* A scalar value equal to the current limit of gas expenditure per block */
 	private static int GAS_LIMIT = (int) Math.pow(10, 6);
-	
+
 	private RLPList rawData;
     private boolean parsed = false;
 
@@ -76,7 +76,7 @@ public class Block {
     }
 
     // [parent_hash,  uncles_hash, coinbase, state_root, tx_list_hash, difficulty, timestamp, extradata, nonce]
-    private void parseRLP(){
+    private void parseRLP() {
 
         this.hash = HashUtil.sha3(rawData.getRLPData());
 
@@ -110,7 +110,6 @@ public class Block {
     }
 
     public byte[] getHash(){
-
         if (!parsed) parseRLP();
         return hash;
     }
