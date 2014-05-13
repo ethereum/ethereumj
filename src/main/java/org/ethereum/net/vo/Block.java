@@ -25,6 +25,7 @@ public class Block {
 	private static int GAS_LIMIT = (int) Math.pow(10, 6);
 
 	private RLPList rawData;
+	private byte[] encodedBlock;
     private boolean parsed = false;
 
     private byte[] hash;
@@ -38,18 +39,34 @@ public class Block {
     private byte[] coinbase;
     /* The SHA3 256-bit hash of the root node of the state trie, 
      * after all transactions are executed and finalisations applied */
-    private byte[] stateHash;
+    private byte[] stateRoot;
     /* The SHA3 256-bit hash of the root node of the trie structure 
      * populated with each transaction in the transactions list portion
      * of the block */
-    private byte[] txTrieHash;
+    private byte[] txTrieRoot;
     /* A scalar value corresponding to the difficulty level of this block. 
      * This can be calculated from the previous block’s difficulty level 
      * and the timestamp */
     private byte[] difficulty;
-
-    private long timestamp;
+    /* A scalar value equal to the reasonable output of Unix's time() 
+     * at this block's inception */
+    private long timestamp;   
+    /* A scalar value equal to the number of ancestor blocks. 
+     * The genesis block has a number of zero */
+    private long number;
+    /* A scalar value equal to the minimum price of gas a transaction 
+     * must have provided in order to be sufficient for inclusion 
+     * by this miner in this block */
+    private long minGasPrice;
+    /* A scalar value equal to the current limit of gas expenditure per block */
+    private long gasLimit;
+    /* A scalar value equal to the total gas used in transactions in this block */
+    private long gasUsed;
+    /* An arbitrary byte array containing data relevant to this block. 
+     * With the exception of the genesis block, this must be 32 bytes or fewer */
     private byte[] extraData;
+    /* A 256-bit hash which proves that a sufficient amount 
+     * of computation has been carried out on this block */
     private byte[] nonce;
 
     private List<Transaction> transactionsList = new ArrayList<Transaction>();
@@ -59,15 +76,27 @@ public class Block {
         this.rawData = rawData;
         this.parsed = false;
     }
-
-    public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] stateHash, byte[] txTrieHash, byte[] difficulty, long timestamp, byte[] extraData, byte[] nonce, List<Transaction> transactionsList, List<Block> uncleList) {
+    
+    public Block(byte[] encodedBlock) {
+        this.encodedBlock = encodedBlock;
+    }
+    
+	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
+			byte[] stateRoot, byte[] txTrieRoot, byte[] difficulty,
+			long timestamp, long number, long minGasPrice, long gasLimit,
+			long gasUsed, byte[] extraData, byte[] nonce,
+			List<Transaction> transactionsList, List<Block> uncleList) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
         this.coinbase = coinbase;
-        this.stateHash = stateHash;
-        this.txTrieHash = txTrieHash;
+        this.stateRoot = stateRoot;
+        this.txTrieRoot = txTrieRoot;
         this.difficulty = difficulty;
         this.timestamp = timestamp;
+        this.number = number;
+        this.minGasPrice = minGasPrice;
+        this.gasLimit = gasLimit;
+        this.gasUsed = gasUsed;
         this.extraData = extraData;
         this.nonce = nonce;
         this.transactionsList = transactionsList;
@@ -75,24 +104,36 @@ public class Block {
         this.parsed = true;
     }
 
-    // [parent_hash,  uncles_hash, coinbase, state_root, tx_list_hash, difficulty, timestamp, extradata, nonce]
+	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
+	// difficulty, timestamp, number, minGasPrice, gasLimit, gasUsed, 
+	// extradata, nonce]
     private void parseRLP() {
 
         this.hash = HashUtil.sha3(rawData.getRLPData());
 
         List params = ((RLPList) rawData.getElement(0)).getList();
 
-        this.parentHash      = ((RLPItem) params.get(0)).getData();
-        this.unclesHash      = ((RLPItem) params.get(1)).getData();
-        this.coinbase        = ((RLPItem) params.get(2)).getData();
-        this.stateHash       = ((RLPItem) params.get(3)).getData();
-        this.txTrieHash      = ((RLPItem) params.get(4)).getData();
-        this.difficulty      = ((RLPItem) params.get(5)).getData();
+        this.parentHash     = ((RLPItem) params.get(0)).getData();
+        this.unclesHash     = ((RLPItem) params.get(1)).getData();
+        this.coinbase       = ((RLPItem) params.get(2)).getData();
+        this.stateRoot      = ((RLPItem) params.get(3)).getData();
+        this.txTrieRoot     = ((RLPItem) params.get(4)).getData();
+        this.difficulty     = ((RLPItem) params.get(5)).getData();
 
-        byte[] tsBytes       = ((RLPItem) params.get(6)).getData();
-        this.timestamp       =  (new BigInteger(tsBytes)).longValue();
-        this.extraData       = ((RLPItem) params.get(7)).getData();
-        this.nonce           = ((RLPItem) params.get(8)).getData();
+        byte[] tsBytes      = ((RLPItem) params.get(6)).getData();       
+        byte[] nrBytes      = ((RLPItem) params.get(7)).getData();
+        byte[] gpBytes      = ((RLPItem) params.get(8)).getData();
+        byte[] glBytes      = ((RLPItem) params.get(9)).getData();
+        byte[] guBytes      = ((RLPItem) params.get(10)).getData();
+
+        this.timestamp      =  (new BigInteger(tsBytes)).longValue();
+        this.number 		= (new BigInteger(nrBytes)).longValue();
+        this.minGasPrice 	= (new BigInteger(gpBytes)).longValue();
+        this.gasLimit 		= (new BigInteger(glBytes)).longValue();
+        this.gasUsed 		= (new BigInteger(guBytes)).longValue();
+        
+        this.extraData       = ((RLPItem) params.get(11)).getData();
+        this.nonce           = ((RLPItem) params.get(12)).getData();
 
         // parse transactions
         List<RLPElement> transactions = ((RLPList) rawData.getElement(1)).getList();
@@ -134,14 +175,14 @@ public class Block {
         return coinbase;
     }
 
-    public byte[] getStateHash() {
+    public byte[] getStateRoot() {
         if (!parsed) parseRLP();
-        return stateHash;
+        return stateRoot;
     }
 
-    public byte[] getTxTrieHash() {
+    public byte[] getTxTrieRoot() {
         if (!parsed) parseRLP();
-        return txTrieHash;
+        return txTrieRoot;
     }
 
     public byte[] getDifficulty() {
@@ -153,8 +194,24 @@ public class Block {
         if (!parsed) parseRLP();
         return timestamp;
     }
+    
+    public long getNumber() {
+		return number;
+	}
 
-    public byte[] getExtraData() {
+	public long getMinGasPrice() {
+		return minGasPrice;
+	}
+
+	public long getGasLimit() {
+		return gasLimit;
+	}
+
+	public long getGasUsed() {
+		return gasUsed;
+	}
+
+	public byte[] getExtraData() {
         if (!parsed) parseRLP();
         return extraData;
     }
@@ -174,21 +231,28 @@ public class Block {
         return uncleList;
     }
 
-    // [parent_hash,  uncles_hash, coinbase, state_root, tx_list_hash, difficulty, timestamp, extradata, nonce]
+	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
+	// difficulty, timestamp, number, minGasPrice, gasLimit, gasUsed, 
+	// extradata, nonce]
     @Override
     public String toString() {
         if (!parsed) parseRLP();
 
-        return "BlockData [" +  " hash=" + Utils.toHexString(hash) +
-                "  parentHash=" + Utils.toHexString(parentHash) +
-                ", unclesHash=" + Utils.toHexString(unclesHash) +
-                ", coinbase=" + Utils.toHexString(coinbase) +
-                ", stateHash=" + Utils.toHexString(stateHash) +
-                ", txTrieHash=" + Utils.toHexString(txTrieHash) +
-                ", difficulty=" + Utils.toHexString(difficulty) +
-                ", timestamp=" + timestamp +
-                ", extraData=" + Utils.toHexString(extraData) +
-                ", nonce=" + Utils.toHexString(nonce) +
+        return "BlockData [" +  
+        		"  hash=" 			+ Utils.toHexString(hash) +
+                "  parentHash=" 	+ Utils.toHexString(parentHash) +
+                ", unclesHash=" 	+ Utils.toHexString(unclesHash) +
+                ", coinbase=" 		+ Utils.toHexString(coinbase) +
+                ", stateHash=" 		+ Utils.toHexString(stateRoot) +
+                ", txTrieHash=" 	+ Utils.toHexString(txTrieRoot) +
+                ", difficulty=" 	+ Utils.toHexString(difficulty) +
+                ", timestamp=" 		+ timestamp +
+                ", number=" 		+ number +
+                ", minGasPrice=" 	+ minGasPrice +
+                ", gasLimit=" 		+ gasLimit +
+                ", gasUsed=" 		+ gasUsed +
+                ", extraData=" 		+ Utils.toHexString(extraData) +
+                ", nonce=" 			+ Utils.toHexString(nonce) +
                 ']';
     }
     
@@ -216,5 +280,14 @@ public class Block {
 	public double getOplimit() {
 		return Math.floor((this.getParent().getOplimit() * (EMA_FACTOR - 1) 
 						+ Math.floor(GAS_LIMIT * LIMIT_FACTOR)) / EMA_FACTOR);
+	}
+
+	public byte[] getEncoded() {
+		if (this.encodedBlock == null) parseRLP();
+		return this.encodedBlock;
+	}
+	
+	public byte[] hash() {
+		return HashUtil.sha3(this.getEncoded());
 	}
 }
