@@ -1,0 +1,251 @@
+// Generated from E:\WorkingArea\ethereum\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
+package org.ethereum.serpent;
+import org.antlr.v4.runtime.misc.NotNull;
+import org.antlr.v4.runtime.tree.ParseTreeVisitor;
+
+/**
+ * This interface defines a complete generic visitor for a parse tree produced
+ * by {@link SerpentParser}.
+ *
+ * @param <T> The return type of the visit operation. Use {@link Void} for
+ * operations with no return type.
+ */
+public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#expression}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExpression(@NotNull SerpentParser.ExpressionContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#assign}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAssign(@NotNull SerpentParser.AssignContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#if_elif_else_stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIf_elif_else_stmt(@NotNull SerpentParser.If_elif_else_stmtContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#get_var}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitGet_var(@NotNull SerpentParser.Get_varContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#tx_origin}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTx_origin(@NotNull SerpentParser.Tx_originContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock(@NotNull SerpentParser.BlockContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#tx_gas}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTx_gas(@NotNull SerpentParser.Tx_gasContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block_number}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock_number(@NotNull SerpentParser.Block_numberContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#in_or_exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIn_or_exp(@NotNull SerpentParser.In_or_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#add_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAdd_expr(@NotNull SerpentParser.Add_exprContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#msg_datasize}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMsg_datasize(@NotNull SerpentParser.Msg_datasizeContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#msg_sender}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMsg_sender(@NotNull SerpentParser.Msg_senderContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block_difficulty}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#tx_gasprice}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTx_gasprice(@NotNull SerpentParser.Tx_gaspriceContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#ex_or_exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEx_or_exp(@NotNull SerpentParser.Ex_or_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block_gaslimit}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock_gaslimit(@NotNull SerpentParser.Block_gaslimitContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#rel_exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRel_exp(@NotNull SerpentParser.Rel_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#parse}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParse(@NotNull SerpentParser.ParseContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#hex_num}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitHex_num(@NotNull SerpentParser.Hex_numContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#ret_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRet_func(@NotNull SerpentParser.Ret_funcContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#contract_balance}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitContract_balance(@NotNull SerpentParser.Contract_balanceContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#condition}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCondition(@NotNull SerpentParser.ConditionContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#eq_exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitEq_exp(@NotNull SerpentParser.Eq_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#log_and_exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLog_and_exp(@NotNull SerpentParser.Log_and_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block_timestamp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock_timestamp(@NotNull SerpentParser.Block_timestampContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#while_stmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhile_stmt(@NotNull SerpentParser.While_stmtContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#special_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSpecial_func(@NotNull SerpentParser.Special_funcContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block_coinbase}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock_coinbase(@NotNull SerpentParser.Block_coinbaseContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#log_or_exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitLog_or_exp(@NotNull SerpentParser.Log_or_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block_prevhash}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#and_exp}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAnd_exp(@NotNull SerpentParser.And_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#mul_expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#int_val}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitInt_val(@NotNull SerpentParser.Int_valContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#msg_value}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMsg_value(@NotNull SerpentParser.Msg_valueContext ctx);
+}
