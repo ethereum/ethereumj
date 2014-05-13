@@ -30,10 +30,17 @@ public class SerpentEditor extends JFrame {
 
     private String codeSample2 = "\n\n\n" +
             "" +
+            "\n" +
+            "\n" +
             "a=block.gaslimit\n" +
             "b = block.difficulty\n" +
             "if 10*2+5 > 15:\n" +
             "    b = 2\n" +
+            "elif 2*6+5 < a ^ 6:\n" +
+            "    c = 4\n" +
+            "else:\n" +
+            "    d = 5\n" +
+            "    \n" +
             "\n" +
             "return(0)\n";
 
