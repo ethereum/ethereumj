@@ -5,12 +5,20 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.rlp.RLP;
 import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.vo.Block;
+import org.ethereum.util.RlpEncoder;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigInteger;
 
 public class BlockTest {
+	
+	// https://ethereum.etherpad.mozilla.org/12
+	private String CPP_PoC5_GENESIS_STATE_ROOT_HEX_HASH = "2f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d";
+	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8cbf8c7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817da00000000000000000000000000000000000000000000000000000000000000000834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+	private String CPP_PoC5_GENESIS_HEX_HASH = "69a7356a245f9dc5b865475ada5ee4e89b18f93c06503a9db3b3630e88e9fb4e";
 
     @Test /* Creating genesis hash not ready yet */
     public void test1() throws IOException {
@@ -50,8 +58,6 @@ public class BlockTest {
 	block.appendRaw(RLPEmptyList);
 
  */
-        // gennesis hash
-        //ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cf
 
     /* 1 */    byte[] prevHash =
                 {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -108,23 +114,72 @@ public class BlockTest {
         System.out.println(Hex.toHexString(genesis));
 
         byte[] hash = HashUtil.sha3(genesis);
-
-        System.out.println(Hex.toHexString(hash));
-
-        System.out.println("ab6b9a5613970faa771b12d449b2e9bb925ab7a369f0a4b86b286e9d540099cf");
+        assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(hash));
     }
 
     @Test /* got from go guy */
-    public void test2(){
+    public void testGenesisFromRLP(){
+    	// from RLP encoding
+    	byte[] genesisBytes = Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
+    	Block genesis = new Block(genesisBytes);
+    	assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(genesis.hash()));
+    }
+    
+    @Test
+    public void testGenesisFromNew() {
+    	
+    	System.out.println(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
+    	Object genesisItems = RlpEncoder.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED.getBytes(), 0).getDecoded();
+    	// TODO: verify genesis items with expected values
 
-        byte[] goGenesisBytes = Hex.decode("f8a4f8a0a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794000000000000000000000000000000000000000080a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347834000008080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0");
-        System.out.println( Hex.toHexString( HashUtil.sha3(goGenesisBytes) ) );
+        /*	From: https://ethereum.etherpad.mozilla.org/11		
+          	Genesis block is: 
+             		( 
+             			B32(0, 0, ...), 
+        				B32(sha3(B())), 
+        				B20(0, 0, ...), 
+        				B32(stateRoot), 
+        				B32(0, 0, ...), 
+		    			P(2^22), 
+        				P(0), 
+        				P(0), 
+        				P(1000000), 
+        				P(0), 
+        				P(0)
+        				B()
+        				B32(sha3(B(42)))
+        			)
+         */
+    	
+        byte[] parentHash = new byte[32];										System.out.println(Hex.toHexString(parentHash));
+        byte[] unclesHash = HashUtil.sha3(new byte[0]); 						System.out.println(Hex.toHexString(unclesHash));
+        byte[] coinbase = new byte[20]; 										System.out.println(Hex.toHexString(coinbase));
+        byte[] stateRoot = Hex.decode(CPP_PoC5_GENESIS_STATE_ROOT_HEX_HASH); 	System.out.println(Hex.toHexString(stateRoot));
+        byte[] txTrieRoot = new byte[32]; 										System.out.println(Hex.toHexString(txTrieRoot));
+        byte[] difficulty = doubleToByteArray(Math.pow(2, 22));					System.out.println(Hex.toHexString(difficulty));
+        long timestamp = 0;														System.out.println(Long.toHexString(timestamp));
+        long number = 0;														System.out.println(Long.toHexString(number));
+        long minGasPrice = 0;													System.out.println(Long.toHexString(minGasPrice));
+        long gasLimit = 1000000;												System.out.println(Long.toHexString(gasLimit));
+        long gasUsed = 0;														System.out.println(Long.toHexString(gasUsed));
+        byte[] extraData = new byte[0]; 										System.out.println(Hex.toHexString(extraData));
+        byte[] nonce = HashUtil.sha3(new byte[]{42});							System.out.println(Hex.toHexString(nonce));
+        Block block = new Block(parentHash, unclesHash, coinbase, stateRoot, txTrieRoot, difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp, extraData, nonce, null, null);
+        assertEquals(CPP_PoC5_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(block.getEncoded()));
+        assertEquals(CPP_PoC5_GENESIS_HEX_HASH, block.hash());
+    }
+    
+    private byte[] doubleToByteArray(double d) {
+    	byte[] output = new byte[8];
+    	long lng = Double.doubleToLongBits(d);
+    	for(int i = 0; i < 8; i++) output[i] = (byte)((lng >> ((7 - i) * 8)) & 0xff);
+    	return output;
     }
 
     @Test /* create BlockData from part of  real RLP BLOCKS message */
     public void test3(){
 
-        String blocksMsg= "F8C8F8C4A07B2536237CBF114A043B0F9B27C76F84AC160EA5B87B53E42C7E76148964D450A01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347943854AAF203BA5F8D49B1EC221329C7AEBCF050D3A07A3BE0EE10ECE4B03097BF74AABAC628AA0FAE617377D30AB1B97376EE31F41AA01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347833FBFE884533F1CE880A0000000000000000000000000000000000000000000000000F3DEEA84969B6E95C0C0";
+        String blocksMsg = "F8C8F8C4A07B2536237CBF114A043B0F9B27C76F84AC160EA5B87B53E42C7E76148964D450A01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347943854AAF203BA5F8D49B1EC221329C7AEBCF050D3A07A3BE0EE10ECE4B03097BF74AABAC628AA0FAE617377D30AB1B97376EE31F41AA01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347833FBFE884533F1CE880A0000000000000000000000000000000000000000000000000F3DEEA84969B6E95C0C0";
 
         byte[] payload = Hex.decode(blocksMsg);
 
