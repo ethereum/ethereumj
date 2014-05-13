@@ -1,4 +1,6 @@
+
 .idea
+*.iml
 *.class
 
 *.xlsx
@@ -8,3 +10,5 @@
 *.war
 *.ear
 /target
+
+*.db
