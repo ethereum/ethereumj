@@ -5,6 +5,11 @@
 
 *.xlsx
 
+# Eclipse
+.project
+.classpath
+.settings
+
 # Package Files #
 *.jar
 *.war
