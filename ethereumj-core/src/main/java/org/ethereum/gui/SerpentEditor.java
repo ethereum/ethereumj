@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.serpent.SerpentCompiler;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
@@ -20,12 +21,22 @@ import java.awt.event.ActionListener;
 public class SerpentEditor extends JFrame {
 
     private String codeSample = "\n\n\n" +
-            "" +
+                                "" +
                                 "if !contract.storage[msg.data[0]]:\n" +
                                 "        contract.storage[msg.data[0]] = msg.data[1]\n" +
                                 "    return(1)\n" +
                                 "else:\n" +
                                 "    return(0)\n";
+
+    private String codeSample2 = "\n\n\n" +
+            "" +
+            "a=block.gaslimit\n" +
+            "b = block.difficulty\n" +
+            "if 10*2+5 > 15:\n" +
+            "    b = 2\n" +
+            "\n" +
+            "return(0)\n";
+
 
 
     private static final long serialVersionUID = 1L;
@@ -48,7 +59,7 @@ public class SerpentEditor extends JFrame {
         codeArea.setSyntaxEditingStyle("text/serpent");
         codeArea.setCodeFoldingEnabled(true);
         codeArea.setAntiAliasingEnabled(true);
-        codeArea.setText(codeSample);
+        codeArea.setText(codeSample2);
 
         RTextScrollPane sp = new RTextScrollPane(codeArea);
 
@@ -84,7 +95,7 @@ public class SerpentEditor extends JFrame {
                 try {
 
                     // todo: integrate new compiler when avail
-                    //asmResult = SerpentCompiler.compile(codeArea.getText());
+                    asmResult = SerpentCompiler.compile(codeArea.getText());
                 } catch (Throwable th) {th.printStackTrace();}
 
                 splitPanel.setDividerLocation(0.7);
