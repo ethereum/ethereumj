@@ -7,7 +7,7 @@ package org.ethereum.serpent;
  */
 public class GenParser {
 
-   /* Test For Git*/
+
 
     public static void main(String args[]){
 
