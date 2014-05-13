@@ -351,10 +351,10 @@ public class MessagesTest {
                 Utils.toHexString(block.getCoinbase()).toUpperCase());
 
         assertEquals("5E2D2CC0B42B38B5B18C9D65734F9877C035DD390B9C12C48624F2243668A268",
-                Utils.toHexString(block.getStateHash()).toUpperCase());
+                Utils.toHexString(block.getStateRoot()).toUpperCase());
 
         assertEquals("1DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347",
-                Utils.toHexString(block.getTxTrieHash()).toUpperCase());
+                Utils.toHexString(block.getTxTrieRoot()).toUpperCase());
 
         assertEquals("02471A26", Utils.toHexString(block.getDifficulty()).toUpperCase());
         assertEquals(1398260220, block.getTimestamp());
@@ -395,10 +395,10 @@ public class MessagesTest {
                 Utils.toHexString(block.getCoinbase()).toUpperCase());
 
         assertEquals("990DC3B5ACBEE04124361D958FE51ACB582593613FC290683940A0769549D3ED",
-                Utils.toHexString(block.getStateHash()).toUpperCase());
+                Utils.toHexString(block.getStateRoot()).toUpperCase());
 
         assertEquals("9BFE4817D274EA3EB8672E9FE848C3885B53BBBD1D7C26E6039F90FB96B942B0",
-                Utils.toHexString(block.getTxTrieHash()).toUpperCase());
+                Utils.toHexString(block.getTxTrieRoot()).toUpperCase());
 
         assertEquals("3FF000", Utils.toHexString(block.getDifficulty()).toUpperCase());
         assertEquals(1396643511, block.getTimestamp());
