@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.ethereum.serpent.SerpentCompiler;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
@@ -83,7 +82,9 @@ public class SerpentEditor extends JFrame {
 
                 String asmResult = "";
                 try {
-                    asmResult = SerpentCompiler.compile(codeArea.getText());
+
+                    // todo: integrate new compiler when avail
+                    //asmResult = SerpentCompiler.compile(codeArea.getText());
                 } catch (Throwable th) {th.printStackTrace();}
 
                 splitPanel.setDividerLocation(0.7);
