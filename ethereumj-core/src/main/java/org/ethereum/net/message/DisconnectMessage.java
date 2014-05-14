@@ -1,8 +1,9 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.Command;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
+
 import static org.ethereum.net.Command.DISCONNECT;
 import static org.ethereum.net.message.ReasonCode.DISCONNECT_REQUESTED;
 
@@ -22,13 +23,13 @@ public class DisconnectMessage extends Message {
     @Override
     public void parseRLP() {
 
-        RLPList paramsList = (RLPList) rawData.getElement(0);
+        RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0]) != DISCONNECT){
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getData()[0]) != DISCONNECT){
             throw new Error("Disconnect: parsing for mal data");
         }
 
-        byte[] reasonB = ((RLPItem)paramsList.getElement(1)).getData();
+        byte[] reasonB = ((RLPItem)paramsList.get(1)).getData();
         if (reasonB == null){
             this.reason = DISCONNECT_REQUESTED;
         } else {

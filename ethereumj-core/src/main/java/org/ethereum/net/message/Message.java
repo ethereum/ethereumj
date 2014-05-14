@@ -1,6 +1,6 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLPList;
 
 /**
  * www.ethereumJ.com
