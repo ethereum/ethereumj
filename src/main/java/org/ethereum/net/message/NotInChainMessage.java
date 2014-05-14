@@ -4,8 +4,8 @@ import static org.ethereum.net.Command.NOT_IN_CHAIN;
 
 import org.ethereum.net.Command;
 import org.ethereum.net.message.Message;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 /**

@@ -1,10 +1,11 @@
 package org.ethereum.net.message;
 
 import static org.ethereum.net.Command.TRANSACTIONS;
+
+import org.ethereum.core.Transaction;
 import org.ethereum.net.Command;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.Transaction;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,9 +1,9 @@
-package org.ethereum.net.vo;
+package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.net.rlp.RLPElement;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 import java.math.BigInteger;
