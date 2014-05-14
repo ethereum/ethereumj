@@ -28,16 +28,16 @@ public class TransactionsMessage extends Message {
 
     @Override
     public void parseRLP() {
-        RLPList paramsList = (RLPList) rawData.getElement(0);
+        RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0] & 0xFF) != TRANSACTIONS) {
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getData()[0] & 0xFF) != TRANSACTIONS) {
             throw new Error("TransactionMessage: parsing for mal data");
         }
 
         transactions = new ArrayList<Transaction>();
-        int size = paramsList.getList().size();
+        int size = paramsList.size();
         for (int i = 1; i < size; ++i){
-            RLPList rlpTxData = (RLPList) paramsList.getElement(i);
+            RLPList rlpTxData = (RLPList) paramsList.get(i);
             Transaction tx = new Transaction(rlpTxData);
             transactions.add(tx);
         }

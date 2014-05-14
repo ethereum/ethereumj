@@ -314,10 +314,31 @@ public class MessagesTest {
     @Test /* BlocksMessage parsing 1*/
     public void test_10(){
 
-//        BlockData [ hash=36a24b56c6104e5a5c0e70b0553f1a4d6109d065d718d7443a6a475ec8c83905  parentHash=372d8e5c6e32335fb86fa7a6ae1b35165745346e1c786eacd42df85f8da12b3d, unclesHash=1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347, coinbase=1a4d98707ba8dd3d36d16e8c165c272645695cea, stateHash=5e2d2cc0b42b38b5b18c9d65734f9877c035dd390b9c12c48624f2243668a268, txListHash=1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347, difficulty=02471a26, timestamp=1398260220, extraData=null, nonce=0000000000000000000000000000000000000000000000006f4cd02da011a235]
-        String blocksRaw = "F8CC13F8C9F8C5A0372D8E5C6E32335FB86FA7A6AE1B35165745346E1C786EACD42DF85F8DA12B3DA01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347941A4D98707BA8DD3D36D16E8C165C272645695CEAA05E2D2CC0B42B38B5B18C9D65734F9877C035DD390B9C12C48624F2243668A268A01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D493478402471A26845357C1FC80A00000000000000000000000000000000000000000000000006F4CD02DA011A235C0C0";
+//      BlockData [ hash=36a24b56c6104e5a5c0e70b0553f1a4d6109d065d718d7443a6a475ec8c83905  parentHash=372d8e5c6e32335fb86fa7a6ae1b35165745346e1c786eacd42df85f8da12b3d, unclesHash=1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347, coinbase=1a4d98707ba8dd3d36d16e8c165c272645695cea, stateHash=5e2d2cc0b42b38b5b18c9d65734f9877c035dd390b9c12c48624f2243668a268, txListHash=1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347, difficulty=02471a26, timestamp=1398260220, extraData=null, nonce=0000000000000000000000000000000000000000000000006f4cd02da011a235]
+//      String blocksRaw = "F8CC13F8C9F8C5A0372D8E5C6E32335FB86FA7A6AE1B35165745346E1C786EACD42DF85F8DA12B3DA01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347941A4D98707BA8DD3D36D16E8C165C272645695CEAA05E2D2CC0B42B38B5B18C9D65734F9877C035DD390B9C12C48624F2243668A268A01DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D493478402471A26845357C1FC80A00000000000000000000000000000000000000000000000006F4CD02DA011A235C0C0";
 
-        byte[] payload = Hex.decode(blocksRaw);
+    	/*
+    	parentHash: 	00000000000000000000000000000000000000000000000000000000000000000
+    	unclesHash: 	1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347
+    	coinbase: 		0000000000000000000000000000000000000000
+    	stateRoot: 		2f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d
+    	txsTrieRoot: 	00000000000000000000000000000000000000000000000000000000000000000
+    	difficulty: 	400000
+    	number: 		<<empty string>>
+    	mixGasPrice: 	<<empty string>>
+    	gasLimit: 		0f4240
+    	gasUsed: 		<<empty string>>
+    	timestamp: 		<<empty string>>
+    	extraData: 		<<empty string>>
+    	nonce: 			04994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829
+    	transaction: 	<<empty string>>
+    	uncles: 		<<empty string>>
+    	*/
+    	
+    	// Genesis block
+    	String blocksRaw = "f8cbf8c7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817da00000000000000000000000000000000000000000000000000000000000000000834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+
+    	byte[] payload = Hex.decode(blocksRaw);
         RLPList rlpList = RLP.decode2(payload);
 
         BlocksMessage blocksMessage = new BlocksMessage(rlpList);
@@ -328,31 +349,31 @@ public class MessagesTest {
 
         Block block = list.get(0);
 
-        assertEquals("36A24B56C6104E5A5C0E70B0553F1A4D6109D065D718D7443A6A475EC8C83905",
-                Utils.toHexString(block.getHash()).toUpperCase());
+        assertEquals("69a7356a245f9dc5b865475ada5ee4e89b18f93c06503a9db3b3630e88e9fb4e",
+                Utils.toHexString(block.getHash()));
 
-        assertEquals("372D8E5C6E32335FB86FA7A6AE1B35165745346E1C786EACD42DF85F8DA12B3D",
-                Utils.toHexString(block.getParentHash()).toUpperCase());
+        assertEquals("00000000000000000000000000000000000000000000000000000000000000000",
+                Utils.toHexString(block.getParentHash()));
 
-        assertEquals("1DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347",
-                Utils.toHexString(block.getUnclesHash()).toUpperCase());
+        assertEquals("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+                Utils.toHexString(block.getUnclesHash()));
 
-        assertEquals("1A4D98707BA8DD3D36D16E8C165C272645695CEA",
-                Utils.toHexString(block.getCoinbase()).toUpperCase());
+        assertEquals("0000000000000000000000000000000000000000",
+                Utils.toHexString(block.getCoinbase()));
 
-        assertEquals("5E2D2CC0B42B38B5B18C9D65734F9877C035DD390B9C12C48624F2243668A268",
-                Utils.toHexString(block.getStateRoot()).toUpperCase());
+        assertEquals("2f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d",
+                Utils.toHexString(block.getStateRoot()));
 
-        assertEquals("1DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347",
-                Utils.toHexString(block.getTxTrieRoot()).toUpperCase());
+        assertEquals("00000000000000000000000000000000000000000000000000000000000000000",
+                Utils.toHexString(block.getTxTrieRoot()));
 
-        assertEquals("02471A26", Utils.toHexString(block.getDifficulty()).toUpperCase());
-        assertEquals(1398260220, block.getTimestamp());
+        assertEquals("400000", Utils.toHexString(block.getDifficulty()));
+        assertEquals(0, block.getTimestamp());
 
         assertNull(block.getExtraData());
 
-        assertEquals("0000000000000000000000000000000000000000000000006F4CD02DA011A235",
-                Utils.toHexString(block.getNonce()).toUpperCase());
+        assertEquals("04994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829",
+                Utils.toHexString(block.getNonce()));
     }
 
     @Test /* BlocksMessage really big message parsing */

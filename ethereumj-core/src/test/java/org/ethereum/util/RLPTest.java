@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
-import static org.ethereum.util.RLP.toInt;
+import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.ethereum.util.RlpTestData.*;
 import static org.junit.Assert.*;
 
@@ -366,7 +366,7 @@ public class RLPTest {
 		assertEquals(expected, asHex(encoderesult));
 		
 		byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
-		int result = toInt(decodeResult);
+		int result = byteArrayToInt(decodeResult);
 		assertEquals(test, Integer.valueOf(result));
 	}
 		
@@ -378,7 +378,7 @@ public class RLPTest {
 		assertEquals(expected, asHex(encoderesult));
 		
 		byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
-		int result = toInt(decodeResult);
+		int result = byteArrayToInt(decodeResult);
 		assertEquals(test, Integer.valueOf(result));
 	}
 	
@@ -390,7 +390,7 @@ public class RLPTest {
 		assertEquals(expected, asHex(encoderesult));
 		
 		byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
-		int result = toInt(decodeResult);
+		int result = byteArrayToInt(decodeResult);
 		assertEquals(test, Integer.valueOf(result));
 		
 		test = new Integer(1024);
@@ -399,7 +399,7 @@ public class RLPTest {
 		assertEquals(expected, asHex(encoderesult));
 		
 		decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
-		result = toInt(decodeResult);
+		result = byteArrayToInt(decodeResult);
 		assertEquals(test, Integer.valueOf(result));
 	}
 	
@@ -474,10 +474,10 @@ public class RLPTest {
 		assertEquals(expected, asHex(encoderesult));
 		
 		Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
-		assertEquals(1, toInt( (byte[]) decodeResult[0] ));
+		assertEquals(1, byteArrayToInt( (byte[]) decodeResult[0] ));
 		assertEquals("cat", bytesToAscii( ((byte[]) ((Object[]) decodeResult[1])[0] )));
 		assertEquals("dog", bytesToAscii( (byte[]) decodeResult[2]));
-		assertEquals(2, toInt( ((byte[]) ((Object[]) decodeResult[3])[0] )));
+		assertEquals(2, byteArrayToInt( ((byte[]) ((Object[]) decodeResult[3])[0] )));
 		
 		test = new Object[] { new Object[] { "cat", "dog" }, new Object[] { 1, 2 }, new Object[] { } };
 		expected = "cdc88363617483646f67c20102c0";
@@ -487,8 +487,8 @@ public class RLPTest {
 		decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();
 		assertEquals("cat", bytesToAscii( ((byte[]) ((Object[]) decodeResult[0])[0] )));
 		assertEquals("dog", bytesToAscii( ((byte[]) ((Object[]) decodeResult[0])[1] )));
-		assertEquals(1, toInt( ((byte[]) ((Object[]) decodeResult[1])[0] )));
-		assertEquals(2, toInt( ((byte[]) ((Object[]) decodeResult[1])[1] )));
+		assertEquals(1, byteArrayToInt( ((byte[]) ((Object[]) decodeResult[1])[0] )));
+		assertEquals(2, byteArrayToInt( ((byte[]) ((Object[]) decodeResult[1])[1] )));
 		assertTrue( ( ((Object[]) decodeResult[2]).length == 0 ));
 	}
 	
@@ -557,7 +557,7 @@ public class RLPTest {
 		Object[] decodedList; 
 		
 		decodedByte = (byte[]) RLP.decode(fromHex(result01), pos).getDecoded();
-		assertEquals(test01, toInt(decodedByte));
+		assertEquals(test01, byteArrayToInt(decodedByte));
 		
 		decodedData = (byte[]) RLP.decode(fromHex(result02), pos).getDecoded();
 		assertEquals(test02, bytesToAscii(decodedData));
@@ -582,19 +582,19 @@ public class RLPTest {
 		
 		// 1
 		decodedData = (byte[]) RLP.decode(fromHex(result08), pos).getDecoded();
-		assertEquals(test08, toInt(decodedData));
+		assertEquals(test08, byteArrayToInt(decodedData));
 
 		// 10
 		decodedData = (byte[]) RLP.decode(fromHex(result09), pos).getDecoded();
-		assertEquals(test09, toInt(decodedData));
+		assertEquals(test09, byteArrayToInt(decodedData));
 
 		// 100
 		decodedData = (byte[]) RLP.decode(fromHex(result10), pos).getDecoded();
-		assertEquals(test10, toInt(decodedData));
+		assertEquals(test10, byteArrayToInt(decodedData));
 
 		// 1000 
 		decodedData = (byte[]) RLP.decode(fromHex(result11), pos).getDecoded();
-		assertEquals(test11, toInt(decodedData));
+		assertEquals(test11, byteArrayToInt(decodedData));
 		
 		decodedData = (byte[]) RLP.decode(fromHex(result12), pos).getDecoded();
 		assertTrue(test12.compareTo(new BigInteger(decodedData)) == 0);
@@ -677,5 +677,31 @@ public class RLPTest {
 	                             + Character.digit(s.charAt(i+1), 16));
 	    }
 	    return data;
+	}
+	
+	@Test
+	public void performanceDecode() {
+		String blocksRaw = "f8cbf8c7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817da00000000000000000000000000000000000000000000000000000000000000000834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+		byte[] payload = Hex.decode(blocksRaw);
+		
+		final int ITERATIONS = 10000000;
+		RLPList list = null;
+		DecodeResult result = null;
+
+		long start1 = System.currentTimeMillis();
+		for (int i = 0; i < ITERATIONS; i++) {
+			result = RLP.decode(payload, 0);
+		}
+		long end1 = System.currentTimeMillis();
+
+		long start2 = System.currentTimeMillis();
+		for (int i = 0; i < ITERATIONS; i++) {
+			list = RLP.decode2(payload);
+		}
+		long end2 = System.currentTimeMillis();
+		
+		System.out.println(list + "" + result);
+		System.out.println("Result RLP.decode(): " +  (end1-start1) + "ms");
+		System.out.println("Result RLP.decode2(): " +  (end2-start2) + "ms");
 	}
 }
