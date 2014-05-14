@@ -1,4 +1,4 @@
-package org.ethereum.net.rlp;
+package org.ethereum.util;
 
 /**
  * www.ethereumJ.com 

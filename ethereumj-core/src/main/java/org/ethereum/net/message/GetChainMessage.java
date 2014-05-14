@@ -5,9 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.ethereum.net.Command.GET_CHAIN;
+
 import org.ethereum.net.Command;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 /**

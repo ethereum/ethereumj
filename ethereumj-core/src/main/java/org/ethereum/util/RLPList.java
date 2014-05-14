@@ -1,16 +1,14 @@
-package org.ethereum.net.rlp;
+package org.ethereum.util;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import org.ethereum.util.Utils;
 
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
  * Created on: 21/04/14 16:26
  */
-public class RLPList implements RLPElement{
+public class RLPList implements RLPElement {
 
     byte[] rlpData;
     List<RLPElement> list;
@@ -46,7 +44,7 @@ public class RLPList implements RLPElement{
 	public static void recursivePrint(RLPElement element) {
 
 		if (element == null)
-			throw new Error("RLPElement object can't be null");
+			throw new RuntimeException("RLPElement object can't be null");
 		if (element instanceof RLPList) {
 
 			RLPList rlpList = (RLPList) element;

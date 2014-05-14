@@ -1,8 +1,9 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
 import org.ethereum.net.Command;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
+
 import static org.ethereum.net.Command.DISCONNECT;
 import static org.ethereum.net.message.ReasonCode.DISCONNECT_REQUESTED;
 

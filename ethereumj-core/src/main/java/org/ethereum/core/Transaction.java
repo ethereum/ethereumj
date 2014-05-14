@@ -1,10 +1,10 @@
-package org.ethereum.net.vo;
+package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 /**
@@ -89,7 +89,7 @@ public class Transaction {
             byte[] r =     ((RLPItem) rawData.getElement(8)).getData();
             byte[] s =     ((RLPItem) rawData.getElement(9)).getData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
-        } else throw new Error("Wrong tx data element list size");
+        } else throw new RuntimeException("Wrong tx data element list size");
         this.parsed = true;
     }
 
