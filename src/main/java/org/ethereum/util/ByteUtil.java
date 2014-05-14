@@ -1,7 +1,5 @@
 package org.ethereum.util;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 
@@ -40,19 +38,34 @@ public class ByteUtil {
     }
     
     /**
-     * <p>Given a textual message, returns a byte buffer formatted as follows:</p>
+     * Calculate packet length
+     * @param msg
+     * @return byte-array with 4 elements
      */
-    public static byte[] formatForSigning(byte[] message) {
-        try {
-            ByteArrayOutputStream bos = new ByteArrayOutputStream();
-            bos.write(encodeInt(message.length));
-            bos.write(message);
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);  // Cannot happen.
-        }
+    public static byte[] calcPacketLength(byte[] msg){
+        int msgLen = msg.length;
+        byte[] len = {
+                (byte)((msgLen >> 24) & 0xFF),
+                (byte)((msgLen >> 16) & 0xFF),
+                (byte)((msgLen >>  8) & 0xFF),
+                (byte)((msgLen      ) & 0xFF)};
+        return len;
     }
     
+	/**
+	 * Cast hex encoded value from byte[] to int
+	 * 
+	 * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
+	 * 
+	 * @param b array contains the values
+	 * @return unsigned positive int value. 
+	 */
+	public static int byteArrayToInt(byte[] b) {
+		if (b == null || b.length == 0)
+			return 0;
+		return new BigInteger(1, b).intValue();
+	}
+        
     public static byte[] encodeInt(int value) {
         if (isLessThanUnsigned(value, 253)) {
             return new byte[]{(byte) value};

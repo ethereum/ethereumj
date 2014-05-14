@@ -128,7 +128,7 @@ public class BlockTest {
     public void testGenesisFromNew() {
     	
     	System.out.println(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
-    	Object genesisItems = RLP.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED.getBytes(), 0).getDecoded();
+    	Object genesisItems = RLP.decode(Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED), 0).getDecoded();
     	// TODO: verify genesis items with expected values
 
         /*	From: https://ethereum.etherpad.mozilla.org/11		

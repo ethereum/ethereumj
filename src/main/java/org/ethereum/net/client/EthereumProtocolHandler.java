@@ -24,6 +24,7 @@ import org.ethereum.net.message.NotInChainMessage;
 import org.ethereum.net.message.PeersMessage;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.TransactionsMessage;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
@@ -40,7 +41,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
 
     private final static byte[] HELLO_MESSAGE = StaticMessages.HELLO_MESSAGE.getPayload();
-    private final static byte[] HELLO_MESSAGE_LEN = calcPacketLength(HELLO_MESSAGE);
+    private final static byte[] HELLO_MESSAGE_LEN = ByteUtil.calcPacketLength(HELLO_MESSAGE);
 
     private long lastPongTime = 0;
     private boolean tearDown = false;
@@ -268,10 +269,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendMsg(Message msg, ChannelHandlerContext ctx){
-
         byte[] data = msg.getPayload();
         final ByteBuf buffer = ctx.alloc().buffer(data.length + 8);
-        byte[] packetLen  = calcPacketLength(data);
+        byte[] packetLen  = ByteUtil.calcPacketLength(data);
 
         buffer.writeBytes(MAGIC_PREFIX);
         buffer.writeBytes(packetLen);
@@ -312,22 +312,8 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     private void sendTx(ChannelHandlerContext ctx){
         byte[] TX_MSG =
                 Hex.decode("2240089100000070F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69");
-
         ByteBuf buffer = ctx.alloc().buffer(TX_MSG.length);
         buffer.writeBytes(TX_MSG);
         ctx.writeAndFlush(buffer);
     }
-
-    private static byte[] calcPacketLength(byte[] msg){
-
-        int msgLen = msg.length;
-
-        byte[] len = {
-                (byte)((msgLen >> 24) & 0xFF),
-                (byte)((msgLen >> 16) & 0xFF),
-                (byte)((msgLen >>  8) & 0xFF),
-                (byte)((msgLen      ) & 0xFF)};
-        return len;
-    }
-
 }

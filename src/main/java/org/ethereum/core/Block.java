@@ -111,7 +111,7 @@ public class Block {
 
         this.hash = HashUtil.sha3(rawData.getRLPData());
 
-        List params = ((RLPList) rawData.getElement(0)).getList();
+        RLPList params = (RLPList) rawData.get(0);
 
         this.parentHash     = ((RLPItem) params.get(0)).getData();
         this.unclesHash     = ((RLPItem) params.get(1)).getData();
@@ -136,13 +136,13 @@ public class Block {
         this.nonce           = ((RLPItem) params.get(12)).getData();
 
         // parse transactions
-        List<RLPElement> transactions = ((RLPList) rawData.getElement(1)).getList();
+        RLPList transactions = (RLPList) rawData.get(1);
         for (RLPElement rlpTx : transactions){
             Transaction tx = new Transaction((RLPList)rlpTx);
             this.transactionsList.add(tx);
         }
         // parse uncles
-        List<RLPElement> uncleBlocks = ((RLPList) rawData.getElement(2)).getList();
+        RLPList uncleBlocks = (RLPList) rawData.get(2);
         for (RLPElement rawUncle : uncleBlocks){
             Block blockData = new Block((RLPList)rawUncle);
             this.uncleList.add(blockData);
