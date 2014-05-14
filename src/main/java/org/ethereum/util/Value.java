@@ -15,7 +15,7 @@ public class Value {
 
 	public void fromRlpEncoded(byte[] data) {
 		if (data.length != 0) {
-			this.value = RlpEncoder.decode(data, 0).getDecoded();
+			this.value = RLP.decode(data, 0).getDecoded();
 		}
 	}
 
@@ -104,7 +104,7 @@ public class Value {
 	 * *****************/
 	
 	public byte[] encode() {
-		return RlpEncoder.encode(value);
+		return RLP.encode(value);
 	}
 
 	public boolean cmp(Value o) {

@@ -4,8 +4,8 @@ import static org.ethereum.net.Command.NOT_IN_CHAIN;
 
 import org.ethereum.net.Command;
 import org.ethereum.net.message.Message;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 /**
@@ -23,12 +23,12 @@ public class NotInChainMessage extends Message {
 
     @Override
     public void parseRLP() {
-        RLPList paramsList = (RLPList) rawData.getElement(0);
+        RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).getElement(0)).getData()[0] & 0xFF) != NOT_IN_CHAIN){
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getData()[0] & 0xFF) != NOT_IN_CHAIN){
             throw new Error("NotInChain Message: parsing for mal data");
         }
-        hash = ((RLPItem)paramsList.getElement(1)).getData();
+        hash = ((RLPItem)paramsList.get(1)).getData();
     }
 
     @Override

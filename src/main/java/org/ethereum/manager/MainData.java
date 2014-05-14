@@ -2,10 +2,10 @@ package org.ethereum.manager;
 
 import com.maxmind.geoip.Location;
 
+import org.ethereum.core.Block;
+import org.ethereum.core.Transaction;
 import org.ethereum.geodb.IpGeoDB;
-import org.ethereum.net.vo.Block;
-import org.ethereum.net.vo.PeerData;
-import org.ethereum.net.vo.Transaction;
+import org.ethereum.net.client.PeerData;
 
 import java.util.*;
 

@@ -1,11 +1,10 @@
 package org.ethereum.block;
 
 import org.spongycastle.util.encoders.Hex;
+import org.ethereum.core.Block;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.net.rlp.RLP;
-import org.ethereum.net.rlp.RLPList;
-import org.ethereum.net.vo.Block;
-import org.ethereum.util.RlpEncoder;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -129,7 +128,7 @@ public class BlockTest {
     public void testGenesisFromNew() {
     	
     	System.out.println(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
-    	Object genesisItems = RlpEncoder.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED.getBytes(), 0).getDecoded();
+    	Object genesisItems = RLP.decode(Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED), 0).getDecoded();
     	// TODO: verify genesis items with expected values
 
         /*	From: https://ethereum.etherpad.mozilla.org/11		
@@ -183,8 +182,7 @@ public class BlockTest {
 
         byte[] payload = Hex.decode(blocksMsg);
 
-        RLPList rlpList = new RLPList();
-        RLP.parseObjects(payload, rlpList);
+        RLPList rlpList = RLP.decode2(payload);
 
         Block blockData = new Block(rlpList);
         RLPList.recursivePrint(rlpList);

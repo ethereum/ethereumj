@@ -1,10 +1,10 @@
-package org.ethereum.net.vo;
+package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 /**
@@ -71,25 +71,25 @@ public class Transaction {
 
     public void rlpParse(){
         this.hash = HashUtil.sha3(rawData.getRLPData());
-        this.nonce =          ((RLPItem) rawData.getElement(0)).getData();
-        this.value =          ((RLPItem) rawData.getElement(1)).getData();
-        this.receiveAddress = ((RLPItem) rawData.getElement(2)).getData();
-        this.gasPrice =       ((RLPItem) rawData.getElement(3)).getData();
-        this.gasLimit =       ((RLPItem) rawData.getElement(4)).getData();
-        this.data =           ((RLPItem) rawData.getElement(5)).getData();
+        this.nonce =          ((RLPItem) rawData.get(0)).getData();
+        this.value =          ((RLPItem) rawData.get(1)).getData();
+        this.receiveAddress = ((RLPItem) rawData.get(2)).getData();
+        this.gasPrice =       ((RLPItem) rawData.get(3)).getData();
+        this.gasLimit =       ((RLPItem) rawData.get(4)).getData();
+        this.data =           ((RLPItem) rawData.get(5)).getData();
 
         if (rawData.size() == 9){  // Simple transaction
-        	byte v =     ((RLPItem) rawData.getElement(6)).getData()[0];
-            byte[] r =     ((RLPItem) rawData.getElement(7)).getData();
-            byte[] s =     ((RLPItem) rawData.getElement(8)).getData();
+        	byte v =		((RLPItem) rawData.get(6)).getData()[0];
+            byte[] r =		((RLPItem) rawData.get(7)).getData();
+            byte[] s =		((RLPItem) rawData.get(8)).getData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
         } else if (rawData.size() == 10){ // Contract creation transaction
-            this.init =           ((RLPItem) rawData.getElement(6)).getData();
-            byte v =     ((RLPItem) rawData.getElement(7)).getData()[0];
-            byte[] r =     ((RLPItem) rawData.getElement(8)).getData();
-            byte[] s =     ((RLPItem) rawData.getElement(9)).getData();
+            this.init =     ((RLPItem) rawData.get(6)).getData();
+            byte v =		((RLPItem) rawData.get(7)).getData()[0];
+            byte[] r =		((RLPItem) rawData.get(8)).getData();
+            byte[] s =		((RLPItem) rawData.get(9)).getData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
-        } else throw new Error("Wrong tx data element list size");
+        } else throw new RuntimeException("Wrong tx data element list size");
         this.parsed = true;
     }
 

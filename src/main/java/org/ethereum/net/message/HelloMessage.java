@@ -4,9 +4,9 @@ import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.net.Command.HELLO;
 
-import org.ethereum.net.rlp.RLP;
-import org.ethereum.net.rlp.RLPItem;
-import org.ethereum.net.rlp.RLPList;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 
 import java.nio.ByteBuffer;
 
@@ -40,25 +40,25 @@ public class HelloMessage extends Message {
     @Override
     public void parseRLP() {
 
-        RLPList paramsList = (RLPList) rawData.getElement(0);
+        RLPList paramsList = (RLPList) rawData.get(0);
 
         // the message does no distinguish between the 0 and null so here I check command code for null
         // todo: find out if it can be 00
-        if (((RLPItem)(paramsList).getElement(0)).getData() != null){
+        if (((RLPItem)(paramsList).get(0)).getData() != null){
             throw new Error("HelloMessage: parsing for mal data");
         }
 
-        this.protocolVersion  =            ((RLPItem) paramsList.getElement(1)).getData()[0];
+        this.protocolVersion  =            ((RLPItem) paramsList.get(1)).getData()[0];
 
-        byte[] networkIdBytes = 			((RLPItem) paramsList.getElement(2)).getData();
+        byte[] networkIdBytes = 			((RLPItem) paramsList.get(2)).getData();
         this.networkId        = 			networkIdBytes == null ? 0 : networkIdBytes[0] ;
 
-        this.clientId         = new String(((RLPItem) paramsList.getElement(3)).getData());
-        this.capabilities     =            ((RLPItem) paramsList.getElement(4)).getData()[0];
+        this.clientId         = new String(((RLPItem) paramsList.get(3)).getData());
+        this.capabilities     =            ((RLPItem) paramsList.get(4)).getData()[0];
 
-        ByteBuffer bb = ByteBuffer.wrap(((RLPItem) paramsList.getElement(5)).getData());
+        ByteBuffer bb = ByteBuffer.wrap(((RLPItem) paramsList.get(5)).getData());
         this.peerPort         = 			bb.getShort();
-        this.peerId           =            ((RLPItem) paramsList.getElement(6)).getData();
+        this.peerId           =            ((RLPItem) paramsList.get(6)).getData();
         this.parsed = true;
         // todo: what to do when mal data ?
     }

@@ -1,4 +1,4 @@
-package org.ethereum.net.vo;
+package org.ethereum.net.client;
 
 import org.spongycastle.util.encoders.Hex;
 
