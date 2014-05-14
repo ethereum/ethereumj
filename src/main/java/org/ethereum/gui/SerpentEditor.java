@@ -103,10 +103,19 @@ public class SerpentEditor extends JFrame {
 
                     // todo: integrate new compiler when avail
                     asmResult = SerpentCompiler.compile(codeArea.getText());
-                } catch (Throwable th) {th.printStackTrace();}
+                } catch (Throwable th) {
+                    th.printStackTrace();
 
+                    splitPanel.setDividerLocation(0.7);
+                    result.setVisible(true);
+                    result.setText(th.getMessage());
+                    result.setForeground(Color.RED);
+                    return;
+
+                }
+
+                result.setForeground(Color.BLUE);
                 splitPanel.setDividerLocation(0.7);
-
                 result.setVisible(true);
                 result.setText(asmResult);
             }

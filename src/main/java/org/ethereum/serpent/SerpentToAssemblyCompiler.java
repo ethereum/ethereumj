@@ -193,8 +193,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     public String visitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx) {
         if (ctx.mul_expr() == null) return visit(ctx.int_val());
 
-        String operand0 = visit(ctx.mul_expr());
-        String operand1 = visit(ctx.int_val());
+        String operand0 = visit(ctx.int_val());
+        String operand1 = visit(ctx.mul_expr());
 
         switch (ctx.OP_MUL().getText().toLowerCase()) {
             case "*": return operand0 + " " + operand1 + " MUL";
@@ -211,8 +211,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.add_expr() == null) return visit(ctx.mul_expr());
 
-        String operand0 = visit(ctx.add_expr());
-        String operand1 = visit(ctx.mul_expr());
+        String operand0 = visit(ctx.mul_expr());
+        String operand1 = visit(ctx.add_expr());
 
         switch (ctx.OP_ADD().getText().toLowerCase()) {
             case "+": return operand0 + " " + operand1 + " ADD";
@@ -230,10 +230,10 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.add_expr());
 
         switch (ctx.OP_REL().getText().toLowerCase()) {
-            case "<":  return operand0 + " " + operand1 + " LT";
-            case ">":  return operand0 + " " + operand1 + " GT";
-            case ">=": return operand0 + " " + operand1 + " LT NOT";
-            case "<=": return operand0 + " " + operand1 + " GT NOT";
+            case "<":  return operand1 + " " + operand0 + " LT";
+            case ">":  return operand1 + " " + operand0 + " GT";
+            case ">=": return operand1 + " " + operand0 + " LT NOT";
+            case "<=": return operand1 + " " + operand0 + " GT NOT";
             default: throw new UnknownOperandException(ctx.OP_REL().getText());
         }
     }
@@ -243,8 +243,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.eq_exp() == null) return visit(ctx.rel_exp());
 
-        String operand0 = visit(ctx.eq_exp());
-        String operand1 = visit(ctx.rel_exp());
+        String operand0 = visit(ctx.rel_exp());
+        String operand1 = visit(ctx.eq_exp());
 
         switch (ctx.OP_EQ().getText().toLowerCase()) {
             case "==":  return operand0 + " " + operand1 + " EQ";
@@ -258,8 +258,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.and_exp() == null) return visit(ctx.eq_exp());
 
-        String operand0 = visit(ctx.and_exp());
-        String operand1 = visit(ctx.eq_exp());
+        String operand0 = visit(ctx.eq_exp());
+        String operand1 = visit(ctx.and_exp());
 
         switch (ctx.OP_AND().getText().toLowerCase()) {
             case "&":  return operand0 + " " + operand1 + " AND";
@@ -272,8 +272,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.ex_or_exp() == null) return visit(ctx.and_exp());
 
-        String operand0 = visit(ctx.ex_or_exp());
-        String operand1 = visit(ctx.and_exp());
+        String operand0 = visit(ctx.and_exp());
+        String operand1 = visit(ctx.ex_or_exp());
 
         switch (ctx.OP_EX_OR().getText().toLowerCase()) {
             case "xor":  return operand0 + " " + operand1 + " XOR";
@@ -286,8 +286,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.in_or_exp() == null) return visit(ctx.ex_or_exp());
 
-        String operand0 = visit(ctx.in_or_exp());
-        String operand1 = visit(ctx.ex_or_exp());
+        String operand0 = visit(ctx.ex_or_exp());
+        String operand1 = visit(ctx.in_or_exp());
 
         switch (ctx.OP_IN_OR().getText().toLowerCase()) {
             case "|":  return operand0 + " " + operand1 + " OR";
@@ -300,8 +300,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.log_and_exp() == null) return visit(ctx.in_or_exp());
 
-        String operand0 = visit(ctx.log_and_exp());
-        String operand1 = visit(ctx.in_or_exp());
+        String operand0 = visit(ctx.in_or_exp());
+        String operand1 = visit(ctx.log_and_exp());
 
         switch (ctx.OP_LOG_AND().getText().toLowerCase()) {
             case "and":  return operand0 + " " + operand1 + " NOT NOT MUL";
@@ -315,8 +315,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.log_or_exp() == null) return visit(ctx.log_and_exp());
 
-        String operand0 = visit(ctx.log_or_exp());
-        String operand1 = visit(ctx.log_and_exp());
+        String operand0 = visit(ctx.log_and_exp());
+        String operand1 = visit(ctx.log_or_exp());
 
         switch (ctx.OP_LOG_OR().getText().toLowerCase()) {
             case "||":  return operand0 + " " + operand1 + " DUP 4 PC ADD JUMPI POP SWAP POP";
