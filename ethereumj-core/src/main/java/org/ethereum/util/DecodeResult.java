@@ -1,6 +1,8 @@
 package org.ethereum.util;
 
-public class DecodeResult {
+import java.io.Serializable;
+
+public class DecodeResult implements Serializable {
 
 	private int pos;
 	private Object decoded;

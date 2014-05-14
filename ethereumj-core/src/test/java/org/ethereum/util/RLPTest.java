@@ -7,6 +7,10 @@ import org.junit.Test;
 
 import com.cedarsoftware.util.DeepEquals;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -680,13 +684,14 @@ public class RLPTest {
 	}
 	
 	@Test
-	public void performanceDecode() {
-		String blocksRaw = "f8cbf8c7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817da00000000000000000000000000000000000000000000000000000000000000000834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
-		byte[] payload = Hex.decode(blocksRaw);
+	public void performanceDecode() throws IOException {
+		String blockRaw = "f8cbf8c7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a02f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817da00000000000000000000000000000000000000000000000000000000000000000834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+		byte[] payload = Hex.decode(blockRaw);
 		
 		final int ITERATIONS = 10000000;
 		RLPList list = null;
 		DecodeResult result = null;
+		System.out.println("Starting " + ITERATIONS + " decoding iterations...");
 
 		long start1 = System.currentTimeMillis();
 		for (int i = 0; i < ITERATIONS; i++) {
@@ -699,9 +704,16 @@ public class RLPTest {
 			list = RLP.decode2(payload);
 		}
 		long end2 = System.currentTimeMillis();
-		
-		System.out.println(list + "" + result);
-		System.out.println("Result RLP.decode(): " +  (end1-start1) + "ms");
-		System.out.println("Result RLP.decode2(): " +  (end2-start2) + "ms");
+				
+		System.out.println("Result RLP.decode()\t: " +  (end1-start1) + "ms and\t " + determineSize(result) + " bytes for each resulting object list");
+		System.out.println("Result RLP.decode2()\t: " +  (end2-start2) + "ms and\t " + determineSize(list) + " bytes for each resulting object list");
+	}
+	
+	private int determineSize(Serializable ser) throws IOException {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		ObjectOutputStream oos = new ObjectOutputStream(baos);
+		oos.writeObject(ser);
+		oos.close();
+		return baos.size();
 	}
 }
