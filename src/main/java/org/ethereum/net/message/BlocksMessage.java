@@ -51,6 +51,7 @@ public class BlocksMessage extends Message {
 	}
 
 	public String toString() {
+        if (!parsed) parseRLP();
 
 		StringBuffer sb = new StringBuffer();
 		for (Block blockData : this.getBlockDataList()) {

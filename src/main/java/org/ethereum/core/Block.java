@@ -109,9 +109,10 @@ public class Block {
 	// extradata, nonce]
     private void parseRLP() {
 
-        this.hash = HashUtil.sha3(rawData.getRLPData());
-
         RLPList params = (RLPList) rawData.get(0);
+
+        this.hash = HashUtil.sha3(params.getRLPData());
+
 
         this.parentHash     = ((RLPItem) params.get(0)).getData();
         this.unclesHash     = ((RLPItem) params.get(1)).getData();
@@ -120,7 +121,7 @@ public class Block {
         this.txTrieRoot     = ((RLPItem) params.get(4)).getData();
         this.difficulty     = ((RLPItem) params.get(5)).getData();
 
-        byte[] tsBytes      = ((RLPItem) params.get(6)).getData();       
+        byte[] tsBytes      = ((RLPItem) params.get(6)).getData();
         byte[] nrBytes      = ((RLPItem) params.get(7)).getData();
         byte[] gpBytes      = ((RLPItem) params.get(8)).getData();
         byte[] glBytes      = ((RLPItem) params.get(9)).getData();
@@ -128,9 +129,9 @@ public class Block {
 
         this.timestamp      =  (new BigInteger(tsBytes)).longValue();
         this.number 		= (new BigInteger(nrBytes)).longValue();
-        this.minGasPrice 	= (new BigInteger(gpBytes)).longValue();
-        this.gasLimit 		= (new BigInteger(glBytes)).longValue();
-        this.gasUsed 		= (new BigInteger(guBytes)).longValue();
+        this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(gpBytes)).longValue();
+        this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(glBytes)).longValue();
+        this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(guBytes)).longValue();
         
         this.extraData       = ((RLPItem) params.get(11)).getData();
         this.nonce           = ((RLPItem) params.get(12)).getData();
