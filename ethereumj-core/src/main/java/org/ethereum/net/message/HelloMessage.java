@@ -115,6 +115,7 @@ public class HelloMessage extends Message {
     }
 
     public String toString(){
+        if (!parsed) parseRLP();
         return "Hello Message [ command=" + HELLO.asByte() + " " +
                 " protocolVersion=" + this.protocolVersion + " " +
                 " networkId=" + this.networkId + " " +
