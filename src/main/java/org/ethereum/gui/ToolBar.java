@@ -21,7 +21,7 @@ public class ToolBar extends JFrame {
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
         this.setIconImage(img);
-        this.setSize(350, 130);
+        this.setSize(350, 200);
         this.setLocation(460, 25);
         this.setAlwaysOnTop(true);
         this.setResizable(false);
@@ -40,6 +40,13 @@ public class ToolBar extends JFrame {
 
         java.net.URL imageURL_3 = ClassLoader.getSystemResource("buttons/browser.png");
         ImageIcon image_3 = new ImageIcon(imageURL_3);
+
+        java.net.URL imageURL_4 = ClassLoader.getSystemResource("buttons/shazam.png");
+        ImageIcon image_4 = new ImageIcon(imageURL_4);
+
+        java.net.URL imageURL_5 = ClassLoader.getSystemResource("buttons/wallet.png");
+        ImageIcon image_5 = new ImageIcon(imageURL_5);
+
 
         JToggleButton editorToggle = new JToggleButton("");
         editorToggle.setIcon(image_1);
@@ -96,9 +103,37 @@ public class ToolBar extends JFrame {
             }
         });
 
+        JToggleButton chainToggle = new JToggleButton();
+        chainToggle.setIcon(image_4);
+        chainToggle.setToolTipText("Block Chain");
+        chainToggle.setContentAreaFilled(true);
+        chainToggle.setBackground(Color.WHITE);
+        chainToggle.setBorderPainted(false);
+        chainToggle.setFocusPainted(false);
+        chainToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        chainToggle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                BlockChainTable mainFrame = new BlockChainTable();
+                mainFrame.setVisible(true);
+//                mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            }
+        });
+
+        JToggleButton walletToggle = new JToggleButton();
+        walletToggle.setIcon(image_5);
+        walletToggle.setToolTipText("Wallet");
+        walletToggle.setContentAreaFilled(true);
+        walletToggle.setBackground(Color.WHITE);
+        walletToggle.setBorderPainted(false);
+        walletToggle.setFocusPainted(false);
+        walletToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         cp.add(editorToggle);
         cp.add(logToggle);
         cp.add(peersToggle);
+        cp.add(chainToggle);
+        cp.add(walletToggle);
     }
 
     public static void main(String args[]){
