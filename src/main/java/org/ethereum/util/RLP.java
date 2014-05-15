@@ -745,10 +745,10 @@ public class RLP {
 			return new byte[] { firstByte };
 		} else if (length < MAX_ITEM_LENGTH) {
 			byte[] binaryLength;
-			if(length < 0xFF)
-				binaryLength = new byte[] { (byte) length };
-			else 
+			if(length > 0xFF)
 				binaryLength = BigInteger.valueOf(length).toByteArray();
+			else 
+				binaryLength = new byte[] { (byte) length };
 			byte firstByte = (byte) (binaryLength.length + offset + SIZE_THRESHOLD - 1 );
 			return concatenate(new byte[] { firstByte }, binaryLength);
 		} else {
