@@ -30,7 +30,7 @@ public class TransactionsMessage extends Message {
     public void parseRLP() {
         RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getData()[0] & 0xFF) != TRANSACTIONS) {
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != TRANSACTIONS) {
             throw new Error("TransactionMessage: parsing for mal data");
         }
 
