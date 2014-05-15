@@ -2,7 +2,9 @@ package org.ethereum.block;
 
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.junit.Test;
@@ -11,6 +13,7 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 
 public class BlockTest {
 	
@@ -120,17 +123,12 @@ public class BlockTest {
     public void testGenesisFromRLP(){
     	// from RLP encoding
     	byte[] genesisBytes = Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
-    	Block genesis = new Block(genesisBytes);
-    	assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(genesis.hash()));
+    	Block genesis = new Block(RLP.decode2(genesisBytes));
+    	assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
     }
     
     @Test
     public void testGenesisFromNew() {
-    	
-    	System.out.println(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
-    	Object genesisItems = RLP.decode(Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED), 0).getDecoded();
-    	// TODO: verify genesis items with expected values
-
         /*	From: https://ethereum.etherpad.mozilla.org/11		
           	Genesis block is: 
              		( 
@@ -149,32 +147,11 @@ public class BlockTest {
         				B32(sha3(B(42)))
         			)
          */
-    	
-        byte[] parentHash = new byte[32];										System.out.println(Hex.toHexString(parentHash));
-        byte[] unclesHash = HashUtil.sha3(new byte[0]); 						System.out.println(Hex.toHexString(unclesHash));
-        byte[] coinbase = new byte[20]; 										System.out.println(Hex.toHexString(coinbase));
-        byte[] stateRoot = Hex.decode(CPP_PoC5_GENESIS_STATE_ROOT_HEX_HASH); 	System.out.println(Hex.toHexString(stateRoot));
-        byte[] txTrieRoot = new byte[32]; 										System.out.println(Hex.toHexString(txTrieRoot));
-        byte[] difficulty = doubleToByteArray(Math.pow(2, 22));					System.out.println(Hex.toHexString(difficulty));
-        long timestamp = 0;														System.out.println(Long.toHexString(timestamp));
-        long number = 0;														System.out.println(Long.toHexString(number));
-        long minGasPrice = 0;													System.out.println(Long.toHexString(minGasPrice));
-        long gasLimit = 1000000;												System.out.println(Long.toHexString(gasLimit));
-        long gasUsed = 0;														System.out.println(Long.toHexString(gasUsed));
-        byte[] extraData = new byte[0]; 										System.out.println(Hex.toHexString(extraData));
-        byte[] nonce = HashUtil.sha3(new byte[]{42});							System.out.println(Hex.toHexString(nonce));
-        Block block = new Block(parentHash, unclesHash, coinbase, stateRoot, txTrieRoot, difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp, extraData, nonce, null, null);
-        assertEquals(CPP_PoC5_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(block.getEncoded()));
-        assertEquals(CPP_PoC5_GENESIS_HEX_HASH, block.hash());
+    	Block genesis = new Genesis();
+        assertEquals(CPP_PoC5_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
+        assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
     }
     
-    private byte[] doubleToByteArray(double d) {
-    	byte[] output = new byte[8];
-    	long lng = Double.doubleToLongBits(d);
-    	for(int i = 0; i < 8; i++) output[i] = (byte)((lng >> ((7 - i) * 8)) & 0xff);
-    	return output;
-    }
-
     @Test /* create BlockData from part of  real RLP BLOCKS message */
     public void test3(){
 
