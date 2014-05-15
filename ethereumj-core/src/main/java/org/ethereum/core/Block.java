@@ -111,7 +111,7 @@ public class Block {
 
         RLPList params = (RLPList) rawData.get(0);
 
-        this.hash = HashUtil.sha3(params.getRLPData());
+        this.hash = HashUtil.sha3(rawData.getRLPData());
 
 
         this.parentHash     = ((RLPItem) params.get(0)).getData();
@@ -284,8 +284,8 @@ public class Block {
 	}
 
 	public byte[] getEncoded() {
-		if (this.encodedBlock == null) parseRLP();
-		return this.encodedBlock;
+		if (this.rawData.getRLPData() == null) parseRLP();
+		return this.rawData.getRLPData();
 	}
 	
 	public byte[] hash() {

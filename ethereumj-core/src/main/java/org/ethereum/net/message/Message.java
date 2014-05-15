@@ -11,6 +11,7 @@ public abstract class Message {
 
     RLPList rawData;
     boolean parsed = false;
+    byte[] payload;
 
 	public Message() {}
 

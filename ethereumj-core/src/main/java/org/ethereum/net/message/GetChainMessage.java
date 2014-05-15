@@ -7,9 +7,11 @@ import java.util.List;
 import static org.ethereum.net.Command.GET_CHAIN;
 
 import org.ethereum.net.Command;
+import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
@@ -23,6 +25,23 @@ public class GetChainMessage extends Message {
 
     public GetChainMessage(RLPList rawData) {
         super(rawData);
+    }
+
+    // todo: it get's byte for now change it to int
+    public GetChainMessage(byte number , byte[]... blockHashList){
+
+        byte[][] encodedElements = new byte[blockHashList.length + 2][];
+
+        encodedElements[0] = new byte[]{0x14};
+        int i = 1;
+        for (byte[] hash : blockHashList){
+            byte[] element = RLP.encodeElement(hash);
+            encodedElements[i] = element;
+            ++i;
+        }
+        encodedElements[i] = RLP.encodeByte(number);
+
+        this.payload = RLP.encodeList(encodedElements);
     }
 
     @Override
@@ -49,7 +68,7 @@ public class GetChainMessage extends Message {
 
     @Override
     public byte[] getPayload() {
-        return null;
+        return payload;
     }
 
     public List<byte[]> getBlockHashList() {

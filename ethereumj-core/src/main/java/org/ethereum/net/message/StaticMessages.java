@@ -1,6 +1,7 @@
 package org.ethereum.net.message;
 
 import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
@@ -46,14 +47,10 @@ public class StaticMessages {
                                                 (byte) 0x00, (byte) 0x00, (byte) 0x00, (byte) 0x03,
                                                 (byte) 0xC2, (byte) 0x01, (byte) 0x08};
 
-    public static final byte[] GET_CHAIN = {
-            (byte) 0x22,  (byte) 0x40,  (byte) 0x08,  (byte) 0x91,  (byte) 0x00,  (byte) 0x00,  (byte) 0x00,  (byte) 0x27,
-            (byte) 0xF8,  (byte) 0x25,  (byte) 0x14,  (byte) 0xA0,  (byte) 0xAB,  (byte) 0x6B,  (byte) 0x9A,  (byte) 0x56,  (byte) 0x13,
-            (byte) 0x97,  (byte) 0x0F,  (byte) 0xAA,  (byte) 0x77,  (byte) 0x1B,  (byte) 0x12,  (byte) 0xD4,  (byte) 0x49,
-            (byte) 0xB2,  (byte) 0xE9,  (byte) 0xBB,  (byte) 0x92,  (byte) 0x5A,  (byte) 0xB7,  (byte) 0xA3,  (byte) 0x69,
-            (byte) 0xF0,  (byte) 0xA4,  (byte) 0xB8,  (byte) 0x6B,  (byte) 0x28,  (byte) 0x6E,  (byte) 0x9D,  (byte) 0x54,
-            (byte) 0x00,  (byte) 0x99,  (byte) 0xCF,  (byte) 0x82,  (byte) 0x01,  (byte) 0x00,
-    };
+    public static final byte[] GET_CHAIN = Hex.decode("2240089100000027F82514A069A7356A245F9DC5B865475ADA5EE4E89B18F93C06503A9DB3B3630E88E9FB4E820100");
+
+    public static final byte[] GENESSIS_HASH = Hex.decode("69a7356a245f9dc5b865475ada5ee4e89b18f93c06503a9db3b3630e88e9fb4e");
+    public static final byte[] MAGIC_PACKET = Hex.decode("22400891");
 
     static {
         String peerId  = "CE 73 F1 F1 F1 F1 6C 1B 3F DA 7B 18 EF 7B A3 CE " +

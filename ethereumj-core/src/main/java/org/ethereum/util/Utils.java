@@ -78,4 +78,17 @@ public class Utils {
         ImageIcon image = new ImageIcon(imageURL);
         return image;
     }
+
+    // The packet size should be 4 byte long
+    public static byte[] calcPacketSize(byte[] packet){
+
+        byte[] size = new byte[4];
+
+        size[3] = (byte)(packet.length >> 0 & 0xFF);
+        size[2] = (byte)(packet.length >> 8 & 0xFF);
+        size[1] = (byte)(packet.length >> 16 & 0xFF);
+        size[0] = (byte)(packet.length >> 24 & 0xFF);
+
+        return size;
+    }
 }

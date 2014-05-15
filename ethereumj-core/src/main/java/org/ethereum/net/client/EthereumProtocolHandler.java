@@ -108,7 +108,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 System.out.println("[Send: GET_CHAIN]");
                 sendGetChain(ctx);
             }
-        }, 10000);
+        }, 10000, 10000);
 /*
         timer.schedule(new TimerTask() {
 
@@ -304,8 +304,15 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendGetChain(ChannelHandlerContext ctx){
-        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_CHAIN.length);
-        buffer.writeBytes(StaticMessages.GET_CHAIN);
+
+        byte[] hash = MainData.instance.getLatestBlockHash();
+        GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
+
+        ByteBuf buffer = ctx.alloc().buffer(chainMessage.getPayload().length + 8);
+        buffer.writeBytes(StaticMessages.MAGIC_PACKET);
+        buffer.writeBytes(Utils.calcPacketSize(chainMessage.getPayload()));
+        buffer.writeBytes(chainMessage.getPayload());
+
         ctx.writeAndFlush(buffer);
     }
 
