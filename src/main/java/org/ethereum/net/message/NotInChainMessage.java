@@ -25,10 +25,10 @@ public class NotInChainMessage extends Message {
     public void parseRLP() {
         RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getData()[0] & 0xFF) != NOT_IN_CHAIN){
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != NOT_IN_CHAIN){
             throw new Error("NotInChain Message: parsing for mal data");
         }
-        hash = ((RLPItem)paramsList.get(1)).getData();
+        hash = ((RLPItem)paramsList.get(1)).getRLPData();
     }
 
     @Override

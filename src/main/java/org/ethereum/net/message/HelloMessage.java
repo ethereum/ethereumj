@@ -44,21 +44,21 @@ public class HelloMessage extends Message {
 
         // the message does no distinguish between the 0 and null so here I check command code for null
         // todo: find out if it can be 00
-        if (((RLPItem)(paramsList).get(0)).getData() != null){
+        if (((RLPItem)(paramsList).get(0)).getRLPData() != null){
             throw new Error("HelloMessage: parsing for mal data");
         }
 
-        this.protocolVersion  =            ((RLPItem) paramsList.get(1)).getData()[0];
+        this.protocolVersion  =            ((RLPItem) paramsList.get(1)).getRLPData()[0];
 
-        byte[] networkIdBytes = 			((RLPItem) paramsList.get(2)).getData();
+        byte[] networkIdBytes = 			((RLPItem) paramsList.get(2)).getRLPData();
         this.networkId        = 			networkIdBytes == null ? 0 : networkIdBytes[0] ;
 
-        this.clientId         = new String(((RLPItem) paramsList.get(3)).getData());
-        this.capabilities     =            ((RLPItem) paramsList.get(4)).getData()[0];
+        this.clientId         = new String(((RLPItem) paramsList.get(3)).getRLPData());
+        this.capabilities     =            ((RLPItem) paramsList.get(4)).getRLPData()[0];
 
-        ByteBuffer bb = ByteBuffer.wrap(((RLPItem) paramsList.get(5)).getData());
+        ByteBuffer bb = ByteBuffer.wrap(((RLPItem) paramsList.get(5)).getRLPData());
         this.peerPort         = 			bb.getShort();
-        this.peerId           =            ((RLPItem) paramsList.get(6)).getData();
+        this.peerId           =            ((RLPItem) paramsList.get(6)).getRLPData();
         this.parsed = true;
         // todo: what to do when mal data ?
     }

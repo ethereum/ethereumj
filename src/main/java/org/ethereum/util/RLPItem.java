@@ -1,24 +1,22 @@
 package org.ethereum.util;
 
-import java.io.Serializable;
 
 /**
  * www.ethereumJ.com 
  * User: Roman Mandeleil 
  * Created on: 21/04/14 16:26
  */
-public class RLPItem implements RLPElement, Serializable {
+public class RLPItem implements RLPElement {
 
-	byte[] data;
-
-	public RLPItem(byte[] data) {
-		this.data = data;
+	byte[] rlpData;
+	
+	public RLPItem(byte[] rlpData) {
+		this.rlpData = rlpData;
 	}
-
-	public byte[] getData() {
-
-		if (data.length == 0)
+	
+	public byte[] getRLPData() {
+		if (rlpData.length == 0)
 			return null;
-		return data;
+		return rlpData;
 	}
 }
