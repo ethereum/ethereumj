@@ -732,7 +732,7 @@ public class RLP {
 			if(inputAsBytes.length == 1) {
 				return inputAsBytes;
 			} else {
-				byte[] firstByte = encodeLength(inputAsBytes.length, OFFSET_SHORT_ITEM);
+				byte[] firstByte = encodeLength(inputAsBytes.length, OFFSET_SHORT_ITEM);				
 				return concatenate(firstByte, inputAsBytes);
 			}
 		} 
@@ -744,7 +744,11 @@ public class RLP {
 			byte firstByte = (byte) (length + offset);
 			return new byte[] { firstByte };
 		} else if (length < MAX_ITEM_LENGTH) {
-			byte[] binaryLength = BigInteger.valueOf(length).toByteArray();
+			byte[] binaryLength;
+			if(length > 0xFF)
+				binaryLength = BigInteger.valueOf(length).toByteArray();
+			else 
+				binaryLength = new byte[] { (byte) length };
 			byte firstByte = (byte) (binaryLength.length + offset + SIZE_THRESHOLD - 1 );
 			return concatenate(new byte[] { firstByte }, binaryLength);
 		} else {
@@ -777,7 +781,10 @@ public class RLP {
     }
 
     public static byte[] encodeBigInteger(BigInteger srcBigInteger) {
-        return encodeElement(srcBigInteger.toByteArray());
+    	if(srcBigInteger == BigInteger.ZERO) 
+    		return encodeByte((byte)0);
+    	else 
+    		return encodeElement(srcBigInteger.toByteArray());
     }
 
     public static byte[] encodeElement(byte[] srcData) {
@@ -864,6 +871,9 @@ public class RLP {
 		} else if (input instanceof String) {
 			String inputString = (String) input;
 			return inputString.getBytes();
+		} else if(input instanceof Long) {
+			Long inputLong = (Long) input;	
+			return (inputLong == 0) ? new byte[0] : BigInteger.valueOf(inputLong).toByteArray();
 		} else if(input instanceof Integer) {
 			Integer inputInt = (Integer) input;	
 			return (inputInt == 0) ? new byte[0] : BigInteger.valueOf(inputInt.longValue()).toByteArray();
