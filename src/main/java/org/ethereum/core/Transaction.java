@@ -1,11 +1,17 @@
 package org.ethereum.core;
 
+import java.math.BigInteger;
+
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
+
+import edu.emory.mathcs.backport.java.util.Arrays;
 
 /**
  * A transaction (formally, T ) is a single cryptographically 
@@ -17,7 +23,7 @@ import org.ethereum.util.Utils;
  */
 public class Transaction {
 
-    private RLPList rawData;
+    private byte[] rlpEncoded;
     private boolean parsed = false;
 
     /* creation contract tx
@@ -44,8 +50,7 @@ public class Transaction {
 	 * to the state or transaction list consumes some gas. */
     private byte[] gasLimit;
 	/* An unlimited size byte array specifying 
-	 * either input [data] of the message call 
-	 * or the [body] for a new contract */
+	 * input [data] of the message call */ 
     private byte[] data;
 	/* Initialisation code for a new contract */
     private byte[] init;
@@ -53,51 +58,63 @@ public class Transaction {
 	 * (including public key recovery bits) */
     private ECDSASignature signature;
 
-    public Transaction(RLPList rawData) {
-        this.rawData = rawData;
+    public Transaction(byte[] rawData) {
+    	System.out.println("Transaction created from RLP: " + Hex.toHexString(rawData));
+        this.rlpEncoded = rawData;
         parsed = false;
     }
 
-    public Transaction(byte[] nonce, byte[] value, byte[] recieveAddress, byte[] gasPrice, byte[] gas, byte[] data, byte v, byte[] r, byte[] s) {
+    public Transaction(byte[] nonce, byte[] value, byte[] recieveAddress, byte[] gasPrice, byte[] gas, byte[] data) {
         this.nonce = nonce;
         this.value = value;
         this.receiveAddress = recieveAddress;
         this.gasPrice = gasPrice;
         this.gasLimit = gas;
-        this.data = data;
-        this.signature = ECDSASignature.fromComponents(r, s, v);
+        if(recieveAddress == null) {
+        	this.init = data;
+        } else {
+        	this.data = data;
+        }
         parsed = true;
     }
 
     public void rlpParse(){
 
-        RLPList params = (RLPList) rawData.get(0);
+    	RLPList decodedTxList = RLP.decode2(rlpEncoded);
+    	RLPList transaction = (RLPList) ((RLPList) decodedTxList.get(0)).get(0);
 
-        this.hash = HashUtil.sha3(rawData.getRLPData());
-        this.nonce =          ((RLPItem) params.get(0)).getRLPData();
-        this.value =          ((RLPItem) params.get(1)).getRLPData();
-        this.receiveAddress = ((RLPItem) params.get(2)).getRLPData();
-        this.gasPrice =       ((RLPItem) params.get(3)).getRLPData();
-        this.gasLimit =       ((RLPItem) params.get(4)).getRLPData();
-        this.data =           ((RLPItem) params.get(5)).getRLPData();
+    	this.hash  = HashUtil.sha3(rlpEncoded);
+    	
+    	/* Temporary order for an RLP encoded transaction in cpp client */ 
+        this.nonce =          ((RLPItem) transaction.get(0)).getRLPData();
+        this.gasPrice =       ((RLPItem) transaction.get(1)).getRLPData();
+        this.gasLimit =       ((RLPItem) transaction.get(2)).getRLPData();
+        this.receiveAddress = ((RLPItem) transaction.get(3)).getRLPData();
+        this.value =          ((RLPItem) transaction.get(4)).getRLPData();
+        this.data =           ((RLPItem) transaction.get(5)).getRLPData();
+    	
+        /* Order of the Yellow Paper / eth-go & pyethereum clients
+        this.nonce =          ((RLPItem) transaction.get(0)).getRLPData();
+        this.value =          ((RLPItem) transaction.get(1)).getRLPData();
+        this.receiveAddress = ((RLPItem) transaction.get(2)).getRLPData();
+        this.gasPrice =       ((RLPItem) transaction.get(3)).getRLPData();
+        this.gasLimit =       ((RLPItem) transaction.get(4)).getRLPData();
+        this.data =           ((RLPItem) transaction.get(5)).getRLPData();
+        */
 
-        if (params.size() == 9){  // Simple transaction
-        	byte v =		((RLPItem) params.get(6)).getRLPData()[0];
-            byte[] r =		((RLPItem) params.get(7)).getRLPData();
-            byte[] s =		((RLPItem) params.get(8)).getRLPData();
+        if (transaction.size() == 9){  // Simple transaction
+        	byte v =		((RLPItem) transaction.get(6)).getRLPData()[0];
+            byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
+            byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
-        } else if (params.size() == 10){ // Contract creation transaction
-            this.init =     ((RLPItem) params.get(6)).getRLPData();
-            byte v =		((RLPItem) params.get(7)).getRLPData()[0];
-            byte[] r =		((RLPItem) params.get(8)).getRLPData();
-            byte[] s =		((RLPItem) params.get(9)).getRLPData();
+        } else if (transaction.size() == 10){ // Contract creation transaction
+            this.init =     ((RLPItem) transaction.get(6)).getRLPData();
+            byte v =		((RLPItem) transaction.get(7)).getRLPData()[0];
+            byte[] r =		((RLPItem) transaction.get(8)).getRLPData();
+            byte[] s =		((RLPItem) transaction.get(9)).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
         } else throw new RuntimeException("Wrong tx data element list size");
         this.parsed = true;
-    }
-
-    public RLPList getRawData() {
-        return rawData;
     }
 
     public boolean isParsed() {
@@ -106,7 +123,7 @@ public class Transaction {
 
     public byte[] getHash() {
         if (!parsed) rlpParse();
-        return hash;
+        return HashUtil.sha3(this.getEncoded(false));
     }
 
     public byte[] getNonce() {
@@ -193,5 +210,48 @@ public class Transaction {
                 ", signatureR=" + Utils.toHexString(signature.r.toByteArray()) +
                 ", signatureS=" + Utils.toHexString(signature.s.toByteArray()) +
                 ']';
+    }
+    
+    public byte[] getEncoded(boolean signed) {
+		if(rlpEncoded == null) {
+
+	        // TODO: Alternative clean way to encode, using RLP.encode() after it's optimized
+	        // return new Object[] { nonce, value, receiveAddress, gasPrice, 
+			//							gasLimit, data, init, signature };
+
+			/* Temporary order for an RLP encoded transaction in cpp client */
+	        byte[] nonce 				= RLP.encodeElement(this.nonce);
+	        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
+	        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
+	        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
+	        byte[] value 				= RLP.encodeElement(this.value);
+	        byte[] data 				= RLP.encodeElement(this.data);
+
+	        if(signed) {
+//	        	byte[] signature	= RLP.encodeElement(this.signature);
+	        }
+
+	        if(Arrays.equals(this.receiveAddress, new byte[0])) {
+	        	byte[] init 			= RLP.encodeElement(this.init);
+		        this.rlpEncoded = RLP.encodeList(nonce, value, receiveAddress,
+		        		gasPrice, gasLimit, data, init);
+	        } else {
+		        this.rlpEncoded = RLP.encodeList(nonce, value, receiveAddress,
+		        		gasPrice, gasLimit, data);
+	        }
+	        			
+	        /* Order of the Yellow Paper / eth-go & pyethereum clients
+	        byte[] nonce			= RLP.encodeElement(this.nonce);
+	        byte[] value			= RLP.encodeElement(this.value);
+	        byte[] receiveAddress 	= RLP.encodeElement(this.receiveAddress);
+	        byte[] gasPrice			= RLP.encodeElement(this.gasPrice);
+	        byte[] gasLimit			= RLP.encodeElement(this.gasLimit);
+	        byte[] data				= RLP.encodeElement(this.data);
+	        byte[] init				= RLP.encodeElement(this.init);
+	        */
+	        
+	
+		}
+		return rlpEncoded;
     }
 }

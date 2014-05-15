@@ -1,4 +1,4 @@
-package org.ethereum.block;
+package org.ethereum.core;
 
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.core.Block;
