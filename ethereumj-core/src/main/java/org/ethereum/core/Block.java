@@ -119,17 +119,17 @@ public class Block {
         this.txTrieRoot     = ((RLPItem) header.get(4)).getRLPData();
         this.difficulty     = ((RLPItem) header.get(5)).getRLPData();
 
-        byte[] tsBytes      = ((RLPItem) header.get(6)).getRLPData();
-        byte[] nrBytes      = ((RLPItem) header.get(7)).getRLPData();
-        byte[] gpBytes      = ((RLPItem) header.get(8)).getRLPData();
-        byte[] glBytes      = ((RLPItem) header.get(9)).getRLPData();
-        byte[] guBytes      = ((RLPItem) header.get(10)).getRLPData();
-
-        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(tsBytes)).longValue();
+        byte[] nrBytes      = ((RLPItem) header.get(6)).getRLPData();
+        byte[] gpBytes      = ((RLPItem) header.get(7)).getRLPData();
+        byte[] glBytes      = ((RLPItem) header.get(8)).getRLPData();
+        byte[] guBytes      = ((RLPItem) header.get(9)).getRLPData();
+        byte[] tsBytes      = ((RLPItem) header.get(10)).getRLPData();
+        
         this.number 		= nrBytes == null ? 0 : (new BigInteger(nrBytes)).longValue();
         this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(gpBytes)).longValue();
         this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(glBytes)).longValue();
         this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(guBytes)).longValue();
+        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(tsBytes)).longValue();
         
         this.extraData       = ((RLPItem) header.get(11)).getRLPData();
         this.nonce           = ((RLPItem) header.get(12)).getRLPData();
@@ -137,7 +137,7 @@ public class Block {
         // parse transactions
         RLPList transactions = (RLPList) block.get(1);
         for (RLPElement rlpTx : transactions){
-            Transaction tx = new Transaction((RLPList)rlpTx);
+            Transaction tx = new Transaction(rlpTx.getRLPData());
             this.transactionsList.add(tx);
         }
         // parse uncles
@@ -195,18 +195,22 @@ public class Block {
     }
     
     public long getNumber() {
+    	if (!parsed) parseRLP();
 		return number;
 	}
 
 	public long getMinGasPrice() {
+		if (!parsed) parseRLP();
 		return minGasPrice;
 	}
 
 	public long getGasLimit() {
+		if (!parsed) parseRLP();
 		return gasLimit;
 	}
 
 	public long getGasUsed() {
+		if (!parsed) parseRLP();
 		return gasUsed;
 	}
 

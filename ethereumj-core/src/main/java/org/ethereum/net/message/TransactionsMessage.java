@@ -38,7 +38,7 @@ public class TransactionsMessage extends Message {
         int size = paramsList.size();
         for (int i = 1; i < size; ++i){
             RLPList rlpTxData = (RLPList) paramsList.get(i);
-            Transaction tx = new Transaction(rlpTxData);
+            Transaction tx = new Transaction(rlpTxData.getRLPData());
             transactions.add(tx);
         }
         parsed = true;
