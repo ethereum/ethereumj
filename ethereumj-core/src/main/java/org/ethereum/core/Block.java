@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
@@ -25,7 +26,6 @@ public class Block {
 	private static int GAS_LIMIT = (int) Math.pow(10, 6);
 
 	private RLPList rawData;
-	private byte[] encodedBlock;
     private boolean parsed = false;
 
     private byte[] hash;
@@ -77,14 +77,10 @@ public class Block {
         this.parsed = false;
     }
     
-    public Block(byte[] encodedBlock) {
-        this.encodedBlock = encodedBlock;
-    }
-    
 	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
 			byte[] stateRoot, byte[] txTrieRoot, byte[] difficulty,
-			long timestamp, long number, long minGasPrice, long gasLimit,
-			long gasUsed, byte[] extraData, byte[] nonce,
+			long number, long minGasPrice, long gasLimit, long gasUsed, 
+			long timestamp, byte[] extraData, byte[] nonce,
 			List<Transaction> transactionsList, List<Block> uncleList) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
@@ -92,11 +88,11 @@ public class Block {
         this.stateRoot = stateRoot;
         this.txTrieRoot = txTrieRoot;
         this.difficulty = difficulty;
-        this.timestamp = timestamp;
         this.number = number;
         this.minGasPrice = minGasPrice;
         this.gasLimit = gasLimit;
         this.gasUsed = gasUsed;
+        this.timestamp = timestamp;
         this.extraData = extraData;
         this.nonce = nonce;
         this.transactionsList = transactionsList;
@@ -105,7 +101,7 @@ public class Block {
     }
 
 	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
-	// difficulty, timestamp, number, minGasPrice, gasLimit, gasUsed, 
+	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
 	// extradata, nonce]
     private void parseRLP() {
 
@@ -113,37 +109,38 @@ public class Block {
 
         this.hash = HashUtil.sha3(params.getRLPData());
 
+        RLPList header = (RLPList) params.get(0);
+        
+        this.parentHash     = ((RLPItem) header.get(0)).getData();
+        this.unclesHash     = ((RLPItem) header.get(1)).getData();
+        this.coinbase       = ((RLPItem) header.get(2)).getData();
+        this.stateRoot      = ((RLPItem) header.get(3)).getData();
+        this.txTrieRoot     = ((RLPItem) header.get(4)).getData();
+        this.difficulty     = ((RLPItem) header.get(5)).getData();
 
-        this.parentHash     = ((RLPItem) params.get(0)).getData();
-        this.unclesHash     = ((RLPItem) params.get(1)).getData();
-        this.coinbase       = ((RLPItem) params.get(2)).getData();
-        this.stateRoot      = ((RLPItem) params.get(3)).getData();
-        this.txTrieRoot     = ((RLPItem) params.get(4)).getData();
-        this.difficulty     = ((RLPItem) params.get(5)).getData();
+        byte[] tsBytes      = ((RLPItem) header.get(6)).getData();
+        byte[] nrBytes      = ((RLPItem) header.get(7)).getData();
+        byte[] gpBytes      = ((RLPItem) header.get(8)).getData();
+        byte[] glBytes      = ((RLPItem) header.get(9)).getData();
+        byte[] guBytes      = ((RLPItem) header.get(10)).getData();
 
-        byte[] tsBytes      = ((RLPItem) params.get(6)).getData();
-        byte[] nrBytes      = ((RLPItem) params.get(7)).getData();
-        byte[] gpBytes      = ((RLPItem) params.get(8)).getData();
-        byte[] glBytes      = ((RLPItem) params.get(9)).getData();
-        byte[] guBytes      = ((RLPItem) params.get(10)).getData();
-
-        this.timestamp      =  (new BigInteger(tsBytes)).longValue();
-        this.number 		= (new BigInteger(nrBytes)).longValue();
+        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(tsBytes)).longValue();
+        this.number 		= nrBytes == null ? 0 : (new BigInteger(nrBytes)).longValue();
         this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(gpBytes)).longValue();
         this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(glBytes)).longValue();
         this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(guBytes)).longValue();
         
-        this.extraData       = ((RLPItem) params.get(11)).getData();
-        this.nonce           = ((RLPItem) params.get(12)).getData();
+        this.extraData       = ((RLPItem) header.get(11)).getData();
+        this.nonce           = ((RLPItem) header.get(12)).getData();
 
         // parse transactions
-        RLPList transactions = (RLPList) rawData.get(1);
+        RLPList transactions = (RLPList) params.get(1);
         for (RLPElement rlpTx : transactions){
             Transaction tx = new Transaction((RLPList)rlpTx);
             this.transactionsList.add(tx);
         }
         // parse uncles
-        RLPList uncleBlocks = (RLPList) rawData.get(2);
+        RLPList uncleBlocks = (RLPList) params.get(2);
         for (RLPElement rawUncle : uncleBlocks){
             Block blockData = new Block((RLPList)rawUncle);
             this.uncleList.add(blockData);
@@ -153,7 +150,7 @@ public class Block {
 
     public byte[] getHash(){
         if (!parsed) parseRLP();
-        return hash;
+       	return HashUtil.sha3(this.getEncoded());
     }
 
     public Block getParent() {
@@ -224,16 +221,22 @@ public class Block {
 
     public List<Transaction> getTransactionsList() {
         if (!parsed) parseRLP();
+        if (transactionsList == null) {
+        	this.transactionsList = new ArrayList<Transaction>();
+        }
         return transactionsList;
     }
 
     public List<Block> getUncleList() {
         if (!parsed) parseRLP();
+        if (uncleList == null) {
+        	this.uncleList = new ArrayList<Block>();
+        }
         return uncleList;
     }
 
 	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
-	// difficulty, timestamp, number, minGasPrice, gasLimit, gasUsed, 
+	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
 	// extradata, nonce]
     @Override
     public String toString() {
@@ -247,11 +250,11 @@ public class Block {
                 ", stateHash=" 		+ Utils.toHexString(stateRoot) +
                 ", txTrieHash=" 	+ Utils.toHexString(txTrieRoot) +
                 ", difficulty=" 	+ Utils.toHexString(difficulty) +
-                ", timestamp=" 		+ timestamp +
                 ", number=" 		+ number +
                 ", minGasPrice=" 	+ minGasPrice +
                 ", gasLimit=" 		+ gasLimit +
                 ", gasUsed=" 		+ gasUsed +
+                ", timestamp=" 		+ timestamp +
                 ", extraData=" 		+ Utils.toHexString(extraData) +
                 ", nonce=" 			+ Utils.toHexString(nonce) +
                 ']';
@@ -284,11 +287,35 @@ public class Block {
 	}
 
 	public byte[] getEncoded() {
-		if (this.encodedBlock == null) parseRLP();
-		return this.encodedBlock;
-	}
-	
-	public byte[] hash() {
-		return HashUtil.sha3(this.getEncoded());
+        byte[] parentHash		= RLP.encodeElement(this.parentHash);
+        byte[] unclesHash		= RLP.encodeElement(this.unclesHash);
+        byte[] coinbase			= RLP.encodeElement(this.coinbase);
+        byte[] stateRoot		= RLP.encodeElement(this.stateRoot);
+        byte[] txTrieRoot		= RLP.encodeElement(this.txTrieRoot);
+        byte[] difficulty		= RLP.encodeElement(this.difficulty);
+        byte[] number			= RLP.encodeBigInteger(BigInteger.valueOf(this.number));
+        byte[] minGasPrice		= RLP.encodeBigInteger(BigInteger.valueOf(this.minGasPrice));
+        byte[] gasLimit			= RLP.encodeBigInteger(BigInteger.valueOf(this.gasLimit));
+        byte[] gasUsed			= RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
+        byte[] timestamp		= RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
+        byte[] extraData		= RLP.encodeElement(this.extraData);
+        byte[] nonce			= RLP.encodeElement(this.nonce);
+
+        byte[] header = RLP.encodeList(parentHash, unclesHash, coinbase,
+				stateRoot, txTrieRoot, difficulty, number,
+				minGasPrice, gasLimit, gasUsed, timestamp, extraData, nonce);
+        
+        byte[] transactions = RLP.encodeList();
+        byte[] uncles = RLP.encodeList();       
+        
+        return RLP.encodeList(header, transactions, uncles);
+        
+        // TODO: Alternative clean way to encode, using RLP.encode() after it's optimized
+//		Object[] header = new Object[] { parentHash, unclesHash, coinbase,
+//				stateRoot, txTrieRoot, difficulty, number, minGasPrice,
+//				gasLimit, gasUsed, timestamp, extraData, nonce };
+//		Object[] transactions = this.getTransactionsList().toArray();
+//		Object[] uncles = this.getUncleList().toArray();        
+//      return RLP.encode(new Object[] { header, transactions, uncles });
 	}
 }
