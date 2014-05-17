@@ -1,9 +1,17 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Block;
+import org.ethereum.manager.MainData;
+
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
+import java.beans.PropertyChangeListener;
 
 /**
  * www.ethereumJ.com
@@ -16,8 +24,12 @@ public class BlockChainTable extends JFrame {
     private	JTable		table;
     private	JScrollPane scrollPane;
 
+    private int lastFindIndex = 0;
+
 
     public BlockChainTable() {
+
+        final BlockChainTable blockChainTable = this;
 
         setTitle("Block Chain Table");
         setSize(700, 400);
@@ -47,14 +59,57 @@ public class BlockChainTable extends JFrame {
         renderer.setHorizontalAlignment(SwingConstants.LEFT);
         renderer.setVerticalAlignment(SwingConstants.TOP);
 
-
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         table.setCellSelectionEnabled(true);
 
         table.setRowMargin(3);
-        table.setRowHeight(120);
+        table.setRowHeight(420);
 
         table.getColumnModel().getColumn(0).setCellRenderer(new TableCellLongTextRenderer());
+
+        table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK), "Copy");
+        table.getActionMap().put("Copy", new AbstractAction(){
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (MainData.instance.getAllBlocks().size() - 1 < lastFindIndex) return;
+
+                Block block = MainData.instance.getAllBlocks().get(lastFindIndex);
+                StringSelection stsel = new StringSelection(block.toString());
+                Clipboard system = Toolkit.getDefaultToolkit().getSystemClipboard();
+                system.setContents(stsel,stsel);
+            }
+        } );
+
+        table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK), "Find");
+        table.getActionMap().put("Find", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                String toFind = JOptionPane.showInputDialog(blockChainTable, "Find:",
+                        "Find in BlockChain", JOptionPane.QUESTION_MESSAGE);
+
+                if (toFind.equals("")){
+                    lastFindIndex = 0;
+                    return;
+                }
+
+                for (int i = lastFindIndex + 1; i < MainData.instance.getAllBlocks().size(); ++i){
+
+                    if (MainData.instance.getAllBlocks().size() - 1 < i) return;
+                    Block block = MainData.instance.getAllBlocks().get(i);
+                    boolean found = block.toString().toLowerCase().contains(toFind.toLowerCase());
+                    if (found) {
+                        // todo: now we find the first occur
+                        // todo: in the future I should keep
+                        // todo: all of them and allow to jump over them
+                        table.scrollRectToVisible(table.getCellRect(i, 0, true));
+                        lastFindIndex = i;
+                        break;
+                    }
+                }
+            }
+        });
 
         // Add the table to a scrolling pane
         scrollPane = new JScrollPane(table);

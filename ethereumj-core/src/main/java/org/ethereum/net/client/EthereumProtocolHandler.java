@@ -108,7 +108,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 System.out.println("[Send: GET_CHAIN]");
                 sendGetChain(ctx);
             }
-        }, 10000, 10000);
+        }, 5000, 1000);
 /*
         timer.schedule(new TimerTask() {
 

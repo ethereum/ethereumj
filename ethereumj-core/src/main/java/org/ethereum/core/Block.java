@@ -240,6 +240,7 @@ public class Block {
         return uncleList;
     }
 
+    private StringBuffer toStringBuff = new StringBuffer();
 	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
 	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
 	// extradata, nonce]
@@ -247,22 +248,34 @@ public class Block {
     public String toString() {
         if (!parsed) parseRLP();
 
-        return "BlockData [" +  
-        		"  hash=" 			+ Utils.toHexString(hash) +
-                "  parentHash=" 	+ Utils.toHexString(parentHash) +
-                ", unclesHash=" 	+ Utils.toHexString(unclesHash) +
-                ", coinbase=" 		+ Utils.toHexString(coinbase) +
-                ", stateHash=" 		+ Utils.toHexString(stateRoot) +
-                ", txTrieHash=" 	+ Utils.toHexString(txTrieRoot) +
-                ", difficulty=" 	+ Utils.toHexString(difficulty) +
-                ", number=" 		+ number +
-                ", minGasPrice=" 	+ minGasPrice +
-                ", gasLimit=" 		+ gasLimit +
-                ", gasUsed=" 		+ gasUsed +
-                ", timestamp=" 		+ timestamp +
-                ", extraData=" 		+ Utils.toHexString(extraData) +
-                ", nonce=" 			+ Utils.toHexString(nonce) +
-                ']';
+        toStringBuff.setLength(0);
+        toStringBuff.append("BlockData [\n");
+        toStringBuff.append("  hash=" + Utils.toHexString(hash)).append("\n");
+        toStringBuff.append("  parentHash=" + Utils.toHexString(parentHash)).append("\n");
+        toStringBuff.append("  unclesHash=" + Utils.toHexString(unclesHash)).append("\n");
+        toStringBuff.append("  coinbase=" + Utils.toHexString(coinbase)).append("\n");
+        toStringBuff.append("  stateHash=" 		+ Utils.toHexString(stateRoot)).append("\n");
+        toStringBuff.append("  txTrieHash=" 	+ Utils.toHexString(txTrieRoot)).append("\n");
+        toStringBuff.append("  difficulty=" 	+ Utils.toHexString(difficulty)).append("\n");
+        toStringBuff.append("  number=" 		+ number).append("\n");
+        toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("\n");
+        toStringBuff.append("  gasLimit=" 		+ gasLimit).append("\n");
+        toStringBuff.append("  gasUsed=" 		+ gasUsed).append("\n");
+        toStringBuff.append("  timestamp=" 		+ timestamp).append("\n");
+        toStringBuff.append("  extraData=" 		+ Utils.toHexString(extraData)).append("\n");
+        toStringBuff.append("  nonce=" 			+ Utils.toHexString(nonce)).append("\n");
+
+        for (Transaction tx : getTransactionsList()){
+
+            toStringBuff.append("\n");
+            toStringBuff.append( tx.toString() );
+        }
+
+
+        toStringBuff.append("\n]");
+
+
+        return toStringBuff.toString();
     }
     
 	/**
