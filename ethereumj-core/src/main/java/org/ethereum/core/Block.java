@@ -244,6 +244,7 @@ public class Block {
 	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
 	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
 	// extradata, nonce]
+
     @Override
     public String toString() {
         if (!parsed) parseRLP();
@@ -271,10 +272,37 @@ public class Block {
             toStringBuff.append( tx.toString() );
         }
 
-
         toStringBuff.append("\n]");
+        return toStringBuff.toString();
+    }
 
+    public String toFlatString(){
+        if (!parsed) parseRLP();
 
+        toStringBuff.setLength(0);
+        toStringBuff.append("BlockData [");
+        toStringBuff.append("  hash=" + Utils.toHexString(hash)).append("");
+        toStringBuff.append("  parentHash=" + Utils.toHexString(parentHash)).append("");
+        toStringBuff.append("  unclesHash=" + Utils.toHexString(unclesHash)).append("");
+        toStringBuff.append("  coinbase=" + Utils.toHexString(coinbase)).append("");
+        toStringBuff.append("  stateHash=" 		+ Utils.toHexString(stateRoot)).append("");
+        toStringBuff.append("  txTrieHash=" 	+ Utils.toHexString(txTrieRoot)).append("");
+        toStringBuff.append("  difficulty=" 	+ Utils.toHexString(difficulty)).append("");
+        toStringBuff.append("  number=" 		+ number).append("");
+        toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("");
+        toStringBuff.append("  gasLimit=" 		+ gasLimit).append("");
+        toStringBuff.append("  gasUsed=" 		+ gasUsed).append("");
+        toStringBuff.append("  timestamp=" 		+ timestamp).append("");
+        toStringBuff.append("  extraData=" 		+ Utils.toHexString(extraData)).append("");
+        toStringBuff.append("  nonce=" 			+ Utils.toHexString(nonce)).append("");
+
+        for (Transaction tx : getTransactionsList()){
+
+            toStringBuff.append("\n");
+            toStringBuff.append( tx.toString() );
+        }
+
+        toStringBuff.append("]");
         return toStringBuff.toString();
     }
     

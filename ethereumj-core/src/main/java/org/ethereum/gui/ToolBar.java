@@ -80,7 +80,7 @@ public class ToolBar extends JFrame {
             public void actionPerformed(ActionEvent e) {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                        new ConnectionConsole().setVisible(true);
+                        new ConnectionConsoleWindow().setVisible(true);
                     }
                 });
             }
@@ -97,7 +97,7 @@ public class ToolBar extends JFrame {
         peersToggle.addActionListener( new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                PeersTableMain mainFrame	= new PeersTableMain();
+                PeersTableWindow mainFrame	= new PeersTableWindow();
                 mainFrame.setVisible( true );
 //                mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             }
@@ -128,6 +128,13 @@ public class ToolBar extends JFrame {
         walletToggle.setBorderPainted(false);
         walletToggle.setFocusPainted(false);
         walletToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        walletToggle.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                WalletWindow walletWindow = new WalletWindow();
+                walletWindow.setVisible(true);
+            }
+        });
 
         cp.add(editorToggle);
         cp.add(logToggle);

@@ -26,7 +26,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
  * Project Home: http://fifesoft.com/rsyntaxtextarea<br>
  * Downloads: https://sourceforge.net/projects/rsyntaxtextarea
  */
-public class ConnectionConsole extends JFrame implements PeerListener{
+public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 
     private static final long serialVersionUID = 1L;
 
@@ -39,8 +39,8 @@ public class ConnectionConsole extends JFrame implements PeerListener{
      *                    TRACE (start/end method)
      */
 
-    public ConnectionConsole() {
-        final ConnectionConsole thisConsole = this;
+    public ConnectionConsoleWindow() {
+        final ConnectionConsoleWindow thisConsole = this;
 
         java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
@@ -95,7 +95,7 @@ public class ConnectionConsole extends JFrame implements PeerListener{
 		// Start all Swing applications on the EDT.
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				new ConnectionConsole().setVisible(true);
+				new ConnectionConsoleWindow().setVisible(true);
 			}
 		});
 	}
