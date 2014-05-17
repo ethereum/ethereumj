@@ -127,8 +127,8 @@ public class Block {
         byte[] glBytes      = ((RLPItem) params.get(9)).getData();
         byte[] guBytes      = ((RLPItem) params.get(10)).getData();
 
-        this.timestamp      =  (new BigInteger(tsBytes)).longValue();
-        this.number 		= (new BigInteger(nrBytes)).longValue();
+        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(tsBytes)).longValue();
+        this.number 		= nrBytes == null ? 0 : (new BigInteger(nrBytes)).longValue();
         this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(gpBytes)).longValue();
         this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(glBytes)).longValue();
         this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(guBytes)).longValue();
@@ -224,11 +224,17 @@ public class Block {
 
     public List<Transaction> getTransactionsList() {
         if (!parsed) parseRLP();
+        if (transactionsList == null) {
+        	this.transactionsList = new ArrayList<Transaction>();
+        }
         return transactionsList;
     }
 
     public List<Block> getUncleList() {
         if (!parsed) parseRLP();
+        if (uncleList == null) {
+        	this.uncleList = new ArrayList<Block>();
+        }
         return uncleList;
     }
 
@@ -247,11 +253,11 @@ public class Block {
                 ", stateHash=" 		+ Utils.toHexString(stateRoot) +
                 ", txTrieHash=" 	+ Utils.toHexString(txTrieRoot) +
                 ", difficulty=" 	+ Utils.toHexString(difficulty) +
-                ", timestamp=" 		+ timestamp +
                 ", number=" 		+ number +
                 ", minGasPrice=" 	+ minGasPrice +
                 ", gasLimit=" 		+ gasLimit +
                 ", gasUsed=" 		+ gasUsed +
+                ", timestamp=" 		+ timestamp +
                 ", extraData=" 		+ Utils.toHexString(extraData) +
                 ", nonce=" 			+ Utils.toHexString(nonce) +
                 ']';

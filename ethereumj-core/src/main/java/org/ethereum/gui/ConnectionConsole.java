@@ -32,6 +32,13 @@ public class ConnectionConsole extends JFrame implements PeerListener{
 
     private RSyntaxTextArea textArea;
 
+    /**
+     * ERROR (exceptions) WARN (when something happens that's not supposed to)
+     *                    INFO (wire output)
+     *                    DEBUG (test/displaying intermediate values),
+     *                    TRACE (start/end method)
+     */
+
     public ConnectionConsole() {
         final ConnectionConsole thisConsole = this;
 
