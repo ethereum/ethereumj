@@ -1,8 +1,6 @@
 package org.ethereum.util;
 
 import org.spongycastle.util.encoders.Hex;
-import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Utils;
 import org.junit.Test;
@@ -233,6 +231,13 @@ public class RLPTest {
     	
     	byte[] actuals = RLP.encodeList();
     	assertArrayEquals(new byte[] { (byte) 0xc0 }, actuals);
+    }
+    
+    @Test /** encode list */
+    public void testEncodeElementNull(){
+    	
+    	byte[] actuals = RLP.encodeElement(null);
+    	assertArrayEquals(new byte[] { (byte) 0x00 }, actuals);
     }
 
     @Test /** found bug encode list affects element value,
