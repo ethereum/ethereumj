@@ -49,17 +49,17 @@ public class GetChainMessage extends Message {
 
         RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getData()[0]) != GET_CHAIN){
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0]) != GET_CHAIN){
             throw new Error("GetChain: parsing for mal data");
         }
 
         int size = paramsList.size();
         for (int i = 1; i < size - 1; ++i){
-            blockHashList.add(((RLPItem) paramsList.get(i)).getData());
+            blockHashList.add(((RLPItem) paramsList.get(i)).getRLPData());
         }
 
         // the last element is the num of requested blocks
-        byte[] blockNumB = ((RLPItem)paramsList.get(size - 1)).getData();
+        byte[] blockNumB = ((RLPItem)paramsList.get(size - 1)).getRLPData();
         this.blockNum = new BigInteger(blockNumB);
 
         this.parsed = true;

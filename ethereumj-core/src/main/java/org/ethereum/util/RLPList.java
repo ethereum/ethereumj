@@ -11,7 +11,7 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
 
     byte[] rlpData;
 
-    public void setRLPData(byte[] rlpData){
+    public void setRLPData(byte[] rlpData) {
         this.rlpData = rlpData;
     }
 
@@ -32,7 +32,7 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
 			}
 			System.out.print("]");
 		} else {
-			String hex = Utils.toHexString(((RLPItem) element).getData());
+			String hex = Utils.toHexString(((RLPItem) element).getRLPData());
 			System.out.print(hex + ", ");
 		}
 	}
