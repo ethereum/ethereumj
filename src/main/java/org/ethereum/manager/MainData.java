@@ -76,7 +76,7 @@ public class MainData {
         if (blockChainDB.isEmpty())
             return StaticMessages.GENESSIS_HASH;
         else
-          return blockChainDB.get(blockChainDB.size() - 1).hash();
+          return blockChainDB.get(blockChainDB.size() - 1).getHash();
     }
 
 
