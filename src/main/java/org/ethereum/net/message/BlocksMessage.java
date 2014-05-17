@@ -28,13 +28,13 @@ public class BlocksMessage extends Message {
 
 		RLPList paramsList = (RLPList) rawData.get(0);
 		
-		if (Command.fromInt(((RLPItem) (paramsList).get(0)).getData()[0]) != BLOCKS) {
+		if (Command.fromInt(((RLPItem) (paramsList).get(0)).getRLPData()[0]) != BLOCKS) {
 			throw new Error("BlocksMessage: parsing for mal data");
 		}
 
 		for (int i = 1; i < paramsList.size(); ++i) {
 			RLPList rlpData = ((RLPList) paramsList.get(i));
-			Block blockData = new Block(rlpData);
+			Block blockData = new Block(rlpData.getRLPData());
 			this.blockDataList.add(blockData);
 		}
 		parsed = true;

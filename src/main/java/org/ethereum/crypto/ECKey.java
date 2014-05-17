@@ -356,7 +356,7 @@ public class ECKey implements Serializable {
      * Signs the given hash and returns the R and S components as BigIntegers 
      * and put them in ECDSASignature 
      * 
-     * @param data to sign
+     * @param rlpData to sign
      * @return ECDSASignature signature that contains the R and S components
      */
     public ECDSASignature doSign(byte[] input) {
