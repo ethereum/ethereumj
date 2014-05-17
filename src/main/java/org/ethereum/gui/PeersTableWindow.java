@@ -20,7 +20,7 @@ import javax.swing.table.TableCellRenderer;
  * User: Roman Mandeleil
  * Created on: 25/04/14 07:11
  */
-public class PeersTableMain extends JFrame{
+public class PeersTableWindow extends JFrame{
 
     // Instance attributes used in this example
     private JPanel topPanel;
@@ -28,7 +28,7 @@ public class PeersTableMain extends JFrame{
     private	JScrollPane scrollPane;
 
 	// Constructor of main frame
-	public PeersTableMain() {
+	public PeersTableWindow() {
 		// Set the frame characteristics
 		setTitle("Ethereum Peers");
 		setSize(355, 300);
@@ -75,7 +75,7 @@ public class PeersTableMain extends JFrame{
 
 	public static void main(String args[]) {
 
-		PeersTableMain mainFrame = new PeersTableMain();
+		PeersTableWindow mainFrame = new PeersTableWindow();
 		mainFrame.setVisible(true);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}

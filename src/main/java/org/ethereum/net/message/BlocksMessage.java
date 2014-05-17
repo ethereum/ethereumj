@@ -55,12 +55,8 @@ public class BlocksMessage extends Message {
 
 		StringBuffer sb = new StringBuffer();
 		for (Block blockData : this.getBlockDataList()) {
-			sb.append("   ").append(blockData.toString()).append("\n");
+			sb.append("   ").append(blockData.toFlatString()).append("\n");
 
-			List<Transaction> transactions = blockData.getTransactionsList();
-			for (Transaction transactionData : transactions) {
-				sb.append("[").append(transactionData).append("]\n");
-			}
 		}
 		return "Blocks Message [\n" + sb.toString() + " ]";
 	}
