@@ -4,6 +4,7 @@ import com.maxmind.geoip.Location;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.Wallet;
 import org.ethereum.geodb.IpGeoDB;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
@@ -23,9 +24,14 @@ public class MainData {
     private Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
     private List<Block> blockChainDB = new ArrayList<Block>();
 
+    private Wallet wallet = new Wallet();
+
     public static MainData instance = new MainData();
 
     public MainData() {
+
+        wallet.addNewKey();
+        wallet.addNewKey();
     }
 
     public void addPeers(List<PeerData> newPeers){
@@ -84,6 +90,12 @@ public class MainData {
 
         return blockChainDB;
     }
+
+    public Wallet getWallet() {
+        return wallet;
+    }
+
+
 
     public void addTransactions(List<Transaction> transactions) {}
 }

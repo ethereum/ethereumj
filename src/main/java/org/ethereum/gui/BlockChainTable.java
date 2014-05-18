@@ -122,7 +122,5 @@ public class BlockChainTable extends JFrame {
         BlockChainTable mainFrame = new BlockChainTable();
         mainFrame.setVisible(true);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-
     }
 }

@@ -1,5 +1,7 @@
 package org.ethereum.gui;
 
+import org.ethereum.util.Utils;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -9,6 +11,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.math.BigInteger;
 import java.net.URL;
 
 /**
@@ -28,15 +31,18 @@ public class WalletSumPanel extends JPanel{
         CompoundBorder border = new CompoundBorder(line, empty);
 
         JLabel addressField = new JLabel();
-        addressField.setPreferredSize(new Dimension(276, 50));
+        addressField.setPreferredSize(new Dimension(300, 35));
         this.add(addressField);
 
         JTextField amount = new JTextField();
         amount.setBorder(border);
         amount.setEnabled(true);
         amount.setEditable(false);
-        amount.setText("234 * 10^9");
+        amount.setText(Utils.getValueShortString(new BigInteger("9288972348723947238947")));
+        amount.setPreferredSize(new Dimension(100, 35));
         amount.setForeground(new Color(143, 170, 220));
+        amount.setHorizontalAlignment(SwingConstants.RIGHT);
+        amount.setFont(new Font("Monospaced", 0, 13));
         amount.setBackground(Color.WHITE);
         this.add(amount);
 

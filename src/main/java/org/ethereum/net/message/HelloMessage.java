@@ -35,6 +35,7 @@ public class HelloMessage extends Message {
         this.capabilities = capabilities;
         this.peerPort = peerPort;
         this.peerId = peerId;
+        this.parsed = true;
     }
 
     @Override

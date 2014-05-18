@@ -64,6 +64,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         buffer.writeBytes(MAGIC_PREFIX);
         buffer.writeBytes(HELLO_MESSAGE_LEN);
         buffer.writeBytes(HELLO_MESSAGE);
+        System.out.println("Send: " + StaticMessages.HELLO_MESSAGE.toString());
         ctx.writeAndFlush(buffer);
 
         // sample for pinging in background
@@ -102,6 +103,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
         }, 2000, 30000);
 
+        // todo: stop that one
+        // todo: and schedule one slower
+        // todo: once the chain is downloaded
         timer.schedule(new TimerTask() {
 
             public void run() {
