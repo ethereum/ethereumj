@@ -45,4 +45,21 @@ public class Address {
     public String toString() {
         return Hex.toHexString(pubKey);
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Address address = (Address) o;
+
+        if (!Arrays.equals(pubKey, address.pubKey)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(pubKey);
+    }
 }

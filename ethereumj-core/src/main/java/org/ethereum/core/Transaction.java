@@ -59,7 +59,6 @@ public class Transaction {
     private ECDSASignature signature;
 
     public Transaction(byte[] rawData) {
-    	System.out.println("Transaction created from RLP: " + Hex.toHexString(rawData));
         this.rlpEncoded = rawData;
         parsed = false;
     }

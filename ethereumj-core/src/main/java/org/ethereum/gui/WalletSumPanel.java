@@ -21,7 +21,7 @@ import java.net.URL;
  */
 public class WalletSumPanel extends JPanel{
 
-    public WalletSumPanel() {
+    public WalletSumPanel(BigInteger balance) {
 
         this.setBackground(Color.WHITE);
         double width = this.getSize().getWidth();
@@ -38,7 +38,8 @@ public class WalletSumPanel extends JPanel{
         amount.setBorder(border);
         amount.setEnabled(true);
         amount.setEditable(false);
-        amount.setText(Utils.getValueShortString(new BigInteger("9288972348723947238947")));
+        amount.setText(Utils.getValueShortString(balance));
+
         amount.setPreferredSize(new Dimension(100, 35));
         amount.setForeground(new Color(143, 170, 220));
         amount.setHorizontalAlignment(SwingConstants.RIGHT);
