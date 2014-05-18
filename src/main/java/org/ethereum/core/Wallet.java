@@ -29,7 +29,7 @@ public class Wallet {
 
     HashMap<Address, BigInteger> rows = new HashMap<>();
     List<WalletListener> listeners = new ArrayList();
-    int high;
+    long high;
 
     public void addNewKey(){
         Address address = new Address();
@@ -41,7 +41,6 @@ public class Wallet {
     public void importKey(byte[] privKey){
         Address address = new Address(privKey);
         rows.put(address, BigInteger.ZERO);
-
         notifyListeners();
     }
 
@@ -51,6 +50,11 @@ public class Wallet {
 
     public Set<Address> getAddressSet(){
         return rows.keySet();
+    }
+
+
+    public BigInteger setBalance(Address address, BigInteger balance){
+        return rows.put(address, balance);
     }
 
     public BigInteger getBalance(Address address){
@@ -67,6 +71,31 @@ public class Wallet {
         return sum;
     }
 
+
+    public void processBlock(Block block){
+
+        boolean walletUpdated = false;
+        // todo: proceed coinbase when you are the miner that gets an award
+
+        List<Transaction> transactions = block.getTransactionsList();
+
+        for (Transaction tx : transactions){
+
+            byte[] pubKey = tx.getReceiveAddress();
+            Address receiveAddress = new Address(null, pubKey);
+            BigInteger balance = getBalance(receiveAddress);
+
+            if (balance != null){
+
+                // todo: validate the transaction and decrypt the sender
+                setBalance(receiveAddress, balance.add(new BigInteger(tx.getValue())));
+                walletUpdated = true;
+            }
+        }
+
+        this.high = block.getNumber();
+        if (walletUpdated) notifyListeners();
+    }
 
     /**
      * Load wallet file from the disk
@@ -111,7 +140,6 @@ public class Wallet {
         high.setValue("2345");
         walletElement.setAttributeNode(high);
 
-
         // staff elements
         Element raw = doc.createElement("raw");
         Attr id = doc.createAttribute("id");
@@ -132,7 +160,6 @@ public class Wallet {
         raw.appendChild(value);
 
         walletElement.appendChild(raw);
-
 
         // write the content into xml file
         TransformerFactory transformerFactory = TransformerFactory.newInstance();

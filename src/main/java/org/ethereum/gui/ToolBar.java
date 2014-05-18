@@ -5,6 +5,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 
 /**
  * www.ethereumJ.com
@@ -12,6 +14,13 @@ import java.awt.event.ActionListener;
  * Created on: 30/04/14 06:29
  */
 public class ToolBar extends JFrame {
+
+    ConnectionConsoleWindow connectionConsoleWindow = null;
+    PeersTableWindow mainFrame	= null;
+    BlockChainTable blockChainWindow = null;
+    WalletWindow walletWindow = null;
+    SerpentEditor serpentEditor = null;
+
 
     public ToolBar() throws HeadlessException {
         final JPanel cp = new JPanel(new FlowLayout());
@@ -56,15 +65,21 @@ public class ToolBar extends JFrame {
         editorToggle.setBorderPainted(false);
         editorToggle.setFocusPainted(false);
         editorToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        editorToggle.addActionListener(new ActionListener() {
+        editorToggle.addItemListener(new ItemListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        new SerpentEditor().setVisible(true);
-                    }
-                });
-             }
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED){
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            if (serpentEditor == null)
+                                serpentEditor = new SerpentEditor();
+                            serpentEditor.setVisible(true);
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    serpentEditor.setVisible(false);
+                }
+            }
         });
 
         JToggleButton logToggle = new JToggleButton();
@@ -75,14 +90,21 @@ public class ToolBar extends JFrame {
         logToggle.setBorderPainted(false);
         logToggle.setFocusPainted(false);
         logToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        logToggle.addActionListener(new ActionListener() {
+        logToggle.addItemListener(new ItemListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        new ConnectionConsoleWindow().setVisible(true);
-                    }
-                });
+            public void itemStateChanged(ItemEvent e) {
+
+                if (e.getStateChange() == ItemEvent.SELECTED){
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                        if (connectionConsoleWindow == null)
+                            connectionConsoleWindow =  new ConnectionConsoleWindow();
+                        connectionConsoleWindow.setVisible(true);
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                        connectionConsoleWindow.setVisible(false);
+                }
             }
         });
 
@@ -94,14 +116,23 @@ public class ToolBar extends JFrame {
         peersToggle.setBorderPainted(false);
         peersToggle.setFocusPainted(false);
         peersToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        peersToggle.addActionListener( new ActionListener() {
+        peersToggle.addItemListener(new ItemListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                PeersTableWindow mainFrame	= new PeersTableWindow();
-                mainFrame.setVisible( true );
-//                mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED){
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            if (mainFrame == null)
+                                mainFrame	= new PeersTableWindow();
+                            mainFrame.setVisible( true );
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    mainFrame.setVisible( false );
+                }
             }
         });
+
 
         JToggleButton chainToggle = new JToggleButton();
         chainToggle.setIcon(image_4);
@@ -111,12 +142,21 @@ public class ToolBar extends JFrame {
         chainToggle.setBorderPainted(false);
         chainToggle.setFocusPainted(false);
         chainToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        chainToggle.addActionListener(new ActionListener() {
+        chainToggle.addItemListener(new ItemListener() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                BlockChainTable mainFrame = new BlockChainTable();
-                mainFrame.setVisible(true);
-//                mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED){
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+
+                            if (blockChainWindow == null)
+                                blockChainWindow = new BlockChainTable();
+                            blockChainWindow.setVisible(true);
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    blockChainWindow.setVisible(false);
+                }
             }
         });
 
@@ -128,13 +168,25 @@ public class ToolBar extends JFrame {
         walletToggle.setBorderPainted(false);
         walletToggle.setFocusPainted(false);
         walletToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        walletToggle.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                WalletWindow walletWindow = new WalletWindow();
-                walletWindow.setVisible(true);
-            }
-        });
+        walletToggle.addItemListener(
+                new ItemListener() {
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == ItemEvent.SELECTED){
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    if (walletWindow == null)
+                                        walletWindow = new WalletWindow();
+                                    walletWindow.setVisible(true);
+                                }
+                            });
+                        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                            walletWindow.setVisible(false);
+                        }
+
+                    }
+                }
+        );
 
         cp.add(editorToggle);
         cp.add(logToggle);

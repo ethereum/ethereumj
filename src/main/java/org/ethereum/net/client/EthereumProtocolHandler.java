@@ -37,6 +37,8 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
+    Timer chainAskTimer = new Timer();
+
     final Timer timer = new Timer();
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
 
@@ -106,7 +108,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         // todo: stop that one
         // todo: and schedule one slower
         // todo: once the chain is downloaded
-        timer.schedule(new TimerTask() {
+        chainAskTimer.schedule(new TimerTask() {
 
             public void run() {
                 System.out.println("[Send: GET_CHAIN]");
@@ -125,7 +127,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     }
 
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+    public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
         byte[] payload = (byte[]) msg;
 
         System.out.print("msg: ");
@@ -221,6 +223,20 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             BlocksMessage blocksMessage = new BlocksMessage(rlpList);
             List<Block> blockList = blocksMessage.getBlockDataList();
+
+            if (blockList.size() <= 1){
+
+                chainAskTimer.cancel();
+                chainAskTimer.purge();
+                chainAskTimer = new Timer();
+                chainAskTimer.schedule(new TimerTask() {
+
+                    public void run() {
+                        System.out.println("[Send: GET_CHAIN]");
+                        sendGetChain(ctx);
+                    }
+                }, 10000, 10000);
+            }
 
             MainData.instance.addBlocks(blockList);
             System.out.println(blocksMessage);

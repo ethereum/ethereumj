@@ -57,7 +57,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             contentPane.add(rowPanel);
         }
 
-        WalletSumPanel sumPanel = new WalletSumPanel();
+        WalletSumPanel sumPanel = new WalletSumPanel(wallet.totalBalance());
         contentPane.add(sumPanel);
 
 
@@ -91,7 +91,6 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             }
         });
         contentPane.add(addAddressLabel);
-
 
         contentPane.revalidate();
         contentPane.repaint();

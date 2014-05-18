@@ -5,6 +5,7 @@ import com.maxmind.geoip.Location;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.geodb.IpGeoDB;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
@@ -30,8 +31,8 @@ public class MainData {
 
     public MainData() {
 
-        wallet.addNewKey();
-        wallet.addNewKey();
+        wallet.importKey(HashUtil.sha3("cow".getBytes()));
+        wallet.importKey(HashUtil.sha3("cat".getBytes()));
     }
 
     public void addPeers(List<PeerData> newPeers){
@@ -60,7 +61,7 @@ public class MainData {
              return;
         }
 
-        // if there is some blocks allready
+        // if there is some blocks already
         // keep chain continuity
         if (!blockChainDB.isEmpty() ){
             Block lastBlock = blockChainDB.get(blockChainDB.size() - 1);
@@ -70,7 +71,9 @@ public class MainData {
         }
 
         for (int i = blocks.size() - 1; i > 0 ; --i){
-            blockChainDB.add(blocks.get(i));
+            Block block = blocks.get(i);
+            blockChainDB.add(block);
+            wallet.processBlock(block);
         }
 
         System.out.println("*** Block chain size: [" + blockChainDB.size() + "]");

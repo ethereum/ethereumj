@@ -64,7 +64,6 @@ public class WalletAddressPanel extends JPanel{
             }
         });
 
-
         this.add(payOutLabel);
     }
 }
