@@ -1,5 +1,6 @@
 package org.ethereum.net.message;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
@@ -53,12 +54,8 @@ public class StaticMessages {
     public static final byte[] MAGIC_PACKET = Hex.decode("22400891");
 
     static {
-        String peerId  = "CE 73 F1 F1 F1 F1 6C 1B 3F DA 7B 18 EF 7B A3 CE " +
-                         "17 B6 F1 F1 F1 F1 41 D3 C6 C6 54 B7 AE 88 B2 39 " +
-                         "40 7F F1 F1 F1 F1 19 02 5D 78 57 27 ED 01 7B 6A " +
-                         "DD 21 F1 F1 F1 F1 00 00 01 E3 21 DB C3 18 24 BA ";
 
-        byte[] peerIdBytes = Utils.hexStringToByteArr(peerId);
+        byte[] peerIdBytes = HashUtil.randomPeerId();
 
         HELLO_MESSAGE = new HelloMessage((byte)0x0F, (byte)0x00, "EthereumJ [v0.0.1] pure java [by Roman Mandeleil]",
                 (byte)0b00000111, (short)30303, peerIdBytes);

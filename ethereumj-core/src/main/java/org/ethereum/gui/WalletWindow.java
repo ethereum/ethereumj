@@ -1,9 +1,10 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Address;
+import org.ethereum.core.Wallet;
+import org.ethereum.manager.MainData;
+
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -14,37 +15,53 @@ import java.net.URL;
  * User: Roman Mandeleil
  * Created on: 17/05/14 12:00
  */
-public class WalletWindow extends JFrame {
+public class WalletWindow extends JFrame implements Wallet.WalletListener{
 
+    WalletWindow walletWindow;
 
     public WalletWindow() {
 
+        walletWindow = this;
         java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
         this.setIconImage(img);
         setTitle("Ethereum Wallet");
-        setSize(490, 370);
+        setSize(550, 280);
         setLocation(215, 280);
-        setBackground(Color.WHITE);
         setResizable(false);
 
         Container contentPane = this.getContentPane();
+
+        contentPane.setBackground(new Color(255, 255, 255));
+
+        Wallet wallet = MainData.instance.getWallet();
+        wallet.addListener(this);
+        loadWallet();
+
+    }
+
+
+    private void loadWallet(){
+
+        Container contentPane = this.getContentPane();
+        contentPane.removeAll();
         contentPane.setLayout(new FlowLayout());
-        contentPane.setBackground(Color.WHITE);
 
-        WalletAddressPanel panel1 = new WalletAddressPanel();
-        WalletAddressPanel panel2 = new WalletAddressPanel();
-        WalletAddressPanel panel3 = new WalletAddressPanel();
-        WalletAddressPanel panel4 = new WalletAddressPanel();
-        WalletSumPanel panel5 = new WalletSumPanel();
+        Wallet wallet = MainData.instance.getWallet();
 
-        contentPane.add(panel1);
-        contentPane.add(panel2);
-        contentPane.add(panel3);
-        contentPane.add(panel4);
-        contentPane.add(panel5);
+        for (Address address : wallet.getAddressSet()){
 
+            WalletAddressPanel rowPanel =
+                    new WalletAddressPanel(address, wallet.getBalance(address));
+            contentPane.add(rowPanel);
+        }
+
+        WalletSumPanel sumPanel = new WalletSumPanel();
+        contentPane.add(sumPanel);
+
+
+        // Todo: move this to some add button method
         URL addAddressIconURL = ClassLoader.getSystemResource("buttons/add-address.png");
         ImageIcon addAddressIcon = new ImageIcon(addAddressIconURL);
         JLabel addAddressLabel = new JLabel(addAddressIcon);
@@ -53,11 +70,35 @@ public class WalletWindow extends JFrame {
         addAddressLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("boom");
+
+                Wallet wallet = MainData.instance.getWallet();
+
+                if (wallet.getAddressSet().size() >=5){
+
+                    JOptionPane.showMessageDialog(walletWindow,
+                            "Hey do you really need more than 5 address for a demo wallet");
+                    return;
+                }
+
+                wallet.addNewKey();
+
+                Dimension dimension = walletWindow.getSize();
+                int height = dimension.height;
+                int width = dimension.width;
+
+                Dimension newDimension = new Dimension(width, (height + 45));
+                walletWindow.setSize(newDimension);
             }
         });
-
         contentPane.add(addAddressLabel);
 
+
+        contentPane.revalidate();
+        contentPane.repaint();
+    }
+
+    @Override
+    public void valueChanged() {
+        loadWallet();
     }
 }

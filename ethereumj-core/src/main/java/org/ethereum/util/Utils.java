@@ -2,6 +2,7 @@ package org.ethereum.util;
 
 import java.math.BigInteger;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
@@ -14,6 +15,8 @@ import org.spongycastle.util.encoders.Hex;
  * Created on: 06/04/14 13:13
  */
 public class Utils {
+
+    private static SecureRandom random = new SecureRandom();
 
     public static byte[]  hexStringToByteArr(String hexString){
 
@@ -90,5 +93,24 @@ public class Utils {
         size[0] = (byte)(packet.length >> 24 & 0xFF);
 
         return size;
+    }
+
+    static BigInteger thousand = new BigInteger("1000");
+    public static String getValueShortString(BigInteger number){
+
+        BigInteger result = number;
+        int pow = 0;
+        while (result.compareTo(thousand) == 1){
+
+            result = result.divide(thousand);
+            pow += 3;
+        }
+
+
+        return result.toString() + " (" + "10^" + pow + ")";
+    }
+
+    public static SecureRandom getRandom(){
+        return random;
     }
 }

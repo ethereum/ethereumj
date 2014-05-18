@@ -2,10 +2,13 @@ package org.ethereum.crypto;
 
 import static java.util.Arrays.copyOfRange;
 
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
 
 public class HashUtil {
 
@@ -34,7 +37,7 @@ public class HashUtil {
     /**
      * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations.
      */
-    public static byte[] sha3hash160(byte[] input) {
+    public static byte[] sha3omit12(byte[] input) {
     	byte[] hash = sha3(input);
     	return copyOfRange(hash, 12, hash.length);
     }
@@ -57,5 +60,22 @@ public class HashUtil {
             byte[] first = sha256digest.digest();
             return sha256digest.digest(first);
         }
+    }
+
+
+    /**
+     * @return generates random peer id for the HelloMessage
+     */
+    public static byte[] randomPeerId(){
+
+        byte[] peerIdBytes = new BigInteger(512, Utils.getRandom()).toByteArray();
+
+        String peerId = null;
+        if (peerIdBytes.length > 64)
+            peerId = Hex.toHexString(peerIdBytes, 1, 64);
+        else
+            peerId = Hex.toHexString(peerIdBytes);
+
+        return Hex.decode(peerId);
     }
 }

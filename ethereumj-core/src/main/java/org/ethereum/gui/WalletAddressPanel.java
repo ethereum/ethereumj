@@ -1,5 +1,9 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Address;
+import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
@@ -7,6 +11,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.math.BigInteger;
 import java.net.URL;
 
 /**
@@ -16,11 +21,10 @@ import java.net.URL;
  */
 public class WalletAddressPanel extends JPanel{
 
-    public WalletAddressPanel() {
+    public WalletAddressPanel(Address address, BigInteger balance) {
 
         this.setBackground(Color.WHITE);
-        double width = this.getSize().getWidth();
-        this.setPreferredSize(new Dimension(500, 50));
+        this.setPreferredSize(new Dimension(500, 45));
 
         JTextField addressField = new JTextField();
         Border line = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
@@ -29,8 +33,10 @@ public class WalletAddressPanel extends JPanel{
         addressField.setBorder(border);
         addressField.setEnabled(true);
         addressField.setEditable(false);
-        addressField.setText("5a554ee950faddf206972771bebd3dc0f13f1f4d");
+        addressField.setText(Hex.toHexString(address.getPubKey()).toUpperCase());
         addressField.setForeground(new Color(143, 170, 220));
+        addressField.setFont(new Font("Monospaced", 0, 12));
+        addressField.setPreferredSize(new Dimension(300, 35));
         addressField.setBackground(Color.WHITE);
         this.add(addressField);
 
@@ -38,9 +44,12 @@ public class WalletAddressPanel extends JPanel{
         amount.setBorder(border);
         amount.setEnabled(true);
         amount.setEditable(false);
-        amount.setText("234 * 10^9");
+        amount.setText(Utils.getValueShortString(balance));
         amount.setForeground(new Color(143, 170, 220));
         amount.setBackground(Color.WHITE);
+        amount.setPreferredSize(new Dimension(100, 35));
+        amount.setFont(new Font("Monospaced", 0, 13));
+        amount.setHorizontalAlignment(SwingConstants.RIGHT);
         this.add(amount);
 
         URL payoutIconURL = ClassLoader.getSystemResource("buttons/wallet-pay.png");

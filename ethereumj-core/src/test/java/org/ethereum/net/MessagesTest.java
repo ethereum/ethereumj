@@ -2,6 +2,7 @@ package org.ethereum.net;
 
 import static org.junit.Assert.*;
 
+import java.math.BigInteger;
 import java.net.UnknownHostException;
 import java.util.List;
 
@@ -517,7 +518,8 @@ public class MessagesTest {
         byte[] size = Utils.calcPacketSize( getChainMessage.getPayload());
 
         assertEquals("00000067", Utils.toHexString(size));
-}
+    }
+
 
 
 }
