@@ -32,7 +32,6 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         setResizable(false);
 
         Container contentPane = this.getContentPane();
-
         contentPane.setBackground(new Color(255, 255, 255));
 
         Wallet wallet = MainData.instance.getWallet();
@@ -72,16 +71,13 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             public void mouseClicked(MouseEvent e) {
 
                 Wallet wallet = MainData.instance.getWallet();
-
                 if (wallet.getAddressSet().size() >=5){
-
                     JOptionPane.showMessageDialog(walletWindow,
                             "Hey do you really need more than 5 address for a demo wallet");
                     return;
                 }
 
                 wallet.addNewKey();
-
                 Dimension dimension = walletWindow.getSize();
                 int height = dimension.height;
                 int width = dimension.width;
@@ -91,7 +87,6 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             }
         });
         contentPane.add(addAddressLabel);
-
         contentPane.revalidate();
         contentPane.repaint();
     }

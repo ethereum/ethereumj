@@ -1,14 +1,21 @@
 package org.ethereum.net.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.ethereum.core.Transaction;
 import org.ethereum.gui.PeerListener;
+import org.ethereum.manager.MainData;
+import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.message.TransactionsMessage;
+import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
+
+import java.util.ArrayList;
+
 
 /**
  * www.ethereumJ.com
@@ -18,6 +25,7 @@ import org.ethereum.gui.PeerListener;
 public class ClientPeer {
 
     PeerListener peerListener;
+    Channel channel;
 
     public ClientPeer() {
     }
@@ -55,8 +63,19 @@ public class ClientPeer {
                 }
             });
 
+
+            // todo: redesign that part ,
+            // todo: 1) the method should finish.
+            // todo: 2) the peer should be saved as active peer in maindata
+            // todo: 3) b.connect(host, port).sync().channel(); // get the channel
+            // todo: 4) b.connect(host, port).sync().channel().writeAndFlush(); // use channel to send message
+
+
             // Start the client.
             ChannelFuture f = b.connect(host, port).sync(); // (5)
+            this.channel = f.channel();
+            MainData.instance.setActivePeer(this);
+
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
 
@@ -66,5 +85,32 @@ public class ClientPeer {
         } finally {
             workerGroup.shutdownGracefully();
         }
+    }
+
+
+    /*
+     * The wire gets data for signed transactions and
+     * sends it to the net.
+     * todo: find a way to set all "send to wire methods" in one place.
+     */
+    public void sendTransaction(Transaction transaction){
+
+        transaction.getEncoded(true);
+        java.util.List<Transaction> txList =  new ArrayList<Transaction>();
+        txList.add(transaction);
+        TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
+
+        byte[] payload = transactionsMessage.getPayload();
+
+        ByteBuf buffer = channel.alloc().buffer(payload.length + 8);
+        buffer.writeBytes(StaticMessages.MAGIC_PACKET);
+        buffer.writeBytes(Utils.calcPacketSize(payload));
+        buffer.writeBytes(payload);
+
+        System.out.println("Send msg: [ " +
+                Hex.toHexString(payload) +
+                " ]");
+
+        channel.writeAndFlush(buffer);
     }
 }

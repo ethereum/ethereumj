@@ -21,7 +21,9 @@ import java.net.URL;
  */
 public class WalletAddressPanel extends JPanel{
 
-    public WalletAddressPanel(Address address, BigInteger balance) {
+    public WalletAddressPanel(Address address, final BigInteger balance) {
+
+        final WalletAddressPanel walletAddressPanel = this;
 
         this.setBackground(Color.WHITE);
         this.setPreferredSize(new Dimension(500, 45));
@@ -60,7 +62,10 @@ public class WalletAddressPanel extends JPanel{
         payOutLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("boom");
+
+                PayOutDialog payOutDialog =
+                        new PayOutDialog((Frame)SwingUtilities.getAncestorOfClass(Frame.class,
+                                walletAddressPanel), balance);
             }
         });
 

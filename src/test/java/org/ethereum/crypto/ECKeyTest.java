@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
+import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -137,6 +138,22 @@ public class ECKeyTest {
 			fail();
 		}
     }
+
+    @Test
+    public void testVerifySignature3() throws SignatureException {
+
+        byte[] rawtx = Hex.decode("f86e80893635c9adc5dea000008609184e72a00082109f9479b08ad8787060333663d19704909ee7b1903e58801ba0899b92d0c76cbf18df24394996beef19c050baa9823b4a9828cd9b260c97112ea0c9e62eb4cf0a9d95ca35c8830afac567619d6b3ebee841a3c8be61d35acd8049");
+
+        Transaction tx = new Transaction(rawtx);
+        ECKey key = ECKey.signatureToKey(HashUtil.sha3(rawtx), tx.getSignature().toBase64());
+
+        System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
+        System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
+
+        //  sender: CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826
+        // todo: add test assertion when the sign/verify part actually works.
+    }
+
     
     @Test
     public void testSValue() throws Exception {
