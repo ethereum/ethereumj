@@ -7,6 +7,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.geodb.IpGeoDB;
+import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
 import org.spongycastle.util.encoders.Hex;
@@ -24,8 +25,8 @@ public class MainData {
 
     private Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
     private List<Block> blockChainDB = new ArrayList<Block>();
-
     private Wallet wallet = new Wallet();
+    private ClientPeer activePeer;
 
     public static MainData instance = new MainData();
 
@@ -49,6 +50,7 @@ public class MainData {
 
         // TODO: redesign this part when the state part and the genesis block is ready
 
+        if (blocks.isEmpty()) return;
 
         Block firstBlockToAdd = blocks.get(blocks.size() - 1);
 
@@ -99,6 +101,13 @@ public class MainData {
     }
 
 
+    public void setActivePeer(ClientPeer peer){
+        this.activePeer = peer;
+    }
+
+    public ClientPeer getActivePeer() {
+        return activePeer;
+    }
 
     public void addTransactions(List<Transaction> transactions) {}
 }

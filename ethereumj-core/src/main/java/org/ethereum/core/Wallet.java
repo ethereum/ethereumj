@@ -1,8 +1,8 @@
 package org.ethereum.core;
 
-import org.w3c.dom.Attr;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.spongycastle.util.encoders.Hex;
+import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -14,6 +14,7 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,9 +28,9 @@ import java.util.Set;
  */
 public class Wallet {
 
-    HashMap<Address, BigInteger> rows = new HashMap<>();
-    List<WalletListener> listeners = new ArrayList();
-    long high;
+    private HashMap<Address, BigInteger> rows = new HashMap<>();
+    private List<WalletListener> listeners = new ArrayList();
+    private long high;
 
     public void addNewKey(){
         Address address = new Address();
@@ -100,7 +101,54 @@ public class Wallet {
     /**
      * Load wallet file from the disk
      */
-    public void load() {
+    public void load() throws IOException, SAXException, ParserConfigurationException {
+
+        /**
+
+         <wallet high="8933">
+             <row id=1>
+                 <address nonce="1" >7c63d6d8b6a4c1ec67766ae123637ca93c199935<address/>
+                 <privkey>roman<privkey/>
+                 <value>20000000<value/>
+             </row>
+             <row id=2>
+                 <address nonce="6" >b5da3e0ba57da04f94793d1c334e476e7ce7b873<address/>
+                 <privkey>cow<privkey/>
+                 <value>900099909<value/>
+             </row>
+         </wallet>
+
+         */
+
+        String dir = System.getProperty("user.dir");
+        String fileName = dir + "/wallet.xml";
+
+        DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
+        Document doc = dBuilder.parse(fileName);
+
+        Node walletNode = doc.getElementsByTagName("wallet").item(0);
+        String high = walletNode.getAttributes().getNamedItem("high").getTextContent();
+        this.setHigh(Long.parseLong(high));
+
+        NodeList rowNodes = walletNode.getChildNodes();
+
+        for (int i = 0; i <  rowNodes.getLength(); ++i ){
+
+            Node rowNode   = rowNodes.item(i);
+            Node addrNode  = rowNode.getChildNodes().item(0);
+            Node privNode  = rowNode.getChildNodes().item(1);
+            Node valueNode = rowNode.getChildNodes().item(2);
+
+            byte[] privKey = Hex.decode(privNode.getTextContent());
+            Address address = new Address(privKey);
+            BigInteger value = new BigInteger(valueNode.getTextContent());
+
+            this.importKey(privKey);
+            this.setBalance(address, value);
+        }
+
+
 
     }
 
@@ -113,12 +161,12 @@ public class Wallet {
 
          <wallet high="8933">
            <row id=1>
-                      <address>7c63d6d8b6a4c1ec67766ae123637ca93c199935<address/>
+                      <address nonce="1" >7c63d6d8b6a4c1ec67766ae123637ca93c199935<address/>
                       <privkey>roman<privkey/>
                       <value>20000000<value/>
            </row>
            <row id=2>
-                      <address>b5da3e0ba57da04f94793d1c334e476e7ce7b873<address/>
+                      <address nonce="6" >b5da3e0ba57da04f94793d1c334e476e7ce7b873<address/>
                       <privkey>cow<privkey/>
                       <value>900099909<value/>
            </row>
@@ -137,30 +185,36 @@ public class Wallet {
         doc.appendChild(walletElement);
 
         Attr high = doc.createAttribute("high");
-        high.setValue("2345");
+        high.setValue(Long.toString( this.high ));
         walletElement.setAttributeNode(high);
 
-        // staff elements
-        Element raw = doc.createElement("raw");
-        Attr id = doc.createAttribute("id");
-        id.setValue("1");
-        raw.setAttributeNode(id);
+        int i = 0;
+        for (Address address :  getAddressSet()){
 
-        Element address = doc.createElement("address");
-        address.setTextContent("732f3b4b6cf31f5d14fed3a5f24f6e90ae6db2cc");
+            Element raw = doc.createElement("raw");
+            Attr id = doc.createAttribute("id");
+            id.setValue(Integer.toString(i++));
+            raw.setAttributeNode(id);
 
-        Element privKey = doc.createElement("privkey");
-        privKey.setTextContent("caw");
+            Element addressE = doc.createElement("address");
+            addressE.setTextContent(Hex.toHexString(address.getPubKey()));
 
-        Element value   = doc.createElement("value");
-        value.setTextContent("200000000000000");
+            Attr nonce = doc.createAttribute("nonce");
+            nonce.setValue("0");
+            addressE.setAttributeNode(nonce);
 
-        raw.appendChild(address);
-        raw.appendChild(privKey);
-        raw.appendChild(value);
+            Element privKey = doc.createElement("privkey");
+            privKey.setTextContent(Hex.toHexString(address.getPrivKey()));
 
-        walletElement.appendChild(raw);
+            Element value   = doc.createElement("value");
+            value.setTextContent(getBalance(address).toString());
 
+            raw.appendChild(addressE);
+            raw.appendChild(privKey);
+            raw.appendChild(value);
+
+            walletElement.appendChild(raw);
+        }
         // write the content into xml file
         TransformerFactory transformerFactory = TransformerFactory.newInstance();
         Transformer transformer = transformerFactory.newTransformer();
@@ -179,5 +233,14 @@ public class Wallet {
 
     public interface WalletListener{
         public void valueChanged();
+    }
+
+
+    public long getHigh() {
+        return high;
+    }
+
+    public void setHigh(long high) {
+        this.high = high;
     }
 }

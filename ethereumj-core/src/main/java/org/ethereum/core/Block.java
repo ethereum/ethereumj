@@ -137,9 +137,17 @@ public class Block {
         // parse transactions
         RLPList transactions = (RLPList) block.get(1);
         for (RLPElement rlpTx : transactions){
-            Transaction tx = new Transaction(rlpTx.getRLPData());
+
+            RLPElement txData = ((RLPList)rlpTx).get(0);
+
+            Transaction tx = new Transaction(txData.getRLPData());
             this.transactionsList.add(tx);
+
+            // YP 4.3.1 should do something with that later
+            RLPElement txRecipe1 = ((RLPList)rlpTx).get(1);
+            RLPElement txRecipe2 = ((RLPList)rlpTx).get(2);
         }
+
         // parse uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
         for (RLPElement rawUncle : uncleBlocks){

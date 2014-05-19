@@ -790,7 +790,7 @@ public class RLP {
     public static byte[] encodeElement(byte[] srcData) {
 
         if (srcData == null){
-        	return new byte[] { 0x00 };
+        	return new byte[] { (byte) 0x80 };
         } else if (srcData.length <= 0x37) {
             // length = 8X
             byte length = (byte) (OFFSET_SHORT_ITEM + srcData.length);

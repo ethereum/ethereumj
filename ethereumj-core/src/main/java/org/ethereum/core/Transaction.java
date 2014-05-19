@@ -34,27 +34,35 @@ public class Transaction {
     
     /* SHA3 hash of the rlpEncoded transaction */
     private byte[] hash;
+
     /* a counter used to make sure each transaction can only be processed once */
     private byte[] nonce;
+
     /* the amount of ether to transfer (calculated as wei) */
     private byte[] value;
-    /* the address of the destination account 
+
+    /* the address of the destination account
      * In creation transaction the receive address is - 0 */
     private byte[] receiveAddress;   
-	/* the amount of ether to pay as a transaction fee 
+
+	/* the amount of ether to pay as a transaction fee
 	 * to the miner for each unit of gas */
     private byte[] gasPrice;
-	/* the amount of "gas" to allow for the computation. 
+
+	/* the amount of "gas" to allow for the computation.
 	 * Gas is the fuel of the computational engine; 
 	 * every computational step taken and every byte added 
 	 * to the state or transaction list consumes some gas. */
     private byte[] gasLimit;
-	/* An unlimited size byte array specifying 
+
+	/* An unlimited size byte array specifying
 	 * input [data] of the message call */ 
     private byte[] data;
+
 	/* Initialisation code for a new contract */
     private byte[] init;
-	/* the elliptic curve signature 
+
+	/* the elliptic curve signature
 	 * (including public key recovery bits) */
     private ECDSASignature signature;
 
@@ -80,7 +88,7 @@ public class Transaction {
     public void rlpParse(){
 
     	RLPList decodedTxList = RLP.decode2(rlpEncoded);
-    	RLPList transaction = (RLPList) ((RLPList) decodedTxList.get(0)).get(0);
+    	RLPList transaction =  (RLPList) decodedTxList.get(0);
 
     	this.hash  = HashUtil.sha3(rlpEncoded);
     	
@@ -190,7 +198,7 @@ public class Transaction {
 
 	public void sign(byte[] privKeyBytes) throws Exception {
 		byte[] hash = this.getHash();
-		ECKey key = ECKey.fromPrivate(privKeyBytes);
+		ECKey key = ECKey.fromPrivate(privKeyBytes).decompress();
 		this.signature = key.sign(hash);
 	}
 
@@ -226,19 +234,43 @@ public class Transaction {
 	        byte[] value 				= RLP.encodeElement(this.value);
 	        byte[] data 				= RLP.encodeElement(this.data);
 
-	        if(signed) {
-//	        	byte[] signature	= RLP.encodeElement(this.signature);
-	        }
+            byte[] v = null;
+            byte[] r = null;
+            byte[] s = null;
 
-	        if(Arrays.equals(this.receiveAddress, new byte[0])) {
-	        	byte[] init 			= RLP.encodeElement(this.init);
-		        this.rlpEncoded = RLP.encodeList(nonce, value, receiveAddress,
-		        		gasPrice, gasLimit, data, init);
+	        if(signed && signature != null) {
+//	        	byte[] signature	= RLP.encodeElement(this.signature);
+
+                v = RLP.encodeByte( signature.v );
+                r = RLP.encodeElement(signature.r.toByteArray());
+                s = RLP.encodeElement(signature.s.toByteArray());
+
+                if(Arrays.equals(this.receiveAddress, new byte[0])) {
+                    byte[] init 			= RLP.encodeElement(this.init);
+                    this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                             data, init, v, r, s);
+                } else {
+                    this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                            data, v, r, s);
+                }
+
 	        } else {
-		        this.rlpEncoded = RLP.encodeList(nonce, value, receiveAddress,
-		        		gasPrice, gasLimit, data);
-	        }
-	        			
+
+                byte[] result;
+
+                if(Arrays.equals(this.receiveAddress, new byte[0])) {
+                    byte[] init 			= RLP.encodeElement(this.init);
+                    result = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                             data, init);
+                } else {
+                    result = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                             data);
+                }
+
+                return result;
+            }
+
+
 	        /* Order of the Yellow Paper / eth-go & pyethereum clients
 	        byte[] nonce			= RLP.encodeElement(this.nonce);
 	        byte[] value			= RLP.encodeElement(this.value);

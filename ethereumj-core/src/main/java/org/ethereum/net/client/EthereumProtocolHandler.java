@@ -38,6 +38,7 @@ import org.spongycastle.util.encoders.Hex;
 public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     Timer chainAskTimer = new Timer();
+    int secToAskForChain = 1;
 
     final Timer timer = new Timer();
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
@@ -105,25 +106,14 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
         }, 2000, 30000);
 
-        // todo: stop that one
-        // todo: and schedule one slower
-        // todo: once the chain is downloaded
         chainAskTimer.schedule(new TimerTask() {
 
             public void run() {
                 System.out.println("[Send: GET_CHAIN]");
                 sendGetChain(ctx);
             }
-        }, 5000, 1000);
-/*
-        timer.schedule(new TimerTask() {
+        }, 3000, secToAskForChain * 1000);
 
-            public void run() {
-                System.out.println("[Send: TX]");
-                sendTx(ctx);
-            }
-        }, 10000);
-*/
     }
 
     @Override
@@ -224,7 +214,12 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             BlocksMessage blocksMessage = new BlocksMessage(rlpList);
             List<Block> blockList = blocksMessage.getBlockDataList();
 
-            if (blockList.size() <= 1){
+            // If we get one block from a peer
+            // we ask less swinish
+            if (blockList.size() <= 1 && secToAskForChain != 10){
+
+                System.out.println("Now we ask for a chain each 10 seconds");
+                secToAskForChain = 10;
 
                 chainAskTimer.cancel();
                 chainAskTimer.purge();
@@ -235,7 +230,26 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                         System.out.println("[Send: GET_CHAIN]");
                         sendGetChain(ctx);
                     }
-                }, 10000, 10000);
+                }, 3000, secToAskForChain * 1000);
+            }
+
+            // If we get more blocks from a peer
+            // we ask more often
+            if (blockList.size() > 2 && secToAskForChain != 1){
+
+                System.out.println("Now we ask for a chain each 1 seconds");
+                secToAskForChain = 11;
+
+                chainAskTimer.cancel();
+                chainAskTimer.purge();
+                chainAskTimer = new Timer();
+                chainAskTimer.schedule(new TimerTask() {
+
+                    public void run() {
+                        System.out.println("[Send: GET_CHAIN]");
+                        sendGetChain(ctx);
+                    }
+                }, 3000, secToAskForChain * 1000);
             }
 
             MainData.instance.addBlocks(blockList);

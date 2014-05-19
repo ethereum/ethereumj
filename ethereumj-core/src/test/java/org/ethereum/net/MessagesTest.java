@@ -4,11 +4,14 @@ import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.List;
 
 import junit.framework.Assert;
+import org.ethereum.core.Address;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.BlocksMessage;
 import org.ethereum.net.message.DisconnectMessage;
@@ -518,6 +521,36 @@ public class MessagesTest {
         byte[] size = Utils.calcPacketSize( getChainMessage.getPayload());
 
         assertEquals("00000067", Utils.toHexString(size));
+    }
+
+
+    @Test /* Transactions msg encode */
+    public void test15() throws Exception {
+
+        BigInteger value = new BigInteger("1000000000000000000000000");
+
+        byte[] privKey = HashUtil.sha3("cat".getBytes());
+        Address receiveAddress = new Address(privKey);
+
+        byte[] gasPrice=  Hex.decode("09184e72a000");
+        byte[] gas =      Hex.decode("4255");
+
+        Transaction tx = new Transaction(null, value.toByteArray(),
+                receiveAddress.getPubKey(),  gasPrice, gas, null);
+
+        tx.sign(privKey);
+        tx.getEncoded(true);
+
+        List<Transaction> txList =  new ArrayList<Transaction>();
+        txList.add(tx);
+        TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
+
+
+        //todo: add assertion to the test whenever you know what should be the result
+        System.out.println(Hex.toHexString( transactionsMessage.getPayload() ));
+
+
+//        !!! [ 15:51:24 | eth ] Ignoring invalid transaction: Invalid transaction format: Bad field 1 (8b00d3c21bcecceda1000000)
     }
 
 

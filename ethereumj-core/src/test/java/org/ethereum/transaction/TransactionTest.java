@@ -1,10 +1,14 @@
 package org.ethereum.transaction;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.security.SignatureException;
 
+import org.ethereum.core.Address;
+import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.junit.Test;
@@ -33,13 +37,53 @@ public class TransactionTest {
     }
 
     @Test  /* achieve public key of the sender */
-    public void test2(){
+    public void test2() throws Exception {
 
-        String rawTX      = "F86B04881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA05E3868194605F1647593B842725818CCFA6A38651A728715133A8E97CDCFAC54A00FF91628D04B215EBCCFD5F4FC34CC1B45DF32F6B4609FBB0DE42E8522264467";
-        byte[] rawTxBytes = Hex.decode(rawTX);
+        // cat --> 79B08AD8787060333663D19704909EE7B1903E58
+        // cow --> CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826
 
-        String txHash = Hex.toHexString(HashUtil.sha3(rawTxBytes));
-        System.out.println(txHash);
+        BigInteger value = new BigInteger("1000000000000000000000000");
+
+        byte[] privKey = HashUtil.sha3("cat".getBytes());
+        Address receiveAddress = new Address(privKey);
+
+        byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
+
+        byte[] gasPrice=  Hex.decode("09184e72a000");
+        byte[] gas =      Hex.decode("4255");
+
+        Transaction tx = new Transaction(null, value.toByteArray(),
+                receiveAddress.getPubKey(),  gasPrice, gas, null);
+
+        tx.sign(senderPrivKey);
+
+        System.out.println(tx.toString());
+
+        ECKey key = ECKey.signatureToKey(HashUtil.sha3(tx.getEncoded(true)), tx.getSignature().toBase64());
+
+        System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
+        System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
+    }
+
+
+    @Test /* encode transaction */
+    public void test3() throws Exception {
+
+        BigInteger value = new BigInteger("1000000000000000000000000");
+
+        byte[] privKey = HashUtil.sha3("cat".getBytes());
+        Address receiveAddress = new Address(privKey);
+
+        byte[] gasPrice=  Hex.decode("09184e72a000");
+        byte[] gas =      Hex.decode("4255");
+
+        Transaction tx = new Transaction(null, value.toByteArray(),
+                receiveAddress.getPubKey(),  gasPrice, gas, null);
+
+        tx.sign(privKey);
+        byte[] payload = tx.getEncoded(true);
+
+        System.out.println(Hex.toHexString(  payload ));
     }
 
 }

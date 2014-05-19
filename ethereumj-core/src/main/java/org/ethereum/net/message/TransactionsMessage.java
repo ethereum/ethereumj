@@ -4,9 +4,12 @@ import static org.ethereum.net.Command.TRANSACTIONS;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.net.Command;
+import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,6 +23,30 @@ public class TransactionsMessage extends Message {
     private List<Transaction> transactions = new ArrayList<Transaction>();
 
     public TransactionsMessage() {
+    }
+
+    public TransactionsMessage(List<Transaction> transactionList) {
+
+        this.transactions = transactionList;
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        for (Transaction tx : transactionList){
+
+            byte[] txPayload = tx.getEncoded(true);
+            try {
+                baos.write(txPayload);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        byte[][] elements = new byte[transactionList.size() + 1][];
+        elements[0] = new byte[]{Command.TRANSACTIONS.asByte()};
+        for (int i = 0; i < transactionList.size(); ++i){
+            elements[i + 1] = transactionList.get(i).getEncoded(true);
+        }
+
+        payload = RLP.encodeList(elements);
     }
 
     public TransactionsMessage(RLPList rawData) {
@@ -51,7 +78,7 @@ public class TransactionsMessage extends Message {
 
     @Override
     public byte[] getPayload() {
-        return null;
+        return payload;
     }
 
     public String toString() {
