@@ -5,10 +5,13 @@ import java.math.BigInteger;
 
 public enum Denomination {
 
-	WEI(BigInteger.ONE),
-	SZABO(BigDecimal.valueOf(Math.pow(10, 12)).toBigInteger()),
-	FINNY(BigDecimal.valueOf(Math.pow(10, 15)).toBigInteger()),
-	ETHER(BigDecimal.valueOf(Math.pow(10, 18)).toBigInteger());
+	WEI(newBigInt(0)),
+	ADA(newBigInt(3)),
+	BABBAGE(newBigInt(6)),
+	SHANNON(newBigInt(9)),
+	SZABO(newBigInt(12)),
+	FINNY(newBigInt(15)),
+	ETHER(newBigInt(18));
 	
 	private BigInteger amount;
 	
@@ -18,5 +21,9 @@ public enum Denomination {
 	
 	public BigInteger getDenomination() {
 		return amount;
+	}
+	
+	private static BigInteger newBigInt(double value) {
+		return BigDecimal.valueOf(Math.pow(10, value)).toBigInteger();
 	}
 }
