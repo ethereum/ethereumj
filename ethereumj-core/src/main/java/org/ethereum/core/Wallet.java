@@ -88,7 +88,8 @@ public class Wallet {
             if (balance != null){
 
                 // todo: validate the transaction and decrypt the sender
-                setBalance(receiveAddress, balance.add(new BigInteger(tx.getValue())));
+                setBalance(receiveAddress, balance.add(new BigInteger(1, tx.getValue())));
+
                 walletUpdated = true;
             }
         }
