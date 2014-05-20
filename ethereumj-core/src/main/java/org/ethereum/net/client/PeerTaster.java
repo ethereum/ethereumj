@@ -57,7 +57,7 @@ public class PeerTaster {
 
 
             // Start the client.
-//            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15);
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
             ChannelFuture f = b.connect(host, port).sync(); // (5)
 
             // Wait until the connection is closed.
@@ -90,6 +90,13 @@ public class PeerTaster {
         try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
         try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
         try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("54.211.14.10", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+
 
         System.out.println("End of the roaad");
 
