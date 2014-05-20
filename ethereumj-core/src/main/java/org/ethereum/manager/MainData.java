@@ -27,7 +27,7 @@ import com.maxmind.geoip.Location;
  */
 public class MainData {
 
-    private Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
+    private List<PeerData> peers = Collections.synchronizedList(new ArrayList<PeerData>());
     private List<Block> blockChainDB = new ArrayList<Block>();
     private Wallet wallet = new Wallet();
     private ClientPeer activePeer;
@@ -41,13 +41,19 @@ public class MainData {
     }
 
     public void addPeers(List<PeerData> newPeers){
-        this.peers.addAll(newPeers);
-        for (PeerData peerData : this.peers){
-            Location location = IpGeoDB.getLocationForIp(peerData.getInetAddress());
-            if (location != null)
-                System.out.println("Hello: " + " [" + peerData.getInetAddress().toString()
-                        + "] " + location.countryName);
+
+        for (PeerData peer : newPeers){
+            if (this.peers.indexOf(peer) == -1){
+                this.peers.add(peer);
+            }
         }
+
+//        for (PeerData peerData : this.peers){
+//            Location location = IpGeoDB.getLocationForIp(peerData.getInetAddress());
+//            if (location != null)
+//                System.out.println("Hello: " + " [" + peerData.getInetAddress().toString()
+//                        + "] " + location.countryName);
+//        }
     }
 
     public void addBlocks(List<Block> blocks) {
@@ -109,4 +115,8 @@ public class MainData {
     }
 
     public void addTransactions(List<Transaction> transactions) {}
+
+    public List<PeerData> getPeers() {
+        return peers;
+    }
 }
