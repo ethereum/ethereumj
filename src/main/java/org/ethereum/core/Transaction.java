@@ -8,6 +8,7 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
@@ -256,8 +257,12 @@ public class Transaction {
         byte[] data 				= RLP.encodeElement(this.data);
 
     	byte[] v = RLP.encodeByte( signature.v );
-    	byte[] r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
-    	byte[] s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
+    	byte[] rBytes = BigIntegers.asUnsignedByteArray(signature.r);
+    	System.out.println(Hex.toHexString(rBytes));
+    	byte[] r = RLP.encodeElement(rBytes);
+    	byte[] sBytes = BigIntegers.asUnsignedByteArray(signature.s);
+    	System.out.println(Hex.toHexString(sBytes));
+    	byte[] s = RLP.encodeElement(sBytes);
 
         if(Arrays.equals(this.receiveAddress, new byte[0])) {
             byte[] init 			= RLP.encodeElement(this.init);
