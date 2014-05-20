@@ -32,7 +32,7 @@ public class TransactionsMessage extends Message {
 
         for (Transaction tx : transactionList){
 
-            byte[] txPayload = tx.getEncoded();
+            byte[] txPayload = tx.getEncodedSigned();
             try {
                 baos.write(txPayload);
             } catch (IOException e) {
@@ -43,7 +43,7 @@ public class TransactionsMessage extends Message {
         byte[][] elements = new byte[transactionList.size() + 1][];
         elements[0] = new byte[]{Command.TRANSACTIONS.asByte()};
         for (int i = 0; i < transactionList.size(); ++i){
-            elements[i + 1] = transactionList.get(i).getEncoded();
+            elements[i + 1] = transactionList.get(i).getEncodedSigned();
         }
 
         payload = RLP.encodeList(elements);
