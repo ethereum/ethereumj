@@ -64,13 +64,6 @@ public class ClientPeer {
             });
 
 
-            // todo: redesign that part ,
-            // todo: 1) the method should finish.
-            // todo: 2) the peer should be saved as active peer in maindata
-            // todo: 3) b.connect(host, port).sync().channel(); // get the channel
-            // todo: 4) b.connect(host, port).sync().channel().writeAndFlush(); // use channel to send message
-
-
             // Start the client.
             ChannelFuture f = b.connect(host, port).sync(); // (5)
             this.channel = f.channel();

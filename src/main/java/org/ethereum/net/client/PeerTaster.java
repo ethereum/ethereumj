@@ -43,15 +43,7 @@ public class PeerTaster {
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
 
-            b.option(ChannelOption.SO_KEEPALIVE, true);
-
-            final EthereumProtocolHandler handler;
-            if (peerListener != null){
-                handler = new EthereumProtocolHandler(peerListener);
-                peerListener.console("connecting to: " + host + ":" + port);
-            }
-            else
-                handler = new EthereumProtocolHandler();
+            final EthereumPeerTasterHandler handler = new EthereumPeerTasterHandler();
 
             b.handler(new ChannelInitializer<NioSocketChannel>() {
                 @Override
@@ -65,9 +57,8 @@ public class PeerTaster {
 
 
             // Start the client.
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5);
             ChannelFuture f = b.connect(host, port).sync(); // (5)
-            this.channel = f.channel();
-            MainData.instance.setActivePeer(this);
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
@@ -76,34 +67,37 @@ public class PeerTaster {
            System.out.println("-- ClientPeer: catch (InterruptedException ie) --");
            ie.printStackTrace();
         } finally {
-            workerGroup.shutdownGracefully();
+            try {
+                workerGroup.shutdownGracefully().sync();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
+
+        System.out.println("I am dead");
     }
 
 
-    /*
-     * The wire gets data for signed transactions and
-     * sends it to the net.
-     * todo: find a way to set all "send to wire methods" in one place.
-     */
-    public void sendTransaction(Transaction transaction){
 
-        transaction.getEncoded();
-        java.util.List<Transaction> txList =  new ArrayList<Transaction>();
-        txList.add(transaction);
-        TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
+    public static void main(String args[]){
 
-        byte[] payload = transactionsMessage.getPayload();
+        PeerTaster peerTaster = new PeerTaster();
 
-        ByteBuf buffer = channel.alloc().buffer(payload.length + 8);
-        buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(Utils.calcPacketSize(payload));
-        buffer.writeBytes(payload);
 
-        System.out.println("Send msg: [ " +
-                Hex.toHexString(payload) +
-                " ]");
+        try {peerTaster.connect("54.211.14.10", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
 
-        channel.writeAndFlush(buffer);
+        System.out.println("End of the roaad");
+
+        for (PeerData peer : MainData.instance.getPeers()){
+
+            System.out.println(peer.getInetAddress().getHostAddress().toString());
+        };
+
+
     }
 }
