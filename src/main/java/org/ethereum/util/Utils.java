@@ -17,6 +17,17 @@ import org.spongycastle.util.encoders.Hex;
 public class Utils {
 
     private static SecureRandom random = new SecureRandom();
+    
+    public static byte[] asUnsignedByteArray(BigInteger bigInteger) {
+	    byte[] array = bigInteger.toByteArray();
+	    if (array[0] == 0) {
+	        byte[] tmp = new byte[array.length - 1];
+	        System.arraycopy(array, 1, tmp, 0, tmp.length);
+	        array = tmp;
+	    }
+	    return array;
+    }
+    
 
     public static byte[]  hexStringToByteArr(String hexString){
 

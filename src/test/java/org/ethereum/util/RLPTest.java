@@ -237,7 +237,7 @@ public class RLPTest {
     public void testEncodeElementNull(){
     	
     	byte[] actuals = RLP.encodeElement(null);
-    	assertArrayEquals(new byte[] { (byte) 0x00 }, actuals);
+    	assertArrayEquals(new byte[] { (byte) 0x80 }, actuals);
     }
 
     @Test /** found bug encode list affects element value,
