@@ -16,8 +16,8 @@ public class Genesis extends Block {
     private static byte[] unclesHash = sha3EmptyList;
     private static byte[] coinbase = zeroHash160;
     private static byte[] stateRoot = // TODO: Get stateRoot from actual state
-    		Hex.decode("2f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d");
-    private static byte[] txTrieRoot = zeroHash256;
+    		Hex.decode("12582945fc5ad12c3e7b67c4fc37a68fc0d52d995bb7f7291ff41a2739a7ca16");
+    private static byte[] txTrieRoot = new byte[0];
     private static byte[] difficulty = BigInteger.valueOf((long) Math.pow(2, 22)).toByteArray();
     private static long number = 0;
     private static long minGasPrice = 0;
