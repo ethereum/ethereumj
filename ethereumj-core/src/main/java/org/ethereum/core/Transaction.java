@@ -65,24 +65,24 @@ public class Transaction {
     private ECDSASignature signature;
     
     /* Tx in encoded form */
+    private byte[] rlpEncodedSigned;
     private byte[] rlpEncoded;
-    private byte[] unsignedRLPEncoded;
     /* Indicates if this transaction has been parsed 
      * from the rlp-encoded data */
     private boolean parsed = false;
 
     public Transaction(byte[] rawData) {
-        this.rlpEncoded = rawData;
+        this.rlpEncodedSigned = rawData;
         parsed = false;
     }
 
-    public Transaction(byte[] nonce, byte[] value, byte[] recieveAddress, byte[] gasPrice, byte[] gas, byte[] data) {
+    public Transaction(byte[] nonce, byte[] gasPrice, byte[] gas, byte[] recieveAddress, byte[] value, byte[] data) {
         this.nonce = nonce;
-        this.value = value;
-        this.receiveAddress = recieveAddress;
         this.gasPrice = gasPrice;
         this.gasLimit = gas;
-        if(recieveAddress == null) {
+        this.receiveAddress = recieveAddress;
+        this.value = value;
+        if(recieveAddress == null || receiveAddress.length == 0) {
         	this.init = data;
         } else {
         	this.data = data;
@@ -92,10 +92,10 @@ public class Transaction {
 
     public void rlpParse(){
 
-    	RLPList decodedTxList = RLP.decode2(rlpEncoded);
+    	RLPList decodedTxList = RLP.decode2(rlpEncodedSigned);
     	RLPList transaction =  (RLPList) decodedTxList.get(0);
 
-    	this.hash  = HashUtil.sha3(rlpEncoded);
+    	this.hash  = HashUtil.sha3(rlpEncodedSigned);
     	
         this.nonce =          ((RLPItem) transaction.get(0)).getRLPData();
         this.gasPrice =       ((RLPItem) transaction.get(1)).getRLPData();
@@ -126,7 +126,7 @@ public class Transaction {
     public byte[] getHash() {
 
         if (!parsed) rlpParse();
-        byte[] plainMsg = this.getRlpUnsigned();
+        byte[] plainMsg = this.getEncoded();
 
         return HashUtil.sha3(plainMsg);
     }
@@ -221,9 +221,9 @@ public class Transaction {
      *  For signature games you have to keep also
      *  rlp of the transaction without any signature data
      */
-    public byte[] getRlpUnsigned(){
+    public byte[] getEncoded(){
 
-        if (unsignedRLPEncoded != null) return unsignedRLPEncoded;
+        if (rlpEncoded != null) return rlpEncoded;
 
         byte[] nonce 				= RLP.encodeElement(this.nonce);
         byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
@@ -234,19 +234,19 @@ public class Transaction {
 
         if(Arrays.equals(this.receiveAddress, new byte[0])) {
             byte[] init 			= RLP.encodeElement(this.init);
-            this.unsignedRLPEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
                     data, init);
         } else {
-            this.unsignedRLPEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
                     data);
         }
 
-        return unsignedRLPEncoded;
+        return rlpEncoded;
     }
 
-    public byte[] getEncoded() {
+    public byte[] getEncodedSigned() {
 
-        if(rlpEncoded != null) return rlpEncoded;
+        if(rlpEncodedSigned != null) return rlpEncodedSigned;
 
         byte[] nonce 				= RLP.encodeElement(this.nonce);
         byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
@@ -255,18 +255,18 @@ public class Transaction {
         byte[] value 				= RLP.encodeElement(this.value);
         byte[] data 				= RLP.encodeElement(this.data);
 
-        byte[] v = RLP.encodeByte( signature.v );
-        byte[] r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
-        byte[] s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
+    	byte[] v = RLP.encodeByte( signature.v );
+    	byte[] r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
+    	byte[] s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
 
         if(Arrays.equals(this.receiveAddress, new byte[0])) {
             byte[] init 			= RLP.encodeElement(this.init);
-            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+            this.rlpEncodedSigned = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
                      data, init, v, r, s);
         } else {
-            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+            this.rlpEncodedSigned = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
                     data, v, r, s);
         }
-        return rlpEncoded;
+        return rlpEncodedSigned;
     }
 }
