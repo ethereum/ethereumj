@@ -538,7 +538,7 @@ public class MessagesTest {
                 receiveAddress.getAddress(),  gasPrice, gas, null);
 
         tx.sign(privKey);
-        tx.getEncoded();
+        tx.getEncodedSigned();
 
         List<Transaction> txList =  new ArrayList<Transaction>();
         txList.add(tx);
@@ -548,11 +548,7 @@ public class MessagesTest {
         //todo: add assertion to the test whenever you know what should be the result
         System.out.println(Hex.toHexString( transactionsMessage.getPayload() ));
 
-
 //        !!! [ 15:51:24 | eth ] Ignoring invalid transaction: Invalid transaction format: Bad field 1 (8b00d3c21bcecceda1000000)
     }
-
-
-
 }
 
