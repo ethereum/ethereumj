@@ -7,6 +7,12 @@
 	<version>0.1-SNAPSHOT</version>
 	<name>EthereumJ</name>
 	<url>http://www.ethereumj.org</url>
+
+<!--  * To deploy all the classes and dependencies to one jar,
+      * that's one option to pack stand alone.
+mvn clean package dependency:copy-dependencies
+-->
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<!-- Third-party dependencies -->
@@ -114,6 +120,20 @@
 					<target>1.7</target>
 				</configuration>
 			</plugin>
+
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>org.ethereum.gui.ToolBar</mainClass>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 </project>

@@ -9,6 +9,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import edu.emory.mathcs.backport.java.util.Arrays;
@@ -24,6 +25,8 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 public class Transaction {
 
     private byte[] rlpEncoded;
+    private byte[] unsignedRLPEncoded;
+
     private boolean parsed = false;
 
     /* creation contract tx
@@ -129,8 +132,11 @@ public class Transaction {
     }
 
     public byte[] getHash() {
+
         if (!parsed) rlpParse();
-        return HashUtil.sha3(this.getEncoded(false));
+        byte[] plainMsg = this.getRlpUnsigned();
+
+        return HashUtil.sha3(plainMsg);
     }
 
     public byte[] getNonce() {
@@ -218,71 +224,77 @@ public class Transaction {
                 ", signatureS=" + Utils.toHexString(signature.s.toByteArray()) +
                 ']';
     }
-    
-    public byte[] getEncoded(boolean signed) {
-		if(rlpEncoded == null) {
 
-	        // TODO: Alternative clean way to encode, using RLP.encode() after it's optimized
-	        // return new Object[] { nonce, value, receiveAddress, gasPrice, 
-			//							gasLimit, data, init, signature };
+    /**
+     *  For signature games you have to keep also
+     *  rlp of the transaction without any signature data
+     */
+    public byte[] getRlpUnsigned(){
 
-			/* Temporary order for an RLP encoded transaction in cpp client */
-	        byte[] nonce 				= RLP.encodeElement(this.nonce);
-	        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
-	        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
-	        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
-	        byte[] value 				= RLP.encodeElement(this.value);
-	        byte[] data 				= RLP.encodeElement(this.data);
+        if (unsignedRLPEncoded != null) return unsignedRLPEncoded;
 
-            byte[] v = null;
-            byte[] r = null;
-            byte[] s = null;
+        byte[] nonce 				= RLP.encodeElement(this.nonce);
+        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
+        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
+        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
+        byte[] value 				= RLP.encodeElement(this.value);
+        byte[] data 				= RLP.encodeElement(this.data);
 
-	        if(signed && signature != null) {
-//	        	byte[] signature	= RLP.encodeElement(this.signature);
+        if(Arrays.equals(this.receiveAddress, new byte[0])) {
+            byte[] init 			= RLP.encodeElement(this.init);
+            this.unsignedRLPEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                    data, init);
+        } else {
+            this.unsignedRLPEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                    data);
+        }
 
-                v = RLP.encodeByte( signature.v );
-                r = RLP.encodeElement(signature.r.toByteArray());
-                s = RLP.encodeElement(signature.s.toByteArray());
+        return unsignedRLPEncoded;
+    }
 
-                if(Arrays.equals(this.receiveAddress, new byte[0])) {
-                    byte[] init 			= RLP.encodeElement(this.init);
-                    this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
-                             data, init, v, r, s);
-                } else {
-                    this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
-                            data, v, r, s);
-                }
+    public byte[] getEncoded() {
 
-	        } else {
+        if(rlpEncoded != null) return rlpEncoded;
 
-                byte[] result;
+        /* Temporary order for an RLP encoded transaction in cpp client */
+        byte[] nonce 				= RLP.encodeElement(this.nonce);
+        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
+        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
+        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
+        byte[] value 				= RLP.encodeElement(this.value);
+        byte[] data 				= RLP.encodeElement(this.data);
 
-                if(Arrays.equals(this.receiveAddress, new byte[0])) {
-                    byte[] init 			= RLP.encodeElement(this.init);
-                    result = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
-                             data, init);
-                } else {
-                    result = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
-                             data);
-                }
-
-                return result;
-            }
+        byte[] v = null;
+        byte[] r = null;
+        byte[] s = null;
 
 
-	        /* Order of the Yellow Paper / eth-go & pyethereum clients
-	        byte[] nonce			= RLP.encodeElement(this.nonce);
-	        byte[] value			= RLP.encodeElement(this.value);
-	        byte[] receiveAddress 	= RLP.encodeElement(this.receiveAddress);
-	        byte[] gasPrice			= RLP.encodeElement(this.gasPrice);
-	        byte[] gasLimit			= RLP.encodeElement(this.gasLimit);
-	        byte[] data				= RLP.encodeElement(this.data);
-	        byte[] init				= RLP.encodeElement(this.init);
-	        */
-	        
-	
-		}
-		return rlpEncoded;
+        v = RLP.encodeByte( signature.v );
+        r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
+        s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
+
+        if(Arrays.equals(this.receiveAddress, new byte[0])) {
+            byte[] init 			= RLP.encodeElement(this.init);
+            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                     data, init, v, r, s);
+        } else {
+            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, value, receiveAddress,
+                    data, v, r, s);
+        }
+
+
+
+
+        /* Order of the Yellow Paper / eth-go & pyethereum clients
+        byte[] nonce			= RLP.encodeElement(this.nonce);
+        byte[] value			= RLP.encodeElement(this.value);
+        byte[] receiveAddress 	= RLP.encodeElement(this.receiveAddress);
+        byte[] gasPrice			= RLP.encodeElement(this.gasPrice);
+        byte[] gasLimit			= RLP.encodeElement(this.gasLimit);
+        byte[] data				= RLP.encodeElement(this.data);
+        byte[] init				= RLP.encodeElement(this.init);
+        */
+
+        return rlpEncoded;
     }
 }

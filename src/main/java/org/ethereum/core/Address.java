@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
@@ -16,34 +15,34 @@ import java.util.Arrays;
 public class Address {
 
     byte[] privKey;
-    byte[] pubKey;
+    byte[] address;
 
     public Address(){
         privKey = new BigInteger(130, Utils.getRandom()).toString(32).getBytes();
-        this.pubKey = ECKey.fromPrivate(privKey).getAddress();
+        this.address = ECKey.fromPrivate(privKey).getAddress();
     }
 
     public Address(byte[] privKey) {
         this.privKey = privKey;
-        this.pubKey = ECKey.fromPrivate(privKey).getAddress();
+        this.address = ECKey.fromPrivate(privKey).getAddress();
     }
 
-    public Address(byte[] privKey, byte[] pubKey) {
+    public Address(byte[] privKey, byte[] address) {
         this.privKey = privKey;
-        this.pubKey = pubKey;
+        this.address = address;
     }
 
     public byte[] getPrivKey() {
         return privKey;
     }
 
-    public byte[] getPubKey() {
-        return pubKey;
+    public byte[] getAddress() {
+        return address;
     }
 
     @Override
     public String toString() {
-        return Hex.toHexString(pubKey);
+        return Hex.toHexString(address);
     }
 
     @Override
@@ -53,13 +52,13 @@ public class Address {
 
         Address address = (Address) o;
 
-        if (!Arrays.equals(pubKey, address.pubKey)) return false;
+        if (!Arrays.equals(this.address, address.address)) return false;
 
         return true;
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(pubKey);
+        return Arrays.hashCode(address);
     }
 }

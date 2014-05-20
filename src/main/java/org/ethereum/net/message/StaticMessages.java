@@ -50,14 +50,14 @@ public class StaticMessages {
 
     public static final byte[] GET_CHAIN = Hex.decode("2240089100000027F82514A069A7356A245F9DC5B865475ADA5EE4E89B18F93C06503A9DB3B3630E88E9FB4E820100");
 
-    public static final byte[] GENESSIS_HASH = Hex.decode("69a7356a245f9dc5b865475ada5ee4e89b18f93c06503a9db3b3630e88e9fb4e");
+    public static final byte[] GENESSIS_HASH = Hex.decode("f5232afe32aba6b366f8aa86a6939437c5e13d1fd71a0f51e77735d3456eb1a6");
     public static final byte[] MAGIC_PACKET = Hex.decode("22400891");
 
     static {
 
         byte[] peerIdBytes = HashUtil.randomPeerId();
 
-        HELLO_MESSAGE = new HelloMessage((byte)0x0F, (byte)0x00, "EthereumJ [v0.0.1] pure java [by Roman Mandeleil]",
+        HELLO_MESSAGE = new HelloMessage((byte)0x10, (byte)0x00, "EthereumJ [v0.5.1] pure java by RomanJ",
                 (byte)0b00000111, (short)30303, peerIdBytes);
 
 /*

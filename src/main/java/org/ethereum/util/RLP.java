@@ -98,7 +98,7 @@ public class RLP {
 	 * followed by the concatenation of the RLP encodings of the items. The
 	 * range of the first byte is thus [0xf8, 0xff].
 	 */
-	private static int OFFSET_LONG_LIST = 0xf8;
+	private static int OFFSET_LONG_LIST = 0xf7;
 	
 	
 	/* ******************************************************

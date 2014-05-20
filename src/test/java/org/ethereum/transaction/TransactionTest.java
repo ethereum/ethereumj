@@ -5,13 +5,14 @@ import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
-import java.security.SignatureException;
 
 import org.ethereum.core.Address;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.junit.Assert;
 import org.junit.Test;
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 public class TransactionTest {
@@ -53,16 +54,28 @@ public class TransactionTest {
         byte[] gas =      Hex.decode("4255");
 
         Transaction tx = new Transaction(null, value.toByteArray(),
-                receiveAddress.getPubKey(),  gasPrice, gas, null);
+                receiveAddress.getAddress(),  gasPrice, gas, null);
 
         tx.sign(senderPrivKey);
 
-        System.out.println(tx.toString());
 
-        ECKey key = ECKey.signatureToKey(HashUtil.sha3(tx.getEncoded(true)), tx.getSignature().toBase64());
+
+        System.out.println("r: " + Hex.toHexString(tx.getSignature().r.toByteArray()));
+        System.out.println("s: " + Hex.toHexString(tx.getSignature().s.toByteArray()));
+
+        System.out.println(Hex.toHexString( tx.getEncoded() ));
+
+        // retrieve the signer/sender of the transaction
+        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature().toBase64());
+
+        System.out.println("Tx unsigned RLP:  " + Hex.toHexString( tx.getRlpUnsigned() ));
+        System.out.println("Tx signed   RLP:  " + Hex.toHexString( tx.getEncoded() ));
 
         System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
         System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
+
+        Assert.assertEquals("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826",
+                Hex.toHexString(key.getAddress()).toUpperCase());
     }
 
 
@@ -78,10 +91,10 @@ public class TransactionTest {
         byte[] gas =      Hex.decode("4255");
 
         Transaction tx = new Transaction(null, value.toByteArray(),
-                receiveAddress.getPubKey(),  gasPrice, gas, null);
+                receiveAddress.getAddress(),  gasPrice, gas, null);
 
         tx.sign(privKey);
-        byte[] payload = tx.getEncoded(true);
+        byte[] payload = tx.getEncoded();
 
         System.out.println(Hex.toHexString(  payload ));
     }
