@@ -1,8 +1,14 @@
 package org.ethereum.manager;
 
-import com.maxmind.geoip.Location;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
@@ -12,7 +18,7 @@ import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.*;
+import com.maxmind.geoip.Location;
 
 /**
  * www.ethereumJ.com
@@ -20,8 +26,6 @@ import java.util.*;
  * Created on: 21/04/14 20:35
  */
 public class MainData {
-
-
 
     private Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
     private List<Block> blockChainDB = new ArrayList<Block>();
@@ -57,7 +61,7 @@ public class MainData {
         // if it is the first block to add
         // check that the parent is the genesis
         if (blockChainDB.isEmpty() &&
-            !Arrays.equals(StaticMessages.GENESSIS_HASH, firstBlockToAdd.getParentHash())){
+            !Arrays.equals(StaticMessages.GENESIS_HASH, firstBlockToAdd.getParentHash())){
 
              return;
         }
@@ -80,25 +84,21 @@ public class MainData {
         System.out.println("*** Block chain size: [" + blockChainDB.size() + "]");
     }
 
-
     public byte[] getLatestBlockHash(){
 
         if (blockChainDB.isEmpty())
-            return StaticMessages.GENESSIS_HASH;
+            return (new Genesis()).getHash();
         else
           return blockChainDB.get(blockChainDB.size() - 1).getHash();
     }
 
-
     public List<Block> getAllBlocks(){
-
         return blockChainDB;
     }
 
     public Wallet getWallet() {
         return wallet;
     }
-
 
     public void setActivePeer(ClientPeer peer){
         this.activePeer = peer;

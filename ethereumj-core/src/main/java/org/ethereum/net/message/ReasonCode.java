@@ -14,7 +14,7 @@ public enum ReasonCode {
     WRONG_GENESIS(0x06),
     INCOMPATIBLE_PROTOCOL(0x07),
     PEER_QUITING(0x08),
-    UNKNOWN(0xFF);
+	UNKNOWN(0xFF);
 
     private int reason;
     
@@ -25,10 +25,10 @@ public enum ReasonCode {
         }
     }
     
-    private ReasonCode(int cmd) {
-        this.reason = cmd;
+    private ReasonCode(int reason) {
+        this.reason = reason;
     }
-
+        
     public static ReasonCode fromInt(int i) {
     	ReasonCode type = intToTypeMap.get(Integer.valueOf(i));
         if (type == null) 
