@@ -71,7 +71,7 @@ class PayOutDialog extends JDialog {
                         byte[] gas =      Hex.decode("4255");
 
                         Transaction tx = new Transaction(null, value.toByteArray(),
-                                receiveAddress.getAddress(),  gasPrice, gas, null);
+                                  gasPrice, gas, receiveAddress.getAddress(),  null);
 
                         try {
                             tx.sign(senderPrivKey);
