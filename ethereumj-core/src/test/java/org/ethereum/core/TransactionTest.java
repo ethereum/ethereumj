@@ -31,7 +31,7 @@ public class TransactionTest {
     	assertEquals("c2604bd6eeca76afce4e7775d87960e3d4ed3b69235a3f94d6f1497c9831b50c", tx.getSignature().r);
     	assertEquals("664124a6b323350dd57a650434dc6bf8ddf37cd1a2686fee377e512aa12f1214", tx.getSignature().s);
     	
-    	assertEquals(RLP_ENCODED_TX2, Hex.toHexString(tx.getEncoded(false)));
+    	assertEquals(RLP_ENCODED_TX2, Hex.toHexString(tx.getEncoded()));
 	}
 
 	@Test
@@ -55,7 +55,7 @@ public class TransactionTest {
 		byte[] data				= Hex.decode("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001");
 		
     	Transaction tx = new Transaction(nonce, value, recieveAddress, gasPrice, gas, data);
-    	byte[] encoded = tx.getEncoded(false);
+    	byte[] encoded = tx.getEncoded();
     	String test = Hex.toHexString(encoded);
     	
     	System.out.println(RLP_ENCODED_TX2);

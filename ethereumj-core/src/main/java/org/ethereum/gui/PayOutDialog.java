@@ -5,18 +5,14 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
-import org.ethereum.net.message.TransactionsMessage;
 import org.spongycastle.util.encoders.Hex;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
 import java.math.BigInteger;
-import java.util.*;
 
 import javax.swing.*;
-import javax.swing.text.DefaultEditorKit;
 
 /**
  * www.ethereumJ.com
@@ -75,7 +71,7 @@ class PayOutDialog extends JDialog {
                         byte[] gas =      Hex.decode("4255");
 
                         Transaction tx = new Transaction(null, value.toByteArray(),
-                                receiveAddress.getPubKey(),  gasPrice, gas, null);
+                                receiveAddress.getAddress(),  gasPrice, gas, null);
 
                         try {
                             tx.sign(senderPrivKey);

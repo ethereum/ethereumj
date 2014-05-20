@@ -35,7 +35,7 @@ public class WalletAddressPanel extends JPanel{
         addressField.setBorder(border);
         addressField.setEnabled(true);
         addressField.setEditable(false);
-        addressField.setText(Hex.toHexString(address.getPubKey()).toUpperCase());
+        addressField.setText(Hex.toHexString(address.getAddress()).toUpperCase());
         addressField.setForeground(new Color(143, 170, 220));
         addressField.setFont(new Font("Monospaced", 0, 12));
         addressField.setPreferredSize(new Dimension(300, 35));

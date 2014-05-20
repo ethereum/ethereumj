@@ -57,8 +57,7 @@ public class MainData {
         // if it is the first block to add
         // check that the parent is the genesis
         if (blockChainDB.isEmpty() &&
-            !"69a7356a245f9dc5b865475ada5ee4e89b18f93c06503a9db3b3630e88e9fb4e".
-                    equals(Hex.toHexString(firstBlockToAdd.getParentHash()))){
+            !Arrays.equals(StaticMessages.GENESSIS_HASH, firstBlockToAdd.getParentHash())){
 
              return;
         }

@@ -7,7 +7,6 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import junit.framework.Assert;
 import org.ethereum.core.Address;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
@@ -536,10 +535,10 @@ public class MessagesTest {
         byte[] gas =      Hex.decode("4255");
 
         Transaction tx = new Transaction(null, value.toByteArray(),
-                receiveAddress.getPubKey(),  gasPrice, gas, null);
+                receiveAddress.getAddress(),  gasPrice, gas, null);
 
         tx.sign(privKey);
-        tx.getEncoded(true);
+        tx.getEncoded();
 
         List<Transaction> txList =  new ArrayList<Transaction>();
         txList.add(tx);
