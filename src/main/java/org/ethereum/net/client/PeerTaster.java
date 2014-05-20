@@ -57,7 +57,7 @@ public class PeerTaster {
 
 
             // Start the client.
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 5);
+//            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 15);
             ChannelFuture f = b.connect(host, port).sync(); // (5)
 
             // Wait until the connection is closed.
