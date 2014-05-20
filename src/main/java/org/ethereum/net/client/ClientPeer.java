@@ -95,7 +95,7 @@ public class ClientPeer {
      */
     public void sendTransaction(Transaction transaction){
 
-        transaction.getEncoded();
+        transaction.getEncodedSigned();
         java.util.List<Transaction> txList =  new ArrayList<Transaction>();
         txList.add(transaction);
         TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
