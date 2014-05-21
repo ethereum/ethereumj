@@ -2,6 +2,8 @@ package org.ethereum.util;
 
 import java.util.ArrayList;
 
+import org.spongycastle.util.encoders.Hex;
+
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
@@ -32,7 +34,7 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
 			}
 			System.out.print("]");
 		} else {
-			String hex = Utils.toHexString(((RLPItem) element).getRLPData());
+			String hex = ByteUtil.toHexString(((RLPItem) element).getRLPData());
 			System.out.print(hex + ", ");
 		}
 	}
