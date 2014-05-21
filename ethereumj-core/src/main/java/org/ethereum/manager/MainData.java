@@ -81,7 +81,7 @@ public class MainData {
             if (!hashLast.equals(blockParentHash)) return;
         }
 
-        for (int i = blocks.size() - 1; i > 0 ; --i){
+        for (int i = blocks.size() - 1; i >= 0 ; --i){
             Block block = blocks.get(i);
             blockChainDB.add(block);
             wallet.processBlock(block);

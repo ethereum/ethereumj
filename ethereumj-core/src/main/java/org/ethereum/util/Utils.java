@@ -106,18 +106,16 @@ public class Utils {
         return size;
     }
 
-    static BigInteger thousand = new BigInteger("1000");
+    static BigInteger _1000_ = new BigInteger("1000");
     public static String getValueShortString(BigInteger number){
 
         BigInteger result = number;
         int pow = 0;
-        while (result.compareTo(thousand) == 1){
+        while (result.compareTo(_1000_) == 1 || result.compareTo(_1000_) == 0){
 
-            result = result.divide(thousand);
+            result = result.divide(_1000_);
             pow += 3;
         }
-
-
         return result.toString() + " (" + "10^" + pow + ")";
     }
 

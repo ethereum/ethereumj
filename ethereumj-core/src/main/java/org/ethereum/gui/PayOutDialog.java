@@ -5,6 +5,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
+import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -22,17 +23,21 @@ import javax.swing.*;
  */
 class PayOutDialog extends JDialog {
 
-    public PayOutDialog(Frame parent, BigInteger maxAmount) {
+    AddressState addressState = null;
+
+    public PayOutDialog(Frame parent, final AddressState addressState) {
         super(parent, "Payout details: ", false);
 
+        this.addressState = addressState;
+
         JLabel receiver = new JLabel("receiver: ");
-        JTextField receiverInput = new JTextField(18);
+        final JTextField receiverInput = new JTextField(18);
         receiverInput.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        JLabel amount = new JLabel("amount: ");
-        JTextField amountInput = new JTextField(18);
+        final JLabel amount = new JLabel("amount: ");
+        final JTextField amountInput = new JTextField(18);
         amountInput.setHorizontalAlignment(SwingConstants.RIGHT);
-        amountInput.setText(maxAmount.toString());
+        amountInput.setText(addressState.getBalance().toString());
 
         this.getContentPane().setBackground(Color.WHITE);
         this.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
@@ -61,18 +66,18 @@ class PayOutDialog extends JDialog {
 //                        Client
                        ClientPeer peer = MainData.instance.getActivePeer();
 
-                        BigInteger value = new BigInteger("1000000000000000000000000");
-
-                        byte[] privKey = HashUtil.sha3("cat".getBytes());
-                        Address receiveAddress = new Address(privKey);
+                        BigInteger value = new BigInteger(amountInput.getText());
+                        byte[] address = Hex.decode(receiverInput.getText());
 
                         byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
 
+                        byte[] nonce =    addressState.getNonce() == BigInteger.ZERO ?
+                                                     null : addressState.getNonce().toByteArray();
                         byte[] gasPrice=  Hex.decode("09184e72a000");
                         byte[] gas =      Hex.decode("4255");
 
-                        Transaction tx = new Transaction(null, gasPrice, gas,
-                        		receiveAddress.getAddress(), BigIntegers.asUnsignedByteArray(value), null);
+                        Transaction tx = new Transaction(nonce, gasPrice, gas,
+                                address, BigIntegers.asUnsignedByteArray(value), null);
 
                         try {
                             tx.sign(senderPrivKey);
@@ -83,6 +88,7 @@ class PayOutDialog extends JDialog {
                         }
 
                         peer.sendTransaction(tx);
+                        addressState.incrementTheNonce();
                     }
                 }
         );

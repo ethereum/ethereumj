@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import org.ethereum.crypto.ECKey;
+import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.encoders.Hex;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -16,9 +18,9 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 /**
  * www.ethereumJ.com
@@ -27,20 +29,31 @@ import java.util.Set;
  */
 public class Wallet {
 
-    private HashMap<Address, BigInteger> rows = new HashMap<>();
-    private List<WalletListener> listeners = new ArrayList();
+    // todo: a) the values I need to keep for address state is balance & nonce & ECKey
+    // todo: b) keep it to be easy accessed by the toAddress()
+//    private HashMap<Address, BigInteger> rows = new HashMap<>();
+
+    // <address, info> table for a wallet
+    private HashMap<String, AddressState> rows = new HashMap<String, AddressState>();
     private long high;
 
+    private List<WalletListener> listeners = new ArrayList();
+
     public void addNewKey(){
-        Address address = new Address();
-        rows.put(address, BigInteger.ZERO);
+
+        AddressState addressState = new AddressState();
+        String address = Hex.toHexString(addressState.getEcKey().getAddress());
+        rows.put(address, addressState);
 
         for (WalletListener listener : listeners) listener.valueChanged();
     }
 
     public void importKey(byte[] privKey){
-        Address address = new Address(privKey);
-        rows.put(address, BigInteger.ZERO);
+
+        AddressState addressState = new AddressState(ECKey.fromPrivate(privKey));
+        String address = Hex.toHexString(addressState.getEcKey().getAddress());
+        rows.put(address, addressState);
+
         notifyListeners();
     }
 
@@ -48,25 +61,28 @@ public class Wallet {
         this.listeners.add(walletListener);
     }
 
-    public Set<Address> getAddressSet(){
-        return rows.keySet();
+    public Collection<AddressState> getAddressStateCollection(){
+        return rows.values();
     }
 
+    public AddressState getAddressState(byte[] addressBytes){
 
-    public BigInteger setBalance(Address address, BigInteger balance){
-        return rows.put(address, balance);
-    }
-
-    public BigInteger getBalance(Address address){
+        String address = Hex.toHexString(addressBytes);
         return rows.get(address);
+    }
+
+
+    public BigInteger getBalance(byte[] addressBytes){
+        String address = Hex.toHexString(addressBytes);
+        return rows.get(address).getBalance();
     }
 
     public BigInteger totalBalance(){
 
         BigInteger sum = BigInteger.ZERO;
 
-        for (BigInteger value : rows.values()){
-            sum = sum.add(value);
+        for (AddressState addressState : rows.values()){
+            sum = sum.add(addressState.getBalance());
         }
         return sum;
     }
@@ -81,15 +97,13 @@ public class Wallet {
 
         for (Transaction tx : transactions){
 
-            byte[] pubKey = tx.getReceiveAddress();
-            Address receiveAddress = new Address(null, pubKey);
-            BigInteger balance = getBalance(receiveAddress);
+            // todo: validate the transaction and decrypt the sender
 
-            if (balance != null){
+            byte[] address = tx.getReceiveAddress();
 
-                // todo: validate the transaction and decrypt the sender
-                setBalance(receiveAddress, balance.add(new BigInteger(1, tx.getValue())));
-
+            AddressState addressState =  rows.get(Hex.toHexString(address));
+            if (addressState != null){
+                addressState.addToBalance(new BigInteger(1, tx.getValue()));
                 walletUpdated = true;
             }
         }
@@ -140,12 +154,13 @@ public class Wallet {
             Node privNode  = rowNode.getChildNodes().item(1);
             Node valueNode = rowNode.getChildNodes().item(2);
 
-            byte[] privKey = Hex.decode(privNode.getTextContent());
-            Address address = new Address(privKey);
-            BigInteger value = new BigInteger(valueNode.getTextContent());
+            // todo: complete load func
+//            byte[] privKey = Hex.decode(privNode.getTextContent());
+//            Address address = new Address(privKey);
+//            BigInteger value = new BigInteger(valueNode.getTextContent());
 
-            this.importKey(privKey);
-            this.setBalance(address, value);
+//            this.importKey(privKey);
+//            this.setBalance(address, value);
         }
 
 
@@ -189,7 +204,7 @@ public class Wallet {
         walletElement.setAttributeNode(high);
 
         int i = 0;
-        for (Address address :  getAddressSet()){
+        for (AddressState addressState :  getAddressStateCollection()){
 
             Element raw = doc.createElement("raw");
             Attr id = doc.createAttribute("id");
@@ -197,17 +212,17 @@ public class Wallet {
             raw.setAttributeNode(id);
 
             Element addressE = doc.createElement("address");
-            addressE.setTextContent(Hex.toHexString(address.getAddress()));
+            addressE.setTextContent(Hex.toHexString(addressState.getEcKey().getAddress()));
 
             Attr nonce = doc.createAttribute("nonce");
             nonce.setValue("0");
             addressE.setAttributeNode(nonce);
 
             Element privKey = doc.createElement("privkey");
-            privKey.setTextContent(Hex.toHexString(address.getPrivKey()));
+            privKey.setTextContent(Hex.toHexString(addressState.getEcKey().getPrivKeyBytes()));
 
             Element value   = doc.createElement("value");
-            value.setTextContent(getBalance(address).toString());
+            value.setTextContent(addressState.getBalance().toString());
 
             raw.appendChild(addressE);
             raw.appendChild(privKey);
