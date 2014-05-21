@@ -644,9 +644,8 @@ public class RLP {
                     continue;
                 }
             }
-        } catch (Throwable th) {
-			throw new RuntimeException("wire packet not parsed correctly",
-					th.fillInStackTrace());
+        } catch (Exception e) {
+			throw new RuntimeException("wire packet not parsed correctly", e);
         }
     }
 	
@@ -679,9 +678,9 @@ public class RLP {
 			int prevPos = pos; pos++;
 			return decodeList(data, pos, prevPos, len);
 		} else if (prefix < 0xFF) {
-			int lenlen = prefix - OFFSET_LONG_LIST + 1; // length of length the encoded list
+			int lenlen = prefix - OFFSET_LONG_LIST; // length of length the encoded list
 			int lenlist = byteArrayToInt(copyOfRange(data, pos+1, pos+1+lenlen)); // length of encoded bytes
-		    pos = pos + lenlen + 1;
+		    pos = pos + lenlen + 1; // start at position of first element in list
 		    int prevPos = lenlist;
 		    return decodeList(data, pos, prevPos, lenlist);
 		} else {

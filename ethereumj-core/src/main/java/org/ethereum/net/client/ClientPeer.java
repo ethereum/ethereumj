@@ -6,12 +6,13 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+
 import org.ethereum.core.Transaction;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.TransactionsMessage;
-import org.ethereum.util.Utils;
+import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -97,7 +98,7 @@ public class ClientPeer {
 
         ByteBuf buffer = channel.alloc().buffer(payload.length + 8);
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(Utils.calcPacketSize(payload));
+        buffer.writeBytes(ByteUtil.calcPacketSize(payload));
         buffer.writeBytes(payload);
 
         System.out.println("Send msg: [ " +
