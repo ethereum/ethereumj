@@ -3,14 +3,12 @@ package org.ethereum.core;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
-import java.security.SignatureException;
 import java.util.Arrays;
 
 /**
@@ -31,7 +29,7 @@ public class Transaction {
      * or simple send tx
      * [ nonce, value, receiveAddress, gasPrice, gasDeposit, data, signature(v, r, s) ]
      */
-    
+
     /* SHA3 hash of the rlpEncoded transaction */
     private byte[] hash;
 
@@ -43,29 +41,29 @@ public class Transaction {
 
     /* the address of the destination account
      * In creation transaction the receive address is - 0 */
-    private byte[] receiveAddress;   
+    private byte[] receiveAddress;
 
-	/* the amount of ether to pay as a transaction fee
-	 * to the miner for each unit of gas */
+    /* the amount of ether to pay as a transaction fee
+     * to the miner for each unit of gas */
     private byte[] gasPrice;
 
-	/* the amount of "gas" to allow for the computation.
-	 * Gas is the fuel of the computational engine; 
-	 * every computational step taken and every byte added 
-	 * to the state or transaction list consumes some gas. */
+    /* the amount of "gas" to allow for the computation.
+     * Gas is the fuel of the computational engine;
+     * every computational step taken and every byte added
+     * to the state or transaction list consumes some gas. */
     private byte[] gasLimit;
 
-	/* An unlimited size byte array specifying
-	 * input [data] of the message call */ 
+    /* An unlimited size byte array specifying
+     * input [data] of the message call */
     private byte[] data;
 
-	/* Initialisation code for a new contract */
+    /* Initialisation code for a new contract */
     private byte[] init;
 
-	/* the elliptic curve signature
-	 * (including public key recovery bits) */
+    /* the elliptic curve signature
+     * (including public key recovery bits) */
     private ECDSASignature signature;
-    
+
     /* Tx in encoded form */
     private byte[] rlpEncodedSigned;
     private byte[] rlpEncoded;
@@ -85,21 +83,19 @@ public class Transaction {
         this.receiveAddress = recieveAddress;
         this.value = value;
         if(recieveAddress == null || receiveAddress.length == 0) {
-        	this.init = data;
+            this.init = data;
         } else {
-        	this.data = data;
+            this.data = data;
         }
         parsed = true;
     }
 
-
-    // YP {Tn (nonce); Tp(pgas);   Tg(gaslimi);   Tt(reciver); Tv(value); Ti(init);  Tw; Tr; Ts}
     public void rlpParse(){
 
-    	RLPList decodedTxList = RLP.decode2(rlpEncodedSigned);
+        RLPList decodedTxList = RLP.decode2(rlpEncodedSigned);
+        RLPList transaction =  (RLPList) decodedTxList.get(0);
 
-    	RLPList transaction =  (RLPList) decodedTxList.get(0);
-
+        this.hash  = HashUtil.sha3(rlpEncodedSigned);
 
         this.nonce =          ((RLPItem) transaction.get(0)).getRLPData();
         this.gasPrice =       ((RLPItem) transaction.get(1)).getRLPData();
@@ -109,7 +105,7 @@ public class Transaction {
         this.data =           ((RLPItem) transaction.get(5)).getRLPData();
 
         if (transaction.size() == CALL_SIZE){  // Simple transaction
-        	byte v =		((RLPItem) transaction.get(6)).getRLPData()[0];
+            byte v =		((RLPItem) transaction.get(6)).getRLPData()[0];
             byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
             byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
@@ -131,7 +127,6 @@ public class Transaction {
 
         if (!parsed) rlpParse();
         byte[] plainMsg = this.getEncoded();
-
         return HashUtil.sha3(plainMsg);
     }
 
@@ -174,62 +169,58 @@ public class Transaction {
         if (!parsed) rlpParse();
         return signature;
     }
-    
-	public boolean isContract() {
-		return this.receiveAddress.length == 0;
-	}
 
-	/********* 
-	 * Crypto
-	 */
-    
-	public ECKey getKey() {
-		byte[] hash = this.getHash();	
-		return ECKey.recoverFromSignature(signature.v, signature, hash, true);
-	}
-	
-	public byte[] sender() {
-
-        ECKey key = null;
-        try {
-            key  = ECKey.signatureToKey(getHash(), getSignature().toBase64());
-        } catch (SignatureException e) {
-            e.printStackTrace();
-        }
-
-        return key.getAddress();
+    public boolean isContract() {
+        return this.receiveAddress.length == 0;
     }
 
-	public void sign(byte[] privKeyBytes) throws Exception {
-		byte[] hash = this.getHash();
-		ECKey key = ECKey.fromPrivate(privKeyBytes).decompress();
-		this.signature = key.sign(hash);
-	}
+    /*********
+     * Crypto
+     */
+
+    public ECKey getKey() {
+        byte[] hash = this.getHash();
+        return ECKey.recoverFromSignature(signature.v, signature, hash, true);
+    }
+
+    public byte[] sender() {
+        ECKey eckey = this.getKey();
+        // Validate the returned key.
+        // Return null if public key isn't in a correct format
+        if (!eckey.isPubKeyCanonical()) {
+            return null;
+        }
+        return eckey.getAddress();
+    }
+
+    public void sign(byte[] privKeyBytes) throws Exception {
+        byte[] hash = this.getHash();
+        ECKey key = ECKey.fromPrivate(privKeyBytes).decompress();
+        this.signature = key.sign(hash);
+    }
 
     @Override
     public String toString() {
         if (!parsed) rlpParse();
-        return "TransactionData [" +  " hash=" + Utils.toHexString(hash) +
-                "  nonce=" + Utils.toHexString(nonce) +
-                ", gasPrice=" + Utils.toHexString(gasPrice) +
-                ", gas=" + Utils.toHexString(gasLimit) +
-                ", receiveAddress=" + Utils.toHexString(receiveAddress) +
-                ", value=" + Utils.toHexString(value) +
-                ", data=" + Utils.toHexString(data) +
-                ", init=" + Utils.toHexString(init) +
+        return "TransactionData [" +  " hash=" + ByteUtil.toHexString(hash) +
+                "  nonce=" + ByteUtil.toHexString(nonce) +
+                ", value=" + ByteUtil.toHexString(value) +
+                ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
+                ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
+                ", gas=" + ByteUtil.toHexString(gasLimit) +
+                ", data=" + ByteUtil.toHexString(data) +
+                ", init=" + ByteUtil.toHexString(init) +
                 ", signatureV=" + signature.v +
-                ", signatureR=" + Utils.toHexString(BigIntegers.asUnsignedByteArray(signature.r)) +
-                ", signatureS=" + Utils.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) +
+                ", signatureR=" + ByteUtil.toHexString(signature.r.toByteArray()) +
+                ", signatureS=" + ByteUtil.toHexString(signature.s.toByteArray()) +
                 ']';
     }
-    
+
     /**
      *  For signature games you have to keep also
      *  rlp of the transaction without any signature data
      */
     public byte[] getEncoded(){
-
-        // YP {Tn (nonce); Tp(pgas);   Tg(gaslimi);   Tt(reciver); Tv(value); Ti(init);  Tw; Tr; Ts}
 
         if (rlpEncoded != null) return rlpEncoded;
 
@@ -242,13 +233,12 @@ public class Transaction {
 
         if(Arrays.equals(this.receiveAddress, new byte[0])) {
             byte[] init 			= RLP.encodeElement(this.init);
-            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
+            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
                     data, init);
         } else {
-            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
+            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
                     data);
         }
-
         return rlpEncoded;
     }
 
@@ -263,20 +253,16 @@ public class Transaction {
         byte[] value 				= RLP.encodeElement(this.value);
         byte[] data 				= RLP.encodeElement(this.data);
 
-    	byte[] v = RLP.encodeByte(signature.v);
-    	byte[] rBytes = BigIntegers.asUnsignedByteArray(signature.r);
-    	System.out.println(Hex.toHexString(rBytes));
-    	byte[] r = RLP.encodeElement(rBytes);
-    	byte[] sBytes = BigIntegers.asUnsignedByteArray(signature.s);
-    	System.out.println(Hex.toHexString(sBytes));
-    	byte[] s = RLP.encodeElement(sBytes);
+        byte[] v = RLP.encodeByte( signature.v );
+        byte[] r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
+        byte[] s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
 
         if(Arrays.equals(this.receiveAddress, new byte[0])) {
             byte[] init 			= RLP.encodeElement(this.init);
-            this.rlpEncodedSigned = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
-                     data, init, v, r, s);
+            this.rlpEncodedSigned = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
+                    data, init, v, r, s);
         } else {
-            this.rlpEncodedSigned = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
+            this.rlpEncodedSigned = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
                     data, v, r, s);
         }
         return rlpEncodedSigned;
