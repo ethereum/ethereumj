@@ -3,6 +3,8 @@ package org.ethereum.util;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import org.spongycastle.util.encoders.Hex;
+
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLongs;
 
@@ -37,6 +39,64 @@ public class ByteUtil {
         return bytes;        
     }
     
+    public static byte[]  hexStringToByteArr(String hexString){
+
+        String hexSymbols = "0123456789ABCDEF";
+
+        int arrSize = (int) (hexString.length() / 3);
+        byte[] result = new byte[arrSize];
+
+        for (int i = 0; i < arrSize; ++i){
+            int digit1 = hexSymbols.indexOf( hexString.charAt(i * 3) );
+            int digit2 = hexSymbols.indexOf( hexString.charAt(i * 3 + 1) );
+            result[i] = (byte) (digit1 * 16 + digit2);
+        }
+        return result;
+    }
+
+    public static String toHexString(byte[] data){
+        if (data == null) return "null";
+        else return Hex.toHexString(data);
+    }
+    
+    public static void printHexStringForByte(byte data){
+        System.out.print("[");
+        String hexNum = Integer.toHexString ((int) data & 0xFF);
+        if (((int) data & 0xFF) < 16) {
+            hexNum = "0" + hexNum;
+        }
+        System.out.print( hexNum );
+        System.out.print("]");
+        System.out.println();
+    }
+
+    public static void printHexStringForByteArray(byte[] data){
+        System.out.print("[");
+        for (int i = 0; i < data.length; ++i){
+            String hexNum = Integer.toHexString ((int) data[i] & 0xFF);
+            if (((int) data[i] & 0xFF) < 16) {
+                hexNum = "0" + hexNum;
+            }
+            System.out.print( hexNum );
+            System.out.print(" ");
+        }
+        System.out.print("]");
+        System.out.println();
+    }
+
+    // The packet size should be 4 byte long
+    public static byte[] calcPacketSize(byte[] packet){
+
+        byte[] size = new byte[4];
+
+        size[3] = (byte)(packet.length >> 0 & 0xFF);
+        size[2] = (byte)(packet.length >> 8 & 0xFF);
+        size[1] = (byte)(packet.length >> 16 & 0xFF);
+        size[0] = (byte)(packet.length >> 24 & 0xFF);
+
+        return size;
+    }
+    
     /**
      * Calculate packet length
      * @param msg
@@ -65,7 +125,7 @@ public class ByteUtil {
 			return 0;
 		return new BigInteger(1, b).intValue();
 	}
-        
+
     public static byte[] encodeInt(int value) {
         if (isLessThanUnsigned(value, 253)) {
             return new byte[]{(byte) value};

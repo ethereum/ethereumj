@@ -3,12 +3,11 @@ package org.ethereum.core;
 import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 
@@ -128,7 +127,6 @@ public class Transaction {
 
         if (!parsed) rlpParse();
         byte[] plainMsg = this.getEncoded();
-
         return HashUtil.sha3(plainMsg);
     }
 
@@ -204,17 +202,17 @@ public class Transaction {
     @Override
     public String toString() {
         if (!parsed) rlpParse();
-        return "TransactionData [" +  " hash=" + Utils.toHexString(hash) +
-                "  nonce=" + Utils.toHexString(nonce) +
-                ", value=" + Utils.toHexString(value) +
-                ", receiveAddress=" + Utils.toHexString(receiveAddress) +
-                ", gasPrice=" + Utils.toHexString(gasPrice) +
-                ", gas=" + Utils.toHexString(gasLimit) +
-                ", data=" + Utils.toHexString(data) +
-                ", init=" + Utils.toHexString(init) +
+        return "TransactionData [" +  " hash=" + ByteUtil.toHexString(hash) +
+                "  nonce=" + ByteUtil.toHexString(nonce) +
+                ", value=" + ByteUtil.toHexString(value) +
+                ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
+                ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
+                ", gas=" + ByteUtil.toHexString(gasLimit) +
+                ", data=" + ByteUtil.toHexString(data) +
+                ", init=" + ByteUtil.toHexString(init) +
                 ", signatureV=" + signature.v +
-                ", signatureR=" + Utils.toHexString(signature.r.toByteArray()) +
-                ", signatureS=" + Utils.toHexString(signature.s.toByteArray()) +
+                ", signatureR=" + ByteUtil.toHexString(signature.r.toByteArray()) +
+                ", signatureS=" + ByteUtil.toHexString(signature.s.toByteArray()) +
                 ']';
     }
     
@@ -241,7 +239,6 @@ public class Transaction {
             this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value, 
                     data);
         }
-
         return rlpEncoded;
     }
 
@@ -257,12 +254,8 @@ public class Transaction {
         byte[] data 				= RLP.encodeElement(this.data);
 
     	byte[] v = RLP.encodeByte( signature.v );
-    	byte[] rBytes = BigIntegers.asUnsignedByteArray(signature.r);
-    	System.out.println(Hex.toHexString(rBytes));
-    	byte[] r = RLP.encodeElement(rBytes);
-    	byte[] sBytes = BigIntegers.asUnsignedByteArray(signature.s);
-    	System.out.println(Hex.toHexString(sBytes));
-    	byte[] s = RLP.encodeElement(sBytes);
+    	byte[] r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
+    	byte[] s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
 
         if(Arrays.equals(this.receiveAddress, new byte[0])) {
             byte[] init 			= RLP.encodeElement(this.init);
