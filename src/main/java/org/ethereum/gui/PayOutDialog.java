@@ -69,7 +69,7 @@ class PayOutDialog extends JDialog {
                         BigInteger value = new BigInteger(amountInput.getText());
                         byte[] address = Hex.decode(receiverInput.getText());
 
-                        byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
+                        byte[] senderPrivKey = HashUtil.sha3(addressState.getEcKey().getPrivKeyBytes());
 
                         byte[] nonce =    addressState.getNonce() == BigInteger.ZERO ?
                                                      null : addressState.getNonce().toByteArray();
