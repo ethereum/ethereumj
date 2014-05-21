@@ -47,7 +47,7 @@ public class TransactionTest {
         // cat --> 79b08ad8787060333663d19704909ee7b1903e58
         // cow --> cd2a3d9f938e13cd947ec05abc7fe734df8dd826
 
-        BigInteger value = new BigInteger("1000000000000000000000000");
+        BigInteger value = new BigInteger("1000000000000000000000");
 
         byte[] privKey = HashUtil.sha3("cat".getBytes());
         Address receiveAddress = new Address(privKey);
@@ -57,8 +57,55 @@ public class TransactionTest {
         byte[] gasPrice=  Hex.decode("09184e72a000");
         byte[] gas =      Hex.decode("4255");
 
-        Transaction tx = new Transaction(null, value.toByteArray(),
-                receiveAddress.getAddress(),  gasPrice, gas, null);
+        // Tn (nonce); Tp(pgas); Tg(gaslimi); Tt(value); Tv(value); Ti(sender);  Tw; Tr; Ts
+        Transaction tx = new Transaction(null, gasPrice, gas, receiveAddress.getAddress(),
+                value.toByteArray(),
+                   null);
+
+        tx.sign(senderPrivKey);
+
+        System.out.println("v\t\t\t: " + Hex.toHexString(new byte[] { tx.getSignature().v }));
+        System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
+        System.out.println("s\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().s)));
+
+        System.out.println("RLP encoded tx\t\t: " + Hex.toHexString( tx.getEncodedSigned() ));
+
+        // retrieve the signer/sender of the transaction
+        ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature().toBase64());
+
+        System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString( tx.getEncoded()));
+        System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString( tx.getEncodedSigned() ));
+
+        System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
+        System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
+
+        Assert.assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826",
+                Hex.toHexString(key.getAddress()));
+
+        System.out.println(tx.toString());
+    }
+
+
+    @Test  /* achieve public key of the sender nonce: 01 */
+    public void test3() throws Exception {
+
+        // cat --> 79b08ad8787060333663d19704909ee7b1903e58
+        // cow --> cd2a3d9f938e13cd947ec05abc7fe734df8dd826
+
+        BigInteger value = new BigInteger("1000000000000000000000000");
+
+
+        byte[] nonce = {01};
+        byte[] privKey = HashUtil.sha3("cat".getBytes());
+        Address receiveAddress = new Address(privKey);
+
+        byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
+
+        byte[] gasPrice=  Hex.decode("09184e72a000");
+        byte[] gas =      Hex.decode("4255");
+
+        Transaction tx = new Transaction(null, gasPrice, gas,
+                receiveAddress.getAddress(),   value.toByteArray(), null);
 
         tx.sign(senderPrivKey);
 
@@ -81,26 +128,7 @@ public class TransactionTest {
                 Hex.toHexString(key.getAddress()));
     }
 
-    @Test /* encode transaction */
-    public void test3() throws Exception {
 
-        BigInteger value = new BigInteger("1000000000000000000000000");
-
-        byte[] privKey = HashUtil.sha3("cat".getBytes());
-        Address receiveAddress = new Address(privKey);
-
-        byte[] gasPrice=  Hex.decode("09184e72a000");
-        byte[] gas =      Hex.decode("4255");
-
-        Transaction tx = new Transaction(null, value.toByteArray(),
-                receiveAddress.getAddress(),  gasPrice, gas, null);
-
-        tx.sign(privKey);
-        byte[] payload = tx.getEncodedSigned();
-
-        System.out.println(Hex.toHexString(  payload ));
-    }
-	
 	@Test
 	public void testTransactionFromRLP() {
     	// from RLP encoding
@@ -121,7 +149,17 @@ public class TransactionTest {
     	assertEquals(RLP_ENCODED_TX, Hex.toHexString(tx.getEncodedSigned()));
 	}
 
-	@Test
+    @Test
+    public void testTransactionFromRLP2() {
+
+        byte[] encodedTxBytes = Hex.decode("f86e808609184e72a0008242559479b08ad8787060333663d19704909ee7b1903e58893635c9adc5dea00000801ba0e01349f939f41f7262e823b1ccd7306ec32b5cab6a4f539849a38b0637aee9cda0079bf1cf8dfcb1ddefa6336de34eefeebfd796afc25568a2b875fc4ff0c044c3");
+        Transaction tx = new Transaction(encodedTxBytes);
+        System.out.println(Hex.toHexString( tx.sender() ));
+    }
+
+
+
+    @Test
 	public void testTransactionFromNew() throws Exception {
         byte[] privKeyBytes = Hex.decode("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4");
         
