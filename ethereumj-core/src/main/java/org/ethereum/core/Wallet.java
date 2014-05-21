@@ -97,14 +97,14 @@ public class Wallet {
 
         for (Transaction tx : transactions){
 
-//            byte[] senderAddress = tx.sender();
-//            AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
-//            if (senderState != null){
-//                BigInteger value = new BigInteger(0, tx.getValue());
-//
-//                senderState.addToBalance(value.negate());
-//                walletUpdated = true;
-//            }
+            byte[] senderAddress = tx.sender();
+            AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
+            if (senderState != null){
+                BigInteger value = new BigInteger(tx.getValue());
+
+                senderState.addToBalance(value.negate());
+                walletUpdated = true;
+            }
 
             byte[] receiveAddress = tx.getReceiveAddress();
             AddressState receiverState =  rows.get(Hex.toHexString(receiveAddress));
