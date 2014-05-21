@@ -6,7 +6,7 @@ import org.ethereum.net.Command;
 import org.ethereum.net.message.Message;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
@@ -43,6 +43,6 @@ public class NotInChainMessage extends Message {
     public String toString(){
         if (!parsed) 
         	parseRLP();
-        return "NotInChain Message [" + Utils.toHexString(hash) + "]";
+        return "NotInChain Message [" + Hex.toHexString(hash) + "]";
     }
 }

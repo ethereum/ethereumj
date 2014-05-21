@@ -20,9 +20,9 @@ import org.ethereum.net.message.NotInChainMessage;
 import org.ethereum.net.message.PeersMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.TransactionsMessage;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -56,7 +56,7 @@ public class MessagesTest {
         assertEquals(30303, helloMessage.getPeerPort());
         assertEquals(
             "D8833B83560E0B12170E9169DC43784223A59842DE2359E6D03DB34C30A966C2DE3B4B2552FB0D7595A185D558F2E669B595674F5217C996EE148884828BE0FD",
-            Utils.toHexString(helloMessage.getPeerId()).toUpperCase() );
+            Hex.toHexString(helloMessage.getPeerId()).toUpperCase() );
     }
 
     @Test /* HelloMessage 2 */
@@ -77,7 +77,7 @@ public class MessagesTest {
         assertEquals(30303, helloMessage.getPeerPort());
         assertEquals(
                 "E02B18FBA6B887FB9258469C3AF8E445CC9AE2B5386CAC5F60C4170F822086224E3876555C745A7EC8AC181C7F9701776D94A779604EA12651DE5F4A748D29E1",
-                Utils.toHexString(helloMessage.getPeerId()).toUpperCase() );
+                Hex.toHexString(helloMessage.getPeerId()).toUpperCase() );
     }
 
     /* DISCONNECT_MESSAGE */
@@ -127,7 +127,7 @@ public class MessagesTest {
         assertEquals("/85.65.126.45", peerData.getInetAddress().toString());
         assertEquals(30303, peerData.getPort());
         assertEquals("82A8A5831D3B4FB76CF130CDC8A2B162A85D005D82A1DCC9B73239035EADE6347EDE2FFC86571ABE348EA38699CE886AA3D425FE58182C433434AB4CFD7B5B88",
-                Utils.toHexString( peerData.getPeerId() ).toUpperCase());
+        		Hex.toHexString( peerData.getPeerId() ).toUpperCase());
     }
 
     @Test /*  PeersMessage 2 */
@@ -147,14 +147,14 @@ public class MessagesTest {
         assertEquals("/191.234.57.55", peerData.getInetAddress().toString());
         assertEquals(30303, peerData.getPort());
         assertEquals("21780C55B47DB4B11467B5F55B0B555E0887CE36FBD975E224B1C70EAC7AB8E8C2DB37F0A48B90FFDD5A379ADA99B6A0F6429C4A53C25558191A682636AEF4F2",
-                Utils.toHexString( peerData.getPeerId() ).toUpperCase());
+        		Hex.toHexString( peerData.getPeerId() ).toUpperCase());
 
         peerData = peersMessage.getPeers().get(75);
 
         assertEquals("/86.124.82.254", peerData.getInetAddress().toString());
         assertEquals(30303, peerData.getPort());
         assertEquals("F6155F1A60143B7D9D5D1A440D7D52FE6809F69E0C6F1E0024457E0D71DD88ADE3B13AAA940C89AC0610952B48BD832C42E343A13E61FFDB06010CFFC345E053",
-                Utils.toHexString( peerData.getPeerId() ).toUpperCase());
+        		Hex.toHexString( peerData.getPeerId() ).toUpperCase());
     }
 
     @Test /* Peers msg parsing performance*/
@@ -195,37 +195,37 @@ public class MessagesTest {
                 transactionsMessage.getTransactions().get(0);
 
         assertEquals("558A3797E0DD3FBFAF761F1ADD6749C7D5DB313FDAC5CBA59F40E28AF7BBACD1",
-                Utils.toHexString( tx.getHash() ).toUpperCase());
+        		Hex.toHexString( tx.getHash() ).toUpperCase());
 
         assertEquals("04",
-                Utils.toHexString( tx.getNonce() ).toUpperCase());
+        		Hex.toHexString( tx.getNonce() ).toUpperCase());
 
         assertEquals("1BC16D674EC80000",
-                Utils.toHexString( tx.getValue() ).toUpperCase());
+        		Hex.toHexString( tx.getValue() ).toUpperCase());
 
         assertEquals("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826",
-                Utils.toHexString( tx.getReceiveAddress() ).toUpperCase());
+        		Hex.toHexString( tx.getReceiveAddress() ).toUpperCase());
 
         assertEquals("09184E72A000",
-                Utils.toHexString( tx.getGasPrice() ).toUpperCase());
+        		Hex.toHexString( tx.getGasPrice() ).toUpperCase());
 
         assertEquals("64",
-                Utils.toHexString( tx.getGasLimit() ).toUpperCase());
+        		Hex.toHexString( tx.getGasLimit() ).toUpperCase());
 
         assertEquals("NULL",
-                Utils.toHexString( tx.getData() ).toUpperCase());
+        		Hex.toHexString( tx.getData() ).toUpperCase());
 
         assertEquals("NULL",
-                Utils.toHexString( tx.getInit() ).toUpperCase());
+        		Hex.toHexString( tx.getInit() ).toUpperCase());
 
         assertEquals("1B",
-                Utils.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
+        		Hex.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
 
         assertEquals("5E3868194605F1647593B842725818CCFA6A38651A728715133A8E97CDCFAC54",
-                Utils.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
+        		Hex.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
 
         assertEquals("0FF91628D04B215EBCCFD5F4FC34CC1B45DF32F6B4609FBB0DE42E8522264467",
-                Utils.toHexString( tx.getSignature().s.toByteArray() ).toUpperCase());
+        		Hex.toHexString( tx.getSignature().s.toByteArray() ).toUpperCase());
     }
 
     @Test  /* Transactions message 2 */
@@ -245,72 +245,72 @@ public class MessagesTest {
                 transactionsMessage.getTransactions().get(0);
 
         assertEquals("4B7D9670A92BF120D5B43400543B69304A14D767CF836A7F6ABFF4EDDE092895",
-                Utils.toHexString( tx.getHash() ).toUpperCase());
+        		Hex.toHexString( tx.getHash() ).toUpperCase());
 
         assertEquals("NULL",
-                Utils.toHexString( tx.getNonce() ).toUpperCase());
+        		Hex.toHexString( tx.getNonce() ).toUpperCase());
 
         assertEquals("NULL",
-                Utils.toHexString( tx.getValue() ).toUpperCase());
+        		Hex.toHexString( tx.getValue() ).toUpperCase());
 
         assertEquals("0000000000000000000000000000000000000000",
-                Utils.toHexString( tx.getReceiveAddress() ).toUpperCase());
+        		Hex.toHexString( tx.getReceiveAddress() ).toUpperCase());
 
         assertEquals("09184E72A000",
-                Utils.toHexString( tx.getGasPrice() ).toUpperCase());
+        		Hex.toHexString( tx.getGasPrice() ).toUpperCase());
 
         assertEquals("2710",
-                Utils.toHexString( tx.getGasLimit() ).toUpperCase());
+        		Hex.toHexString( tx.getGasLimit() ).toUpperCase());
 
         assertEquals("606956330C0D630000003359366000530A0D630000003359602060005301356000533557604060005301600054630000000C58",
-                Utils.toHexString( tx.getData() ).toUpperCase());
+        		Hex.toHexString( tx.getData() ).toUpperCase());
 
         assertEquals("33606957",
-                Utils.toHexString( tx.getInit() ).toUpperCase());
+        		Hex.toHexString( tx.getInit() ).toUpperCase());
 
         assertEquals("1C",
-                Utils.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
+        		Hex.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
 
         assertEquals("7F6EB94576346488C6253197BDE6A7E59DDC36F2773672C849402AA9C402C3C4",
-                Utils.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
+        		Hex.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
 
         assertEquals("6D254E662BF7450DD8D835160CBB053463FED0B53F2CDD7F3EA8731919C8E8CC",
-                Utils.toHexString( tx.getSignature().s.toByteArray() ).toUpperCase());
+        		Hex.toHexString( tx.getSignature().s.toByteArray() ).toUpperCase());
 
         tx = transactionsMessage.getTransactions().get(2);
 
         assertEquals("B0251A1BB20B44459DB5B5444AB53EDD9E12C46D0BA07FA401A797BEB967D53C",
-                Utils.toHexString( tx.getHash() ).toUpperCase());
+        		Hex.toHexString( tx.getHash() ).toUpperCase());
 
         assertEquals("02",
-                Utils.toHexString( tx.getNonce() ).toUpperCase());
+        		Hex.toHexString( tx.getNonce() ).toUpperCase());
 
         assertEquals("NULL",
-                Utils.toHexString( tx.getValue() ).toUpperCase());
+        		Hex.toHexString( tx.getValue() ).toUpperCase());
 
         assertEquals("CCDEAC59D35627B7DE09332E819D5159E7BB7250",
-                Utils.toHexString( tx.getReceiveAddress() ).toUpperCase());
+        		Hex.toHexString( tx.getReceiveAddress() ).toUpperCase());
 
         assertEquals("09184E72A000",
-                Utils.toHexString( tx.getGasPrice() ).toUpperCase());
+        		Hex.toHexString( tx.getGasPrice() ).toUpperCase());
 
         assertEquals("2710",
-                Utils.toHexString( tx.getGasLimit() ).toUpperCase());
+        		Hex.toHexString( tx.getGasLimit() ).toUpperCase());
 
         assertEquals("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000002D0ACEEE7E5AB874E22CCF8D1A649F59106D74E8",
-                Utils.toHexString( tx.getData() ).toUpperCase());
+        		Hex.toHexString( tx.getData() ).toUpperCase());
 
         assertEquals("NULL",
-                Utils.toHexString( tx.getInit() ).toUpperCase());
+        		Hex.toHexString( tx.getInit() ).toUpperCase());
 
         assertEquals("1B",
-                Utils.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
+        		Hex.toHexString( new byte[] {tx.getSignature().v} ).toUpperCase());
 
         assertEquals("D05887574456C6DE8F7A0D172342C2CBDD4CF7AFE15D9DBB8B75B748BA6791C9",
-                Utils.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
+        		Hex.toHexString( tx.getSignature().r.toByteArray() ).toUpperCase());
 
         assertEquals("1E87172A861F6C37B5A9E3A5D0D7393152A7FBE41530E5BB8AC8F35433E5931B",
-                Utils.toHexString(tx.getSignature().s.toByteArray()).toUpperCase());
+                Hex.toHexString(tx.getSignature().s.toByteArray()).toUpperCase());
     }
 
     /* BLOCKS */
@@ -354,30 +354,30 @@ public class MessagesTest {
         Block block = list.get(0);
 
         assertEquals("69a7356a245f9dc5b865475ada5ee4e89b18f93c06503a9db3b3630e88e9fb4e",
-                Utils.toHexString(block.getHash()));
+        		Hex.toHexString(block.getHash()));
 
         assertEquals("00000000000000000000000000000000000000000000000000000000000000000",
-                Utils.toHexString(block.getParentHash()));
+        		Hex.toHexString(block.getParentHash()));
 
         assertEquals("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
-                Utils.toHexString(block.getUnclesHash()));
+        		Hex.toHexString(block.getUnclesHash()));
 
         assertEquals("0000000000000000000000000000000000000000",
-                Utils.toHexString(block.getCoinbase()));
+        		Hex.toHexString(block.getCoinbase()));
 
         assertEquals("2f4399b08efe68945c1cf90ffe85bbe3ce978959da753f9e649f034015b8817d",
-                Utils.toHexString(block.getStateRoot()));
+        		Hex.toHexString(block.getStateRoot()));
 
         assertEquals("00000000000000000000000000000000000000000000000000000000000000000",
-                Utils.toHexString(block.getTxTrieRoot()));
+        		Hex.toHexString(block.getTxTrieRoot()));
 
-        assertEquals("400000", Utils.toHexString(block.getDifficulty()));
+        assertEquals("400000", Hex.toHexString(block.getDifficulty()));
         assertEquals(0, block.getTimestamp());
 
         assertNull(block.getExtraData());
 
         assertEquals("04994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829",
-                Utils.toHexString(block.getNonce()));
+        		Hex.toHexString(block.getNonce()));
     }
 
     @Test /* BlocksMessage really big message parsing */
@@ -397,30 +397,30 @@ public class MessagesTest {
         Block block = list.get(31);
 
         assertEquals("518916DFB79C390BD7BFF75712174512C2F96BEC42A3F573355507AD1588CE0C",
-                Utils.toHexString(block.getHash()).toUpperCase());
+        		Hex.toHexString(block.getHash()).toUpperCase());
 
         assertEquals("AB6B9A5613970FAA771B12D449B2E9BB925AB7A369F0A4B86B286E9D540099CF",
-                Utils.toHexString(block.getParentHash()).toUpperCase());
+        		Hex.toHexString(block.getParentHash()).toUpperCase());
 
         assertEquals("1DCC4DE8DEC75D7AAB85B567B6CCD41AD312451B948A7413F0A142FD40D49347",
-                Utils.toHexString(block.getUnclesHash()).toUpperCase());
+        		Hex.toHexString(block.getUnclesHash()).toUpperCase());
 
         assertEquals("3854AAF203BA5F8D49B1EC221329C7AEBCF050D3",
-                Utils.toHexString(block.getCoinbase()).toUpperCase());
+        		Hex.toHexString(block.getCoinbase()).toUpperCase());
 
         assertEquals("990DC3B5ACBEE04124361D958FE51ACB582593613FC290683940A0769549D3ED",
-                Utils.toHexString(block.getStateRoot()).toUpperCase());
+        		Hex.toHexString(block.getStateRoot()).toUpperCase());
 
         assertEquals("9BFE4817D274EA3EB8672E9FE848C3885B53BBBD1D7C26E6039F90FB96B942B0",
-                Utils.toHexString(block.getTxTrieRoot()).toUpperCase());
+        		Hex.toHexString(block.getTxTrieRoot()).toUpperCase());
 
-        assertEquals("3FF000", Utils.toHexString(block.getDifficulty()).toUpperCase());
+        assertEquals("3FF000", Hex.toHexString(block.getDifficulty()).toUpperCase());
         assertEquals(1396643511, block.getTimestamp());
 
         assertNull(block.getExtraData());
 
         assertEquals("00000000000000000000000000000000000000000000000077377ADFF6C227DB",
-                Utils.toHexString(block.getNonce()).toUpperCase());
+        		Hex.toHexString(block.getNonce()).toUpperCase());
 
         System.out.println(blocksMessage);
     }
@@ -442,13 +442,13 @@ public class MessagesTest {
         assertEquals(32, getChainMessage.getBlockHashList().size());
 
         assertEquals("E5E441F0877116011CCDECE2501A50B40C40418377037E16D0282B2B5E347138",
-                Utils.toHexString( getChainMessage.getBlockHashList().get(5) ).toUpperCase());
+        		Hex.toHexString( getChainMessage.getBlockHashList().get(5) ).toUpperCase());
 
         assertEquals("6AA7A7D18B07BE0222DA47A8EE6923BAD522DBF5D0650D64CA0F2AD4C606D0CC",
-                Utils.toHexString( getChainMessage.getBlockHashList().get(19) ).toUpperCase());
+        		Hex.toHexString( getChainMessage.getBlockHashList().get(19) ).toUpperCase());
 
         assertEquals("03AF21F3939C29C231200B1F790F16421A8923254CBF2A90455B9B8F28BE4562",
-                Utils.toHexString( getChainMessage.getBlockHashList().get(25) ).toUpperCase());
+        		Hex.toHexString( getChainMessage.getBlockHashList().get(25) ).toUpperCase());
     }
 
     /* NOT_IN_CHAIN */
@@ -465,7 +465,7 @@ public class MessagesTest {
         System.out.println(notInChainMessage);
 
         assertEquals("E5E441F0877116011CCDECE2501A50B40C40418377037E16D0282B2B5E347138",
-                Utils.toHexString(notInChainMessage.getHash()).toUpperCase());
+        		Hex.toHexString(notInChainMessage.getHash()).toUpperCase());
     }
 
     @Test /* BlocksMessage POC-5 real msg*/
@@ -480,9 +480,7 @@ public class MessagesTest {
         List<Block> list = blocksMessage.getBlockDataList();
         System.out.println(blocksMessage);
 
-
         Block block = list.get(0);
-
     }
 
     @Test /* BlocksMessage POC-5 real big msg*/
@@ -497,11 +495,8 @@ public class MessagesTest {
         List<Block> list = blocksMessage.getBlockDataList();
         System.out.println(blocksMessage);
 
-
         Block block = list.get(0);
-
     }
-
 
     @Test /* GetChain encode */
     public void test14(){
@@ -517,11 +512,10 @@ public class MessagesTest {
 
         assertEquals(expected, Hex.toHexString(getChainMessage.getPayload()).toUpperCase());
 
-        byte[] size = Utils.calcPacketSize( getChainMessage.getPayload());
+        byte[] size = ByteUtil.calcPacketSize( getChainMessage.getPayload());
 
-        assertEquals("00000067", Utils.toHexString(size));
+        assertEquals("00000067", Hex.toHexString(size));
     }
-
 
     @Test /* Transactions msg encode */
     public void test15() throws Exception {
@@ -543,7 +537,6 @@ public class MessagesTest {
         List<Transaction> txList =  new ArrayList<Transaction>();
         txList.add(tx);
         TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
-
 
         //todo: add assertion to the test whenever you know what should be the result
         System.out.println(Hex.toHexString( transactionsMessage.getPayload() ));

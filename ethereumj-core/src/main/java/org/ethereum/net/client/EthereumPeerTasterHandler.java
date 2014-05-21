@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
-import org.ethereum.core.Block;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.Command;
@@ -13,10 +12,8 @@ import org.ethereum.net.message.*;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -86,7 +83,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         byte[] payload = (byte[]) msg;
 
         System.out.print("msg: ");
-        Utils.printHexStringForByteArray(payload);
+        ByteUtil.printHexStringForByteArray(payload);
 
         byte command = RLP.getCommandCode(payload);
 
@@ -218,7 +215,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
         ByteBuf buffer = ctx.alloc().buffer(chainMessage.getPayload().length + 8);
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(Utils.calcPacketSize(chainMessage.getPayload()));
+        buffer.writeBytes(ByteUtil.calcPacketSize(chainMessage.getPayload()));
         buffer.writeBytes(chainMessage.getPayload());
 
         ctx.writeAndFlush(buffer);

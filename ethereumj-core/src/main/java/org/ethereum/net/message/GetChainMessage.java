@@ -10,7 +10,6 @@ import org.ethereum.net.Command;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -87,7 +86,7 @@ public class GetChainMessage extends Message {
 
         StringBuffer sb = new StringBuffer();
         for (byte[] blockHash : blockHashList){
-            sb.append("").append(Utils.toHexString(blockHash)).append(", ");
+            sb.append("").append(Hex.toHexString(blockHash)).append(", ");
         }
 
         sb.append(" blockNum=").append(blockNum);
