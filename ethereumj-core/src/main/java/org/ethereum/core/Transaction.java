@@ -9,6 +9,7 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.BigIntegers;
 
+import java.security.SignatureException;
 import java.util.Arrays;
 
 /**
@@ -184,13 +185,15 @@ public class Transaction {
     }
 
     public byte[] sender() {
-        ECKey eckey = this.getKey();
-        // Validate the returned key.
-        // Return null if public key isn't in a correct format
-        if (!eckey.isPubKeyCanonical()) {
-            return null;
+
+        ECKey key = null;
+        try {
+            key = ECKey.signatureToKey(getHash(), getSignature().toBase64());
+        } catch (SignatureException e) {
+            e.printStackTrace();
         }
-        return eckey.getAddress();
+
+        return key.getAddress();
     }
 
     public void sign(byte[] privKeyBytes) throws Exception {
