@@ -1,4 +1,4 @@
-package org.ethereum.net;
+package org.ethereum.net.message;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
