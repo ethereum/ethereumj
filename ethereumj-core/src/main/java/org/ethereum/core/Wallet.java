@@ -97,12 +97,15 @@ public class Wallet {
 
         for (Transaction tx : transactions){
 
+
             byte[] senderAddress = tx.sender();
             AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
             if (senderState != null){
                 BigInteger value = new BigInteger(tx.getValue());
 
                 senderState.addToBalance(value.negate());
+
+                senderState.incrementTheNonce();
                 walletUpdated = true;
             }
 
