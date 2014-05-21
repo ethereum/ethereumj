@@ -10,6 +10,7 @@ import org.ethereum.util.Utils;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
+import java.security.SignatureException;
 import java.util.Arrays;
 
 /**
@@ -91,13 +92,15 @@ public class Transaction {
         parsed = true;
     }
 
+
+    // YP {Tn (nonce); Tp(pgas);   Tg(gaslimi);   Tt(reciver); Tv(value); Ti(init);  Tw; Tr; Ts}
     public void rlpParse(){
 
     	RLPList decodedTxList = RLP.decode2(rlpEncodedSigned);
+
     	RLPList transaction =  (RLPList) decodedTxList.get(0);
 
-    	this.hash  = HashUtil.sha3(rlpEncodedSigned);
-    	
+
         this.nonce =          ((RLPItem) transaction.get(0)).getRLPData();
         this.gasPrice =       ((RLPItem) transaction.get(1)).getRLPData();
         this.gasLimit =       ((RLPItem) transaction.get(2)).getRLPData();
@@ -186,14 +189,16 @@ public class Transaction {
 	}
 	
 	public byte[] sender() {
-		ECKey eckey = this.getKey();
-		// Validate the returned key.
-		// Return null if public key isn't in a correct format
-		if (!eckey.isPubKeyCanonical()) {
-			return null;
-		}
-		return eckey.getAddress();
-	}
+
+        ECKey key = null;
+        try {
+            key  = ECKey.signatureToKey(getHash(), getSignature().toBase64());
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        }
+
+        return key.getAddress();
+    }
 
 	public void sign(byte[] privKeyBytes) throws Exception {
 		byte[] hash = this.getHash();
@@ -206,15 +211,15 @@ public class Transaction {
         if (!parsed) rlpParse();
         return "TransactionData [" +  " hash=" + Utils.toHexString(hash) +
                 "  nonce=" + Utils.toHexString(nonce) +
-                ", value=" + Utils.toHexString(value) +
-                ", receiveAddress=" + Utils.toHexString(receiveAddress) +
                 ", gasPrice=" + Utils.toHexString(gasPrice) +
                 ", gas=" + Utils.toHexString(gasLimit) +
+                ", receiveAddress=" + Utils.toHexString(receiveAddress) +
+                ", value=" + Utils.toHexString(value) +
                 ", data=" + Utils.toHexString(data) +
                 ", init=" + Utils.toHexString(init) +
                 ", signatureV=" + signature.v +
-                ", signatureR=" + Utils.toHexString(signature.r.toByteArray()) +
-                ", signatureS=" + Utils.toHexString(signature.s.toByteArray()) +
+                ", signatureR=" + Utils.toHexString(BigIntegers.asUnsignedByteArray(signature.r)) +
+                ", signatureS=" + Utils.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) +
                 ']';
     }
     
@@ -223,6 +228,8 @@ public class Transaction {
      *  rlp of the transaction without any signature data
      */
     public byte[] getEncoded(){
+
+        // YP {Tn (nonce); Tp(pgas);   Tg(gaslimi);   Tt(reciver); Tv(value); Ti(init);  Tw; Tr; Ts}
 
         if (rlpEncoded != null) return rlpEncoded;
 
@@ -256,7 +263,7 @@ public class Transaction {
         byte[] value 				= RLP.encodeElement(this.value);
         byte[] data 				= RLP.encodeElement(this.data);
 
-    	byte[] v = RLP.encodeByte( signature.v );
+    	byte[] v = RLP.encodeByte(signature.v);
     	byte[] rBytes = BigIntegers.asUnsignedByteArray(signature.r);
     	System.out.println(Hex.toHexString(rBytes));
     	byte[] r = RLP.encodeElement(rBytes);

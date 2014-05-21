@@ -97,13 +97,19 @@ public class Wallet {
 
         for (Transaction tx : transactions){
 
-            // todo: validate the transaction and decrypt the sender
+//            byte[] senderAddress = tx.sender();
+//            AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
+//            if (senderState != null){
+//                BigInteger value = new BigInteger(0, tx.getValue());
+//
+//                senderState.addToBalance(value.negate());
+//                walletUpdated = true;
+//            }
 
-            byte[] address = tx.getReceiveAddress();
-
-            AddressState addressState =  rows.get(Hex.toHexString(address));
-            if (addressState != null){
-                addressState.addToBalance(new BigInteger(1, tx.getValue()));
+            byte[] receiveAddress = tx.getReceiveAddress();
+            AddressState receiverState =  rows.get(Hex.toHexString(receiveAddress));
+            if (receiverState != null){
+                receiverState.addToBalance(new BigInteger(1, tx.getValue()));
                 walletUpdated = true;
             }
         }
