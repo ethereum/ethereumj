@@ -27,7 +27,6 @@ import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -121,7 +120,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         byte[] payload = (byte[]) msg;
 
         System.out.print("msg: ");
-        Utils.printHexStringForByteArray(payload);
+        ByteUtil.printHexStringForByteArray(payload);
 
         byte command = RLP.getCommandCode(payload);
         // got HELLO
@@ -344,7 +343,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
         ByteBuf buffer = ctx.alloc().buffer(chainMessage.getPayload().length + 8);
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(Utils.calcPacketSize(chainMessage.getPayload()));
+        buffer.writeBytes(ByteUtil.calcPacketSize(chainMessage.getPayload()));
         buffer.writeBytes(chainMessage.getPayload());
 
         ctx.writeAndFlush(buffer);

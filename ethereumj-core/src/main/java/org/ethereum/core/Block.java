@@ -1,11 +1,11 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -259,20 +259,20 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [\n");
-        toStringBuff.append("  hash=" + Utils.toHexString(hash)).append("\n");
-        toStringBuff.append("  parentHash=" + Utils.toHexString(parentHash)).append("\n");
-        toStringBuff.append("  unclesHash=" + Utils.toHexString(unclesHash)).append("\n");
-        toStringBuff.append("  coinbase=" + Utils.toHexString(coinbase)).append("\n");
-        toStringBuff.append("  stateHash=" 		+ Utils.toHexString(stateRoot)).append("\n");
-        toStringBuff.append("  txTrieHash=" 	+ Utils.toHexString(txTrieRoot)).append("\n");
-        toStringBuff.append("  difficulty=" 	+ Utils.toHexString(difficulty)).append("\n");
+        toStringBuff.append("  hash=" + ByteUtil.toHexString(hash)).append("\n");
+        toStringBuff.append("  parentHash=" + ByteUtil.toHexString(parentHash)).append("\n");
+        toStringBuff.append("  unclesHash=" + ByteUtil.toHexString(unclesHash)).append("\n");
+        toStringBuff.append("  coinbase=" + ByteUtil.toHexString(coinbase)).append("\n");
+        toStringBuff.append("  stateHash=" 		+ ByteUtil.toHexString(stateRoot)).append("\n");
+        toStringBuff.append("  txTrieHash=" 	+ ByteUtil.toHexString(txTrieRoot)).append("\n");
+        toStringBuff.append("  difficulty=" 	+ ByteUtil.toHexString(difficulty)).append("\n");
         toStringBuff.append("  number=" 		+ number).append("\n");
         toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("\n");
         toStringBuff.append("  gasLimit=" 		+ gasLimit).append("\n");
         toStringBuff.append("  gasUsed=" 		+ gasUsed).append("\n");
         toStringBuff.append("  timestamp=" 		+ timestamp).append("\n");
-        toStringBuff.append("  extraData=" 		+ Utils.toHexString(extraData)).append("\n");
-        toStringBuff.append("  nonce=" 			+ Utils.toHexString(nonce)).append("\n");
+        toStringBuff.append("  extraData=" 		+ ByteUtil.toHexString(extraData)).append("\n");
+        toStringBuff.append("  nonce=" 			+ ByteUtil.toHexString(nonce)).append("\n");
 
         for (Transaction tx : getTransactionsList()){
 
@@ -289,20 +289,20 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
-        toStringBuff.append("  hash=" + Utils.toHexString(hash)).append("");
-        toStringBuff.append("  parentHash=" + Utils.toHexString(parentHash)).append("");
-        toStringBuff.append("  unclesHash=" + Utils.toHexString(unclesHash)).append("");
-        toStringBuff.append("  coinbase=" + Utils.toHexString(coinbase)).append("");
-        toStringBuff.append("  stateHash=" 		+ Utils.toHexString(stateRoot)).append("");
-        toStringBuff.append("  txTrieHash=" 	+ Utils.toHexString(txTrieRoot)).append("");
-        toStringBuff.append("  difficulty=" 	+ Utils.toHexString(difficulty)).append("");
+        toStringBuff.append("  hash=" + ByteUtil.toHexString(hash)).append("");
+        toStringBuff.append("  parentHash=" + ByteUtil.toHexString(parentHash)).append("");
+        toStringBuff.append("  unclesHash=" + ByteUtil.toHexString(unclesHash)).append("");
+        toStringBuff.append("  coinbase=" + ByteUtil.toHexString(coinbase)).append("");
+        toStringBuff.append("  stateHash=" 		+ ByteUtil.toHexString(stateRoot)).append("");
+        toStringBuff.append("  txTrieHash=" 	+ ByteUtil.toHexString(txTrieRoot)).append("");
+        toStringBuff.append("  difficulty=" 	+ ByteUtil.toHexString(difficulty)).append("");
         toStringBuff.append("  number=" 		+ number).append("");
         toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("");
         toStringBuff.append("  gasLimit=" 		+ gasLimit).append("");
         toStringBuff.append("  gasUsed=" 		+ gasUsed).append("");
         toStringBuff.append("  timestamp=" 		+ timestamp).append("");
-        toStringBuff.append("  extraData=" 		+ Utils.toHexString(extraData)).append("");
-        toStringBuff.append("  nonce=" 			+ Utils.toHexString(nonce)).append("");
+        toStringBuff.append("  extraData=" 		+ ByteUtil.toHexString(extraData)).append("");
+        toStringBuff.append("  nonce=" 			+ ByteUtil.toHexString(nonce)).append("");
 
         for (Transaction tx : getTransactionsList()){
 
