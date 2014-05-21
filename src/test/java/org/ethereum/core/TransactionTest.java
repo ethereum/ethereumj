@@ -44,8 +44,8 @@ public class TransactionTest {
     @Test  /* achieve public key of the sender */
     public void test2() throws Exception {
 
-        // cat --> 79B08AD8787060333663D19704909EE7B1903E58
-        // cow --> CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826
+        // cat --> 79b08ad8787060333663d19704909ee7b1903e58
+        // cow --> cd2a3d9f938e13cd947ec05abc7fe734df8dd826
 
         BigInteger value = new BigInteger("1000000000000000000000000");
 

@@ -1,6 +1,8 @@
 package org.ethereum.core;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.wallet.AddressState;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
@@ -20,14 +22,18 @@ public class WalletTest {
     public void SaveTest1() throws TransformerException, ParserConfigurationException {
 
         Wallet wallet = new Wallet();
-        wallet.importKey(HashUtil.sha3("cow".getBytes()));
-        wallet.importKey(HashUtil.sha3("cat".getBytes()));
+        ECKey cowKey = ECKey.fromPrivate( HashUtil.sha3("cow".getBytes()) );
+        ECKey catKey = ECKey.fromPrivate( HashUtil.sha3("cat".getBytes()) );
 
-        Address addr1 = (Address) wallet.getAddressSet().toArray()[0];
-        Address addr2 = (Address) wallet.getAddressSet().toArray()[1];
+        wallet.importKey(cowKey.getPrivKeyBytes());
+        wallet.importKey(catKey.getPrivKeyBytes());
 
-        wallet.setBalance(addr1, new BigInteger("234234"));
-        wallet.setBalance(addr2, new BigInteger("84758"));
+
+        AddressState cowAddressState = (AddressState) wallet.getAddressState(cowKey.getAddress());
+        AddressState catAddressState = (AddressState) wallet.getAddressState(catKey.getAddress());
+
+        cowAddressState.addToBalance(new BigInteger("234234"));
+        catAddressState.addToBalance(new BigInteger("84758"));
 
         wallet.setHigh(4354);
 

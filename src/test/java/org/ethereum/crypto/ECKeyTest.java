@@ -75,6 +75,7 @@ public class ECKeyTest {
 		assertArrayEquals(key.getPubKey(), pubKey);
 	}
 
+
 	@Test
 	public void testPublicKeyFromPrivate() {
 		byte[] pubFromPriv = ECKey.publicKeyFromPrivate(privateKey, false);
