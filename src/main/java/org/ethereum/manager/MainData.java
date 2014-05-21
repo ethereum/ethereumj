@@ -3,22 +3,17 @@ package org.ethereum.manager;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.geodb.IpGeoDB;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
 import org.spongycastle.util.encoders.Hex;
-
-import com.maxmind.geoip.Location;
 
 /**
  * www.ethereumJ.com
@@ -91,9 +86,8 @@ public class MainData {
     }
 
     public byte[] getLatestBlockHash(){
-
         if (blockChainDB.isEmpty())
-            return StaticMessages.GENESIS_HASH;
+            return (new Genesis()).getHash();
         else
           return blockChainDB.get(blockChainDB.size() - 1).getHash();
     }
