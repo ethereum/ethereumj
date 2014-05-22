@@ -191,8 +191,8 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
     private void sendDisconnectNice(ChannelHandlerContext ctx){
         logger.info("[Send: DISCONNECT]");
-        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.DISCONNECT_00.length);
-        buffer.writeBytes(StaticMessages.DISCONNECT_00);
+        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.DISCONNECT_08.length);
+        buffer.writeBytes(StaticMessages.DISCONNECT_08);
         ctx.writeAndFlush(buffer);
     }
 

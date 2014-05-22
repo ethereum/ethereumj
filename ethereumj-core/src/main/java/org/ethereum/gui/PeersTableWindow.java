@@ -34,11 +34,11 @@ public class PeersTableWindow extends JFrame{
 
 	// Constructor of main frame
 	public PeersTableWindow() {
+
 		// Set the frame characteristics
 		setTitle("Ethereum Peers");
 		setSize(355, 300);
 		setLocation(815, 80);
-		setBackground(Color.gray);
 
 		java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
 		Toolkit kit = Toolkit.getDefaultToolkit();
@@ -48,7 +48,10 @@ public class PeersTableWindow extends JFrame{
 		// Create a panel to hold all other components
 		topPanel = new JPanel();
 		topPanel.setLayout(new BorderLayout());
+        topPanel.setBackground(Color.WHITE);
+
 		getContentPane().add(topPanel);
+        getContentPane().setBackground(Color.WHITE);
 
 		// Create a new table instance
 		table = new JTable();
@@ -73,8 +76,14 @@ public class PeersTableWindow extends JFrame{
 		table.setRowMargin(3);
 		table.setRowHeight(50);
 
+        table.setShowHorizontalLines(true);
+        table.setShowVerticalLines(true);
+        table.setGridColor(new Color(230, 230, 230));
+
 		// Add the table to a scrolling pane
 		scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(Color.WHITE);
+
 		topPanel.add(scrollPane, BorderLayout.CENTER);
 
         updater.scheduleAtFixedRate(new TimerTask() {
