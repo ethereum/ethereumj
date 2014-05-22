@@ -2,7 +2,6 @@ package org.ethereum.geodb;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.net.URISyntaxException;
 import java.net.URL;
 
 import com.maxmind.geoip.Location;

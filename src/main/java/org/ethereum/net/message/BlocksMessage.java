@@ -6,7 +6,6 @@ import java.util.List;
 import static org.ethereum.net.Command.BLOCKS;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
 import org.ethereum.net.Command;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;

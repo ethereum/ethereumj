@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.wallet.AddressState;
