@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.Address;
 import org.ethereum.core.Wallet;
 import org.ethereum.manager.MainData;
 import org.ethereum.wallet.AddressState;

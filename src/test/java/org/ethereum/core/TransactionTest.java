@@ -51,7 +51,7 @@ public class TransactionTest {
         BigInteger value = new BigInteger("1000000000000000000000");
 
         byte[] privKey = HashUtil.sha3("cat".getBytes());
-        Address receiveAddress = new Address(privKey);
+        ECKey ecKey = ECKey.fromPrivate(privKey);
 
         byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
 
@@ -59,7 +59,7 @@ public class TransactionTest {
         byte[] gas =      Hex.decode("4255");
 
         // Tn (nonce); Tp(pgas); Tg(gaslimi); Tt(value); Tv(value); Ti(sender);  Tw; Tr; Ts
-        Transaction tx = new Transaction(null, gasPrice, gas, receiveAddress.getAddress(),
+        Transaction tx = new Transaction(null, gasPrice, gas, ecKey.getAddress(),
                 value.toByteArray(),
                    null);
 
@@ -98,7 +98,7 @@ public class TransactionTest {
 
         byte[] nonce = {01};
         byte[] privKey = HashUtil.sha3("cat".getBytes());
-        Address receiveAddress = new Address(privKey);
+        ECKey ecKey = ECKey.fromPrivate(privKey);
 
         byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
 
@@ -106,7 +106,7 @@ public class TransactionTest {
         byte[] gas =      Hex.decode("4255");
 
         Transaction tx = new Transaction(null, gasPrice, gas,
-                receiveAddress.getAddress(),   value.toByteArray(), null);
+                ecKey.getAddress(),   value.toByteArray(), null);
 
         tx.sign(senderPrivKey);
 
