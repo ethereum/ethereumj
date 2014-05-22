@@ -1,10 +1,7 @@
 package org.ethereum.net.peerdiscovery;
 
 
-import org.ethereum.manager.MainData;
 import org.ethereum.net.client.PeerData;
-import samples.threadpool.MyMonitorThread;
-import samples.threadpool.RejectedExecutionHandlerImpl;
 
 import java.util.List;
 import java.util.concurrent.*;

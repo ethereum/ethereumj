@@ -10,7 +10,7 @@
 
 <!--  * To deploy all the classes and dependencies to one jar,
       * that's one option to pack stand alone.
-mvn clean package dependency:copy-dependencies
+mvn clean package dependency:copy-dependencies -Dmaven.test.skip=true
 -->
 
 	<properties>
