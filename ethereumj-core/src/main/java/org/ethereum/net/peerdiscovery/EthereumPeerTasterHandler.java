@@ -13,6 +13,8 @@ import org.ethereum.net.message.*;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Timer;
@@ -26,6 +28,8 @@ import static org.ethereum.net.Command.*;
  * Created on: 10/04/14 08:19
  */
 public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
+
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     Timer timer = null;
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
@@ -61,7 +65,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         buffer.writeBytes(MAGIC_PREFIX);
         buffer.writeBytes(helloLength);
         buffer.writeBytes(helloMessage.getPayload());
-        System.out.println("Send: " + helloMessage.toString());
+        logger.info("Send: " + helloMessage.toString());
         ctx.writeAndFlush(buffer);
 
         // sample for pinging in background
@@ -74,11 +78,11 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
                 long currTime = System.currentTimeMillis();
                 if (currTime - lastPongTime > 30000){
-                    System.out.println("No ping answer for [30 sec]");
+                    logger.info("No ping answer for [30 sec]");
                     throw new Error("No ping return for 30 [sec]");
                     // TODO: shutdown the handler
                 }
-                System.out.println("[Send: PING]");
+                logger.info("[Send: PING]");
                 if (peerListener != null) peerListener.console("[Send: PING]");
                 sendPing(ctx);
             }
@@ -89,56 +93,56 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
         byte[] payload = (byte[]) msg;
 
-        System.out.print("msg: ");
-        ByteUtil.printHexStringForByteArray(payload);
+        logger.info("msg: %s", Hex.toHexString(payload));
+
 
         byte command = RLP.getCommandCode(payload);
 
         // got HELLO
         if (Command.fromInt(command) == HELLO) {
-            System.out.println("[Recv: HELLO]" );
+            logger.info("[Recv: HELLO]" );
             RLPList rlpList = RLP.decode2(payload);
             
             HelloMessage helloMessage = new HelloMessage(rlpList);
-            System.out.println(helloMessage.toString());
+            logger.info(helloMessage.toString());
 
             sendGetPeers(ctx);
         }
         // got DISCONNECT
         if (Command.fromInt(command) == DISCONNECT) {
-            System.out.println("[Recv: DISCONNECT]");
+            logger.info("[Recv: DISCONNECT]");
             if (peerListener != null) peerListener.console("[Recv: DISCONNECT]");
 
             RLPList rlpList = RLP.decode2(payload);
             DisconnectMessage disconnectMessage = new DisconnectMessage(rlpList);
 
-            System.out.println(disconnectMessage);
+            logger.info(disconnectMessage.toString());
         }
 
         // got PING send pong
         if (Command.fromInt(command) == PING) {
-            System.out.println("[Recv: PING]");
+            logger.info("[Recv: PING]");
             if (peerListener != null) peerListener.console("[Recv: PING]");
             sendPong(ctx);
         }
 
         // got PONG mark it
         if (Command.fromInt(command) == PONG) {
-            System.out.println("[Recv: PONG]" );
+            logger.info("[Recv: PONG]" );
             if (peerListener != null) peerListener.console("[Recv: PONG]");
             this.lastPongTime = System.currentTimeMillis();
         }
 
         // got PEERS
         if (Command.fromInt(command) == PEERS) {
-            System.out.println("[Recv: PEERS]");
+            logger.info("[Recv: PEERS]");
             if (peerListener != null) peerListener.console("[Recv: PEERS]");
 
             RLPList rlpList = RLP.decode2(payload);
             PeersMessage peersMessage = new PeersMessage(rlpList);
 
             MainData.instance.addPeers(peersMessage.getPeers());
-            System.out.println(peersMessage);
+            logger.info(peersMessage.toString());
 
             sendDisconnectNice(ctx);
 
@@ -161,7 +165,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         this.tearDown = true;
-        System.out.println("Lost connection to the server");
+        logger.info("Lost connection to the server");
         cause.printStackTrace();
         timer.cancel();
         timer.purge();
@@ -180,14 +184,14 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendPong(ChannelHandlerContext ctx){
-        System.out.println("[Send: PONG]");
+        logger.info("[Send: PONG]");
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PONG.length);
         buffer.writeBytes(StaticMessages.PONG);
         ctx.writeAndFlush(buffer);
     }
 
     private void sendDisconnectNice(ChannelHandlerContext ctx){
-        System.out.println("[Send: DISCONNECT]");
+        logger.info("[Send: DISCONNECT]");
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.DISCONNECT_00.length);
         buffer.writeBytes(StaticMessages.DISCONNECT_00);
         ctx.writeAndFlush(buffer);

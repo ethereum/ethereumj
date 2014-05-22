@@ -3,12 +3,16 @@ package org.ethereum.util;
 import java.math.BigInteger;
 import java.util.Arrays;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import com.google.common.primitives.UnsignedInteger;
 import com.google.common.primitives.UnsignedLongs;
 
 public class ByteUtil {
+
+    private static Logger logger = LoggerFactory.getLogger("ByteUtil");
 
     /**
      * Creates a copy of bytes and appends b to the end of it
@@ -71,17 +75,23 @@ public class ByteUtil {
     }
 
     public static void printHexStringForByteArray(byte[] data){
-        System.out.print("[");
-        for (int i = 0; i < data.length; ++i){
-            String hexNum = Integer.toHexString ((int) data[i] & 0xFF);
-            if (((int) data[i] & 0xFF) < 16) {
-                hexNum = "0" + hexNum;
+
+        if (logger.isInfoEnabled()) {
+
+            logger.info("[");
+
+            for (int i = 0; i < data.length; ++i) {
+
+                String hexNum = Integer.toHexString((int) data[i] & 0xFF);
+                if (((int) data[i] & 0xFF) < 16) {
+                    hexNum = "0" + hexNum;
+                }
+                logger.info(hexNum);
+                logger.info(" ");
             }
-            System.out.print( hexNum );
-            System.out.print(" ");
+            logger.info("]");
+            logger.info("");
         }
-        System.out.print("]");
-        System.out.println();
     }
 
     // The packet size should be 4 byte long

@@ -1,15 +1,17 @@
 package org.ethereum.net.peerdiscovery;
 
 import org.ethereum.manager.MainData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class PeerDiscoveryMonitorThread implements Runnable
 {
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     private ThreadPoolExecutor executor;
-
     private int seconds;
-
     private boolean run=true;
 
     public PeerDiscoveryMonitorThread(ThreadPoolExecutor executor, int delay)
@@ -26,7 +28,7 @@ public class PeerDiscoveryMonitorThread implements Runnable
     public void run()
     {
         while(run){
-            System.out.println(
+            logger.info(
                     String.format("[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s, peersDiscovered: %d ",
                             this.executor.getPoolSize(),
                             this.executor.getCorePoolSize(),

@@ -31,16 +31,20 @@ public class ToolBar extends JFrame {
 
     public ToolBar() throws HeadlessException {
 
+        logger.info("♢");
         logger.info("EthereumJ [v0.5.1] by Roman Mandeleil");
         logger.info(" design by Vitaly Buterin");
         logger.info("");
         logger.info("java.version: " + System.getProperty("java.version"));
         logger.info("java.home:    " + System.getProperty("java.home"));
+        logger.info("java.vendor:  " + System.getProperty("java.vendor"));
 
         if (Utils.JAVA_VERSION < 1.7) {
             logger.info("EthereumJ support version 1.7 and higher of Java Runtime please update");
             System.exit(0);
         }
+
+
 
 
         final JPanel cp = new JPanel(new FlowLayout());

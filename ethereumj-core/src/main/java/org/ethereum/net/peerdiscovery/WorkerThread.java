@@ -1,6 +1,8 @@
 package org.ethereum.net.peerdiscovery;
 
 import org.ethereum.net.client.PeerData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -12,6 +14,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class WorkerThread implements Runnable {
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     ThreadPoolExecutor poolExecutor;
     private PeerData peerData;
 
@@ -22,9 +26,9 @@ public class WorkerThread implements Runnable {
 
     @Override
     public void run() {
-        System.out.println(Thread.currentThread().getName()+" Start. Command = "+ peerData.toString());
+        logger.info(Thread.currentThread().getName()+" Start. Command = "+ peerData.toString());
         processCommand();
-        System.out.println(Thread.currentThread().getName()+" End.");
+        logger.info(Thread.currentThread().getName()+" End.");
         poolExecutor.execute(this);
     }
 
@@ -34,10 +38,10 @@ public class WorkerThread implements Runnable {
             PeerTaster peerTaster = new PeerTaster();
             peerTaster.connect(peerData.getInetAddress().getHostName(), peerData.getPort());
             peerData.setOnline(true);
-            System.out.println("Peer: " + peerData.toString() + " isOnline: true");
+            logger.info("Peer: " + peerData.toString() + " isOnline: true");
         }
         catch (Throwable e) {
-            System.out.println("Peer: " + peerData.toString() + " isOnline: false");
+            logger.info("Peer: " + peerData.toString() + " isOnline: false");
             peerData.setOnline(false);
         }
     }
