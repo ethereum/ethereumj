@@ -18,7 +18,7 @@ public class Genesis extends Block {
     private static byte[] stateRoot = // TODO: Get stateRoot from actual state
     		Hex.decode("12582945fc5ad12c3e7b67c4fc37a68fc0d52d995bb7f7291ff41a2739a7ca16");
     private static byte[] txTrieRoot = new byte[0];
-    private static byte[] difficulty = BigInteger.valueOf((long) Math.pow(2, 22)).toByteArray();
+    private static byte[] difficulty = BigInteger.valueOf(2).pow(22).toByteArray();
     private static long number = 0;
     private static long minGasPrice = 0;
     private static long gasLimit = 1000000;
