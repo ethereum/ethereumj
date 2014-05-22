@@ -1,6 +1,5 @@
 package org.ethereum.core;
 
-import java.math.BigDecimal;
 import java.math.BigInteger;
 
 public enum Denomination {
@@ -23,7 +22,7 @@ public enum Denomination {
 		return amount;
 	}
 	
-	private static BigInteger newBigInt(double value) {
-		return BigDecimal.valueOf(Math.pow(10, value)).toBigInteger();
+	private static BigInteger newBigInt(int value) {
+		return BigInteger.valueOf(2).pow(value);
 	}
 }
