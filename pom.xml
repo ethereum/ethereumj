@@ -87,21 +87,48 @@ mvn clean package -Dmaven.test.skip=true
         </dependency>
 
 
-		<!-- Consumers are expected to provide their own SLF4J adapters such as
-			logback, slf4j-log4j12, slf4j-jcl and so on see http://www.slf4j.org/faq.html -->
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-jdk14</artifactId>
-			<version>${slf4j.version}</version>
-			<scope>runtime</scope>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>${slf4j.version}</version>
-		</dependency>
+        <!-- remove the real commons-logging from classpath -->
+        <!-- declare as provided or exclude from spring jars -->
+        <dependency>
+            <artifactId>commons-logging</artifactId>
+            <groupId>commons-logging</groupId>
+            <version>1.0</version>
+            <scope>provided</scope>
+        </dependency>
 
+        <!-- add slf4j interfaces to classpath -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.7</version>
+            <scope>compile</scope>
+        </dependency>
+
+        <!-- add commons logging to slf4j bridge to classpath -->
+        <!-- acts as jcl but routes commons-logging calls to slf4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.5.6</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- add log4j binding to classpath -->
+        <!-- routes slf4j calls to log4j -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.7.5</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- add log4j to classpath -->
+        <!-- does the logging -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>1.2.17</version>
+        </dependency>
         <dependency>
             <groupId>com.yuvalshavit</groupId>
             <artifactId>antlr-denter</artifactId>
