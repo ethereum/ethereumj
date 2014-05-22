@@ -23,6 +23,6 @@ public enum Denomination {
 	}
 	
 	private static BigInteger newBigInt(int value) {
-		return BigInteger.valueOf(2).pow(value);
+		return BigInteger.valueOf(10).pow(value);
 	}
 }
