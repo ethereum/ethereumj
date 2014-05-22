@@ -96,8 +96,6 @@ public class Transaction {
         RLPList decodedTxList = RLP.decode2(rlpEncodedSigned);
         RLPList transaction =  (RLPList) decodedTxList.get(0);
 
-        this.hash  = HashUtil.sha3(rlpEncodedSigned);
-
         this.nonce =          ((RLPItem) transaction.get(0)).getRLPData();
         this.gasPrice =       ((RLPItem) transaction.get(1)).getRLPData();
         this.gasLimit =       ((RLPItem) transaction.get(2)).getRLPData();
@@ -118,6 +116,7 @@ public class Transaction {
             this.signature = ECDSASignature.fromComponents(r, s, v);
         } else throw new RuntimeException("Wrong tx data element list size");
         this.parsed = true;
+        this.hash  = this.getHash();
     }
 
     public boolean isParsed() {
