@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.Address;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.MainData;

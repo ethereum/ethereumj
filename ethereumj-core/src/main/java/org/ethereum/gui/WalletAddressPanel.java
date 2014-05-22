@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.Address;
 import org.ethereum.util.Utils;
 import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.encoders.Hex;

@@ -7,9 +7,9 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ethereum.core.Address;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.BlocksMessage;
@@ -520,16 +520,18 @@ public class MessagesTest {
     @Test /* Transactions msg encode */
     public void test15() throws Exception {
 
+        String expected = "f87312f870808b00d3c21bcecceda10000009479b08ad8787060333663d19704909ee7b1903e588609184e72a000824255801ca00f410a70e42b2c9854a8421d32c87c370a2b9fff0a27f9f031bb4443681d73b5a018a7dc4c4f9dee9f3dc35cb96ca15859aa27e219a8e4a8547be6bd3206979858";
+
         BigInteger value = new BigInteger("1000000000000000000000000");
 
         byte[] privKey = HashUtil.sha3("cat".getBytes());
-        Address receiveAddress = new Address(privKey);
+        ECKey ecKey = ECKey.fromPrivate(privKey);
 
         byte[] gasPrice=  Hex.decode("09184e72a000");
         byte[] gas =      Hex.decode("4255");
 
         Transaction tx = new Transaction(null, value.toByteArray(),
-                receiveAddress.getAddress(),  gasPrice, gas, null);
+                ecKey.getAddress(),  gasPrice, gas, null);
 
         tx.sign(privKey);
         tx.getEncodedSigned();
@@ -538,10 +540,8 @@ public class MessagesTest {
         txList.add(tx);
         TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
 
-        //todo: add assertion to the test whenever you know what should be the result
-        System.out.println(Hex.toHexString( transactionsMessage.getPayload() ));
+        assertEquals(expected, Hex.toHexString( transactionsMessage.getPayload()) );
 
-//        !!! [ 15:51:24 | eth ] Ignoring invalid transaction: Invalid transaction format: Bad field 1 (8b00d3c21bcecceda1000000)
     }
 }
 
