@@ -38,8 +38,8 @@ public class PeerDiscovery {
         threadFactory = Executors.defaultThreadFactory();
 
         //creating the ThreadPoolExecutor
-        executorPool = new ThreadPoolExecutor(1, config.peerDiscoveryWorkers(), 10, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<Runnable>(2), threadFactory, rejectionHandler);
+        executorPool = new ThreadPoolExecutor(1, 1000, 10, TimeUnit.SECONDS,
+                new ArrayBlockingQueue<Runnable>(config.peerDiscoveryWorkers()), threadFactory, rejectionHandler);
 
         //start the monitoring thread
         monitor = new PeerDiscoveryMonitorThread(executorPool, 3);
