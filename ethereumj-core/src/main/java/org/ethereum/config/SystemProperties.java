@@ -62,9 +62,18 @@ public class SystemProperties {
         if(prop.isEmpty()) return 2;
 
         int result =
-                Integer.parseInt( prop.getProperty("peer.discovery") );
+                Integer.parseInt( prop.getProperty("peer.discovery.workers") );
 
         return result;
+    }
+
+    public int peerDiscoveryTimeout(){
+        if(prop.isEmpty()) return 10000;
+
+        int result =
+                Integer.parseInt( prop.getProperty("peer.discovery.timeout") );
+
+        return result * 1000;
     }
 
 
