@@ -1,5 +1,7 @@
 package org.ethereum.gui;
 
+import org.ethereum.manager.MainData;
+
 import javax.swing.*;
 
 import java.awt.*;
@@ -193,6 +195,9 @@ public class ToolBar extends JFrame {
         cp.add(peersToggle);
         cp.add(chainToggle);
         cp.add(walletToggle);
+
+
+        MainData.instance.toString();
     }
 
     public static void main(String args[]){

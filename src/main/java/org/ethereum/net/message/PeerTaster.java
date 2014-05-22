@@ -13,7 +13,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.EthereumFrameDecoder;
-import org.ethereum.net.client.EthereumPeerTasterHandler;
+import org.ethereum.net.peerdiscovery.EthereumPeerTasterHandler;
 import org.ethereum.net.client.PeerData;
 
 /**

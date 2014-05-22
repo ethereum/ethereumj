@@ -1,4 +1,4 @@
-package org.ethereum.net.client;
+package org.ethereum.net.peerdiscovery;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
@@ -74,8 +74,6 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
                 sendPing(ctx);
             }
         }, 2000, 5000);
-
-
     }
 
     @Override
@@ -141,8 +139,6 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
             ctx.close().sync();
             ctx.disconnect().sync();
-
-
         }
     }
 
@@ -164,16 +160,8 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
         ctx.close().sync();
         ctx.disconnect().sync();
-    }
 
-    private void sendMsg(Message msg, ChannelHandlerContext ctx){
-        byte[] data = msg.getPayload();
-        final ByteBuf buffer = ctx.alloc().buffer(data.length + 8);
-        byte[] packetLen  = ByteUtil.calcPacketLength(data);
-
-        buffer.writeBytes(MAGIC_PREFIX);
-        buffer.writeBytes(packetLen);
-        ctx.writeAndFlush(buffer);
+        throw new Error("Peer is dead");
     }
 
     private void sendPing(ChannelHandlerContext ctx){
@@ -202,30 +190,4 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendGetTransactions(ChannelHandlerContext ctx){
-        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_TRANSACTIONS.length);
-        buffer.writeBytes(StaticMessages.GET_TRANSACTIONS);
-        ctx.writeAndFlush(buffer);
-    }
-
-    private void sendGetChain(ChannelHandlerContext ctx){
-
-        byte[] hash = MainData.instance.getLatestBlockHash();
-        GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
-
-        ByteBuf buffer = ctx.alloc().buffer(chainMessage.getPayload().length + 8);
-        buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(ByteUtil.calcPacketSize(chainMessage.getPayload()));
-        buffer.writeBytes(chainMessage.getPayload());
-
-        ctx.writeAndFlush(buffer);
-    }
-
-    private void sendTx(ChannelHandlerContext ctx){
-        byte[] TX_MSG =
-                Hex.decode("2240089100000070F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69");
-        ByteBuf buffer = ctx.alloc().buffer(TX_MSG.length);
-        buffer.writeBytes(TX_MSG);
-        ctx.writeAndFlush(buffer);
-    }
 }
