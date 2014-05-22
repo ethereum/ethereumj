@@ -1,18 +1,25 @@
 package org.ethereum.manager;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import com.maxmind.geoip.Location;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.geodb.IpGeoDB;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.peerdiscovery.PeerDiscovery;
+import org.ethereum.net.peerdiscovery.WorkerThread;
+import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -27,29 +34,29 @@ public class MainData {
     private Wallet wallet = new Wallet();
     private ClientPeer activePeer;
 
+    PeerDiscovery peerDiscovery;
+
     public static MainData instance = new MainData();
 
     public MainData() {
 
-        wallet.importKey(HashUtil.sha3("cow".getBytes()));
+        PeerData peer = new PeerData(
+                new byte[]{54 , (byte)201, 28, 117}, (short) 30303, new byte[]{00});
+        peers.add(peer);
+
+
+        byte[] cowAddr = HashUtil.sha3("cow".getBytes());
+        ECKey key = ECKey.fromPrivate(cowAddr);
+
+        wallet.importKey(cowAddr);
+        AddressState state = wallet.getAddressState(key.getAddress());
+        state.addToBalance(new BigInteger("1606938044258990275541962092341162602522202993782792835301376"));
         wallet.importKey(HashUtil.sha3("cat".getBytes()));
+
+        peerDiscovery = new PeerDiscovery(peers);
+        peerDiscovery.start();
     }
 
-    public void addPeers(List<PeerData> newPeers){
-
-        for (PeerData peer : newPeers){
-            if (this.peers.indexOf(peer) == -1){
-                this.peers.add(peer);
-            }
-        }
-
-//        for (PeerData peerData : this.peers){
-//            Location location = IpGeoDB.getLocationForIp(peerData.getInetAddress());
-//            if (location != null)
-//                System.out.println("Hello: " + " [" + peerData.getInetAddress().toString()
-//                        + "] " + location.countryName);
-//        }
-    }
 
     public void addBlocks(List<Block> blocks) {
 
@@ -113,4 +120,33 @@ public class MainData {
     public List<PeerData> getPeers() {
         return peers;
     }
+
+    public void updatePeerIsDead(String ip, short port){
+
+        for (PeerData peer : peers) {
+
+            if (peer.getInetAddress().getHostAddress().equals(ip) && (peer.getPort() == port)){
+
+                System.out.println("update peer is dead: " + ip + ":" + port);
+                peer.setOnline(false);
+                break;
+            }
+        }
+    }
+
+    public void addPeers(List<PeerData> newPeers){
+
+        for (PeerData peer : newPeers){
+            if (this.peers.indexOf(peer) == -1){
+
+                Location location = IpGeoDB.getLocationForIp(peer.getInetAddress());
+                if (location != null){
+                    this.peers.add(peer);
+                    peerDiscovery.addNewPeerData(peer);
+                }
+            }
+        }
+
+    }
+
 }

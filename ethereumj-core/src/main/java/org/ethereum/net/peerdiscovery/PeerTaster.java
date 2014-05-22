@@ -1,19 +1,18 @@
-package org.ethereum.net.client;
+package org.ethereum.net.peerdiscovery;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import org.ethereum.core.Transaction;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
-import org.ethereum.net.message.StaticMessages;
-import org.ethereum.net.message.TransactionsMessage;
-import org.ethereum.util.Utils;
-import org.spongycastle.util.encoders.Hex;
+import org.ethereum.net.client.EthereumFrameDecoder;
+import org.ethereum.net.client.PeerData;
 
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 
 
@@ -39,6 +38,7 @@ public class PeerTaster {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
+
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
@@ -83,19 +83,30 @@ public class PeerTaster {
 
         PeerTaster peerTaster = new PeerTaster();
 
+        ArrayList<PeerData> peers = new ArrayList<PeerData>();
+        peers.add(new PeerData(new byte[]{54, (byte)211, 14, 10}, (short) 30303, null));
+        MainData.instance.addPeers(peers);
 
-        try {peerTaster.connect("54.211.14.10", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("54.211.14.10", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+        String ip = "54.211.14.10";
+        short port = 30303;
+        try {
+            peerTaster.connect(ip, port);}
+        catch (Throwable e) {
+            e.printStackTrace();
+            MainData.instance.updatePeerIsDead(ip, port);
+        }
+
+//        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("54.211.14.10", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
+//        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
 
 
         System.out.println("End of the roaad");

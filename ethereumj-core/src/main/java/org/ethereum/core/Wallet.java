@@ -44,7 +44,6 @@ public class Wallet {
         AddressState addressState = new AddressState();
         String address = Hex.toHexString(addressState.getEcKey().getAddress());
         rows.put(address, addressState);
-
         for (WalletListener listener : listeners) listener.valueChanged();
     }
 
@@ -53,7 +52,6 @@ public class Wallet {
         AddressState addressState = new AddressState(ECKey.fromPrivate(privKey));
         String address = Hex.toHexString(addressState.getEcKey().getAddress());
         rows.put(address, addressState);
-
         notifyListeners();
     }
 

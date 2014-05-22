@@ -13,7 +13,7 @@ import java.net.UnknownHostException;
 public class PeerData {
 
 	private byte[] ip;
-	private short  port;
+	private int    port;
 	private byte[] peerId;
 
 	private transient boolean isOnline = false;
@@ -21,7 +21,7 @@ public class PeerData {
 
     public PeerData(byte[] ip, short port, byte[] peerId) {
         this.ip = ip;
-        this.port = port;
+        this.port = port & 0xFFFF;
         this.peerId = peerId;
     }
 
@@ -40,7 +40,7 @@ public class PeerData {
         return ip;
     }
 
-    public short getPort() {
+    public int getPort() {
         return port;
     }
 

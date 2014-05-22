@@ -1,10 +1,8 @@
 package org.ethereum.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Image;
-import java.awt.Toolkit;
+import java.awt.*;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -26,6 +24,8 @@ public class PeersTableWindow extends JFrame{
     private JPanel topPanel;
     private	JTable		table;
     private	JScrollPane scrollPane;
+    private Timer updater = new Timer();
+
 
 	// Constructor of main frame
 	public PeersTableWindow() {
@@ -71,6 +71,15 @@ public class PeersTableWindow extends JFrame{
 		// Add the table to a scrolling pane
 		scrollPane = new JScrollPane(table);
 		topPanel.add(scrollPane, BorderLayout.CENTER);
+
+        updater.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                table.revalidate();
+                table.repaint();
+                System.out.println("repaint");
+            }
+        }, 1000, 1000);
+
 	}
 
 	public static void main(String args[]) {

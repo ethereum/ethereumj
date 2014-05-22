@@ -3,14 +3,14 @@ package org.ethereum.gui;
 import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
 
 import org.ethereum.geodb.IpGeoDB;
+import org.ethereum.manager.MainData;
+import org.ethereum.net.client.PeerData;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;
@@ -22,12 +22,16 @@ import com.maxmind.geoip.Location;
  */
 public class PeersTableModel extends AbstractTableModel {
 
-	private static final long serialVersionUID = -6984988938009834569L;
-
 	private List<PeerInfo> peerInfoList = new ArrayList<PeerInfo>();
+    Timer updater = new Timer();
 
     public PeersTableModel() {
-        generateRandomData();
+
+        updater.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                updateModel();
+            }
+        }, 0, 1000);
     }
 
     public String getColumnName(int column) {
@@ -81,38 +85,14 @@ public class PeersTableModel extends AbstractTableModel {
         return 3;
     }
 
-    // todo: delete it when stabilized
-    private void generateRandomData(){
+    public void updateModel(){
+        synchronized (peerInfoList){
 
-        List<String> ips = new ArrayList<String>();
-        ips.add("206.223.168.190");
-        ips.add("94.210.200.192");
-        ips.add("88.69.198.198");
-        ips.add("62.78.198.208");
-        ips.add("71.202.162.40");
-        ips.add("78.55.236.218");
-        ips.add("94.197.120.80");
-        ips.add("85.65.126.45");
-
-        ips.add("110.77.217.185");
-        ips.add("64.231.9.30");
-        ips.add("162.243.203.121");
-        ips.add("82.217.72.169");
-
-        ips.add("99.231.80.166");
-        ips.add("131.104.252.4");
-        ips.add("54.204.10.41");
-        ips.add("54.201.28.117");
-        ips.add("82.240.16.5");
-        ips.add("74.79.23.119");
-
-        for (String peer : ips){
-            try {
-                InetAddress addr = InetAddress.getByName(peer);
+            peerInfoList.clear();
+            for (PeerData peer : MainData.instance.getPeers()){
+                InetAddress addr = peer.getInetAddress();
                 Location cr = IpGeoDB.getLocationForIp(addr);
-                peerInfoList.add(new PeerInfo(cr, addr));
-            } catch (UnknownHostException e) {
-            	e.printStackTrace(); 
+                peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline()));
             }
         }
     }
@@ -123,12 +103,10 @@ public class PeersTableModel extends AbstractTableModel {
         InetAddress      ip;
         boolean          connected;
 
-        private PeerInfo(Location location, InetAddress ip) {
+        private PeerInfo(Location location, InetAddress ip, boolean isConnected) {
             this.location = location;
             this.ip = ip;
-
-            Random random = new Random();
-            connected = random.nextBoolean();
+            this.connected = isConnected;
         }
 
         private InetAddress getIp() {
