@@ -5,11 +5,14 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.EthereumFrameDecoder;
 import org.ethereum.net.client.PeerData;
 import java.util.ArrayList;
+
+import static org.ethereum.config.SystemProperties.config;
 
 
 /**
@@ -53,7 +56,7 @@ public class PeerTaster {
 
 
             // Start the client.
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000);
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerDiscoveryTimeout());
             ChannelFuture f = b.connect(host, port).sync(); // (5)
 
             // Wait until the connection is closed.
