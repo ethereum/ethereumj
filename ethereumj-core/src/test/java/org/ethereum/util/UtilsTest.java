@@ -1,6 +1,5 @@
 package org.ethereum.util;
 
-import junit.framework.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
