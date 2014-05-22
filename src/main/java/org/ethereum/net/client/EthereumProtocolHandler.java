@@ -27,6 +27,8 @@ import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -35,6 +37,8 @@ import org.spongycastle.util.encoders.Hex;
  * Created on: 10/04/14 08:19
  */
 public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
+
+    Logger logger = LoggerFactory.getLogger("wire");
 
     Timer chainAskTimer = new Timer();
     int secToAskForChain = 1;
@@ -66,7 +70,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         buffer.writeBytes(MAGIC_PREFIX);
         buffer.writeBytes(HELLO_MESSAGE_LEN);
         buffer.writeBytes(HELLO_MESSAGE);
-        System.out.println("Send: " + StaticMessages.HELLO_MESSAGE.toString());
+        logger.info("Send: " + StaticMessages.HELLO_MESSAGE.toString());
         ctx.writeAndFlush(buffer);
 
         // sample for pinging in background
@@ -79,11 +83,11 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
                 long currTime = System.currentTimeMillis();
                 if (currTime - lastPongTime > 30000){
-                    System.out.println("No ping answer for [30 sec]");
+                    logger.info("No ping answer for [30 sec]");
                     throw new Error("No ping return for 30 [sec]");
                     // TODO: shutdown the handler
                 }
-                System.out.println("[Send: PING]");
+                logger.info("[Send: PING]");
                 if (peerListener != null) peerListener.console("[Send: PING]");
                 sendPing(ctx);
             }
@@ -92,7 +96,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         timer.scheduleAtFixedRate(new TimerTask() {
 
             public void run() {
-                System.out.println("[Send: GET_PEERS]");
+                logger.info("[Send: GET_PEERS]");
                 sendGetPeers(ctx);
             }
         }, 2000, 60000);
@@ -100,7 +104,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         timer.scheduleAtFixedRate(new TimerTask() {
 
             public void run() {
-                System.out.println("[Send: GET_TRANSACTIONS]");
+                logger.info("[Send: GET_TRANSACTIONS]");
                 sendGetTransactions(ctx);
             }
         }, 2000, 30000);
@@ -108,7 +112,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         chainAskTimer.schedule(new TimerTask() {
 
             public void run() {
-                System.out.println("[Send: GET_CHAIN]");
+                logger.info("[Send: GET_CHAIN]");
                 sendGetChain(ctx);
             }
         }, 3000, secToAskForChain * 1000);
@@ -119,45 +123,44 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
         byte[] payload = (byte[]) msg;
 
-        System.out.print("msg: ");
-        ByteUtil.printHexStringForByteArray(payload);
+        logger.info("[Send msg: [{}] ]", Hex.toHexString(payload));
 
         byte command = RLP.getCommandCode(payload);
         // got HELLO
         if (Command.fromInt(command) == HELLO) {
-            System.out.println("[Recv: HELLO]" );
+            logger.info("[Recv: HELLO]" );
             RLPList rlpList = RLP.decode2(payload);
             
             HelloMessage helloMessage = new HelloMessage(rlpList);
-            System.out.println(helloMessage.toString());
+            logger.info(helloMessage.toString());
             if (peerListener != null) peerListener.console(helloMessage.toString());
         }
         // got DISCONNECT
         if (Command.fromInt(command) == DISCONNECT) {
-            System.out.println("[Recv: DISCONNECT]");
+            logger.info("[Recv: DISCONNECT]");
             if (peerListener != null) peerListener.console("[Recv: DISCONNECT]");
 
             RLPList rlpList = RLP.decode2(payload);
             DisconnectMessage disconnectMessage = new DisconnectMessage(rlpList);
 
-            System.out.println(disconnectMessage);
+            logger.info(disconnectMessage.toString());
             if (peerListener != null) peerListener.console(disconnectMessage.toString());
         }
         // got PING send pong
         if (Command.fromInt(command) == PING) {
-            System.out.println("[Recv: PING]");
+            logger.info("[Recv: PING]");
             if (peerListener != null) peerListener.console("[Recv: PING]");
             sendPong(ctx);
         }
         // got PONG mark it
         if (Command.fromInt(command) == PONG) {
-            System.out.println("[Recv: PONG]" );
+            logger.info("[Recv: PONG]" );
             if (peerListener != null) peerListener.console("[Recv: PONG]");
             this.lastPongTime = System.currentTimeMillis();
         }
         // got GETPEERS send peers
         if (Command.fromInt(command) == GET_PEERS) {
-            System.out.println("[Recv: GETPEERS]" );
+            logger.info("[Recv: GETPEERS]" );
             if (peerListener != null) peerListener.console("[Recv: GETPEERS]");
 
 //            String answer = "2240089100000134F9013111F84A8456084B1482765FB84072FD5DBC7F458FB0A52354E25234CEA90A51EA09858A21406056D9B9E0826BB153527E4C4CBEC53B46B0245E6E8503EEABDBF0F1789D7C5C78BBF2B1FDD9090CF84A8455417E2D82765FB840CE73F1F1F1F16C1B3FDA7B18EF7BA3CE17B6F1F1F1F141D3C6C654B7AE88B239407FF1F1F1F119025D785727ED017B6ADD21F1F1F1F1000001E321DBC31824BAF84A8436C91C7582765FB840D592C570B5082D357C30E61E3D8F26317BFD7A3A2A00A36CFB7254FEE80830F26DDFBD6A99712552F3D77314DB4AB58B9989F25699C4997A0F62489D4B86CB4DF84A8436CC0A2982765FB840E34C6E3EAC28CFD3DC930A5AEFD9552FEBCD72C33DFC74D8E4C7CF8A7BA71AE53316ADDBD241EB051ED0871C2B62825E66A45DC6A0E752A7F1C22ABEF9ABDE32";
@@ -179,7 +182,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         }
         // got PEERS
         if (Command.fromInt(command) == PEERS) {
-            System.out.println("[Recv: PEERS]");
+            logger.info("[Recv: PEERS]");
             if (peerListener != null) peerListener.console("[Recv: PEERS]");
 
             RLPList rlpList = RLP.decode2(payload);
@@ -187,12 +190,12 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             MainData.instance.addPeers(peersMessage.getPeers());
 
-            System.out.println(peersMessage);
+            logger.info(peersMessage.toString());
             if (peerListener != null) peerListener.console(peersMessage.toString());
         }
         // got TRANSACTIONS
         if (Command.fromInt(command) == TRANSACTIONS) {
-            System.out.println("Recv: TRANSACTIONS]");
+            logger.info("Recv: TRANSACTIONS]");
             if (peerListener != null) peerListener.console("Recv: TRANSACTIONS]");
 
             RLPList rlpList = RLP.decode2(payload);
@@ -200,12 +203,12 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             MainData.instance.addTransactions(transactionsMessage.getTransactions());
 
             // todo: if you got transactions send it to your peers
-            System.out.println(transactionsMessage);
+            logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());
         }
         // got BLOCKS
         if (Command.fromInt(command) == BLOCKS) {
-            System.out.println("[Recv: BLOCKS]");
+            logger.info("[Recv: BLOCKS]");
             if (peerListener != null) peerListener.console("[Recv: BLOCKS]");
 
             RLPList rlpList = RLP.decode2(payload);
@@ -217,7 +220,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             // we ask less swinish
             if (blockList.size() <= 1 && secToAskForChain != 10){
 
-                System.out.println("Now we ask for a chain each 10 seconds");
+                logger.info("Now we ask for a chain each 10 seconds");
                 secToAskForChain = 10;
 
                 chainAskTimer.cancel();
@@ -226,7 +229,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 chainAskTimer.schedule(new TimerTask() {
 
                     public void run() {
-                        System.out.println("[Send: GET_CHAIN]");
+                        logger.info("[Send: GET_CHAIN]");
                         sendGetChain(ctx);
                     }
                 }, 3000, secToAskForChain * 1000);
@@ -236,7 +239,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             // we ask more often
             if (blockList.size() > 2 && secToAskForChain != 1){
 
-                System.out.println("Now we ask for a chain each 1 seconds");
+                logger.info("Now we ask for a chain each 1 seconds");
                 secToAskForChain = 11;
 
                 chainAskTimer.cancel();
@@ -245,41 +248,41 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 chainAskTimer.schedule(new TimerTask() {
 
                     public void run() {
-                        System.out.println("[Send: GET_CHAIN]");
+                        logger.info("[Send: GET_CHAIN]");
                         sendGetChain(ctx);
                     }
                 }, 3000, secToAskForChain * 1000);
             }
 
             MainData.instance.addBlocks(blockList);
-            System.out.println(blocksMessage);
+            logger.info(blocksMessage.toString());
             if (peerListener != null) peerListener.console(blocksMessage.toString());
         }
         // got GETCHAIN
         if (Command.fromInt(command) == GET_CHAIN) {
-            System.out.println("[Recv: GET_CHAIN]");
+            logger.info("[Recv: GET_CHAIN]");
             if (peerListener != null) peerListener.console("[Recv: GET_CHAIN]");
 
             RLPList rlpList = RLP.decode2(payload);
             GetChainMessage getChainMessage = new GetChainMessage(rlpList);
 
-            System.out.println(getChainMessage);
+            logger.info(getChainMessage.toString());
             if (peerListener != null) peerListener.console(getChainMessage.toString());
         }
         // got NOTINCHAIN
         if (Command.fromInt(command) == NOT_IN_CHAIN) {
-            System.out.println("[Recv: NOT_IN_CHAIN]");
+            logger.info("[Recv: NOT_IN_CHAIN]");
             if (peerListener != null) peerListener.console("[Recv: NOT_IN_CHAIN]");
 
             RLPList rlpList = RLP.decode2(payload);
             NotInChainMessage notInChainMessage = new NotInChainMessage(rlpList);
 
-            System.out.println(notInChainMessage);
+            logger.info(notInChainMessage.toString());
             if (peerListener != null) peerListener.console(notInChainMessage.toString());
         }
         // got GETTRANSACTIONS
         if (Command.fromInt(command) == GET_TRANSACTIONS) {
-            System.out.println("[Recv: GET_TRANSACTIONS]");
+            logger.info("[Recv: GET_TRANSACTIONS]");
             if (peerListener != null) peerListener.console("[Recv: GET_TRANSACTIONS]");
             // todo: send the queue of the transactions
         }
@@ -295,7 +298,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         this.tearDown = true;
-        System.out.println("Lost connection to the server");
+        logger.info("Lost connection to the server");
         cause.printStackTrace();
         ctx.close().sync();
         timer.cancel();
@@ -318,7 +321,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendPong(ChannelHandlerContext ctx){
-        System.out.println("[Send: PONG]");
+        logger.info("[Send: PONG]");
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PONG.length);
         buffer.writeBytes(StaticMessages.PONG);
         ctx.writeAndFlush(buffer);

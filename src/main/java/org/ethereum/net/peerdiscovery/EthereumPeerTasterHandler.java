@@ -93,8 +93,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(final ChannelHandlerContext ctx, Object msg) throws Exception {
         byte[] payload = (byte[]) msg;
 
-        logger.info("msg: %s", Hex.toHexString(payload));
-
+        logger.info("[Send msg: [{}] ]", Hex.toHexString(payload));
 
         byte command = RLP.getCommandCode(payload);
 
