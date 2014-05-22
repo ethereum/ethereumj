@@ -16,5 +16,6 @@ bin
 *.war
 *.ear
 /target
+/src/main/java/samples
 
 *.db
