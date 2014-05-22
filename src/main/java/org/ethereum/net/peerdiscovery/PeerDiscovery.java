@@ -1,7 +1,5 @@
 package org.ethereum.net.peerdiscovery;
 
-
-import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.PeerData;
 
 import java.util.List;

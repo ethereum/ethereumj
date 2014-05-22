@@ -18,7 +18,6 @@ import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
-import org.ethereum.net.peerdiscovery.WorkerThread;
 import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.encoders.Hex;
 
@@ -49,7 +48,7 @@ public class MainData {
 
         wallet.importKey(cowAddr);
         AddressState state = wallet.getAddressState(key.getAddress());
-        state.addToBalance(new BigInteger("1606938044258990275541962092341162602522202993782792835301376"));
+        state.addToBalance(BigInteger.valueOf(2).pow(200)); // 1606938044258990275541962092341162602522202993782792835301376
         wallet.importKey(HashUtil.sha3("cat".getBytes()));
 
         peerDiscovery = new PeerDiscovery(peers);

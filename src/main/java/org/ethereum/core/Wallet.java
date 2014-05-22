@@ -37,7 +37,7 @@ public class Wallet {
     private HashMap<String, AddressState> rows = new HashMap<String, AddressState>();
     private long high;
 
-    private List<WalletListener> listeners = new ArrayList();
+    private List<WalletListener> listeners = new ArrayList<WalletListener>();
 
     public void addNewKey(){
 
@@ -96,7 +96,7 @@ public class Wallet {
         for (Transaction tx : transactions){
 
 
-            byte[] senderAddress = tx.sender();
+            byte[] senderAddress = tx.getSender();
             AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
             if (senderState != null){
                 BigInteger value = new BigInteger(tx.getValue());
@@ -169,9 +169,6 @@ public class Wallet {
 //            this.importKey(privKey);
 //            this.setBalance(address, value);
         }
-
-
-
     }
 
     /**
@@ -256,7 +253,6 @@ public class Wallet {
     public interface WalletListener{
         public void valueChanged();
     }
-
 
     public long getHigh() {
         return high;

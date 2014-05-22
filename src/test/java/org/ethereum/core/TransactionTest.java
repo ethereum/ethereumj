@@ -157,7 +157,7 @@ public class TransactionTest {
 
         byte[] encodedTxBytes = Hex.decode("f86f81018609184e72a0008242559479b08ad8787060333663d19704909ee7b1903e58893635c9adc5dea00000801ba056f49cb76f7daadd0e7eb523a8c942a2b510f450185c93a3e2e51a749642f0efa03374f71fa8855212d8c369be6ced2801a8a7b6d7cea3a578623ad34feceef12f");
         Transaction tx = new Transaction(encodedTxBytes);
-        System.out.println(Hex.toHexString( tx.sender() ));
+        System.out.println(Hex.toHexString( tx.getSender() ));
         System.out.println(Hex.toHexString( tx.getHash() ));
         System.out.println(Hex.toHexString( tx.getEncoded() ));
     }
