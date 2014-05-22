@@ -8,9 +8,15 @@
 	<name>EthereumJ</name>
 	<url>http://www.ethereumj.org</url>
 
-<!--  * To deploy all the classes and dependencies to one jar,
-      * that's one option to pack stand alone.
+<!--
+
+* To deploy all the classes and dependencies to one jar,
+* that's one option to pack stand alone.
 mvn clean package dependency:copy-dependencies -Dmaven.test.skip=true
+
+
+* To deploy the classes in one jar and dependencies to another dir
+mvn clean package -Dmaven.test.skip=true
 -->
 
 	<properties>
@@ -81,12 +87,7 @@ mvn clean package dependency:copy-dependencies -Dmaven.test.skip=true
         </dependency>
 
 
-		<dependency>
-			<groupId>org.python</groupId>
-			<artifactId>jython</artifactId>
-			<version>2.5.3</version>
-		</dependency>
-		<!-- Consumers are expected to provide their own SLF4J adapters such as 
+		<!-- Consumers are expected to provide their own SLF4J adapters such as
 			logback, slf4j-log4j12, slf4j-jcl and so on see http://www.slf4j.org/faq.html -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
@@ -123,17 +124,46 @@ mvn clean package dependency:copy-dependencies -Dmaven.test.skip=true
 
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
+                <version>2.2.1</version>
                 <configuration>
+
                     <archive>
                         <manifest>
                             <mainClass>org.ethereum.gui.ToolBar</mainClass>
                         </manifest>
+
                     </archive>
+
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>org.ethereum.gui.ToolBar</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+
+
 		</plugins>
 	</build>
 </project>

@@ -140,7 +140,9 @@ public class MainData {
                 Location location = IpGeoDB.getLocationForIp(peer.getInetAddress());
                 if (location != null){
                     this.peers.add(peer);
-                    peerDiscovery.addNewPeerData(peer);
+
+                    if (peerDiscovery.isStarted())
+                        peerDiscovery.addNewPeerData(peer);
                 }
             }
         }

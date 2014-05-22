@@ -2,6 +2,7 @@ package org.ethereum.geodb;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 import com.maxmind.geoip.Location;
@@ -16,8 +17,17 @@ public class IpGeoDB {   // change
 
     static{
         try {
-            URL geiIpDBFile = ClassLoader.getSystemResource("GeoLiteCity.dat");
-            File file = new File(geiIpDBFile.toURI());
+            File file = null;
+            try {
+
+                URL geiIpDBFile = ClassLoader.getSystemResource("geolitecity.dat");
+                file = new File(geiIpDBFile.toURI());
+            } catch (Throwable th) {
+
+                String dir = System.getProperty("user.dir");
+                String fileName = dir + "/db/GeoLiteCity.dat";
+                file = new File(fileName);
+            }
             cl = new LookupService(file);
         } catch (Throwable e) {
             e.printStackTrace();
