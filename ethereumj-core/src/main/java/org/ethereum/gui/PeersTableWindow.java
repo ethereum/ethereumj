@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.MainData;
 
 import java.awt.*;
@@ -14,6 +15,8 @@ import javax.swing.ListSelectionModel;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
+
+import static org.ethereum.config.SystemProperties.config;
 
 /**
  * www.ethereumJ.com
@@ -81,7 +84,8 @@ public class PeersTableWindow extends JFrame{
             }
         }, 1000, 1000);
 
-        MainData.instance.startPeerDiscovery();
+        if (config.peerDiscovery())
+            MainData.instance.startPeerDiscovery();
     }
 
 	public static void main(String args[]) {

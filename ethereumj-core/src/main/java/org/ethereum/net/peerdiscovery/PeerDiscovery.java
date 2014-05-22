@@ -1,10 +1,13 @@
 package org.ethereum.net.peerdiscovery;
 
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.PeerData;
 
 import java.util.List;
 import java.util.concurrent.*;
+
+import static org.ethereum.config.SystemProperties.config;
 
 /**
  * www.ethereumJ.com
@@ -35,7 +38,7 @@ public class PeerDiscovery {
         threadFactory = Executors.defaultThreadFactory();
 
         //creating the ThreadPoolExecutor
-        executorPool = new ThreadPoolExecutor(1, 5, 10, TimeUnit.SECONDS,
+        executorPool = new ThreadPoolExecutor(1, config.peerDiscoveryWorkers(), 10, TimeUnit.SECONDS,
                 new ArrayBlockingQueue<Runnable>(2), threadFactory, rejectionHandler);
 
         //start the monitoring thread
@@ -63,44 +66,6 @@ public class PeerDiscovery {
     public boolean isStarted() {
         return started;
     }
-
-    // todo: this main here for test erase it once upon a time
-    public static void main(String args[]) throws InterruptedException{
-
-        //RejectedExecutionHandler implementation
-        RejectedExecutionHandlerImpl rejectionHandler = new RejectedExecutionHandlerImpl();
-
-        //Get the ThreadFactory implementation to use
-        ThreadFactory threadFactory = Executors.defaultThreadFactory();
-
-        //creating the ThreadPoolExecutor
-        ThreadPoolExecutor executorPool = new ThreadPoolExecutor(2, 4, 10, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<Runnable>(2), threadFactory, rejectionHandler);
-
-        //start the monitoring thread
-        PeerDiscoveryMonitorThread monitor = new PeerDiscoveryMonitorThread(executorPool, 3);
-        Thread monitorThread = new Thread(monitor);
-        monitorThread.start();
-
-        //submit work to the thread pool
-        PeerData peer = new PeerData(new byte[]{54, (byte)211, 14, 10}, (short) 30303, new byte[]{00});
-        executorPool.execute(new WorkerThread(peer, executorPool));
-
-        PeerData peer2 = new PeerData(new byte[]{54 , (byte)201, 28, 117}, (short) 30303, new byte[]{00});
-        executorPool.execute(new WorkerThread(peer2, executorPool));
-
-        PeerData peer3 = new PeerData(new byte[]{54, (byte)211, 14, 10}, (short) 40404, new byte[]{00});
-        executorPool.execute(new WorkerThread(peer3, executorPool));
-
-        Thread.sleep(30000);
-        //shut down the pool
-        executorPool.shutdown();
-        //shut down the monitor thread
-        Thread.sleep(5000);
-        monitor.shutdown();
-
-    }
-
 
 }
 

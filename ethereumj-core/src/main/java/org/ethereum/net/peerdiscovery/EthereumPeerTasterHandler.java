@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.Command;
@@ -46,13 +47,21 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelActive(final ChannelHandlerContext ctx) {
 
-        final ByteBuf buffer = ctx.alloc().buffer(HELLO_MESSAGE.length + 8);
+        // Here we send the hello message with random id each time
+        // to not interrupt active peer
+
+        byte[] peerIdBytes = HashUtil.randomPeerId();
+        HelloMessage helloMessage = new HelloMessage((byte)0x11, (byte)0x00, "EthereumJ [v0.5.1] by RomanJ  ",
+                (byte)0b00000111, (short)30303, peerIdBytes);
+        byte[] helloLength =ByteUtil.calcPacketLength(helloMessage.getPayload());
+
+        final ByteBuf buffer = ctx.alloc().buffer(helloMessage.getPayload().length + 8);
         timer = new Timer();
 
         buffer.writeBytes(MAGIC_PREFIX);
-        buffer.writeBytes(HELLO_MESSAGE_LEN);
-        buffer.writeBytes(HELLO_MESSAGE);
-        System.out.println("Send: " + StaticMessages.HELLO_MESSAGE.toString());
+        buffer.writeBytes(helloLength);
+        buffer.writeBytes(helloMessage.getPayload());
+        System.out.println("Send: " + helloMessage.toString());
         ctx.writeAndFlush(buffer);
 
         // sample for pinging in background
