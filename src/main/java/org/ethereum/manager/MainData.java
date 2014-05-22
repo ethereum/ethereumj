@@ -44,7 +44,6 @@ public class MainData {
                 new byte[]{54 , (byte)201, 28, 117}, (short) 30303, new byte[]{00});
         peers.add(peer);
 
-
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
         ECKey key = ECKey.fromPrivate(cowAddr);
 
@@ -54,7 +53,6 @@ public class MainData {
         wallet.importKey(HashUtil.sha3("cat".getBytes()));
 
         peerDiscovery = new PeerDiscovery(peers);
-        peerDiscovery.start();
     }
 
 
@@ -148,5 +146,9 @@ public class MainData {
         }
 
     }
+
+    public void startPeerDiscovery(){
+        peerDiscovery.start();
+    };
 
 }

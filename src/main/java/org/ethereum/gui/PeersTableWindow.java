@@ -1,5 +1,7 @@
 package org.ethereum.gui;
 
+import org.ethereum.manager.MainData;
+
 import java.awt.*;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -80,7 +82,8 @@ public class PeersTableWindow extends JFrame{
             }
         }, 1000, 1000);
 
-	}
+        MainData.instance.startPeerDiscovery();
+    }
 
 	public static void main(String args[]) {
 
