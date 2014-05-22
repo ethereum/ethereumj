@@ -58,7 +58,7 @@ public class PeersTableModel extends AbstractTableModel {
 
         if (column == 0){
             String countryCode = peerInfo.getLocation().countryCode;
-            URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode + ".png");
+            URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode.toLowerCase() + ".png");
             ImageIcon flagIcon = new ImageIcon(flagURL);
             return flagIcon;
         }

@@ -20,6 +20,8 @@ public class PeerDiscovery {
     PeerDiscoveryMonitorThread monitor;
     List<PeerData> peers;
 
+    boolean started = false;
+
     public PeerDiscovery(List<PeerData> peers) {
         this.peers = peers;
     }
@@ -45,6 +47,7 @@ public class PeerDiscovery {
             executorPool.execute(new WorkerThread(peerData, executorPool));
         }
 
+        started = true;
     }
 
     public void addNewPeerData(PeerData peerData){
@@ -56,6 +59,10 @@ public class PeerDiscovery {
         monitor.shutdown();
     }
 
+
+    public boolean isStarted() {
+        return started;
+    }
 
     // todo: this main here for test erase it once upon a time
     public static void main(String args[]) throws InterruptedException{
@@ -93,5 +100,7 @@ public class PeerDiscovery {
         monitor.shutdown();
 
     }
+
+
 }
 

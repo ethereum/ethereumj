@@ -78,7 +78,6 @@ public class PeersTableWindow extends JFrame{
             public void run() {
                 table.revalidate();
                 table.repaint();
-                System.out.println("repaint");
             }
         }, 1000, 1000);
 
