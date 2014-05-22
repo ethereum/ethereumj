@@ -1,6 +1,9 @@
 package org.ethereum.gui;
 
 import org.ethereum.manager.MainData;
+import org.ethereum.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -17,6 +20,8 @@ import java.awt.event.ItemListener;
  */
 public class ToolBar extends JFrame {
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
     ConnectionConsoleWindow connectionConsoleWindow = null;
     PeersTableWindow mainFrame	= null;
     BlockChainTable blockChainWindow = null;
@@ -25,6 +30,19 @@ public class ToolBar extends JFrame {
 
 
     public ToolBar() throws HeadlessException {
+
+        logger.info("EthereumJ [v0.5.1] by Roman Mandeleil");
+        logger.info(" design by Vitaly Buterin");
+        logger.info("");
+        logger.info("java.version: " + System.getProperty("java.version"));
+        logger.info("java.home:    " + System.getProperty("java.home"));
+
+        if (Utils.JAVA_VERSION < 1.7) {
+            logger.info("EthereumJ support version 1.7 and higher of Java Runtime please update");
+            System.exit(0);
+        }
+
+
         final JPanel cp = new JPanel(new FlowLayout());
         cp.setBackground(Color.WHITE);
 

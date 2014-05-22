@@ -72,8 +72,6 @@ public class PeerTaster {
                 e.printStackTrace();
             }
         }
-
-        System.out.println("I am dead");
     }
 
 
