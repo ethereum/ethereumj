@@ -21,6 +21,7 @@ import java.awt.event.ItemListener;
 public class ToolBar extends JFrame {
 
     Logger logger = LoggerFactory.getLogger(getClass());
+    Logger introLogger = LoggerFactory.getLogger("Intro");
 
     ConnectionConsoleWindow connectionConsoleWindow = null;
     PeersTableWindow mainFrame	= null;
@@ -31,16 +32,18 @@ public class ToolBar extends JFrame {
 
     public ToolBar() throws HeadlessException {
 
-        logger.info("♢");
-        logger.info("EthereumJ [v0.5.1] by Roman Mandeleil");
-        logger.info(" design by Vitaly Buterin");
-        logger.info("");
-        logger.info("java.version: " + System.getProperty("java.version"));
-        logger.info("java.home:    " + System.getProperty("java.home"));
-        logger.info("java.vendor:  " + System.getProperty("java.vendor"));
+        introLogger.info("");
+        introLogger.info("♢ EthereumJ [v0.5.1] ");
+        introLogger.info("♢ Code by Roman Mandeleil, (c) 2014.");
+        introLogger.info("♢ Based on a design by Vitaly Buterin.");
+        introLogger.info("");
+        introLogger.info("java.version: " + System.getProperty("java.version"));
+        introLogger.info("java.home:    " + System.getProperty("java.home"));
+        introLogger.info("java.vendor:  " + System.getProperty("java.vendor"));
+        introLogger.info("");
 
         if (Utils.JAVA_VERSION < 1.7) {
-            logger.info("EthereumJ support version 1.7 and higher of Java Runtime please update");
+            introLogger.info("EthereumJ support version 1.7 and higher of Java Runtime please update");
             System.exit(0);
         }
 
