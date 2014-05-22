@@ -10,6 +10,9 @@ import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.EthereumFrameDecoder;
 import org.ethereum.net.client.PeerData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 
 import static org.ethereum.config.SystemProperties.config;
@@ -21,6 +24,8 @@ import static org.ethereum.config.SystemProperties.config;
  * Created on: 10/04/14 12:28
  */
 public class PeerTaster {
+
+    Logger logger = LoggerFactory.getLogger(getClass());
 
     PeerListener peerListener;
     Channel channel;
@@ -63,8 +68,7 @@ public class PeerTaster {
             f.channel().closeFuture().sync();
 
         } catch (InterruptedException ie){
-           System.out.println("-- ClientPeer: catch (InterruptedException ie) --");
-           ie.printStackTrace();
+           logger.info("-- ClientPeer: catch (InterruptedException ie) --");
         } finally {
             try {
                 workerGroup.shutdownGracefully().sync();
@@ -74,45 +78,4 @@ public class PeerTaster {
         }
     }
 
-
-
-    public static void main(String args[]){
-
-        PeerTaster peerTaster = new PeerTaster();
-
-        ArrayList<PeerData> peers = new ArrayList<PeerData>();
-        peers.add(new PeerData(new byte[]{54, (byte)211, 14, 10}, (short) 30303, null));
-        MainData.instance.addPeers(peers);
-
-        String ip = "54.211.14.10";
-        short port = 30303;
-        try {
-            peerTaster.connect(ip, port);}
-        catch (Throwable e) {
-            e.printStackTrace();
-            MainData.instance.updatePeerIsDead(ip, port);
-        }
-
-//        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("54.211.14.10", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("82.217.72.169", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("54.201.28.117", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("54.2.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("0.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-//        try {peerTaster.connect("54.204.10.41", 30303);} catch (Exception e) {e.printStackTrace();}
-
-
-        System.out.println("End of the roaad");
-
-        for (PeerData peer : MainData.instance.getPeers()){
-
-            System.out.println(peer.getInetAddress().getHostAddress().toString());
-        };
-
-
-    }
 }
