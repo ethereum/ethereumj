@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 import javax.swing.*;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 
@@ -35,7 +33,7 @@ public class ToolBar extends JFrame {
         introLogger.info("");
         introLogger.info("♢ EthereumJ [v0.5.1] ");
         introLogger.info("♢ Code by Roman Mandeleil, (c) 2014.");
-        introLogger.info("♢ Based on a design by Vitaly Buterin.");
+        introLogger.info("♢ Based on a design by Vitalik Buterin.");
         introLogger.info("");
         introLogger.info("java.version: " + System.getProperty("java.version"));
         introLogger.info("java.home:    " + System.getProperty("java.home"));
@@ -46,9 +44,6 @@ public class ToolBar extends JFrame {
             introLogger.info("EthereumJ support version 1.7 and higher of Java Runtime please update");
             System.exit(0);
         }
-
-
-
 
         final JPanel cp = new JPanel(new FlowLayout());
         cp.setBackground(Color.WHITE);
@@ -160,7 +155,6 @@ public class ToolBar extends JFrame {
             }
         });
 
-
         JToggleButton chainToggle = new JToggleButton();
         chainToggle.setIcon(image_4);
         chainToggle.setToolTipText("Block Chain");
@@ -221,17 +215,14 @@ public class ToolBar extends JFrame {
         cp.add(chainToggle);
         cp.add(walletToggle);
 
-
         MainData.instance.toString();
     }
 
     public static void main(String args[]){
-
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new ToolBar().setVisible(true);
             }
         });
     }
-
 }

@@ -9,7 +9,6 @@
 	<url>http://www.ethereumj.org</url>
 
 <!--
-
 * To deploy all the classes and dependencies to one jar,
 * that's one option to pack stand alone.
 mvn clean package dependency:copy-dependencies -Dmaven.test.skip=true
@@ -100,7 +99,7 @@ mvn clean package -Dmaven.test.skip=true
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <version>1.7.7</version>
+            <version>${slf4j.version}</version>
             <scope>compile</scope>
         </dependency>
 
@@ -109,7 +108,7 @@ mvn clean package -Dmaven.test.skip=true
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>jcl-over-slf4j</artifactId>
-            <version>1.5.6</version>
+            <version>${slf4j.version}</version>
             <scope>runtime</scope>
         </dependency>
 
@@ -118,7 +117,7 @@ mvn clean package -Dmaven.test.skip=true
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>1.7.5</version>
+            <version>${slf4j.version}</version>
             <scope>runtime</scope>
         </dependency>
 

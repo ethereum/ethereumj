@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.MainData;
 
 import java.awt.*;

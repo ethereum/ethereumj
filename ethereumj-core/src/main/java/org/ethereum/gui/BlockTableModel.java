@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import org.ethereum.manager.MainData;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -11,8 +10,6 @@ import javax.swing.table.AbstractTableModel;
  * Created on: 15/05/14 12:42
  */
 public class BlockTableModel  extends AbstractTableModel {
-
-
 
     @Override
     public int getRowCount() {
