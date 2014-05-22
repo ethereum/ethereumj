@@ -1,6 +1,5 @@
 package org.ethereum.net.peerdiscovery;
 
-import org.ethereum.manager.MainData;
 import org.ethereum.net.client.PeerData;
 
 import java.util.concurrent.ThreadPoolExecutor;
