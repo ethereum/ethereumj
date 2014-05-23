@@ -11,9 +11,15 @@ import org.spongycastle.util.encoders.Hex;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.math.BigInteger;
+import java.net.URL;
 
 import javax.swing.*;
+import javax.swing.border.Border;
+import javax.swing.border.CompoundBorder;
+import javax.swing.border.EmptyBorder;
 
 /**
  * www.ethereumJ.com
@@ -22,61 +28,105 @@ import javax.swing.*;
  */
 class PayOutDialog extends JDialog {
 
+    PayOutDialog dialog;
+
     AddressState addressState = null;
+    JLabel statusMsg = null;
 
     public PayOutDialog(Frame parent, final AddressState addressState) {
         super(parent, "Payout details: ", false);
+        dialog = this;
 
         this.addressState = addressState;
 
-        JLabel receiver = new JLabel("receiver: ");
         final JTextField receiverInput = new JTextField(18);
-        receiverInput.setHorizontalAlignment(SwingConstants.RIGHT);
+        GUIUtils.addStyle(receiverInput, "Pay to:");
 
-        final JLabel amount = new JLabel("amount: ");
         final JTextField amountInput = new JTextField(18);
-        amountInput.setHorizontalAlignment(SwingConstants.RIGHT);
-        amountInput.setText(addressState.getBalance().toString());
+        GUIUtils.addStyle(amountInput, "Amount: ");
+
+        final JTextField feeInput = new JTextField(5);
+        GUIUtils.addStyle(feeInput, "Fee: ");
 
         this.getContentPane().setBackground(Color.WHITE);
-        this.getContentPane().setLayout(new GridLayout(0, 1, 0, 0));
+        this.getContentPane().setLayout(null);
 
-        JPanel row1 = new JPanel();
-        row1.setBackground(Color.WHITE);
-        row1.add(receiver);
-        row1.add(receiverInput);
-        this.getContentPane().add(row1);
+        receiverInput.setBounds(70, 30, 350, 45);
+        this.getContentPane().add(receiverInput);
 
-        JPanel row2 = new JPanel();
-        row2.setBackground(Color.WHITE);
-        row2.add(amount);
-        row2.add(amountInput);
-        this.getContentPane().add(row2);
+        amountInput.setBounds(70, 80, 250, 45);
+        this.getContentPane().add(amountInput);
 
-        JPanel row3 = new JPanel();
-        row3.setBackground(Color.WHITE);
+        feeInput.setBounds(330, 80, 90, 45);
+        this.getContentPane().add(feeInput);
 
-        JButton sendButton = new JButton("Send");
-        sendButton.addActionListener(
-                new ActionListener() {
+        URL rejectIconURL = ClassLoader.getSystemResource("buttons/reject.png");
+        ImageIcon rejectIcon = new ImageIcon(rejectIconURL);
+        JLabel rejectLabel = new JLabel(rejectIcon);
+        rejectLabel.setToolTipText("Cancel");
+        rejectLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        JLabel statusMessage = new JLabel("");
+        statusMessage.setBounds(50, 180, 400, 50);
+        statusMessage.setHorizontalAlignment(SwingConstants.CENTER);
+        this.statusMsg = statusMessage;
+        this.getContentPane().add(statusMessage);
+
+        rejectLabel.setBounds(260, 145, 45, 45);
+        this.getContentPane().add(rejectLabel);
+        rejectLabel.setVisible(true);
+        rejectLabel.addMouseListener(
+                new MouseAdapter() {
                     @Override
-                    public void actionPerformed(ActionEvent e) {
+                    public void mouseClicked(MouseEvent e) {
+
+                        dialog.dispose();
+                    }}
+        );
+
+
+        URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
+        ImageIcon approveIcon = new ImageIcon(approveIconURL);
+        JLabel approveLabel = new JLabel(approveIcon);
+        approveLabel.setToolTipText("Submit the transaction");
+        approveLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        approveLabel.setBounds(200, 145, 45, 45);
+        this.getContentPane().add(approveLabel);
+        approveLabel.setVisible(true);
+
+
+        approveLabel.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+
+
+                        BigInteger fee = new BigInteger(feeInput.getText());
+                        BigInteger value = new BigInteger(amountInput.getText());
+                        byte[] address = Hex.decode( receiverInput.getText());
+
 
 //                        Client
-                       ClientPeer peer = MainData.instance.getActivePeer();
+                        ClientPeer peer = MainData.instance.getActivePeer();
 
-                        BigInteger value = new BigInteger(amountInput.getText());
-                        byte[] address = Hex.decode(receiverInput.getText());
+                        if (peer == null){
+                            dialog.alertStatusMsg("Not connected to any peer");
+                            return;
+                        }
 
                         byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
 
-                        byte[] nonce =    addressState.getNonce() == BigInteger.ZERO ?
-                                                     null : addressState.getNonce().toByteArray();
-                        byte[] gasPrice=  Hex.decode("09184e72a000");
-                        byte[] gas =      Hex.decode("4255");
+                        byte[] nonce = addressState.getNonce() == BigInteger.ZERO ?
+                                null : addressState.getNonce().toByteArray();
 
-                        Transaction tx = new Transaction(nonce, gasPrice, gas,
-                                address, BigIntegers.asUnsignedByteArray(value), null);
+                        // todo: in the future it should be retrieved from the block
+                        byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
+
+                        Transaction tx = new Transaction(nonce, gasPrice,
+                                BigIntegers.asUnsignedByteArray(fee),
+                                address,
+                                BigIntegers.asUnsignedByteArray(value), null);
 
                         try {
                             tx.sign(senderPrivKey);
@@ -87,15 +137,18 @@ class PayOutDialog extends JDialog {
                         }
 
                         peer.sendTransaction(tx);
+                        dialog.infoStatusMsg("Transaction sent to the network, waiting for approve");
                     }
                 }
         );
 
-        row3.add(sendButton);
 
-        row3.add(new JButton("Cancel"));
-        row3.setAlignmentY(Component.TOP_ALIGNMENT);
-        this.getContentPane().add(row3);
+        feeInput.setText("1000");
+        amountInput.setText("0");
+
+        this.getContentPane().revalidate();
+        this.getContentPane().repaint();
+        this.setResizable(false);
     }
 
     protected JRootPane createRootPane() {
@@ -112,17 +165,39 @@ class PayOutDialog extends JDialog {
         KeyStroke stroke = KeyStroke.getKeyStroke("ESCAPE");
         Action actionListener = new AbstractAction() {
             public void actionPerformed(ActionEvent actionEvent) {
-                setVisible(false);
+                dispose();
             }
         };
         InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
         inputMap.put(stroke, "ESCAPE");
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
-        this.setSize(350, 140);
+        this.setSize(500, 255);
         this.setVisible(true);
 
+
         return rootPane;
+    }
+
+    public void infoStatusMsg(String text){
+        this.statusMsg.setForeground(Color.GREEN.darker().darker());
+        this.statusMsg.setText(text);
+    }
+
+    public void alertStatusMsg(String text){
+        this.statusMsg.setForeground(Color.RED);
+        this.statusMsg.setText(text);
+    }
+
+
+    public static void main(String args[]) {
+
+        AddressState as = new AddressState();
+
+        PayOutDialog pod = new PayOutDialog(null,  as);
+        pod.setVisible(true);
+
+
     }
 }
 

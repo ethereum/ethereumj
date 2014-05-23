@@ -56,7 +56,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
         byte[] peerIdBytes = HashUtil.randomPeerId();
         HelloMessage helloMessage = new HelloMessage((byte)0x11, (byte)0x00, "EthereumJ [v0.5.1] by RomanJ  ",
-                (byte)0b00000111, (short)30303, peerIdBytes);
+                (byte)0b00000001, (short)30303, peerIdBytes);
         byte[] helloLength =ByteUtil.calcPacketLength(helloMessage.getPayload());
 
         final ByteBuf buffer = ctx.alloc().buffer(helloMessage.getPayload().length + 8);
