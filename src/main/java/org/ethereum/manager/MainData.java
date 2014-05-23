@@ -113,7 +113,20 @@ public class MainData {
         return activePeer;
     }
 
-    public void addTransactions(List<Transaction> transactions) {}
+
+    /* todo: here will be all the pending transaction approve
+    *        1) the dialog put a pending transaction her
+    *        2) the dialog send the transaction to a net
+    *        3) wherever the transaction got for the wire in will change to approve state
+    *        4) only after the approve a) Wallet state changes
+    *
+    *        5) After the block is received with that tx the pending been clean up
+    */
+    public void addTransactions(List<Transaction> transactions) {
+
+
+
+    }
 
     public List<PeerData> getPeers() {
         return peers;
