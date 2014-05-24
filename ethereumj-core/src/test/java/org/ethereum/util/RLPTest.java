@@ -212,14 +212,12 @@ public class RLPTest {
     @Test /** encode byte array */
     public void test8(){
 
-        String byteArr = "CE 73 66 0A 06 62 6C 1B 3F DA 7B 18 EF 7B A3 CE " +
-                         "17 B6 BF 60 4F 95 41 D3 C6 C6 54 B7 AE 88 B2 39 " +
-                         "40 7F 65 9C 78 F4 19 02 5D 78 57 27 ED 01 7B 6A " +
-                         "DD 21 95 2D 7E 12 00 73 73 E3 21 DB C3 18 24 BA ";
+        String byteArr = "ce73660a06626c1b3fda7b18ef7ba3ce17b6bf604f9541d3c6c654b7ae88b239"
+        		+ "407f659c78f419025d785727ed017b6add21952d7e12007373e321dbc31824ba";
 
         byte[] byteArray = Hex.decode(byteArr);
 
-        String expected = "B8 40 " + byteArr;
+        String expected = "b840" + byteArr;
 
         assertEquals(expected, Hex.toHexString(RLP.encodeElement(byteArray)));
     }
