@@ -152,14 +152,11 @@ mvn clean package -Dmaven.test.skip=true
                 <artifactId>maven-assembly-plugin</artifactId>
                 <version>2.2.1</version>
                 <configuration>
-
                     <archive>
                         <manifest>
                             <mainClass>org.ethereum.gui.ToolBar</mainClass>
                         </manifest>
-
                     </archive>
-
                     <descriptorRefs>
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
@@ -188,8 +185,7 @@ mvn clean package -Dmaven.test.skip=true
                     </archive>
                 </configuration>
             </plugin>
-
-
+            
 		</plugins>
 	</build>
 </project>
