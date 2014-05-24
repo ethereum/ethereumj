@@ -15,7 +15,7 @@ import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
-import static org.ethereum.config.SystemProperties.config;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -92,7 +92,7 @@ public class PeersTableWindow extends JFrame{
             }
         }, 1000, 1000);
 
-        if (config.peerDiscovery())
+        if (CONFIG.peerDiscovery())
             MainData.instance.startPeerDiscovery();
     }
 
