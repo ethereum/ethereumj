@@ -91,7 +91,7 @@ public class MainData {
 
     public byte[] getLatestBlockHash(){
         if (blockChainDB.isEmpty())
-            return (new Genesis()).getHash();
+            return StaticMessages.GENESIS_HASH;
         else
           return blockChainDB.get(blockChainDB.size() - 1).getHash();
     }
