@@ -19,7 +19,7 @@ public class IpGeoDB {   // change
             File file = null;
             try {
 
-                URL geiIpDBFile = ClassLoader.getSystemResource("geolitecity.dat");
+                URL geiIpDBFile = ClassLoader.getSystemResource("GeoLiteCity.dat");
                 file = new File(geiIpDBFile.toURI());
             } catch (Throwable th) {
 
