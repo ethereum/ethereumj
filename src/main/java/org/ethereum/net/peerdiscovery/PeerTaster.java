@@ -10,7 +10,7 @@ import org.ethereum.net.client.EthereumFrameDecoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.ethereum.config.SystemProperties.config;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -54,7 +54,7 @@ public class PeerTaster {
             });
 
             // Start the client.
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerDiscoveryTimeout());
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerDiscoveryTimeout());
             ChannelFuture f = b.connect(host, port).sync(); // (5)
 
             // Wait until the connection is closed.

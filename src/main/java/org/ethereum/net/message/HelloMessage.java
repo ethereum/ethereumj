@@ -120,10 +120,10 @@ public class HelloMessage extends Message {
         return "Hello Message [ command=" + HELLO.asByte() + " " +
                 " protocolVersion=" + this.protocolVersion + " " +
                 " networkId=" + this.networkId + " " +
-                " clientId= " + this.clientId + " " +
-                " capabilities= " + this.capabilities + " " +
-                " peerPort= " + this.peerPort + " " +
-                " peerId= " + Hex.toHexString(this.peerId) + " " +
+                " clientId=" + this.clientId + " " +
+                " capabilities=" + this.capabilities + " " +
+                " peerPort=" + this.peerPort + " " +
+                " peerId=" + Hex.toHexString(this.peerId) + " " +
                 "]";
     }
 }
