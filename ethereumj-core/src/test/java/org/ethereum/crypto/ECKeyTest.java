@@ -40,7 +40,7 @@ public class ECKeyTest {
 	
 	@Test
 	public void testHashCode() {
-		fail("Not yet implemented");
+		assertEquals(1866897155, ECKey.fromPrivate(privateKey).hashCode());
 	}
 
 	@Test
