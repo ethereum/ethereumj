@@ -40,8 +40,9 @@ public class Cache {
 		Value value = new Value(o);
 		byte[] enc = value.encode();
 		if (enc.length >= 32) {
-			byte[] sha = Hex.encode(HashUtil.sha3(enc));
-			this.nodes.put(sha, new Node(sha, value, true));
+			byte[] sha = HashUtil.sha3(enc);
+			this.nodes.put(sha, new Node(value, true));
+			System.out.println("Storing in cache: Key=" + Hex.toHexString(sha) + " Value=" + Hex.toHexString(enc) + " (RLP encoded) ");
 			this.isDirty = true;
 			return sha;
 		}
@@ -57,7 +58,7 @@ public class Cache {
 		byte[] data = this.db.get(key);
 		Value value = new Value(data);
 		// Create caching node
-		this.nodes.put(key, new Node(key, value, false));
+		this.nodes.put(key, new Node(value, false));
 
 		return value;
 	}
