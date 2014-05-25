@@ -2,7 +2,6 @@ package org.ethereum.gui;
 
 import java.net.InetAddress;
 import java.net.URL;
-import java.net.UnknownHostException;
 import java.util.*;
 
 import javax.swing.ImageIcon;

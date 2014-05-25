@@ -5,100 +5,81 @@ import java.io.InputStream;
 import java.util.Enumeration;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
  * Created on: 22/05/2014 19:22
  */
-
 public class SystemProperties {
 
-    Properties prop = new Properties();
-    InputStream input = null;
-
-    public static SystemProperties config = new SystemProperties();
-
+	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
+	
+	public static SystemProperties CONFIG = new SystemProperties();
+    private Properties prop = new Properties();
+    private InputStream input = null;
+    
     public SystemProperties() {
-
-
         try {
-
-            String filename = "system.properties";
-            input = SystemProperties.class.getClassLoader().getResourceAsStream(filename);
-            if(input==null){
-                System.out.println("Sorry, unable to find " + filename);
-                return;
-            }
-
+			String filename = "system.properties";
+			input = SystemProperties.class.getClassLoader().getResourceAsStream(filename);
+			if (input == null) {
+				logger.warn("Sorry, unable to find " + filename);
+				return;
+			}
             //load a properties file from class path, inside static method
             prop.load(input);
 
-
         } catch (IOException ex) {
-            ex.printStackTrace();
-        } finally{
-            if(input!=null){
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
+        	logger.error(ex.getMessage(), ex);
+		} finally {
+			if (input != null) {
+				try {
+					input.close();
+				} catch (IOException e) {
+					logger.error(e.getMessage(), e);
+				}
+			}
+		}
+	}
 
-
-    public boolean peerDiscovery(){
-
-        if(prop.isEmpty()) return true;
-
-        boolean result =
-                Boolean.parseBoolean( prop.getProperty("peer.discovery") );
-
-        return result;
-    }
+	public boolean peerDiscovery() {
+		if (prop.isEmpty())
+			return true;
+		return Boolean.parseBoolean(prop.getProperty("peer.discovery"));
+	}
 
     public int peerDiscoveryWorkers(){
         if(prop.isEmpty()) return 2;
-
-        int result =
-                Integer.parseInt( prop.getProperty("peer.discovery.workers") );
-
-        return result;
+        return Integer.parseInt( prop.getProperty("peer.discovery.workers") );
     }
 
     public int peerDiscoveryTimeout(){
-        if(prop.isEmpty()) return 10000;
-
-        int result =
-                Integer.parseInt( prop.getProperty("peer.discovery.timeout") );
-
-        return result * 1000;
+		if (prop.isEmpty())
+			return 10000;
+		return Integer.parseInt(prop.getProperty("peer.discovery.timeout")) * 1000;
     }
+    
+	public String clientName() {
+        if(prop.isEmpty()) return "";
+        return prop.getProperty("client.name");
+	}
 
-
-    public String toString(){
-
-        Enumeration<?> e = prop.propertyNames();
-        while (e.hasMoreElements()) {
-            String key = (String) e.nextElement();
-            String value = prop.getProperty(key);
-
-            if (!key.equals("null"))
-                System.out.println("Key : " + key + ", Value : " + value);
-        }
-
-        return "";
-    }
-
+	public String toString() {
+		Enumeration<?> e = prop.propertyNames();
+		while (e.hasMoreElements()) {
+			String key = (String) e.nextElement();
+			String value = prop.getProperty(key);
+			if (!key.equals("null"))
+				logger.info("Key: " + key + ", Value: " + value);
+		}
+		return "";
+	}
 
     public static void main(String args[]){
-
         SystemProperties systemProperties = new SystemProperties();
-        System.out.println(systemProperties.toString());
-
-
-
+        logger.info(systemProperties.toString());
     }
-
 }

@@ -1,13 +1,11 @@
 package org.ethereum.net.peerdiscovery;
 
-
-import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.PeerData;
 
 import java.util.List;
 import java.util.concurrent.*;
 
-import static org.ethereum.config.SystemProperties.config;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -39,7 +37,7 @@ public class PeerDiscovery {
 
         //creating the ThreadPoolExecutor
         executorPool = new ThreadPoolExecutor(1, 1000, 10, TimeUnit.SECONDS,
-                new ArrayBlockingQueue<Runnable>(config.peerDiscoveryWorkers()), threadFactory, rejectionHandler);
+                new ArrayBlockingQueue<Runnable>(CONFIG.peerDiscoveryWorkers()), threadFactory, rejectionHandler);
 
         //start the monitoring thread
         monitor = new PeerDiscoveryMonitorThread(executorPool, 3);

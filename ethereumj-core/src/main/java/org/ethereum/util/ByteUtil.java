@@ -3,16 +3,9 @@ package org.ethereum.util;
 import java.math.BigInteger;
 import java.util.Arrays;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import com.google.common.primitives.UnsignedInteger;
-import com.google.common.primitives.UnsignedLongs;
-
 public class ByteUtil {
-
-    private static Logger logger = LoggerFactory.getLogger("ByteUtil");
 
     /**
      * Creates a copy of bytes and appends b to the end of it
@@ -43,57 +36,11 @@ public class ByteUtil {
         return bytes;        
     }
     
-    public static byte[]  hexStringToByteArr(String hexString){
-
-        String hexSymbols = "0123456789ABCDEF";
-
-        int arrSize = (int) (hexString.length() / 3);
-        byte[] result = new byte[arrSize];
-
-        for (int i = 0; i < arrSize; ++i){
-            int digit1 = hexSymbols.indexOf( hexString.charAt(i * 3) );
-            int digit2 = hexSymbols.indexOf( hexString.charAt(i * 3 + 1) );
-            result[i] = (byte) (digit1 * 16 + digit2);
-        }
-        return result;
-    }
-
     public static String toHexString(byte[] data){
         if (data == null) return "null";
         else return Hex.toHexString(data);
     }
     
-    public static void printHexStringForByte(byte data){
-        System.out.print("[");
-        String hexNum = Integer.toHexString ((int) data & 0xFF);
-        if (((int) data & 0xFF) < 16) {
-            hexNum = "0" + hexNum;
-        }
-        System.out.print( hexNum );
-        System.out.print("]");
-        System.out.println();
-    }
-
-    public static void printHexStringForByteArray(byte[] data){
-
-        if (logger.isInfoEnabled()) {
-
-            logger.info("[");
-
-            for (int i = 0; i < data.length; ++i) {
-
-                String hexNum = Integer.toHexString((int) data[i] & 0xFF);
-                if (((int) data[i] & 0xFF) < 16) {
-                    hexNum = "0" + hexNum;
-                }
-                logger.info(hexNum);
-                logger.info(" ");
-            }
-            logger.info("]");
-            logger.info("");
-        }
-    }
-
     // The packet size should be 4 byte long
     public static byte[] calcPacketSize(byte[] packet){
 
@@ -135,38 +82,4 @@ public class ByteUtil {
 			return 0;
 		return new BigInteger(1, b).intValue();
 	}
-
-    public static byte[] encodeInt(int value) {
-        if (isLessThanUnsigned(value, 253)) {
-            return new byte[]{(byte) value};
-        } else if (isLessThanUnsigned(value, 65536)) {
-            return new byte[]{(byte) 253, (byte) (value), (byte) (value >> 8)};
-        } else if (isLessThanUnsigned(value, UnsignedInteger.MAX_VALUE.longValue())) {
-            byte[] bytes = new byte[5];
-            bytes[0] = (byte) 254;
-            uint32ToByteArrayLE(value, bytes, 1);
-            return bytes;
-        } else {
-            byte[] bytes = new byte[9];
-            bytes[0] = (byte) 255;
-            uint32ToByteArrayLE(value, bytes, 1);
-            uint32ToByteArrayLE(value >>> 32, bytes, 5);
-            return bytes;
-        }
-    }
-
-    /**
-     * Work around lack of unsigned types in Java.
-     */
-    public static boolean isLessThanUnsigned(long n1, long n2) {
-        return UnsignedLongs.compare(n1, n2) < 0;
-    }
-    
-    public static void uint32ToByteArrayLE(long val, byte[] out, int offset) {
-        out[offset + 0] = (byte) (0xFF & (val >> 0));
-        out[offset + 1] = (byte) (0xFF & (val >> 8));
-        out[offset + 2] = (byte) (0xFF & (val >> 16));
-        out[offset + 3] = (byte) (0xFF & (val >> 24));
-    }
-
 }

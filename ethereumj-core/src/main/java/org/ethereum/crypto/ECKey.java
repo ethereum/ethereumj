@@ -15,7 +15,6 @@ package org.ethereum.crypto;
  * limitations under the License.
  */
 
-import static com.google.common.base.Preconditions.checkNotNull;
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
 import java.io.Serializable;
@@ -46,9 +45,7 @@ import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.encoders.Hex;
-
-import com.google.common.base.Preconditions;
-
+ 
 public class ECKey implements Serializable {
 	private static final Logger log = LoggerFactory.getLogger(ECKey.class);
 	
@@ -158,8 +155,8 @@ public class ECKey implements Serializable {
      * already. The compression state of the point will be preserved.
      */
     public static ECKey fromPrivateAndPrecalculatedPublic(byte[] priv, byte[] pub) {
-        checkNotNull(priv);
-        checkNotNull(pub);
+        check(priv != null, "Private key must not be null");
+        check(pub != null, "Public key must not be null");
         return new ECKey(new BigInteger(1, priv), CURVE.getCurve().decodePoint(pub));
     }
 
@@ -363,7 +360,7 @@ public class ECKey implements Serializable {
         // No decryption of private key required.
         if (priv == null)
             throw new MissingPrivateKeyException();
-        checkNotNull(priv);
+        check(priv != null, "Private key must not be null");
         ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
         ECPrivateKeyParameters privKey = new ECPrivateKeyParameters(priv, CURVE);
         signer.init(true, privKey);
@@ -534,10 +531,10 @@ public class ECKey implements Serializable {
      */
     @Nullable
     public static ECKey recoverFromSignature(int recId, ECDSASignature sig, byte[] messageHash, boolean compressed) {
-        Preconditions.checkArgument(recId >= 0, "recId must be positive");
-        Preconditions.checkArgument(sig.r.signum() >= 0, "r must be positive");
-        Preconditions.checkArgument(sig.s.signum() >= 0, "s must be positive");
-        Preconditions.checkNotNull(messageHash);
+        check(recId >= 0, "recId must be positive");
+        check(sig.r.signum() >= 0, "r must be positive");
+        check(sig.s.signum() >= 0, "s must be positive");
+        check(messageHash != null, "messageHash must not be null");
         // 1.0 For j from 0 to h   (h == recId here and the loop is outside this function)
         //   1.1 Let x = r + jn
         BigInteger n = CURVE.getN();  // Curve order.
@@ -624,4 +621,7 @@ public class ECKey implements Serializable {
     public static class MissingPrivateKeyException extends RuntimeException {
     }
 
+    private static void check(boolean test, String message) {
+        if(!test) throw new IllegalArgumentException(message);
+    }
 }

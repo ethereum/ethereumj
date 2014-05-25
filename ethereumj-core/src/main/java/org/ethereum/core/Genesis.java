@@ -4,10 +4,14 @@ import java.math.BigInteger;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 public class Genesis extends Block {
-
+	
+	Logger logger = LoggerFactory.getLogger(this.getClass());
+	
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
 	private static byte[] sha3EmptyList = HashUtil.sha3(RLP.encodeList());
@@ -31,5 +35,6 @@ public class Genesis extends Block {
 		super(parentHash, unclesHash, coinbase, stateRoot,
 				txTrieRoot, difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce, null, null);
+		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
 	}
 }

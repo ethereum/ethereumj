@@ -2,8 +2,6 @@ package org.ethereum.util;
 
 import java.util.ArrayList;
 
-import org.spongycastle.util.encoders.Hex;
-
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil

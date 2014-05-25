@@ -11,7 +11,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.math.BigInteger;
 import java.net.URL;
 
 /**
