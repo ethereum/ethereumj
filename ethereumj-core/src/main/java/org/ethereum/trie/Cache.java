@@ -12,7 +12,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.Options;
-import org.spongycastle.util.encoders.Hex;
 
 public class Cache {
 	
@@ -42,7 +41,6 @@ public class Cache {
 		if (enc.length >= 32) {
 			byte[] sha = HashUtil.sha3(enc);
 			this.nodes.put(sha, new Node(value, true));
-			System.out.println("Storing in cache: Key=" + Hex.toHexString(sha) + " Value=" + Hex.toHexString(enc) + " (RLP encoded) ");
 			this.isDirty = true;
 			return sha;
 		}
