@@ -63,7 +63,7 @@ public class WalletAddressPanel extends JPanel{
             public void mouseClicked(MouseEvent e) {
 
                 PayOutDialog payOutDialog =
-                        new PayOutDialog((Frame)SwingUtilities.getAncestorOfClass(Frame.class,
+                        new PayOutDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
                                 walletAddressPanel), addressState);
             }
         });

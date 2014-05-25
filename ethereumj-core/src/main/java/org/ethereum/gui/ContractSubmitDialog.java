@@ -3,6 +3,7 @@ package org.ethereum.gui;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
+import org.ethereum.util.Utils;
 import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -22,6 +23,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.Collection;
 
 /**
  * www.ethereumJ.com
@@ -36,7 +38,7 @@ class ContractSubmitDialog extends JDialog {
     AddressState addressState = null;
     JLabel statusMsg = null;
 
-    public ContractSubmitDialog(Frame parent, final AddressState addressState) {
+    public ContractSubmitDialog(Frame parent, String byteCode) {
         super(parent, "Contract Details: ", false);
         dialog = this;
 
@@ -56,6 +58,7 @@ class ContractSubmitDialog extends JDialog {
         JScrollPane contractDataInput = new JScrollPane(contractDataTA);
         GUIUtils.addStyle(contractDataTA, null, false);
         GUIUtils.addStyle(contractDataInput, "Data:");
+        contractDataTA.setText(byteCode);
 
         this.getContentPane().setBackground(Color.WHITE);
         this.getContentPane().setLayout(null);
@@ -137,7 +140,21 @@ class ContractSubmitDialog extends JDialog {
         JComponent editor = (JComponent)(jComboBox.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
-        jComboBox.addItem(" By: 1f21c - 1000 (10^9)");
+        Collection<AddressState> addressStates =
+                MainData.instance.getWallet().getAddressStateCollection();
+
+        for (AddressState addressState : addressStates){
+
+            String addressShort = Utils.getAddressShortString(addressState.getEcKey().getAddress());
+            String valueShort   = Utils.getValueShortString(addressState.getBalance());
+
+            String addresText =
+                String.format(" By: [%s] %s",
+                     addressShort, valueShort);
+
+            jComboBox.addItem(addresText);
+        }
+
         jComboBox.setRenderer(new DefaultListCellRenderer() {
 
             @Override
@@ -187,7 +204,7 @@ class ContractSubmitDialog extends JDialog {
         if (parent != null) {
             Dimension parentSize = parent.getSize();
             Point p = parent.getLocation();
-            setLocation(p.x + parentSize.width / 4, p.y + parentSize.height / 4);
+            setLocation(p.x + parentSize.width / 4, p.y + 10);
         }
 
         JRootPane rootPane = new JRootPane();
@@ -223,7 +240,7 @@ class ContractSubmitDialog extends JDialog {
 
         AddressState as = new AddressState();
 
-        ContractSubmitDialog pod = new ContractSubmitDialog(null,  as);
+        ContractSubmitDialog pod = new ContractSubmitDialog(null, "");
 
 
         pod.setVisible(true);

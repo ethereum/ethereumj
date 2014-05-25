@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.abego.treelayout.internal.util.Contract;
 import org.ethereum.serpent.SerpentCompiler;
 import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
@@ -57,7 +58,7 @@ public class SerpentEditor extends JFrame {
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
         this.setIconImage(img);
-        this.setLocation(30, 80);
+        this.setLocation(30, 70);
 
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance();
         atmf.putMapping("text/serpent", "org.ethereum.gui.SerpentTokenMaker");
@@ -89,11 +90,43 @@ public class SerpentEditor extends JFrame {
         splitPanel.add(result);
 
         JPanel controlsPanel = new JPanel();
-        FlowLayout fl = new FlowLayout(FlowLayout.LEADING, 30, 5);
+        FlowLayout fl = new FlowLayout(FlowLayout.LEADING, 10, 5);
         fl.setAlignment(FlowLayout.RIGHT);
         controlsPanel.setLayout(fl);
 
         JButton buildButton = new JButton("Build");
+        JButton sendButton = new JButton("Send");
+
+        sendButton.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+
+
+                String asmResult = "";
+                try {
+
+                    // todo: integrate new compiler when avail
+                    asmResult = SerpentCompiler.compile(codeArea.getText());
+                } catch (Throwable th) {
+                    th.printStackTrace();
+
+                    splitPanel.setDividerLocation(0.7);
+                    result.setVisible(true);
+                    result.setText(th.getMessage());
+                    result.setForeground(Color.RED);
+                    return;
+
+                }
+
+                String machineCode = SerpentCompiler.compileAssemblyToMachine(asmResult);
+
+                ContractSubmitDialog payOutDialog =
+                        new ContractSubmitDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
+                                cp), machineCode);
+            }
+        });
+
+
         buildButton.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
@@ -122,6 +155,7 @@ public class SerpentEditor extends JFrame {
         });
 
 
+        controlsPanel.add(sendButton);
         controlsPanel.add(buildButton);
 
         cp.add(controlsPanel, BorderLayout.SOUTH);
