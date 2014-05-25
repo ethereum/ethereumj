@@ -73,7 +73,7 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 //                    	new ClientPeer(thisConsole).connect("54.201.28.117", 30303);
                     	
                     	// Peer Server One: peer discovery
-                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
+//                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
                     	
                     	  // Some dude in Canada
 //                    	new ClientPeer(thisConsole).connect("131.104.247.135", 30303);
@@ -85,7 +85,7 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 //                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
                     	
                     	// RomanJ
-//                    	new ClientPeer(thisConsole).connect("54.211.14.10", 40404);
+                    	new ClientPeer(thisConsole).connect("54.211.14.10", 40404);
                     }
                 };
                 t.start();

@@ -1,10 +1,7 @@
 package org.ethereum.manager;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import com.maxmind.geoip.Location;
 import org.ethereum.core.Block;
@@ -18,7 +15,10 @@ import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
+import org.ethereum.net.submit.PendingTransaction;
 import org.ethereum.wallet.AddressState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -28,10 +28,15 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class MainData {
 
+    Logger logger = LoggerFactory.getLogger(getClass().getName());
+
     private List<PeerData> peers = Collections.synchronizedList(new ArrayList<PeerData>());
     private List<Block> blockChainDB = new ArrayList<Block>();
     private Wallet wallet = new Wallet();
     private ClientPeer activePeer;
+
+    private Map<BigInteger, PendingTransaction> pendingTransactions =
+            Collections.synchronizedMap(new HashMap<BigInteger, PendingTransaction>());
 
     PeerDiscovery peerDiscovery;
 
@@ -67,7 +72,6 @@ public class MainData {
         // check that the parent is the genesis
         if (blockChainDB.isEmpty() &&
             !Arrays.equals(StaticMessages.GENESIS_HASH, firstBlockToAdd.getParentHash())){
-
              return;
         }
 
@@ -86,7 +90,16 @@ public class MainData {
             wallet.processBlock(block);
         }
 
-        System.out.println("*** Block chain size: [" + blockChainDB.size() + "]");
+        // Remove all pending transactions as they already approved by the net
+        for (Block block : blocks){
+            for (Transaction tx : block.getTransactionsList()){
+
+                if (logger.isDebugEnabled())
+                    logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
+                pendingTransactions.remove(tx.getHash());
+            }
+        }
+        logger.info("*** Block chain size: [ {} ]", blockChainDB.size());
     }
 
     public byte[] getLatestBlockHash(){
@@ -113,18 +126,28 @@ public class MainData {
     }
 
 
-    /* todo: here will be all the pending transaction approve
-    *        1) the dialog put a pending transaction her
-    *        2) the dialog send the transaction to a net
-    *        3) wherever the transaction got for the wire in will change to approve state
-    *        4) only after the approve a) Wallet state changes
-    *
-    *        5) After the block is received with that tx the pending been clean up
+    /*
+     *        1) the dialog put a pending transaction on the list
+     *        2) the dialog send the transaction to a net
+     *        3) wherever the transaction got for the wire in will change to approve state
+     *        4) only after the approve a) Wallet state changes
+     *
+     *        5) After the block is received with that tx the pending been clean up
     */
-    public void addTransactions(List<Transaction> transactions) {
+    public PendingTransaction addPendingTransaction(Transaction transaction) {
 
+        BigInteger hash = new BigInteger(transaction.getHash());
 
+        PendingTransaction pendingTransaction =  pendingTransactions.get(hash);
+        if (pendingTransaction != null)
+                    pendingTransaction.incApproved();
+        else{
 
+            pendingTransaction = new PendingTransaction(transaction);
+            pendingTransactions.put(hash, pendingTransaction);
+        }
+
+        return pendingTransaction;
     }
 
     public List<PeerData> getPeers() {

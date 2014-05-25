@@ -1,11 +1,15 @@
 package org.ethereum.gui;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
+import org.ethereum.net.submit.TransactionExecutor;
+import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
+import samples.Main;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -14,11 +18,19 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigInteger;
 import java.net.URL;
+import java.util.*;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -83,7 +95,6 @@ class PayOutDialog extends JDialog {
                     }}
         );
 
-
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
         ImageIcon approveIcon = new ImageIcon(approveIconURL);
         JLabel approveLabel = new JLabel(approveIcon);
@@ -93,7 +104,6 @@ class PayOutDialog extends JDialog {
         approveLabel.setBounds(200, 145, 45, 45);
         this.getContentPane().add(approveLabel);
         approveLabel.setVisible(true);
-
 
         approveLabel.addMouseListener(
                 new MouseAdapter() {
@@ -131,16 +141,17 @@ class PayOutDialog extends JDialog {
                             tx.sign(senderPrivKey);
                         } catch (Exception e1) {
 
-                            // todo something if sign fails
-                            e1.printStackTrace();
+                            dialog.alertStatusMsg("Failed to sign the transaction");
+                            return;
                         }
 
-                        peer.sendTransaction(tx);
-                        dialog.infoStatusMsg("Transaction sent to the network, waiting for approve");
+//                        SwingWorker
+
+                        DialogWorker worker = new DialogWorker(tx);
+                        worker.execute();
                     }
                 }
         );
-
 
         feeInput.setText("1000");
         amountInput.setText("0");
@@ -178,14 +189,69 @@ class PayOutDialog extends JDialog {
         return rootPane;
     }
 
-    public void infoStatusMsg(String text){
-        this.statusMsg.setForeground(Color.GREEN.darker().darker());
-        this.statusMsg.setText(text);
+    public void infoStatusMsg(final String text){
+
+        final PayOutDialog dialog = this;
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                dialog.statusMsg.setForeground(Color.GREEN.darker().darker());
+                dialog.statusMsg.setText(text);
+                dialog.revalidate();
+                dialog.repaint();
+            }
+        });
+
     }
 
-    public void alertStatusMsg(String text){
-        this.statusMsg.setForeground(Color.RED);
-        this.statusMsg.setText(text);
+    public void alertStatusMsg(final String text){
+        final PayOutDialog dialog = this;
+
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                dialog.statusMsg.setForeground(Color.RED);
+                dialog.statusMsg.setText(text);
+                dialog.revalidate();
+                dialog.repaint();
+            }
+        });
+    }
+
+
+    class DialogWorker extends SwingWorker{
+
+        Transaction tx;
+
+        DialogWorker(Transaction tx) {
+            this.tx = tx;
+        }
+
+        @Override
+        protected Object doInBackground() throws Exception {
+            TransactionTask transactionTask = new TransactionTask(tx);
+            Future future = TransactionExecutor.instance.submitTransaction(transactionTask);
+            dialog.infoStatusMsg("Transaction sent to the network, waiting for approve");
+
+            try {
+                future.get(CONFIG.transactionApproveTimeout(), TimeUnit.SECONDS);
+            } catch (TimeoutException e1) {
+                e1.printStackTrace();
+                dialog.alertStatusMsg("Transaction wasn't approved, network timeout");
+                return null;
+            } catch (InterruptedException e1) {
+                e1.printStackTrace();
+                dialog.alertStatusMsg("Transaction wasn't approved");
+                return null;
+            } catch (ExecutionException e1) {
+                e1.printStackTrace();
+                dialog.alertStatusMsg("Transaction wasn't approved");
+                return null;
+            }
+
+            dialog.infoStatusMsg("Transaction got approved");
+            MainData.instance.getWallet().applyTransaction(tx);
+            return null;
+        }
     }
 
 
