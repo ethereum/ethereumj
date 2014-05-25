@@ -737,7 +737,6 @@ public class SerpentCompileTest {
         Assert.assertEquals(expected, result);
     }
 
-
     @Test    // if elif else test 13
     public void test28(){
 
@@ -774,7 +773,6 @@ public class SerpentCompileTest {
 
         Assert.assertEquals(expected, result);
     }
-
 
     @Test    // if elif else test 14
     public void test29(){
@@ -913,7 +911,6 @@ public class SerpentCompileTest {
         Assert.fail("Should be indent error thrown");
     }
 
-
     @Test    // if elif else test 19
     public void test34(){
 
@@ -956,8 +953,6 @@ public class SerpentCompileTest {
 
         Assert.assertEquals(expected, result);
     }
-
-
 
     @Test    // if elif else test 20
     public void test35(){
@@ -1002,7 +997,6 @@ public class SerpentCompileTest {
 
         Assert.assertEquals(expected, result);
     }
-
 
     @Test    // while test 1
     public void test36(){
@@ -1074,7 +1068,6 @@ public class SerpentCompileTest {
 
         Assert.assertEquals(expected, result);
     }
-
 
     @Test    // while test 3
     public void test38(){
@@ -1218,11 +1211,8 @@ public class SerpentCompileTest {
 
         Assert.assertEquals(expected, result);
     }
-
-
-
 /*
-
+ * 
 a = msg.datasize
 b = msg.sender
 c = msg.value
