@@ -1,14 +1,13 @@
 package org.ethereum.vm;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Instruction set for the Ethereum Virtual Machine
  */
 public enum OpCode {
 
-	/**
+    /**
 	 * Stop and Arithmetic Operations
 	 */
 	
@@ -136,9 +135,13 @@ public enum OpCode {
 	private byte opcode;
     
     private static final Map<Byte, OpCode> intToTypeMap = new HashMap<Byte, OpCode>();
+    private static final Map<String, Byte> stringToByteMap = new HashMap<String, Byte>();
+
+
     static {
         for (OpCode type : OpCode.values()) {
             intToTypeMap.put(type.opcode, type);
+            stringToByteMap.put(type.name(), type.opcode);
         }
     }
     
@@ -148,12 +151,21 @@ public enum OpCode {
 
     public static OpCode fromInt(int i) {
     	OpCode type = intToTypeMap.get(i);
-        if (type == null) 
+        if (type == null)
             return OpCode.STOP;
         return type;
     }
-    
+
     public int asInt() {
     	return opcode;
-    }	
+    }
+
+    public static boolean contains(String code){
+
+       return stringToByteMap.containsKey(code.trim());
+    }
+
+    public static byte byteVal(String code){
+        return stringToByteMap.get(code);
+    }
 }

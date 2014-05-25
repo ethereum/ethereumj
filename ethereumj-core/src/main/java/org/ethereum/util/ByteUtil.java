@@ -82,4 +82,28 @@ public class ByteUtil {
 			return 0;
 		return new BigInteger(1, b).intValue();
 	}
+
+
+    /**
+     * Calculate the number of bytes need
+     * to encode the number
+     *
+     * @param val - number
+     * @return number of min bytes used to encode the number
+     */
+    public static int numBytes(String val){
+
+        BigInteger bInt = new BigInteger(val);
+        int bytes = 0;
+
+        while(!bInt.equals(BigInteger.ZERO)){
+
+            bInt = bInt.shiftRight(8);
+            ++bytes;
+        }
+
+        if (bytes == 0) ++bytes;
+
+        return bytes;
+    }
 }

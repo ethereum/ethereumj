@@ -1,6 +1,7 @@
 package org.ethereum.serpent;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.ethereum.util.ByteUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -1211,23 +1212,34 @@ public class SerpentCompileTest {
 
         Assert.assertEquals(expected, result);
     }
-/*
- * 
-a = msg.datasize
-b = msg.sender
-c = msg.value
-d = tx.gasprice
-e = tx.origin
-f = tx.gas
-g = contract.balance
-h = block.prevhash
-i = block.coinbase
-j = block.timestamp
-k = block.number
-l = block.difficulty
-m = block.gaslimit
 
-*/
+
+    @Test // compile to machine code 1
+    public void test42(){
+
+        String code =   "x = 256              \n" +
+                "while x > 1:         \n" +
+                "   if (x % 2) == 0:  \n" +
+                "       x = x / 2     \n" +
+                "   else:             \n " +
+                "       x = 3 * x + 1 \n"  ;
+
+        String expected = "97 1 0 96 0 84 96 1 96 0 83 11 12 13 99 0 0 0 53 89 96 0 96 2 96 0 83 6 12 13 99 0 0 0 39 89 96 2 96 0 83 4 96 0 84 99 0 0 0 51 88 96 1 96 0 83 96 3 2 1 96 0 84 99 0 0 0 6 88";
+
+        String asmResult = SerpentCompiler.compile(code);
+        String machineCode = SerpentCompiler.compileAssemblyToMachine(asmResult);
+
+        Assert.assertEquals(expected, machineCode.trim());
+    }
+
+
+
+    @Test // todo delete this one
+    public void testFoo(){
+
+        System.out.println(ByteUtil.numBytes("65536"));
+
+    }
 
     /**
      *

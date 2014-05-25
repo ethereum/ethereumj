@@ -170,6 +170,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     @Override
     public String visitInt_val(@NotNull SerpentParser.Int_valContext ctx) {
 
+        //   todo:     (!!!) ensure that not encode value more than 32 bytes (!!!)
+
         if (ctx.OP_NOT() != null)
             return visitExpression(ctx.expression()) + " NOT";
 
