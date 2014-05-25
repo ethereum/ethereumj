@@ -39,6 +39,8 @@ public class Wallet {
 
     private List<WalletListener> listeners = new ArrayList<WalletListener>();
 
+    private HashMap<BigInteger, Transaction> transactionMap = new HashMap<BigInteger, Transaction>();
+
     public void addNewKey(){
 
         AddressState addressState = new AddressState();
@@ -86,31 +88,45 @@ public class Wallet {
     }
 
 
+    public void applyTransaction(Transaction transaction){
+
+        transactionMap.put(new BigInteger(transaction.getHash()), transaction );
+
+        byte[] senderAddress = transaction.getSender();
+        AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
+        if (senderState != null){
+
+            BigInteger value = new BigInteger(transaction.getValue());
+            senderState.addToBalance(value.negate());
+            senderState.incrementTheNonce();
+        }
+
+        byte[] receiveAddress = transaction.getReceiveAddress();
+        AddressState receiverState =  rows.get(Hex.toHexString(receiveAddress));
+        if (receiverState != null){
+            receiverState.addToBalance(new BigInteger(1, transaction.getValue()));
+        }
+
+        notifyListeners();
+    }
+
+
     public void processBlock(Block block){
 
-        boolean walletUpdated = false;
         // todo: proceed coinbase when you are the miner that gets an award
+
+        boolean walletUpdated = false;
 
         List<Transaction> transactions = block.getTransactionsList();
 
         for (Transaction tx : transactions){
 
+            boolean txExist = transactionMap.get(new BigInteger(tx.getHash())) != null;
+            if (txExist) break;
 
-            byte[] senderAddress = tx.getSender();
-            AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
-            if (senderState != null){
-                BigInteger value = new BigInteger(tx.getValue());
+            else {
 
-                senderState.addToBalance(value.negate());
-
-                senderState.incrementTheNonce();
-                walletUpdated = true;
-            }
-
-            byte[] receiveAddress = tx.getReceiveAddress();
-            AddressState receiverState =  rows.get(Hex.toHexString(receiveAddress));
-            if (receiverState != null){
-                receiverState.addToBalance(new BigInteger(1, tx.getValue()));
+                applyTransaction(tx);
                 walletUpdated = true;
             }
         }

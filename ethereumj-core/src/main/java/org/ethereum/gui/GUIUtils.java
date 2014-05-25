@@ -28,4 +28,38 @@ public class GUIUtils {
         textField.setForeground(new Color(143, 170, 220));
         textField.setFont(new Font("Monospaced", 0, 13));
     }
+
+    public static void addStyle(JTextArea textArea, String labelName, boolean isBorder){
+
+        Border border = null;
+        if (isBorder) {
+            Border line = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
+            TitledBorder titled = BorderFactory.createTitledBorder(line, labelName);
+            titled.setTitleFont(new Font("Verdana", 0, 13));
+            titled.setTitleColor(new Color(213, 225, 185));
+            Border empty = new EmptyBorder(5, 8, 5, 8);
+            CompoundBorder cBorder = new CompoundBorder(titled, empty);
+        }
+
+        textArea.setBorder(border);
+        textArea.setForeground(new Color(143, 170, 220));
+        textArea.setFont(new Font("Monospaced", 0, 13));
+    }
+
+    public static void addStyle(JScrollPane jScrollPane, String labelName){
+        Border line = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
+        TitledBorder titled = BorderFactory.createTitledBorder(line, labelName);
+        titled.setTitleFont(new Font("Verdana", 0, 13));
+        titled.setTitleColor(new Color(213, 225, 185));
+        Border empty = new EmptyBorder(5, 8, 5, 8);
+        CompoundBorder border = new CompoundBorder(titled, empty);
+        jScrollPane.setBorder(border);
+        jScrollPane.setForeground(new Color(143, 170, 220));
+        jScrollPane.setBackground(Color.WHITE);
+        jScrollPane.setFont(new Font("Monospaced", 0, 13));
+        jScrollPane.setHorizontalScrollBar(null);
+    }
+
+
+
 }

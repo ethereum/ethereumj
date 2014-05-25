@@ -12,6 +12,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.Transaction;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.Command;
@@ -200,9 +201,10 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             RLPList rlpList = RLP.decode2(payload);
             TransactionsMessage transactionsMessage = new TransactionsMessage(rlpList);
-            MainData.instance.addTransactions(transactionsMessage.getTransactions());
+            for (Transaction tx :  transactionsMessage.getTransactions())
+                MainData.instance.addPendingTransaction(tx);
 
-            // todo: if you got transactions send it to your peers
+            // todo: if you got transactions send it to your connected peers
             logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());
         }

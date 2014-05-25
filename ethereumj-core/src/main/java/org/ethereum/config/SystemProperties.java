@@ -61,6 +61,13 @@ public class SystemProperties {
 			return 10000;
 		return Integer.parseInt(prop.getProperty("peer.discovery.timeout")) * 1000;
     }
+
+    public int transactionApproveTimeout(){
+        if (prop.isEmpty())
+            return 10;
+        return Integer.parseInt(prop.getProperty("transaction.approve.timeout"));
+    }
+
     
 	public String clientName() {
         if(prop.isEmpty()) return "";
