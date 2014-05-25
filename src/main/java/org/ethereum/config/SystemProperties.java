@@ -68,11 +68,11 @@ public class SystemProperties {
         return Integer.parseInt(prop.getProperty("transaction.approve.timeout"));
     }
 
-    
-	public String clientName() {
+
+    public String peerDiscoveryIP(){
         if(prop.isEmpty()) return "";
-        return prop.getProperty("client.name");
-	}
+        return prop.getProperty("peer.discovery.ip");
+    }
 
 	public String toString() {
 		Enumeration<?> e = prop.propertyNames();

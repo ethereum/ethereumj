@@ -41,7 +41,24 @@ public class Utils {
             result = result.divide(_1000_);
             pow += 3;
         }
-        return result.toString() + " (" + "10^" + pow + ")";
+        return result.toString() + "·(" + "10^" + pow + ")";
+    }
+
+    /**
+     * @param addr length should be 20
+     * @return short string represent 1f21c...
+     */
+    public static String getAddressShortString(byte[] addr){
+
+        if (addr == null || addr.length != 20) throw new Error("not an address");
+
+        String addrShort = Hex.toHexString(addr, 0, 3);
+
+        StringBuffer sb = new StringBuffer();
+        sb.append(addrShort);
+        sb.append("...");
+
+        return sb.toString();
     }
 
     public static SecureRandom getRandom(){

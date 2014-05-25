@@ -1,9 +1,13 @@
 package org.ethereum.manager;
 
 import java.math.BigInteger;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 
 import com.maxmind.geoip.Location;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
@@ -20,6 +24,8 @@ import org.ethereum.wallet.AddressState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -44,8 +50,16 @@ public class MainData {
 
     public MainData() {
 
+        InetAddress ip = null;
+        try {
+            ip = InetAddress.getByName(CONFIG.peerDiscoveryIP());
+        } catch (UnknownHostException e) {
+            System.exit(-1);
+            e.printStackTrace();
+        }
+
         PeerData peer = new PeerData(
-                new byte[]{54 , (byte)201, 28, 117}, (short) 30303, new byte[]{00});
+                ip.getAddress(), (short) 30303, new byte[]{00});
         peers.add(peer);
 
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
