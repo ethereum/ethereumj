@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
@@ -9,26 +8,19 @@ import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-import samples.Main;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.*;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import javax.swing.*;
-import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -44,11 +36,11 @@ class PayOutDialog extends JDialog {
     AddressState addressState = null;
     JLabel statusMsg = null;
 
-    public PayOutDialog(Frame parent, final AddressState addressState) {
-        super(parent, "Payout details: ", false);
-        dialog = this;
+	public PayOutDialog(Frame parent, final AddressState addressState) {
+		super(parent, "Payout details: ", false);
+		dialog = this;
 
-        this.addressState = addressState;
+		this.addressState = addressState;
 
         final JTextField receiverInput = new JTextField(18);
         GUIUtils.addStyle(receiverInput, "Pay to:");
@@ -86,14 +78,12 @@ class PayOutDialog extends JDialog {
         rejectLabel.setBounds(260, 145, 45, 45);
         this.getContentPane().add(rejectLabel);
         rejectLabel.setVisible(true);
-        rejectLabel.addMouseListener(
-                new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-
-                        dialog.dispose();
-                    }}
-        );
+		rejectLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				dialog.dispose();
+			}
+		});
 
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
         ImageIcon approveIcon = new ImageIcon(approveIconURL);
@@ -105,53 +95,45 @@ class PayOutDialog extends JDialog {
         this.getContentPane().add(approveLabel);
         approveLabel.setVisible(true);
 
-        approveLabel.addMouseListener(
-                new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
+		approveLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
 
+				BigInteger fee = new BigInteger(feeInput.getText());
+				BigInteger value = new BigInteger(amountInput.getText());
+				byte[] address = Hex.decode(receiverInput.getText());
 
-                        BigInteger fee = new BigInteger(feeInput.getText());
-                        BigInteger value = new BigInteger(amountInput.getText());
-                        byte[] address = Hex.decode( receiverInput.getText());
+				// Client
+				ClientPeer peer = MainData.instance.getActivePeer();
 
+				if (peer == null) {
+					dialog.alertStatusMsg("Not connected to any peer");
+					return;
+				}
 
-//                        Client
-                        ClientPeer peer = MainData.instance.getActivePeer();
+				byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
 
-                        if (peer == null){
-                            dialog.alertStatusMsg("Not connected to any peer");
-                            return;
-                        }
+				byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
 
-                        byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
+				// todo: in the future it should be retrieved from the block
+				byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
 
-                        byte[] nonce = addressState.getNonce() == BigInteger.ZERO ?
-                                null : addressState.getNonce().toByteArray();
+				Transaction tx = new Transaction(nonce, gasPrice, BigIntegers
+						.asUnsignedByteArray(fee), address, BigIntegers
+						.asUnsignedByteArray(value), null);
 
-                        // todo: in the future it should be retrieved from the block
-                        byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
+				try {
+					tx.sign(senderPrivKey);
+				} catch (Exception e1) {
 
-                        Transaction tx = new Transaction(nonce, gasPrice,
-                                BigIntegers.asUnsignedByteArray(fee),
-                                address,
-                                BigIntegers.asUnsignedByteArray(value), null);
-
-                        try {
-                            tx.sign(senderPrivKey);
-                        } catch (Exception e1) {
-
-                            dialog.alertStatusMsg("Failed to sign the transaction");
-                            return;
-                        }
-
-//                        SwingWorker
-
-                        DialogWorker worker = new DialogWorker(tx);
-                        worker.execute();
-                    }
-                }
-        );
+					dialog.alertStatusMsg("Failed to sign the transaction");
+					return;
+				}
+				// SwingWorker
+				DialogWorker worker = new DialogWorker(tx);
+				worker.execute();
+			}
+		});
 
         feeInput.setText("1000");
         amountInput.setText("0");
@@ -185,7 +167,6 @@ class PayOutDialog extends JDialog {
         this.setSize(500, 255);
         this.setVisible(true);
 
-
         return rootPane;
     }
 
@@ -217,8 +198,7 @@ class PayOutDialog extends JDialog {
         });
     }
 
-
-    class DialogWorker extends SwingWorker{
+	class DialogWorker extends SwingWorker {
 
         Transaction tx;
 
@@ -252,17 +232,12 @@ class PayOutDialog extends JDialog {
             MainData.instance.getWallet().applyTransaction(tx);
             return null;
         }
-    }
-
+	}
 
     public static void main(String args[]) {
-
         AddressState as = new AddressState();
-
         PayOutDialog pod = new PayOutDialog(null,  as);
         pod.setVisible(true);
-
-
     }
 }
 

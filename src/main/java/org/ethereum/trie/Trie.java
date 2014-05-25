@@ -11,8 +11,6 @@ import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 import org.spongycastle.util.encoders.Hex;
 
-import com.cedarsoftware.util.DeepEquals;
-
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure 
  * to map between arbitrary-length binary data (byte arrays). It is defined in terms of 
@@ -322,9 +320,9 @@ public class Trie {
 		return itemList;
 	}
 
-	// Simple compare function which creates a rlp value out of the evaluated objects
+	// Simple compare function which compared the tries based on their stateRoot
 	public boolean cmp(Trie trie) {
-		return DeepEquals.deepEquals(this.root, trie.getRoot());
+		return this.getRootHash().equals(trie.getRootHash());
 	}
 	
 	// Save the cached value to the database.
