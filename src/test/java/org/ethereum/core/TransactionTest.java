@@ -227,4 +227,47 @@ public class TransactionTest {
         assertEquals(RLP_TX_SIGNED, encodedSigned);
         assertEquals(HASH_TX_UNSIGNED, Hex.toHexString(tx.getHash()));
 	}
+
+
+    @Test
+    public void testTransactionCreateContract(){
+
+//        String rlp = "f89f808609184e72a0008203e8808203e8b84b4560005444602054600f60056002600a02010b0d630000001d596002602054630000003b5860066000530860056006600202010a0d6300000036596004604054630000003b5860056060541ca0ddc901d83110ea50bc40803f42083afea1bbd420548f6392a679af8e24b21345a06620b3b512bea5f0a272703e8d6933177c23afc79516fd0ca4a204aa6e34c7e9";
+
+        byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
+
+        byte[] nonce			= BigIntegers.asUnsignedByteArray(BigInteger.ZERO);
+        byte[] gasPrice			= Hex.decode("09184e72a000");		// 10000000000000
+        byte[] gas				= Hex.decode("03e8");			// 1000
+        byte[] recieveAddress	= null;
+        byte[] endowment     	= Hex.decode("03e8"); //10000000000000000"
+        byte[] init 			= Hex.decode("4560005444602054600f60056002600a02010b0d630000001d596002602054630000003b5860066000530860056006600202010a0d6300000036596004604054630000003b586005606054");
+
+
+        Transaction tx1 = new Transaction(nonce, gasPrice, gas,
+                recieveAddress, endowment, init);
+        tx1.sign(senderPrivKey);
+
+        byte[] payload = tx1.getEncoded();
+
+
+        System.out.println(Hex.toHexString(payload));
+        Transaction tx2 = new Transaction(payload);
+//        tx2.getSender();
+
+        String plainTx1 = Hex.toHexString( tx1.getEncodedRaw() );
+        String plainTx2 = Hex.toHexString( tx2.getEncodedRaw() );
+
+//        Transaction tx = new Transaction(Hex.decode(rlp));
+
+        System.out.println("tx1.hash: " + Hex.toHexString( tx1.getHash() ));
+        System.out.println("tx2.hash: " + Hex.toHexString( tx2.getHash() ));
+        System.out.println();
+        System.out.println("plainTx1: " + plainTx1 );
+        System.out.println("plainTx2: " + plainTx2 );
+
+
+        System.out.println( Hex.toHexString( tx2.getSender() ));
+
+    }
 }

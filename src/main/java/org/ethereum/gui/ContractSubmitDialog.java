@@ -6,15 +6,10 @@ import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.Utils;
 import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.border.CompoundBorder;
-import javax.swing.border.EmptyBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.plaf.ComboBoxUI;
-import javax.swing.plaf.basic.BasicComboBoxEditor;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 import java.awt.*;
@@ -25,26 +20,31 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
 
+
+
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
-class ContractSubmitDialog extends JDialog {
+class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
 
 
     ContractSubmitDialog dialog;
+    JComboBox<AddressStateWraper> creatorAddressCombo;
+    final JTextField gasInput;
 
-    AddressState addressState = null;
+    private byte[]       initByteCode;
+
+
     JLabel statusMsg = null;
 
-    public ContractSubmitDialog(Frame parent, String byteCode) {
+    public ContractSubmitDialog(Frame parent, byte[] byteCode) {
         super(parent, "Contract Details: ", false);
         dialog = this;
+        this.initByteCode = byteCode;
 
-        this.addressState = addressState;
-
-        final JTextField gasInput = new JTextField(5);
+        gasInput = new JTextField(5);
         GUIUtils.addStyle(gasInput, "Gas: ");
 
         JTextArea   contractInitTA = new JTextArea();
@@ -57,8 +57,12 @@ class ContractSubmitDialog extends JDialog {
         contractDataTA.setLineWrap(true);
         JScrollPane contractDataInput = new JScrollPane(contractDataTA);
         GUIUtils.addStyle(contractDataTA, null, false);
-        GUIUtils.addStyle(contractDataInput, "Data:");
-        contractDataTA.setText(byteCode);
+        GUIUtils.addStyle(contractDataInput, "Body:");
+
+        String byteCodeText = GUIUtils.getHexStyledText(byteCode);
+        contractDataTA.setText(byteCodeText);
+        contractDataTA.setEditable(false);
+        contractDataTA.setCaretPosition(0);
 
         this.getContentPane().setBackground(Color.WHITE);
         this.getContentPane().setLayout(null);
@@ -106,11 +110,11 @@ class ContractSubmitDialog extends JDialog {
         this.getContentPane().add(approveLabel);
         approveLabel.setVisible(true);
 
-
         approveLabel.addMouseListener(
                 new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
+                        submitContract();
                     }
                 }
         );
@@ -118,9 +122,7 @@ class ContractSubmitDialog extends JDialog {
 
         gasInput.setText("1000");
 
-
-
-        JComboBox jComboBox = new JComboBox(){
+        JComboBox<AddressStateWraper> creatorAddressCombo = new JComboBox<AddressStateWraper>(){
             @Override
             public ComboBoxUI getUI() {
 
@@ -129,15 +131,16 @@ class ContractSubmitDialog extends JDialog {
                 return super.getUI();
             }
         };
-        jComboBox.setOpaque(true);
-        jComboBox.setEnabled(true);
+        creatorAddressCombo.setOpaque(true);
+        creatorAddressCombo.setEnabled(true);
 
-        jComboBox.setBackground(Color.WHITE);
-        jComboBox.setFocusable(false);
+        creatorAddressCombo.setBackground(Color.WHITE);
+        creatorAddressCombo.setFocusable(false);
+
+        this.creatorAddressCombo = creatorAddressCombo;
 
         final Border line = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
-//        jComboBox.setBorder(line);
-        JComponent editor = (JComponent)(jComboBox.getEditor().getEditorComponent());
+        JComponent editor = (JComponent)(creatorAddressCombo.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
         Collection<AddressState> addressStates =
@@ -145,17 +148,10 @@ class ContractSubmitDialog extends JDialog {
 
         for (AddressState addressState : addressStates){
 
-            String addressShort = Utils.getAddressShortString(addressState.getEcKey().getAddress());
-            String valueShort   = Utils.getValueShortString(addressState.getBalance());
-
-            String addresText =
-                String.format(" By: [%s] %s",
-                     addressShort, valueShort);
-
-            jComboBox.addItem(addresText);
+            creatorAddressCombo.addItem(new AddressStateWraper(addressState));
         }
 
-        jComboBox.setRenderer(new DefaultListCellRenderer() {
+        creatorAddressCombo.setRenderer(new DefaultListCellRenderer() {
 
             @Override
             public void paint(Graphics g) {
@@ -168,28 +164,28 @@ class ContractSubmitDialog extends JDialog {
 
         });
 
-        jComboBox.setPopupVisible(false);
+        creatorAddressCombo.setPopupVisible(false);
 
-        Object child = jComboBox.getAccessibleContext().getAccessibleChild(0);
+        Object child = creatorAddressCombo.getAccessibleContext().getAccessibleChild(0);
         BasicComboPopup popup = (BasicComboPopup)child;
 
         JList list = popup.getList();
         list.setSelectionBackground(Color.cyan);
         list.setBorder(null);
 
-        for (int i = 0; i < jComboBox.getComponentCount(); i++)
+        for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++)
         {
-            if (jComboBox.getComponent(i) instanceof CellRendererPane) {
+            if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
 
-                CellRendererPane crp = ((CellRendererPane) (jComboBox.getComponent(i)));
+                CellRendererPane crp = ((CellRendererPane) (creatorAddressCombo.getComponent(i)));
             }
 
-            if (jComboBox.getComponent(i) instanceof AbstractButton) {
-                ((AbstractButton) jComboBox.getComponent(i)).setBorder(line);
+            if (creatorAddressCombo.getComponent(i) instanceof AbstractButton) {
+                ((AbstractButton) creatorAddressCombo.getComponent(i)).setBorder(line);
             }
         }
-        jComboBox.setBounds(73, 387, 230, 36);
-        this.getContentPane().add(jComboBox);
+        creatorAddressCombo.setBounds(73, 387, 230, 36);
+        this.getContentPane().add(creatorAddressCombo);
 
 
         this.getContentPane().revalidate();
@@ -236,16 +232,76 @@ class ContractSubmitDialog extends JDialog {
     }
 
 
+    public void submitContract(){
+
+        ClientPeer peer = MainData.instance.getActivePeer();
+        if (peer == null) {
+            dialog.alertStatusMsg("Not connected to any peer");
+            return;
+        }
+
+        AddressState addressState = ((AddressStateWraper)creatorAddressCombo.getSelectedItem()).getAddressState();
+
+        byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
+        byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
+        byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
+
+        BigInteger gasBI = new BigInteger(gasInput.getText());
+        byte[] gasValue  = BigIntegers.asUnsignedByteArray(gasBI);
+        byte[] endowment = BigIntegers.asUnsignedByteArray(new BigInteger("1000"));
+
+        byte[] zeroAddress = null;
+
+        Transaction tx = new Transaction(nonce, gasPrice, gasValue,
+                zeroAddress, endowment, initByteCode);
+
+        try {
+            tx.sign(senderPrivKey);
+        } catch (Exception e1) {
+
+            dialog.alertStatusMsg("Failed to sign the transaction");
+            return;
+        }
+
+        // SwingWorker
+        DialogWorker worker = new DialogWorker(tx, this);
+        worker.execute();
+
+    }
+
+
+
     public static void main(String args[]) {
 
         AddressState as = new AddressState();
 
-        ContractSubmitDialog pod = new ContractSubmitDialog(null, "");
-
-
+        ContractSubmitDialog pod = new ContractSubmitDialog(null, null);
         pod.setVisible(true);
+    }
 
+    public class AddressStateWraper{
 
+        private AddressState addressState;
+
+        public AddressStateWraper(AddressState addressState) {
+            this.addressState = addressState;
+        }
+
+        public AddressState getAddressState() {
+            return addressState;
+        }
+
+        @Override
+        public String toString() {
+            String addressShort = Utils.getAddressShortString(addressState.getEcKey().getAddress());
+            String valueShort   = Utils.getValueShortString(addressState.getBalance());
+
+            String result =
+                    String.format(" By: [%s] %s",
+                            addressShort, valueShort);
+
+            return result;
+        }
     }
 }
 

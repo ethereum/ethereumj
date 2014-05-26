@@ -19,3 +19,4 @@ bin
 /src/main/java/samples
 
 *.db
+*.xlsx
