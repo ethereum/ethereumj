@@ -111,7 +111,9 @@ public class SerpentCompiler {
             if (OpCode.contains(lexa))
                 baos.write( OpCode.byteVal(lexa) );
             else{
-                baos.write(Byte.parseByte(lexa));
+
+                // todo: support for number more than one byte
+                baos.write(Integer.parseInt(lexa) & 0xFF);
             }
         }
 

@@ -117,11 +117,13 @@ public class ByteUtil {
     public static byte[] encodeValFor32Bits(Object arg){
 
         byte[] data;
-        if (arg instanceof Number){
 
-            data = new BigInteger(arg.toString()).toByteArray();
+        // check if the string is numeric
+        if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?")){
+
+            data = new BigInteger(arg.toString().trim()).toByteArray();
         }else{
-            data = arg.toString().getBytes();
+            data = arg.toString().trim().getBytes();
         }
 
         if (data.length > 32) throw new Error("values can't be more than 32 bits");
