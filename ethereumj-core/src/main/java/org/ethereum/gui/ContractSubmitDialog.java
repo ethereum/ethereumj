@@ -6,6 +6,7 @@ import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.Utils;
 import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -33,6 +34,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
     ContractSubmitDialog dialog;
     JComboBox<AddressStateWraper> creatorAddressCombo;
     final JTextField gasInput;
+    final JTextField contractAddrInput;
 
     private byte[]       initByteCode;
 
@@ -44,20 +46,20 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
         dialog = this;
         this.initByteCode = byteCode;
 
+        contractAddrInput = new JTextField(5);
+        GUIUtils.addStyle(contractAddrInput, "Contract Address: ");
+
+        contractAddrInput.setBounds(70, 30, 350, 45);
+        this.getContentPane().add(contractAddrInput);
+
         gasInput = new JTextField(5);
         GUIUtils.addStyle(gasInput, "Gas: ");
-
-        JTextArea   contractInitTA = new JTextArea();
-        contractInitTA.setLineWrap(true);
-        JScrollPane contractInitInput = new JScrollPane(contractInitTA);
-        GUIUtils.addStyle(contractInitTA, null, false);
-        GUIUtils.addStyle(contractInitInput, "Init:");
 
         JTextArea   contractDataTA = new JTextArea();
         contractDataTA.setLineWrap(true);
         JScrollPane contractDataInput = new JScrollPane(contractDataTA);
         GUIUtils.addStyle(contractDataTA, null, false);
-        GUIUtils.addStyle(contractDataInput, "Body:");
+        GUIUtils.addStyle(contractDataInput, "Code:");
 
         String byteCodeText = GUIUtils.getHexStyledText(byteCode);
         contractDataTA.setText(byteCodeText);
@@ -67,13 +69,11 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
         this.getContentPane().setBackground(Color.WHITE);
         this.getContentPane().setLayout(null);
 
-        contractInitInput.setBounds(70, 30, 350, 165);
-        this.getContentPane().add(contractInitInput);
 
-        contractDataInput.setBounds(70, 200, 350, 165);
+        contractDataInput.setBounds(70, 80, 350, 165);
         this.getContentPane().add(contractDataInput);
 
-        gasInput.setBounds(330, 380, 90, 45);
+        gasInput.setBounds(330, 260, 90, 45);
         this.getContentPane().add(gasInput);
 
         URL rejectIconURL = ClassLoader.getSystemResource("buttons/reject.png");
@@ -83,12 +83,12 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
         rejectLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         JLabel statusMessage = new JLabel("");
-        statusMessage.setBounds(50, 480, 400, 50);
+        statusMessage.setBounds(50, 360, 400, 50);
         statusMessage.setHorizontalAlignment(SwingConstants.CENTER);
         this.statusMsg = statusMessage;
         this.getContentPane().add(statusMessage);
 
-        rejectLabel.setBounds(260, 445, 45, 45);
+        rejectLabel.setBounds(260, 325, 45, 45);
         this.getContentPane().add(rejectLabel);
         rejectLabel.setVisible(true);
         rejectLabel.addMouseListener(
@@ -106,7 +106,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
         approveLabel.setToolTipText("Submit the transaction");
         approveLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        approveLabel.setBounds(200, 445, 45, 45);
+        approveLabel.setBounds(200, 325, 45, 45);
         this.getContentPane().add(approveLabel);
         approveLabel.setVisible(true);
 
@@ -118,7 +118,6 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
                     }
                 }
         );
-
 
         gasInput.setText("1000");
 
@@ -184,7 +183,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
                 ((AbstractButton) creatorAddressCombo.getComponent(i)).setBorder(line);
             }
         }
-        creatorAddressCombo.setBounds(73, 387, 230, 36);
+        creatorAddressCombo.setBounds(73, 267, 230, 36);
         this.getContentPane().add(creatorAddressCombo);
 
 
@@ -214,7 +213,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
         inputMap.put(stroke, "ESCAPE");
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
-        this.setSize(500, 550);
+        this.setSize(500, 430);
         this.setVisible(true);
 
 
@@ -262,6 +261,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
             dialog.alertStatusMsg("Failed to sign the transaction");
             return;
         }
+
+        contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
         // SwingWorker
         DialogWorker worker = new DialogWorker(tx, this);
