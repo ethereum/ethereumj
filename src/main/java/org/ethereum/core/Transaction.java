@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
-import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
@@ -33,7 +32,7 @@ public class Transaction {
     public static final byte[] ZERO_ADDRESS = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	
     /* creation contract tx
-     * [ nonce, endowment, 0, gasPrice, gasDeposit (for init), body, init, signature(v, r, s) ]
+     * [ nonce, endowment, 0000000000000000, gasPrice, gasDeposit  data, signature(v, r, s) ]
      * or simple send tx
      * [ nonce, value, receiveAddress, gasPrice, gasDeposit, data, signature(v, r, s) ]
      */
@@ -63,10 +62,8 @@ public class Transaction {
 
     /* An unlimited size byte array specifying
      * input [data] of the message call */
-    private byte[] data;
-
     /* Initialisation code for a new contract */
-    private byte[] init;
+    private byte[] data;
 
     /* the elliptic curve signature
      * (including public key recovery bits) */
@@ -90,11 +87,10 @@ public class Transaction {
         this.gasLimit = gasLimit;
         this.receiveAddress = receiveAddress;
         this.value = value;
+        this.data = data;
+
         if(receiveAddress == null || receiveAddress.length == 0) {
             this.receiveAddress = ZERO_ADDRESS;
-            this.init = data;
-        } else {
-            this.data = data;
         }
         parsed = true;
     }
@@ -111,30 +107,17 @@ public class Transaction {
         this.value =          ((RLPItem) transaction.get(4)).getRLPData();
 
 
-        if (isContract()){  // Simple transaction
-
-            this.init =           ((RLPItem) transaction.get(5)).getRLPData();
-        	// only parse signature in case tx is signed
-        	if(((RLPItem) transaction.get(6)).getRLPData() != null) {
-        		byte v =		((RLPItem) transaction.get(6)).getRLPData()[0];
-                byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
-                byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
-                this.signature = ECDSASignature.fromComponents(r, s, v);
-        	} else {
-        		logger.debug("RLP encoded tx is not signed!");
-        	}        	
-        } else { // Contract creation transaction
-            this.init =     ((RLPItem) transaction.get(5)).getRLPData();
-            // only parse signature in case tx is signed
-            if(((RLPItem) transaction.get(6)).getRLPData() != null) {
-            	byte v =		((RLPItem) transaction.get(6)).getRLPData()[0];
-                byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
-                byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
-                this.signature = ECDSASignature.fromComponents(r, s, v);
-            } else {
-            	logger.debug("RLP encoded tx is not signed!");
-            }
+        this.data =     ((RLPItem) transaction.get(5)).getRLPData();
+        // only parse signature in case tx is signed
+        if(((RLPItem) transaction.get(6)).getRLPData() != null) {
+            byte v =		((RLPItem) transaction.get(6)).getRLPData()[0];
+            byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
+            byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
+            this.signature = ECDSASignature.fromComponents(r, s, v);
+        } else {
+            logger.debug("RLP encoded tx is not signed!");
         }
+
         this.parsed = true;
         this.hash  = this.getHash();
     }
@@ -182,7 +165,7 @@ public class Transaction {
 
     public byte[] getInit() {
         if (!parsed) rlpParse();
-        return init;
+        return data;
     }
 
     public ECDSASignature getSignature() {
@@ -241,7 +224,6 @@ public class Transaction {
                 ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
                 ", value=" + ByteUtil.toHexString(value) +
                 ", data=" + ByteUtil.toHexString(data) +
-                ", init=" + ByteUtil.toHexString(init) +
                 ", signatureV=" + signature.v +
                 ", signatureR=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r)) +
                 ", signatureS=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) +
@@ -262,16 +244,10 @@ public class Transaction {
         byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
         byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
         byte[] value 				= RLP.encodeElement(this.value);
-        byte[] data 				= RLP.encodeElement(this.data);
+        byte[] init 			= RLP.encodeElement(this.data);
 
-        if(isContract()) {
-            byte[] init 			= RLP.encodeElement(this.init);
-            this.rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
-                     init);
-        } else {
-            this.rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
-                    data);
-        }
+        this.rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
+                 init);
         return rlpRaw;
     }
 
@@ -284,7 +260,7 @@ public class Transaction {
         byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
         byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
         byte[] value 				= RLP.encodeElement(this.value);
-        byte[] data 				= RLP.encodeElement(this.data);
+        byte[] init 			= RLP.encodeElement(this.data);
 
         byte[] v, r, s;
         
@@ -298,14 +274,9 @@ public class Transaction {
         	s = RLP.encodeElement(new byte[0]);
         }
 
-        if(isContract()) {
-            byte[] init 			= RLP.encodeElement(this.init);
-            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
-                    init, v, r, s);
-        } else {
-            this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
-                    data, v, r, s);
-        }
+        this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
+                init, v, r, s);
+
         return rlpEncoded;
     }
 
