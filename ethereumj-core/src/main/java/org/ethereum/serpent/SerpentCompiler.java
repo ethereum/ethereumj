@@ -81,8 +81,7 @@ public class SerpentCompiler {
             String labelNum = label.split("LABEL_")[1];
 
             labels.put(labelNum, i);
-
-            ++i;
+            --i;
         }
 
         // encode all ref occurrence
