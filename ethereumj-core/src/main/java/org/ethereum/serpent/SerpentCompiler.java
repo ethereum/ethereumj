@@ -1,11 +1,15 @@
 package org.ethereum.serpent;
 
+import io.netty.buffer.ByteBuf;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.OpCode;
 import org.spongycastle.util.BigIntegers;
+import sun.nio.ByteBuffered;
 
+import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,9 +35,10 @@ public class SerpentCompiler {
     }
 
 
-    public static String compileAssemblyToMachine(String code){
+    public static byte[] compileAssemblyToMachine(String code){
 
-        StringBuffer assemblyCode = new StringBuffer();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
         String[] lexaArr = code.split("\\s+");
 
         List<String> lexaList = new ArrayList<String>();
@@ -104,15 +109,13 @@ public class SerpentCompiler {
         for (String lexa : lexaList){
 
             if (OpCode.contains(lexa))
-                assemblyCode.append( OpCode.byteVal(lexa) );
+                baos.write( OpCode.byteVal(lexa) );
             else{
-
-                assemblyCode.append( lexa );
+                baos.write(Byte.parseByte(lexa));
             }
-            assemblyCode.append(" ");
         }
 
-        return assemblyCode.toString();
+        return baos.toByteArray();
     }
 
 

@@ -29,7 +29,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * User: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
-class PayOutDialog extends JDialog {
+class PayOutDialog extends JDialog implements MessageAwareDialog{
 
     PayOutDialog dialog;
 
@@ -112,7 +112,6 @@ class PayOutDialog extends JDialog {
 				}
 
 				byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
-
 				byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
 
 				// todo: in the future it should be retrieved from the block
@@ -129,8 +128,9 @@ class PayOutDialog extends JDialog {
 					dialog.alertStatusMsg("Failed to sign the transaction");
 					return;
 				}
+
 				// SwingWorker
-				DialogWorker worker = new DialogWorker(tx);
+				DialogWorker worker = new DialogWorker(tx, dialog);
 				worker.execute();
 			}
 		});
@@ -198,41 +198,6 @@ class PayOutDialog extends JDialog {
         });
     }
 
-	class DialogWorker extends SwingWorker {
-
-        Transaction tx;
-
-        DialogWorker(Transaction tx) {
-            this.tx = tx;
-        }
-
-        @Override
-        protected Object doInBackground() throws Exception {
-            TransactionTask transactionTask = new TransactionTask(tx);
-            Future future = TransactionExecutor.instance.submitTransaction(transactionTask);
-            dialog.infoStatusMsg("Transaction sent to the network, waiting for approve");
-
-            try {
-                future.get(CONFIG.transactionApproveTimeout(), TimeUnit.SECONDS);
-            } catch (TimeoutException e1) {
-                e1.printStackTrace();
-                dialog.alertStatusMsg("Transaction wasn't approved, network timeout");
-                return null;
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-                dialog.alertStatusMsg("Transaction wasn't approved");
-                return null;
-            } catch (ExecutionException e1) {
-                e1.printStackTrace();
-                dialog.alertStatusMsg("Transaction wasn't approved");
-                return null;
-            }
-
-            dialog.infoStatusMsg("Transaction got approved");
-            MainData.instance.getWallet().applyTransaction(tx);
-            return null;
-        }
-	}
 
     public static void main(String args[]) {
         AddressState as = new AddressState();

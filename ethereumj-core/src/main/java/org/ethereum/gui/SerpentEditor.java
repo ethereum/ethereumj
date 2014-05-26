@@ -118,7 +118,8 @@ public class SerpentEditor extends JFrame {
 
                 }
 
-                String machineCode = SerpentCompiler.compileAssemblyToMachine(asmResult);
+                byte[] machineCode =
+                    SerpentCompiler.compileAssemblyToMachine(asmResult);
 
                 ContractSubmitDialog payOutDialog =
                         new ContractSubmitDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,

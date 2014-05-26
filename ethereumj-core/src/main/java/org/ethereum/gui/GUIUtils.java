@@ -1,11 +1,14 @@
 package org.ethereum.gui;
 
+import org.spongycastle.util.encoders.Hex;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
+import java.util.Arrays;
 
 /**
  * www.ethereumJ.com
@@ -60,6 +63,18 @@ public class GUIUtils {
         jScrollPane.setHorizontalScrollBar(null);
     }
 
+
+    public static String getHexStyledText(byte[] data){
+        String[] dataHex = Hex.toHexString(data).split("(?<=\\G.{2})");
+        StringBuffer sb = new StringBuffer();
+
+        for (int i = 0; i < dataHex.length; ++i){
+
+            sb.append(dataHex[i]).append(" ");
+            if ((i + 1) % 8 == 0 && i != 0) sb.append("\n");
+        }
+        return sb.toString();
+    }
 
 
 }
