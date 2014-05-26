@@ -90,12 +90,24 @@ public class SerpentEditor extends JFrame {
         splitPanel.add(result);
 
         JPanel controlsPanel = new JPanel();
-        FlowLayout fl = new FlowLayout(FlowLayout.LEADING, 10, 5);
-        fl.setAlignment(FlowLayout.RIGHT);
+        FlowLayout fl = new FlowLayout(FlowLayout.CENTER, 10, 5);
+//        fl.setAlignment(FlowLayout.RIGHT);
         controlsPanel.setLayout(fl);
 
         JButton buildButton = new JButton("Build");
         JButton sendButton = new JButton("Send");
+        JButton callButton = new JButton("Call");
+
+        callButton.addActionListener(new ActionListener() {
+
+            public void actionPerformed(ActionEvent e) {
+                ContractCallDialog payOutDialog =
+                        new ContractCallDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
+                                cp));
+
+            }
+        });
+
 
         sendButton.addActionListener(new ActionListener() {
 
@@ -155,6 +167,8 @@ public class SerpentEditor extends JFrame {
             }
         });
 
+
+        controlsPanel.add(callButton, FlowLayout.LEFT);
 
         controlsPanel.add(sendButton);
         controlsPanel.add(buildButton);
