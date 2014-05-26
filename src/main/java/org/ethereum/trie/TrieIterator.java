@@ -2,8 +2,8 @@ package org.ethereum.trie;
 
 import java.util.List;
 
-import org.ethereum.util.CompactEncoder;
 import org.ethereum.util.Value;
+import static org.ethereum.util.CompactEncoder.unpackToNibbles;
 
 public class TrieIterator {
 	
@@ -22,7 +22,7 @@ public class TrieIterator {
 	// XXX Note to self, IsSlice == inline node. Str == sha3 to node
 	private void workNode(Value currentNode) {
 		if (currentNode.length() == 2) {
-			byte[] k = CompactEncoder.decode(currentNode.get(0).asBytes());
+			byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
 
 			if (currentNode.get(1).asString() == "") {
 				this.workNode(currentNode.get(1));
