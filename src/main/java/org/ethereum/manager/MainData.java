@@ -1,15 +1,12 @@
 package org.ethereum.manager;
 
 import java.math.BigInteger;
-import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
 import com.maxmind.geoip.Location;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.ECKey;
@@ -58,8 +55,7 @@ public class MainData {
             e.printStackTrace();
         }
 
-        PeerData peer = new PeerData(
-                ip.getAddress(), (short) 30303, new byte[]{00});
+		PeerData peer = new PeerData(ip.getAddress(), (short) 30303, new byte[] { 00 });
         peers.add(peer);
 
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -72,7 +68,6 @@ public class MainData {
 
         peerDiscovery = new PeerDiscovery(peers);
     }
-
 
     public void addBlocks(List<Block> blocks) {
 
@@ -107,7 +102,6 @@ public class MainData {
         // Remove all pending transactions as they already approved by the net
         for (Block block : blocks){
             for (Transaction tx : block.getTransactionsList()){
-
                 if (logger.isDebugEnabled())
                     logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
                 pendingTransactions.remove(tx.getHash());
@@ -139,7 +133,6 @@ public class MainData {
         return activePeer;
     }
 
-
     /*
      *        1) the dialog put a pending transaction on the list
      *        2) the dialog send the transaction to a net
@@ -153,14 +146,12 @@ public class MainData {
         BigInteger hash = new BigInteger(transaction.getHash());
 
         PendingTransaction pendingTransaction =  pendingTransactions.get(hash);
-        if (pendingTransaction != null)
-                    pendingTransaction.incApproved();
-        else{
-
-            pendingTransaction = new PendingTransaction(transaction);
-            pendingTransactions.put(hash, pendingTransaction);
-        }
-
+		if (pendingTransaction != null)
+			pendingTransaction.incApproved();
+		else {
+			pendingTransaction = new PendingTransaction(transaction);
+			pendingTransactions.put(hash, pendingTransaction);
+		}
         return pendingTransaction;
     }
 
@@ -169,11 +160,8 @@ public class MainData {
     }
 
     public void updatePeerIsDead(String ip, short port){
-
         for (PeerData peer : peers) {
-
             if (peer.getInetAddress().getHostAddress().equals(ip) && (peer.getPort() == port)){
-
                 System.out.println("update peer is dead: " + ip + ":" + port);
                 peer.setOnline(false);
                 break;
@@ -182,24 +170,19 @@ public class MainData {
     }
 
     public void addPeers(List<PeerData> newPeers){
-
         for (PeerData peer : newPeers){
             if (this.peers.indexOf(peer) == -1){
-
                 Location location = IpGeoDB.getLocationForIp(peer.getInetAddress());
                 if (location != null){
                     this.peers.add(peer);
-
                     if (peerDiscovery.isStarted())
                         peerDiscovery.addNewPeerData(peer);
                 }
             }
         }
-
     }
 
     public void startPeerDiscovery(){
         peerDiscovery.start();
     };
-
 }

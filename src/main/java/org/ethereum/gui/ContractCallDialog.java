@@ -22,7 +22,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
 
-
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
@@ -30,15 +29,11 @@ import java.util.Collection;
  */
 class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
-
     ContractCallDialog dialog;
     JComboBox<AddressStateWraper> creatorAddressCombo;
     final JTextField gasInput;
     final JTextField contractAddrInput;
     JTextArea   msgDataTA;
-
-
-
     JLabel statusMsg = null;
 
     public ContractCallDialog(Frame parent) {
@@ -87,14 +82,12 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         rejectLabel.setBounds(260, 325, 45, 45);
         this.getContentPane().add(rejectLabel);
         rejectLabel.setVisible(true);
-        rejectLabel.addMouseListener(
-                new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-
-                        dialog.dispose();
-                    }}
-        );
+		rejectLabel.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				dialog.dispose();
+			}
+		});
 
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
         ImageIcon approveIcon = new ImageIcon(approveIconURL);
@@ -117,15 +110,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         gasInput.setText("1000");
 
-        JComboBox<AddressStateWraper> creatorAddressCombo = new JComboBox<AddressStateWraper>(){
-            @Override
-            public ComboBoxUI getUI() {
-
-                BasicComboBoxUI ui = (BasicComboBoxUI)super.getUI();
-
-                return super.getUI();
-            }
-        };
+		JComboBox<AddressStateWraper> creatorAddressCombo = new JComboBox<AddressStateWraper>() {
+			@Override
+			public ComboBoxUI getUI() {
+				BasicComboBoxUI ui = (BasicComboBoxUI) super.getUI();
+				return super.getUI();
+			}
+		};
         creatorAddressCombo.setOpaque(true);
         creatorAddressCombo.setEnabled(true);
 
@@ -142,22 +133,19 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
                 MainData.instance.getWallet().getAddressStateCollection();
 
         for (AddressState addressState : addressStates){
-
             creatorAddressCombo.addItem(new AddressStateWraper(addressState));
         }
 
-        creatorAddressCombo.setRenderer(new DefaultListCellRenderer() {
-
-            @Override
-            public void paint(Graphics g) {
-                setBackground(Color.WHITE);
-                setForeground(new Color(143, 170, 220));
-                setFont(new Font("Monospaced", 0, 13));
-                setBorder(BorderFactory.createEmptyBorder());
-                super.paint(g);
-            }
-
-        });
+		creatorAddressCombo.setRenderer(new DefaultListCellRenderer() {
+			@Override
+			public void paint(Graphics g) {
+				setBackground(Color.WHITE);
+				setForeground(new Color(143, 170, 220));
+				setFont(new Font("Monospaced", 0, 13));
+				setBorder(BorderFactory.createEmptyBorder());
+				super.paint(g);
+			}
+		});
 
         creatorAddressCombo.setPopupVisible(false);
 
@@ -168,20 +156,16 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         list.setSelectionBackground(Color.cyan);
         list.setBorder(null);
 
-        for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++)
-        {
+		for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++) {
             if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
-
                 CellRendererPane crp = ((CellRendererPane) (creatorAddressCombo.getComponent(i)));
             }
-
             if (creatorAddressCombo.getComponent(i) instanceof AbstractButton) {
                 ((AbstractButton) creatorAddressCombo.getComponent(i)).setBorder(line);
             }
         }
         creatorAddressCombo.setBounds(73, 267, 230, 36);
         this.getContentPane().add(creatorAddressCombo);
-
 
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
@@ -212,7 +196,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         this.setSize(500, 430);
         this.setVisible(true);
 
-
         return rootPane;
     }
 
@@ -225,7 +208,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         this.statusMsg.setForeground(Color.RED);
         this.statusMsg.setText(text);
     }
-
 
     public void submitContract(){
 
@@ -240,7 +222,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         byte[] contractAddress = Hex.decode( contractAddrInput.getText());
 
-
         AddressState addressState = ((AddressStateWraper)creatorAddressCombo.getSelectedItem()).getAddressState();
 
         byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
@@ -251,9 +232,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         byte[] gasValue  = BigIntegers.asUnsignedByteArray(gasBI);
         byte[] endowment = BigIntegers.asUnsignedByteArray(new BigInteger("1000"));
 
-
-        Transaction tx = new Transaction(nonce, gasPrice, gasValue,
-                contractAddress, endowment, data);
+		Transaction tx = new Transaction(nonce, gasPrice, gasValue,
+				contractAddress, endowment, data);
 
         try {
             tx.sign(senderPrivKey);
@@ -263,17 +243,12 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
             return;
         }
 
-
         // SwingWorker
         DialogWorker worker = new DialogWorker(tx, this);
         worker.execute();
-
     }
 
-
-
-
-    public class AddressStateWraper{
+	public class AddressStateWraper {
 
         private AddressState addressState;
 
@@ -285,17 +260,14 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
             return addressState;
         }
 
-        @Override
-        public String toString() {
-            String addressShort = Utils.getAddressShortString(addressState.getEcKey().getAddress());
-            String valueShort   = Utils.getValueShortString(addressState.getBalance());
-
-            String result =
-                    String.format(" By: [%s] %s",
-                            addressShort, valueShort);
-
-            return result;
-        }
+		@Override
+		public String toString() {
+			String addressShort = Utils.getAddressShortString(addressState.getEcKey().getAddress());
+			String valueShort = Utils.getValueShortString(addressState.getBalance());
+			String result = String.format(" By: [%s] %s", addressShort,
+					valueShort);
+			return result;
+		}
     }
 }
 

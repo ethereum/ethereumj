@@ -11,7 +11,6 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.beans.PropertyChangeListener;
 
 /**
  * www.ethereumJ.com
@@ -25,7 +24,6 @@ public class BlockChainTable extends JFrame {
     private	JScrollPane scrollPane;
 
     private int lastFindIndex = 0;
-
 
     public BlockChainTable() {
 
@@ -68,7 +66,7 @@ public class BlockChainTable extends JFrame {
         table.getColumnModel().getColumn(0).setCellRenderer(new TableCellLongTextRenderer());
 
         table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK), "Copy");
-        table.getActionMap().put("Copy", new AbstractAction(){
+        table.getActionMap().put("Copy", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
 
@@ -89,12 +87,12 @@ public class BlockChainTable extends JFrame {
                 String toFind = JOptionPane.showInputDialog(blockChainTable, "Find:",
                         "Find in BlockChain", JOptionPane.QUESTION_MESSAGE);
 
-                if (toFind.equals("")){
+                if (toFind.equals("")) {
                     lastFindIndex = 0;
                     return;
                 }
 
-                for (int i = lastFindIndex + 1; i < MainData.instance.getAllBlocks().size(); ++i){
+                for (int i = lastFindIndex + 1; i < MainData.instance.getAllBlocks().size(); ++i) {
 
                     if (MainData.instance.getAllBlocks().size() - 1 < i) return;
                     Block block = MainData.instance.getAllBlocks().get(i);
@@ -110,15 +108,12 @@ public class BlockChainTable extends JFrame {
                 }
             }
         });
-
         // Add the table to a scrolling pane
         scrollPane = new JScrollPane(table);
         topPanel.add(scrollPane, BorderLayout.CENTER);
-
     }
 
     public static void main(String args[]){
-
         BlockChainTable mainFrame = new BlockChainTable();
         mainFrame.setVisible(true);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
