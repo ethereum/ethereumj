@@ -20,3 +20,4 @@ bin
 
 *.db
 *.xlsx
+/gen
