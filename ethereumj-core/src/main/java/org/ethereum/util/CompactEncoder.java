@@ -9,8 +9,7 @@ import static org.ethereum.util.ByteUtil.appendByte;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.encoders.Hex.toHexString;
 
-/**
- * 
+/** 
  * Compact encoding of hex sequence with optional terminator
  * 
  * The traditional compact way of encoding a hex string is to convert it into binary 
@@ -49,36 +48,43 @@ public class CompactEncoder {
 	private final static byte TERMINATOR = 16;
 	private final static String hexBase = "0123456789abcdef";
 	
-	public static byte[] encode(byte[] hexSlice) {
+	/**
+	 * Pack nibbles to binary
+	 *
+	 * @param nibbles sequence. may have a terminator
+	 * @return hex-encoded byte array
+	 */
+	public static byte[] packNibbles(byte[] nibbles) {
 		int terminator = 0;
 		
-		if (hexSlice[hexSlice.length-1] == TERMINATOR) {
+		if (nibbles[nibbles.length-1] == TERMINATOR) {
 			terminator = 1;
-			hexSlice = copyOf(hexSlice, hexSlice.length-1);
+			nibbles = copyOf(nibbles, nibbles.length-1);
 		}
-		
-		int oddlen = hexSlice.length % 2;
+		int oddlen = nibbles.length % 2;
 		int flag = 2*terminator + oddlen;
 		if (oddlen != 0) {
 			byte[] flags = new byte[] { (byte) flag};
-			hexSlice = concatenate(flags, hexSlice);
+			nibbles = concatenate(flags, nibbles);
 		} else {
 			byte[] flags = new byte[] { (byte) flag, 0};
-			hexSlice = concatenate(flags, hexSlice);
+			nibbles = concatenate(flags, nibbles);
 		}
-
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		for (int i = 0; i < hexSlice.length; i += 2) {
-			buffer.write( 16*hexSlice[i] + hexSlice[i+1] );
+		for (int i = 0; i < nibbles.length; i += 2) {
+			buffer.write( 16*nibbles[i] + nibbles[i+1] );
 		}
 		return buffer.toByteArray();
 	}
 
 	/**
-	 * Strips hex slices  
+	 * Unpack a binary string to its nibbles equivalent
+	 * 
+	 * @param string of binary data
+	 * @return array of nibbles in byte-format  
 	 */
-	public static byte[] decode(byte[] str) {
-		byte[] base = hexDecode(str);
+	public static byte[] unpackToNibbles(byte[] str) {
+		byte[] base = binToNibbles(str);
 		base = copyOf(base, base.length-1);
 		if (base[0] >= 2) {
 			base = appendByte(base, TERMINATOR);
@@ -92,10 +98,11 @@ public class CompactEncoder {
 	}
 
 	/**
-	 * Transforms a binary array to hexadecimal format,
-	 * returns array with each individual nibble adding a terminator at the end 
-	 */
-	public static byte[] hexDecode(byte[] str) {
+	 * Transforms a binary array to hexadecimal format + terminator
+	 *
+	 * @return array with each individual nibble adding a terminator at the end 
+	 */	
+	public static byte[] binToNibbles(byte[] str) {
 		byte[] hexSlice = new byte[0];
 		String hexEncoded = toHexString(str);
 		for (char value : hexEncoded.toCharArray()) {

@@ -2,26 +2,37 @@ package org.ethereum.trie;
 
 import static java.util.Arrays.copyOfRange;
 import static org.spongycastle.util.Arrays.concatenate;
+import static org.ethereum.util.CompactEncoder.*;
 
 import java.util.Arrays;
 
-import org.ethereum.util.CompactEncoder;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
+import org.spongycastle.util.encoders.Hex;
 
-import com.cedarsoftware.util.DeepEquals;
-
+/**
+ * The modified Merkle Patricia tree (trie) provides a persistent data structure 
+ * to map between arbitrary-length binary data (byte arrays). It is defined in terms of 
+ * a mutable data structure to map between 256-bit binary fragments and arbitrary-length 
+ * binary data, typically implemented as a database. The core of the trie, and its sole 
+ * requirement in terms of the protocol specification is to provide a single value that 
+ * identifies a given set of key-value pairs, which may either a 32 byte sequence or 
+ * the empty byte sequence. It is left as an implementation consideration to store and 
+ * maintain the structure of the trie in a manner the allows effective and efficient 
+ * realisation of the protocol.
+ *
+ * The trie implements a caching mechanism and will use cached values if they are present. 
+ * If a node is not present in the cache it will try to fetch it from the database and 
+ * store the cached value. 
+ * 
+ * Please note that the data isn't persisted unless `sync` is explicitly called.
+ */
 public class Trie {
 
 	private static byte PAIR_SIZE = 2;
 	private static byte LIST_SIZE = 17;
 	
-	// A (modified) Radix Trie implementation. The Trie implements
-	// a caching mechanism and will used cached values if they are
-	// present. If a node is not present in the cache it will try to
-	// fetch it from the database and store the cached value.
-	// Please note that the data isn't persisted unless `Sync` is
-	// explicitly called.
 	private Object prevRoot;
 	private Object root;
 	private Cache cache;
@@ -73,7 +84,7 @@ public class Trie {
 	public void update(String key, String value) {
 		if (key == null)
 			throw new NullPointerException("Key should not be blank");
-		byte[] k = CompactEncoder.hexDecode(key.getBytes());
+		byte[] k = binToNibbles(key.getBytes());
 		this.root = this.insertOrDelete(this.root, k, value.getBytes());
 	}
 
@@ -84,7 +95,7 @@ public class Trie {
 	 * @return value
 	 */
 	public String get(String key) {
-		byte[] k = CompactEncoder.hexDecode(key.getBytes());
+		byte[] k = binToNibbles(key.getBytes());
 		Value c = new Value( this.get(this.root, k) );
 		return c.asString();
 	}
@@ -110,11 +121,10 @@ public class Trie {
 		}
 
 		Value currentNode = this.getNode(node);
-		int length = currentNode.length();
-
-		if (length == PAIR_SIZE) {
+		
+		if (currentNode.length() == PAIR_SIZE) {
 			// Decode the key
-			byte[] k = CompactEncoder.decode(currentNode.get(0).asBytes());
+			byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
 			Object v = currentNode.get(1).asObj();
 
 			if (key.length >= k.length && Arrays.equals(k, copyOfRange(key, 0, k.length))) {
@@ -122,12 +132,9 @@ public class Trie {
 			} else {
 				return "";
 			}
-		} else if (length == LIST_SIZE) {
-			return this.get(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length));
+		} else {
+			return this.get(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length)); 
 		}
-
-		// It shouldn't come this far
-		throw new RuntimeException("Unexpected Node length: " + length);
 	}
 
 	private Object insertOrDelete(Object node, byte[] key, byte[] value) {
@@ -149,7 +156,7 @@ public class Trie {
         }
         
         if (isEmptyNode(node)) {
-    		Object[] newNode = new Object[] { CompactEncoder.encode(key), value };
+    		Object[] newNode = new Object[] { packNibbles(key), value };
     		return this.put(newNode);
     	}
     	
@@ -158,13 +165,12 @@ public class Trie {
     	// Check for "special" 2 slice type node
     	if (currentNode.length() == PAIR_SIZE) {
     		// Decode the key
-
-    		byte[] k = CompactEncoder.decode(currentNode.get(0).asBytes());
+    		byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
     		Object v = currentNode.get(1).asObj();
 
     		// Matching key pair (ie. there's already an object with this key)
     		if (Arrays.equals(k, key)) {
-    			Object[] newNode = new Object[] {CompactEncoder.encode(key), value};
+    			Object[] newNode = new Object[] {packNibbles(key), value};
     			return this.put(newNode);
     		}
 
@@ -172,9 +178,10 @@ public class Trie {
     		int matchingLength = matchingNibbleLength(key, k);
     		if (matchingLength == k.length) {
     			// Insert the hash, creating a new node
-    			newHash = this.insert(v, copyOfRange(key, matchingLength, key.length), value);
-    		} else {
-    			// Expand the 2 length slice to a 17 length slice
+    			byte[] remainingKeypart = copyOfRange(key, matchingLength, key.length);
+    			newHash = this.insert(v, remainingKeypart, value);
+    		} else { // Expand the 2 length slice to a 17 length slice
+    			// Create two nodes to put into the new 17 length node
     			Object oldNode = this.insert("", copyOfRange(k, matchingLength+1, k.length), v);
     			Object newNode = this.insert("", copyOfRange(key, matchingLength+1, key.length), value);
     			// Create an expanded slice
@@ -189,7 +196,7 @@ public class Trie {
     			// End of the chain, return
     			return newHash;
     		} else {
-    			Object[] newNode = new Object[] {CompactEncoder.encode(copyOfRange(key, 0, matchingLength)), newHash};
+    			Object[] newNode = new Object[] { packNibbles(copyOfRange(key, 0, matchingLength)), newHash};
     			return this.put(newNode);
     		}
     	} else {
@@ -213,7 +220,7 @@ public class Trie {
 		// Check for "special" 2 slice type node
 		if (currentNode.length() == PAIR_SIZE) {
 			// Decode the key
-			byte[] k = CompactEncoder.decode(currentNode.get(0).asBytes());
+			byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
 			Object v = currentNode.get(1).asObj();
 
 			// Matching key pair (ie. there's already an object with this key)
@@ -225,8 +232,8 @@ public class Trie {
 
 				Object newNode;
 				if (child.length() == PAIR_SIZE) {
-					byte[] newKey = concatenate(k, CompactEncoder.decode(child.get(0).asBytes()));
-					newNode = new Object[] {CompactEncoder.encode(newKey), child.get(1).asObj()};
+					byte[] newKey = concatenate(k, unpackToNibbles(child.get(0).asBytes()));
+					newNode = new Object[] {packNibbles(newKey), child.get(1).asObj()};
 				} else {
 					newNode = new Object[] {currentNode.get(0).asString(), hash};
 				}
@@ -240,6 +247,7 @@ public class Trie {
 
 			// Replace the first nibble in the key
 			itemList[key[0]] = this.delete(itemList[key[0]], copyOfRange(key, 1, key.length));
+			
 			byte amount = -1;
 			for (byte i = 0; i < LIST_SIZE; i++) {
 				if (itemList[i] != "") {
@@ -253,14 +261,14 @@ public class Trie {
 			
 			Object[] newNode = null;
 			if (amount == 16) {
-				newNode = new Object[] { CompactEncoder.encode(new byte[] {16} ), itemList[amount]};
+				newNode = new Object[] { packNibbles(new byte[] {16} ), itemList[amount]};
 			} else if (amount >= 0) {
 				Value child = this.getNode(itemList[amount]);
 				if (child.length() == PAIR_SIZE) {
-					key = concatenate(new byte[]{amount}, CompactEncoder.decode(child.get(0).asBytes()));
-					newNode = new Object[] {CompactEncoder.encode(key), child.get(1).asObj()};
+					key = concatenate(new byte[]{amount}, unpackToNibbles(child.get(0).asBytes()));
+					newNode = new Object[] {packNibbles(key), child.get(1).asObj()};
 				} else if (child.length() == LIST_SIZE) {
-					newNode = new Object[] { CompactEncoder.encode(new byte[]{amount}), itemList[amount]};
+					newNode = new Object[] { packNibbles(new byte[]{amount}), itemList[amount]};
 				}
 			} else {
 				newNode = itemList;
@@ -276,30 +284,23 @@ public class Trie {
 	 * @param node
 	 * @return
 	 */
-	private Value getNode(Object node) {
+	private Value getNode(Object node) {		
 		Value n = new Value(node);
 		
 		if (!n.get(0).isNull()) {
 			return n;
 		}
 
-		String str = n.asString();
-		if (str.length() == 0) {
+		byte[] str = n.asBytes();
+		if (str.length == 0) {
 			return n;
-		} else if (str.length() < 32) {
-			return new Value(str.getBytes());
+		} else if (str.length < 32) {
+			return new Value(str);
 		}
-		return this.cache.get(n.asBytes());
+		return this.cache.get(str);
 	}
 	
 	private Object put(Object node) {
-		/* TODO?
-			c := Conv(t.Root)
-			fmt.Println(c.Type(), c.Length())
-			if c.Type() == reflect.String && c.AsString() == "" {
-				return enc
-			}
-		*/
 		return this.cache.put(node);
 	}
 
@@ -319,9 +320,9 @@ public class Trie {
 		return itemList;
 	}
 
-	// Simple compare function which creates a rlp value out of the evaluated objects
+	// Simple compare function which compared the tries based on their stateRoot
 	public boolean cmp(Trie trie) {
-		return DeepEquals.deepEquals(this.root, trie.getRoot());
+		return this.getRootHash().equals(trie.getRootHash());
 	}
 	
 	// Save the cached value to the database.
@@ -358,11 +359,28 @@ public class Trie {
 		return i;
 	}
 	
+	// Created an array of empty elements of requred length
 	private Object[] emptyStringSlice(int l) {
 		Object[] slice = new Object[l];
 		for (int i = 0; i < l; i++) {
 			slice[i] = "";
 		}
 		return slice;
+	}
+
+	public String getRootHash() {
+		Object root = this.getRoot();
+		if (root == null
+				|| (root instanceof byte[] && ((byte[]) root).length == 0)
+				|| (root instanceof String && "".equals((String) root))) {
+			return "";
+		} else if (root instanceof byte[]) {
+			return Hex.toHexString((byte[])this.getRoot());
+		} else {
+			Value rootValue = new Value(this.getRoot());
+			byte[] val = rootValue.encode();
+			byte[] key = HashUtil.sha3(val);
+			return Hex.toHexString(key);
+		}
 	}
 }
