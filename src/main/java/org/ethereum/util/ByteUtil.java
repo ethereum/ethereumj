@@ -1,5 +1,7 @@
 package org.ethereum.util;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.Arrays;
 
@@ -105,5 +107,53 @@ public class ByteUtil {
         if (bytes == 0) ++bytes;
 
         return bytes;
+    }
+
+
+    /**
+     * @param arg - not more that 32 bits
+     * @return - byts of the value pad with complete to 32 zeroes
+     */
+    public static byte[] encodeValFor32Bits(Object arg){
+
+        byte[] data;
+        if (arg instanceof Number){
+
+            data = new BigInteger(arg.toString()).toByteArray();
+        }else{
+            data = arg.toString().getBytes();
+        }
+
+        if (data.length > 32) throw new Error("values can't be more than 32 bits");
+
+        byte[] val = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
+        int j = 0;
+        for (int i = data.length; i > 0; --i){
+            val[31 - j] = data[i-1];
+            ++j;
+        }
+
+        return val;
+    }
+
+
+    /**
+     * encode the values and concatenate together
+     */
+    public static byte[] encodeDataList(Object... args){
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        for (Object arg : args){
+
+            byte[] val = encodeValFor32Bits(arg);
+            try {
+                baos.write(val);
+            } catch (IOException e) {
+                throw new Error("Happen something that should never happen ", e);
+            }
+        }
+
+        return baos.toByteArray();
     }
 }
