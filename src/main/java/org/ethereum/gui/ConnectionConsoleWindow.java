@@ -1,8 +1,6 @@
 package org.ethereum.gui;
 
-import java.awt.BorderLayout;
-import java.awt.Image;
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 
@@ -11,8 +9,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
 import org.ethereum.net.client.ClientPeer;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
+import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 /**
@@ -29,6 +26,8 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 
     private static final long serialVersionUID = 1L;
+
+    private boolean autoScroll = false;
 
     private RSyntaxTextArea textArea;
 
@@ -49,11 +48,18 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 
         JPanel cp = new JPanel(new BorderLayout());
 
+        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
+        atmf.putMapping("text/console", "org.ethereum.gui.ConsoleTokenMaker");
+
         textArea = new RSyntaxTextArea(16, 47);
-        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_LISP);
+        textArea.setSyntaxEditingStyle("text/console");
+//        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_LISP);
         textArea.setCodeFoldingEnabled(true);
         textArea.setAntiAliasingEnabled(true);
+
+        changeStyleProgrammatically();
         RTextScrollPane sp = new RTextScrollPane(textArea);
+
         cp.add(sp);
 
         setContentPane(cp);
@@ -99,10 +105,51 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 			public void run() {
 				textArea.append(output);
 				textArea.append("\n");
-				textArea.setCaretPosition(textArea.getText().length());
+
+                if (autoScroll)
+                    textArea.setCaretPosition(textArea.getText().length());
 			}
 		});
 	}
+
+    private void changeStyleProgrammatically() {
+
+        // Set the font for all token types.
+        setFont(textArea, new Font("Courier New", Font.PLAIN, 12));
+
+        // Change a few things here and there.
+        SyntaxScheme scheme = textArea.getSyntaxScheme();
+        scheme.getStyle(Token.RESERVED_WORD).background = Color.white;
+        scheme.getStyle(Token.RESERVED_WORD).foreground = Color.MAGENTA.darker().darker();
+
+        scheme.getStyle(Token.DATA_TYPE).foreground = Color.blue;
+        scheme.getStyle(Token.LITERAL_STRING_DOUBLE_QUOTE).underline = true;
+        scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).underline = true;
+        scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).background = Color.pink;
+
+        scheme.getStyle(Token.COMMENT_EOL).font = new Font("Georgia",
+                Font.ITALIC, 10);
+
+        textArea.revalidate();
+
+    }
+
+    public static void setFont(RSyntaxTextArea textArea, Font font) {
+        if (font != null) {
+            SyntaxScheme ss = textArea.getSyntaxScheme();
+            ss = (SyntaxScheme) ss.clone();
+            for (int i = 0; i < ss.getStyleCount(); i++) {
+                if (ss.getStyle(i) != null) {
+                    ss.getStyle(i).font = font;
+                }
+            }
+            textArea.setSyntaxScheme(ss);
+            textArea.setFont(font);
+        }
+    }
+
+
+
 
 	public static void main(String[] args) {
 		// Start all Swing applications on the EDT.
