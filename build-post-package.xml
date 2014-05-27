@@ -22,20 +22,20 @@
     <target name="make-package">
 
         <mkdir dir="./target/package"/>
-        <copy  todir="./target/package/lib">
+        <copy  todir="./target/package/ethereumj/lib">
             <fileset dir="./target/dependency"/>
         </copy>
 
         <copy file="./target/${maven.project.artifactId}-${maven.project.version}.jar"
-              tofile="./target/package/ethereumj.jar"/>
+              tofile="./target/package/ethereumj/ethereumj.jar"/>
 
-        <copy todir="./target/package">
+        <copy todir="./target/package/ethereumj/">
             <fileset dir="./target/classes/config"/>
         </copy>
 
-        <copy file="./target/classes/log4j.properties" todir="./target/package/config"/>
-        <copy file="./target/classes/system.properties" todir="./target/package/config"/>
-        <copy file="./target/classes/GeoLiteCity.dat" todir="./target/package/config"/>
+        <copy file="./target/classes/log4j.properties" todir="./target/package/ethereumj/config"/>
+        <copy file="./target/classes/system.properties" todir="./target/package/ethereumj/config"/>
+        <copy file="./target/classes/GeoLiteCity.dat" todir="./target/package/ethereumj/config"/>
 
 
         <zip destfile="ethereumJ-${DSTAMP}-${TSTAMP}.zip" basedir="./target/package">
