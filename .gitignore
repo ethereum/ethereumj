@@ -12,6 +12,7 @@
 bin
 
 # Package Files #
+*.zip
 *.jar
 *.war
 *.ear
