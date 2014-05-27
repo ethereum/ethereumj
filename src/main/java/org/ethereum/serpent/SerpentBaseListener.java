@@ -225,6 +225,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterMsg_func(@NotNull SerpentParser.Msg_funcContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterRel_exp(@NotNull SerpentParser.Rel_expContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -394,19 +407,6 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
-	@Override public void enterBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * The default implementation does nothing.
-	 */
-	@Override public void exitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * The default implementation does nothing.
-	 */
 	@Override public void enterAnd_exp(@NotNull SerpentParser.And_expContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -414,6 +414,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitAnd_exp(@NotNull SerpentParser.And_expContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -453,6 +466,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitMsg_value(@NotNull SerpentParser.Msg_valueContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterAsm(@NotNull SerpentParser.AsmContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitAsm(@NotNull SerpentParser.AsmContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

@@ -124,6 +124,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitBlock_gaslimit(@NotNull SerpentParser.Block_gaslimitContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#msg_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#rel_exp}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -215,18 +222,18 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitLog_or_exp(@NotNull SerpentParser.Log_or_expContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link SerpentParser#block_prevhash}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
-
-	/**
 	 * Visit a parse tree produced by {@link SerpentParser#and_exp}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitAnd_exp(@NotNull SerpentParser.And_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#block_prevhash}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#mul_expr}.
@@ -248,4 +255,11 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitMsg_value(@NotNull SerpentParser.Msg_valueContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#asm}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAsm(@NotNull SerpentParser.AsmContext ctx);
 }

@@ -116,6 +116,11 @@ public class SerpentCompiler {
             }
         }
 
+
+        // wrap plan
+        // 1) that is the code
+        // 2) need to wrap it with PUSH1 (codesize) PUSH1 (codestart) 000 CODECOPY 000 PUSH1 (codesize) RETURN
+
         return baos.toByteArray();
     }
 

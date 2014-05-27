@@ -6,6 +6,8 @@ import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
 import org.ethereum.wallet.AddressState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -28,6 +30,9 @@ import java.util.Collection;
  * Created on: 18/05/14 22:21
  */
 class ContractCallDialog extends JDialog implements MessageAwareDialog{
+
+    Logger logger = LoggerFactory.getLogger(getClass());
+
 
     ContractCallDialog dialog;
     JComboBox<AddressStateWraper> creatorAddressCombo;
@@ -233,8 +238,22 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         byte[] gasValue  = BigIntegers.asUnsignedByteArray(gasBI);
         byte[] endowment = BigIntegers.asUnsignedByteArray(new BigInteger("1000"));
 
+        if (logger.isInfoEnabled()) {
+            logger.info("Contract call:");
+            logger.info("tx.nonce: {}", nonce == null ? "null" : Hex.toHexString(nonce));
+            logger.info("tx.gasPrice: {}", Hex.toHexString(gasPrice));
+            logger.info("tx.gasValue: {}", Hex.toHexString(gasValue));
+            logger.info("tx.address: {}", Hex.toHexString(contractAddress));
+            logger.info("tx.endowment: {}", Hex.toHexString(endowment));
+            logger.info("tx.data: {}", Hex.toHexString(data));
+        }
+
 		Transaction tx = new Transaction(nonce, gasPrice, gasValue,
 				contractAddress, endowment, data);
+
+        if (logger.isInfoEnabled()) {
+            logger.info("tx.hash: {}", (new BigInteger(tx.getHash()).toString(16)));
+        }
 
         try {
             tx.sign(senderPrivKey);

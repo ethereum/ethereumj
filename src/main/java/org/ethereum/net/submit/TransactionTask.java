@@ -31,21 +31,26 @@ public class TransactionTask implements Callable {
     @Override
     public Object call() throws Exception {
 
-        logger.info("call() tx: {}", tx.toString());
+        try {
+            logger.info("call() tx: {}", tx.toString());
 
-        ClientPeer peer = MainData.instance.getActivePeer();
+            ClientPeer peer = MainData.instance.getActivePeer();
 
-        PendingTransaction pendingTransaction =  MainData.instance.addPendingTransaction(tx);
-        peer.sendTransaction(tx);
+            PendingTransaction pendingTransaction =  MainData.instance.addPendingTransaction(tx);
+            peer.sendTransaction(tx);
 
-        int i = 0;
-        while(pendingTransaction.getApproved() < 1 ){
+            int i = 0;
+            while(pendingTransaction.getApproved() < 1 ){
 
-            ++i;
-            sleep(10);
+                ++i;
+                sleep(10);
+            }
+
+            logger.info("return approved: {}", pendingTransaction.getApproved());
+        } catch (Throwable th) {
+            logger.info("exception caugh: {}", th.getCause());
+            MainData.instance.removePendingTransaction(tx);
         }
-
-        logger.info("return approved: {}", pendingTransaction.getApproved());
 
         return null;
     }

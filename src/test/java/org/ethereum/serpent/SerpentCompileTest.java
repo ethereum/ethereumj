@@ -1250,6 +1250,8 @@ public class SerpentCompileTest {
      * todo: return testing
      * todo: memory_storage testing
      * todo: message access testing
+     * todo: msg testing
+     * todo: [asm   asm] testing
      *
      */
 }
