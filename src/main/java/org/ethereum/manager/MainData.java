@@ -51,15 +51,17 @@ public class MainData {
     public MainData() {
 
         InetAddress ip = null;
+        int port = 0;
         try {
             ip = InetAddress.getByName(CONFIG.peerDiscoveryIP());
+            port = CONFIG.peerDiscoveryPort();
         } catch (UnknownHostException e) {
-            System.exit(-1);
             e.printStackTrace();
+            System.exit(-1);
         }
 
         PeerData peer = new PeerData(
-                ip.getAddress(), (short) 30303, new byte[]{00});
+                ip.getAddress(), port, new byte[]{00});
         peers.add(peer);
 
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());

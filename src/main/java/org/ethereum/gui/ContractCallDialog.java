@@ -235,6 +235,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
             return;
         }
 
+        // todo: check up how the HEX value is encoded
         Object[] lexaList = msgDataTA.getText().split(",");
         byte[] data = ByteUtil.encodeDataList(lexaList);
 

@@ -19,7 +19,7 @@ public class PeerData {
 	private transient boolean isOnline = false;
 	private transient long    lastCheckTime = 0;
 
-    public PeerData(byte[] ip, short port, byte[] peerId) {
+    public PeerData(byte[] ip, int port, byte[] peerId) {
         this.ip = ip;
         this.port = port & 0xFFFF;
         this.peerId = peerId;
