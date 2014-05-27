@@ -49,6 +49,8 @@ public class DialogWorker extends SwingWorker {
             e1.printStackTrace();
             dialog.alertStatusMsg("Transaction wasn't approved");
             return null;
+        } finally {
+            future.cancel(true);
         }
 
         dialog.infoStatusMsg("Transaction got approved");
