@@ -57,12 +57,8 @@ public class MainData {
             System.exit(-1);
         }
 
-<<<<<<< HEAD
         PeerData peer = new PeerData(
                 ip.getAddress(), port, new byte[]{00});
-=======
-		PeerData peer = new PeerData(ip.getAddress(), (short) 30303, new byte[] { 00 });
->>>>>>> d52f5868c293bff76394d6e014833a7dd17b5722
         peers.add(peer);
 
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
