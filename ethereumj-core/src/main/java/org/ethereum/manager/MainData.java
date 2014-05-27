@@ -38,6 +38,8 @@ public class MainData {
     private Wallet wallet = new Wallet();
     private ClientPeer activePeer;
 
+    private long gasPrice = 1000;
+
     private Map<BigInteger, PendingTransaction> pendingTransactions =
             Collections.synchronizedMap(new HashMap<BigInteger, PendingTransaction>());
 
@@ -99,6 +101,13 @@ public class MainData {
         for (int i = blocks.size() - 1; i >= 0 ; --i){
             Block block = blocks.get(i);
             blockChainDB.add(block);
+
+            if (logger.isInfoEnabled())
+                logger.info("block added to the chain hash: {}", Hex.toHexString(block.getHash()));
+
+            this.gasPrice = block.getMinGasPrice();
+
+
             wallet.processBlock(block);
         }
 
@@ -156,6 +165,10 @@ public class MainData {
 			pendingTransactions.put(hash, pendingTransaction);
 		}
         return pendingTransaction;
+    }
+
+    public long getGasPrice() {
+        return gasPrice;
     }
 
     public List<PeerData> getPeers() {

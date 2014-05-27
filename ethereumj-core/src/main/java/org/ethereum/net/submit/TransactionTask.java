@@ -21,6 +21,7 @@ public class TransactionTask implements Callable {
     Logger logger = LoggerFactory.getLogger("TransactionTask");
 
     Transaction tx;
+    boolean obsolete = false;
 
 
     public TransactionTask(Transaction tx) {
@@ -48,4 +49,5 @@ public class TransactionTask implements Callable {
 
         return null;
     }
+
 }

@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import com.google.common.primitives.Longs;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
@@ -19,6 +20,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.regex.Pattern;
 
 import javax.swing.*;
 
@@ -36,19 +38,23 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
     AddressState addressState = null;
     JLabel statusMsg = null;
 
+    final JTextField receiverInput;
+    final JTextField amountInput;
+    final JTextField feeInput;
+
 	public PayOutDialog(Frame parent, final AddressState addressState) {
 		super(parent, "Payout details: ", false);
 		dialog = this;
 
 		this.addressState = addressState;
 
-        final JTextField receiverInput = new JTextField(18);
+        receiverInput = new JTextField(18);
         GUIUtils.addStyle(receiverInput, "Pay to:");
 
-        final JTextField amountInput = new JTextField(18);
+        amountInput = new JTextField(18);
         GUIUtils.addStyle(amountInput, "Amount: ");
 
-        final JTextField feeInput = new JTextField(5);
+        feeInput = new JTextField(5);
         GUIUtils.addStyle(feeInput, "Fee: ");
 
         this.getContentPane().setBackground(Color.WHITE);
@@ -99,11 +105,15 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
 			@Override
 			public void mouseClicked(MouseEvent e) {
 
-				BigInteger fee = new BigInteger(feeInput.getText());
-				BigInteger value = new BigInteger(amountInput.getText());
-				byte[] address = Hex.decode(receiverInput.getText());
+                if (!validInput()) {
+                    return;
+                }
 
-				// Client
+                BigInteger fee = new BigInteger(feeInput.getText());
+                BigInteger value = new BigInteger(amountInput.getText());
+                byte[] address = Hex.decode(receiverInput.getText());
+
+                // Client
 				ClientPeer peer = MainData.instance.getActivePeer();
 
 				if (peer == null) {
@@ -114,8 +124,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
 				byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
 				byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
 
-				// todo: in the future it should be retrieved from the block
-				byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
+                byte[] gasPrice = BigInteger.valueOf( MainData.instance.getGasPrice()).toByteArray();
 
 				Transaction tx = new Transaction(nonce, gasPrice, BigIntegers
 						.asUnsignedByteArray(fee), address, BigIntegers
@@ -141,6 +150,69 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
         this.setResizable(false);
+    }
+
+    private boolean validInput() {
+
+        String receiverText = receiverInput.getText();
+        if (receiverText == null || receiverText.isEmpty()){
+            alertStatusMsg("Should specify valid receiver address");
+            return false;
+        }
+
+        if (!Pattern.matches("[0-9a-fA-F]+", receiverText)){
+            alertStatusMsg("Should specify valid receiver address");
+            return false;
+        }
+
+        if (Hex.decode(receiverText).length != 20){
+            alertStatusMsg("Should specify valid receiver address");
+            return false;
+        }
+
+        String amountText = amountInput.getText();
+        if (amountText == null || amountText.isEmpty()){
+            alertStatusMsg("Should specify amount to transfer");
+            return false;
+        }
+
+        if (!Pattern.matches("[0-9]+", amountText)){
+            alertStatusMsg("Should specify numeric value for amount ");
+            return false;
+        }
+
+        if (amountText.equals("0")){
+            alertStatusMsg("Should specify more than zero for transaction");
+            return false;
+        }
+
+        String feeText = feeInput.getText();
+        if (feeText == null || feeText.isEmpty()){
+            alertStatusMsg("Should specify fee to fund the transaction");
+            return false;
+        }
+
+        if (!Pattern.matches("[0-9]+", feeText)){
+            alertStatusMsg("Should specify numeric value for a fee");
+            return false;
+        }
+
+
+        // check if the tx is affordable
+        BigInteger ammountValue = new BigInteger(amountText);
+        BigInteger feeValue = new BigInteger(feeText);
+        BigInteger gasPrice = BigInteger.valueOf(MainData.instance.getGasPrice());
+        BigInteger currentBalance = addressState.getBalance();
+
+        boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;
+
+        if (!canAfford){
+            alertStatusMsg("The address can't afford this transaction");
+            return false;
+        }
+
+
+        return true;
     }
 
     protected JRootPane createRootPane() {
