@@ -12,7 +12,7 @@ import javax.swing.table.TableCellRenderer;
  * User: Roman Mandeleil
  * Created on: 15/05/14 13:08
  */
-public class TableCellLongTextRenderer extends JTextArea implements TableCellRenderer{
+public class TableCellLongTextRenderer extends JEditorPane  implements TableCellRenderer{
 
     protected static Border m_noFocusBorder;
 
@@ -26,8 +26,8 @@ public class TableCellLongTextRenderer extends JTextArea implements TableCellRen
     public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
         this.setText((String) value);
         this.setSelectedTextColor(Color.BLUE);
-        this.setWrapStyleWord(true);
-        this.setLineWrap(true);
+//        this.setWrapStyleWord(true);
+//        this.setLineWrap(true);
 
         setBackground(isSelected && !hasFocus ? table.getSelectionBackground() : table.getBackground());
         setForeground(isSelected && !hasFocus ? table.getSelectionForeground() : table.getForeground());

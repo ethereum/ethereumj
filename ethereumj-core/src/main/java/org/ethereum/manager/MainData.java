@@ -116,7 +116,7 @@ public class MainData {
             for (Transaction tx : block.getTransactionsList()){
                 if (logger.isDebugEnabled())
                     logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
-                pendingTransactions.remove(tx.getHash());
+                removePendingTransaction(tx);
             }
         }
         logger.info("*** Block chain size: [ {} ]", blockChainDB.size());
@@ -156,6 +156,7 @@ public class MainData {
     public PendingTransaction addPendingTransaction(Transaction transaction) {
 
         BigInteger hash = new BigInteger(transaction.getHash());
+        logger.info("pending transaction placed hash: {} ", hash.toString(16) );
 
         PendingTransaction pendingTransaction =  pendingTransactions.get(hash);
 		if (pendingTransaction != null)
@@ -165,6 +166,13 @@ public class MainData {
 			pendingTransactions.put(hash, pendingTransaction);
 		}
         return pendingTransaction;
+    }
+
+    public void removePendingTransaction(Transaction transaction){
+
+        BigInteger hash = new BigInteger(transaction.getHash());
+        logger.info("pending transaction removed hash: {} ",  hash.toString(16) );
+        pendingTransactions.remove(hash);
     }
 
     public long getGasPrice() {

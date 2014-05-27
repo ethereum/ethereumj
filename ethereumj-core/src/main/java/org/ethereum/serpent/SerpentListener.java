@@ -185,6 +185,17 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitBlock_gaslimit(@NotNull SerpentParser.Block_gaslimitContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#msg_func}.
+	 * @param ctx the parse tree
+	 */
+	void enterMsg_func(@NotNull SerpentParser.Msg_funcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#msg_func}.
+	 * @param ctx the parse tree
+	 */
+	void exitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#rel_exp}.
 	 * @param ctx the parse tree
 	 */
@@ -328,17 +339,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitLog_or_exp(@NotNull SerpentParser.Log_or_expContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#block_prevhash}.
-	 * @param ctx the parse tree
-	 */
-	void enterBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#block_prevhash}.
-	 * @param ctx the parse tree
-	 */
-	void exitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#and_exp}.
 	 * @param ctx the parse tree
 	 */
@@ -348,6 +348,17 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAnd_exp(@NotNull SerpentParser.And_expContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#block_prevhash}.
+	 * @param ctx the parse tree
+	 */
+	void enterBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#block_prevhash}.
+	 * @param ctx the parse tree
+	 */
+	void exitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#mul_expr}.
@@ -381,4 +392,15 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitMsg_value(@NotNull SerpentParser.Msg_valueContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#asm}.
+	 * @param ctx the parse tree
+	 */
+	void enterAsm(@NotNull SerpentParser.AsmContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#asm}.
+	 * @param ctx the parse tree
+	 */
+	void exitAsm(@NotNull SerpentParser.AsmContext ctx);
 }

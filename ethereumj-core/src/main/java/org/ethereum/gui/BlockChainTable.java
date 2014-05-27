@@ -11,6 +11,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 /**
  * www.ethereumJ.com
@@ -108,6 +110,17 @@ public class BlockChainTable extends JFrame {
                 }
             }
         });
+
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+
+                lastFindIndex = ((JTable)(e.getSource())).rowAtPoint(e.getPoint());
+
+                super.mouseClicked(e);
+            }
+        });
+
         // Add the table to a scrolling pane
         scrollPane = new JScrollPane(table);
         topPanel.add(scrollPane, BorderLayout.CENTER);

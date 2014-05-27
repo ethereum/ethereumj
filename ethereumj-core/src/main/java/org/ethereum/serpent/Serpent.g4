@@ -28,8 +28,10 @@ parse: block EOF
     ;
 
 
-block:  (assign | special_func | if_elif_else_stmt | while_stmt | ret_func)* ;
+block:  ( asm | assign | special_func | if_elif_else_stmt | while_stmt | ret_func  | msg_func)* ;
 
+
+asm: '[asm' (ASM_SYMBOLS | INT)* 'asm]' NL;
 
 if_elif_else_stmt:  'if'   condition ':' INDENT block DEDENT
                    ('elif' condition ':' INDENT block DEDENT)*
@@ -96,7 +98,7 @@ block_difficulty
 block_gaslimit
       : 'block.gaslimit' ;
 
-
+msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' int_val ',' int_val  ')' ;
 
 assign:  VAR EQ_OP expression NL;
 
@@ -152,7 +154,14 @@ expression : log_or_exp ;
 condition: expression ;
 
 
-int_val : INT | hex_num | get_var | special_func | '(' expression ')' | OP_NOT '(' expression ')' ;
+int_val : INT |
+          hex_num |
+          get_var |
+          special_func |
+          '(' expression ')' |
+          OP_NOT '(' expression ')' |
+          msg_func
+          ;
 // todo:  here the val should include also retrieve a variable
 
 hex_num
@@ -162,6 +171,11 @@ hex_num
 ret_func:  'return' '(' INT ')' NL;
 
 get_var: VAR;
+
+INT: [0-9]+;
+
+
+ASM_SYMBOLS: 'STOP' | 'ADD' | 'MUL' | 'SUB' | 'DIV' | 'SDIV' | 'MOD' |'SMOD' | 'EXP' | 'NEG' | 'LT' | 'GT' | 'SLT' | 'SGT'| 'EQ' | 'NOT' | 'AND' | 'OR' | 'XOR' | 'BYTE' | 'SHA3' | 'ADDRESS' | 'BALANCE' | 'ORIGIN' | 'CALLER' | 'CALLVALUE' | 'CALLDATALOAD' | 'CALLDATASIZE' | 'CALLDATACOPY' | 'CODESIZE' | 'CODECOPY' | 'GASPRICE' | 'PREVHASH' | 'COINBASE' | 'TIMESTAMP' | 'NUMBER' | 'DIFFICULTY' | 'GASLIMIT' | 'POP' | 'DUP' | 'SWAP' | 'MLOAD' | 'MSTORE' | 'MSTORE8' | 'SLOAD' | 'SSTORE' | 'JUMP' | 'JUMPI' | 'PC' | 'MSIZE' | 'GAS' | 'PUSH1' | 'PUSH2' | 'PUSH3' | 'PUSH4' | 'PUSH5' | 'PUSH6' | 'PUSH7' | 'PUSH8' | 'PUSH9' | 'PUSH10' | 'PUSH11' | 'PUSH12' | 'PUSH13' | 'PUSH14' | 'PUSH15' | 'PUSH16' | 'PUSH17' | 'PUSH18' | 'PUSH19' | 'PUSH20' | 'PUSH21' | 'PUSH22' | 'PUSH23' | 'PUSH24' | 'PUSH25' | 'PUSH26' | 'PUSH27' | 'PUSH28' | 'PUSH29' | 'PUSH30' | 'PUSH31' | 'PUSH32' | 'CREATE' | 'CALL' | 'RETURN' | 'SUICIDE';
 
 
 /*  'xor', 'and', 'or', 'not' operands should be defined
@@ -179,7 +193,6 @@ NL: ('\r'? '\n' ' '*); // note the ' '*;
 WS: [ \t]+ -> skip;
 LINE_COMMENT: '//' ~[\r\n]* -> skip;
 
-INT: [0-9]+;
 VAR:  [a-zA-Z][a-zA-Z0-9]* ;
 
 
@@ -194,3 +207,4 @@ OP_IN_OR: '|';
 
 HEX_DIGIT : [0-9a-fA-F];
 HEX_NUMBER : ('0x' | '0X' )HEX_DIGIT+;
+

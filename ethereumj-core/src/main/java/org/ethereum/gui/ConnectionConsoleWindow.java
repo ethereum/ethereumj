@@ -92,6 +92,10 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
                     	
                     	// RomanJ
                     	new ClientPeer(thisConsole).connect("54.211.14.10", 40404);
+
+
+
+
                     }
                 };
                 t.start();

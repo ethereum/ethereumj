@@ -5,6 +5,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
@@ -186,6 +187,9 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.special_func() != null)
             return visitSpecial_func(ctx.special_func());
+
+        if (ctx.msg_func() != null)
+            return visitMsg_func(ctx.msg_func());
 
         return ctx.INT().toString();
     }
@@ -395,7 +399,50 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return " GASLIMIT ";
     }
 
+    @Override
+    public String visitRet_func(@NotNull SerpentParser.Ret_funcContext ctx) {
 
+        return ctx.INT() + " MSIZE SWAP MSIZE MSTORE 32 SWAP RETURN";
+    }
+
+
+    @Override
+    public String visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx) {
+
+        String operand0 = visit(ctx.int_val(0));
+        String operand1 = visit(ctx.int_val(1));
+        String operand2 = visit(ctx.int_val(2));
+        String operand3 = visit(ctx.int_val(3));
+        String operand4 = visit(ctx.int_val(4));
+
+        return  " 32 " + operand4 + " MUL " + operand3 + " " + operand1 + " " + operand0 + " " + operand2 + " CALL";
+    }
+
+    @Override
+    public String visitAsm(@NotNull SerpentParser.AsmContext ctx) {
+
+        int size = ((SerpentParser.AsmContext) ctx).getChildCount();
+        StringBuffer sb = new StringBuffer();
+
+        for (int i = 0; i < size ; ++i){
+
+            String symbol = ((SerpentParser.AsmContext) ctx).getChild(i).toString();
+            symbol = symbol.trim();
+
+            if (symbol.equals("[asm") || symbol.equals("asm]") || symbol.equals("\n")) continue;
+
+            boolean match = Pattern.matches("[0-9a-fA-F]+", symbol);
+            if (match){
+
+                int byteVal = Integer.parseInt(symbol);
+                if (byteVal > 255 || byteVal < 0) throw new Error("In the [asm asm] block should be placed only byte range numbers");
+            }
+
+            sb.append(symbol).append(" ");
+        }
+
+        return sb.toString();
+    }
 
     @Override
     protected String aggregateResult(String aggregate, String nextResult) {

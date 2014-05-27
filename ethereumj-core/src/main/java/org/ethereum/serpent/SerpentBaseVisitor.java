@@ -146,6 +146,14 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
+	@Override public T visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx) { return visitChildren(ctx); }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 */
 	@Override public T visitRel_exp(@NotNull SerpentParser.Rel_expContext ctx) { return visitChildren(ctx); }
 
 	/**
@@ -250,7 +258,7 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
-	@Override public T visitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx) { return visitChildren(ctx); }
+	@Override public T visitAnd_exp(@NotNull SerpentParser.And_expContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -258,7 +266,7 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
-	@Override public T visitAnd_exp(@NotNull SerpentParser.And_expContext ctx) { return visitChildren(ctx); }
+	@Override public T visitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -283,4 +291,12 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
 	@Override public T visitMsg_value(@NotNull SerpentParser.Msg_valueContext ctx) { return visitChildren(ctx); }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 */
+	@Override public T visitAsm(@NotNull SerpentParser.AsmContext ctx) { return visitChildren(ctx); }
 }
