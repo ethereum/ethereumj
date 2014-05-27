@@ -125,11 +125,11 @@ public class Block {
         byte[] guBytes      = ((RLPItem) header.get(9)).getRLPData();
         byte[] tsBytes      = ((RLPItem) header.get(10)).getRLPData();
         
-        this.number 		= nrBytes == null ? 0 : (new BigInteger(nrBytes)).longValue();
-        this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(gpBytes)).longValue();
-        this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(glBytes)).longValue();
-        this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(guBytes)).longValue();
-        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(tsBytes)).longValue();
+        this.number 		= nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
+        this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(1, gpBytes)).longValue();
+        this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(1, glBytes)).longValue();
+        this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
+        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
         
         this.extraData       = ((RLPItem) header.get(11)).getRLPData();
         this.nonce           = ((RLPItem) header.get(12)).getRLPData();
