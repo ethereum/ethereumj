@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.apache.log4j.PropertyConfigurator;
 import org.ethereum.manager.MainData;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import java.awt.event.ItemListener;
  */
 public class ToolBar extends JFrame {
 
+
     Logger logger = LoggerFactory.getLogger(getClass());
     Logger introLogger = LoggerFactory.getLogger("Intro");
 
@@ -31,10 +33,10 @@ public class ToolBar extends JFrame {
     public ToolBar() throws HeadlessException {
 
         introLogger.info("");
-        introLogger.info("♢ EthereumJ [v0.5.1]  by RomanJ");
-        introLogger.info("♢ Code by Roman Mandeleil, (c) 2014.");
-        introLogger.info("♢ Contribution: Nick Savers ");
-        introLogger.info("♢ Based on a design by Vitalik Buterin.");
+        introLogger.info("<>  EthereumJ [v0.5.1]  by RomanJ");
+        introLogger.info("<>  Code by Roman Mandeleil, (c) 2014.");
+        introLogger.info("<>  Contribution: Nick Savers ");
+        introLogger.info("<>  Based on a design by Vitalik Buterin.");
         introLogger.info("");
         introLogger.info("java.version: " + System.getProperty("java.version"));
         introLogger.info("java.home:    " + System.getProperty("java.home"));

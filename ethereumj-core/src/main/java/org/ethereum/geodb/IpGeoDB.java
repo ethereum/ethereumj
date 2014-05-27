@@ -19,13 +19,16 @@ public class IpGeoDB {   // change
             File file = null;
             try {
 
-                URL geiIpDBFile = ClassLoader.getSystemResource("GeoLiteCity.dat");
-                file = new File(geiIpDBFile.toURI());
-            } catch (Throwable th) {
-
                 String dir = System.getProperty("user.dir");
-                String fileName = dir + "/db/GeoLiteCity.dat";
+                String fileName = dir + "/config/GeoLiteCity.dat";
                 file = new File(fileName);
+                if (!file.exists()){
+                    URL geiIpDBFile = ClassLoader.getSystemResource("GeoLiteCity.dat");
+                    file = new File(geiIpDBFile.toURI());
+                }
+            } catch (Throwable th) {
+                th.printStackTrace();
+                System.exit(-1);
             }
             cl = new LookupService(file);
         } catch (Throwable e) {

@@ -1,5 +1,7 @@
 package org.ethereum.config;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -23,12 +25,23 @@ public class SystemProperties {
     
     public SystemProperties() {
         try {
-			String filename = "system.properties";
-			input = SystemProperties.class.getClassLoader().getResourceAsStream(filename);
-			if (input == null) {
-				logger.warn("Sorry, unable to find " + filename);
-				return;
-			}
+
+            File file = null;
+            String dir = System.getProperty("user.dir");
+            String fileName = dir + "/config/system.properties";
+            file = new File(fileName);
+
+            if (file.exists()){
+                input = new FileInputStream(file);
+            }  else{
+                fileName = "system.properties";
+                input = SystemProperties.class.getClassLoader().getResourceAsStream(fileName);
+                if (input == null) {
+                    logger.error("Sorry, unable to find " + fileName);
+                    return;
+                }
+            }
+
             //load a properties file from class path, inside static method
             prop.load(input);
 
@@ -70,8 +83,13 @@ public class SystemProperties {
 
 
     public String peerDiscoveryIP(){
-        if(prop.isEmpty()) return "";
+        if(prop.isEmpty()) return "54.201.28.117";
         return prop.getProperty("peer.discovery.ip");
+    }
+
+    public int peerDiscoveryPort(){
+        if(prop.isEmpty()) return 30303;
+        return Integer.parseInt(prop.getProperty("peer.discovery.port"));
     }
 
 	public String toString() {
