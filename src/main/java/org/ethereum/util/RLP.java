@@ -813,7 +813,7 @@ public class RLP {
             }
             byte[] lenBytes = new byte[byteNum];
             for (int i = 0; i < byteNum; ++i) {
-                lenBytes[0] = (byte) ((srcData.length >> (8 * i)) & 0xFF);
+                lenBytes[byteNum - 1 - i] = (byte) ((srcData.length >> (8 * i)) & 0xFF);
             }
             // first byte = F7 + bytes.length
             byte[] data = Arrays.copyOf(srcData, srcData.length + 1 + byteNum);
@@ -851,7 +851,7 @@ public class RLP {
             tmpLength = totalLength;
             byte[] lenBytes = new byte[byteNum];
             for (int i = 0; i < byteNum; ++i) {
-                lenBytes[i] = (byte) ((tmpLength >> (8 * i)) & 0xFF);
+                lenBytes[byteNum - 1 - i] = (byte) ((tmpLength >> (8 * i)) & 0xFF);
             }
             // first byte = F7 + bytes.length
             data = new byte[1 + lenBytes.length + totalLength];
