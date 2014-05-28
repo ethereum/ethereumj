@@ -3,7 +3,9 @@ package org.ethereum.serpent;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.OpCode;
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -51,12 +53,14 @@ public class SerpentCompiler {
                 if (lexa.equals("asm]")){
                     skiping = false;
                     lexaList.remove(i);
-                    lexa  = lexaList.get(i);
+                    --i;
+                    continue;
                 }
 
                 if (lexa.equals("[asm")){
                     skiping = true;
                     lexaList.remove(i);
+                    --i;
                     continue;
                 }
 
@@ -140,6 +144,29 @@ public class SerpentCompiler {
     }
 
 
+    public static byte[]  encodeMachineCodeForVMRun(byte[] code){
 
+        if (code == null || code.length == 0) throw new RuntimeException("code can't be empty code: " + code);
+
+        int numBytes = ByteUtil.numBytes(code.length + "");
+        byte[] lenBytes = BigInteger.valueOf(code.length).toByteArray();
+
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < lenBytes.length; ++i){
+
+            sb.append(Hex.toHexString(lenBytes, i, 1)).append(" ");
+        }
+
+        // calc real code start position (after the init header)
+        int pos = 10  + numBytes * 2;
+
+        // @push_len @len PUSH1 @src_start  PUSH1 0 CODECOPY @push_len @len 0 PUSH1 0 RETURN
+        String header =  String.format("[asm %s %s PUSH1 %d  PUSH1 0 CODECOPY %s %s PUSH1 0 RETURN asm]",
+                "PUSH" + numBytes, sb.toString(), pos , "PUSH" + numBytes, sb.toString());
+
+        byte[] headerMachine = compileAssemblyToMachine(header);
+
+        return Arrays.concatenate(headerMachine, code);
+    }
 
 }

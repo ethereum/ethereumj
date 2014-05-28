@@ -275,7 +275,7 @@ public class SerpentCompileTest {
     @Test    // expression test 10
     public void test15(){
 
-        String code = "a =     not (   1    + 2     *    9 | 8 == 2)";
+        String code = "a =     !(   1    + 2     *    9 | 8 == 2)";
         String expected = "2 8 EQ 9 2 MUL 1 ADD OR NOT 0 MSTORE";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -1245,15 +1245,30 @@ public class SerpentCompileTest {
 
     }
 
+/*
+ todo: more to implement
+# 1) send(1, 2, 3)
+# 2) create(1, 2, 3, 4)
+# 3) x = sha3(v)
+# 4) x = byte(y,z)
+# 5) v = getch(x,i)
+# 6) setch(x,i,v)
+
+# 7) a=array(30)
+# 8) x = bytes(n)
+
+
+     */
+
     /**
      *
      * todo: return(1) testing
-     *       return (1,2) testing
+     * todo: return (1,2) testing
      * todo: msg.data testing
-     * todo: contract.storage testing
+     * todo: contract.storage get/set testing
      * todo: [asm   asm] testing
      * todo: suicide(1) testing
-     * todo: stop test
+     * todo: stop testing
      *
      *
      */
