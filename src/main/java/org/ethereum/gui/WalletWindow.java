@@ -1,10 +1,11 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.AddressState;
 import org.ethereum.core.Wallet;
 import org.ethereum.manager.MainData;
-import org.ethereum.wallet.AddressState;
 
 import javax.swing.*;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;

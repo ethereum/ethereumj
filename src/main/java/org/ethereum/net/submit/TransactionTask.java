@@ -15,21 +15,19 @@ import static java.lang.Thread.sleep;
  * User: Roman Mandeleil
  * Created on: 23/05/2014 18:33
  */
-
-public class TransactionTask implements Callable {
+public class TransactionTask implements Callable<Transaction> {
 
     Logger logger = LoggerFactory.getLogger("TransactionTask");
 
     Transaction tx;
     boolean obsolete = false;
 
-
     public TransactionTask(Transaction tx) {
         this.tx = tx;
     }
 
     @Override
-    public Object call() throws Exception {
+    public Transaction call() throws Exception {
 
         try {
             logger.info("call() tx: {}", tx.toString());
@@ -39,10 +37,7 @@ public class TransactionTask implements Callable {
             PendingTransaction pendingTransaction =  MainData.instance.addPendingTransaction(tx);
             peer.sendTransaction(tx);
 
-            int i = 0;
             while(pendingTransaction.getApproved() < 1 ){
-
-                ++i;
                 sleep(10);
             }
 

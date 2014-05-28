@@ -1,12 +1,9 @@
 package org.ethereum.gui;
 
-import com.google.common.primitives.Longs;
+import org.ethereum.core.AddressState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
-import org.ethereum.net.submit.TransactionExecutor;
-import org.ethereum.net.submit.TransactionTask;
-import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -16,15 +13,9 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.math.BigInteger;
 import java.net.URL;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.regex.Pattern;
 
 import javax.swing.*;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -210,8 +201,6 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
             alertStatusMsg("The address can't afford this transaction");
             return false;
         }
-
-
         return true;
     }
 
@@ -269,7 +258,6 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
             }
         });
     }
-
 
     public static void main(String args[]) {
         AddressState as = new AddressState();

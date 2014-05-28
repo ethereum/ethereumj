@@ -29,6 +29,13 @@ public class Utils {
         return (new BigInteger(1, numberBytes)).toString();
     }
     
+    /** 
+     * Return formatted Date String: yyyy.MM.dd HH:mm:ss
+     * Based on Unix's time() input in seconds
+     * 
+     * @param timestamp seconds since start of Unix-time
+     * @return String formatted as - yyyy.MM.dd HH:mm:ss
+     */
     public static String longToDateTime(long timestamp) {
     	Date date = new Date(timestamp * 1000);
     	DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
@@ -43,7 +50,6 @@ public class Utils {
 
     static BigInteger _1000_ = new BigInteger("1000");
     public static String getValueShortString(BigInteger number){
-
         BigInteger result = number;
         int pow = 0;
         while (result.compareTo(_1000_) == 1 || result.compareTo(_1000_) == 0){
