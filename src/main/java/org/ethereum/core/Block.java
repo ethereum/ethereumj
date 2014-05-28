@@ -6,6 +6,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
+import org.ethereum.util.Utils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -129,7 +130,7 @@ public class Block {
         this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(1, gpBytes)).longValue();
         this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(1, glBytes)).longValue();
         this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
-        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
+        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(tsBytes)).longValue();
         
         this.extraData       = ((RLPItem) header.get(11)).getRLPData();
         this.nonce           = ((RLPItem) header.get(12)).getRLPData();
@@ -270,7 +271,7 @@ public class Block {
         toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("\n");
         toStringBuff.append("  gasLimit=" 		+ gasLimit).append("\n");
         toStringBuff.append("  gasUsed=" 		+ gasUsed).append("\n");
-        toStringBuff.append("  timestamp=" 		+ timestamp).append("\n");
+        toStringBuff.append("  timestamp=" 		+ timestamp + " (" + Utils.longToDateTime(timestamp) + ")").append("\n");
         toStringBuff.append("  extraData=" 		+ ByteUtil.toHexString(extraData)).append("\n");
         toStringBuff.append("  nonce=" 			+ ByteUtil.toHexString(nonce)).append("\n");
 
