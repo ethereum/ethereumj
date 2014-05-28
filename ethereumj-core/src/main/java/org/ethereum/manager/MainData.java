@@ -6,6 +6,8 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 import com.maxmind.geoip.Location;
+
+import org.ethereum.core.AddressState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
@@ -17,7 +19,6 @@ import org.ethereum.net.client.PeerData;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.submit.PendingTransaction;
-import org.ethereum.wallet.AddressState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -150,7 +151,6 @@ public class MainData {
      *        2) the dialog send the transaction to a net
      *        3) wherever the transaction got for the wire in will change to approve state
      *        4) only after the approve a) Wallet state changes
-     *
      *        5) After the block is received with that tx the pending been clean up
     */
     public PendingTransaction addPendingTransaction(Transaction transaction) {

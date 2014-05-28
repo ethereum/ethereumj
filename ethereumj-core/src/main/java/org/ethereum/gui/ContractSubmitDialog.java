@@ -1,10 +1,10 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.AddressState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.Utils;
-import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -13,6 +13,7 @@ import javax.swing.border.Border;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;

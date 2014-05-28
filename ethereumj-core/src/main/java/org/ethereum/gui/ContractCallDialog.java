@@ -1,11 +1,11 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.AddressState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
-import org.ethereum.wallet.AddressState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -16,6 +16,7 @@ import javax.swing.border.Border;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
