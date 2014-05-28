@@ -1,7 +1,7 @@
-<project name="enthereumJ-postpackage" default="run" basedir=".">
+<project name="ethereumj-postpackage" default="run" basedir=".">
 
     <description>
-        simple example build file
+        Build file to package the EthereumJ client and dependencies into a zip-file
     </description>
     <!-- set global properties for this build -->
     <property name="src" location="src"/>
@@ -38,7 +38,7 @@
         <copy file="./target/classes/GeoLiteCity.dat" todir="./target/package/ethereumj/config"/>
 
 
-        <zip destfile="ethereumJ-${DSTAMP}-${TSTAMP}.zip" basedir="./target/package">
+        <zip destfile="ethereumj-${DSTAMP}-${TSTAMP}.zip" basedir="./target/package">
         </zip>
 
 
