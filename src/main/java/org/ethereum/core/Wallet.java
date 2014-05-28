@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.wallet.AddressState;
 import org.spongycastle.util.encoders.Hex;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -14,6 +13,7 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
+
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
@@ -71,22 +71,18 @@ public class Wallet {
         return rows.get(address);
     }
 
-
     public BigInteger getBalance(byte[] addressBytes){
         String address = Hex.toHexString(addressBytes);
         return rows.get(address).getBalance();
     }
 
     public BigInteger totalBalance(){
-
         BigInteger sum = BigInteger.ZERO;
-
         for (AddressState addressState : rows.values()){
             sum = sum.add(addressState.getBalance());
         }
         return sum;
     }
-
 
     public void applyTransaction(Transaction transaction){
 
@@ -140,7 +136,7 @@ public class Wallet {
      */
     public void load() throws IOException, SAXException, ParserConfigurationException {
 
-        /**
+    	/**
 
          <wallet high="8933">
              <row id=1>
@@ -154,7 +150,7 @@ public class Wallet {
                  <value>900099909<value/>
              </row>
          </wallet>
-
+         
          */
 
         String dir = System.getProperty("user.dir");
