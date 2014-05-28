@@ -27,9 +27,8 @@ public class ByteUtil {
      * @return numBytes byte long array.
      */
     public static byte[] bigIntegerToBytes(BigInteger b, int numBytes) {
-        if (b == null) {
-            return null;
-        }
+		if (b == null)
+			return null;
         byte[] bytes = new byte[numBytes];
         byte[] biBytes = b.toByteArray();
         int start = (biBytes.length == numBytes + 1) ? 1 : 0;
@@ -85,7 +84,6 @@ public class ByteUtil {
 		return new BigInteger(1, b).intValue();
 	}
 
-
     /**
      * Calculate the number of bytes need
      * to encode the number
@@ -93,69 +91,60 @@ public class ByteUtil {
      * @param val - number
      * @return number of min bytes used to encode the number
      */
-    public static int numBytes(String val){
+    public static int numBytes(String val) {
 
         BigInteger bInt = new BigInteger(val);
         int bytes = 0;
 
-        while(!bInt.equals(BigInteger.ZERO)){
-
+        while(!bInt.equals(BigInteger.ZERO)) {
             bInt = bInt.shiftRight(8);
             ++bytes;
         }
-
         if (bytes == 0) ++bytes;
-
         return bytes;
     }
 
-
     /**
      * @param arg - not more that 32 bits
-     * @return - byts of the value pad with complete to 32 zeroes
+     * @return - bytes of the value pad with complete to 32 zeroes
      */
-    public static byte[] encodeValFor32Bits(Object arg){
+	public static byte[] encodeValFor32Bits(Object arg) {
 
-        byte[] data;
+		byte[] data;
 
-        // check if the string is numeric
-        if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?")){
+		// check if the string is numeric
+		if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?")) {
+			data = new BigInteger(arg.toString().trim()).toByteArray();
+		} else {
+			data = arg.toString().trim().getBytes();
+		}
 
-            data = new BigInteger(arg.toString().trim()).toByteArray();
-        }else{
-            data = arg.toString().trim().getBytes();
-        }
+		if (data.length > 32)
+			throw new RuntimeException("values can't be more than 32 bits");
 
-        if (data.length > 32) throw new Error("values can't be more than 32 bits");
+		byte[] val = new byte[32];
 
-        byte[] val = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+		int j = 0;
+		for (int i = data.length; i > 0; --i) {
+			val[31 - j] = data[i - 1];
+			++j;
+		}
+		return val;
+	}
 
-        int j = 0;
-        for (int i = data.length; i > 0; --i){
-            val[31 - j] = data[i-1];
-            ++j;
-        }
-
-        return val;
-    }
-
-
-    /**
-     * encode the values and concatenate together
-     */
-    public static byte[] encodeDataList(Object... args){
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        for (Object arg : args){
-
-            byte[] val = encodeValFor32Bits(arg);
-            try {
-                baos.write(val);
-            } catch (IOException e) {
-                throw new Error("Happen something that should never happen ", e);
-            }
-        }
-
-        return baos.toByteArray();
-    }
+	/**
+	 * encode the values and concatenate together
+	 */
+	public static byte[] encodeDataList(Object... args) {
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		for (Object arg : args) {
+			byte[] val = encodeValFor32Bits(arg);
+			try {
+				baos.write(val);
+			} catch (IOException e) {
+				throw new Error("Happen something that should never happen ", e);
+			}
+		}
+		return baos.toByteArray();
+	}
 }
