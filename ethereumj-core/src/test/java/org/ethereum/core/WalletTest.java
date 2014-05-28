@@ -2,12 +2,12 @@ package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.wallet.AddressState;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerException;
+
 import java.io.IOException;
 import java.math.BigInteger;
 

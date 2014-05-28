@@ -27,17 +27,9 @@ public class Transaction {
 
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 	
-    private static final int CALL_SIZE = 9;
-    private static final int CONTRACT_SIZE = 10;
-    public static final byte[] ZERO_ADDRESS = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    public static final byte[] ZERO_ADDRESS = new byte[20];
 	
-    /* creation contract tx
-     * [ nonce, endowment, 0000000000000000, gasPrice, gasDeposit  data, signature(v, r, s) ]
-     * or simple send tx
-     * [ nonce, value, receiveAddress, gasPrice, gasDeposit, data, signature(v, r, s) ]
-     */
-
-    /* SHA3 hash of the rlpEncoded transaction */
+    /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
 
     /* a counter used to make sure each transaction can only be processed once */
@@ -61,8 +53,8 @@ public class Transaction {
     private byte[] gasLimit;
 
     /* An unlimited size byte array specifying
-     * input [data] of the message call */
-    /* Initialisation code for a new contract */
+     * input [data] of the message call or
+     * Initialization code for a new contract */
     private byte[] data;
 
     /* the elliptic curve signature
@@ -73,7 +65,7 @@ public class Transaction {
     private byte[] rlpEncoded;
     private byte[] rlpRaw;
     /* Indicates if this transaction has been parsed 
-     * from the rlp-encoded data */
+     * from the RLP-encoded data */
     private boolean parsed = false;
 
     public Transaction(byte[] rawData) {
@@ -81,6 +73,11 @@ public class Transaction {
         parsed = false;
     }
 
+    /* creation contract tx
+     * [ nonce, gasPrice, gasLimit, 0000000000000000, endowment, init, signature(v, r, s) ]
+     * or simple send tx
+     * [ nonce, gasPrice, gasLimit, receiveAddress, value, data, signature(v, r, s) ]
+     */
     public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data) {
         this.nonce = nonce;
         this.gasPrice = gasPrice;
@@ -95,7 +92,7 @@ public class Transaction {
         parsed = true;
     }
 
-    public void rlpParse(){
+    public void rlpParse() {
 
         RLPList decodedTxList = RLP.decode2(rlpEncoded);
         RLPList transaction =  (RLPList) decodedTxList.get(0);
@@ -105,7 +102,6 @@ public class Transaction {
         this.gasLimit =       ((RLPItem) transaction.get(2)).getRLPData();
         this.receiveAddress = ((RLPItem) transaction.get(3)).getRLPData();
         this.value =          ((RLPItem) transaction.get(4)).getRLPData();
-
 
         this.data =     ((RLPItem) transaction.get(5)).getRLPData();
         // only parse signature in case tx is signed
@@ -117,7 +113,6 @@ public class Transaction {
         } else {
             logger.debug("RLP encoded tx is not signed!");
         }
-
         this.parsed = true;
         this.hash  = this.getHash();
     }
@@ -127,7 +122,6 @@ public class Transaction {
     }
 
     public byte[] getHash() {
-
         if (!parsed) rlpParse();
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.sha3(plainMsg);
@@ -177,11 +171,9 @@ public class Transaction {
 
         if (!isContract()) return null;
 
-        byte[] val1 = RLP.encodeElement(getSender());
-        byte[] val2 = RLP.encodeElement(nonce);
-        byte[] val  = HashUtil.sha3omit12(RLP.encodeList(val1, val2));
-
-        return val;
+        byte[] encSender = RLP.encodeElement(getSender());
+        byte[] encNonce = RLP.encodeElement(nonce);
+        return HashUtil.sha3omit12(RLP.encodeList(encSender, encNonce));
     }
 
     public boolean isContract() {
@@ -231,8 +223,8 @@ public class Transaction {
     }
 
     /**
-     *  For signature games you have to keep also
-     *  rlp of the transaction without any signature data
+     *  For signatures you have to keep also
+     *  RLP of the transaction without any signature data
      */
     public byte[] getEncodedRaw(){
 
@@ -244,10 +236,10 @@ public class Transaction {
         byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
         byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
         byte[] value 				= RLP.encodeElement(this.value);
-        byte[] init 			= RLP.encodeElement(this.data);
+        byte[] data 				= RLP.encodeElement(this.data);
 
-        this.rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
-                 init);
+		this.rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
+				value, data);
         return rlpRaw;
     }
 
@@ -260,7 +252,7 @@ public class Transaction {
         byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
         byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
         byte[] value 				= RLP.encodeElement(this.value);
-        byte[] init 			= RLP.encodeElement(this.data);
+        byte[] data 				= RLP.encodeElement(this.data);
 
         byte[] v, r, s;
         
@@ -274,9 +266,8 @@ public class Transaction {
         	s = RLP.encodeElement(new byte[0]);
         }
 
-        this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress, value,
-                init, v, r, s);
-
+		this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,
+				receiveAddress, value, data, v, r, s);
         return rlpEncoded;
     }
 

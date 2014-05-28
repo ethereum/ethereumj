@@ -1,4 +1,4 @@
-package org.ethereum.wallet;
+package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.Utils;
@@ -10,23 +10,19 @@ import java.math.BigInteger;
  * User: Roman Mandeleil
  * Created on: 21/05/2014 10:43
  */
-
 public class AddressState {
 
     private ECKey ecKey;
     private BigInteger nonce;
     private BigInteger balance;
 
-
     public AddressState() {
-
         ecKey = new ECKey(Utils.getRandom());
         nonce = BigInteger.ZERO;
         balance = BigInteger.ZERO;
     }
 
     public AddressState(ECKey ecKey) {
-
         this();
         this.ecKey = ecKey;
     }
@@ -56,6 +52,4 @@ public class AddressState {
     public void addToBalance(BigInteger value){
         balance = balance.add(value);
     }
-
-
 }

@@ -4,8 +4,6 @@ import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
