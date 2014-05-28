@@ -3,6 +3,9 @@ package org.ethereum.util;
 import java.math.BigInteger;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
@@ -24,6 +27,12 @@ public class Utils {
 
         byte[] numberBytes = Hex.decode(hexNum.substring(2));
         return (new BigInteger(1, numberBytes)).toString();
+    }
+    
+    public static String longToDateTime(long timestamp) {
+    	Date date = new Date(timestamp * 1000);
+    	DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+    	return formatter.format(date);
     }
     
     public static ImageIcon getImageIcon(String resource){
