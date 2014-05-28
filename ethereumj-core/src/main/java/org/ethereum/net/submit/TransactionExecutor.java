@@ -4,6 +4,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.ethereum.core.Transaction;
+
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
@@ -17,7 +19,7 @@ public class TransactionExecutor {
 
     ExecutorService executor = Executors.newFixedThreadPool(1);
 
-    public Future submitTransaction(TransactionTask task){
+    public Future<Transaction> submitTransaction(TransactionTask task){
         return executor.submit(task);
     }
 
