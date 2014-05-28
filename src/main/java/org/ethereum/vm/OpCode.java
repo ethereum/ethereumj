@@ -54,7 +54,7 @@ public enum OpCode {
 	CALLDATASIZE(0x36),
 	CALLDATACOPY(0x37),
 	CODESIZE(0x38),
-	CODECOPY(0x39),
+	CODECOPY(0x39), // [len src_start target_start CODECOPY]
 	GASPRICE(0x3a),
 	
 	/**
