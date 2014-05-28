@@ -1247,11 +1247,46 @@ public class SerpentCompileTest {
 
     /**
      *
-     * todo: return testing
-     * todo: memory_storage testing
-     * todo: message access testing
-     * todo: msg testing
+     * todo: return(1) testing
+     *       return (1,2) testing
+     * todo: msg.data testing
+     * todo: contract.storage testing
      * todo: [asm   asm] testing
+     * todo: suicide(1) testing
+     * todo: stop test
+     *
      *
      */
+
+
+    /**
+
+     todo: add this namecoin sample to the testing
+     if !(contract.storage[msg.data[0]]):
+         contract.storage[msg.data[0]] = msg.data[1]
+         return(1)
+         else:
+         return(0)
+
+     */
+
+
+/*
+     todo: add this curency creation sample for testing
+    "if msg.datasize == 1:\n" +
+    "        addr = msg.data[0]\n" +
+    "        return(contract.storage[addr])\n" +
+    "else:\n" +
+    "        from = msg.sender\n" +
+    "        fromvalue = contract.storage[from]\n" +
+    "        to = msg.data[0]\n" +
+    "        value = msg.data[1]\n" +
+    "        if fromvalue >= value:\n" +
+    "            contract.storage[from] = fromvalue - value\n" +
+    "            contract.storage[to] = contract.storage[to] + value\n" +
+    "            return(1)\n" +
+    "        else:\n" +
+    "            return(0)" +
+
+*/
 }

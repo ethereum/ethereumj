@@ -132,7 +132,9 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
         int function = Token.FUNCTION;
         tokenMap.put("msg",		        	function);
+        tokenMap.put("data",		        	function);
         tokenMap.put("contract",			function);
+        tokenMap.put("storage",			function);
         tokenMap.put("block",			function);
         tokenMap.put("tx",			function);
 

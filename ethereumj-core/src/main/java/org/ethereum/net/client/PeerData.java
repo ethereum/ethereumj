@@ -66,7 +66,7 @@ public class PeerData {
 
     @Override
     public String toString() {
-        return "Peer: [ip=" + getInetAddress().getHostName() + ", port=" + getPort() + ", peerId=" + Hex.toHexString(getPeerId()) + "]";
+        return "Peer: [ip=" + getInetAddress().getHostAddress() + ", port=" + getPort() + ", peerId=" + Hex.toHexString(getPeerId()) + "]";
     }
 
     @Override

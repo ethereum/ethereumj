@@ -86,6 +86,17 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitAsm_symbol(@NotNull SerpentParser.Asm_symbolContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#contract_storage_assign}.
+	 * @param ctx the parse tree
+	 */
+	void enterContract_storage_assign(@NotNull SerpentParser.Contract_storage_assignContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#contract_storage_assign}.
+	 * @param ctx the parse tree
+	 */
+	void exitContract_storage_assign(@NotNull SerpentParser.Contract_storage_assignContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#tx_gas}.
 	 * @param ctx the parse tree
 	 */
@@ -174,6 +185,17 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitTx_gasprice(@NotNull SerpentParser.Tx_gaspriceContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#contract_storage_load}.
+	 * @param ctx the parse tree
+	 */
+	void enterContract_storage_load(@NotNull SerpentParser.Contract_storage_loadContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#contract_storage_load}.
+	 * @param ctx the parse tree
+	 */
+	void exitContract_storage_load(@NotNull SerpentParser.Contract_storage_loadContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#ex_or_exp}.
 	 * @param ctx the parse tree
 	 */
@@ -229,6 +251,17 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitParse(@NotNull SerpentParser.ParseContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#suicide_func}.
+	 * @param ctx the parse tree
+	 */
+	void enterSuicide_func(@NotNull SerpentParser.Suicide_funcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#suicide_func}.
+	 * @param ctx the parse tree
+	 */
+	void exitSuicide_func(@NotNull SerpentParser.Suicide_funcContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#hex_num}.
 	 * @param ctx the parse tree
 	 */
@@ -238,17 +271,6 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitHex_num(@NotNull SerpentParser.Hex_numContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#ret_func}.
-	 * @param ctx the parse tree
-	 */
-	void enterRet_func(@NotNull SerpentParser.Ret_funcContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#ret_func}.
-	 * @param ctx the parse tree
-	 */
-	void exitRet_func(@NotNull SerpentParser.Ret_funcContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#contract_balance}.
@@ -282,6 +304,17 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitEq_exp(@NotNull SerpentParser.Eq_expContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#stop_func}.
+	 * @param ctx the parse tree
+	 */
+	void enterStop_func(@NotNull SerpentParser.Stop_funcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#stop_func}.
+	 * @param ctx the parse tree
+	 */
+	void exitStop_func(@NotNull SerpentParser.Stop_funcContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#log_and_exp}.
@@ -394,6 +427,28 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitInt_val(@NotNull SerpentParser.Int_valContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#msg_data}.
+	 * @param ctx the parse tree
+	 */
+	void enterMsg_data(@NotNull SerpentParser.Msg_dataContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#msg_data}.
+	 * @param ctx the parse tree
+	 */
+	void exitMsg_data(@NotNull SerpentParser.Msg_dataContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#ret_func_2}.
+	 * @param ctx the parse tree
+	 */
+	void enterRet_func_2(@NotNull SerpentParser.Ret_func_2Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#ret_func_2}.
+	 * @param ctx the parse tree
+	 */
+	void exitRet_func_2(@NotNull SerpentParser.Ret_func_2Context ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#msg_value}.
 	 * @param ctx the parse tree
 	 */
@@ -414,4 +469,15 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitAsm(@NotNull SerpentParser.AsmContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#ret_func_1}.
+	 * @param ctx the parse tree
+	 */
+	void enterRet_func_1(@NotNull SerpentParser.Ret_func_1Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#ret_func_1}.
+	 * @param ctx the parse tree
+	 */
+	void exitRet_func_1(@NotNull SerpentParser.Ret_func_1Context ctx);
 }

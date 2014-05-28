@@ -61,6 +61,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitAsm_symbol(@NotNull SerpentParser.Asm_symbolContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#contract_storage_assign}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitContract_storage_assign(@NotNull SerpentParser.Contract_storage_assignContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#tx_gas}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -117,6 +124,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitTx_gasprice(@NotNull SerpentParser.Tx_gaspriceContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#contract_storage_load}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitContract_storage_load(@NotNull SerpentParser.Contract_storage_loadContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#ex_or_exp}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -152,18 +166,18 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitParse(@NotNull SerpentParser.ParseContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#suicide_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSuicide_func(@NotNull SerpentParser.Suicide_funcContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#hex_num}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitHex_num(@NotNull SerpentParser.Hex_numContext ctx);
-
-	/**
-	 * Visit a parse tree produced by {@link SerpentParser#ret_func}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitRet_func(@NotNull SerpentParser.Ret_funcContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#contract_balance}.
@@ -185,6 +199,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitEq_exp(@NotNull SerpentParser.Eq_expContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#stop_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitStop_func(@NotNull SerpentParser.Stop_funcContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#log_and_exp}.
@@ -257,6 +278,20 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitInt_val(@NotNull SerpentParser.Int_valContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#msg_data}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitMsg_data(@NotNull SerpentParser.Msg_dataContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#ret_func_2}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRet_func_2(@NotNull SerpentParser.Ret_func_2Context ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#msg_value}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -269,4 +304,11 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitAsm(@NotNull SerpentParser.AsmContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#ret_func_1}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitRet_func_1(@NotNull SerpentParser.Ret_func_1Context ctx);
 }
