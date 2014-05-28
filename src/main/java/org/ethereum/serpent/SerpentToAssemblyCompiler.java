@@ -167,11 +167,26 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return String.format(" %s %d MSTORE ", expression, addr * 32);
     }
 
+    @Override
+    public String visitContract_storage_load(@NotNull SerpentParser.Contract_storage_loadContext ctx) {
+
+        String operand0 = visitExpression(ctx.expression());
+
+        return String.format(" %s SLOAD ", operand0);
+    }
+
+    @Override
+    public String visitContract_storage_assign(@NotNull SerpentParser.Contract_storage_assignContext ctx) {
+
+        String operand0 = visitExpression(ctx.expression(0));
+        String operand1 = visitExpression(ctx.expression(1));
+
+        return String.format(" %s %s SSTORE ", operand1, operand0);
+    }
+
 
     @Override
     public String visitInt_val(@NotNull SerpentParser.Int_valContext ctx) {
-
-        //   todo:     (!!!) ensure that not encode value more than 32 bytes (!!!)
 
         if (ctx.OP_NOT() != null)
             return visitExpression(ctx.expression()) + " NOT";
@@ -190,6 +205,13 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.msg_func() != null)
             return visitMsg_func(ctx.msg_func());
+
+        if (ctx.msg_data() != null)
+            return visitMsg_data(ctx.msg_data());
+
+        if (ctx.contract_storage_load() != null)
+            return visitContract_storage_load(ctx.contract_storage_load());
+
 
         return ctx.INT().toString();
     }
@@ -400,11 +422,42 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     }
 
     @Override
-    public String visitRet_func(@NotNull SerpentParser.Ret_funcContext ctx) {
+    public String visitRet_func_1(@NotNull SerpentParser.Ret_func_1Context ctx) {
 
-        return ctx.INT() + " MSIZE SWAP MSIZE MSTORE 32 SWAP RETURN";
+        String operand0 = visit(ctx.expression());
+
+        return  String.format(" %s MSIZE SWAP MSIZE MSTORE 32 SWAP RETURN ", operand0);
     }
 
+    @Override
+    public String visitRet_func_2(@NotNull SerpentParser.Ret_func_2Context ctx) {
+
+        String operand0 = visit(ctx.expression(0));
+        String operand1 = visit(ctx.expression(1));
+
+        return String.format(" %s 32 MUL %s RETURN ", operand1, operand0);
+    }
+
+    @Override
+    public String visitSuicide_func(@NotNull SerpentParser.Suicide_funcContext ctx) {
+
+        String operand0 = visit(ctx.expression());
+
+        return String.format(" %s SUICIDE ", operand0);
+    }
+
+    @Override
+    public String visitStop_func(@NotNull SerpentParser.Stop_funcContext ctx) {
+        return " STOP ";
+    }
+
+    @Override
+    public String visitMsg_data(@NotNull SerpentParser.Msg_dataContext ctx) {
+
+        String operand0 = visit(ctx.expression());
+
+        return String.format("%s 32 MUL CALLDATALOAD ",  operand0);
+    }
 
     @Override
     public String visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx) {
@@ -415,7 +468,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand3 = visit(ctx.int_val(3));
         String operand4 = visit(ctx.int_val(4));
 
-        return  " 32 " + operand4 + " MUL " + operand3 + " " + operand1 + " " + operand0 + " " + operand2 + " CALL";
+        return  String.format("%s 32 MUL %s %s %s %s CALL ",  operand4, operand3, operand1, operand0, operand2);
     }
 
     @Override
@@ -442,7 +495,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             sb.append(symbol).append(" ");
         }
 
-        return sb.toString();
+        return "[asm " + sb.toString() + " asm]";
     }
 
     @Override

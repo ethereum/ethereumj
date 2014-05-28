@@ -108,6 +108,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterContract_storage_assign(@NotNull SerpentParser.Contract_storage_assignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitContract_storage_assign(@NotNull SerpentParser.Contract_storage_assignContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterTx_gas(@NotNull SerpentParser.Tx_gasContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -212,6 +225,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterContract_storage_load(@NotNull SerpentParser.Contract_storage_loadContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitContract_storage_load(@NotNull SerpentParser.Contract_storage_loadContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterEx_or_exp(@NotNull SerpentParser.Ex_or_expContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -277,6 +303,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterSuicide_func(@NotNull SerpentParser.Suicide_funcContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitSuicide_func(@NotNull SerpentParser.Suicide_funcContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterHex_num(@NotNull SerpentParser.Hex_numContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -284,19 +323,6 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitHex_num(@NotNull SerpentParser.Hex_numContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * The default implementation does nothing.
-	 */
-	@Override public void enterRet_func(@NotNull SerpentParser.Ret_funcContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * The default implementation does nothing.
-	 */
-	@Override public void exitRet_func(@NotNull SerpentParser.Ret_funcContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -336,6 +362,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitEq_exp(@NotNull SerpentParser.Eq_expContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterStop_func(@NotNull SerpentParser.Stop_funcContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitStop_func(@NotNull SerpentParser.Stop_funcContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -472,6 +511,32 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterMsg_data(@NotNull SerpentParser.Msg_dataContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitMsg_data(@NotNull SerpentParser.Msg_dataContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterRet_func_2(@NotNull SerpentParser.Ret_func_2Context ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitRet_func_2(@NotNull SerpentParser.Ret_func_2Context ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterMsg_value(@NotNull SerpentParser.Msg_valueContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -492,6 +557,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitAsm(@NotNull SerpentParser.AsmContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterRet_func_1(@NotNull SerpentParser.Ret_func_1Context ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitRet_func_1(@NotNull SerpentParser.Ret_func_1Context ctx) { }
 
 	/**
 	 * {@inheritDoc}

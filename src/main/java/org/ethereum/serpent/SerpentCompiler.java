@@ -1,15 +1,12 @@
 package org.ethereum.serpent;
 
-import io.netty.buffer.ByteBuf;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.OpCode;
 import org.spongycastle.util.BigIntegers;
-import sun.nio.ByteBuffered;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -44,28 +41,34 @@ public class SerpentCompiler {
         List<String> lexaList = new ArrayList<String>();
         Collections.addAll(lexaList, lexaArr);
 
-        // temporary remove all push inserted
-        // by [asm asm] block
-        for (int i = 0; i < lexaList.size(); ++i){
-
-            String lexa  = lexaList.get(i);
-            if (lexa.length() >= 4 && lexa.substring(0,4).equals("PUSH")){
-
-                lexaList.remove(i);
-            }
-        }
-
         // Encode push_n numbers
         boolean skiping = false;
         for (int i = 0; i < lexaList.size(); ++i){
 
             String lexa  = lexaList.get(i);
 
+            { // skiping the [asm asm] block
+                if (lexa.equals("asm]")){
+                    skiping = false;
+                    lexaList.remove(i);
+                    lexa  = lexaList.get(i);
+                }
+
+                if (lexa.equals("[asm")){
+                    skiping = true;
+                    lexaList.remove(i);
+                    continue;
+                }
+
+                if (skiping) continue;
+            }
+
             if (OpCode.contains(lexa) ||
                 lexa.contains("REF_") ||
                 lexa.contains("LABEL_")) continue;
 
             int bytesNum = ByteUtil.numBytes(lexa);
+
 
             String num = lexaList.remove(i);
             BigInteger bNum = new BigInteger(num);
@@ -131,7 +134,7 @@ public class SerpentCompiler {
 
         // wrap plan
         // 1) that is the code
-        // 2) need to wrap it with PUSH1 (codesize) PUSH1 (codestart) 000 CODECOPY 000 PUSH1 (codesize) RETURN
+        // 2) need to wrap it with PUSH1 (codesize) PUSH1 (codestart) 000 CODECOPY 000 PUSH1 (codesize) _fURN
 
         return baos.toByteArray();
     }

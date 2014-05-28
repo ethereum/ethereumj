@@ -28,7 +28,8 @@ parse: block EOF
     ;
 
 
-block:  ( asm | assign | special_func | if_elif_else_stmt | while_stmt | ret_func  | msg_func)* ;
+block:  ( asm | assign | contract_storage_assign | special_func | if_elif_else_stmt |
+          while_stmt | ret_func_1 | ret_func_2 | suicide_func | stop_func)* ;
 
 
 asm: '[asm' asm_symbol 'asm]' NL;
@@ -100,8 +101,11 @@ block_gaslimit
       : 'block.gaslimit' ;
 
 msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' int_val ',' int_val  ')' ;
+msg_data: 'msg.data' '[' expression ']' ;
 
 assign:  VAR EQ_OP expression NL;
+contract_storage_assign:  'contract.storage' '[' expression ']' EQ_OP expression NL;
+contract_storage_load: 'contract.storage' '[' expression ']';
 
 
 mul_expr
@@ -161,7 +165,9 @@ int_val : INT |
           special_func |
           '(' expression ')' |
           OP_NOT '(' expression ')' |
-          msg_func
+          msg_func |
+          msg_data |
+          contract_storage_load
           ;
 // todo:  here the val should include also retrieve a variable
 
@@ -169,7 +175,10 @@ hex_num
    : HEX_NUMBER
    ;
 
-ret_func:  'return' '(' INT ')' NL;
+ret_func_1:  'return' '(' expression ')' NL;
+ret_func_2:  'return' '(' expression ',' expression ')' NL;
+suicide_func: 'suicide' '(' expression ')' NL;
+stop_func: 'stop' NL;
 
 get_var: VAR;
 
