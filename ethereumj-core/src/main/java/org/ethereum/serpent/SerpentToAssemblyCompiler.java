@@ -421,17 +421,18 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     @Override
     public String visitAsm(@NotNull SerpentParser.AsmContext ctx) {
 
-        int size = ((SerpentParser.AsmContext) ctx).getChildCount();
+        int size = ctx.asm_symbol().getChildCount();
         StringBuffer sb = new StringBuffer();
 
         for (int i = 0; i < size ; ++i){
 
-            String symbol = ((SerpentParser.AsmContext) ctx).getChild(i).toString();
+            String symbol = ctx.asm_symbol().children.get(i).toString();
             symbol = symbol.trim();
 
+            // exclude all that is not an assembly code
             if (symbol.equals("[asm") || symbol.equals("asm]") || symbol.equals("\n")) continue;
 
-            boolean match = Pattern.matches("[0-9a-fA-F]+", symbol);
+            boolean match = Pattern.matches("[0-9]+", symbol);
             if (match){
 
                 int byteVal = Integer.parseInt(symbol);
