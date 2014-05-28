@@ -31,7 +31,8 @@ parse: block EOF
 block:  ( asm | assign | special_func | if_elif_else_stmt | while_stmt | ret_func  | msg_func)* ;
 
 
-asm: '[asm' (ASM_SYMBOLS | INT)* 'asm]' NL;
+asm: '[asm' asm_symbol 'asm]' NL;
+asm_symbol: (ASM_SYMBOLS | INT)* ;
 
 if_elif_else_stmt:  'if'   condition ':' INDENT block DEDENT
                    ('elif' condition ':' INDENT block DEDENT)*

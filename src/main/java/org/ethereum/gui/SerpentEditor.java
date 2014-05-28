@@ -2,9 +2,7 @@ package org.ethereum.gui;
 
 import org.abego.treelayout.internal.util.Contract;
 import org.ethereum.serpent.SerpentCompiler;
-import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
-import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
-import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
@@ -46,7 +44,7 @@ public class SerpentEditor extends JFrame {
             "return(0)\n";
 
 
-
+    private final RSyntaxTextArea codeArea;
     private static final long serialVersionUID = 1L;
 
     public SerpentEditor() {
@@ -63,11 +61,12 @@ public class SerpentEditor extends JFrame {
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance();
         atmf.putMapping("text/serpent", "org.ethereum.gui.SerpentTokenMaker");
 
-        final RSyntaxTextArea codeArea = new RSyntaxTextArea(32, 80);
+        codeArea = new RSyntaxTextArea(32, 80);
         codeArea.setSyntaxEditingStyle("text/serpent");
         codeArea.setCodeFoldingEnabled(true);
         codeArea.setAntiAliasingEnabled(true);
         codeArea.setText(codeSample2);
+        changeStyleProgrammatically();
 
         RTextScrollPane sp = new RTextScrollPane(codeArea);
 
@@ -183,6 +182,33 @@ public class SerpentEditor extends JFrame {
 //        setLocationRelativeTo(null);
 
     }
+
+    private void changeStyleProgrammatically() {
+
+        // Set the font for all token types.
+
+        // Change a few things here and there.
+        SyntaxScheme scheme = codeArea.getSyntaxScheme();
+
+//        scheme.getStyle(Token.RESERVED_WORD).background = Color.white;
+//        scheme.getStyle(Token.RESERVED_WORD).foreground = Color.BLUE;
+
+        scheme.getStyle(Token.IDENTIFIER).foreground = Color.black;
+
+
+        scheme.getStyle(Token.RESERVED_WORD_2).background = Color.white;
+        scheme.getStyle(Token.RESERVED_WORD_2).foreground = Color.MAGENTA.darker().darker();
+
+
+//        scheme.getStyle(Token.LITERAL_STRING_DOUBLE_QUOTE).underline = true;
+//        scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).underline = true;
+//        scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).background = Color.pink;
+
+//        scheme.getStyle(Token.COMMENT_EOL).font = new Font("Georgia", Font.ITALIC, 10);
+
+        codeArea.revalidate();
+    }
+
 
     public static void main(String[] args) {
         // Start all Swing applications on the EDT.

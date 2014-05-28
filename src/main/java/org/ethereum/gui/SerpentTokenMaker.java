@@ -2,6 +2,7 @@ package org.ethereum.gui;
 
 import javax.swing.text.Segment;
 
+import org.ethereum.vm.OpCode;
 import org.fife.ui.rsyntaxtextarea.*;
 
 
@@ -98,7 +99,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
     @Override
     public TokenMap getWordsToHighlight() {
 
-        TokenMap tokenMap = new TokenMap(true); // Ignore case.
+        TokenMap tokenMap = new TokenMap(false); // Ignore case.
 
         int reservedWord = Token.RESERVED_WORD;
         tokenMap.put("set",		reservedWord);
@@ -135,6 +136,13 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         tokenMap.put("block",			function);
         tokenMap.put("tx",			function);
 
+        // ALL the assembly tokens
+        int reservedWord2 = Token.RESERVED_WORD_2;
+        for (OpCode value : OpCode.values()){
+            tokenMap.put(value.name(), reservedWord2);
+            tokenMap.put("[asm", reservedWord2);
+            tokenMap.put("asm]", reservedWord2);
+        }
 
         return tokenMap;
 

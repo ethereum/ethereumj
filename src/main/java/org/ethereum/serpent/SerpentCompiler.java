@@ -44,7 +44,19 @@ public class SerpentCompiler {
         List<String> lexaList = new ArrayList<String>();
         Collections.addAll(lexaList, lexaArr);
 
+        // temporary remove all push inserted
+        // by [asm asm] block
+        for (int i = 0; i < lexaList.size(); ++i){
+
+            String lexa  = lexaList.get(i);
+            if (lexa.length() >= 4 && lexa.substring(0,4).equals("PUSH")){
+
+                lexaList.remove(i);
+            }
+        }
+
         // Encode push_n numbers
+        boolean skiping = false;
         for (int i = 0; i < lexaList.size(); ++i){
 
             String lexa  = lexaList.get(i);
@@ -53,16 +65,16 @@ public class SerpentCompiler {
                 lexa.contains("REF_") ||
                 lexa.contains("LABEL_")) continue;
 
-            int bytesNum = ByteUtil.numBytes( lexa );
+            int bytesNum = ByteUtil.numBytes(lexa);
 
             String num = lexaList.remove(i);
             BigInteger bNum = new BigInteger(num);
             byte[] bytes = BigIntegers.asUnsignedByteArray(bNum);
-            if (bytes.length == 0)bytes = new byte[]{0};
+            if (bytes.length == 0) bytes = new byte[]{0};
 
-            for (int j = bytes.length; j > 0 ; --j){
+            for (int j = bytes.length; j > 0; --j) {
 
-                lexaList.add(i, (bytes[j-1] & 0xFF) +"");
+                lexaList.add(i, (bytes[j - 1] & 0xFF) + "");
             }
 
             lexaList.add(i, "PUSH" + bytesNum);
