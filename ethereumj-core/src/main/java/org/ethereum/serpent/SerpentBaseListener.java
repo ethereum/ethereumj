@@ -69,19 +69,6 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
-	@Override public void enterTx_origin(@NotNull SerpentParser.Tx_originContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * The default implementation does nothing.
-	 */
-	@Override public void exitTx_origin(@NotNull SerpentParser.Tx_originContext ctx) { }
-
-	/**
-	 * {@inheritDoc}
-	 * <p/>
-	 * The default implementation does nothing.
-	 */
 	@Override public void enterBlock(@NotNull SerpentParser.BlockContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -89,6 +76,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitBlock(@NotNull SerpentParser.BlockContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterTx_origin(@NotNull SerpentParser.Tx_originContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitTx_origin(@NotNull SerpentParser.Tx_originContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -206,6 +206,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.serpent.SerpentCompiler;
 import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
@@ -74,6 +75,16 @@ public class GUIUtils {
             if ((i + 1) % 8 == 0 && i != 0) sb.append("\n");
         }
         return sb.toString();
+    }
+
+
+    public static String getStyledAsmCode(String asmCode){
+
+        String initBlock = SerpentCompiler.extractInitBlock(asmCode);
+        String codeBlock = SerpentCompiler.extractCodeBlock(asmCode);
+
+        return String.format(" \n\n *** [Init] *** \n\n     %s \n" +
+                "\n *** [Code] *** \n\n      %s \n\n", initBlock, codeBlock);
     }
 
 

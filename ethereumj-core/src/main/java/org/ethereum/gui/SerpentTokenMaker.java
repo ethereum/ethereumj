@@ -55,6 +55,13 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                 if (value!=-1)
                     tokenType = value;
                 break;
+
+            case Token.ANNOTATION:
+                value = wordsToHighlight.get(segment, start,end);
+                if (value!=-1)
+                    tokenType = value;
+                break;
+
         }
 
         super.addToken(segment, start, end, tokenType, startOffset);
@@ -146,6 +153,13 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
             tokenMap.put("asm]", reservedWord2);
         }
 
+        int dataType = Token.ANNOTATION;
+        tokenMap.put("init",			dataType);
+        tokenMap.put("code",			dataType);
+
+
+
+
         return tokenMap;
 
     }
@@ -189,6 +203,10 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                     currentTokenStart = i;	// Starting a new token here.
 
                     switch (c) {
+
+                        case '#':
+                            currentTokenType = Token.COMMENT_EOL;
+                            break;
 
                         case ' ':
                         case '\t':
@@ -262,6 +280,11 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                     switch (c) {
 
+                        case '#':
+                            addToken(text, currentTokenStart,i-1, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
+                            currentTokenStart = i;
+                            currentTokenType = Token.COMMENT_EOL;
+                            break;
                         case ' ':
                         case '\t':
                             break;	// Still whitespace.

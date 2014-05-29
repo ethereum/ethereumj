@@ -53,17 +53,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitGet_var(@NotNull SerpentParser.Get_varContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#tx_origin}.
-	 * @param ctx the parse tree
-	 */
-	void enterTx_origin(@NotNull SerpentParser.Tx_originContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#tx_origin}.
-	 * @param ctx the parse tree
-	 */
-	void exitTx_origin(@NotNull SerpentParser.Tx_originContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#block}.
 	 * @param ctx the parse tree
 	 */
@@ -73,6 +62,17 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitBlock(@NotNull SerpentParser.BlockContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#tx_origin}.
+	 * @param ctx the parse tree
+	 */
+	void enterTx_origin(@NotNull SerpentParser.Tx_originContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#tx_origin}.
+	 * @param ctx the parse tree
+	 */
+	void exitTx_origin(@NotNull SerpentParser.Tx_originContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#asm_symbol}.
@@ -172,6 +172,17 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#parse_init_code_block}.
+	 * @param ctx the parse tree
+	 */
+	void enterParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#parse_init_code_block}.
+	 * @param ctx the parse tree
+	 */
+	void exitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#tx_gasprice}.

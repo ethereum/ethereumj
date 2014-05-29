@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
@@ -29,6 +31,50 @@ public class SerpentCompiler {
         String result = new SerpentToAssemblyCompiler().visit(tree);
         result = result.replaceAll("\\s+", " ");
         result = result.trim();
+
+        return result;
+    }
+
+    public static String compileFullNotion(String code){
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
+                code);
+        ParseTree tree = parser.parse_init_code_block();
+
+        String result = new SerpentToAssemblyCompiler().visit(tree);
+        result = result.replaceAll("\\s+", " ");
+        result = result.trim();
+
+        return result;
+    }
+
+    public static byte[] compileFullNotionAssemblyToMachine(String code){
+
+        byte[] initCode = compileAssemblyToMachine(extractInitBlock(code));
+        byte[] codeCode = compileAssemblyToMachine(extractCodeBlock(code));
+
+        return encodeMachineCodeForVMRun(codeCode, initCode);
+    }
+
+
+    public static String extractInitBlock(String code){
+
+        String result = "";
+        Pattern pattern = Pattern.compile("\\[init (.*?) init\\]");
+        Matcher matcher = pattern.matcher(code);
+        if (matcher.find()) {
+            result = matcher.group(1);
+        }
+
+        return result;
+    }
+
+    public static String extractCodeBlock(String code){
+        String result = "";
+        Pattern pattern = Pattern.compile("\\[code (.*?) code\\]");
+        Matcher matcher = pattern.matcher(code);
+        if (matcher.find()) {
+            result = matcher.group(1);
+        }
 
         return result;
     }
@@ -144,21 +190,28 @@ public class SerpentCompiler {
     }
 
 
-    public static byte[]  encodeMachineCodeForVMRun(byte[] code){
+    /**
+     *
+     * @param code
+     * @param init
+     * @return
+     */
+    public static byte[] encodeMachineCodeForVMRun(byte[] code, byte[] init){
 
         if (code == null || code.length == 0) throw new RuntimeException("code can't be empty code: " + code);
 
         int numBytes = ByteUtil.numBytes(code.length + "");
-        byte[] lenBytes = BigInteger.valueOf(code.length).toByteArray();
+        byte[] lenBytes = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(code.length));
 
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < lenBytes.length; ++i){
 
-            sb.append(Hex.toHexString(lenBytes, i, 1)).append(" ");
+            sb.append(lenBytes[i]).append(" ");
         }
 
         // calc real code start position (after the init header)
         int pos = 10  + numBytes * 2;
+        if (init != null) pos+=init.length;
 
         // @push_len @len PUSH1 @src_start  PUSH1 0 CODECOPY @push_len @len 0 PUSH1 0 RETURN
         String header =  String.format("[asm %s %s PUSH1 %d  PUSH1 0 CODECOPY %s %s PUSH1 0 RETURN asm]",
@@ -166,7 +219,10 @@ public class SerpentCompiler {
 
         byte[] headerMachine = compileAssemblyToMachine(header);
 
-        return Arrays.concatenate(headerMachine, code);
+        byte[] result = init != null ? Arrays.concatenate(init, headerMachine, code) :
+                Arrays.concatenate(headerMachine, code);
+
+        return result;
     }
 
 }
