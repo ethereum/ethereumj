@@ -27,6 +27,7 @@ INDENT, DEDENT }
 parse: block EOF
     ;
 
+parse_init_code_block : 'init' ':' INDENT block DEDENT 'code' ':' INDENT block DEDENT;
 
 block:  ( asm | assign | contract_storage_assign | special_func | if_elif_else_stmt |
           while_stmt | ret_func_1 | ret_func_2 | suicide_func | stop_func)* ;
@@ -201,7 +202,7 @@ EQ_OP: '='  ;
 
 NL: ('\r'? '\n' ' '*); // note the ' '*;
 WS: [ \t]+ -> skip;
-LINE_COMMENT: '//' ~[\r\n]* -> skip;
+LINE_COMMENT: '#' ~[\r\n]* -> skip;
 
 VAR:  [a-zA-Z][a-zA-Z0-9]* ;
 

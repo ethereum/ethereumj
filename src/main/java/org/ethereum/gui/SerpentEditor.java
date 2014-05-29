@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.abego.treelayout.internal.util.Contract;
 import org.ethereum.serpent.SerpentCompiler;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
@@ -9,6 +8,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
@@ -43,9 +44,28 @@ public class SerpentEditor extends JFrame {
             "\n" +
             "return(0)\n";
 
+    private String codeSample3 = "\n" +
+            "\n" +
+            "init: \n" +
+            "\n" +
+            "  # [init block] - executed once when contract\n" +
+            "  # being initialized.\n" +
+            "  contract.storage[999] = 3 \n" +
+            "\n" +
+            "code:\n" +
+            "\n" +
+            "  # [code block] - the actual code\n" +
+            "  # executed when the call msg\n" +
+            "  # hit the peer\n" +
+            "  a = contract.storage[999]\n" +
+            "  b = msg.data[a]\n";
+
+
 
     private final RSyntaxTextArea codeArea;
     private static final long serialVersionUID = 1L;
+    final JSplitPane splitPanel;
+    final JTextArea result;
 
     public SerpentEditor() {
 
@@ -65,7 +85,7 @@ public class SerpentEditor extends JFrame {
         codeArea.setSyntaxEditingStyle("text/serpent");
         codeArea.setCodeFoldingEnabled(true);
         codeArea.setAntiAliasingEnabled(true);
-        codeArea.setText(codeSample2);
+        codeArea.setText(codeSample3);
         changeStyleProgrammatically();
 
         RTextScrollPane sp = new RTextScrollPane(codeArea);
@@ -73,15 +93,16 @@ public class SerpentEditor extends JFrame {
         sp.setFoldIndicatorEnabled(true);
         cp.setLayout(new BorderLayout());
 
-        final JSplitPane splitPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+        splitPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPanel.setOneTouchExpandable(true);
         splitPanel.setDividerSize(5);
         splitPanel.setContinuousLayout(true);
 
+
         cp.add(splitPanel, BorderLayout.CENTER);
         splitPanel.add(sp);
 
-        final JTextArea result = new JTextArea();
+        result = new JTextArea();
         result.setLineWrap(true);
         result.setWrapStyleWord(true);
         result.setVisible(false);
@@ -112,25 +133,8 @@ public class SerpentEditor extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
 
-
-                String asmResult = "";
-                try {
-
-                    // todo: integrate new compiler when avail
-                    asmResult = SerpentCompiler.compile(codeArea.getText());
-                } catch (Throwable th) {
-                    th.printStackTrace();
-
-                    splitPanel.setDividerLocation(0.7);
-                    result.setVisible(true);
-                    result.setText(th.getMessage());
-                    result.setForeground(Color.RED);
-                    return;
-
-                }
-
-                byte[] machineCode =
-                    SerpentCompiler.compileAssemblyToMachine(asmResult);
+                byte[] machineCode = prepareCodeForSend();
+                if (machineCode == null) return;
 
                 ContractSubmitDialog payOutDialog =
                         new ContractSubmitDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
@@ -143,31 +147,13 @@ public class SerpentEditor extends JFrame {
 
             public void actionPerformed(ActionEvent e) {
 
-                String asmResult = "";
-                try {
-
-                    // todo: integrate new compiler when avail
-                    asmResult = SerpentCompiler.compile(codeArea.getText());
-                } catch (Throwable th) {
-                    th.printStackTrace();
-
-                    splitPanel.setDividerLocation(0.7);
-                    result.setVisible(true);
-                    result.setText(th.getMessage());
-                    result.setForeground(Color.RED);
-                    return;
-
-                }
-
-                result.setForeground(Color.BLUE);
-                splitPanel.setDividerLocation(0.7);
-                result.setVisible(true);
-                result.setText(asmResult);
-            }
-        });
+                    compileCode();
+            }});
 
 
         controlsPanel.add(callButton, FlowLayout.LEFT);
+
+
 
         controlsPanel.add(sendButton);
         controlsPanel.add(buildButton);
@@ -190,23 +176,100 @@ public class SerpentEditor extends JFrame {
         // Change a few things here and there.
         SyntaxScheme scheme = codeArea.getSyntaxScheme();
 
-//        scheme.getStyle(Token.RESERVED_WORD).background = Color.white;
-//        scheme.getStyle(Token.RESERVED_WORD).foreground = Color.BLUE;
+        scheme.getStyle(Token.RESERVED_WORD).background = Color.white;
+        scheme.getStyle(Token.RESERVED_WORD).foreground = Color.BLUE.darker();
 
         scheme.getStyle(Token.IDENTIFIER).foreground = Color.black;
 
 
-        scheme.getStyle(Token.RESERVED_WORD_2).background = Color.white;
-        scheme.getStyle(Token.RESERVED_WORD_2).foreground = Color.MAGENTA.darker().darker();
+        scheme.getStyle(Token.RESERVED_WORD_2).background = Color.WHITE;
+        scheme.getStyle(Token.RESERVED_WORD_2).foreground = Color.MAGENTA.darker();
+
+
+        scheme.getStyle(Token.ANNOTATION).foreground = Color.ORANGE;
+        scheme.getStyle(Token.ANNOTATION).background = Color.black;
+        scheme.getStyle(Token.ANNOTATION).font = new Font("Consolas", Font.BOLD, 15);
 
 
 //        scheme.getStyle(Token.LITERAL_STRING_DOUBLE_QUOTE).underline = true;
 //        scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).underline = true;
 //        scheme.getStyle(Token.LITERAL_NUMBER_HEXADECIMAL).background = Color.pink;
 
+        scheme.getStyle(Token.COMMENT_EOL).foreground = Color.lightGray;
+
 //        scheme.getStyle(Token.COMMENT_EOL).font = new Font("Georgia", Font.ITALIC, 10);
 
         codeArea.revalidate();
+    }
+
+
+    protected void compileCode(){
+
+        String code = codeArea.getText();
+        String asmResult = "";
+
+        Pattern pattern = Pattern.compile("(.*?)init:(.*?)code:(.*?)", Pattern.DOTALL);
+        Matcher matcher = pattern.matcher(code);
+
+        try {
+            if (matcher.find()) {
+
+                asmResult = SerpentCompiler.compileFullNotion(codeArea.getText());
+                asmResult = GUIUtils.getStyledAsmCode(asmResult);
+            }else{
+
+                asmResult = SerpentCompiler.compile(codeArea.getText());
+            }
+        } catch (Throwable th) {
+            th.printStackTrace();
+
+            splitPanel.setDividerLocation(0.7);
+            result.setVisible(true);
+            result.setText(th.getMessage());
+            result.setForeground(Color.RED);
+            return ;
+
+        }
+
+        result.setForeground(Color.BLACK.brighter());
+        result.setVisible(true);
+        result.setText(asmResult);
+
+        splitPanel.setDividerLocation(0.7);
+        this.repaint();
+    }
+
+    protected byte[] prepareCodeForSend(){
+
+        String asmResult = "";
+        byte[] machineCode = null;
+
+        try {
+
+            String code = codeArea.getText();
+
+            Pattern pattern = Pattern.compile("(.*?)init:(.*?)code:(.*?)", Pattern.DOTALL);
+            Matcher matcher = pattern.matcher(code);
+            if (matcher.find()) {
+
+                asmResult = SerpentCompiler.compileFullNotion(codeArea.getText());
+                machineCode = SerpentCompiler.compileFullNotionAssemblyToMachine(asmResult);
+
+            }else{
+                asmResult = SerpentCompiler.compile(codeArea.getText());
+                machineCode = SerpentCompiler.compileAssemblyToMachine(asmResult);
+            }
+
+        } catch (Throwable th) {
+            th.printStackTrace();
+            splitPanel.setDividerLocation(0.7);
+            result.setVisible(true);
+            result.setText(th.getMessage());
+            result.setForeground(Color.RED);
+            return null;
+        }
+
+        return machineCode;
     }
 
 

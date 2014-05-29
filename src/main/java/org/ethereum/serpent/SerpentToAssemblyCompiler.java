@@ -31,6 +31,14 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return result.toString();
     }
 
+    @Override
+    public String visitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx) {
+
+        String initBlock = visit(ctx.block(0));
+        String codeBlock = visit(ctx.block(1));
+
+        return String.format(" [init %s init] [code %s code] ", initBlock, codeBlock);
+    }
 
     @Override
     public String visitIf_elif_else_stmt(@NotNull SerpentParser.If_elif_else_stmtContext ctx) {

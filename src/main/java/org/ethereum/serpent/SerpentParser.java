@@ -15,47 +15,48 @@ public class SerpentParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		T__30=1, T__29=2, T__28=3, T__27=4, T__26=5, T__25=6, T__24=7, T__23=8, 
-		T__22=9, T__21=10, T__20=11, T__19=12, T__18=13, T__17=14, T__16=15, T__15=16, 
-		T__14=17, T__13=18, T__12=19, T__11=20, T__10=21, T__9=22, T__8=23, T__7=24, 
-		T__6=25, T__5=26, T__4=27, T__3=28, T__2=29, T__1=30, T__0=31, INT=32, 
-		ASM_SYMBOLS=33, OP_EX_OR=34, OP_LOG_AND=35, OP_LOG_OR=36, OP_NOT=37, EQ_OP=38, 
-		NL=39, WS=40, LINE_COMMENT=41, VAR=42, OP_ADD=43, OP_MUL=44, OP_REL=45, 
-		OP_EQ=46, OP_AND=47, OP_IN_OR=48, HEX_DIGIT=49, HEX_NUMBER=50, INDENT=51, 
-		DEDENT=52;
+		T__32=1, T__31=2, T__30=3, T__29=4, T__28=5, T__27=6, T__26=7, T__25=8, 
+		T__24=9, T__23=10, T__22=11, T__21=12, T__20=13, T__19=14, T__18=15, T__17=16, 
+		T__16=17, T__15=18, T__14=19, T__13=20, T__12=21, T__11=22, T__10=23, 
+		T__9=24, T__8=25, T__7=26, T__6=27, T__5=28, T__4=29, T__3=30, T__2=31, 
+		T__1=32, T__0=33, INT=34, ASM_SYMBOLS=35, OP_EX_OR=36, OP_LOG_AND=37, 
+		OP_LOG_OR=38, OP_NOT=39, EQ_OP=40, NL=41, WS=42, LINE_COMMENT=43, VAR=44, 
+		OP_ADD=45, OP_MUL=46, OP_REL=47, OP_EQ=48, OP_AND=49, OP_IN_OR=50, HEX_DIGIT=51, 
+		HEX_NUMBER=52, INDENT=53, DEDENT=54;
 	public static final String[] tokenNames = {
 		"<INVALID>", "']'", "'stop'", "'block.coinbase'", "','", "'msg'", "'tx.gas'", 
 		"'while'", "'['", "'('", "':'", "'if'", "'block.timestamp'", "'[asm'", 
-		"'msg.value'", "'block.prevhash'", "'contract.storage'", "'suicide'", 
-		"'block.difficulty'", "'msg.datasize'", "')'", "'else:'", "'tx.gasprice'", 
+		"'msg.value'", "'init'", "'block.prevhash'", "'contract.storage'", "'suicide'", 
+		"'block.difficulty'", "'msg.datasize'", "')'", "'tx.gasprice'", "'else:'", 
 		"'tx.origin'", "'msg.data'", "'elif'", "'return'", "'msg.sender'", "'contract.balance'", 
-		"'asm]'", "'block.gaslimit'", "'block.number'", "INT", "ASM_SYMBOLS", 
+		"'asm]'", "'block.gaslimit'", "'block.number'", "'code'", "INT", "ASM_SYMBOLS", 
 		"'xor'", "OP_LOG_AND", "OP_LOG_OR", "OP_NOT", "'='", "NL", "WS", "LINE_COMMENT", 
 		"VAR", "OP_ADD", "OP_MUL", "OP_REL", "OP_EQ", "'&'", "'|'", "HEX_DIGIT", 
 		"HEX_NUMBER", "INDENT", "DEDENT"
 	};
 	public static final int
-		RULE_parse = 0, RULE_block = 1, RULE_asm = 2, RULE_asm_symbol = 3, RULE_if_elif_else_stmt = 4, 
-		RULE_while_stmt = 5, RULE_special_func = 6, RULE_msg_datasize = 7, RULE_msg_sender = 8, 
-		RULE_msg_value = 9, RULE_tx_gasprice = 10, RULE_tx_origin = 11, RULE_tx_gas = 12, 
-		RULE_contract_balance = 13, RULE_block_prevhash = 14, RULE_block_coinbase = 15, 
-		RULE_block_timestamp = 16, RULE_block_number = 17, RULE_block_difficulty = 18, 
-		RULE_block_gaslimit = 19, RULE_msg_func = 20, RULE_msg_data = 21, RULE_assign = 22, 
-		RULE_contract_storage_assign = 23, RULE_contract_storage_load = 24, RULE_mul_expr = 25, 
-		RULE_add_expr = 26, RULE_rel_exp = 27, RULE_eq_exp = 28, RULE_and_exp = 29, 
-		RULE_ex_or_exp = 30, RULE_in_or_exp = 31, RULE_log_and_exp = 32, RULE_log_or_exp = 33, 
-		RULE_expression = 34, RULE_condition = 35, RULE_int_val = 36, RULE_hex_num = 37, 
-		RULE_ret_func_1 = 38, RULE_ret_func_2 = 39, RULE_suicide_func = 40, RULE_stop_func = 41, 
-		RULE_get_var = 42;
+		RULE_parse = 0, RULE_parse_init_code_block = 1, RULE_block = 2, RULE_asm = 3, 
+		RULE_asm_symbol = 4, RULE_if_elif_else_stmt = 5, RULE_while_stmt = 6, 
+		RULE_special_func = 7, RULE_msg_datasize = 8, RULE_msg_sender = 9, RULE_msg_value = 10, 
+		RULE_tx_gasprice = 11, RULE_tx_origin = 12, RULE_tx_gas = 13, RULE_contract_balance = 14, 
+		RULE_block_prevhash = 15, RULE_block_coinbase = 16, RULE_block_timestamp = 17, 
+		RULE_block_number = 18, RULE_block_difficulty = 19, RULE_block_gaslimit = 20, 
+		RULE_msg_func = 21, RULE_msg_data = 22, RULE_assign = 23, RULE_contract_storage_assign = 24, 
+		RULE_contract_storage_load = 25, RULE_mul_expr = 26, RULE_add_expr = 27, 
+		RULE_rel_exp = 28, RULE_eq_exp = 29, RULE_and_exp = 30, RULE_ex_or_exp = 31, 
+		RULE_in_or_exp = 32, RULE_log_and_exp = 33, RULE_log_or_exp = 34, RULE_expression = 35, 
+		RULE_condition = 36, RULE_int_val = 37, RULE_hex_num = 38, RULE_ret_func_1 = 39, 
+		RULE_ret_func_2 = 40, RULE_suicide_func = 41, RULE_stop_func = 42, RULE_get_var = 43;
 	public static final String[] ruleNames = {
-		"parse", "block", "asm", "asm_symbol", "if_elif_else_stmt", "while_stmt", 
-		"special_func", "msg_datasize", "msg_sender", "msg_value", "tx_gasprice", 
-		"tx_origin", "tx_gas", "contract_balance", "block_prevhash", "block_coinbase", 
-		"block_timestamp", "block_number", "block_difficulty", "block_gaslimit", 
-		"msg_func", "msg_data", "assign", "contract_storage_assign", "contract_storage_load", 
-		"mul_expr", "add_expr", "rel_exp", "eq_exp", "and_exp", "ex_or_exp", "in_or_exp", 
-		"log_and_exp", "log_or_exp", "expression", "condition", "int_val", "hex_num", 
-		"ret_func_1", "ret_func_2", "suicide_func", "stop_func", "get_var"
+		"parse", "parse_init_code_block", "block", "asm", "asm_symbol", "if_elif_else_stmt", 
+		"while_stmt", "special_func", "msg_datasize", "msg_sender", "msg_value", 
+		"tx_gasprice", "tx_origin", "tx_gas", "contract_balance", "block_prevhash", 
+		"block_coinbase", "block_timestamp", "block_number", "block_difficulty", 
+		"block_gaslimit", "msg_func", "msg_data", "assign", "contract_storage_assign", 
+		"contract_storage_load", "mul_expr", "add_expr", "rel_exp", "eq_exp", 
+		"and_exp", "ex_or_exp", "in_or_exp", "log_and_exp", "log_or_exp", "expression", 
+		"condition", "int_val", "hex_num", "ret_func_1", "ret_func_2", "suicide_func", 
+		"stop_func", "get_var"
 	};
 
 	@Override
@@ -104,8 +105,71 @@ public class SerpentParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(86); block();
-			setState(87); match(EOF);
+			setState(88); block();
+			setState(89); match(EOF);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	public static class Parse_init_code_blockContext extends ParserRuleContext {
+		public List<TerminalNode> INDENT() { return getTokens(SerpentParser.INDENT); }
+		public TerminalNode INDENT(int i) {
+			return getToken(SerpentParser.INDENT, i);
+		}
+		public BlockContext block(int i) {
+			return getRuleContext(BlockContext.class,i);
+		}
+		public List<TerminalNode> DEDENT() { return getTokens(SerpentParser.DEDENT); }
+		public List<BlockContext> block() {
+			return getRuleContexts(BlockContext.class);
+		}
+		public TerminalNode DEDENT(int i) {
+			return getToken(SerpentParser.DEDENT, i);
+		}
+		public Parse_init_code_blockContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_parse_init_code_block; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof SerpentListener ) ((SerpentListener)listener).enterParse_init_code_block(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof SerpentListener ) ((SerpentListener)listener).exitParse_init_code_block(this);
+		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof SerpentVisitor ) return ((SerpentVisitor<? extends T>)visitor).visitParse_init_code_block(this);
+			else return visitor.visitChildren(this);
+		}
+	}
+
+	public final Parse_init_code_blockContext parse_init_code_block() throws RecognitionException {
+		Parse_init_code_blockContext _localctx = new Parse_init_code_blockContext(_ctx, getState());
+		enterRule(_localctx, 2, RULE_parse_init_code_block);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(91); match(15);
+			setState(92); match(10);
+			setState(93); match(INDENT);
+			setState(94); block();
+			setState(95); match(DEDENT);
+			setState(96); match(33);
+			setState(97); match(10);
+			setState(98); match(INDENT);
+			setState(99); block();
+			setState(100); match(DEDENT);
 			}
 		}
 		catch (RecognitionException re) {
@@ -201,80 +265,80 @@ public class SerpentParser extends Parser {
 
 	public final BlockContext block() throws RecognitionException {
 		BlockContext _localctx = new BlockContext(_ctx, getState());
-		enterRule(_localctx, 2, RULE_block);
+		enterRule(_localctx, 4, RULE_block);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(101);
+			setState(114);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << 2) | (1L << 3) | (1L << 6) | (1L << 7) | (1L << 11) | (1L << 12) | (1L << 13) | (1L << 14) | (1L << 15) | (1L << 16) | (1L << 17) | (1L << 18) | (1L << 19) | (1L << 22) | (1L << 23) | (1L << 26) | (1L << 27) | (1L << 28) | (1L << 30) | (1L << 31) | (1L << VAR))) != 0)) {
+			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & ((1L << 2) | (1L << 3) | (1L << 6) | (1L << 7) | (1L << 11) | (1L << 12) | (1L << 13) | (1L << 14) | (1L << 16) | (1L << 17) | (1L << 18) | (1L << 19) | (1L << 20) | (1L << 22) | (1L << 24) | (1L << 27) | (1L << 28) | (1L << 29) | (1L << 31) | (1L << 32) | (1L << VAR))) != 0)) {
 				{
-				setState(99);
+				setState(112);
 				switch ( getInterpreter().adaptivePredict(_input,0,_ctx) ) {
 				case 1:
 					{
-					setState(89); asm();
+					setState(102); asm();
 					}
 					break;
 
 				case 2:
 					{
-					setState(90); assign();
+					setState(103); assign();
 					}
 					break;
 
 				case 3:
 					{
-					setState(91); contract_storage_assign();
+					setState(104); contract_storage_assign();
 					}
 					break;
 
 				case 4:
 					{
-					setState(92); special_func();
+					setState(105); special_func();
 					}
 					break;
 
 				case 5:
 					{
-					setState(93); if_elif_else_stmt();
+					setState(106); if_elif_else_stmt();
 					}
 					break;
 
 				case 6:
 					{
-					setState(94); while_stmt();
+					setState(107); while_stmt();
 					}
 					break;
 
 				case 7:
 					{
-					setState(95); ret_func_1();
+					setState(108); ret_func_1();
 					}
 					break;
 
 				case 8:
 					{
-					setState(96); ret_func_2();
+					setState(109); ret_func_2();
 					}
 					break;
 
 				case 9:
 					{
-					setState(97); suicide_func();
+					setState(110); suicide_func();
 					}
 					break;
 
 				case 10:
 					{
-					setState(98); stop_func();
+					setState(111); stop_func();
 					}
 					break;
 				}
 				}
-				setState(103);
+				setState(116);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -317,14 +381,14 @@ public class SerpentParser extends Parser {
 
 	public final AsmContext asm() throws RecognitionException {
 		AsmContext _localctx = new AsmContext(_ctx, getState());
-		enterRule(_localctx, 4, RULE_asm);
+		enterRule(_localctx, 6, RULE_asm);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(104); match(13);
-			setState(105); asm_symbol();
-			setState(106); match(29);
-			setState(107); match(NL);
+			setState(117); match(13);
+			setState(118); asm_symbol();
+			setState(119); match(30);
+			setState(120); match(NL);
 			}
 		}
 		catch (RecognitionException re) {
@@ -368,18 +432,18 @@ public class SerpentParser extends Parser {
 
 	public final Asm_symbolContext asm_symbol() throws RecognitionException {
 		Asm_symbolContext _localctx = new Asm_symbolContext(_ctx, getState());
-		enterRule(_localctx, 6, RULE_asm_symbol);
+		enterRule(_localctx, 8, RULE_asm_symbol);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(112);
+			setState(125);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==INT || _la==ASM_SYMBOLS) {
 				{
 				{
-				setState(109);
+				setState(122);
 				_la = _input.LA(1);
 				if ( !(_la==INT || _la==ASM_SYMBOLS) ) {
 				_errHandler.recoverInline(this);
@@ -387,7 +451,7 @@ public class SerpentParser extends Parser {
 				consume();
 				}
 				}
-				setState(114);
+				setState(127);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -446,43 +510,43 @@ public class SerpentParser extends Parser {
 
 	public final If_elif_else_stmtContext if_elif_else_stmt() throws RecognitionException {
 		If_elif_else_stmtContext _localctx = new If_elif_else_stmtContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_if_elif_else_stmt);
+		enterRule(_localctx, 10, RULE_if_elif_else_stmt);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(115); match(11);
-			setState(116); condition();
-			setState(117); match(10);
-			setState(118); match(INDENT);
-			setState(119); block();
-			setState(120); match(DEDENT);
-			setState(130);
+			setState(128); match(11);
+			setState(129); condition();
+			setState(130); match(10);
+			setState(131); match(INDENT);
+			setState(132); block();
+			setState(133); match(DEDENT);
+			setState(143);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while (_la==25) {
+			while (_la==26) {
 				{
 				{
-				setState(121); match(25);
-				setState(122); condition();
-				setState(123); match(10);
-				setState(124); match(INDENT);
-				setState(125); block();
-				setState(126); match(DEDENT);
+				setState(134); match(26);
+				setState(135); condition();
+				setState(136); match(10);
+				setState(137); match(INDENT);
+				setState(138); block();
+				setState(139); match(DEDENT);
 				}
 				}
-				setState(132);
+				setState(145);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
-			setState(138);
+			setState(151);
 			_la = _input.LA(1);
-			if (_la==21) {
+			if (_la==23) {
 				{
-				setState(133); match(21);
-				setState(134); match(INDENT);
-				setState(135); block();
-				setState(136); match(DEDENT);
+				setState(146); match(23);
+				setState(147); match(INDENT);
+				setState(148); block();
+				setState(149); match(DEDENT);
 				}
 			}
 
@@ -529,16 +593,16 @@ public class SerpentParser extends Parser {
 
 	public final While_stmtContext while_stmt() throws RecognitionException {
 		While_stmtContext _localctx = new While_stmtContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_while_stmt);
+		enterRule(_localctx, 12, RULE_while_stmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(140); match(7);
-			setState(141); condition();
-			setState(142); match(10);
-			setState(143); match(INDENT);
-			setState(144); block();
-			setState(145); match(DEDENT);
+			setState(153); match(7);
+			setState(154); condition();
+			setState(155); match(10);
+			setState(156); match(INDENT);
+			setState(157); block();
+			setState(158); match(DEDENT);
 			}
 		}
 		catch (RecognitionException re) {
@@ -613,86 +677,86 @@ public class SerpentParser extends Parser {
 
 	public final Special_funcContext special_func() throws RecognitionException {
 		Special_funcContext _localctx = new Special_funcContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_special_func);
+		enterRule(_localctx, 14, RULE_special_func);
 		try {
-			setState(160);
+			setState(173);
 			switch (_input.LA(1)) {
-			case 19:
+			case 20:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(147); msg_datasize();
+				setState(160); msg_datasize();
 				}
 				break;
-			case 27:
+			case 28:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(148); msg_sender();
+				setState(161); msg_sender();
 				}
 				break;
 			case 14:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(149); msg_value();
+				setState(162); msg_value();
 				}
 				break;
 			case 22:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(150); tx_gasprice();
+				setState(163); tx_gasprice();
 				}
 				break;
-			case 23:
+			case 24:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(151); tx_origin();
+				setState(164); tx_origin();
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(152); tx_gas();
+				setState(165); tx_gas();
 				}
 				break;
-			case 28:
+			case 29:
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(153); contract_balance();
+				setState(166); contract_balance();
 				}
 				break;
-			case 15:
+			case 16:
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(154); block_prevhash();
+				setState(167); block_prevhash();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(155); block_coinbase();
+				setState(168); block_coinbase();
 				}
 				break;
 			case 12:
 				enterOuterAlt(_localctx, 10);
 				{
-				setState(156); block_timestamp();
+				setState(169); block_timestamp();
+				}
+				break;
+			case 32:
+				enterOuterAlt(_localctx, 11);
+				{
+				setState(170); block_number();
+				}
+				break;
+			case 19:
+				enterOuterAlt(_localctx, 12);
+				{
+				setState(171); block_difficulty();
 				}
 				break;
 			case 31:
-				enterOuterAlt(_localctx, 11);
-				{
-				setState(157); block_number();
-				}
-				break;
-			case 18:
-				enterOuterAlt(_localctx, 12);
-				{
-				setState(158); block_difficulty();
-				}
-				break;
-			case 30:
 				enterOuterAlt(_localctx, 13);
 				{
-				setState(159); block_gaslimit();
+				setState(172); block_gaslimit();
 				}
 				break;
 			default:
@@ -732,11 +796,11 @@ public class SerpentParser extends Parser {
 
 	public final Msg_datasizeContext msg_datasize() throws RecognitionException {
 		Msg_datasizeContext _localctx = new Msg_datasizeContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_msg_datasize);
+		enterRule(_localctx, 16, RULE_msg_datasize);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(162); match(19);
+			setState(175); match(20);
 			}
 		}
 		catch (RecognitionException re) {
@@ -772,11 +836,11 @@ public class SerpentParser extends Parser {
 
 	public final Msg_senderContext msg_sender() throws RecognitionException {
 		Msg_senderContext _localctx = new Msg_senderContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_msg_sender);
+		enterRule(_localctx, 18, RULE_msg_sender);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(164); match(27);
+			setState(177); match(28);
 			}
 		}
 		catch (RecognitionException re) {
@@ -812,11 +876,11 @@ public class SerpentParser extends Parser {
 
 	public final Msg_valueContext msg_value() throws RecognitionException {
 		Msg_valueContext _localctx = new Msg_valueContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_msg_value);
+		enterRule(_localctx, 20, RULE_msg_value);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(166); match(14);
+			setState(179); match(14);
 			}
 		}
 		catch (RecognitionException re) {
@@ -852,11 +916,11 @@ public class SerpentParser extends Parser {
 
 	public final Tx_gaspriceContext tx_gasprice() throws RecognitionException {
 		Tx_gaspriceContext _localctx = new Tx_gaspriceContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_tx_gasprice);
+		enterRule(_localctx, 22, RULE_tx_gasprice);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(168); match(22);
+			setState(181); match(22);
 			}
 		}
 		catch (RecognitionException re) {
@@ -892,11 +956,11 @@ public class SerpentParser extends Parser {
 
 	public final Tx_originContext tx_origin() throws RecognitionException {
 		Tx_originContext _localctx = new Tx_originContext(_ctx, getState());
-		enterRule(_localctx, 22, RULE_tx_origin);
+		enterRule(_localctx, 24, RULE_tx_origin);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(170); match(23);
+			setState(183); match(24);
 			}
 		}
 		catch (RecognitionException re) {
@@ -932,11 +996,11 @@ public class SerpentParser extends Parser {
 
 	public final Tx_gasContext tx_gas() throws RecognitionException {
 		Tx_gasContext _localctx = new Tx_gasContext(_ctx, getState());
-		enterRule(_localctx, 24, RULE_tx_gas);
+		enterRule(_localctx, 26, RULE_tx_gas);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(172); match(6);
+			setState(185); match(6);
 			}
 		}
 		catch (RecognitionException re) {
@@ -972,11 +1036,11 @@ public class SerpentParser extends Parser {
 
 	public final Contract_balanceContext contract_balance() throws RecognitionException {
 		Contract_balanceContext _localctx = new Contract_balanceContext(_ctx, getState());
-		enterRule(_localctx, 26, RULE_contract_balance);
+		enterRule(_localctx, 28, RULE_contract_balance);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(174); match(28);
+			setState(187); match(29);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1012,11 +1076,11 @@ public class SerpentParser extends Parser {
 
 	public final Block_prevhashContext block_prevhash() throws RecognitionException {
 		Block_prevhashContext _localctx = new Block_prevhashContext(_ctx, getState());
-		enterRule(_localctx, 28, RULE_block_prevhash);
+		enterRule(_localctx, 30, RULE_block_prevhash);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(176); match(15);
+			setState(189); match(16);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1052,11 +1116,11 @@ public class SerpentParser extends Parser {
 
 	public final Block_coinbaseContext block_coinbase() throws RecognitionException {
 		Block_coinbaseContext _localctx = new Block_coinbaseContext(_ctx, getState());
-		enterRule(_localctx, 30, RULE_block_coinbase);
+		enterRule(_localctx, 32, RULE_block_coinbase);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(178); match(3);
+			setState(191); match(3);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1092,11 +1156,11 @@ public class SerpentParser extends Parser {
 
 	public final Block_timestampContext block_timestamp() throws RecognitionException {
 		Block_timestampContext _localctx = new Block_timestampContext(_ctx, getState());
-		enterRule(_localctx, 32, RULE_block_timestamp);
+		enterRule(_localctx, 34, RULE_block_timestamp);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(180); match(12);
+			setState(193); match(12);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1132,11 +1196,11 @@ public class SerpentParser extends Parser {
 
 	public final Block_numberContext block_number() throws RecognitionException {
 		Block_numberContext _localctx = new Block_numberContext(_ctx, getState());
-		enterRule(_localctx, 34, RULE_block_number);
+		enterRule(_localctx, 36, RULE_block_number);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(182); match(31);
+			setState(195); match(32);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1172,11 +1236,11 @@ public class SerpentParser extends Parser {
 
 	public final Block_difficultyContext block_difficulty() throws RecognitionException {
 		Block_difficultyContext _localctx = new Block_difficultyContext(_ctx, getState());
-		enterRule(_localctx, 36, RULE_block_difficulty);
+		enterRule(_localctx, 38, RULE_block_difficulty);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(184); match(18);
+			setState(197); match(19);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1212,11 +1276,11 @@ public class SerpentParser extends Parser {
 
 	public final Block_gaslimitContext block_gaslimit() throws RecognitionException {
 		Block_gaslimitContext _localctx = new Block_gaslimitContext(_ctx, getState());
-		enterRule(_localctx, 38, RULE_block_gaslimit);
+		enterRule(_localctx, 40, RULE_block_gaslimit);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(186); match(30);
+			setState(199); match(31);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1258,22 +1322,22 @@ public class SerpentParser extends Parser {
 
 	public final Msg_funcContext msg_func() throws RecognitionException {
 		Msg_funcContext _localctx = new Msg_funcContext(_ctx, getState());
-		enterRule(_localctx, 40, RULE_msg_func);
+		enterRule(_localctx, 42, RULE_msg_func);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(188); match(5);
-			setState(189); match(9);
-			setState(190); int_val();
-			setState(191); match(4);
-			setState(192); int_val();
-			setState(193); match(4);
-			setState(194); int_val();
-			setState(195); match(4);
-			setState(196); int_val();
-			setState(197); match(4);
-			setState(198); int_val();
-			setState(199); match(20);
+			setState(201); match(5);
+			setState(202); match(9);
+			setState(203); int_val();
+			setState(204); match(4);
+			setState(205); int_val();
+			setState(206); match(4);
+			setState(207); int_val();
+			setState(208); match(4);
+			setState(209); int_val();
+			setState(210); match(4);
+			setState(211); int_val();
+			setState(212); match(21);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1312,14 +1376,14 @@ public class SerpentParser extends Parser {
 
 	public final Msg_dataContext msg_data() throws RecognitionException {
 		Msg_dataContext _localctx = new Msg_dataContext(_ctx, getState());
-		enterRule(_localctx, 42, RULE_msg_data);
+		enterRule(_localctx, 44, RULE_msg_data);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(201); match(24);
-			setState(202); match(8);
-			setState(203); expression();
-			setState(204); match(1);
+			setState(214); match(25);
+			setState(215); match(8);
+			setState(216); expression();
+			setState(217); match(1);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1361,14 +1425,14 @@ public class SerpentParser extends Parser {
 
 	public final AssignContext assign() throws RecognitionException {
 		AssignContext _localctx = new AssignContext(_ctx, getState());
-		enterRule(_localctx, 44, RULE_assign);
+		enterRule(_localctx, 46, RULE_assign);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(206); match(VAR);
-			setState(207); match(EQ_OP);
-			setState(208); expression();
-			setState(209); match(NL);
+			setState(219); match(VAR);
+			setState(220); match(EQ_OP);
+			setState(221); expression();
+			setState(222); match(NL);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1412,17 +1476,17 @@ public class SerpentParser extends Parser {
 
 	public final Contract_storage_assignContext contract_storage_assign() throws RecognitionException {
 		Contract_storage_assignContext _localctx = new Contract_storage_assignContext(_ctx, getState());
-		enterRule(_localctx, 46, RULE_contract_storage_assign);
+		enterRule(_localctx, 48, RULE_contract_storage_assign);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(211); match(16);
-			setState(212); match(8);
-			setState(213); expression();
-			setState(214); match(1);
-			setState(215); match(EQ_OP);
-			setState(216); expression();
-			setState(217); match(NL);
+			setState(224); match(17);
+			setState(225); match(8);
+			setState(226); expression();
+			setState(227); match(1);
+			setState(228); match(EQ_OP);
+			setState(229); expression();
+			setState(230); match(NL);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1461,14 +1525,14 @@ public class SerpentParser extends Parser {
 
 	public final Contract_storage_loadContext contract_storage_load() throws RecognitionException {
 		Contract_storage_loadContext _localctx = new Contract_storage_loadContext(_ctx, getState());
-		enterRule(_localctx, 48, RULE_contract_storage_load);
+		enterRule(_localctx, 50, RULE_contract_storage_load);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(219); match(16);
-			setState(220); match(8);
-			setState(221); expression();
-			setState(222); match(1);
+			setState(232); match(17);
+			setState(233); match(8);
+			setState(234); expression();
+			setState(235); match(1);
 			}
 		}
 		catch (RecognitionException re) {
@@ -1517,17 +1581,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		Mul_exprContext _localctx = new Mul_exprContext(_ctx, _parentState, _p);
 		Mul_exprContext _prevctx = _localctx;
-		int _startState = 50;
+		int _startState = 52;
 		enterRecursionRule(_localctx, RULE_mul_expr);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(225); int_val();
+			setState(238); int_val();
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(232);
+			setState(245);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -1538,14 +1602,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new Mul_exprContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_mul_expr);
-					setState(227);
+					setState(240);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(228); match(OP_MUL);
-					setState(229); int_val();
+					setState(241); match(OP_MUL);
+					setState(242); int_val();
 					}
 					} 
 				}
-				setState(234);
+				setState(247);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,6,_ctx);
 			}
@@ -1597,17 +1661,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		Add_exprContext _localctx = new Add_exprContext(_ctx, _parentState, _p);
 		Add_exprContext _prevctx = _localctx;
-		int _startState = 52;
+		int _startState = 54;
 		enterRecursionRule(_localctx, RULE_add_expr);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(236); mul_expr(0);
+			setState(249); mul_expr(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(243);
+			setState(256);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,7,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -1618,14 +1682,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new Add_exprContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_add_expr);
-					setState(238);
+					setState(251);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(239); match(OP_ADD);
-					setState(240); mul_expr(0);
+					setState(252); match(OP_ADD);
+					setState(253); mul_expr(0);
 					}
 					} 
 				}
-				setState(245);
+				setState(258);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,7,_ctx);
 			}
@@ -1677,17 +1741,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		Rel_expContext _localctx = new Rel_expContext(_ctx, _parentState, _p);
 		Rel_expContext _prevctx = _localctx;
-		int _startState = 54;
+		int _startState = 56;
 		enterRecursionRule(_localctx, RULE_rel_exp);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(247); add_expr(0);
+			setState(260); add_expr(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(254);
+			setState(267);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -1698,14 +1762,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new Rel_expContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_rel_exp);
-					setState(249);
+					setState(262);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(250); match(OP_REL);
-					setState(251); add_expr(0);
+					setState(263); match(OP_REL);
+					setState(264); add_expr(0);
 					}
 					} 
 				}
-				setState(256);
+				setState(269);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			}
@@ -1757,17 +1821,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		Eq_expContext _localctx = new Eq_expContext(_ctx, _parentState, _p);
 		Eq_expContext _prevctx = _localctx;
-		int _startState = 56;
+		int _startState = 58;
 		enterRecursionRule(_localctx, RULE_eq_exp);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(258); rel_exp(0);
+			setState(271); rel_exp(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(265);
+			setState(278);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,9,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -1778,14 +1842,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new Eq_expContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_eq_exp);
-					setState(260);
+					setState(273);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(261); match(OP_EQ);
-					setState(262); rel_exp(0);
+					setState(274); match(OP_EQ);
+					setState(275); rel_exp(0);
 					}
 					} 
 				}
-				setState(267);
+				setState(280);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,9,_ctx);
 			}
@@ -1837,17 +1901,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		And_expContext _localctx = new And_expContext(_ctx, _parentState, _p);
 		And_expContext _prevctx = _localctx;
-		int _startState = 58;
+		int _startState = 60;
 		enterRecursionRule(_localctx, RULE_and_exp);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(269); eq_exp(0);
+			setState(282); eq_exp(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(276);
+			setState(289);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,10,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -1858,14 +1922,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new And_expContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_and_exp);
-					setState(271);
+					setState(284);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(272); match(OP_AND);
-					setState(273); eq_exp(0);
+					setState(285); match(OP_AND);
+					setState(286); eq_exp(0);
 					}
 					} 
 				}
-				setState(278);
+				setState(291);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,10,_ctx);
 			}
@@ -1917,17 +1981,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		Ex_or_expContext _localctx = new Ex_or_expContext(_ctx, _parentState, _p);
 		Ex_or_expContext _prevctx = _localctx;
-		int _startState = 60;
+		int _startState = 62;
 		enterRecursionRule(_localctx, RULE_ex_or_exp);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(280); and_exp(0);
+			setState(293); and_exp(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(287);
+			setState(300);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,11,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -1938,14 +2002,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new Ex_or_expContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_ex_or_exp);
-					setState(282);
+					setState(295);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(283); match(OP_EX_OR);
-					setState(284); and_exp(0);
+					setState(296); match(OP_EX_OR);
+					setState(297); and_exp(0);
 					}
 					} 
 				}
-				setState(289);
+				setState(302);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,11,_ctx);
 			}
@@ -1997,17 +2061,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		In_or_expContext _localctx = new In_or_expContext(_ctx, _parentState, _p);
 		In_or_expContext _prevctx = _localctx;
-		int _startState = 62;
+		int _startState = 64;
 		enterRecursionRule(_localctx, RULE_in_or_exp);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(291); ex_or_exp(0);
+			setState(304); ex_or_exp(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(298);
+			setState(311);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -2018,14 +2082,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new In_or_expContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_in_or_exp);
-					setState(293);
+					setState(306);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(294); match(OP_IN_OR);
-					setState(295); ex_or_exp(0);
+					setState(307); match(OP_IN_OR);
+					setState(308); ex_or_exp(0);
 					}
 					} 
 				}
-				setState(300);
+				setState(313);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,12,_ctx);
 			}
@@ -2077,17 +2141,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		Log_and_expContext _localctx = new Log_and_expContext(_ctx, _parentState, _p);
 		Log_and_expContext _prevctx = _localctx;
-		int _startState = 64;
+		int _startState = 66;
 		enterRecursionRule(_localctx, RULE_log_and_exp);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(302); in_or_exp(0);
+			setState(315); in_or_exp(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(309);
+			setState(322);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,13,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -2098,14 +2162,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new Log_and_expContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_log_and_exp);
-					setState(304);
+					setState(317);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(305); match(OP_LOG_AND);
-					setState(306); in_or_exp(0);
+					setState(318); match(OP_LOG_AND);
+					setState(319); in_or_exp(0);
 					}
 					} 
 				}
-				setState(311);
+				setState(324);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,13,_ctx);
 			}
@@ -2157,17 +2221,17 @@ public class SerpentParser extends Parser {
 		int _parentState = getState();
 		Log_or_expContext _localctx = new Log_or_expContext(_ctx, _parentState, _p);
 		Log_or_expContext _prevctx = _localctx;
-		int _startState = 66;
+		int _startState = 68;
 		enterRecursionRule(_localctx, RULE_log_or_exp);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
 			{
-			setState(313); log_and_exp(0);
+			setState(326); log_and_exp(0);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(320);
+			setState(333);
 			_errHandler.sync(this);
 			_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			while ( _alt!=2 && _alt!=-1 ) {
@@ -2178,14 +2242,14 @@ public class SerpentParser extends Parser {
 					{
 					_localctx = new Log_or_expContext(_parentctx, _parentState, _p);
 					pushNewRecursionContext(_localctx, _startState, RULE_log_or_exp);
-					setState(315);
+					setState(328);
 					if (!(1 >= _localctx._p)) throw new FailedPredicateException(this, "1 >= $_p");
-					setState(316); match(OP_LOG_OR);
-					setState(317); log_and_exp(0);
+					setState(329); match(OP_LOG_OR);
+					setState(330); log_and_exp(0);
 					}
 					} 
 				}
-				setState(322);
+				setState(335);
 				_errHandler.sync(this);
 				_alt = getInterpreter().adaptivePredict(_input,14,_ctx);
 			}
@@ -2227,11 +2291,11 @@ public class SerpentParser extends Parser {
 
 	public final ExpressionContext expression() throws RecognitionException {
 		ExpressionContext _localctx = new ExpressionContext(_ctx, getState());
-		enterRule(_localctx, 68, RULE_expression);
+		enterRule(_localctx, 70, RULE_expression);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(323); log_or_exp(0);
+			setState(336); log_or_exp(0);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2270,11 +2334,11 @@ public class SerpentParser extends Parser {
 
 	public final ConditionContext condition() throws RecognitionException {
 		ConditionContext _localctx = new ConditionContext(_ctx, getState());
-		enterRule(_localctx, 70, RULE_condition);
+		enterRule(_localctx, 72, RULE_condition);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(325); expression();
+			setState(338); expression();
 			}
 		}
 		catch (RecognitionException re) {
@@ -2333,79 +2397,79 @@ public class SerpentParser extends Parser {
 
 	public final Int_valContext int_val() throws RecognitionException {
 		Int_valContext _localctx = new Int_valContext(_ctx, getState());
-		enterRule(_localctx, 72, RULE_int_val);
+		enterRule(_localctx, 74, RULE_int_val);
 		try {
-			setState(343);
+			setState(356);
 			switch (_input.LA(1)) {
 			case INT:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(327); match(INT);
+				setState(340); match(INT);
 				}
 				break;
 			case HEX_NUMBER:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(328); hex_num();
+				setState(341); hex_num();
 				}
 				break;
 			case VAR:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(329); get_var();
+				setState(342); get_var();
 				}
 				break;
 			case 3:
 			case 6:
 			case 12:
 			case 14:
-			case 15:
-			case 18:
+			case 16:
 			case 19:
+			case 20:
 			case 22:
-			case 23:
-			case 27:
+			case 24:
 			case 28:
-			case 30:
+			case 29:
 			case 31:
+			case 32:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(330); special_func();
+				setState(343); special_func();
 				}
 				break;
 			case 9:
 				enterOuterAlt(_localctx, 5);
 				{
-				setState(331); match(9);
-				setState(332); expression();
-				setState(333); match(20);
+				setState(344); match(9);
+				setState(345); expression();
+				setState(346); match(21);
 				}
 				break;
 			case OP_NOT:
 				enterOuterAlt(_localctx, 6);
 				{
-				setState(335); match(OP_NOT);
-				setState(336); match(9);
-				setState(337); expression();
-				setState(338); match(20);
+				setState(348); match(OP_NOT);
+				setState(349); match(9);
+				setState(350); expression();
+				setState(351); match(21);
 				}
 				break;
 			case 5:
 				enterOuterAlt(_localctx, 7);
 				{
-				setState(340); msg_func();
+				setState(353); msg_func();
 				}
 				break;
-			case 24:
+			case 25:
 				enterOuterAlt(_localctx, 8);
 				{
-				setState(341); msg_data();
+				setState(354); msg_data();
 				}
 				break;
-			case 16:
+			case 17:
 				enterOuterAlt(_localctx, 9);
 				{
-				setState(342); contract_storage_load();
+				setState(355); contract_storage_load();
 				}
 				break;
 			default:
@@ -2446,11 +2510,11 @@ public class SerpentParser extends Parser {
 
 	public final Hex_numContext hex_num() throws RecognitionException {
 		Hex_numContext _localctx = new Hex_numContext(_ctx, getState());
-		enterRule(_localctx, 74, RULE_hex_num);
+		enterRule(_localctx, 76, RULE_hex_num);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(345); match(HEX_NUMBER);
+			setState(358); match(HEX_NUMBER);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2490,15 +2554,15 @@ public class SerpentParser extends Parser {
 
 	public final Ret_func_1Context ret_func_1() throws RecognitionException {
 		Ret_func_1Context _localctx = new Ret_func_1Context(_ctx, getState());
-		enterRule(_localctx, 76, RULE_ret_func_1);
+		enterRule(_localctx, 78, RULE_ret_func_1);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(347); match(26);
-			setState(348); match(9);
-			setState(349); expression();
-			setState(350); match(20);
-			setState(351); match(NL);
+			setState(360); match(27);
+			setState(361); match(9);
+			setState(362); expression();
+			setState(363); match(21);
+			setState(364); match(NL);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2541,17 +2605,17 @@ public class SerpentParser extends Parser {
 
 	public final Ret_func_2Context ret_func_2() throws RecognitionException {
 		Ret_func_2Context _localctx = new Ret_func_2Context(_ctx, getState());
-		enterRule(_localctx, 78, RULE_ret_func_2);
+		enterRule(_localctx, 80, RULE_ret_func_2);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(353); match(26);
-			setState(354); match(9);
-			setState(355); expression();
-			setState(356); match(4);
-			setState(357); expression();
-			setState(358); match(20);
-			setState(359); match(NL);
+			setState(366); match(27);
+			setState(367); match(9);
+			setState(368); expression();
+			setState(369); match(4);
+			setState(370); expression();
+			setState(371); match(21);
+			setState(372); match(NL);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2591,15 +2655,15 @@ public class SerpentParser extends Parser {
 
 	public final Suicide_funcContext suicide_func() throws RecognitionException {
 		Suicide_funcContext _localctx = new Suicide_funcContext(_ctx, getState());
-		enterRule(_localctx, 80, RULE_suicide_func);
+		enterRule(_localctx, 82, RULE_suicide_func);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(361); match(17);
-			setState(362); match(9);
-			setState(363); expression();
-			setState(364); match(20);
-			setState(365); match(NL);
+			setState(374); match(18);
+			setState(375); match(9);
+			setState(376); expression();
+			setState(377); match(21);
+			setState(378); match(NL);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2636,12 +2700,12 @@ public class SerpentParser extends Parser {
 
 	public final Stop_funcContext stop_func() throws RecognitionException {
 		Stop_funcContext _localctx = new Stop_funcContext(_ctx, getState());
-		enterRule(_localctx, 82, RULE_stop_func);
+		enterRule(_localctx, 84, RULE_stop_func);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(367); match(2);
-			setState(368); match(NL);
+			setState(380); match(2);
+			setState(381); match(NL);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2678,11 +2742,11 @@ public class SerpentParser extends Parser {
 
 	public final Get_varContext get_var() throws RecognitionException {
 		Get_varContext _localctx = new Get_varContext(_ctx, getState());
-		enterRule(_localctx, 84, RULE_get_var);
+		enterRule(_localctx, 86, RULE_get_var);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(370); match(VAR);
+			setState(383); match(VAR);
 			}
 		}
 		catch (RecognitionException re) {
@@ -2698,23 +2762,23 @@ public class SerpentParser extends Parser {
 
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
-		case 25: return mul_expr_sempred((Mul_exprContext)_localctx, predIndex);
+		case 26: return mul_expr_sempred((Mul_exprContext)_localctx, predIndex);
 
-		case 26: return add_expr_sempred((Add_exprContext)_localctx, predIndex);
+		case 27: return add_expr_sempred((Add_exprContext)_localctx, predIndex);
 
-		case 27: return rel_exp_sempred((Rel_expContext)_localctx, predIndex);
+		case 28: return rel_exp_sempred((Rel_expContext)_localctx, predIndex);
 
-		case 28: return eq_exp_sempred((Eq_expContext)_localctx, predIndex);
+		case 29: return eq_exp_sempred((Eq_expContext)_localctx, predIndex);
 
-		case 29: return and_exp_sempred((And_expContext)_localctx, predIndex);
+		case 30: return and_exp_sempred((And_expContext)_localctx, predIndex);
 
-		case 30: return ex_or_exp_sempred((Ex_or_expContext)_localctx, predIndex);
+		case 31: return ex_or_exp_sempred((Ex_or_expContext)_localctx, predIndex);
 
-		case 31: return in_or_exp_sempred((In_or_expContext)_localctx, predIndex);
+		case 32: return in_or_exp_sempred((In_or_expContext)_localctx, predIndex);
 
-		case 32: return log_and_exp_sempred((Log_and_expContext)_localctx, predIndex);
+		case 33: return log_and_exp_sempred((Log_and_expContext)_localctx, predIndex);
 
-		case 33: return log_or_exp_sempred((Log_or_expContext)_localctx, predIndex);
+		case 34: return log_or_exp_sempred((Log_or_expContext)_localctx, predIndex);
 		}
 		return true;
 	}
@@ -2774,127 +2838,131 @@ public class SerpentParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\3\uacf5\uee8c\u4f5d\u8b0d\u4a45\u78bd\u1b2f\u3378\3\66\u0177\4\2\t\2"+
-		"\4\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13"+
-		"\t\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
+		"\3\uacf5\uee8c\u4f5d\u8b0d\u4a45\u78bd\u1b2f\u3378\38\u0184\4\2\t\2\4"+
+		"\3\t\3\4\4\t\4\4\5\t\5\4\6\t\6\4\7\t\7\4\b\t\b\4\t\t\t\4\n\t\n\4\13\t"+
+		"\13\4\f\t\f\4\r\t\r\4\16\t\16\4\17\t\17\4\20\t\20\4\21\t\21\4\22\t\22"+
 		"\4\23\t\23\4\24\t\24\4\25\t\25\4\26\t\26\4\27\t\27\4\30\t\30\4\31\t\31"+
 		"\4\32\t\32\4\33\t\33\4\34\t\34\4\35\t\35\4\36\t\36\4\37\t\37\4 \t \4!"+
 		"\t!\4\"\t\"\4#\t#\4$\t$\4%\t%\4&\t&\4\'\t\'\4(\t(\4)\t)\4*\t*\4+\t+\4"+
-		",\t,\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\7\3f\n\3\f\3"+
-		"\16\3i\13\3\3\4\3\4\3\4\3\4\3\4\3\5\7\5q\n\5\f\5\16\5t\13\5\3\6\3\6\3"+
-		"\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\3\6\7\6\u0083\n\6\f\6\16\6\u0086"+
-		"\13\6\3\6\3\6\3\6\3\6\3\6\5\6\u008d\n\6\3\7\3\7\3\7\3\7\3\7\3\7\3\7\3"+
-		"\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\b\5\b\u00a3\n\b\3\t\3"+
-		"\t\3\n\3\n\3\13\3\13\3\f\3\f\3\r\3\r\3\16\3\16\3\17\3\17\3\20\3\20\3\21"+
-		"\3\21\3\22\3\22\3\23\3\23\3\24\3\24\3\25\3\25\3\26\3\26\3\26\3\26\3\26"+
-		"\3\26\3\26\3\26\3\26\3\26\3\26\3\26\3\26\3\27\3\27\3\27\3\27\3\27\3\30"+
-		"\3\30\3\30\3\30\3\30\3\31\3\31\3\31\3\31\3\31\3\31\3\31\3\31\3\32\3\32"+
-		"\3\32\3\32\3\32\3\33\3\33\3\33\3\33\3\33\3\33\7\33\u00e9\n\33\f\33\16"+
-		"\33\u00ec\13\33\3\34\3\34\3\34\3\34\3\34\3\34\7\34\u00f4\n\34\f\34\16"+
-		"\34\u00f7\13\34\3\35\3\35\3\35\3\35\3\35\3\35\7\35\u00ff\n\35\f\35\16"+
-		"\35\u0102\13\35\3\36\3\36\3\36\3\36\3\36\3\36\7\36\u010a\n\36\f\36\16"+
-		"\36\u010d\13\36\3\37\3\37\3\37\3\37\3\37\3\37\7\37\u0115\n\37\f\37\16"+
-		"\37\u0118\13\37\3 \3 \3 \3 \3 \3 \7 \u0120\n \f \16 \u0123\13 \3!\3!\3"+
-		"!\3!\3!\3!\7!\u012b\n!\f!\16!\u012e\13!\3\"\3\"\3\"\3\"\3\"\3\"\7\"\u0136"+
-		"\n\"\f\"\16\"\u0139\13\"\3#\3#\3#\3#\3#\3#\7#\u0141\n#\f#\16#\u0144\13"+
-		"#\3$\3$\3%\3%\3&\3&\3&\3&\3&\3&\3&\3&\3&\3&\3&\3&\3&\3&\3&\3&\5&\u015a"+
-		"\n&\3\'\3\'\3(\3(\3(\3(\3(\3(\3)\3)\3)\3)\3)\3)\3)\3)\3*\3*\3*\3*\3*\3"+
-		"*\3+\3+\3+\3,\3,\3,\2-\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,"+
-		".\60\62\64\668:<>@BDFHJLNPRTV\2\3\3\2\"#\u0175\2X\3\2\2\2\4g\3\2\2\2\6"+
-		"j\3\2\2\2\br\3\2\2\2\nu\3\2\2\2\f\u008e\3\2\2\2\16\u00a2\3\2\2\2\20\u00a4"+
-		"\3\2\2\2\22\u00a6\3\2\2\2\24\u00a8\3\2\2\2\26\u00aa\3\2\2\2\30\u00ac\3"+
-		"\2\2\2\32\u00ae\3\2\2\2\34\u00b0\3\2\2\2\36\u00b2\3\2\2\2 \u00b4\3\2\2"+
-		"\2\"\u00b6\3\2\2\2$\u00b8\3\2\2\2&\u00ba\3\2\2\2(\u00bc\3\2\2\2*\u00be"+
-		"\3\2\2\2,\u00cb\3\2\2\2.\u00d0\3\2\2\2\60\u00d5\3\2\2\2\62\u00dd\3\2\2"+
-		"\2\64\u00e2\3\2\2\2\66\u00ed\3\2\2\28\u00f8\3\2\2\2:\u0103\3\2\2\2<\u010e"+
-		"\3\2\2\2>\u0119\3\2\2\2@\u0124\3\2\2\2B\u012f\3\2\2\2D\u013a\3\2\2\2F"+
-		"\u0145\3\2\2\2H\u0147\3\2\2\2J\u0159\3\2\2\2L\u015b\3\2\2\2N\u015d\3\2"+
-		"\2\2P\u0163\3\2\2\2R\u016b\3\2\2\2T\u0171\3\2\2\2V\u0174\3\2\2\2XY\5\4"+
-		"\3\2YZ\7\2\2\3Z\3\3\2\2\2[f\5\6\4\2\\f\5.\30\2]f\5\60\31\2^f\5\16\b\2"+
-		"_f\5\n\6\2`f\5\f\7\2af\5N(\2bf\5P)\2cf\5R*\2df\5T+\2e[\3\2\2\2e\\\3\2"+
-		"\2\2e]\3\2\2\2e^\3\2\2\2e_\3\2\2\2e`\3\2\2\2ea\3\2\2\2eb\3\2\2\2ec\3\2"+
-		"\2\2ed\3\2\2\2fi\3\2\2\2ge\3\2\2\2gh\3\2\2\2h\5\3\2\2\2ig\3\2\2\2jk\7"+
-		"\17\2\2kl\5\b\5\2lm\7\37\2\2mn\7)\2\2n\7\3\2\2\2oq\t\2\2\2po\3\2\2\2q"+
-		"t\3\2\2\2rp\3\2\2\2rs\3\2\2\2s\t\3\2\2\2tr\3\2\2\2uv\7\r\2\2vw\5H%\2w"+
-		"x\7\f\2\2xy\7\65\2\2yz\5\4\3\2z\u0084\7\66\2\2{|\7\33\2\2|}\5H%\2}~\7"+
-		"\f\2\2~\177\7\65\2\2\177\u0080\5\4\3\2\u0080\u0081\7\66\2\2\u0081\u0083"+
-		"\3\2\2\2\u0082{\3\2\2\2\u0083\u0086\3\2\2\2\u0084\u0082\3\2\2\2\u0084"+
-		"\u0085\3\2\2\2\u0085\u008c\3\2\2\2\u0086\u0084\3\2\2\2\u0087\u0088\7\27"+
-		"\2\2\u0088\u0089\7\65\2\2\u0089\u008a\5\4\3\2\u008a\u008b\7\66\2\2\u008b"+
-		"\u008d\3\2\2\2\u008c\u0087\3\2\2\2\u008c\u008d\3\2\2\2\u008d\13\3\2\2"+
-		"\2\u008e\u008f\7\t\2\2\u008f\u0090\5H%\2\u0090\u0091\7\f\2\2\u0091\u0092"+
-		"\7\65\2\2\u0092\u0093\5\4\3\2\u0093\u0094\7\66\2\2\u0094\r\3\2\2\2\u0095"+
-		"\u00a3\5\20\t\2\u0096\u00a3\5\22\n\2\u0097\u00a3\5\24\13\2\u0098\u00a3"+
-		"\5\26\f\2\u0099\u00a3\5\30\r\2\u009a\u00a3\5\32\16\2\u009b\u00a3\5\34"+
-		"\17\2\u009c\u00a3\5\36\20\2\u009d\u00a3\5 \21\2\u009e\u00a3\5\"\22\2\u009f"+
-		"\u00a3\5$\23\2\u00a0\u00a3\5&\24\2\u00a1\u00a3\5(\25\2\u00a2\u0095\3\2"+
-		"\2\2\u00a2\u0096\3\2\2\2\u00a2\u0097\3\2\2\2\u00a2\u0098\3\2\2\2\u00a2"+
-		"\u0099\3\2\2\2\u00a2\u009a\3\2\2\2\u00a2\u009b\3\2\2\2\u00a2\u009c\3\2"+
-		"\2\2\u00a2\u009d\3\2\2\2\u00a2\u009e\3\2\2\2\u00a2\u009f\3\2\2\2\u00a2"+
-		"\u00a0\3\2\2\2\u00a2\u00a1\3\2\2\2\u00a3\17\3\2\2\2\u00a4\u00a5\7\25\2"+
-		"\2\u00a5\21\3\2\2\2\u00a6\u00a7\7\35\2\2\u00a7\23\3\2\2\2\u00a8\u00a9"+
-		"\7\20\2\2\u00a9\25\3\2\2\2\u00aa\u00ab\7\30\2\2\u00ab\27\3\2\2\2\u00ac"+
-		"\u00ad\7\31\2\2\u00ad\31\3\2\2\2\u00ae\u00af\7\b\2\2\u00af\33\3\2\2\2"+
-		"\u00b0\u00b1\7\36\2\2\u00b1\35\3\2\2\2\u00b2\u00b3\7\21\2\2\u00b3\37\3"+
-		"\2\2\2\u00b4\u00b5\7\5\2\2\u00b5!\3\2\2\2\u00b6\u00b7\7\16\2\2\u00b7#"+
-		"\3\2\2\2\u00b8\u00b9\7!\2\2\u00b9%\3\2\2\2\u00ba\u00bb\7\24\2\2\u00bb"+
-		"\'\3\2\2\2\u00bc\u00bd\7 \2\2\u00bd)\3\2\2\2\u00be\u00bf\7\7\2\2\u00bf"+
-		"\u00c0\7\13\2\2\u00c0\u00c1\5J&\2\u00c1\u00c2\7\6\2\2\u00c2\u00c3\5J&"+
-		"\2\u00c3\u00c4\7\6\2\2\u00c4\u00c5\5J&\2\u00c5\u00c6\7\6\2\2\u00c6\u00c7"+
-		"\5J&\2\u00c7\u00c8\7\6\2\2\u00c8\u00c9\5J&\2\u00c9\u00ca\7\26\2\2\u00ca"+
-		"+\3\2\2\2\u00cb\u00cc\7\32\2\2\u00cc\u00cd\7\n\2\2\u00cd\u00ce\5F$\2\u00ce"+
-		"\u00cf\7\3\2\2\u00cf-\3\2\2\2\u00d0\u00d1\7,\2\2\u00d1\u00d2\7(\2\2\u00d2"+
-		"\u00d3\5F$\2\u00d3\u00d4\7)\2\2\u00d4/\3\2\2\2\u00d5\u00d6\7\22\2\2\u00d6"+
-		"\u00d7\7\n\2\2\u00d7\u00d8\5F$\2\u00d8\u00d9\7\3\2\2\u00d9\u00da\7(\2"+
-		"\2\u00da\u00db\5F$\2\u00db\u00dc\7)\2\2\u00dc\61\3\2\2\2\u00dd\u00de\7"+
-		"\22\2\2\u00de\u00df\7\n\2\2\u00df\u00e0\5F$\2\u00e0\u00e1\7\3\2\2\u00e1"+
-		"\63\3\2\2\2\u00e2\u00e3\b\33\1\2\u00e3\u00e4\5J&\2\u00e4\u00ea\3\2\2\2"+
-		"\u00e5\u00e6\6\33\2\3\u00e6\u00e7\7.\2\2\u00e7\u00e9\5J&\2\u00e8\u00e5"+
-		"\3\2\2\2\u00e9\u00ec\3\2\2\2\u00ea\u00e8\3\2\2\2\u00ea\u00eb\3\2\2\2\u00eb"+
-		"\65\3\2\2\2\u00ec\u00ea\3\2\2\2\u00ed\u00ee\b\34\1\2\u00ee\u00ef\5\64"+
-		"\33\2\u00ef\u00f5\3\2\2\2\u00f0\u00f1\6\34\3\3\u00f1\u00f2\7-\2\2\u00f2"+
-		"\u00f4\5\64\33\2\u00f3\u00f0\3\2\2\2\u00f4\u00f7\3\2\2\2\u00f5\u00f3\3"+
-		"\2\2\2\u00f5\u00f6\3\2\2\2\u00f6\67\3\2\2\2\u00f7\u00f5\3\2\2\2\u00f8"+
-		"\u00f9\b\35\1\2\u00f9\u00fa\5\66\34\2\u00fa\u0100\3\2\2\2\u00fb\u00fc"+
-		"\6\35\4\3\u00fc\u00fd\7/\2\2\u00fd\u00ff\5\66\34\2\u00fe\u00fb\3\2\2\2"+
-		"\u00ff\u0102\3\2\2\2\u0100\u00fe\3\2\2\2\u0100\u0101\3\2\2\2\u01019\3"+
-		"\2\2\2\u0102\u0100\3\2\2\2\u0103\u0104\b\36\1\2\u0104\u0105\58\35\2\u0105"+
-		"\u010b\3\2\2\2\u0106\u0107\6\36\5\3\u0107\u0108\7\60\2\2\u0108\u010a\5"+
-		"8\35\2\u0109\u0106\3\2\2\2\u010a\u010d\3\2\2\2\u010b\u0109\3\2\2\2\u010b"+
-		"\u010c\3\2\2\2\u010c;\3\2\2\2\u010d\u010b\3\2\2\2\u010e\u010f\b\37\1\2"+
-		"\u010f\u0110\5:\36\2\u0110\u0116\3\2\2\2\u0111\u0112\6\37\6\3\u0112\u0113"+
-		"\7\61\2\2\u0113\u0115\5:\36\2\u0114\u0111\3\2\2\2\u0115\u0118\3\2\2\2"+
-		"\u0116\u0114\3\2\2\2\u0116\u0117\3\2\2\2\u0117=\3\2\2\2\u0118\u0116\3"+
-		"\2\2\2\u0119\u011a\b \1\2\u011a\u011b\5<\37\2\u011b\u0121\3\2\2\2\u011c"+
-		"\u011d\6 \7\3\u011d\u011e\7$\2\2\u011e\u0120\5<\37\2\u011f\u011c\3\2\2"+
-		"\2\u0120\u0123\3\2\2\2\u0121\u011f\3\2\2\2\u0121\u0122\3\2\2\2\u0122?"+
-		"\3\2\2\2\u0123\u0121\3\2\2\2\u0124\u0125\b!\1\2\u0125\u0126\5> \2\u0126"+
-		"\u012c\3\2\2\2\u0127\u0128\6!\b\3\u0128\u0129\7\62\2\2\u0129\u012b\5>"+
-		" \2\u012a\u0127\3\2\2\2\u012b\u012e\3\2\2\2\u012c\u012a\3\2\2\2\u012c"+
-		"\u012d\3\2\2\2\u012dA\3\2\2\2\u012e\u012c\3\2\2\2\u012f\u0130\b\"\1\2"+
-		"\u0130\u0131\5@!\2\u0131\u0137\3\2\2\2\u0132\u0133\6\"\t\3\u0133\u0134"+
-		"\7%\2\2\u0134\u0136\5@!\2\u0135\u0132\3\2\2\2\u0136\u0139\3\2\2\2\u0137"+
-		"\u0135\3\2\2\2\u0137\u0138\3\2\2\2\u0138C\3\2\2\2\u0139\u0137\3\2\2\2"+
-		"\u013a\u013b\b#\1\2\u013b\u013c\5B\"\2\u013c\u0142\3\2\2\2\u013d\u013e"+
-		"\6#\n\3\u013e\u013f\7&\2\2\u013f\u0141\5B\"\2\u0140\u013d\3\2\2\2\u0141"+
-		"\u0144\3\2\2\2\u0142\u0140\3\2\2\2\u0142\u0143\3\2\2\2\u0143E\3\2\2\2"+
-		"\u0144\u0142\3\2\2\2\u0145\u0146\5D#\2\u0146G\3\2\2\2\u0147\u0148\5F$"+
-		"\2\u0148I\3\2\2\2\u0149\u015a\7\"\2\2\u014a\u015a\5L\'\2\u014b\u015a\5"+
-		"V,\2\u014c\u015a\5\16\b\2\u014d\u014e\7\13\2\2\u014e\u014f\5F$\2\u014f"+
-		"\u0150\7\26\2\2\u0150\u015a\3\2\2\2\u0151\u0152\7\'\2\2\u0152\u0153\7"+
-		"\13\2\2\u0153\u0154\5F$\2\u0154\u0155\7\26\2\2\u0155\u015a\3\2\2\2\u0156"+
-		"\u015a\5*\26\2\u0157\u015a\5,\27\2\u0158\u015a\5\62\32\2\u0159\u0149\3"+
-		"\2\2\2\u0159\u014a\3\2\2\2\u0159\u014b\3\2\2\2\u0159\u014c\3\2\2\2\u0159"+
-		"\u014d\3\2\2\2\u0159\u0151\3\2\2\2\u0159\u0156\3\2\2\2\u0159\u0157\3\2"+
-		"\2\2\u0159\u0158\3\2\2\2\u015aK\3\2\2\2\u015b\u015c\7\64\2\2\u015cM\3"+
-		"\2\2\2\u015d\u015e\7\34\2\2\u015e\u015f\7\13\2\2\u015f\u0160\5F$\2\u0160"+
-		"\u0161\7\26\2\2\u0161\u0162\7)\2\2\u0162O\3\2\2\2\u0163\u0164\7\34\2\2"+
-		"\u0164\u0165\7\13\2\2\u0165\u0166\5F$\2\u0166\u0167\7\6\2\2\u0167\u0168"+
-		"\5F$\2\u0168\u0169\7\26\2\2\u0169\u016a\7)\2\2\u016aQ\3\2\2\2\u016b\u016c"+
-		"\7\23\2\2\u016c\u016d\7\13\2\2\u016d\u016e\5F$\2\u016e\u016f\7\26\2\2"+
-		"\u016f\u0170\7)\2\2\u0170S\3\2\2\2\u0171\u0172\7\4\2\2\u0172\u0173\7)"+
-		"\2\2\u0173U\3\2\2\2\u0174\u0175\7,\2\2\u0175W\3\2\2\2\22egr\u0084\u008c"+
-		"\u00a2\u00ea\u00f5\u0100\u010b\u0116\u0121\u012c\u0137\u0142\u0159";
+		",\t,\4-\t-\3\2\3\2\3\2\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\3\4"+
+		"\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\3\4\7\4s\n\4\f\4\16\4v\13\4\3\5\3\5\3"+
+		"\5\3\5\3\5\3\6\7\6~\n\6\f\6\16\6\u0081\13\6\3\7\3\7\3\7\3\7\3\7\3\7\3"+
+		"\7\3\7\3\7\3\7\3\7\3\7\3\7\7\7\u0090\n\7\f\7\16\7\u0093\13\7\3\7\3\7\3"+
+		"\7\3\7\3\7\5\7\u009a\n\7\3\b\3\b\3\b\3\b\3\b\3\b\3\b\3\t\3\t\3\t\3\t\3"+
+		"\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\3\t\5\t\u00b0\n\t\3\n\3\n\3\13\3\13\3\f"+
+		"\3\f\3\r\3\r\3\16\3\16\3\17\3\17\3\20\3\20\3\21\3\21\3\22\3\22\3\23\3"+
+		"\23\3\24\3\24\3\25\3\25\3\26\3\26\3\27\3\27\3\27\3\27\3\27\3\27\3\27\3"+
+		"\27\3\27\3\27\3\27\3\27\3\27\3\30\3\30\3\30\3\30\3\30\3\31\3\31\3\31\3"+
+		"\31\3\31\3\32\3\32\3\32\3\32\3\32\3\32\3\32\3\32\3\33\3\33\3\33\3\33\3"+
+		"\33\3\34\3\34\3\34\3\34\3\34\3\34\7\34\u00f6\n\34\f\34\16\34\u00f9\13"+
+		"\34\3\35\3\35\3\35\3\35\3\35\3\35\7\35\u0101\n\35\f\35\16\35\u0104\13"+
+		"\35\3\36\3\36\3\36\3\36\3\36\3\36\7\36\u010c\n\36\f\36\16\36\u010f\13"+
+		"\36\3\37\3\37\3\37\3\37\3\37\3\37\7\37\u0117\n\37\f\37\16\37\u011a\13"+
+		"\37\3 \3 \3 \3 \3 \3 \7 \u0122\n \f \16 \u0125\13 \3!\3!\3!\3!\3!\3!\7"+
+		"!\u012d\n!\f!\16!\u0130\13!\3\"\3\"\3\"\3\"\3\"\3\"\7\"\u0138\n\"\f\""+
+		"\16\"\u013b\13\"\3#\3#\3#\3#\3#\3#\7#\u0143\n#\f#\16#\u0146\13#\3$\3$"+
+		"\3$\3$\3$\3$\7$\u014e\n$\f$\16$\u0151\13$\3%\3%\3&\3&\3\'\3\'\3\'\3\'"+
+		"\3\'\3\'\3\'\3\'\3\'\3\'\3\'\3\'\3\'\3\'\3\'\3\'\5\'\u0167\n\'\3(\3(\3"+
+		")\3)\3)\3)\3)\3)\3*\3*\3*\3*\3*\3*\3*\3*\3+\3+\3+\3+\3+\3+\3,\3,\3,\3"+
+		"-\3-\3-\2.\2\4\6\b\n\f\16\20\22\24\26\30\32\34\36 \"$&(*,.\60\62\64\66"+
+		"8:<>@BDFHJLNPRTVX\2\3\3\2$%\u0181\2Z\3\2\2\2\4]\3\2\2\2\6t\3\2\2\2\bw"+
+		"\3\2\2\2\n\177\3\2\2\2\f\u0082\3\2\2\2\16\u009b\3\2\2\2\20\u00af\3\2\2"+
+		"\2\22\u00b1\3\2\2\2\24\u00b3\3\2\2\2\26\u00b5\3\2\2\2\30\u00b7\3\2\2\2"+
+		"\32\u00b9\3\2\2\2\34\u00bb\3\2\2\2\36\u00bd\3\2\2\2 \u00bf\3\2\2\2\"\u00c1"+
+		"\3\2\2\2$\u00c3\3\2\2\2&\u00c5\3\2\2\2(\u00c7\3\2\2\2*\u00c9\3\2\2\2,"+
+		"\u00cb\3\2\2\2.\u00d8\3\2\2\2\60\u00dd\3\2\2\2\62\u00e2\3\2\2\2\64\u00ea"+
+		"\3\2\2\2\66\u00ef\3\2\2\28\u00fa\3\2\2\2:\u0105\3\2\2\2<\u0110\3\2\2\2"+
+		">\u011b\3\2\2\2@\u0126\3\2\2\2B\u0131\3\2\2\2D\u013c\3\2\2\2F\u0147\3"+
+		"\2\2\2H\u0152\3\2\2\2J\u0154\3\2\2\2L\u0166\3\2\2\2N\u0168\3\2\2\2P\u016a"+
+		"\3\2\2\2R\u0170\3\2\2\2T\u0178\3\2\2\2V\u017e\3\2\2\2X\u0181\3\2\2\2Z"+
+		"[\5\6\4\2[\\\7\2\2\3\\\3\3\2\2\2]^\7\21\2\2^_\7\f\2\2_`\7\67\2\2`a\5\6"+
+		"\4\2ab\78\2\2bc\7#\2\2cd\7\f\2\2de\7\67\2\2ef\5\6\4\2fg\78\2\2g\5\3\2"+
+		"\2\2hs\5\b\5\2is\5\60\31\2js\5\62\32\2ks\5\20\t\2ls\5\f\7\2ms\5\16\b\2"+
+		"ns\5P)\2os\5R*\2ps\5T+\2qs\5V,\2rh\3\2\2\2ri\3\2\2\2rj\3\2\2\2rk\3\2\2"+
+		"\2rl\3\2\2\2rm\3\2\2\2rn\3\2\2\2ro\3\2\2\2rp\3\2\2\2rq\3\2\2\2sv\3\2\2"+
+		"\2tr\3\2\2\2tu\3\2\2\2u\7\3\2\2\2vt\3\2\2\2wx\7\17\2\2xy\5\n\6\2yz\7 "+
+		"\2\2z{\7+\2\2{\t\3\2\2\2|~\t\2\2\2}|\3\2\2\2~\u0081\3\2\2\2\177}\3\2\2"+
+		"\2\177\u0080\3\2\2\2\u0080\13\3\2\2\2\u0081\177\3\2\2\2\u0082\u0083\7"+
+		"\r\2\2\u0083\u0084\5J&\2\u0084\u0085\7\f\2\2\u0085\u0086\7\67\2\2\u0086"+
+		"\u0087\5\6\4\2\u0087\u0091\78\2\2\u0088\u0089\7\34\2\2\u0089\u008a\5J"+
+		"&\2\u008a\u008b\7\f\2\2\u008b\u008c\7\67\2\2\u008c\u008d\5\6\4\2\u008d"+
+		"\u008e\78\2\2\u008e\u0090\3\2\2\2\u008f\u0088\3\2\2\2\u0090\u0093\3\2"+
+		"\2\2\u0091\u008f\3\2\2\2\u0091\u0092\3\2\2\2\u0092\u0099\3\2\2\2\u0093"+
+		"\u0091\3\2\2\2\u0094\u0095\7\31\2\2\u0095\u0096\7\67\2\2\u0096\u0097\5"+
+		"\6\4\2\u0097\u0098\78\2\2\u0098\u009a\3\2\2\2\u0099\u0094\3\2\2\2\u0099"+
+		"\u009a\3\2\2\2\u009a\r\3\2\2\2\u009b\u009c\7\t\2\2\u009c\u009d\5J&\2\u009d"+
+		"\u009e\7\f\2\2\u009e\u009f\7\67\2\2\u009f\u00a0\5\6\4\2\u00a0\u00a1\7"+
+		"8\2\2\u00a1\17\3\2\2\2\u00a2\u00b0\5\22\n\2\u00a3\u00b0\5\24\13\2\u00a4"+
+		"\u00b0\5\26\f\2\u00a5\u00b0\5\30\r\2\u00a6\u00b0\5\32\16\2\u00a7\u00b0"+
+		"\5\34\17\2\u00a8\u00b0\5\36\20\2\u00a9\u00b0\5 \21\2\u00aa\u00b0\5\"\22"+
+		"\2\u00ab\u00b0\5$\23\2\u00ac\u00b0\5&\24\2\u00ad\u00b0\5(\25\2\u00ae\u00b0"+
+		"\5*\26\2\u00af\u00a2\3\2\2\2\u00af\u00a3\3\2\2\2\u00af\u00a4\3\2\2\2\u00af"+
+		"\u00a5\3\2\2\2\u00af\u00a6\3\2\2\2\u00af\u00a7\3\2\2\2\u00af\u00a8\3\2"+
+		"\2\2\u00af\u00a9\3\2\2\2\u00af\u00aa\3\2\2\2\u00af\u00ab\3\2\2\2\u00af"+
+		"\u00ac\3\2\2\2\u00af\u00ad\3\2\2\2\u00af\u00ae\3\2\2\2\u00b0\21\3\2\2"+
+		"\2\u00b1\u00b2\7\26\2\2\u00b2\23\3\2\2\2\u00b3\u00b4\7\36\2\2\u00b4\25"+
+		"\3\2\2\2\u00b5\u00b6\7\20\2\2\u00b6\27\3\2\2\2\u00b7\u00b8\7\30\2\2\u00b8"+
+		"\31\3\2\2\2\u00b9\u00ba\7\32\2\2\u00ba\33\3\2\2\2\u00bb\u00bc\7\b\2\2"+
+		"\u00bc\35\3\2\2\2\u00bd\u00be\7\37\2\2\u00be\37\3\2\2\2\u00bf\u00c0\7"+
+		"\22\2\2\u00c0!\3\2\2\2\u00c1\u00c2\7\5\2\2\u00c2#\3\2\2\2\u00c3\u00c4"+
+		"\7\16\2\2\u00c4%\3\2\2\2\u00c5\u00c6\7\"\2\2\u00c6\'\3\2\2\2\u00c7\u00c8"+
+		"\7\25\2\2\u00c8)\3\2\2\2\u00c9\u00ca\7!\2\2\u00ca+\3\2\2\2\u00cb\u00cc"+
+		"\7\7\2\2\u00cc\u00cd\7\13\2\2\u00cd\u00ce\5L\'\2\u00ce\u00cf\7\6\2\2\u00cf"+
+		"\u00d0\5L\'\2\u00d0\u00d1\7\6\2\2\u00d1\u00d2\5L\'\2\u00d2\u00d3\7\6\2"+
+		"\2\u00d3\u00d4\5L\'\2\u00d4\u00d5\7\6\2\2\u00d5\u00d6\5L\'\2\u00d6\u00d7"+
+		"\7\27\2\2\u00d7-\3\2\2\2\u00d8\u00d9\7\33\2\2\u00d9\u00da\7\n\2\2\u00da"+
+		"\u00db\5H%\2\u00db\u00dc\7\3\2\2\u00dc/\3\2\2\2\u00dd\u00de\7.\2\2\u00de"+
+		"\u00df\7*\2\2\u00df\u00e0\5H%\2\u00e0\u00e1\7+\2\2\u00e1\61\3\2\2\2\u00e2"+
+		"\u00e3\7\23\2\2\u00e3\u00e4\7\n\2\2\u00e4\u00e5\5H%\2\u00e5\u00e6\7\3"+
+		"\2\2\u00e6\u00e7\7*\2\2\u00e7\u00e8\5H%\2\u00e8\u00e9\7+\2\2\u00e9\63"+
+		"\3\2\2\2\u00ea\u00eb\7\23\2\2\u00eb\u00ec\7\n\2\2\u00ec\u00ed\5H%\2\u00ed"+
+		"\u00ee\7\3\2\2\u00ee\65\3\2\2\2\u00ef\u00f0\b\34\1\2\u00f0\u00f1\5L\'"+
+		"\2\u00f1\u00f7\3\2\2\2\u00f2\u00f3\6\34\2\3\u00f3\u00f4\7\60\2\2\u00f4"+
+		"\u00f6\5L\'\2\u00f5\u00f2\3\2\2\2\u00f6\u00f9\3\2\2\2\u00f7\u00f5\3\2"+
+		"\2\2\u00f7\u00f8\3\2\2\2\u00f8\67\3\2\2\2\u00f9\u00f7\3\2\2\2\u00fa\u00fb"+
+		"\b\35\1\2\u00fb\u00fc\5\66\34\2\u00fc\u0102\3\2\2\2\u00fd\u00fe\6\35\3"+
+		"\3\u00fe\u00ff\7/\2\2\u00ff\u0101\5\66\34\2\u0100\u00fd\3\2\2\2\u0101"+
+		"\u0104\3\2\2\2\u0102\u0100\3\2\2\2\u0102\u0103\3\2\2\2\u01039\3\2\2\2"+
+		"\u0104\u0102\3\2\2\2\u0105\u0106\b\36\1\2\u0106\u0107\58\35\2\u0107\u010d"+
+		"\3\2\2\2\u0108\u0109\6\36\4\3\u0109\u010a\7\61\2\2\u010a\u010c\58\35\2"+
+		"\u010b\u0108\3\2\2\2\u010c\u010f\3\2\2\2\u010d\u010b\3\2\2\2\u010d\u010e"+
+		"\3\2\2\2\u010e;\3\2\2\2\u010f\u010d\3\2\2\2\u0110\u0111\b\37\1\2\u0111"+
+		"\u0112\5:\36\2\u0112\u0118\3\2\2\2\u0113\u0114\6\37\5\3\u0114\u0115\7"+
+		"\62\2\2\u0115\u0117\5:\36\2\u0116\u0113\3\2\2\2\u0117\u011a\3\2\2\2\u0118"+
+		"\u0116\3\2\2\2\u0118\u0119\3\2\2\2\u0119=\3\2\2\2\u011a\u0118\3\2\2\2"+
+		"\u011b\u011c\b \1\2\u011c\u011d\5<\37\2\u011d\u0123\3\2\2\2\u011e\u011f"+
+		"\6 \6\3\u011f\u0120\7\63\2\2\u0120\u0122\5<\37\2\u0121\u011e\3\2\2\2\u0122"+
+		"\u0125\3\2\2\2\u0123\u0121\3\2\2\2\u0123\u0124\3\2\2\2\u0124?\3\2\2\2"+
+		"\u0125\u0123\3\2\2\2\u0126\u0127\b!\1\2\u0127\u0128\5> \2\u0128\u012e"+
+		"\3\2\2\2\u0129\u012a\6!\7\3\u012a\u012b\7&\2\2\u012b\u012d\5> \2\u012c"+
+		"\u0129\3\2\2\2\u012d\u0130\3\2\2\2\u012e\u012c\3\2\2\2\u012e\u012f\3\2"+
+		"\2\2\u012fA\3\2\2\2\u0130\u012e\3\2\2\2\u0131\u0132\b\"\1\2\u0132\u0133"+
+		"\5@!\2\u0133\u0139\3\2\2\2\u0134\u0135\6\"\b\3\u0135\u0136\7\64\2\2\u0136"+
+		"\u0138\5@!\2\u0137\u0134\3\2\2\2\u0138\u013b\3\2\2\2\u0139\u0137\3\2\2"+
+		"\2\u0139\u013a\3\2\2\2\u013aC\3\2\2\2\u013b\u0139\3\2\2\2\u013c\u013d"+
+		"\b#\1\2\u013d\u013e\5B\"\2\u013e\u0144\3\2\2\2\u013f\u0140\6#\t\3\u0140"+
+		"\u0141\7\'\2\2\u0141\u0143\5B\"\2\u0142\u013f\3\2\2\2\u0143\u0146\3\2"+
+		"\2\2\u0144\u0142\3\2\2\2\u0144\u0145\3\2\2\2\u0145E\3\2\2\2\u0146\u0144"+
+		"\3\2\2\2\u0147\u0148\b$\1\2\u0148\u0149\5D#\2\u0149\u014f\3\2\2\2\u014a"+
+		"\u014b\6$\n\3\u014b\u014c\7(\2\2\u014c\u014e\5D#\2\u014d\u014a\3\2\2\2"+
+		"\u014e\u0151\3\2\2\2\u014f\u014d\3\2\2\2\u014f\u0150\3\2\2\2\u0150G\3"+
+		"\2\2\2\u0151\u014f\3\2\2\2\u0152\u0153\5F$\2\u0153I\3\2\2\2\u0154\u0155"+
+		"\5H%\2\u0155K\3\2\2\2\u0156\u0167\7$\2\2\u0157\u0167\5N(\2\u0158\u0167"+
+		"\5X-\2\u0159\u0167\5\20\t\2\u015a\u015b\7\13\2\2\u015b\u015c\5H%\2\u015c"+
+		"\u015d\7\27\2\2\u015d\u0167\3\2\2\2\u015e\u015f\7)\2\2\u015f\u0160\7\13"+
+		"\2\2\u0160\u0161\5H%\2\u0161\u0162\7\27\2\2\u0162\u0167\3\2\2\2\u0163"+
+		"\u0167\5,\27\2\u0164\u0167\5.\30\2\u0165\u0167\5\64\33\2\u0166\u0156\3"+
+		"\2\2\2\u0166\u0157\3\2\2\2\u0166\u0158\3\2\2\2\u0166\u0159\3\2\2\2\u0166"+
+		"\u015a\3\2\2\2\u0166\u015e\3\2\2\2\u0166\u0163\3\2\2\2\u0166\u0164\3\2"+
+		"\2\2\u0166\u0165\3\2\2\2\u0167M\3\2\2\2\u0168\u0169\7\66\2\2\u0169O\3"+
+		"\2\2\2\u016a\u016b\7\35\2\2\u016b\u016c\7\13\2\2\u016c\u016d\5H%\2\u016d"+
+		"\u016e\7\27\2\2\u016e\u016f\7+\2\2\u016fQ\3\2\2\2\u0170\u0171\7\35\2\2"+
+		"\u0171\u0172\7\13\2\2\u0172\u0173\5H%\2\u0173\u0174\7\6\2\2\u0174\u0175"+
+		"\5H%\2\u0175\u0176\7\27\2\2\u0176\u0177\7+\2\2\u0177S\3\2\2\2\u0178\u0179"+
+		"\7\24\2\2\u0179\u017a\7\13\2\2\u017a\u017b\5H%\2\u017b\u017c\7\27\2\2"+
+		"\u017c\u017d\7+\2\2\u017dU\3\2\2\2\u017e\u017f\7\4\2\2\u017f\u0180\7+"+
+		"\2\2\u0180W\3\2\2\2\u0181\u0182\7.\2\2\u0182Y\3\2\2\2\22rt\177\u0091\u0099"+
+		"\u00af\u00f7\u0102\u010d\u0118\u0123\u012e\u0139\u0144\u014f\u0166";
 	public static final ATN _ATN =
 		ATNSimulator.deserialize(_serializedATN.toCharArray());
 	static {

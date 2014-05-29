@@ -50,7 +50,7 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
-	@Override public T visitTx_origin(@NotNull SerpentParser.Tx_originContext ctx) { return visitChildren(ctx); }
+	@Override public T visitBlock(@NotNull SerpentParser.BlockContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -58,7 +58,7 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
-	@Override public T visitBlock(@NotNull SerpentParser.BlockContext ctx) { return visitChildren(ctx); }
+	@Override public T visitTx_origin(@NotNull SerpentParser.Tx_originContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -131,6 +131,14 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
 	@Override public T visitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx) { return visitChildren(ctx); }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 */
+	@Override public T visitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}

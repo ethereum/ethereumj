@@ -40,18 +40,18 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitGet_var(@NotNull SerpentParser.Get_varContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link SerpentParser#tx_origin}.
-	 * @param ctx the parse tree
-	 * @return the visitor result
-	 */
-	T visitTx_origin(@NotNull SerpentParser.Tx_originContext ctx);
-
-	/**
 	 * Visit a parse tree produced by {@link SerpentParser#block}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitBlock(@NotNull SerpentParser.BlockContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#tx_origin}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitTx_origin(@NotNull SerpentParser.Tx_originContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#asm_symbol}.
@@ -115,6 +115,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#parse_init_code_block}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#tx_gasprice}.

@@ -6,6 +6,9 @@ import org.ethereum.util.ByteUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
@@ -1237,6 +1240,21 @@ public class SerpentCompileTest {
     }
 
 
+    @Test // test init/code blocks 1
+    public void test43(){
+        String code =   "init:\n" +
+                        "  a = 2\n" +
+                        "code:\n" +
+                        "  b=msg.data[1]\n" +
+                        "  stop\n" ;
+
+        String expected = "[init 2 0 MSTORE init] [code 1 32 MUL CALLDATALOAD 32 MSTORE STOP code]";
+        String asmResult = SerpentCompiler.compileFullNotion(code);
+        Assert.assertEquals(expected, asmResult);
+
+
+    }
+
 
     @Test // todo delete this one
     public void testFoo(){
@@ -1247,6 +1265,8 @@ public class SerpentCompileTest {
 
 /*
  todo: more to implement
+
+# 0) sha();
 # 1) send(1, 2, 3)
 # 2) create(1, 2, 3, 4)
 # 3) x = sha3(v)
