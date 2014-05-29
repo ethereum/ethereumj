@@ -58,11 +58,11 @@ public class StateObject {
 	}
 
 	public Value getAddress(byte[] address) {
-		return new Value(this.state.getTrie().get(new String(address)).getBytes());
+		return new Value(this.state.getTrie().get(new String(address)));
 	}
 
 	public void setAddress(byte[] address, Object value) {
-		this.state.getTrie().update(new String(address), new String(new Value(value).encode()));
+		this.state.getTrie().update(address, new Value(value).encode());
 	}
 
 	public GoState getState() {
@@ -89,7 +89,7 @@ public class StateObject {
 
 	public void setMem(BigInteger num, Value val) {
 		byte[] address = num.toByteArray();
-		this.state.getTrie().update(new String(address), new String(val.encode()));
+		this.state.getTrie().update(address, val.encode());
 	}
 
 	// Return the gas back to the origin. Used by the Virtual machine or Closures

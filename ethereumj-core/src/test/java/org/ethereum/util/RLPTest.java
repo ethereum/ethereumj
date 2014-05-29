@@ -85,9 +85,9 @@ public class RLPTest {
         BigInteger peerId =  RLP.decodeBigInteger(payload, nextIndex);
 
         BigInteger expectedPeerId =
-            new BigInteger("-3757679129454624401847229560118336025674165800491763435653406124634392418475888088940922052683656239666728251000337405781915693264977453978537202650777524");
+            new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
         assertEquals(expectedPeerId, peerId);
-
+        
         nextIndex = RLP.getNextElementIndex(payload, nextIndex);
         nextIndex = RLP.getFirstListElement(payload, nextIndex);
         ip = RLP.decodeIP4Bytes(payload, nextIndex);
@@ -101,7 +101,7 @@ public class RLPTest {
         peerId =  RLP.decodeBigInteger(payload, nextIndex);
 
         expectedPeerId =
-                new BigInteger("-3757679129454624401847229560118336025674165800491763435653406124634392418475888088940922052683656239666728251000337405781915693264977453978537202650777524");
+                new BigInteger("9650128800487972697726795438087510101805200020100629942070155319087371611597658887860952245483247188023303607186148645071838189546969115967896446355306572");
 
         assertEquals(expectedPeerId ,peerId);
 
@@ -429,7 +429,7 @@ public class RLPTest {
 		assertEquals(expected, Hex.toHexString(encoderesult));
 		
 		byte[] decodeResult = (byte[]) RLP.decode(encoderesult, 0).getDecoded();
-		assertEquals(test, new BigInteger(decodeResult));
+		assertEquals(test, new BigInteger(1,  decodeResult));
 	}
 
 	@Test
@@ -615,10 +615,10 @@ public class RLPTest {
 		assertEquals(test11, byteArrayToInt(decodedData));
 		
 		decodedData = (byte[]) RLP.decode(Hex.decode(result12), pos).getDecoded();
-		assertTrue(test12.compareTo(new BigInteger(decodedData)) == 0);
+		assertTrue(test12.compareTo(new BigInteger(1, decodedData)) == 0);
 		
 		decodedData = (byte[]) RLP.decode(Hex.decode(result13), pos).getDecoded();
-		assertTrue(test13.compareTo(new BigInteger(decodedData)) == 0);
+		assertTrue(test13.compareTo(new BigInteger(1, decodedData)) == 0);
 		
 		// Need to test with different expected value, because decoding doesn't recognize types
 		Object testObject1 = RLP.decode(Hex.decode(result14), pos).getDecoded();

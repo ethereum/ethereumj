@@ -3,15 +3,12 @@ package org.ethereum.gui;
 import org.ethereum.manager.MainData;
 
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.ListSelectionModel;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
@@ -30,9 +27,13 @@ public class PeersTableWindow extends JFrame{
     private	JScrollPane scrollPane;
     private Timer updater = new Timer();
 
+    private ToolBar toolBar;
 
 	// Constructor of main frame
-	public PeersTableWindow() {
+	public PeersTableWindow(ToolBar toolBar) {
+
+        this.toolBar = toolBar;
+        addCloseAction();
 
 		// Set the frame characteristics
 		setTitle("Ethereum Peers");
@@ -96,9 +97,21 @@ public class PeersTableWindow extends JFrame{
             MainData.instance.startPeerDiscovery();
     }
 
+    public void addCloseAction(){
+        this.addWindowListener( new WindowAdapter()
+        {
+            public void windowClosing(WindowEvent e)
+            {
+                toolBar.peersToggle.setSelected(false);
+
+            }
+        });
+    }
+
+
 	public static void main(String args[]) {
 
-		PeersTableWindow mainFrame = new PeersTableWindow();
+		PeersTableWindow mainFrame = new PeersTableWindow(null);
 		mainFrame.setVisible(true);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}

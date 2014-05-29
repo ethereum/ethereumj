@@ -37,6 +37,11 @@
         <copy file="./target/classes/system.properties" todir="./target/package/ethereumj/config"/>
         <copy file="./target/classes/GeoLiteCity.dat" todir="./target/package/ethereumj/config"/>
 
+        <copy  todir="./target/package/ethereumj/samples">
+            <fileset dir="./samples"/>
+        </copy>
+
+
 
         <zip destfile="ethereumj-${DSTAMP}-${TSTAMP}.zip" basedir="./target/package">
         </zip>

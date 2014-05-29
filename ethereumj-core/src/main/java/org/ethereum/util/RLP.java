@@ -9,6 +9,7 @@ import java.util.Queue;
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.spongycastle.util.Arrays.concatenate;
+import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
 import java.util.List;
 
@@ -233,7 +234,7 @@ public class RLP {
         }
         byte[] valueBytes = new byte[length];
         System.arraycopy(data, index, valueBytes, 0, length);
-        value = new BigInteger(valueBytes);
+        value = new BigInteger(1, valueBytes);
         return value;
     }
 
@@ -783,7 +784,7 @@ public class RLP {
     	if(srcBigInteger == BigInteger.ZERO) 
     		return encodeByte((byte)0);
     	else 
-    		return encodeElement(srcBigInteger.toByteArray());
+    		return encodeElement(asUnsignedByteArray(srcBigInteger));
     }
 
     public static byte[] encodeElement(byte[] srcData) {
@@ -878,13 +879,13 @@ public class RLP {
 			return inputString.getBytes();
 		} else if(input instanceof Long) {
 			Long inputLong = (Long) input;	
-			return (inputLong == 0) ? new byte[0] : BigInteger.valueOf(inputLong).toByteArray();
+			return (inputLong == 0) ? new byte[0] : asUnsignedByteArray(BigInteger.valueOf(inputLong));
 		} else if(input instanceof Integer) {
 			Integer inputInt = (Integer) input;	
-			return (inputInt == 0) ? new byte[0] : BigInteger.valueOf(inputInt.longValue()).toByteArray();
+			return (inputInt == 0) ? new byte[0] : asUnsignedByteArray(BigInteger.valueOf(inputInt.intValue()));
 		} else if(input instanceof BigInteger) {
 			BigInteger inputBigInt = (BigInteger) input;
-			return (inputBigInt == BigInteger.ZERO) ? new byte[0] : inputBigInt.toByteArray();
+			return (inputBigInt == BigInteger.ZERO) ? new byte[0] : asUnsignedByteArray(inputBigInt);
 		} else if (input instanceof Value) {
 			Value val = (Value) input;
 			return toBytes(val.asObj());

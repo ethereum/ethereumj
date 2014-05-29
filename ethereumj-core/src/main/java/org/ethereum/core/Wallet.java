@@ -34,7 +34,7 @@ public class Wallet {
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
 	
     // <address, info> table for a wallet
-    private HashMap<String, AddressState> rows = new HashMap<String, AddressState>();
+    private HashMap<String, AccountState> rows = new HashMap<String, AccountState>();
     private long high;
 
     private List<WalletListener> listeners = new ArrayList<WalletListener>();
@@ -42,14 +42,14 @@ public class Wallet {
     private HashMap<BigInteger, Transaction> transactionMap = new HashMap<BigInteger, Transaction>();
 
     public void addNewKey(){
-        AddressState addressState = new AddressState();
+        AccountState addressState = new AccountState();
         String address = Hex.toHexString(addressState.getEcKey().getAddress());
         rows.put(address, addressState);
         for (WalletListener listener : listeners) listener.valueChanged();
     }
 
     public void importKey(byte[] privKey){
-        AddressState addressState = new AddressState(ECKey.fromPrivate(privKey));
+        AccountState addressState = new AccountState(ECKey.fromPrivate(privKey));
         String address = Hex.toHexString(addressState.getEcKey().getAddress());
         rows.put(address, addressState);
         notifyListeners();
@@ -59,11 +59,11 @@ public class Wallet {
         this.listeners.add(walletListener);
     }
 
-    public Collection<AddressState> getAddressStateCollection(){
+    public Collection<AccountState> getAddressStateCollection(){
         return rows.values();
     }
 
-    public AddressState getAddressState(byte[] addressBytes){
+    public AccountState getAddressState(byte[] addressBytes){
         String address = Hex.toHexString(addressBytes);
         return rows.get(address);
     }
@@ -75,7 +75,7 @@ public class Wallet {
 
     public BigInteger totalBalance(){
         BigInteger sum = BigInteger.ZERO;
-        for (AddressState addressState : rows.values()){
+        for (AccountState addressState : rows.values()){
             sum = sum.add(addressState.getBalance());
         }
         return sum;
@@ -86,7 +86,7 @@ public class Wallet {
         transactionMap.put(new BigInteger(transaction.getHash()), transaction );
 
         byte[] senderAddress = transaction.getSender();
-        AddressState senderState =  rows.get(Hex.toHexString(senderAddress));
+        AccountState senderState =  rows.get(Hex.toHexString(senderAddress));
         if (senderState != null){
 
             BigInteger value = new BigInteger(transaction.getValue());
@@ -95,7 +95,7 @@ public class Wallet {
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
-        AddressState receiverState =  rows.get(Hex.toHexString(receiveAddress));
+        AccountState receiverState =  rows.get(Hex.toHexString(receiveAddress));
         if (receiverState != null){
             receiverState.addToBalance(new BigInteger(1, transaction.getValue()));
         }
@@ -214,7 +214,7 @@ public class Wallet {
         walletElement.setAttributeNode(high);
 
         int i = 0;
-        for (AddressState addressState :  getAddressStateCollection()){
+        for (AccountState addressState :  getAddressStateCollection()){
 
             Element raw = doc.createElement("raw");
             Attr id = doc.createAttribute("id");

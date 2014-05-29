@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AddressState;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Wallet;
 import org.ethereum.manager.MainData;
 
@@ -9,6 +9,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.net.URL;
 
 /**
@@ -19,8 +21,12 @@ import java.net.URL;
 public class WalletWindow extends JFrame implements Wallet.WalletListener{
 
     WalletWindow walletWindow;
+    ToolBar toolBar;
 
-    public WalletWindow() {
+    public WalletWindow(ToolBar toolBar) {
+
+        addCloseAction();
+        this.toolBar = toolBar;
 
         walletWindow = this;
         java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
@@ -50,7 +56,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
 
         Wallet wallet = MainData.instance.getWallet();
 
-        for (AddressState addressState : wallet.getAddressStateCollection()){
+        for (AccountState addressState : wallet.getAddressStateCollection()){
 
             WalletAddressPanel rowPanel =
                     new WalletAddressPanel(addressState);
@@ -91,6 +97,18 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         contentPane.revalidate();
         contentPane.repaint();
     }
+
+    public void addCloseAction(){
+        this.addWindowListener( new WindowAdapter()
+        {
+            public void windowClosing(WindowEvent e)
+            {
+                toolBar.walletToggle.setSelected(false);
+
+            }
+        });
+    }
+
 
     @Override
     public void valueChanged() {
