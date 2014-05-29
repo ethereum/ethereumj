@@ -10,8 +10,12 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.*;
+import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -46,7 +50,7 @@ public class SerpentEditor extends JFrame {
             "\n" +
             "return(0)\n";
 
-    private String codeSample3 = "\n" +
+    private String defaultCode = "\n" +
             "\n" +
             "init: \n" +
             "\n" +
@@ -69,6 +73,7 @@ public class SerpentEditor extends JFrame {
     final JSplitPane splitPanel;
     final JTextArea result;
     final JPanel contentPane;
+    JFileChooser fileChooser = null;
 
     public SerpentEditor() {
 
@@ -88,7 +93,7 @@ public class SerpentEditor extends JFrame {
         codeArea.setSyntaxEditingStyle("text/serpent");
         codeArea.setCodeFoldingEnabled(true);
         codeArea.setAntiAliasingEnabled(true);
-        codeArea.setText(codeSample3);
+        codeArea.setText(defaultCode);
 
         changeStyleProgrammatically();
 
@@ -101,6 +106,7 @@ public class SerpentEditor extends JFrame {
         splitPanel.setOneTouchExpandable(true);
         splitPanel.setDividerSize(5);
         splitPanel.setContinuousLayout(true);
+
 
 
         contentPane.add(splitPanel, BorderLayout.CENTER);
@@ -123,6 +129,7 @@ public class SerpentEditor extends JFrame {
 
         contentPane.add(controlsPanel, BorderLayout.SOUTH);
 
+
         createToolBar();
 
         setContentPane(contentPane);
@@ -130,6 +137,8 @@ public class SerpentEditor extends JFrame {
 
 
         pack();
+        this.revalidate();
+        this.repaint();
 
     }
 
@@ -187,19 +196,20 @@ public class SerpentEditor extends JFrame {
         } catch (Throwable th) {
             th.printStackTrace();
 
-            splitPanel.setDividerLocation(0.7);
+            splitPanel.setDividerLocation(0.8);
             result.setVisible(true);
             result.setText(th.getMessage());
             result.setForeground(Color.RED);
             return ;
-
         }
 
         result.setForeground(Color.BLACK.brighter());
         result.setVisible(true);
         result.setText(asmResult);
 
-        splitPanel.setDividerLocation(0.7);
+        splitPanel.setDividerLocation(
+                1 - result.getPreferredSize().getHeight() / codeArea.getPreferredSize().getHeight());
+
         this.repaint();
     }
 
@@ -245,10 +255,7 @@ public class SerpentEditor extends JFrame {
         toolbar.setFloatable(false);
         final JPanel mainContentPane = SerpentEditor.this.contentPane;
 
-
-
         {
-
             java.net.URL url = ClassLoader.getSystemResource("buttons/open-file.png");
             Toolkit kit = Toolkit.getDefaultToolkit();
             Image img = kit.createImage(url);
@@ -273,7 +280,21 @@ public class SerpentEditor extends JFrame {
                     new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("open file");
+
+                           File file = callFileChooser();
+                            try {
+                                if (file == null) return;
+                                String content = new Scanner(file).useDelimiter("\\Z").next();
+                                codeArea.setText(content);
+
+                            } catch (FileNotFoundException e1) {
+
+                                e1.printStackTrace();
+                            } catch (java.util.NoSuchElementException e2){
+
+                                // don't worry it's just the file is empty
+                                codeArea.setText("");
+                            }
                         }
                     }
             );
@@ -306,7 +327,26 @@ public class SerpentEditor extends JFrame {
                     new ActionListener() {
                         @Override
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("save file");
+
+                            File file = null;
+                            if (fileChooser == null) file = callFileChooser();
+                            else{
+
+                                if (fileChooser.getSelectedFile() == null){
+                                    file = callFileChooser();
+                                }else{
+
+                                    file = fileChooser.getSelectedFile();
+                                }
+                            }
+
+                            try {
+                                BufferedWriter out = new BufferedWriter(new FileWriter(file), 32768);
+                                out.write(codeArea.getText());
+                                out.close();
+                            } catch (IOException e1) {
+                                e1.printStackTrace();
+                            }
                         }
                     }
             );
@@ -429,6 +469,27 @@ public class SerpentEditor extends JFrame {
 
 
         this.contentPane.add(toolbar, BorderLayout.EAST);
+    }
+
+
+    protected File callFileChooser(){
+
+        File file = null;
+
+        if (fileChooser == null) {
+            fileChooser = new JFileChooser(CONFIG.samplesDir());
+            fileChooser.setMultiSelectionEnabled(false);
+        }
+
+        switch (fileChooser.showOpenDialog(SerpentEditor.this))
+        {
+            case JFileChooser.APPROVE_OPTION:
+
+                    file = fileChooser.getSelectedFile();
+                break;
+        }
+
+        return file;
     }
 
     public static void main(String[] args) {

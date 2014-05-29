@@ -92,6 +92,12 @@ public class SystemProperties {
         return Integer.parseInt(prop.getProperty("peer.discovery.port"));
     }
 
+    public String samplesDir(){
+        if(prop.isEmpty()) return "samples";
+        return prop.getProperty("samples.dir");
+    }
+
+
 	public String toString() {
 		Enumeration<?> e = prop.propertyNames();
 		while (e.hasMoreElements()) {
