@@ -1,9 +1,5 @@
 package org.ethereum.trie;
 
-import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
-
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -11,7 +7,6 @@ import java.util.Map;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
-import org.iq80.leveldb.Options;
 
 public class Cache {
 	
@@ -20,17 +15,6 @@ public class Cache {
 	private boolean isDirty;
 
 	public Cache(DB db) {
-		if(db == null) {
-			try {
-				/* **** Experimental LevelDB Code **** */
-				Options options = new Options();
-				options.createIfMissing(true);
-				this.db = factory.open(new File("ethereumdb"), options);
-				/* **** Experimental LevelDB Code **** */
-			} catch (IOException ioe) {
-				ioe.printStackTrace();
-			}
-		}
 		this.db = db;
 		nodes = new HashMap<byte[], Node>();
 	}

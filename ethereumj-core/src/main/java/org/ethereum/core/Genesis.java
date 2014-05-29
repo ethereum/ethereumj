@@ -16,25 +16,25 @@ public class Genesis extends Block {
 	private static byte[] zeroHash160 = new byte[20];
 	private static byte[] sha3EmptyList = HashUtil.sha3(RLP.encodeList());
 
-	private static byte[] parentHash = zeroHash256;
-    private static byte[] unclesHash = sha3EmptyList;
-    private static byte[] coinbase = zeroHash160;
-    private static byte[] stateRoot = // TODO: Get stateRoot from actual state
+	public static byte[] PARENT_HASH = zeroHash256;
+	public static byte[] UNCLES_HASH = sha3EmptyList;
+	public static byte[] COINBASE = zeroHash160;
+    public static byte[] STATE_ROOT = // TODO: Get stateRoot from actual state
     		Hex.decode("12582945fc5ad12c3e7b67c4fc37a68fc0d52d995bb7f7291ff41a2739a7ca16");
-    private static byte[] txTrieRoot = new byte[0];
-    private static byte[] difficulty = BigInteger.valueOf(2).pow(22).toByteArray();
-    private static long number = 0;
-    private static long minGasPrice = 0;
-    private static long gasLimit = 1000000;
-    private static long gasUsed = 0;
-    private static long timestamp = 0;
-    private static byte[] extraData = new byte[0];
-    private static byte[] nonce = HashUtil.sha3(new byte[]{42});
+    public static byte[] TX_TRIE_ROOT = new byte[0];
+    public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(22).toByteArray();
+    public static long NUMBER = 0;
+    public static long MIN_GAS_PRICE = 0;
+    public static long GAS_LIMIT = 1000000;
+    public static long GAS_USED = 0;
+    public static long TIMESTAMP = 0;
+    public static byte[] EXTRA_DATA = new byte[0];
+    public static byte[] NONCE = HashUtil.sha3(new byte[]{42});
 			
 	public Genesis() {
-		super(parentHash, unclesHash, coinbase, stateRoot,
-				txTrieRoot, difficulty, number, minGasPrice, gasLimit, gasUsed,
-				timestamp, extraData, nonce, null, null);
+		super(PARENT_HASH, UNCLES_HASH, COINBASE, STATE_ROOT,
+				TX_TRIE_ROOT, DIFFICULTY, NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED,
+				TIMESTAMP, EXTRA_DATA, NONCE, null, null);
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
 	}
 }

@@ -32,7 +32,7 @@ public class Wallet {
     // todo: a) the values I need to keep for address state is balance & nonce & ECKey
     // todo: b) keep it to be easy accessed by the toAddress()
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
-
+	
     // <address, info> table for a wallet
     private HashMap<String, AddressState> rows = new HashMap<String, AddressState>();
     private long high;
@@ -42,7 +42,6 @@ public class Wallet {
     private HashMap<BigInteger, Transaction> transactionMap = new HashMap<BigInteger, Transaction>();
 
     public void addNewKey(){
-
         AddressState addressState = new AddressState();
         String address = Hex.toHexString(addressState.getEcKey().getAddress());
         rows.put(address, addressState);
@@ -50,7 +49,6 @@ public class Wallet {
     }
 
     public void importKey(byte[] privKey){
-
         AddressState addressState = new AddressState(ECKey.fromPrivate(privKey));
         String address = Hex.toHexString(addressState.getEcKey().getAddress());
         rows.put(address, addressState);
@@ -66,7 +64,6 @@ public class Wallet {
     }
 
     public AddressState getAddressState(byte[] addressBytes){
-
         String address = Hex.toHexString(addressBytes);
         return rows.get(address);
     }
@@ -94,7 +91,7 @@ public class Wallet {
 
             BigInteger value = new BigInteger(transaction.getValue());
             senderState.addToBalance(value.negate());
-            senderState.incrementTheNonce();
+            senderState.incrementNonce();
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
@@ -116,12 +113,9 @@ public class Wallet {
         List<Transaction> transactions = block.getTransactionsList();
 
         for (Transaction tx : transactions){
-
             boolean txExist = transactionMap.get(new BigInteger(tx.getHash())) != null;
             if (txExist) break;
-
             else {
-
                 applyTransaction(tx);
                 walletUpdated = true;
             }
@@ -259,7 +253,8 @@ public class Wallet {
     }
 
     private void notifyListeners(){
-        for (WalletListener listener : listeners) listener.valueChanged();
+		for (WalletListener listener : listeners)
+			listener.valueChanged();
     }
 
     public interface WalletListener{

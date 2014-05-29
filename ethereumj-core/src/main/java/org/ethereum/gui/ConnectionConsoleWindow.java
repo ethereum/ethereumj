@@ -88,13 +88,10 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 //                    	new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
                     	
                     	// c++: ZeroGox
-//                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
+                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
                     	
                     	// RomanJ
-                    	new ClientPeer(thisConsole).connect("54.211.14.10", 40404);
-
-
-
+//                    	new ClientPeer(thisConsole).connect("54.211.14.10", 40404);
 
                     }
                 };
@@ -151,9 +148,6 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
             textArea.setFont(font);
         }
     }
-
-
-
 
 	public static void main(String[] args) {
 		// Start all Swing applications on the EDT.
