@@ -55,13 +55,13 @@ public class GoState {
 	}
 
 	public StateObject getContract(byte[] address) {
-		String data = this.trie.get(new String(address));
-		if (data == "") {
+		byte[] data = this.trie.get(new String(address));
+		if (data == null || data.length == 0) {
 			return null;
 		}
 
 		// build contract
-		StateObject contract = new StateObject(address, data.getBytes());
+		StateObject contract = new StateObject(address, data);
 
 		// Check if there's a cached state for this contract
 		GoState cachedState = this.states.get(new String(address));
@@ -76,11 +76,11 @@ public class GoState {
 	}
 
 	public StateObject getAccount(byte[] address) {
-		String data = this.trie.get(new String(address));
-		if (data == "") {
+		byte[] data = this.trie.get(new String(address));
+		if (data == null || data.length == 0) {
 			return StateObject.createAccount(address, BigInteger.ZERO);
 		} else {
-			return new StateObject(address, data.getBytes());
+			return new StateObject(address, data);
 		}
 	}
 
@@ -138,11 +138,11 @@ public class GoState {
 			this.states.put(new String(addr), stateObject.getState());
 		}
 
-		this.trie.update(new String(addr), new String(stateObject.rlpEncode()));
+		this.trie.update(addr, stateObject.rlpEncode());
 	}
 
 	public void put(byte[] key, byte[] object) {
-		this.trie.update(new String(key), new String(object));
+		this.trie.update(key, object);
 	}
 
 	/**

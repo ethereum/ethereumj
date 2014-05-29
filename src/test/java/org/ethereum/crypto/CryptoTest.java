@@ -90,7 +90,7 @@ public class CryptoTest {
         // todo: https://tools.ietf.org/html/rfc6979#section-2.2
         // todo: https://github.com/bcgit/bc-java/blob/master/core/src/main/java/org/bouncycastle/crypto/signers/ECDSASigner.java
 
-        System.out.println(new BigInteger(1, Hex.decode("3913517ebd3c0c65000000")));
+        System.out.println(new BigInteger(Hex.decode("3913517ebd3c0c65000000")));
 
         System.out.println(Utils.getValueShortString(new BigInteger("69000000000000000000000000")));
 

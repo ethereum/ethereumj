@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import org.ethereum.trie.Trie;
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 public class TrieTest {
 
@@ -34,7 +35,7 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update("", dog);
-		assertEquals(dog, trie.get(""));
+		assertEquals(dog, new String(trie.get("")));
 	}
 	
 	@Test
@@ -42,7 +43,7 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
+		assertEquals(dog, new String(trie.get(cat)));
 	}
 	
 	@Test
@@ -50,33 +51,33 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(cat));
+		assertEquals(LONG_STRING, new String(trie.get(cat)));
 	}
 	
 	@Test
 	public void testInsertMultipleItems1() {
 		Trie trie = new Trie(mockDb);
 		trie.update(ca, dude);
-		assertEquals(dude, trie.get(ca));
+		assertEquals(dude, new String(trie.get(ca)));
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
+		assertEquals(dog, new String(trie.get(cat)));
 		
 		trie.update(dog, test);
-		assertEquals(test, trie.get(dog));
+		assertEquals(test, new String(trie.get(dog)));
 		
 		trie.update(doge, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(doge));
+		assertEquals(LONG_STRING, new String(trie.get(doge)));
 		
 		trie.update(test, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(test));
+		assertEquals(LONG_STRING, new String(trie.get(test)));
 
 		// Test if everything is still there
-		assertEquals(dude, trie.get(ca));
-		assertEquals(dog, trie.get(cat));
-		assertEquals(test, trie.get(dog));
-		assertEquals(LONG_STRING, trie.get(doge));
-		assertEquals(LONG_STRING, trie.get(test));
+		assertEquals(dude, new String(trie.get(ca)));
+		assertEquals(dog, new String(trie.get(cat)));
+		assertEquals(test, new String(trie.get(dog)));
+		assertEquals(LONG_STRING, new String(trie.get(doge)));
+		assertEquals(LONG_STRING, new String(trie.get(test)));
 	}
 	
 	@Test
@@ -84,26 +85,26 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
+		assertEquals(dog, new String(trie.get(cat)));
 		
 		trie.update(ca, dude);
-		assertEquals(dude, trie.get(ca));
+		assertEquals(dude, new String(trie.get(ca)));
 		
 		trie.update(doge, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(doge));
+		assertEquals(LONG_STRING, new String(trie.get(doge)));
 		
 		trie.update(dog, test);
-		assertEquals(test, trie.get(dog));
+		assertEquals(test, new String(trie.get(dog)));
 		
 		trie.update(test, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(test));
+		assertEquals(LONG_STRING, new String(trie.get(test)));
 		
 		// Test if everything is still there
-		assertEquals(dog, trie.get(cat));
-		assertEquals(dude, trie.get(ca));
-		assertEquals(LONG_STRING, trie.get(doge));
-		assertEquals(test, trie.get(dog));
-		assertEquals(LONG_STRING, trie.get(test));
+		assertEquals(dog, new String(trie.get(cat)));
+		assertEquals(dude, new String(trie.get(ca)));
+		assertEquals(LONG_STRING, new String(trie.get(doge)));
+		assertEquals(test, new String(trie.get(dog)));
+		assertEquals(LONG_STRING, new String(trie.get(test)));
 	}
 	
 	@Test
@@ -111,19 +112,19 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
+		assertEquals(dog, new String(trie.get(cat)));
 		
 		trie.update(cat, dog+"1");
-		assertEquals(dog+"1", trie.get(cat));
+		assertEquals(dog+"1", new String(trie.get(cat)));
 	}
 
 	@Test
 	public void testUpdateLongToLongString() {
 		Trie trie = new Trie(mockDb);
 		trie.update(cat, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(cat));
+		assertEquals(LONG_STRING, new String(trie.get(cat)));
 		trie.update(cat, LONG_STRING+"1");
-		assertEquals(LONG_STRING+"1", trie.get(cat));
+		assertEquals(LONG_STRING+"1", new String(trie.get(cat)));
 	}
 	
 	@Test
@@ -131,10 +132,10 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
+		assertEquals(dog, new String(trie.get(cat)));
 		
 		trie.update(cat, LONG_STRING+"1");
-		assertEquals(LONG_STRING+"1", trie.get(cat));
+		assertEquals(LONG_STRING+"1", new String(trie.get(cat)));
 	}
 
 	@Test
@@ -142,10 +143,10 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(cat));
+		assertEquals(LONG_STRING, new String(trie.get(cat)));
 		
 		trie.update(cat, dog+"1");
-		assertEquals(dog+"1", trie.get(cat));
+		assertEquals(dog+"1", new String(trie.get(cat)));
 	}
 
 	@Test
@@ -155,15 +156,15 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
+		assertEquals(dog, new String(trie.get(cat)));
 		
 		trie.update(ca, dude);
-		assertEquals(dude, trie.get(ca));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(dude, new String(trie.get(ca)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 
 		trie.delete(ca);
-		assertEquals("", trie.get(ca));
-		assertEquals(ROOT_HASH_AFTER, trie.getRootHash());
+		assertEquals("", new String(trie.get(ca)));
+		assertEquals(ROOT_HASH_AFTER, Hex.toHexString(trie.getRootHash()));
 	}
 	
 	@Test
@@ -173,15 +174,15 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(ca, dude);
-		assertEquals(dude, trie.get(ca));
+		assertEquals(dude, new String(trie.get(ca)));
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(dog, new String(trie.get(cat)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(cat);
-		assertEquals("", trie.get(cat));
-		assertEquals(ROOT_HASH_AFTER, trie.getRootHash());
+		assertEquals("", new String(trie.get(cat)));
+		assertEquals(ROOT_HASH_AFTER, Hex.toHexString(trie.getRootHash()));
 	}
 	
 	@Test
@@ -191,15 +192,15 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, dude);
-		assertEquals(dude, trie.get(cat));
+		assertEquals(dude, new String(trie.get(cat)));
 		
 		trie.update(dog, test);
-		assertEquals(test, trie.get(dog));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(test, new String(trie.get(dog)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(dog);
-		assertEquals("", trie.get(dog));
-		assertEquals(ROOT_HASH_AFTER, trie.getRootHash());
+		assertEquals("", new String(trie.get(dog)));
+		assertEquals(ROOT_HASH_AFTER, Hex.toHexString(trie.getRootHash()));
 	}
 
 	@Test
@@ -209,15 +210,15 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 
 		trie.update(cat, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(cat));
+		assertEquals(LONG_STRING, new String(trie.get(cat)));
 		
 		trie.update(dog, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(dog));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(LONG_STRING, new String(trie.get(dog)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(dog);
-		assertEquals("", trie.get(dog));
-		assertEquals(ROOT_HASH_AFTER, trie.getRootHash());
+		assertEquals("", new String(trie.get(dog)));
+		assertEquals(ROOT_HASH_AFTER, Hex.toHexString(trie.getRootHash()));
 	}
 	
 	@Test
@@ -227,15 +228,15 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(ca, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(ca));
+		assertEquals(LONG_STRING, new String(trie.get(ca)));
 
 		trie.update(cat, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(cat));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(LONG_STRING, new String(trie.get(cat)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(cat);
-		assertEquals("", trie.get(cat));
-		assertEquals(ROOT_HASH_AFTER, trie.getRootHash());
+		assertEquals("", new String(trie.get(cat)));
+		assertEquals(ROOT_HASH_AFTER, Hex.toHexString(trie.getRootHash()));
 	}
 	
 	@Test
@@ -245,15 +246,15 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(cat));
+		assertEquals(LONG_STRING, new String(trie.get(cat)));
 		
 		trie.update(ca, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(ca));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(LONG_STRING, new String(trie.get(ca)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(ca);
-		assertEquals("", trie.get(ca));
-		assertEquals(ROOT_HASH_AFTER, trie.getRootHash());
+		assertEquals("", new String(trie.get(ca)));
+		assertEquals(ROOT_HASH_AFTER, Hex.toHexString(trie.getRootHash()));
 	}	
 
 	@Test
@@ -264,28 +265,28 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		
 		trie.update(cat, dog);
-		assertEquals(dog, trie.get(cat));
+		assertEquals(dog, new String(trie.get(cat)));
 		
 		trie.update(ca, dude);
-		assertEquals(dude, trie.get(ca));
+		assertEquals(dude, new String(trie.get(ca)));
 		
 		trie.update(doge, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(doge));
+		assertEquals(LONG_STRING, new String(trie.get(doge)));
 		
 		trie.update(dog, test);
-		assertEquals(test, trie.get(dog));
+		assertEquals(test, new String(trie.get(dog)));
 		
 		trie.update(test, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(test));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(LONG_STRING, new String(trie.get(test)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 
 		trie.delete(dog);
-		assertEquals("", trie.get(dog));
-		assertEquals(ROOT_HASH_AFTER1, trie.getRootHash());
+		assertEquals("", new String(trie.get(dog)));
+		assertEquals(ROOT_HASH_AFTER1, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(test);
-		assertEquals("", trie.get(test));
-		assertEquals(ROOT_HASH_AFTER2, trie.getRootHash());
+		assertEquals("", new String(trie.get(test)));
+		assertEquals(ROOT_HASH_AFTER2, Hex.toHexString(trie.getRootHash()));
 	}	
 	
 	@Test
@@ -296,39 +297,39 @@ public class TrieTest {
 		
 		Trie trie = new Trie(mockDb);
 		trie.update(c, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(c));
+		assertEquals(LONG_STRING, new String(trie.get(c)));
 		
 		trie.update(ca, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(ca));
+		assertEquals(LONG_STRING, new String(trie.get(ca)));
 		
 		trie.update(cat, LONG_STRING);
-		assertEquals(LONG_STRING, trie.get(cat));
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(LONG_STRING, new String(trie.get(cat)));
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(ca);
-		assertEquals("", trie.get(ca));
-		assertEquals(ROOT_HASH_AFTER1, trie.getRootHash());
+		assertEquals("", new String(trie.get(ca)));
+		assertEquals(ROOT_HASH_AFTER1, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(cat);
-		assertEquals("", trie.get(cat));
-		assertEquals(ROOT_HASH_AFTER2, trie.getRootHash());
+		assertEquals("", new String(trie.get(cat)));
+		assertEquals(ROOT_HASH_AFTER2, Hex.toHexString(trie.getRootHash()));
 	}
 	
 	@Test
 	public void testDeleteAll() {
 		String ROOT_HASH_BEFORE = "a84739b4762ddf15e3acc4e6957e5ab2bbfaaef00fe9d436a7369c6f058ec90d";
 		Trie trie = new Trie(mockDb);
-		assertEquals(ROOT_HASH_EMPTY, trie.getRootHash());
+		assertEquals(ROOT_HASH_EMPTY, Hex.toHexString(trie.getRootHash()));
 		
 		trie.update(ca, dude);
 		trie.update(cat, dog);
 		trie.update(doge, LONG_STRING);
-		assertEquals(ROOT_HASH_BEFORE, trie.getRootHash());
+		assertEquals(ROOT_HASH_BEFORE, Hex.toHexString(trie.getRootHash()));
 		
 		trie.delete(ca);
 		trie.delete(cat);
 		trie.delete(doge);
-		assertEquals(ROOT_HASH_EMPTY, trie.getRootHash());
+		assertEquals(ROOT_HASH_EMPTY, Hex.toHexString(trie.getRootHash()));
 	}
 
 	@Test
@@ -339,12 +340,12 @@ public class TrieTest {
 		trie1.update(doge, LONG_STRING);
 		trie2.update(doge, LONG_STRING);
 		assertTrue("Expected tries to be equal", trie1.cmp(trie2));
-		assertEquals(trie1.getRootHash(), trie2.getRootHash());
+		assertEquals(Hex.toHexString(trie1.getRootHash()), Hex.toHexString(trie2.getRootHash()));
 		
 		trie1.update(dog, LONG_STRING);
 		trie2.update(cat, LONG_STRING);
 		assertFalse("Expected tries not to be equal", trie1.cmp(trie2));
-		assertNotEquals(trie1.getRootHash(), trie2.getRootHash());
+		assertNotEquals(Hex.toHexString(trie1.getRootHash()), Hex.toHexString(trie2.getRootHash()));
 	}
 	
 	@Test
@@ -386,12 +387,26 @@ public class TrieTest {
 	
 	@Test
 	public void testTrieCopy() {
-		fail("To be implemented");
+		Trie trie = new Trie(mockDb);
+		trie.update("doe", "reindeer");
+		Trie trie2 = trie.copy();
+		assertFalse(trie.equals(trie2)); // avoid possibility that its just a reference copy
+		assertEquals(Hex.toHexString(trie.getRootHash()), Hex.toHexString(trie2.getRootHash()));
+		assertTrue(trie.cmp(trie2));
 	}
 	
 	@Test
 	public void testTrieUndo() {
-		fail("To be implemented");
+		Trie trie = new Trie(mockDb);
+		trie.update("doe", "reindeer");
+		assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e", Hex.toHexString(trie.getRootHash()));
+		trie.sync();
+		
+		trie.update("dog", "puppy");
+		assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4", Hex.toHexString(trie.getRootHash()));
+		
+		trie.undo();
+		assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e", Hex.toHexString(trie.getRootHash()));
 	}
 	
 	// Using tests from: https://github.com/ethereum/tests/blob/master/trietest.json
@@ -401,20 +416,20 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 		trie.update("A", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 		
-	    assertEquals("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab", trie.getRootHash());
+	    assertEquals("d23786fb4a010da3ce639d66d5e904a11dbc02746d1ce25029e53290cabf28ab", Hex.toHexString(trie.getRootHash()));
 	  }
 	
 	@Test
 	public void testDogs() {
 		Trie trie = new Trie(mockDb);
 		trie.update("doe", "reindeer");
-		assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e", trie.getRootHash());
+		assertEquals("11a0327cfcc5b7689b6b6d727e1f5f8846c1137caaa9fc871ba31b7cce1b703e", Hex.toHexString(trie.getRootHash()));
 		
 		trie.update("dog", "puppy");
-		assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4", trie.getRootHash());
+		assertEquals("05ae693aac2107336a79309e0c60b24a7aac6aa3edecaef593921500d33c63c4", Hex.toHexString(trie.getRootHash()));
 		
 		trie.update("dogglesworth", "cat");
-		assertEquals("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3", trie.getRootHash());
+		assertEquals("8aad789dff2f538bca5d8ea56e8abe10f4c7ba3a5dea95fea4cd6e7c3a1168d3", Hex.toHexString(trie.getRootHash()));
 	  }
 	
 	  @Test
@@ -425,7 +440,7 @@ public class TrieTest {
 		  trie.update("doge", "coin");
 		  trie.update("dog", "puppy");
 		  
-		  assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", trie.getRootHash());
+		  assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", Hex.toHexString(trie.getRootHash()));
 	  }
 	  
 	  @Test
@@ -440,7 +455,7 @@ public class TrieTest {
 		  trie.update("dog", "puppy");
 		  trie.update("shaman", "");
 		  
-		  assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", trie.getRootHash());
+		  assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", Hex.toHexString(trie.getRootHash()));
 	  }
 	  
 	  @Test
@@ -450,7 +465,7 @@ public class TrieTest {
 		  trie.update("food", "bat");
 		  trie.update("food", "bass");
 		  
-		  assertEquals("17beaa1648bafa633cda809c90c04af50fc8aed3cb40d16efbddee6fdf63c4c3", trie.getRootHash());
+		  assertEquals("17beaa1648bafa633cda809c90c04af50fc8aed3cb40d16efbddee6fdf63c4c3", Hex.toHexString(trie.getRootHash()));
 	  }
 	  
 	  @Test
@@ -460,7 +475,7 @@ public class TrieTest {
 		  trie.update("be", "e");
 		  trie.update("dog", "puppy");
 		  trie.update("bed", "d");
-		  assertEquals("3f67c7a47520f79faa29255d2d3c084a7a6df0453116ed7232ff10277a8be68b", trie.getRootHash());
+		  assertEquals("3f67c7a47520f79faa29255d2d3c084a7a6df0453116ed7232ff10277a8be68b", Hex.toHexString(trie.getRootHash()));
 	  }
 
 	  @Test
@@ -468,9 +483,9 @@ public class TrieTest {
 		Trie trie = new Trie(mockDb);
 
 		trie.update("test", "test");
-		assertEquals("85d106d4edff3b7a4889e91251d0a87d7c17a1dda648ebdba8c6060825be23b8", trie.getRootHash());
+		assertEquals("85d106d4edff3b7a4889e91251d0a87d7c17a1dda648ebdba8c6060825be23b8", Hex.toHexString(trie.getRootHash()));
 		
 		trie.update("te", "testy");
-		assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928", trie.getRootHash());
+		assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928", Hex.toHexString(trie.getRootHash()));
 	  }
 }

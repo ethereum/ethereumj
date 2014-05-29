@@ -1,16 +1,17 @@
 package org.ethereum.gui;
 
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.ClientPeer;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A simple example showing how to modify the fonts and colors used in an
@@ -25,11 +26,16 @@ import org.fife.ui.rtextarea.RTextScrollPane;
  */
 public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 
+    Logger logger = LoggerFactory.getLogger(getClass());
+
+
     private static final long serialVersionUID = 1L;
 
     private boolean autoScroll = false;
 
     private RSyntaxTextArea textArea;
+
+    ToolBar toolBar = null;
 
     /**
      * ERROR (exceptions) WARN (when something happens that's not supposed to)
@@ -38,13 +44,15 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
      *                    TRACE (start/end method)
      */
 
-    public ConnectionConsoleWindow() {
+    public ConnectionConsoleWindow(ToolBar toolBar) {
         final ConnectionConsoleWindow thisConsole = this;
+        this.toolBar = toolBar;
 
         java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
         this.setIconImage(img);
+        addCloseAction();
 
         JPanel cp = new JPanel(new BorderLayout());
 
@@ -68,36 +76,14 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
         pack();
         setLocation(775, 390);
 
-        this.addComponentListener(new ComponentAdapter() {
-
-            @Override
-            public void componentShown(ComponentEvent e) {
-                Thread t = new Thread() {
+        Thread t = new Thread() {
                     public void run() {
 
-                    	// Peer Server Zero: peer discovery
-//                    	new ClientPeer(thisConsole).connect("54.201.28.117", 30303);
-                    	
-                    	// Peer Server One: peer discovery
-//                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
-                    	
-                    	  // Some dude in Canada
-//                    	new ClientPeer(thisConsole).connect("131.104.247.135", 30303);
-                    	
-                    	  // Nick
-//                    	new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
-                    	
-                    	// c++: ZeroGox
-                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
-                    	
-                    	// RomanJ
-//                    	new ClientPeer(thisConsole).connect("54.211.14.10", 40404);
-
+                        new ClientPeer(thisConsole).connect(SystemProperties.CONFIG.activePeerIP(),
+                                SystemProperties.CONFIG.activePeerPort());
                     }
-                };
-                t.start();
-            }
-        });
+        };
+        t.start();
     }
 
 	@Override
@@ -149,11 +135,23 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
         }
     }
 
+    public void addCloseAction(){
+        this.addWindowListener( new WindowAdapter()
+        {
+            public void windowClosing(WindowEvent e)
+            {
+                toolBar.logToggle.setSelected(false);
+
+            }
+        });
+
+    }
+
 	public static void main(String[] args) {
 		// Start all Swing applications on the EDT.
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
-				new ConnectionConsoleWindow().setVisible(true);
+				new ConnectionConsoleWindow(null).setVisible(true);
 			}
 		});
 	}
