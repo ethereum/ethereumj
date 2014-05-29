@@ -234,12 +234,6 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
 
     public void submitContract(){
 
-        ClientPeer peer = MainData.instance.getActivePeer();
-        if (peer == null) {
-            dialog.alertStatusMsg("Not connected to any peer");
-            return;
-        }
-
         AddressState addressState = ((AddressStateWraper)creatorAddressCombo.getSelectedItem()).getAddressState();
 
         byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
@@ -264,6 +258,13 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
         }
 
         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
+
+
+        ClientPeer peer = MainData.instance.getActivePeer();
+        if (peer == null) {
+            dialog.alertStatusMsg("Not connected to any peer");
+            return;
+        }
 
         // SwingWorker
         DialogWorker worker = new DialogWorker(tx, this);

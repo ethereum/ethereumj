@@ -8,6 +8,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -66,10 +68,11 @@ public class SerpentEditor extends JFrame {
     private static final long serialVersionUID = 1L;
     final JSplitPane splitPanel;
     final JTextArea result;
+    final JPanel contentPane;
 
     public SerpentEditor() {
 
-        final JPanel cp = new JPanel(new BorderLayout());
+        contentPane = new JPanel(new BorderLayout());
         final JFrame mainWindow = this;
 
         java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
@@ -86,12 +89,13 @@ public class SerpentEditor extends JFrame {
         codeArea.setCodeFoldingEnabled(true);
         codeArea.setAntiAliasingEnabled(true);
         codeArea.setText(codeSample3);
+
         changeStyleProgrammatically();
 
         RTextScrollPane sp = new RTextScrollPane(codeArea);
 
         sp.setFoldIndicatorEnabled(true);
-        cp.setLayout(new BorderLayout());
+        contentPane.setLayout(new BorderLayout());
 
         splitPanel = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
         splitPanel.setOneTouchExpandable(true);
@@ -99,7 +103,7 @@ public class SerpentEditor extends JFrame {
         splitPanel.setContinuousLayout(true);
 
 
-        cp.add(splitPanel, BorderLayout.CENTER);
+        contentPane.add(splitPanel, BorderLayout.CENTER);
         splitPanel.add(sp);
 
         result = new JTextArea();
@@ -113,59 +117,19 @@ public class SerpentEditor extends JFrame {
         FlowLayout fl = new FlowLayout(FlowLayout.CENTER, 10, 5);
 //        fl.setAlignment(FlowLayout.RIGHT);
         controlsPanel.setLayout(fl);
+        controlsPanel.setMaximumSize(new Dimension(10000, 20));
+        controlsPanel.setPreferredSize(new Dimension(600, 20));
+        controlsPanel.setMinimumSize(new Dimension(1, 20));
 
-        JButton buildButton = new JButton("Build");
-        JButton sendButton = new JButton("Send");
-        JButton callButton = new JButton("Call");
+        contentPane.add(controlsPanel, BorderLayout.SOUTH);
 
-        callButton.addActionListener(new ActionListener() {
+        createToolBar();
 
-            public void actionPerformed(ActionEvent e) {
-                ContractCallDialog payOutDialog =
-                        new ContractCallDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
-                                cp));
-
-            }
-        });
-
-
-        sendButton.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-
-                byte[] machineCode = prepareCodeForSend();
-                if (machineCode == null) return;
-
-                ContractSubmitDialog payOutDialog =
-                        new ContractSubmitDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
-                                cp), machineCode);
-            }
-        });
-
-
-        buildButton.addActionListener(new ActionListener() {
-
-            public void actionPerformed(ActionEvent e) {
-
-                    compileCode();
-            }});
-
-
-        controlsPanel.add(callButton, FlowLayout.LEFT);
-
-
-
-        controlsPanel.add(sendButton);
-        controlsPanel.add(buildButton);
-
-        cp.add(controlsPanel, BorderLayout.SOUTH);
-
-
-        setContentPane(cp);
+        setContentPane(contentPane);
         setTitle("Serpent Editor");
-//        setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+
         pack();
-//        setLocationRelativeTo(null);
 
     }
 
@@ -272,6 +236,200 @@ public class SerpentEditor extends JFrame {
         return machineCode;
     }
 
+
+    public void createToolBar(){
+
+
+        JToolBar toolbar = new JToolBar(SwingConstants.VERTICAL);
+        toolbar.putClientProperty("JToolBar.isRollover", Boolean.TRUE);
+        toolbar.setFloatable(false);
+        final JPanel mainContentPane = SerpentEditor.this.contentPane;
+
+
+
+        {
+
+            java.net.URL url = ClassLoader.getSystemResource("buttons/open-file.png");
+            Toolkit kit = Toolkit.getDefaultToolkit();
+            Image img = kit.createImage(url);
+            ImageIcon imageIcon = new ImageIcon(img);
+            final JButton button = new JButton(imageIcon);
+            button.setToolTipText("Open File < Ctrl + O >");
+
+            Action openFile = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
+
+            mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
+                    put(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK),
+                            "OpenFileButton");
+
+            mainContentPane.getActionMap().put("OpenFileButton",openFile);
+
+            button.addActionListener(
+                    new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("open file");
+                        }
+                    }
+            );
+
+            toolbar.add(button);
+        }
+
+        {
+            java.net.URL url = ClassLoader.getSystemResource("buttons/save-file.png");
+            Toolkit kit = Toolkit.getDefaultToolkit();
+            Image img = kit.createImage(url);
+            ImageIcon imageIcon = new ImageIcon(img);
+            final JButton button = new JButton(imageIcon);
+            button.setToolTipText("Save File < Ctrl + S >");
+
+            Action saveFile = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
+
+            mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
+                    put(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
+                            "OpenSaveButton");
+
+            mainContentPane.getActionMap().put("OpenSaveButton",saveFile);
+
+            button.addActionListener(
+                    new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            System.out.println("save file");
+                        }
+                    }
+            );
+
+            toolbar.add(button);
+        }
+
+
+        toolbar.addSeparator();
+
+        {
+
+            java.net.URL url = ClassLoader.getSystemResource("buttons/compile.png");
+            Toolkit kit = Toolkit.getDefaultToolkit();
+            Image img = kit.createImage(url);
+            ImageIcon imageIcon = new ImageIcon(img);
+            final JButton button = new JButton(imageIcon);
+            button.setToolTipText("Compile the contract < Ctrl + F9 >");
+
+            Action compile = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
+
+            mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
+                    put(KeyStroke.getKeyStroke(KeyEvent.VK_F9, InputEvent.CTRL_DOWN_MASK),
+                            "CompileButton");
+
+            mainContentPane.getActionMap().put("CompileButton",compile);
+
+
+            button.addActionListener(
+                    new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            compileCode();
+                        }
+                    }
+            );
+            toolbar.add(button);
+        }
+
+        {
+
+            java.net.URL url = ClassLoader.getSystemResource("buttons/deploy.png");
+            Toolkit kit = Toolkit.getDefaultToolkit();
+            Image img = kit.createImage(url);
+            ImageIcon imageIcon = new ImageIcon(img);
+            final JButton button = new JButton(imageIcon);
+            button.setToolTipText("Deploy contract to the chain < Ctrl + Shift + F9 >");
+
+            Action deploy = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
+
+            mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
+                    put(KeyStroke.getKeyStroke(KeyEvent.VK_F9,
+                                    InputEvent.SHIFT_DOWN_MASK | InputEvent.CTRL_DOWN_MASK),
+                            "DeployButton");
+
+            mainContentPane.getActionMap().put("DeployButton",deploy);
+
+
+            button.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+
+                    byte[] machineCode = prepareCodeForSend();
+                    if (machineCode == null) return;
+
+                    ContractSubmitDialog payOutDialog =
+                            new ContractSubmitDialog((Frame) SwingUtilities.getAncestorOfClass(JFrame.class,
+                                    contentPane), machineCode);
+                }
+            });
+            toolbar.add(button);
+        }
+
+        {
+
+            java.net.URL url = ClassLoader.getSystemResource("buttons/call.png");
+            Toolkit kit = Toolkit.getDefaultToolkit();
+            Image img = kit.createImage(url);
+            ImageIcon imageIcon = new ImageIcon(img);
+            final JButton button = new JButton(imageIcon);
+            button.setToolTipText("Call contract <Ctrl + F8>");
+
+            Action call = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
+
+            mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
+                    put(KeyStroke.getKeyStroke(KeyEvent.VK_F8,
+                                    InputEvent.CTRL_DOWN_MASK),
+                            "CallButton");
+
+            mainContentPane.getActionMap().put("CallButton", call);
+
+
+            button.addActionListener(new ActionListener() {
+
+                public void actionPerformed(ActionEvent e) {
+                    ContractCallDialog payOutDialog =
+                            new ContractCallDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
+                                    contentPane));
+
+                }
+            });
+
+            toolbar.add(button);
+        }
+
+
+        this.contentPane.add(toolbar, BorderLayout.EAST);
+    }
 
     public static void main(String[] args) {
         // Start all Swing applications on the EDT.
