@@ -11,7 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.ethereum.core.AddressState;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
@@ -51,7 +51,7 @@ public class MainData {
         ECKey key = ECKey.fromPrivate(cowAddr);
 
         wallet.importKey(cowAddr);
-        AddressState state = wallet.getAddressState(key.getAddress());
+        AccountState state = wallet.getAddressState(key.getAddress());
         state.addToBalance(BigInteger.valueOf(2).pow(200)); // 1606938044258990275541962092341162602522202993782792835301376
         wallet.importKey(HashUtil.sha3("cat".getBytes()));
 

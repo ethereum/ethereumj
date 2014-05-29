@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AddressState;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
@@ -26,14 +26,14 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
 
     PayOutDialog dialog;
 
-    AddressState addressState = null;
+    AccountState addressState = null;
     JLabel statusMsg = null;
 
     final JTextField receiverInput;
     final JTextField amountInput;
     final JTextField feeInput;
 
-	public PayOutDialog(Frame parent, final AddressState addressState) {
+	public PayOutDialog(Frame parent, final AccountState addressState) {
 		super(parent, "Payout details: ", false);
 		dialog = this;
 
@@ -260,7 +260,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
     }
 
     public static void main(String args[]) {
-        AddressState as = new AddressState();
+        AccountState as = new AccountState();
         PayOutDialog pod = new PayOutDialog(null,  as);
         pod.setVisible(true);
     }
