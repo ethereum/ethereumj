@@ -6,13 +6,11 @@ import org.ethereum.manager.MainData;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
+import javax.tools.Tool;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 /**
  * www.ethereumJ.com
@@ -27,7 +25,12 @@ public class BlockChainTable extends JFrame {
 
     private int lastFindIndex = 0;
 
-    public BlockChainTable() {
+    ToolBar toolBar;
+
+    public BlockChainTable(ToolBar toolBar) {
+
+        this.toolBar = toolBar;
+        addCloseAction();
 
         final BlockChainTable blockChainTable = this;
 
@@ -126,8 +129,20 @@ public class BlockChainTable extends JFrame {
         topPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
+    public void addCloseAction(){
+        this.addWindowListener( new WindowAdapter()
+        {
+            public void windowClosing(WindowEvent e)
+            {
+                toolBar.chainToggle.setSelected(false);
+
+            }
+        });
+    }
+
+
     public static void main(String args[]){
-        BlockChainTable mainFrame = new BlockChainTable();
+        BlockChainTable mainFrame = new BlockChainTable(null);
         mainFrame.setVisible(true);
         mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }

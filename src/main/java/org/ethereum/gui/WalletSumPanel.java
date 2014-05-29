@@ -53,7 +53,7 @@ public class WalletSumPanel extends JPanel{
         payOutLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                System.out.println("boom");
+                JOptionPane.showMessageDialog(null, "Under construction");
             }
         });
 

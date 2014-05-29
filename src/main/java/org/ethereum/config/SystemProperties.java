@@ -92,6 +92,16 @@ public class SystemProperties {
         return Integer.parseInt(prop.getProperty("peer.discovery.port"));
     }
 
+    public String activePeerIP(){
+        if(prop.isEmpty()) return "54.201.28.117";
+        return prop.getProperty("peer.active.ip");
+    }
+
+    public int activePeerPort(){
+        if(prop.isEmpty()) return 30303;
+        return Integer.parseInt(prop.getProperty("peer.active.port"));
+    }
+
     public String samplesDir(){
         if(prop.isEmpty()) return "samples";
         return prop.getProperty("samples.dir");
