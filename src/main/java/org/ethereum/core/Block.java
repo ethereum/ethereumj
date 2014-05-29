@@ -7,6 +7,7 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.BigIntegers;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -21,10 +22,8 @@ import java.util.List;
  */
 public class Block {
 
-	private static int LIMIT_FACTOR = (int) Math.pow(2, 16);
-	private static double EMA_FACTOR = 1.5;
-	/* A scalar value equal to the current limit of gas expenditure per block */
-	private static int GAS_LIMIT = (int) Math.pow(10, 6);
+	/* A scalar value equal to the mininum limit of gas expenditure per block */
+	private static long MIN_GAS_LIMIT = BigInteger.valueOf(10).pow(4).longValue();
 
 	private byte[] rlpEncoded;
     private boolean parsed = false;
@@ -316,29 +315,49 @@ public class Block {
     }
     
 	/**
-	 * Because every transaction published into the blockchain imposes on the
-	 * network the cost of needing to download and verify it, there is a need
-	 * for some regulatory mechanism to prevent abuse.
-	 * 
-	 *  To solve this we simply institute a floating cap:
-	 *   
-	 *  	No block can have more operations than BLK_LIMIT_FACTOR times 
-	 *  	the long-term exponential moving average. 
+	 * This mechanism enforces a homeostasis in terms of the time between blocks; 
+	 * a smaller period between the last two blocks results in an increase in the 
+	 * difficulty level and thus additional computation required, lengthening the 
+	 * likely next period. Conversely, if the period is too large, the difficulty, 
+	 * and expected time to the next block, is reduced.
+	 */
+    private boolean isValid() {
+    	boolean isValid = false;
+    	
+    	// verify difficulty meets requirements
+    	isValid = this.getDifficulty() == this.calcDifficulty();
+    	// verify gasLimit meets requirements
+    	isValid = this.getGasLimit() == this.calcGasLimit();
+    	// verify timestamp meets requirements
+    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+    	
+    	return isValid;
+    }
+	
+	/**
+	 * Calculate GasLimit 
+	 *  max(10000, (parent gas limit * (1024 - 1) + (parent gas used * 6 / 5)) / 1024)
 	 *  
-	 *  Specifically:
-	 *  
-	 *  	blk.oplimit = floor((blk.parent.oplimit * (EMAFACTOR - 1) 
-	 *  		+ floor(GAS_LIMIT * BLK_LIMIT_FACTOR)) / EMA_FACTOR)
-	 * 
-	 * BLK_LIMIT_FACTOR and EMA_FACTOR are constants that will be set 
-	 * to 65536 and 1.5 for the time being, but will likely be changed 
-	 * after further analysis.
-	 * 
 	 * @return
 	 */
-	public double getOplimit() {
-		return Math.floor((this.getParent().getOplimit() * (EMA_FACTOR - 1) 
-						+ Math.floor(GAS_LIMIT * LIMIT_FACTOR)) / EMA_FACTOR);
+	public long calcGasLimit() {
+		if (parentHash == null)
+			return 1000000L;
+		else {
+			Block parent = this.getParent();
+			return Math.max(MIN_GAS_LIMIT, (parent.gasLimit * (1024 - 1) + (parent.gasUsed * 6 / 5)) / 1024);
+		}
+	}
+	
+	public byte[] calcDifficulty() {
+		if (parentHash == null)
+			return Genesis.DIFFICULTY;
+		else {
+			Block parent = this.getParent();
+			long parentDifficulty = new BigInteger(1, parent.difficulty).longValue();
+			long newDifficulty = timestamp >= parent.timestamp + 42 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
+			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
+		}
 	}
 
 	public byte[] getEncoded() {

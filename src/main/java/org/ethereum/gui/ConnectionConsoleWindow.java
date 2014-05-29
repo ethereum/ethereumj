@@ -1,15 +1,10 @@
 package org.ethereum.gui;
 
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 
 import javax.swing.*;
-import javax.tools.Tool;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.ClientPeer;
@@ -83,36 +78,12 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 
         Thread t = new Thread() {
                     public void run() {
-
-                    	// Peer Server Zero: peer discovery
-//                    	new ClientPeer(thisConsole).connect("54.201.28.117", 30303);
-                    	
-                    	// Peer Server One: peer discovery
-//                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
-                    	
-                    	  // Some dude in Canada
-//                    	new ClientPeer(thisConsole).connect("131.104.247.135", 30303);
-                    	
-                    	  // Nick
-//                    	new ClientPeer(thisConsole).connect("82.217.72.169", 30303);
-                    	
-                    	// c++: ZeroGox
-//                    	new ClientPeer(thisConsole).connect("54.204.10.41", 30303);
-                    	
-                    	// RomanJ
-//                    	new ClientPeer(thisConsole).connect("54.211.14.10", 40404);
-
                         new ClientPeer(thisConsole).connect(SystemProperties.CONFIG.activePeerIP(),
                                 SystemProperties.CONFIG.activePeerPort());
-
-
                     }
         };
         t.start();
     }
-
-
-
 
 	@Override
 	public void console(final String output) {
@@ -163,7 +134,6 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
         }
     }
 
-
     public void addCloseAction(){
         this.addWindowListener( new WindowAdapter()
         {
@@ -175,7 +145,6 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
         });
 
     }
-
 
 	public static void main(String[] args) {
 		// Start all Swing applications on the EDT.

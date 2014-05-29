@@ -9,13 +9,13 @@ import javax.swing.table.AbstractTableModel;
  * User: Roman Mandeleil
  * Created on: 15/05/14 12:42
  */
-public class BlockTableModel  extends AbstractTableModel {
+public class BlockTableModel extends AbstractTableModel {
 
     @Override
     public int getRowCount() {
 
         fireTableDataChanged();
-        int rowCount = MainData.instance.getAllBlocks().size();
+        int rowCount = MainData.instance.getBlockchain().size();
         return rowCount;
     }
 
@@ -30,6 +30,6 @@ public class BlockTableModel  extends AbstractTableModel {
 //        byte[] hash = MainData.instance.getAllBlocks().get(rowIndex).getHash();
 //        return Hex.toHexString(hash);
 
-        return MainData.instance.getAllBlocks().get(rowIndex).toString();
+        return MainData.instance.getBlockchain().get(rowIndex).toString();
     }
 }

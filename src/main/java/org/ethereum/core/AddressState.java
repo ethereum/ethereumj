@@ -17,14 +17,11 @@ public class AddressState {
     private BigInteger balance;
 
     public AddressState() {
-        ecKey = new ECKey(Utils.getRandom());
-        nonce = BigInteger.ZERO;
-        balance = BigInteger.ZERO;
+        this(new ECKey(Utils.getRandom()));
     }
 
     public AddressState(ECKey ecKey) {
-        this();
-        this.ecKey = ecKey;
+    	this(ecKey, BigInteger.ZERO, BigInteger.ZERO);
     }
 
     public AddressState(ECKey ecKey, BigInteger nonce, BigInteger balance) {
@@ -41,8 +38,8 @@ public class AddressState {
         return nonce;
     }
 
-    public void incrementTheNonce(){
-        nonce = nonce.add(BigInteger.ONE);
+    public void incrementNonce(){
+        this.nonce = nonce.add(BigInteger.ONE);
     }
 
     public BigInteger getBalance() {
@@ -50,6 +47,6 @@ public class AddressState {
     }
 
     public void addToBalance(BigInteger value){
-        balance = balance.add(value);
+        this.balance = balance.add(value);
     }
 }
