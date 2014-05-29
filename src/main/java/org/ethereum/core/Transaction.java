@@ -25,7 +25,7 @@ import java.util.Arrays;
  */
 public class Transaction {
 
-	Logger logger = LoggerFactory.getLogger(this.getClass());
+	private static Logger logger = LoggerFactory.getLogger(Transaction.class);
 	
     public static final byte[] ZERO_ADDRESS = new byte[20];
 	
@@ -153,11 +153,6 @@ public class Transaction {
     }
 
     public byte[] getData() {
-        if (!parsed) rlpParse();
-        return data;
-    }
-
-    public byte[] getInit() {
         if (!parsed) rlpParse();
         return data;
     }

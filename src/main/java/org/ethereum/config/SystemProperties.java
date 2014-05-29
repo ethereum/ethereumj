@@ -91,6 +91,11 @@ public class SystemProperties {
         if(prop.isEmpty()) return 30303;
         return Integer.parseInt(prop.getProperty("peer.discovery.port"));
     }
+    
+    public boolean databaseReset(){
+        if(prop.isEmpty()) return false;
+        return Boolean.parseBoolean(prop.getProperty("database.reset"));
+    }
 
 	public String toString() {
 		Enumeration<?> e = prop.propertyNames();

@@ -34,7 +34,8 @@ public class TransactionTask implements Callable<Transaction> {
 
             ClientPeer peer = MainData.instance.getActivePeer();
 
-            PendingTransaction pendingTransaction =  MainData.instance.addPendingTransaction(tx);
+			PendingTransaction pendingTransaction = MainData.instance
+					.getBlockchain().addPendingTransaction(tx);
             peer.sendTransaction(tx);
 
             while(pendingTransaction.getApproved() < 1 ){
@@ -44,7 +45,7 @@ public class TransactionTask implements Callable<Transaction> {
             logger.info("return approved: {}", pendingTransaction.getApproved());
         } catch (Throwable th) {
             logger.info("exception caugh: {}", th.getCause());
-            MainData.instance.removePendingTransaction(tx);
+            MainData.instance.getBlockchain().removePendingTransaction(tx);
         }
 
         return null;

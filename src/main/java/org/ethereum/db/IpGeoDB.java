@@ -1,4 +1,4 @@
-package org.ethereum.geodb;
+package org.ethereum.db;
 
 import java.io.File;
 import java.net.InetAddress;
