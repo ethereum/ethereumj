@@ -19,6 +19,12 @@ public class Cache {
 		nodes = new HashMap<byte[], Node>();
 	}
 
+	/**
+	 * Put the node in the cache if RLP encoded value is longer than 32 bytes
+	 * 
+	 * @param o the Node which could be a pair-, multi-item Node or single Value  
+	 * @return sha3 hash of RLP encoded node if length > 32 otherwise return node itself
+	 */
 	public Object put(Object o) {
 		Value value = new Value(o);
 		byte[] enc = value.encode();

@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AddressState;
+import org.ethereum.core.AccountState;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
@@ -21,7 +21,7 @@ import java.net.URL;
  */
 public class WalletAddressPanel extends JPanel{
 
-    public WalletAddressPanel(final AddressState addressState) {
+    public WalletAddressPanel(final AccountState addressState) {
 
         final WalletAddressPanel walletAddressPanel = this;
 
