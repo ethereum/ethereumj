@@ -660,7 +660,7 @@ public class RLP {
 		if (data == null || data.length < 1) {
 			return null;
 		}
-		
+
 		int prefix = data[pos] & 0xFF;
 		if (prefix == OFFSET_SHORT_ITEM) {
 			return new DecodeResult(pos+1, new byte[0]); // means no length or 0

@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import java.io.IOException;
 import java.math.BigInteger;
@@ -148,7 +149,6 @@ public class TransactionTest {
     	assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txSigned.getReceiveAddress()));
     	assertEquals(new BigInteger(1, testValue), new BigInteger(1, txSigned.getValue()));
     	assertNull(txSigned.getData());
-    	assertNull(txSigned.getInit());
     	assertEquals(27, txSigned.getSignature().v);
     	assertEquals("eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4", Hex.toHexString(BigIntegers.asUnsignedByteArray(txSigned.getSignature().r)));
     	assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txSigned.getSignature().s)));
@@ -169,7 +169,6 @@ public class TransactionTest {
     	assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txUnsigned.getReceiveAddress()));
     	assertEquals(new BigInteger(1, testValue), new BigInteger(1, txUnsigned.getValue()));
     	assertNull(txUnsigned.getData());
-    	assertNull(txUnsigned.getInit());
     	assertEquals(27, txUnsigned.getSignature().v);
     	assertEquals("eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4", Hex.toHexString(BigIntegers.asUnsignedByteArray(txUnsigned.getSignature().r)));
     	assertEquals("14a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1", Hex.toHexString(BigIntegers.asUnsignedByteArray(txUnsigned.getSignature().s)));
@@ -185,7 +184,6 @@ public class TransactionTest {
     	assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txNew.getReceiveAddress()));
     	assertEquals(new BigInteger(1, testValue), new BigInteger(1, txNew.getValue()));
     	assertEquals("", Hex.toHexString(txNew.getData()));
-    	assertNull(txNew.getInit());
     	assertNull(txNew.getSignature());
     	
     	assertEquals(RLP_ENCODED_RAW_TX, Hex.toHexString(txNew.getEncodedRaw()));
@@ -228,7 +226,6 @@ public class TransactionTest {
         assertEquals(HASH_TX_UNSIGNED, Hex.toHexString(tx.getHash()));
 	}
 
-
     @Test
     public void testTransactionCreateContract(){
 
@@ -266,8 +263,6 @@ public class TransactionTest {
         System.out.println("plainTx1: " + plainTx1 );
         System.out.println("plainTx2: " + plainTx2 );
 
-
         System.out.println( Hex.toHexString( tx2.getSender() ));
-
     }
 }
