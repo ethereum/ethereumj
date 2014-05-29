@@ -6,10 +6,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.InputEvent;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.io.*;
 import java.util.Scanner;
 import java.util.regex.Matcher;
@@ -75,8 +72,12 @@ public class SerpentEditor extends JFrame {
     final JPanel contentPane;
     JFileChooser fileChooser = null;
 
-    public SerpentEditor() {
+    ToolBar toolBar = null;
 
+    public SerpentEditor(ToolBar toolBar) {
+
+        this.toolBar = toolBar;
+        addCloseAction();
         contentPane = new JPanel(new BorderLayout());
         final JFrame mainWindow = this;
 
@@ -329,15 +330,13 @@ public class SerpentEditor extends JFrame {
                         public void actionPerformed(ActionEvent e) {
 
                             File file = null;
-                            if (fileChooser == null) file = callFileChooser();
+                            if (fileChooser == null || fileChooser.getSelectedFile() == null) {
+                                file = callFileChooser();
+                                if (fileChooser.getSelectedFile() == null)
+                                    return;
+                            }
                             else{
-
-                                if (fileChooser.getSelectedFile() == null){
-                                    file = callFileChooser();
-                                }else{
-
                                     file = fileChooser.getSelectedFile();
-                                }
                             }
 
                             try {
@@ -492,11 +491,23 @@ public class SerpentEditor extends JFrame {
         return file;
     }
 
+    public void addCloseAction(){
+        this.addWindowListener( new WindowAdapter()
+        {
+            public void windowClosing(WindowEvent e)
+            {
+                toolBar.editorToggle.setSelected(false);
+
+            }
+        });
+    }
+
+
     public static void main(String[] args) {
         // Start all Swing applications on the EDT.
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                new SerpentEditor().setVisible(true);
+                new SerpentEditor(null).setVisible(true);
             }
         });
     }

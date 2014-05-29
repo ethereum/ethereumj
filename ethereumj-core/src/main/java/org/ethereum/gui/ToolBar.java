@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import javax.tools.Tool;
 
 import java.awt.*;
 import java.awt.event.ItemEvent;
@@ -28,6 +29,12 @@ public class ToolBar extends JFrame {
     BlockChainTable blockChainWindow = null;
     WalletWindow walletWindow = null;
     SerpentEditor serpentEditor = null;
+
+    JToggleButton editorToggle;
+    JToggleButton logToggle;
+    JToggleButton peersToggle;
+    JToggleButton chainToggle;
+    JToggleButton walletToggle;
 
 
     public ToolBar() throws HeadlessException {
@@ -82,7 +89,7 @@ public class ToolBar extends JFrame {
         ImageIcon image_5 = new ImageIcon(imageURL_5);
 
 
-        JToggleButton editorToggle = new JToggleButton("");
+        editorToggle = new JToggleButton("");
         editorToggle.setIcon(image_1);
         editorToggle.setContentAreaFilled(true);
         editorToggle.setToolTipText("Serpent Editor");
@@ -97,7 +104,7 @@ public class ToolBar extends JFrame {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             if (serpentEditor == null)
-                                serpentEditor = new SerpentEditor();
+                                serpentEditor = new SerpentEditor(ToolBar.this);
                             serpentEditor.setVisible(true);
                         }
                     });
@@ -107,7 +114,7 @@ public class ToolBar extends JFrame {
             }
         });
 
-        JToggleButton logToggle = new JToggleButton();
+        logToggle = new JToggleButton();
         logToggle.setIcon(image_2);
         logToggle.setToolTipText("Log Console");
         logToggle.setContentAreaFilled(true);
@@ -123,7 +130,7 @@ public class ToolBar extends JFrame {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                         if (connectionConsoleWindow == null)
-                            connectionConsoleWindow =  new ConnectionConsoleWindow();
+                            connectionConsoleWindow =  new ConnectionConsoleWindow(ToolBar.this);
                         connectionConsoleWindow.setVisible(true);
                         }
                     });
@@ -133,7 +140,7 @@ public class ToolBar extends JFrame {
             }
         });
 
-        JToggleButton peersToggle = new JToggleButton();
+        peersToggle = new JToggleButton();
         peersToggle.setIcon(image_3);
         peersToggle.setToolTipText("Peers");
         peersToggle.setContentAreaFilled(true);
@@ -148,7 +155,7 @@ public class ToolBar extends JFrame {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             if (mainFrame == null)
-                                mainFrame	= new PeersTableWindow();
+                                mainFrame	= new PeersTableWindow(ToolBar.this);
                             mainFrame.setVisible( true );
                         }
                     });
@@ -158,7 +165,7 @@ public class ToolBar extends JFrame {
             }
         });
 
-        JToggleButton chainToggle = new JToggleButton();
+        chainToggle = new JToggleButton();
         chainToggle.setIcon(image_4);
         chainToggle.setToolTipText("Block Chain");
         chainToggle.setContentAreaFilled(true);
@@ -174,7 +181,7 @@ public class ToolBar extends JFrame {
                         public void run() {
 
                             if (blockChainWindow == null)
-                                blockChainWindow = new BlockChainTable();
+                                blockChainWindow = new BlockChainTable(ToolBar.this);
                             blockChainWindow.setVisible(true);
                         }
                     });
@@ -184,7 +191,7 @@ public class ToolBar extends JFrame {
             }
         });
 
-        JToggleButton walletToggle = new JToggleButton();
+        walletToggle = new JToggleButton();
         walletToggle.setIcon(image_5);
         walletToggle.setToolTipText("Wallet");
         walletToggle.setContentAreaFilled(true);
@@ -200,7 +207,7 @@ public class ToolBar extends JFrame {
                             SwingUtilities.invokeLater(new Runnable() {
                                 public void run() {
                                     if (walletWindow == null)
-                                        walletWindow = new WalletWindow();
+                                        walletWindow = new WalletWindow(ToolBar.this);
                                     walletWindow.setVisible(true);
                                 }
                             });
