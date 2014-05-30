@@ -242,7 +242,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             if (blockList.size() > 2 && secToAskForChain != 1){
 
                 logger.info("Now we ask for a chain each 1 seconds");
-                secToAskForChain = 11;
+                secToAskForChain = 1;
 
                 chainAskTimer.cancel();
                 chainAskTimer.purge();

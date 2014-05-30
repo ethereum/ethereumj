@@ -38,8 +38,11 @@ public class Blockchain extends ArrayList<Block> {
         byte[] payload = db.get(Genesis.PARENT_HASH);
 
         while (payload != null) {
+
             Block block = new Block(payload);
             this.add(block);
+            lastBlock  = block;
+            wallet.processBlock(block);
             payload = db.get(block.getHash());
         }
 	}
@@ -132,9 +135,6 @@ public class Blockchain extends ArrayList<Block> {
         if (this.isEmpty())
             return StaticMessages.GENESIS_HASH;
         else{
-
-            // TODO: ERASE IT WHEN THE STATE IS FIXED :
-            if (Arrays.equals(lastBlock.getParentHash(), new byte[32])) return StaticMessages.GENESIS_HASH;
 
             return lastBlock.getHash();
         }
