@@ -123,7 +123,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
                 ctx.getChild(4);
 
         String retCode =
-                String.format("LABEL_%d %s EQ NOT REF_%d JUMPI %s REF_%d JUMP LABEL_%d",
+                String.format(" LABEL_%d %s EQ NOT REF_%d JUMPI %s REF_%d JUMP LABEL_%d ",
                             whileStartRef, visitCondition(whileCondition), whileEndRef, visitBlock(whileBlock), whileStartRef, whileEndRef);
 
         return retCode;
@@ -220,6 +220,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         if (ctx.contract_storage_load() != null)
             return visitContract_storage_load(ctx.contract_storage_load());
 
+        if (ctx.send_func() != null)
+            return visitSend_func(ctx.send_func());
 
         return ctx.INT().toString();
     }
@@ -476,7 +478,19 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand3 = visit(ctx.int_val(3));
         String operand4 = visit(ctx.int_val(4));
 
-        return  String.format("%s 32 MUL %s %s %s %s CALL ",  operand4, operand3, operand1, operand0, operand2);
+//        OUTDATASIZE OUTDATASTART INDATASIZE INDATASTART VALUE TO GAS CALL
+        return  String.format("0 0 %s %s %s %s %s CALL ",  operand4, operand3, operand1, operand0, operand2);
+    }
+
+    @Override
+    public String visitSend_func(@NotNull SerpentParser.Send_funcContext ctx) {
+
+        String operand0 = visit(ctx.int_val(0));
+        String operand1 = visit(ctx.int_val(1));
+        String operand2 = visit(ctx.int_val(2));
+
+//        OUTDATASIZE OUTDATASTART INDATASIZE INDATASTART VALUE TO GAS CALL
+        return  String.format("0 0 0 0 %s %s %s CALL ",  operand1, operand0, operand2);
     }
 
     @Override
@@ -498,6 +512,14 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
                 int byteVal = Integer.parseInt(symbol);
                 if (byteVal > 255 || byteVal < 0) throw new Error("In the [asm asm] block should be placed only byte range numbers");
+            }
+
+            match = Pattern.matches("0[xX][0-9a-fA-F]+", symbol);
+            if (match){
+
+                int byteVal = Integer.parseInt(symbol.substring(2), 16);
+                if (byteVal > 255 || byteVal < 0) throw new Error("In the [asm asm] block should be placed only byte range numbers");
+                symbol = byteVal + "";
             }
 
             sb.append(symbol).append(" ");

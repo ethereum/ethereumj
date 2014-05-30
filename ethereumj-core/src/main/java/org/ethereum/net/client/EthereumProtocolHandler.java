@@ -219,7 +219,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             List<Block> blockList = blocksMessage.getBlockDataList();
 
             // If we get one block from a peer
-            // we ask less swinish
+            // we ask less greedy
             if (blockList.size() <= 1 && secToAskForChain != 10){
 
                 logger.info("Now we ask for a chain each 10 seconds");
@@ -238,7 +238,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
 
             // If we get more blocks from a peer
-            // we ask more often
+            // we ask more greedy
             if (blockList.size() > 2 && secToAskForChain != 1){
 
                 logger.info("Now we ask for a chain each 1 seconds");
@@ -308,6 +308,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private void sendMsg(Message msg, ChannelHandlerContext ctx){
         byte[] data = msg.getPayload();
+
+        if (peerListener != null) peerListener.console(Hex.toHexString(data));
+
         final ByteBuf buffer = ctx.alloc().buffer(data.length + 8);
         byte[] packetLen  = ByteUtil.calcPacketLength(data);
 
@@ -354,11 +357,4 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendTx(ChannelHandlerContext ctx){
-        byte[] TX_MSG =
-                Hex.decode("2240089100000070F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69");
-        ByteBuf buffer = ctx.alloc().buffer(TX_MSG.length);
-        buffer.writeBytes(TX_MSG);
-        ctx.writeAndFlush(buffer);
-    }
 }

@@ -229,6 +229,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitBlock_timestamp(@NotNull SerpentParser.Block_timestampContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#send_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#while_stmt}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

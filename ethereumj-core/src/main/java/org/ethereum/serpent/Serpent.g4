@@ -34,7 +34,7 @@ block:  ( asm | assign | contract_storage_assign | special_func | if_elif_else_s
 
 
 asm: '[asm' asm_symbol 'asm]' NL;
-asm_symbol: (ASM_SYMBOLS | INT)* ;
+asm_symbol: (ASM_SYMBOLS | INT | HEX_NUMBER)* ;
 
 if_elif_else_stmt:  'if'   condition ':' INDENT block DEDENT
                    ('elif' condition ':' INDENT block DEDENT)*
@@ -102,6 +102,8 @@ block_gaslimit
       : 'block.gaslimit' ;
 
 msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' int_val ',' int_val  ')' ;
+send_func: 'send' '(' int_val ',' int_val ',' int_val ')';
+
 msg_data: 'msg.data' '[' expression ']' ;
 
 assign:  VAR EQ_OP expression NL;
@@ -168,6 +170,7 @@ int_val : INT |
           OP_NOT '(' expression ')' |
           msg_func |
           msg_data |
+          send_func |
           contract_storage_load
           ;
 // todo:  here the val should include also retrieve a variable

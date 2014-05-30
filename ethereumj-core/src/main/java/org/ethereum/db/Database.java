@@ -9,6 +9,8 @@ import java.util.Map;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
+import org.ethereum.net.message.StaticMessages;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
@@ -28,6 +30,7 @@ public class Database {
 	
 	private static Logger logger = LoggerFactory.getLogger(Database.class);
 	private DB db;
+
 	
 	public Database(String name) {
     	// Initialize Database
@@ -41,7 +44,8 @@ public class Database {
 			}
 			logger.debug("Initializing new or existing DB: '" + name + "'");
 			options.createIfMissing(true);
-			db = factory.open(new File(name), options);	
+			db = factory.open(new File(name), options);
+
 			printDB();
 //			logger.debug("Showing database stats");
 //			String stats = DATABASE.getProperty("leveldb.stats");

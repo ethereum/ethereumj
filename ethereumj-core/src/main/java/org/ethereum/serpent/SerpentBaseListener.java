@@ -420,6 +420,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterSend_func(@NotNull SerpentParser.Send_funcContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitSend_func(@NotNull SerpentParser.Send_funcContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterWhile_stmt(@NotNull SerpentParser.While_stmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
