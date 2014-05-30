@@ -17,7 +17,7 @@ public class UtilsTest {
     @Test
     public void getValueShortString1(){
 
-        String expected = "123 (10^24)";
+        String expected = "123·(10^24)";
         String result = Utils.getValueShortString(new BigInteger("123456789123445654363653463"));
 
         assertEquals(expected, result);
@@ -26,7 +26,7 @@ public class UtilsTest {
     @Test
     public void getValueShortString2(){
 
-        String expected = "123 (10^3)";
+        String expected = "123·(10^3)";
         String result = Utils.getValueShortString(new BigInteger("123456"));
 
         assertEquals(expected, result);
@@ -35,7 +35,7 @@ public class UtilsTest {
     @Test
     public void getValueShortString3(){
 
-        String expected = "1 (10^3)";
+        String expected = "1·(10^3)";
         String result = Utils.getValueShortString(new BigInteger("1234"));
 
         assertEquals(expected, result);
@@ -44,7 +44,7 @@ public class UtilsTest {
     @Test
     public void getValueShortString4(){
 
-        String expected = "123 (10^0)";
+        String expected = "123·(10^0)";
         String result = Utils.getValueShortString(new BigInteger("123"));
 
         assertEquals(expected, result);
@@ -54,7 +54,7 @@ public class UtilsTest {
     public void getValueShortString5(){
 
         byte[] decimal = Hex.decode("3913517ebd3c0c65000000");
-        String expected = "69 (10^24)";
+        String expected = "69·(10^24)";
         String result = Utils.getValueShortString(new BigInteger(decimal));
 
         assertEquals(expected, result);

@@ -1,12 +1,15 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.Config;
+import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.BigIntegers;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -21,10 +24,8 @@ import java.util.List;
  */
 public class Block {
 
-	private static int LIMIT_FACTOR = (int) Math.pow(2, 16);
-	private static double EMA_FACTOR = 1.5;
-	/* A scalar value equal to the current limit of gas expenditure per block */
-	private static int GAS_LIMIT = (int) Math.pow(10, 6);
+	/* A scalar value equal to the mininum limit of gas expenditure per block */
+	private static long MIN_GAS_LIMIT = BigInteger.valueOf(10).pow(4).longValue();
 
 	private byte[] rlpEncoded;
     private boolean parsed = false;
@@ -72,6 +73,7 @@ public class Block {
 
     private List<Transaction> transactionsList = new ArrayList<Transaction>();
     private List<Block> uncleList = new ArrayList<Block>();
+    private Trie state;
 
     public Block(byte[] rawData) {
         this.rlpEncoded = rawData;
@@ -79,14 +81,15 @@ public class Block {
     }
     
 	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
-			byte[] stateRoot, byte[] txTrieRoot, byte[] difficulty,
-			long number, long minGasPrice, long gasLimit, long gasUsed, 
-			long timestamp, byte[] extraData, byte[] nonce,
-			List<Transaction> transactionsList, List<Block> uncleList) {
+			byte[] txTrieRoot, byte[] difficulty, long number,
+			long minGasPrice, long gasLimit, long gasUsed, long timestamp,
+			byte[] extraData, byte[] nonce, List<Transaction> transactionsList,
+			List<Block> uncleList) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
         this.coinbase = coinbase;
-        this.stateRoot = stateRoot;
+        this.state = new Trie(Config.STATE_DB.getDb());
+        this.stateRoot = state.getRootHash();
         this.txTrieRoot = txTrieRoot;
         this.difficulty = difficulty;
         this.number = number;
@@ -105,14 +108,13 @@ public class Block {
 	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
 	// extradata, nonce]
     private void parseRLP() {
-    	
+
         RLPList params = (RLPList) RLP.decode2(rlpEncoded);
-
-        this.hash = HashUtil.sha3(rlpEncoded);
-
         RLPList block = (RLPList) params.get(0);
-        RLPList header = (RLPList) block.get(0);
         
+        // Parse Header
+        RLPList header = (RLPList) block.get(0);
+
         this.parentHash     = ((RLPItem) header.get(0)).getRLPData();
         this.unclesHash     = ((RLPItem) header.get(1)).getRLPData();
         this.coinbase       = ((RLPItem) header.get(2)).getRLPData();
@@ -130,12 +132,12 @@ public class Block {
         this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(1, gpBytes)).longValue();
         this.gasLimit 		= glBytes == null ? 0 : (new BigInteger(1, glBytes)).longValue();
         this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
-        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(tsBytes)).longValue();
+        this.timestamp      = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
         
         this.extraData       = ((RLPItem) header.get(11)).getRLPData();
         this.nonce           = ((RLPItem) header.get(12)).getRLPData();
 
-        // parse transactions
+        // Parse Transactions
         RLPList transactions = (RLPList) block.get(1);
         for (RLPElement rlpTx : transactions){
 
@@ -149,13 +151,14 @@ public class Block {
             RLPElement txRecipe2 = ((RLPList)rlpTx).get(2);
         }
 
-        // parse uncles
+        // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
         for (RLPElement rawUncle : uncleBlocks){
             Block blockData = new Block(rawUncle.getRLPData());
             this.uncleList.add(blockData);
         }
         this.parsed = true;
+        this.hash  = this.getHash();
     }
 
     public byte[] getHash(){
@@ -185,7 +188,7 @@ public class Block {
 
     public byte[] getStateRoot() {
         if (!parsed) parseRLP();
-        return stateRoot;
+        return this.stateRoot;
     }
 
     public byte[] getTxTrieRoot() {
@@ -315,30 +318,55 @@ public class Block {
         return toStringBuff.toString();
     }
     
+    public byte[] updateState(byte[] key, byte[] value) {
+    	this.state.update(key, value);
+    	return this.stateRoot = this.state.getRootHash();
+    }
+    
 	/**
-	 * Because every transaction published into the blockchain imposes on the
-	 * network the cost of needing to download and verify it, there is a need
-	 * for some regulatory mechanism to prevent abuse.
-	 * 
-	 *  To solve this we simply institute a floating cap:
-	 *   
-	 *  	No block can have more operations than BLK_LIMIT_FACTOR times 
-	 *  	the long-term exponential moving average. 
+	 * This mechanism enforces a homeostasis in terms of the time between blocks; 
+	 * a smaller period between the last two blocks results in an increase in the 
+	 * difficulty level and thus additional computation required, lengthening the 
+	 * likely next period. Conversely, if the period is too large, the difficulty, 
+	 * and expected time to the next block, is reduced.
+	 */
+    private boolean isValid() {
+    	boolean isValid = false;
+    	
+    	// verify difficulty meets requirements
+    	isValid = this.getDifficulty() == this.calcDifficulty();
+    	// verify gasLimit meets requirements
+    	isValid = this.getGasLimit() == this.calcGasLimit();
+    	// verify timestamp meets requirements
+    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+    	
+    	return isValid;
+    }
+	
+	/**
+	 * Calculate GasLimit 
+	 *  max(10000, (parent gas limit * (1024 - 1) + (parent gas used * 6 / 5)) / 1024)
 	 *  
-	 *  Specifically:
-	 *  
-	 *  	blk.oplimit = floor((blk.parent.oplimit * (EMAFACTOR - 1) 
-	 *  		+ floor(GAS_LIMIT * BLK_LIMIT_FACTOR)) / EMA_FACTOR)
-	 * 
-	 * BLK_LIMIT_FACTOR and EMA_FACTOR are constants that will be set 
-	 * to 65536 and 1.5 for the time being, but will likely be changed 
-	 * after further analysis.
-	 * 
 	 * @return
 	 */
-	public double getOplimit() {
-		return Math.floor((this.getParent().getOplimit() * (EMA_FACTOR - 1) 
-						+ Math.floor(GAS_LIMIT * LIMIT_FACTOR)) / EMA_FACTOR);
+	public long calcGasLimit() {
+		if (parentHash == null)
+			return 1000000L;
+		else {
+			Block parent = this.getParent();
+			return Math.max(MIN_GAS_LIMIT, (parent.gasLimit * (1024 - 1) + (parent.gasUsed * 6 / 5)) / 1024);
+		}
+	}
+	
+	public byte[] calcDifficulty() {
+		if (parentHash == null)
+			return Genesis.DIFFICULTY;
+		else {
+			Block parent = this.getParent();
+			long parentDifficulty = new BigInteger(1, parent.difficulty).longValue();
+			long newDifficulty = timestamp >= parent.timestamp + 42 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
+			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
+		}
 	}
 
 	public byte[] getEncoded() {

@@ -9,7 +9,6 @@ import java.util.Arrays;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure 
@@ -82,10 +81,20 @@ public class Trie {
 	 * @param value
 	 */
 	public void update(String key, String value) {
+		this.update(key.getBytes(), value.getBytes());
+	}
+
+	/**
+	 * Insert key/value pair into trie
+	 * 
+	 * @param key
+	 * @param value
+	 */
+	public void update(byte[] key, byte[] value) {
 		if (key == null)
 			throw new NullPointerException("Key should not be blank");
-		byte[] k = binToNibbles(key.getBytes());
-		this.root = this.insertOrDelete(this.root, k, value.getBytes());
+		byte[] k = binToNibbles(key);
+		this.root = this.insertOrDelete(this.root, k, value);
 	}
 
 	/**
@@ -94,10 +103,10 @@ public class Trie {
 	 * @param key
 	 * @return value
 	 */
-	public String get(String key) {
+	public byte[] get(String key) {
 		byte[] k = binToNibbles(key.getBytes());
 		Value c = new Value( this.get(this.root, k) );
-		return c.asString();
+		return c.asBytes();
 	}
 
 	/**
@@ -106,7 +115,7 @@ public class Trie {
 	 * @param key
 	 */
 	public void delete(String key) {
-		this.update(key, "");
+		this.update(key.getBytes(), "".getBytes());
 	}
 
 	/****************************************
@@ -322,7 +331,7 @@ public class Trie {
 
 	// Simple compare function which compared the tries based on their stateRoot
 	public boolean cmp(Trie trie) {
-		return this.getRootHash().equals(trie.getRootHash());
+		return Arrays.equals(this.getRootHash(), trie.getRootHash());
 	}
 	
 	// Save the cached value to the database.
@@ -368,19 +377,18 @@ public class Trie {
 		return slice;
 	}
 
-	public String getRootHash() {
+	public byte[] getRootHash() {
 		Object root = this.getRoot();
 		if (root == null
 				|| (root instanceof byte[] && ((byte[]) root).length == 0)
 				|| (root instanceof String && "".equals((String) root))) {
-			return "";
+			return new byte[0];
 		} else if (root instanceof byte[]) {
-			return Hex.toHexString((byte[])this.getRoot());
+			return (byte[]) this.getRoot();
 		} else {
 			Value rootValue = new Value(this.getRoot());
 			byte[] val = rootValue.encode();
-			byte[] key = HashUtil.sha3(val);
-			return Hex.toHexString(key);
+			return HashUtil.sha3(val);
 		}
 	}
 }

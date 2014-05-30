@@ -41,7 +41,7 @@ public class RlpTestData {
 	public static String result11 = "8203e8";
 
 	public static BigInteger test12 = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935"); 
-	public static String result12 = "a100ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+	public static String result12 = "a0ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
 	public static BigInteger test13 = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639936"); 
 	public static String result13 = "a1010000000000000000000000000000000000000000000000000000000000000000";

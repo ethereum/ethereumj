@@ -6,7 +6,6 @@ import org.ethereum.manager.MainData;
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
-import javax.tools.Tool;
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
@@ -75,9 +74,9 @@ public class BlockChainTable extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                if (MainData.instance.getAllBlocks().size() - 1 < lastFindIndex) return;
+                if (MainData.instance.getBlockchain().size() - 1 < lastFindIndex) return;
 
-                Block block = MainData.instance.getAllBlocks().get(lastFindIndex);
+                Block block = MainData.instance.getBlockchain().get(lastFindIndex);
                 StringSelection stsel = new StringSelection(block.toString());
                 Clipboard system = Toolkit.getDefaultToolkit().getSystemClipboard();
                 system.setContents(stsel,stsel);
@@ -97,10 +96,10 @@ public class BlockChainTable extends JFrame {
                     return;
                 }
 
-                for (int i = lastFindIndex + 1; i < MainData.instance.getAllBlocks().size(); ++i) {
+                for (int i = lastFindIndex + 1; i < MainData.instance.getBlockchain().size(); ++i) {
 
-                    if (MainData.instance.getAllBlocks().size() - 1 < i) return;
-                    Block block = MainData.instance.getAllBlocks().get(i);
+                    if (MainData.instance.getBlockchain().size() - 1 < i) return;
+                    Block block = MainData.instance.getBlockchain().get(i);
                     boolean found = block.toString().toLowerCase().contains(toFind.toLowerCase());
                     if (found) {
                         // todo: now we find the first occur

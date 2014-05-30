@@ -202,7 +202,7 @@ public class MessagesTest {
 		assertEquals("64", Hex.toHexString(tx.getGasPrice()));
 		assertEquals("09184e72a000", Hex.toHexString(tx.getGasLimit()));
 		assertEquals("null", ByteUtil.toHexString(tx.getData()));
-		assertEquals("null", ByteUtil.toHexString(tx.getInit()));
+
 		assertEquals("1b", Hex.toHexString(new byte[] { tx.getSignature().v }));
 		assertEquals("5c89ebf2b77eeab88251e553f6f9d53badc1d800bbac02d830801c2aa94a4c9f", Hex.toHexString(tx.getSignature().r.toByteArray()));
 		assertEquals("0b7907532b1f29c79942b75fff98822293bf5fdaa3653a8d9f424c6a3265f06c", Hex.toHexString(tx.getSignature().s.toByteArray()));
@@ -263,9 +263,6 @@ public class MessagesTest {
         assertEquals("606956330c0d630000003359366000530a0d630000003359602060005301356000533557604060005301600054630000000c58",
         		Hex.toHexString( tx.getData() ));
 
-        assertEquals("33606957",
-        		Hex.toHexString( tx.getInit() ));
-
         assertEquals("1c",
         		Hex.toHexString( new byte[] {tx.getSignature().v} ));
 
@@ -297,9 +294,6 @@ public class MessagesTest {
 
         assertEquals("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d0aceee7e5ab874e22ccf8d1a649f59106d74e8",
         		Hex.toHexString( tx.getData() ));
-
-        assertEquals("null",
-        		Hex.toHexString( tx.getInit() ));
 
         assertEquals("1b",
         		Hex.toHexString( new byte[] {tx.getSignature().v} ));

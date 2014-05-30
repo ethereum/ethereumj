@@ -44,7 +44,7 @@ public class Value {
 		if (isInt()) {
 			return (Integer) value;			
 		} else if (isBytes()) {
-			return new BigInteger(asBytes()).intValue();
+			return new BigInteger(1, asBytes()).intValue();
 		}
 		return 0;
 	}
@@ -53,7 +53,7 @@ public class Value {
 		if (isLong()) {
 			return (Long) value;			
 		} else if (isBytes()) {
-			return new BigInteger(asBytes()).longValue();
+			return new BigInteger(1, asBytes()).longValue();
 		}
 		return 0;
 	}

@@ -202,7 +202,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             RLPList rlpList = RLP.decode2(payload);
             TransactionsMessage transactionsMessage = new TransactionsMessage(rlpList);
             for (Transaction tx :  transactionsMessage.getTransactions())
-                MainData.instance.addPendingTransaction(tx);
+                MainData.instance.getBlockchain().addPendingTransaction(tx);
 
             // todo: if you got transactions send it to your connected peers
             logger.info(transactionsMessage.toString());
@@ -256,7 +256,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 }, 3000, secToAskForChain * 1000);
             }
 
-            MainData.instance.addBlocks(blockList);
+            MainData.instance.getBlockchain().addBlocks(blockList);
             logger.info(blocksMessage.toString());
             if (peerListener != null) peerListener.console(blocksMessage.toString());
         }
@@ -343,7 +343,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private void sendGetChain(ChannelHandlerContext ctx){
 
-        byte[] hash = MainData.instance.getLatestBlockHash();
+        byte[] hash = MainData.instance.getBlockchain().getLatestBlockHash();
         GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
 
         ByteBuf buffer = ctx.alloc().buffer(chainMessage.getPayload().length + 8);
