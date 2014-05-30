@@ -1,13 +1,11 @@
 package org.ethereum.gui;
 
-import org.apache.log4j.PropertyConfigurator;
 import org.ethereum.manager.MainData;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-import javax.tools.Tool;
 
 import java.awt.*;
 import java.awt.event.ItemEvent;
@@ -19,7 +17,6 @@ import java.awt.event.ItemListener;
  * Created on: 30/04/14 06:29
  */
 public class ToolBar extends JFrame {
-
 
     Logger logger = LoggerFactory.getLogger(getClass());
     Logger introLogger = LoggerFactory.getLogger("Intro");

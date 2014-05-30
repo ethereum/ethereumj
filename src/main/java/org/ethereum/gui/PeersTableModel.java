@@ -7,7 +7,7 @@ import java.util.*;
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
 
-import org.ethereum.geodb.IpGeoDB;
+import org.ethereum.db.IpGeoDB;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.util.Utils;

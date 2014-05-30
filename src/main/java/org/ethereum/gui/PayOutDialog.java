@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AddressState;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
@@ -26,14 +26,14 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
 
     PayOutDialog dialog;
 
-    AddressState addressState = null;
+    AccountState addressState = null;
     JLabel statusMsg = null;
 
     final JTextField receiverInput;
     final JTextField amountInput;
     final JTextField feeInput;
 
-	public PayOutDialog(Frame parent, final AddressState addressState) {
+	public PayOutDialog(Frame parent, final AccountState addressState) {
 		super(parent, "Payout details: ", false);
 		dialog = this;
 
@@ -115,7 +115,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
 				byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
 				byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
 
-                byte[] gasPrice = BigInteger.valueOf( MainData.instance.getGasPrice()).toByteArray();
+                byte[] gasPrice = BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice()).toByteArray();
 
 				Transaction tx = new Transaction(nonce, gasPrice, BigIntegers
 						.asUnsignedByteArray(fee), address, BigIntegers
@@ -192,7 +192,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
         // check if the tx is affordable
         BigInteger ammountValue = new BigInteger(amountText);
         BigInteger feeValue = new BigInteger(feeText);
-        BigInteger gasPrice = BigInteger.valueOf(MainData.instance.getGasPrice());
+        BigInteger gasPrice = BigInteger.valueOf(MainData.instance.getBlockchain().getGasPrice());
         BigInteger currentBalance = addressState.getBalance();
 
         boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;
@@ -260,7 +260,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
     }
 
     public static void main(String args[]) {
-        AddressState as = new AddressState();
+        AccountState as = new AccountState();
         PayOutDialog pod = new PayOutDialog(null,  as);
         pod.setVisible(true);
     }

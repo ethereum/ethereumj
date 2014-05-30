@@ -1,11 +1,10 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AddressState;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Wallet;
 import org.ethereum.manager.MainData;
 
 import javax.swing.*;
-import javax.tools.Tool;
 
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -57,7 +56,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
 
         Wallet wallet = MainData.instance.getWallet();
 
-        for (AddressState addressState : wallet.getAddressStateCollection()){
+        for (AccountState addressState : wallet.getAddressStateCollection()){
 
             WalletAddressPanel rowPanel =
                     new WalletAddressPanel(addressState);

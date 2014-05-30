@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AddressState;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
@@ -135,10 +135,10 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         JComponent editor = (JComponent)(creatorAddressCombo.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
-        Collection<AddressState> addressStates =
+        Collection<AccountState> addressStates =
                 MainData.instance.getWallet().getAddressStateCollection();
 
-        for (AddressState addressState : addressStates){
+        for (AccountState addressState : addressStates){
             creatorAddressCombo.addItem(new AddressStateWraper(addressState));
         }
 
@@ -229,7 +229,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         byte[] contractAddress = Hex.decode( contractAddrInput.getText());
 
-        AddressState addressState = ((AddressStateWraper)creatorAddressCombo.getSelectedItem()).getAddressState();
+        AccountState addressState = ((AddressStateWraper)creatorAddressCombo.getSelectedItem()).getAddressState();
 
         byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
         byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
@@ -271,13 +271,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
 	public class AddressStateWraper {
 
-        private AddressState addressState;
+        private AccountState addressState;
 
-        public AddressStateWraper(AddressState addressState) {
+        public AddressStateWraper(AccountState addressState) {
             this.addressState = addressState;
         }
 
-        public AddressState getAddressState() {
+        public AccountState getAddressState() {
             return addressState;
         }
 
