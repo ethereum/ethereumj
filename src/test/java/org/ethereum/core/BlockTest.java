@@ -14,7 +14,7 @@ import static org.junit.Assert.*;
 public class BlockTest {
 	
 	// https://ethereum.etherpad.mozilla.org/12
-	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a012582945fc5ad12c3e7b67c4fc37a68fc0d52d995bb7f7291ff41a2739a7ca1680834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a023b503734ff34ddb7bd5e478f1645680ec778ab3f90007cb1c854653693e5adc80834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
 	private String CPP_PoC5_GENESIS_HEX_HASH = Hex.toHexString(StaticMessages.GENESIS_HASH);
 
     @Test /* got from go guy */
@@ -50,6 +50,8 @@ public class BlockTest {
          */
     	Block genesis = new Genesis();
         assertEquals(CPP_PoC5_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
+        
+        // Not really a good test because this compares Genesis.getHash() to itself
         assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
     }
     

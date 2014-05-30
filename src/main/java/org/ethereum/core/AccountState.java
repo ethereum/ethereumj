@@ -85,7 +85,7 @@ public class AccountState {
 	        byte[] balance		= RLP.encodeBigInteger(this.balance);
 	        byte[] stateRoot	= RLP.encodeElement(this.stateRoot);
 	        byte[] codeHash		= RLP.encodeElement(this.codeHash);
-	        this.rlpEncoded = RLP.encodeList(balance, nonce, stateRoot, codeHash);
+	        this.rlpEncoded = RLP.encodeList(nonce, balance, stateRoot, codeHash);
 		}
 		return rlpEncoded;
     }
