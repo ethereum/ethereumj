@@ -47,7 +47,7 @@ public class StateTest {
 		AccountState acct6 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
 		trie.update(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), acct6.getEncoded());
 		
-		assertEquals("12582945fc5ad12c3e7b67c4fc37a68fc0d52d995bb7f7291ff41a2739a7ca16", Hex.toHexString(trie.getRootHash()));
+		assertEquals("23b503734ff34ddb7bd5e478f1645680ec778ab3f90007cb1c854653693e5adc", Hex.toHexString(trie.getRootHash()));
 	}
 
 }
