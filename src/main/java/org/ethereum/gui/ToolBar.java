@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.db.Config;
 import org.ethereum.manager.MainData;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -10,6 +11,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 /**
  * www.ethereumJ.com
@@ -67,6 +70,14 @@ public class ToolBar extends JFrame {
 
         setTitle("EthereumJ Studio");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                Config.CHAIN_DB.close();
+                Config.STATE_DB.close();
+            }
+        });
 
         this.setContentPane(cp);
 

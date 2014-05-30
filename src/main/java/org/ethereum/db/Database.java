@@ -30,10 +30,12 @@ public class Database {
 	
 	private static Logger logger = LoggerFactory.getLogger(Database.class);
 	private DB db;
+    private String name;
 
 	
 	public Database(String name) {
     	// Initialize Database
+        this.name = name;
 		Options options = new Options();
 		options.createIfMissing(true);
 		try {
@@ -116,5 +118,14 @@ public class Database {
 	public DB getDb() {
 		return this.db;
 	}
+
+    public void close(){
+        try {
+            logger.info("Release DB: {}", name);
+            db.close();
+        } catch (IOException e) {
+            logger.error("failed to find the db file on the close: {} ", name);
+        }
+    }
 
 }
