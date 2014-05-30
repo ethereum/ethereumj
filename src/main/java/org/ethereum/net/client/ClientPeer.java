@@ -13,6 +13,8 @@ import org.ethereum.manager.MainData;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
@@ -24,6 +26,9 @@ import java.util.ArrayList;
  * Created on: 10/04/14 12:28
  */
 public class ClientPeer {
+
+    Logger logger = LoggerFactory.getLogger("wire");
+
 
     PeerListener peerListener;
     Channel channel;
@@ -96,12 +101,17 @@ public class ClientPeer {
 
         byte[] payload = transactionsMessage.getPayload();
 
+        if (peerListener != null)
+         peerListener.console("Send msg: [ " +
+                 Hex.toHexString(payload) +
+                 " ]");
+
         ByteBuf buffer = channel.alloc().buffer(payload.length + 8);
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
         buffer.writeBytes(ByteUtil.calcPacketSize(payload));
         buffer.writeBytes(payload);
 
-        System.out.println("Send msg: [ " +
+        logger.info("Send msg: [ " +
                 Hex.toHexString(payload) +
                 " ]");
 

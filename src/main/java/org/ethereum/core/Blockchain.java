@@ -34,22 +34,14 @@ public class Blockchain extends ArrayList<Block> {
 		this.db = Config.CHAIN_DB;
 		this.wallet = wallet;
 		
-		DBIterator iterator = db.iterator();
-		try {
-			for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-				byte[] value = iterator.peekNext().getValue();
-				Block block = new Block(value);
-				if(block.getNumber() > lastBlock.getNumber()) lastBlock = block;
-				this.add(new Block(value));
-			}
-		} finally {
-			// Make sure you close the iterator to avoid resource leaks.
-			try {
-				iterator.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+        // Redesign fetch all to get the chain ordered
+        byte[] payload = db.get(Genesis.PARENT_HASH);
+
+        while (payload != null) {
+            Block block = new Block(payload);
+            this.add(block);
+            payload = db.get(block.getHash());
+        }
 	}
 
 	public Block getLastBlock() {
@@ -81,7 +73,9 @@ public class Blockchain extends ArrayList<Block> {
             Block block = blocks.get(i);
             this.add(block);
             if(block.getNumber() > lastBlock.getNumber()) lastBlock = block;
-            db.put(block.getHash(), block.getEncoded());
+
+            db.put(block.getParentHash(), block.getEncoded());
+
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
             this.gasPrice = block.getMinGasPrice();
@@ -103,7 +97,7 @@ public class Blockchain extends ArrayList<Block> {
     /*
      *        1) the dialog put a pending transaction on the list
      *        2) the dialog send the transaction to a net
-     *        3) wherever the transaction got for the wire in will change to approve state
+     *        3) wherever the transaction got in from the wire it will change to approve state
      *        4) only after the approve a) Wallet state changes
      *        5) After the block is received with that tx the pending been clean up
     */
@@ -134,9 +128,16 @@ public class Blockchain extends ArrayList<Block> {
     }
 
     public byte[] getLatestBlockHash(){
+
         if (this.isEmpty())
             return StaticMessages.GENESIS_HASH;
-        else
-          return lastBlock.getHash();
+        else{
+
+            // TODO: ERASE IT WHEN THE STATE IS FIXED :
+            if (Arrays.equals(lastBlock.getParentHash(), new byte[32])) return StaticMessages.GENESIS_HASH;
+
+            return lastBlock.getHash();
+        }
+
     }
 }

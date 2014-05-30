@@ -3,6 +3,7 @@ package org.ethereum.core;
 import java.math.BigInteger;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.Config;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,7 @@ public class Genesis extends Block {
 		super(PARENT_HASH, UNCLES_HASH, COINBASE, TX_TRIE_ROOT, DIFFICULTY,
 				NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED, TIMESTAMP,
 				EXTRA_DATA, NONCE, null, null);
+
 		// Premine state
 		AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
 		// # (M)
@@ -53,5 +55,7 @@ public class Genesis extends Block {
 		this.updateState(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), acct.getEncoded());
 		System.out.println(Hex.toHexString(this.getStateRoot()));
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
-	}
+
+        Config.CHAIN_DB.put(getParentHash(), getEncoded());
+    }
 }

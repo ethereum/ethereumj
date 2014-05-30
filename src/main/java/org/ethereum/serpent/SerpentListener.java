@@ -350,6 +350,17 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitBlock_timestamp(@NotNull SerpentParser.Block_timestampContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#send_func}.
+	 * @param ctx the parse tree
+	 */
+	void enterSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#send_func}.
+	 * @param ctx the parse tree
+	 */
+	void exitSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#while_stmt}.
 	 * @param ctx the parse tree
 	 */

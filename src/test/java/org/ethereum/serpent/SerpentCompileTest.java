@@ -1267,12 +1267,12 @@ public class SerpentCompileTest {
  todo: more to implement
 
 # 0) sha();
-# 1) send(1, 2, 3)
 # 2) create(1, 2, 3, 4)
 # 3) x = sha3(v)
 # 4) x = byte(y,z)
 # 5) v = getch(x,i)
 # 6) setch(x,i,v)
+
 
 # 7) a=array(30)
 # 8) x = bytes(n)
@@ -1285,6 +1285,8 @@ public class SerpentCompileTest {
      * todo: return(1) testing
      * todo: return (1,2) testing
      * todo: msg.data testing
+     * todo: send(1, 2, 3)
+     *
      * todo: contract.storage get/set testing
      * todo: [asm   asm] testing
      * todo: suicide(1) testing
