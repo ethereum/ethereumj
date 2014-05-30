@@ -18,6 +18,8 @@ bin
 *.ear
 /target
 /src/main/java/samples
+/blockchain
+/state
 
 *.db
 *.xlsx
