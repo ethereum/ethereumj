@@ -436,7 +436,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         String operand0 = visit(ctx.expression());
 
-        return  String.format(" %s MSIZE SWAP MSIZE MSTORE 32 SWAP RETURN ", operand0);
+        return  String.format(" %s MEMSIZE SWAP MEMSIZE MSTORE 32 SWAP RETURN ", operand0);
     }
 
     @Override
