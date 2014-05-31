@@ -5,6 +5,9 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -15,35 +18,68 @@ import java.util.regex.Pattern;
 public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
     int labelIndex = 0;
-    private ArrayList<String> vars = new ArrayList<String>();
+    private ArrayList<String> vars   = new ArrayList<String>();
+
+    private HashMap<String, Integer> arraysSize = new HashMap<String, Integer>();
+    private List<String> arraysIndex = new ArrayList<String>();
 
 
 
     @Override
     public String visitParse(@NotNull SerpentParser.ParseContext ctx) {
 
-        StringBuffer result = new StringBuffer();
+        String codeBlock = visit(ctx.block());
+        int memSize = vars.size() * 32 - ( vars.size() > 0 ? 1 : 0);
 
-        result.append( super.visitParse(ctx) );
+        String initMemCodeBlock = "";
+        if ( ! arraysSize.isEmpty() && vars.size() > 0)
+            initMemCodeBlock = String.format(" 0 %d MSTORE8 ", memSize);
 
-        // todo: calc the wrapping with memory usage data
+        if (memSize == 0)
+            codeBlock= codeBlock.replace("@vars_table@", "0");
+        else
+            codeBlock= codeBlock.replace("@vars_table@", memSize + 1 + "");
 
-        return result.toString();
+        return  initMemCodeBlock + codeBlock;
     }
 
     @Override
     public String visitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx) {
 
         String initBlock = visit(ctx.block(0));
-        String codeBlock = visit(ctx.block(1));
+        int memSize = vars.size() * 32 - ( vars.size() > 0 ? 1 : 0);
 
-        return String.format(" [init %s init] [code %s code] ", initBlock, codeBlock);
+        String initMemInitBlock = "";
+        if ( ! arraysSize.isEmpty() && vars.size() > 0)
+            initMemInitBlock = String.format(" 0 %d MSTORE8 ", memSize);
+
+        if (memSize == 0)
+            initBlock= initBlock.replace("@vars_table@", "0");
+        else
+            initBlock= initBlock.replace("@vars_table@", memSize + 1 + "");
+
+
+        vars.clear();
+        String codeBlock = visit(ctx.block(1));
+        memSize = vars.size() * 32 - ( vars.size() > 0 ? 1 : 0);
+
+        if (memSize == 0)
+            codeBlock= codeBlock.replace("@vars_table@", "0");
+        else
+            codeBlock= codeBlock.replace("@vars_table@", memSize + 1 + "");
+
+
+        String initMemCodeBlock = "";
+        if ( ! arraysSize.isEmpty() && vars.size() > 0)
+            initMemCodeBlock = String.format(" 0 %d MSTORE8 ", memSize);
+
+        return String.format(" [init %s %s init] [code %s %s code] ", initMemInitBlock, initBlock,
+                initMemCodeBlock,  codeBlock);
     }
 
     @Override
     public String visitIf_elif_else_stmt(@NotNull SerpentParser.If_elif_else_stmtContext ctx) {
 
-        //todo: when you find some error throw expectation exception
         StringBuffer retCode = new StringBuffer();
 
         int endOfStmtLabel = labelIndex++ ;
@@ -164,15 +200,29 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String varName = ctx.VAR().toString();
         int addr = 0;
 
-        addr = vars.indexOf(varName);
-        if (addr == -1){
-           addr = vars.size();
-           vars.add(varName);
+        if (ctx.arr_def() != null){
+            // if it's an array the all management is different
+            String arrayCode = visitArr_def(ctx.arr_def());
+
+            // calc the pointer addr
+            int pos = getArraySize(arrayCode);
+            arraysSize.put(varName, pos);
+            arraysIndex.add(varName);
+
+            return arrayCode;
+        } else{
+
+            // if it's an array the all management is different
+            String expression = visitExpression(ctx.expression());
+            addr = vars.indexOf(varName);
+            if (addr == -1){
+                addr = vars.size();
+                vars.add(varName);
+            }
+
+            return String.format(" %s %d MSTORE ", expression, addr * 32);
         }
 
-        String expression = visitExpression(ctx.expression());
-
-        return String.format(" %s %d MSTORE ", expression, addr * 32);
     }
 
     @Override
@@ -223,9 +273,69 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         if (ctx.send_func() != null)
             return visitSend_func(ctx.send_func());
 
+        if (ctx.array_retreive() != null)
+            return visitArray_retreive(ctx.array_retreive());
+
         return ctx.INT().toString();
     }
 
+    @Override
+    public String visitArr_def(@NotNull SerpentParser.Arr_defContext ctx) {
+
+        List<SerpentParser.Int_valContext> numElements = ctx.int_val();
+        int arraySize = numElements.size() * 32 + 32;
+
+        StringBuffer arrayInit = new StringBuffer();
+        int i = 32;
+        for (SerpentParser.Int_valContext int_val : ctx.int_val()){
+
+            arrayInit.append(String.format(" DUP %d ADD %s SWAP MSTORE ", i, visit(int_val)));
+            i += 32;
+        }
+
+       return String.format(" MEMSIZE %s %d SWAP MSTORE ", arrayInit, arraySize);
+    }
+
+    @Override
+    public String visitArray_assign(@NotNull SerpentParser.Array_assignContext ctx) {
+
+        int order = this.arraysIndex.indexOf( ctx.VAR().toString());
+        if (order == -1){
+            throw new Error("array with that name was not defined");
+        }
+
+        //calcAllocatedBefore();
+        int allocSize = 0;
+        for (int i = 0; i < order; ++i ){
+            String var = arraysIndex.get(i);
+            allocSize += arraysSize.get(var);
+        }
+
+        String index = visit(ctx.int_val());
+        String assignValue = visit(ctx.expression());
+
+        return String.format(" %s 32 %s MUL 32 ADD %d ADD @vars_table@ ADD MSTORE ", assignValue, index, allocSize);
+    }
+
+
+    @Override
+    public String visitArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx) {
+
+        int order = this.arraysIndex.indexOf( ctx.VAR().toString());
+        if (order == -1){
+            throw new Error("array with that name was not defined");
+        }
+
+        int allocSize = 0;
+        for (int i = 0; i < order; ++i ){
+            String var = arraysIndex.get(i);
+            allocSize += arraysSize.get(var);
+        }
+
+        String index = visit(ctx.int_val());
+
+        return String.format(" 32 %s MUL %d ADD @vars_table@ ADD MLOAD ", index, allocSize );
+    }
 
     @Override
     public String visitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx) {
@@ -264,8 +374,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.rel_exp() == null) return visit(ctx.add_expr());
 
-        String operand0 = visit(ctx.add_expr());
-        String operand1 = visit(ctx.rel_exp());
+        String operand0 = visit(ctx.rel_exp());
+        String operand1 = visit(ctx.add_expr());
 
         switch (ctx.OP_REL().getText().toLowerCase()) {
             case "<":  return operand1 + " " + operand0 + " LT";
@@ -490,7 +600,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand2 = visit(ctx.int_val(2));
 
 //        OUTDATASIZE OUTDATASTART INDATASIZE INDATASTART VALUE TO GAS CALL
-        return  String.format("0 0 0 0 %s %s %s CALL ",  operand1, operand0, operand2);
+        return  String.format("0 0 0 0 %s %s %s CALL ", operand1, operand0, operand2);
     }
 
     @Override
@@ -562,6 +672,21 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         public UnassignVarException(String name) {
             super("attempt to access not assigned variable: " + name);
         }
+    }
+
+
+    private Integer getArraySize(String code){
+
+        String result = "0";
+        Pattern pattern = Pattern.compile(" [0-9]* SWAP MSTORE$");
+        Matcher matcher = pattern.matcher(code.trim());
+        if (matcher.find()) {
+
+            String group = matcher.group(0);
+            result = group.replace("SWAP MSTORE", "").trim();
+        }
+
+        return Integer.parseInt(result);
     }
 
 }

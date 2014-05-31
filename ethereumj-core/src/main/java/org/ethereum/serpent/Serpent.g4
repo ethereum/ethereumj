@@ -29,7 +29,7 @@ parse: block EOF
 
 parse_init_code_block : 'init' ':' INDENT block DEDENT 'code' ':' INDENT block DEDENT;
 
-block:  ( asm | assign | contract_storage_assign | special_func | if_elif_else_stmt |
+block:  ( asm | array_assign | assign | contract_storage_assign | special_func | if_elif_else_stmt |
           while_stmt | ret_func_1 | ret_func_2 | suicide_func | stop_func)* ;
 
 
@@ -106,7 +106,13 @@ send_func: 'send' '(' int_val ',' int_val ',' int_val ')';
 
 msg_data: 'msg.data' '[' expression ']' ;
 
-assign:  VAR EQ_OP expression NL;
+array_assign: VAR '[' int_val ']' EQ_OP expression  NL;
+array_retreive:  VAR '[' int_val ']';
+
+assign:  VAR EQ_OP (expression | arr_def) NL;
+arr_def : '[' (int_val ','?)* ']';
+
+
 contract_storage_assign:  'contract.storage' '[' expression ']' EQ_OP expression NL;
 contract_storage_load: 'contract.storage' '[' expression ']';
 
@@ -171,9 +177,11 @@ int_val : INT |
           msg_func |
           msg_data |
           send_func |
-          contract_storage_load
+          contract_storage_load |
+          array_retreive
           ;
-// todo:  here the val should include also retrieve a variable
+
+
 
 hex_num
    : HEX_NUMBER
@@ -189,7 +197,7 @@ get_var: VAR;
 INT: [0-9]+;
 
 
-ASM_SYMBOLS: 'STOP' | 'ADD' | 'MUL' | 'SUB' | 'DIV' | 'SDIV' | 'MOD' |'SMOD' | 'EXP' | 'NEG' | 'LT' | 'GT' | 'SLT' | 'SGT'| 'EQ' | 'NOT' | 'AND' | 'OR' | 'XOR' | 'BYTE' | 'SHA3' | 'ADDRESS' | 'BALANCE' | 'ORIGIN' | 'CALLER' | 'CALLVALUE' | 'CALLDATALOAD' | 'CALLDATASIZE' | 'CALLDATACOPY' | 'CODESIZE' | 'CODECOPY' | 'GASPRICE' | 'PREVHASH' | 'COINBASE' | 'TIMESTAMP' | 'NUMBER' | 'DIFFICULTY' | 'GASLIMIT' | 'POP' | 'DUP' | 'SWAP' | 'MLOAD' | 'MSTORE' | 'MSTORE8' | 'SLOAD' | 'SSTORE' | 'JUMP' | 'JUMPI' | 'PC' | 'MSIZE' | 'GAS' | 'PUSH1' | 'PUSH2' | 'PUSH3' | 'PUSH4' | 'PUSH5' | 'PUSH6' | 'PUSH7' | 'PUSH8' | 'PUSH9' | 'PUSH10' | 'PUSH11' | 'PUSH12' | 'PUSH13' | 'PUSH14' | 'PUSH15' | 'PUSH16' | 'PUSH17' | 'PUSH18' | 'PUSH19' | 'PUSH20' | 'PUSH21' | 'PUSH22' | 'PUSH23' | 'PUSH24' | 'PUSH25' | 'PUSH26' | 'PUSH27' | 'PUSH28' | 'PUSH29' | 'PUSH30' | 'PUSH31' | 'PUSH32' | 'CREATE' | 'CALL' | 'RETURN' | 'SUICIDE';
+ASM_SYMBOLS: 'STOP' | 'ADD' | 'MUL' | 'SUB' | 'DIV' | 'SDIV' | 'MOD' |'SMOD' | 'EXP' | 'NEG' | 'LT' | 'GT' | 'SLT' | 'SGT'| 'EQ' | 'NOT' | 'AND' | 'OR' | 'XOR' | 'BYTE' | 'SHA3' | 'ADDRESS' | 'BALANCE' | 'ORIGIN' | 'CALLER' | 'CALLVALUE' | 'CALLDATALOAD' | 'CALLDATASIZE' | 'CALLDATACOPY' | 'CODESIZE' | 'CODECOPY' | 'GASPRICE' | 'PREVHASH' | 'COINBASE' | 'TIMESTAMP' | 'NUMBER' | 'DIFFICULTY' | 'GASLIMIT' | 'POP' | 'DUP' | 'SWAP' | 'MLOAD' | 'MSTORE' | 'MSTORE8' | 'SLOAD' | 'SSTORE' | 'JUMP' | 'JUMPI' | 'PC' | 'MEMSIZE' | 'GAS' | 'PUSH1' | 'PUSH2' | 'PUSH3' | 'PUSH4' | 'PUSH5' | 'PUSH6' | 'PUSH7' | 'PUSH8' | 'PUSH9' | 'PUSH10' | 'PUSH11' | 'PUSH12' | 'PUSH13' | 'PUSH14' | 'PUSH15' | 'PUSH16' | 'PUSH17' | 'PUSH18' | 'PUSH19' | 'PUSH20' | 'PUSH21' | 'PUSH22' | 'PUSH23' | 'PUSH24' | 'PUSH25' | 'PUSH26' | 'PUSH27' | 'PUSH28' | 'PUSH29' | 'PUSH30' | 'PUSH31' | 'PUSH32' | 'CREATE' | 'CALL' | 'RETURN' | 'SUICIDE';
 
 
 /*  'xor', 'and', 'or', 'not' operands should be defined
@@ -208,6 +216,7 @@ WS: [ \t]+ -> skip;
 LINE_COMMENT: '#' ~[\r\n]* -> skip;
 
 VAR:  [a-zA-Z][a-zA-Z0-9]* ;
+
 
 
 OP_ADD : '+' | '-';
