@@ -212,6 +212,32 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterArray_assign(@NotNull SerpentParser.Array_assignContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitArray_assign(@NotNull SerpentParser.Array_assignContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -427,6 +453,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitSend_func(@NotNull SerpentParser.Send_funcContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterArr_def(@NotNull SerpentParser.Arr_defContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitArr_def(@NotNull SerpentParser.Arr_defContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

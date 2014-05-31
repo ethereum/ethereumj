@@ -117,6 +117,20 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#array_assign}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArray_assign(@NotNull SerpentParser.Array_assignContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#array_retreive}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#parse_init_code_block}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -234,6 +248,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#arr_def}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArr_def(@NotNull SerpentParser.Arr_defContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#while_stmt}.

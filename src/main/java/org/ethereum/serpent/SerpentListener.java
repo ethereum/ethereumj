@@ -174,6 +174,28 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#array_assign}.
+	 * @param ctx the parse tree
+	 */
+	void enterArray_assign(@NotNull SerpentParser.Array_assignContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#array_assign}.
+	 * @param ctx the parse tree
+	 */
+	void exitArray_assign(@NotNull SerpentParser.Array_assignContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#array_retreive}.
+	 * @param ctx the parse tree
+	 */
+	void enterArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#array_retreive}.
+	 * @param ctx the parse tree
+	 */
+	void exitArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#parse_init_code_block}.
 	 * @param ctx the parse tree
 	 */
@@ -359,6 +381,17 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#arr_def}.
+	 * @param ctx the parse tree
+	 */
+	void enterArr_def(@NotNull SerpentParser.Arr_defContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#arr_def}.
+	 * @param ctx the parse tree
+	 */
+	void exitArr_def(@NotNull SerpentParser.Arr_defContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#while_stmt}.
