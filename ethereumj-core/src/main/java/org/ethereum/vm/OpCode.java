@@ -22,10 +22,14 @@ public enum OpCode {
 	EXP(0x08),
 	NEG(0x09),
 	LT(0x0a),
+    SLT(0x0b),
+    SGT(0x0c),
 	GT(0x0b),
 	EQ(0x0c),
 	NOT(0x0d),
-	
+
+
+
 	/**
 	 * Bitwise Logic Operations
 	 */
@@ -44,7 +48,7 @@ public enum OpCode {
 	/**
 	 * Environmental Information
 	 */
-	
+
 	ADDRESS(0x30),
 	BALANCE(0x31),
 	ORIGIN(0x32),
@@ -60,7 +64,7 @@ public enum OpCode {
 	/**
 	 * Block Information
 	 */
-	
+
 	PREVHASH(0x40),
 	COINBASE(0x41),
 	TIMESTAMP(0x42),
@@ -83,7 +87,7 @@ public enum OpCode {
 	JUMP(0x58),
 	JUMPI(0x59),
 	PC(0x5a),
-	MSIZE(0x5b),
+	MEMSIZE(0x5b),
 	GAS(0x5c),
 	
 	/**

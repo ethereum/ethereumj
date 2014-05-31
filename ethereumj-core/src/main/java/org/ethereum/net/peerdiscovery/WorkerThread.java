@@ -29,6 +29,8 @@ public class WorkerThread implements Runnable {
         logger.info(Thread.currentThread().getName()+" Start. Command = "+ peerData.toString());
         processCommand();
         logger.info(Thread.currentThread().getName()+" End.");
+
+        try {Thread.sleep(10000); } catch (InterruptedException e) {logger.error("sleep interrupted");}
         poolExecutor.execute(this);
     }
 
