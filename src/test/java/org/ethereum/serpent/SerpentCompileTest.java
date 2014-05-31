@@ -262,7 +262,7 @@ public class SerpentCompileTest {
     public void test14(){
 
         String code = "a = 1 > 2 > 3 > 4";
-        String expected = "4 3 2 1 GT GT GT 0 MSTORE";
+        String expected = "1 2 GT 3 GT 4 GT 0 MSTORE";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
                 code);
@@ -297,14 +297,13 @@ public class SerpentCompileTest {
 
         String code = "if 1>2: \n" +
                       "  a=2";
-        String expected = "2 1 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0";
+        String expected = "1 2 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0";
 
         /**
 
-            2 1 GT NOT REF_1 JUMPI
+             1 2 GT NOT REF_1 JUMPI
                  2 0 MSTORE
-                 REF_0 JUMP
-            LABEL_1 LABEL_0
+             REF_0 JUMP LABEL_1 LABEL_0
 
           */
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -323,14 +322,13 @@ public class SerpentCompileTest {
 
         String code = "if 10 > 2 + 5: \n" +
                       "  a=2";
-        String expected = "5 2 ADD 10 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0";
+        String expected = "10 5 2 ADD GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0";
 
         /**
 
-         5 2 ADD 10 GT NOT REF_1 JUMPI
-            2 0 MSTORE
-            REF_0 JUMP
-         LABEL_1 LABEL_0
+         10 5 2 ADD GT NOT REF_1 JUMPI
+           2 0 MSTORE
+         REF_0 JUMP LABEL_1 LABEL_0
 
           */
 
@@ -352,15 +350,14 @@ public class SerpentCompileTest {
                       "  a=2\n" +
                       "else: \n" +
                       "  c=3\n";
-        String expected = "5 2 ADD 10 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 3 32 MSTORE LABEL_0";
+        String expected = "10 5 2 ADD GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 3 32 MSTORE LABEL_0";
 
         /**
-            5 2 ADD 10 GT NOT REF_1 JUMPI
-                2 0 MSTORE
-                REF_0 JUMP
-            LABEL_1
-                3 32 MSTORE
-            LABEL_0
+             10 5 2 ADD GT NOT REF_1 JUMPI
+                 2 0 MSTORE
+             REF_0 JUMP LABEL_1
+                 3 32 MSTORE
+             LABEL_0
          */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -382,16 +379,15 @@ public class SerpentCompileTest {
                       "else: \n" +
                       "  c=123\n" +
                       "  d=0xFFAA";
-        String expected = "5 2 ADD 10 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 123 32 MSTORE 65450 64 MSTORE LABEL_0";
+        String expected = "10 5 2 ADD GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 123 32 MSTORE 65450 64 MSTORE LABEL_0";
 
         /**
-            5 2 ADD 10 GT NOT REF_1 JUMPI
-               2 0 MSTORE
-               REF_0 JUMP
-            LABEL_1
-               123 32 MSTORE
-               65450 64 MSTORE
-            LABEL_0
+             10 5 2 ADD GT NOT REF_1 JUMPI
+                   2 0 MSTORE REF_0
+             JUMP LABEL_1
+                   123 32 MSTORE
+                   65450 64 MSTORE
+             LABEL_0
          */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -415,20 +411,20 @@ public class SerpentCompileTest {
                       "else: \n" +
                       "  c=123\n" +
                       "  d=0xFFAA";
-        String expected = "5 2 ADD 10 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE REF_0 JUMP LABEL_2 123 32 MSTORE 65450 64 MSTORE LABEL_0";
+        String expected = "10 5 2 ADD GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE REF_0 JUMP LABEL_2 123 32 MSTORE 65450 64 MSTORE LABEL_0";
 
         /**
-            5 2 ADD 10 GT NOT REF_1 JUMPI
-               2 0 MSTORE
-               REF_0 JUMP
-               LABEL_1
-            4 2 2 MUL EQ NOT REF_2 JUMPI
-               3 0 MSTORE
-               REF_0 JUMP
-               LABEL_2
-            123 32 MSTORE
-            65450 64 MSTORE
-            LABEL_0
+
+           10 5 2 ADD GT NOT REF_1 JUMPI
+                2 0 MSTORE REF_0
+                JUMP LABEL_1
+           4 2 2 MUL EQ NOT REF_2 JUMPI
+                3 0 MSTORE
+           REF_0 JUMP LABEL_2
+                123 32 MSTORE
+                65450 64 MSTORE
+           LABEL_0
+
          */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -456,27 +452,27 @@ public class SerpentCompileTest {
                       "else: \n" +
                       "  c=123\n" +
                       "  d=0xFFAA";
-        String expected = "5 2 ADD 10 LT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE REF_0 JUMP LABEL_2 40 10 2 2 MUL ADD EQ NOT REF_3 JUMPI 3 0 MSTORE 9 0 MSTORE 21 0 MSTORE REF_0 JUMP LABEL_3 123 32 MSTORE 65450 64 MSTORE LABEL_0";
+        String expected = "10 5 2 ADD LT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE REF_0 JUMP LABEL_2 40 10 2 2 MUL ADD EQ NOT REF_3 JUMPI 3 0 MSTORE 9 0 MSTORE 21 0 MSTORE REF_0 JUMP LABEL_3 123 32 MSTORE 65450 64 MSTORE LABEL_0";
 
         /**
 
-         5 2 ADD 10 LT NOT REF_1 JUMPI
-             2 0 MSTORE
-             REF_0 JUMP
-             LABEL_1
-         4 2 2 MUL EQ NOT REF_2 JUMPI
-             3 0 MSTORE
-             REF_0 JUMP
-             LABEL_2
-         40 10 2 2 MUL ADD EQ NOT REF_3 JUMPI
-             3 0 MSTORE
-             9 0 MSTORE
-             21 0 MSTORE
-             REF_0 JUMP
-             LABEL_3
-         123 32 MSTORE
-         65450 64 MSTORE
-         LABEL_0
+           10 5 2 ADD LT NOT REF_1 JUMPI
+                 2 0 MSTORE
+                 REF_0 JUMP
+                 LABEL_1
+            4 2 2 MUL EQ NOT REF_2 JUMPI
+                 3 0 MSTORE
+                 REF_0 JUMP
+                 LABEL_2
+            40 10 2 2 MUL ADD EQ NOT REF_3 JUMPI
+                 3 0 MSTORE
+                 9 0 MSTORE
+                 21 0 MSTORE
+                 REF_0 JUMP
+            LABEL_3
+                 123 32 MSTORE
+                 65450 64 MSTORE LABEL_0
+
 
          */
 
@@ -508,31 +504,31 @@ public class SerpentCompileTest {
                 "else: \n" +
                 "  c=123\n" +
                 "  d=0xFFAA";
-        String expected = "5 2 ADD 10 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE 3 0 MLOAD EQ NOT REF_4 JUMPI 123 32 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_0 JUMP LABEL_2 40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI 3 0 MSTORE 9 0 MSTORE 21 0 MSTORE REF_0 JUMP LABEL_5 123 64 MSTORE 65450 96 MSTORE LABEL_0";
+        String expected = "10 5 2 ADD GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE 3 0 MLOAD EQ NOT REF_4 JUMPI 123 32 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_0 JUMP LABEL_2 40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI 3 0 MSTORE 9 0 MSTORE 21 0 MSTORE REF_0 JUMP LABEL_5 123 64 MSTORE 65450 96 MSTORE LABEL_0";
 
         /**
-             5 2 ADD 10 GT NOT REF_1 JUMPI
-                  2 0 MSTORE
-                  REF_0 JUMP
-                  LABEL_1
+            10 5 2 ADD GT NOT REF_1 JUMPI
+                 2 0 MSTORE
+                 REF_0 JUMP
+                 LABEL_1
              4 2 2 MUL EQ NOT REF_2 JUMPI
-                  3 0 MSTORE
-                  3 0 MLOAD EQ NOT REF_4 JUMPI
-                    123 32 MSTORE
-                    REF_3 JUMP
-                    LABEL_4
-                    LABEL_3
-                    REF_0
-                    JUMP LABEL_2
-             40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI
-                    3 0 MSTORE
-                    9 0 MSTORE
-                    21 0 MSTORE
-                    REF_0 JUMP
-                    LABEL_5
-             123 64 MSTORE
-             65450 96 MSTORE
-             LABEL_0
+                 3 0 MSTORE
+                 3 0 MLOAD
+             EQ NOT REF_4 JUMPI
+                 123 32 MSTORE
+                 REF_3 JUMP
+                 LABEL_4
+                 LABEL_3
+                 REF_0 JUMP LABEL_2
+              40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI
+                 3 0 MSTORE
+                 9 0 MSTORE
+                 21 0 MSTORE
+                 REF_0 JUMP
+              LABEL_5
+                 123 64 MSTORE
+                 65450 96 MSTORE
+              LABEL_0
          */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -562,31 +558,30 @@ public class SerpentCompileTest {
                 "else: \n" +
                 "  c=123\n" +
                 "  d=0xFFAA";
-        String expected = "96 7 2 MUL GT 5 2 ADD 10 LT NOT NOT NOT MUL NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE 3 0 MLOAD EQ NOT REF_4 JUMPI 123 32 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_0 JUMP LABEL_2 40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI 3 0 MSTORE 9 0 MSTORE 21 0 MSTORE REF_0 JUMP LABEL_5 123 64 MSTORE 65450 96 MSTORE LABEL_0";
+        String expected = "7 2 MUL 96 GT 10 5 2 ADD LT NOT NOT NOT MUL NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 4 2 2 MUL EQ NOT REF_2 JUMPI 3 0 MSTORE 3 0 MLOAD EQ NOT REF_4 JUMPI 123 32 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_0 JUMP LABEL_2 40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI 3 0 MSTORE 9 0 MSTORE 21 0 MSTORE REF_0 JUMP LABEL_5 123 64 MSTORE 65450 96 MSTORE LABEL_0";
 
         /**
-            96 7 2 MUL GT 5 2 ADD 10 LT NOT NOT NOT MUL NOT REF_1 JUMPI
-                2 0 MSTORE
-                REF_0 JUMP
-                LABEL_1
-            4 2 2 MUL EQ NOT REF_2 JUMPI
-                3 0 MSTORE
-                3 0 MLOAD EQ NOT REF_4 JUMPI
-                   123 32 MSTORE
-                   REF_3 JUMP
+             7 2 MUL 96 GT 10 5 2 ADD LT NOT NOT NOT MUL NOT REF_1 JUMPI
+                   2 0 MSTORE
+                   REF_0 JUMP
+                   LABEL_1
+              4 2 2 MUL EQ NOT REF_2 JUMPI
+                   3 0 MSTORE
+              3 0 MLOAD EQ NOT REF_4 JUMPI
+                   123 32 MSTORE REF_3 JUMP
                    LABEL_4
                    LABEL_3
-                REF_0 JUMP
-                LABEL_2
-            40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI
-                3 0 MSTORE
-                9 0 MSTORE
-                21 0 MSTORE
-                REF_0 JUMP
-                LABEL_5
-            123 64 MSTORE
-            65450 96 MSTORE
-            LABEL_0
+                   REF_0 JUMP
+                   LABEL_2
+              40 10 2 2 MUL ADD EQ NOT REF_5 JUMPI
+                   3 0 MSTORE
+                   9 0 MSTORE
+                   21 0 MSTORE
+                   REF_0 JUMP
+               LABEL_5
+                   123 64 MSTORE
+                   65450 96 MSTORE
+               LABEL_0
          */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -685,18 +680,17 @@ public class SerpentCompileTest {
                         "  if 4>3:\n" +
                         "   if 5>4:\n" +
                         "     a = 10\n";
-        String expected = "1 2 GT NOT REF_7 JUMPI 2 3 GT NOT REF_6 JUMPI 3 4 GT NOT REF_5 JUMPI 4 5 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0";
+        String expected = "2 1 GT NOT REF_7 JUMPI 3 2 GT NOT REF_6 JUMPI 4 3 GT NOT REF_5 JUMPI 5 4 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0";
 
         /**
 
-         1 2 GT NOT REF_7 JUMPI
-           2 3 GT NOT REF_6 JUMPI
-             3 4 GT NOT REF_5 JUMPI
-               4 5 GT NOT REF_4 JUMPI
-                  10 0 MSTORE
-                  REF_3 JUMP
-         LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0
-
+           2 1 GT NOT REF_7 JUMPI
+              3 2 GT NOT REF_6 JUMPI
+                 4 3 GT NOT REF_5 JUMPI
+                    5 4 GT NOT REF_4 JUMPI
+                       10 0 MSTORE
+                       REF_3 JUMP
+           LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0
          */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -718,17 +712,16 @@ public class SerpentCompileTest {
                 "  if 4>3:\n" +
                 "   if 5>4:\n" +
                 "     a = 10\n";
-        String expected = "1 2 GT NOT REF_7 JUMPI 2 3 GT NOT REF_6 JUMPI 3 4 GT NOT REF_5 JUMPI 4 5 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0";
+        String expected = "2 1 GT NOT REF_7 JUMPI 3 2 GT NOT REF_6 JUMPI 4 3 GT NOT REF_5 JUMPI 5 4 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0";
 
         /**
 
-         1 2 GT NOT REF_7 JUMPI
-           2 3 GT NOT REF_6 JUMPI
-             3 4 GT NOT REF_5 JUMPI
-               4 5 GT NOT REF_4 JUMPI
-                   10 0 MSTORE
-                   REF_3 JUMP
-               LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0
+            2 1 GT NOT REF_7 JUMPI
+                3 2 GT NOT REF_6 JUMPI
+                     4 3 GT NOT REF_5 JUMPI
+                         5 4 GT NOT REF_4 JUMPI
+                               10 0 MSTORE
+            REF_3 JUMP LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0
          */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
@@ -752,19 +745,19 @@ public class SerpentCompileTest {
                         "     a = 10\n" +
                         "   else:\n" +
                         "     b = 20\n";
-        String expected = "1 2 GT NOT REF_7 JUMPI 2 3 GT NOT REF_6 JUMPI 3 4 GT NOT REF_5 JUMPI 4 5 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 20 32 MSTORE LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0";
+        String expected = "2 1 GT NOT REF_7 JUMPI 3 2 GT NOT REF_6 JUMPI 4 3 GT NOT REF_5 JUMPI 5 4 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 20 32 MSTORE LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0";
 
         /**
 
-         1 2 GT NOT REF_7 JUMPI
-           2 3 GT NOT REF_6 JUMPI
-             3 4 GT NOT REF_5 JUMPI
-               4 5 GT NOT REF_4 JUMPI
-                     10 0 MSTORE
-                     REF_3 JUMP
-               LABEL_4
-                     20 32 MSTORE
-               LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0
+           2 1 GT NOT REF_7 JUMPI
+              3 2 GT NOT REF_6 JUMPI
+                 4 3 GT NOT REF_5 JUMPI
+                     5 4 GT NOT REF_4 JUMPI
+                         10 0 MSTORE
+                         REF_3 JUMP
+                     LABEL_4
+                         20 32 MSTORE
+           LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0
 
          */
 
@@ -928,23 +921,15 @@ public class SerpentCompileTest {
                         "     b = 20\n" +
                         "  elif 2*2 != 4: \n" +
                         "     a = 15\n";
-        String expected = "1 2 GT NOT REF_8 JUMPI 2 3 GT NOT REF_7 JUMPI 3 4 GT NOT REF_5 JUMPI 4 5 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 20 32 MSTORE LABEL_3 REF_2 JUMP LABEL_5 4 2 2 MUL EQ NOT NOT REF_6 JUMPI 15 0 MSTORE REF_2 JUMP LABEL_6 LABEL_2 REF_1 JUMP LABEL_7 LABEL_1 REF_0 JUMP LABEL_8 LABEL_0";
+        String expected = "2 1 GT NOT REF_8 JUMPI 3 2 GT NOT REF_7 JUMPI 4 3 GT NOT REF_5 JUMPI 5 4 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 20 32 MSTORE LABEL_3 REF_2 JUMP LABEL_5 4 2 2 MUL EQ NOT NOT REF_6 JUMPI 15 0 MSTORE REF_2 JUMP LABEL_6 LABEL_2 REF_1 JUMP LABEL_7 LABEL_1 REF_0 JUMP LABEL_8 LABEL_0";
 
         /**
 
-         1 2 GT NOT REF_8 JUMPI
-           2 3 GT NOT REF_7 JUMPI
-             3 4 GT NOT REF_5 JUMPI
-               4 5 GT NOT REF_4 JUMPI
-                   10 0 MSTORE
-                   REF_3 JUMP
-               LABEL_4
-                   20 32 MSTORE
-                   LABEL_3 REF_2 JUMP
-             LABEL_5
-               4 2 2 MUL EQ NOT NOT REF_6 JUMPI
-                  15 0 MSTORE
-               REF_2 JUMP LABEL_6 LABEL_2 REF_1 JUMP LABEL_7 LABEL_1 REF_0 JUMP LABEL_8 LABEL_0
+            2 1 GT NOT REF_8 JUMPI
+               3 2 GT NOT REF_7 JUMPI
+                   4 3 GT NOT REF_5 JUMPI
+                      5 4 GT NOT REF_4 JUMPI 10 0 MSTORE REF_3 JUMP LABEL_4 20 32 MSTORE LABEL_3 REF_2 JUMP LABEL_5 4 2 2 MUL EQ NOT NOT REF_6 JUMPI 15 0 MSTORE REF_2 JUMP LABEL_6 LABEL_2 REF_1 JUMP LABEL_7 LABEL_1 REF_0 JUMP LABEL_8 LABEL_0
+
 
          */
 
@@ -971,24 +956,24 @@ public class SerpentCompileTest {
                         "else:      \n" +
                         "   a=50    \n" ;
 
-        String expected = "1 2 GT NOT REF_1 JUMPI 20 0 MSTORE REF_0 JUMP LABEL_1 1 5 LT NOT REF_2 JUMPI 30 0 MSTORE REF_0 JUMP LABEL_2 6 6 GT NOT REF_3 JUMPI 40 0 MSTORE REF_0 JUMP LABEL_3 50 0 MSTORE LABEL_0";
+        String expected = "2 1 GT NOT REF_1 JUMPI 20 0 MSTORE REF_0 JUMP LABEL_1 5 1 LT NOT REF_2 JUMPI 30 0 MSTORE REF_0 JUMP LABEL_2 6 6 GT NOT REF_3 JUMPI 40 0 MSTORE REF_0 JUMP LABEL_3 50 0 MSTORE LABEL_0";
 
         /**
 
-         1 2 GT NOT REF_1 JUMPI
-            20 0 MSTORE
-            REF_0 JUMP
-            LABEL_1
-         1 5 LT NOT REF_2 JUMPI
-            30 0 MSTORE
-            REF_0 JUMP
-            LABEL_2
-         6 6 GT NOT REF_3 JUMPI
-             40 0 MSTORE
-             REF_0 JUMP
-             LABEL_3
-         50 0 MSTORE
-         LABEL_0
+             2 1 GT NOT REF_1 JUMPI
+                 20 0 MSTORE
+                 REF_0 JUMP
+                 LABEL_1
+              5 1 LT NOT REF_2 JUMPI
+                  30 0 MSTORE
+                  REF_0 JUMP
+                  LABEL_2
+               6 6 GT NOT REF_3 JUMPI
+                  40 0 MSTORE
+                  REF_0 JUMP
+                LABEL_3
+                  50 0 MSTORE
+                  LABEL_0
 
          */
 
@@ -1010,16 +995,14 @@ public class SerpentCompileTest {
                         "while a>0:    \n" +
                         "  a = a - 1   \n"  ;
 
-        String expected = "20 0 MSTORE LABEL_0 0 0 MLOAD GT EQ NOT REF_1 JUMPI 1 0 MLOAD SUB 0 MSTORE REF_0 JUMP LABEL_1";
+        String expected = "20 0 MSTORE LABEL_0 0 MLOAD 0 GT NOT REF_1 JUMPI 1 0 MLOAD SUB 0 MSTORE REF_0 JUMP LABEL_1";
 
         /**
 
-         20 0 MSTORE
-         LABEL_0
-         0 0 MLOAD GT EQ NOT REF_1 JUMPI
-            1 0 MLOAD SUB 0 MSTORE
-            REF_0 JUMP
-         LABEL_1
+            20 0 MSTORE
+            LABEL_0 0 MLOAD 0 GT NOT REF_1 JUMPI
+               1 0 MLOAD SUB 0 MSTORE
+            REF_0 JUMP LABEL_1
 
          */
 
@@ -1044,22 +1027,18 @@ public class SerpentCompileTest {
                         "   else:             \n " +
                         "       x = 3 * x + 1 \n"  ;
 
-        String expected = "248 0 MSTORE LABEL_0 1 0 MLOAD GT EQ NOT REF_1 JUMPI 0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI 2 0 MLOAD DIV 0 MSTORE REF_2 JUMP LABEL_3 1 0 MLOAD 3 MUL ADD 0 MSTORE LABEL_2 REF_0 JUMP LABEL_1";
+        String expected = "248 0 MSTORE LABEL_0 0 MLOAD 1 GT NOT REF_1 JUMPI 0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI 2 0 MLOAD DIV 0 MSTORE REF_2 JUMP LABEL_3 1 0 MLOAD 3 MUL ADD 0 MSTORE LABEL_2 REF_0 JUMP LABEL_1";
 
         /**
 
-         248 0 MSTORE
-         LABEL_0
-         1 0 MLOAD GT EQ NOT REF_1 JUMPI
-            0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI
-            2 0 MLOAD DIV 0 MSTORE
-            REF_2 JUMP
-         LABEL_3
-            1 0 MLOAD 3 MUL ADD 0 MSTORE
-            LABEL_2
-
-         REF_0 JUMP
-         LABEL_1
+            248 0 MSTORE
+            LABEL_0 0 MLOAD 1 GT NOT REF_1 JUMPI
+                0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI
+                    2 0 MLOAD DIV 0 MSTORE
+                 REF_2 JUMP LABEL_3
+                    1 0 MLOAD 3 MUL ADD 0 MSTORE
+                 LABEL_2 REF_0 JUMP
+            LABEL_1
 
          */
 
@@ -1084,20 +1063,19 @@ public class SerpentCompileTest {
                         "x = x +2            \n" +
                         "x = 3 * x + 1        \n"  ;
 
-        String expected = "255 0 MSTORE LABEL_0 1 0 MLOAD GT EQ NOT REF_1 JUMPI 0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI 2 0 MLOAD DIV 0 MSTORE REF_2 JUMP LABEL_3 LABEL_2 REF_0 JUMP LABEL_1 2 0 MLOAD ADD 0 MSTORE 1 0 MLOAD 3 MUL ADD 0 MSTORE";
+        String expected = "255 0 MSTORE LABEL_0 0 MLOAD 1 GT NOT REF_1 JUMPI 0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI 2 0 MLOAD DIV 0 MSTORE REF_2 JUMP LABEL_3 LABEL_2 REF_0 JUMP LABEL_1 2 0 MLOAD ADD 0 MSTORE 1 0 MLOAD 3 MUL ADD 0 MSTORE";
 
         /**
 
-         255 0 MSTORE
-         LABEL_0
-         1 0 MLOAD GT EQ NOT REF_1 JUMPI
+          255 0 MSTORE
+          LABEL_0 0 MLOAD 1 GT NOT REF_1 JUMPI
              0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI
-                 2 0 MLOAD DIV 0 MSTORE REF_2 JUMP
-                 LABEL_3 LABEL_2
-         REF_0 JUMP
-         LABEL_1
-         2 0 MLOAD ADD 0 MSTORE
-         1 0 MLOAD 3 MUL ADD 0 MSTORE
+               2 0 MLOAD DIV 0 MSTORE
+               REF_2 JUMP LABEL_3 LABEL_2
+          REF_0 JUMP LABEL_1
+          2 0 MLOAD ADD 0 MSTORE
+          1 0 MLOAD 3 MUL ADD 0 MSTORE
+
 
          */
 
@@ -1145,15 +1123,14 @@ public class SerpentCompileTest {
                         "while (x > 1) && (x > 2) && (x >    3) && (2 <9):\n" +
                         "   x = x -2\n"  ;
 
-        String expected = "255 0 MSTORE LABEL_0 9 2 LT 3 0 MLOAD GT 2 0 MLOAD GT 1 0 MLOAD GT NOT NOT MUL NOT NOT MUL NOT NOT MUL EQ NOT REF_1 JUMPI 2 0 MLOAD SUB 0 MSTORE REF_0 JUMP LABEL_1";
+        String expected = "255 0 MSTORE LABEL_0 2 9 LT 0 MLOAD 3 GT 0 MLOAD 2 GT 0 MLOAD 1 GT NOT NOT MUL NOT NOT MUL NOT NOT MUL NOT REF_1 JUMPI 2 0 MLOAD SUB 0 MSTORE REF_0 JUMP LABEL_1";
 
         /**
 
-         255 0 MSTORE
-         LABEL_0
-         9 2 LT 3 0 MLOAD GT 2 0 MLOAD GT 1 0 MLOAD GT NOT NOT MUL NOT NOT MUL NOT NOT MUL EQ NOT REF_1 JUMPI
-           2 0 MLOAD SUB 0 MSTORE
-           REF_0 JUMP
+         255 0 MSTORE LABEL_0
+            2 9 LT 0 MLOAD 3 GT 0 MLOAD 2 GT 0 MLOAD 1 GT NOT NOT MUL NOT NOT MUL NOT NOT MUL NOT REF_1 JUMPI
+             2 0 MLOAD SUB 0 MSTORE
+             REF_0 JUMP
          LABEL_1
 
          */
