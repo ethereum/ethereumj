@@ -311,6 +311,21 @@ public class SerpentEditor extends JFrame {
             final JButton button = new JButton(imageIcon);
             button.setToolTipText("Save File < Ctrl + S >");
 
+
+            Action saveNewFile = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
+
+            mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
+                    put(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK),
+                            "OpenSaveButtonAlways");
+
+            mainContentPane.getActionMap().put("OpenSaveButtonAlways",saveNewFile);
+
+
             Action saveFile = new AbstractAction() {
                 @Override
                 public void actionPerformed(ActionEvent e) {
@@ -330,12 +345,16 @@ public class SerpentEditor extends JFrame {
                         public void actionPerformed(ActionEvent e) {
 
                             File file = null;
-                            if (fileChooser == null || fileChooser.getSelectedFile() == null) {
+
+                            if (e.getModifiers() == (InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK)){
                                 file = callFileChooser();
-                                if (fileChooser.getSelectedFile() == null)
+                                if (file == null)
                                     return;
-                            }
-                            else{
+                            } else if (fileChooser == null || fileChooser.getSelectedFile() == null) {
+                                file = callFileChooser();
+                                if (file == null)
+                                    return;
+                            } else{
                                     file = fileChooser.getSelectedFile();
                             }
 
