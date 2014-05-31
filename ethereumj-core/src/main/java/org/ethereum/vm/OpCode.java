@@ -21,12 +21,12 @@ public enum OpCode {
 	SMOD(0x07),
 	EXP(0x08),
 	NEG(0x09),
-	LT(0x0a),
-    SLT(0x0b),
-    SGT(0x0c),
-	GT(0x0b),
-	EQ(0x0c),
-	NOT(0x0d),
+	LT(0X0A),
+    SLT(0X0B),
+    SGT(0X0C),
+	GT(0X0D),
+	EQ(0X0E),
+	NOT(0X0F),
 
 
 

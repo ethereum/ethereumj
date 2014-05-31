@@ -123,7 +123,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
                 ctx.getChild(4);
 
         String retCode =
-                String.format(" LABEL_%d %s EQ NOT REF_%d JUMPI %s REF_%d JUMP LABEL_%d ",
+                String.format(" LABEL_%d %s NOT REF_%d JUMPI %s REF_%d JUMP LABEL_%d ",
                             whileStartRef, visitCondition(whileCondition), whileEndRef, visitBlock(whileBlock), whileStartRef, whileEndRef);
 
         return retCode;
@@ -264,8 +264,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         if (ctx.rel_exp() == null) return visit(ctx.add_expr());
 
-        String operand0 = visit(ctx.rel_exp());
-        String operand1 = visit(ctx.add_expr());
+        String operand0 = visit(ctx.add_expr());
+        String operand1 = visit(ctx.rel_exp());
 
         switch (ctx.OP_REL().getText().toLowerCase()) {
             case "<":  return operand1 + " " + operand0 + " LT";
