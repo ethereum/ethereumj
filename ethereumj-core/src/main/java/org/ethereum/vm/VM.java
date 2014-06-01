@@ -2,6 +2,9 @@ package org.ethereum.vm;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.ethereum.vm.Program.DataWord;
+
+import java.math.BigInteger;
 
 import static org.ethereum.vm.OpCode.PUSH1;
 
@@ -28,38 +31,38 @@ public class VM {
              * Stop and Arithmetic Operations
              */
 
-            case STOP:
-                break;
-            case ADD:
-                break;
-            case MUL:
-                break;
-            case SUB:
-                break;
-            case DIV:
-                break;
-            case SDIV:
-                break;
-            case MOD:
-                break;
-            case SMOD:
-                break;
-            case EXP:
-                break;
-            case NEG:
-                break;
-            case LT:
-                break;
-            case SLT:
-                break;
-            case SGT:
-                break;
-            case GT:
-                break;
-            case EQ:
-                break;
-            case NOT:
-                break;
+//            case STOP:
+//                break;
+//            case ADD:
+//                break;
+//            case MUL:
+//                break;
+//            case SUB:
+//                break;
+//            case DIV:
+//                break;
+//            case SDIV:
+//                break;
+//            case MOD:
+//                break;
+//            case SMOD:
+//                break;
+//            case EXP:
+//                break;
+//            case NEG:
+//                break;
+//            case LT:
+//                break;
+//            case SLT:
+//                break;
+//            case SGT:
+//                break;
+//            case GT:
+//                break;
+//            case EQ:
+//                break;
+//            case NOT:
+//                break;
 
 
 
@@ -67,21 +70,36 @@ public class VM {
              * Bitwise Logic Operations
              */
 
-            case AND:
-                break;
-            case OR:
-                break;
-            case XOR:
-                break;
-            case BYTE:
-                break;
+            case AND:{
+                DataWord word1 = program.stackPull();
+                DataWord word2 = program.stackPull();
+                word1.and(word2);
+                program.stackPush(word1);
+            }
+            break;
+            case OR: {
+                DataWord word1 = program.stackPull();
+                DataWord word2 = program.stackPull();
+                word1.or(word2);
+                program.stackPush(word1);
+            }
+            break;
+            case XOR: {
+                DataWord word1 = program.stackPull();
+                DataWord word2 = program.stackPull();
+                word1.xor(word2);
+                program.stackPush(word1);
+            }
+            break;
+//            case BYTE:
+//                break;
 
             /**
              * SHA3
              */
 
-            case SHA3:
-                break;
+//            case SHA3:
+//                break;
 
             /**
              * Environmental Information
@@ -194,11 +212,19 @@ public class VM {
 
                 byte[] data = program.sweep(nPush);
                 program.stackPush(data);
-                program.fullTrace();
+                break;
+            case CREATE:
+                break;
+            case CALL:
+                break;
+            case RETURN:
+                break;
+            case SUICIDE:
                 break;
             default:
 
         }
+        program.fullTrace();
 
 
 

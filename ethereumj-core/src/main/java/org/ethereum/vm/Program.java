@@ -41,10 +41,14 @@ public class Program {
 
 
     public void stackPush(byte[] data){
-
         DataWord stackWord = new DataWord(data);
         stack.push(stackWord);
     }
+
+    public void stackPush(DataWord stackWord){
+        stack.push(stackWord);
+    }
+
 
     public void step(){
         ++pc;
@@ -59,7 +63,11 @@ public class Program {
         return data;
     }
 
-    public void stackPull(){};
+    public DataWord stackPull(){
+
+        if (stack.size() == 0) throw new RuntimeException("required pull for empty stack");
+        return stack.pop();
+    };
 
     public void memorySave(byte[] addrB, byte[] value){
 
@@ -138,7 +146,7 @@ public class Program {
                 if (i != pc)
                     opsString.append(tmpString);
                 else
-                    opsString.append(" >>").append(tmpString).append( "");
+                    opsString.append(" >>").append(tmpString).append("");
 
             }
             if (pc >= ops.length) opsString.append(" >>");
@@ -170,6 +178,33 @@ public class Program {
 
         public String toString(){
             return Hex.toHexString(data);
+        }
+
+        public DataWord and(DataWord w2){
+
+            for (int i = 0; i < this.data.length; ++i){
+                this.data[i] &= w2.data[i];
+            }
+
+            return this;
+        }
+
+        public DataWord or(DataWord w2){
+
+            for (int i = 0; i < this.data.length; ++i){
+                this.data[i] |= w2.data[i];
+            }
+
+            return this;
+        }
+
+        public DataWord xor(DataWord w2){
+
+            for (int i = 0; i < this.data.length; ++i){
+                this.data[i] ^= w2.data[i];
+            }
+
+            return this;
         }
     }
 }
