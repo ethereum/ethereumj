@@ -2,8 +2,8 @@ package org.ethereum.vm;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.ethereum.vm.Program.DataWord;
 
+import javax.xml.crypto.Data;
 import java.math.BigInteger;
 
 import static org.ethereum.vm.OpCode.PUSH1;
@@ -16,6 +16,8 @@ import static org.ethereum.vm.OpCode.PUSH1;
 
 public class VM {
 
+    static private BigInteger _32_ = BigInteger.valueOf(32);
+
     Logger logger = LoggerFactory.getLogger("VM");
 
 
@@ -23,6 +25,7 @@ public class VM {
 
 
         byte op = program.getCurrentOp();
+        logger.debug("Op: {}" ,OpCode.code(op).name());
 
         switch (OpCode.code(op)){
 
@@ -49,20 +52,64 @@ public class VM {
 //                break;
 //            case EXP:
 //                break;
-//            case NEG:
-//                break;
-//            case LT:
-//                break;
+            case NEG:{
+                DataWord word1 = program.stackPull();
+                word1.negate();
+                program.stackPush(word1);
+                program.step();
+            }break;
+            case LT:{
+                DataWord word1 = program.stackPull();
+                DataWord word2 = program.stackPull();
+                if (word1.value().compareTo(word2.value()) == -1){
+                    word1.and(DataWord.ZERO);
+                    word1.getData()[31] = 1;
+                } else {
+                    word1.and(DataWord.ZERO);
+                }
+                program.stackPush(word1);
+                program.step();
+            }break;
 //            case SLT:
 //                break;
 //            case SGT:
 //                break;
-//            case GT:
-//                break;
-//            case EQ:
-//                break;
-//            case NOT:
-//                break;
+            case GT:{
+                DataWord word1 = program.stackPull();
+                DataWord word2 = program.stackPull();
+                if (word1.value().compareTo(word2.value()) == 1){
+                    word1.and(DataWord.ZERO);
+                    word1.getData()[31] = 1;
+                } else {
+                    word1.and(DataWord.ZERO);
+                }
+                program.stackPush(word1);
+                program.step();
+            }break;
+            case EQ:{
+                DataWord word1 = program.stackPull();
+                DataWord word2 = program.stackPull();
+                if (word1.xor(word2).isZero()){
+                    word1.and(DataWord.ZERO);
+                    word1.getData()[31] = 1;
+                } else {
+                    word1.and(DataWord.ZERO);
+                }
+                program.stackPush(word1);
+                program.step();
+            }
+            break;
+            case NOT: {
+                DataWord word1 = program.stackPull();
+                if (word1.isZero()){
+                    word1.getData()[31] = 1;
+                } else {
+                    word1.and(DataWord.ZERO);
+                }
+                program.stackPush(word1);
+                program.step();
+            }
+            break;
 
 
 
@@ -75,6 +122,7 @@ public class VM {
                 DataWord word2 = program.stackPull();
                 word1.and(word2);
                 program.stackPush(word1);
+                program.step();
             }
             break;
             case OR: {
@@ -82,6 +130,7 @@ public class VM {
                 DataWord word2 = program.stackPull();
                 word1.or(word2);
                 program.stackPush(word1);
+                program.step();
             }
             break;
             case XOR: {
@@ -89,10 +138,27 @@ public class VM {
                 DataWord word2 = program.stackPull();
                 word1.xor(word2);
                 program.stackPush(word1);
+                program.step();
             }
             break;
-//            case BYTE:
-//                break;
+            case BYTE:{
+
+                DataWord word1 = program.stackPull();
+                DataWord word2 = program.stackPull();
+
+                DataWord result = null;
+                if (word1.value().compareTo(_32_) == -1){
+                    byte tmp = word2.getData()[word1.value().intValue()];
+                    word2.and(DataWord.ZERO);
+                    word2.getData()[31] = tmp;
+                    result = word2;
+                } else
+                    result = new DataWord();
+
+                program.stackPush(result);
+                program.step();
+            }
+            break;
 
             /**
              * SHA3
@@ -206,7 +272,6 @@ public class VM {
             case PUSH31:
             case PUSH32:
 
-                logger.debug("Op: {}" ,OpCode.code(op).name());
                 program.step();
                 int nPush = op - PUSH1.val() + 1;
 

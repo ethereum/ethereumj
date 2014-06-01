@@ -22,9 +22,9 @@ public enum OpCode {
 	EXP(0x08),
 	NEG(0x09),
 	LT(0X0A),
-    SLT(0X0B),
-    SGT(0X0C),
-	GT(0X0D),
+    GT(0X0B),
+    SLT(0X0C),
+    SGT(0X0D),
 	EQ(0X0E),
 	NOT(0X0F),
 
