@@ -475,7 +475,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
     }
 
     @Test  // AND OP
@@ -591,6 +591,342 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test  // BYTE OP
+    public void testBYTE_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("65AABBCCDDEEFF601E13"));
+        String expected = "00000000000000000000000000000000000000000000000000000000000000EE";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+    }
+
+    @Test  // BYTE OP
+    public void testBYTE_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("65AABBCCDDEEFF602013"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+    }
+
+    @Test  // BYTE OP
+    public void testBYTE_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("65AABBCCDDEE3A601F13"));
+        String expected = "000000000000000000000000000000000000000000000000000000000000003A";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+    }
+
+
+    @Test  // BYTE OP mal data
+    public void testBYTE_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("65AABBCCDDEE3A13"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+    @Test  // NOT OP
+    public void testNOT_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60000F"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+    }
+
+    @Test  // NOT OP
+    public void testNOT_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602A0F"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+    }
+
+    @Test  // NOT OP mal data
+    public void testNOT_3(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("0F"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+    @Test  // EQ OP
+    public void testEQ_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602A602A0E"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+    }
+
+    @Test  // EQ OP
+    public void testEQ_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("622A3B4C622A3B4C0E"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+    }
+
+    @Test  // EQ OP
+    public void testEQ_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("622A3B5C622A3B4C0E"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // EQ OP mal data
+    public void testEQ_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("622A3B4C0E"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+    @Test  // GT OP
+    public void testGT_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600160020B"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // GT OP
+    public void testGT_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6001610F000B"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // GT OP
+    public void testGT_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6301020304610F000B"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // GT OP mal data
+    public void testGT_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("622A3B4C0B"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test  // LT OP
+    public void testLT_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600160020A"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // LT OP
+    public void testLT_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6001610F000A"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // LT OP
+    public void testLT_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6301020304610F000A"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // LT OP mal data
+    public void testLT_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("622A3B4C0A"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test  // NEG OP
+    public void testNEG_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600109"));
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // NEG OP
+    public void testNEG_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61A00309"));
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5FFD";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // NEG OP
+    public void testNEG_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61000009"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+    }
+
+    @Test  // NEG OP
+    public void testNEG_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("09"));
+
+            vm.step(program);
+            vm.step(program);
+
         } catch (RuntimeException e) {
             return;
         }

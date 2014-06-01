@@ -65,7 +65,7 @@ public class Program {
 
     public DataWord stackPull(){
 
-        if (stack.size() == 0) throw new RuntimeException("required pull for empty stack");
+        if (stack.size() == 0) throw new RuntimeException("attempted pull action for empty stack");
         return stack.pop();
     };
 
@@ -161,50 +161,4 @@ public class Program {
         };
     }
 
-    class DataWord {
-
-        byte[] data = new byte[32];
-
-        public DataWord(byte[] data){
-            if (data == null || data.length > 32)
-                throw new RuntimeException("bad push data: " +  data);
-
-            System.arraycopy(data, 0, this.data, 32 - data.length,  data.length);
-        }
-
-        public byte[] getData() {
-            return data;
-        }
-
-        public String toString(){
-            return Hex.toHexString(data);
-        }
-
-        public DataWord and(DataWord w2){
-
-            for (int i = 0; i < this.data.length; ++i){
-                this.data[i] &= w2.data[i];
-            }
-
-            return this;
-        }
-
-        public DataWord or(DataWord w2){
-
-            for (int i = 0; i < this.data.length; ++i){
-                this.data[i] |= w2.data[i];
-            }
-
-            return this;
-        }
-
-        public DataWord xor(DataWord w2){
-
-            for (int i = 0; i < this.data.length; ++i){
-                this.data[i] ^= w2.data[i];
-            }
-
-            return this;
-        }
-    }
 }
