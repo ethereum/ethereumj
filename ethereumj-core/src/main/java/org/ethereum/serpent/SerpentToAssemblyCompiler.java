@@ -326,7 +326,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             throw new Error("array with that name was not defined");
         }
 
-        int allocSize = 0;
+        int allocSize = 32;
         for (int i = 0; i < order; ++i ){
             String var = arraysIndex.get(i);
             allocSize += arraysSize.get(var);
