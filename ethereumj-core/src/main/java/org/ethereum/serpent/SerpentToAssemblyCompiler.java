@@ -24,7 +24,6 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     private List<String> arraysIndex = new ArrayList<String>();
 
 
-
     @Override
     public String visitParse(@NotNull SerpentParser.ParseContext ctx) {
 

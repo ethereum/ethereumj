@@ -160,6 +160,10 @@ public enum OpCode {
         return type;
     }
 
+    public byte val(){
+        return opcode;
+    }
+
     public int asInt() {
     	return opcode;
     }
@@ -171,5 +175,9 @@ public enum OpCode {
 
     public static byte byteVal(String code){
         return stringToByteMap.get(code);
+    }
+
+    public static OpCode code(byte op){
+        return intToTypeMap.get(op);
     }
 }
