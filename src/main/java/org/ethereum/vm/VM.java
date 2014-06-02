@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.crypto.Data;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 
 import static org.ethereum.vm.OpCode.PUSH1;
 
@@ -34,24 +35,24 @@ public class VM {
              * Stop and Arithmetic Operations
              */
 
-//            case STOP:
-//                break;
-//            case ADD:
-//                break;
-//            case MUL:
-//                break;
-//            case SUB:
-//                break;
-//            case DIV:
-//                break;
-//            case SDIV:
-//                break;
-//            case MOD:
-//                break;
-//            case SMOD:
-//                break;
-//            case EXP:
-//                break;
+            case STOP:
+                break;
+            case ADD:
+                break;
+            case MUL:
+                break;
+            case SUB:
+                break;
+            case DIV:
+                break;
+            case SDIV:
+                break;
+            case MOD:
+                break;
+            case SMOD:
+                break;
+            case EXP:
+                break;
             case NEG:{
                 DataWord word1 = program.stackPull();
                 word1.negate();
@@ -236,31 +237,71 @@ public class VM {
             break;
             case MLOAD:{
                 DataWord addr =  program.stackPull();
-                DataWord data = program.memoryLoad(addr);
+                DataWord data =  program.memoryLoad(addr);
                 program.stackPush(data);
                 program.step();
             }
             break;
             case MSTORE:{
-                DataWord addr =  program.stackPull();
+                DataWord addr  =  program.stackPull();
                 DataWord value =  program.stackPull();
 
                 program.memorySave(addr, value);
                 program.step();
             }
             break;
-            case MSTORE8:
-                break;
-            case SLOAD:
-                break;
-            case SSTORE:
-                break;
-            case JUMP:
-                break;
-            case JUMPI:
-                break;
-            case PC:
-                break;
+            case MSTORE8:{
+
+                DataWord addr  =  program.stackPull();
+                DataWord value =  program.stackPull();
+                byte[] byteVal = {value.getData()[31]};
+                program.memorySave(addr.getData(), byteVal);
+                program.step();
+            }
+            break;
+            case SLOAD:{
+                DataWord key =  program.stackPull();
+                DataWord val = program.storageLoad(key);
+
+                if (val == null){
+                    val = key.and(DataWord.ZERO);
+                }
+                program.stackPush(val);
+                program.step();
+            }
+            break;
+            case SSTORE:{
+                DataWord addr  =  program.stackPull();
+                DataWord value =  program.stackPull();
+
+                program.storageSave(addr, value);
+                program.step();
+            }
+            break;
+            case JUMP:{
+                DataWord pos  =  program.stackPull();
+                program.setPC(pos);
+            }
+            break;
+            case JUMPI:{
+                DataWord pos   =  program.stackPull();
+                DataWord cond  =  program.stackPull();
+
+                if (!cond.isZero()){
+                    program.setPC(pos);
+                } else{
+                    program.step();
+                }
+            }
+            break;
+            case PC:{
+                int pc = program.getPC();
+                DataWord pcWord = new DataWord(pc);
+
+                program.stackPush(pcWord);
+                program.step();
+            }
+            break;
             case MEMSIZE:
                 break;
             case GAS:

@@ -1245,4 +1245,323 @@ public class VMTest {
         fail();
     }
 
+
+    @Test // MSTORE8 OP
+    public void testMSTORE8_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6011600055"));
+        String m_expected = "1100000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+    }
+
+
+    @Test // MSTORE8 OP
+    public void testMSTORE8_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6022600155"));
+        String m_expected = "0022000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+    }
+
+    @Test // MSTORE8 OP
+    public void testMSTORE8_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6022602155"));
+        String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
+                            "0022000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+    }
+
+    @Test // MSTORE8 OP mal
+    public void testMSTORE8_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("602255"));
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+
+    }
+
+
+    @Test // SSTORE OP
+    public void testSSTORE_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602260AA57"));
+        String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000AA";
+        String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord key = program.storage.keySet().iterator().next();
+        Assert.assertEquals(s_expected_key,
+                Hex.toHexString(key.getData()).toUpperCase());
+
+        DataWord val = program.storage.get(key);
+        Assert.assertEquals(s_expected_val,
+                Hex.toHexString(val.getData()).toUpperCase());
+
+    }
+
+    @Test // SSTORE OP
+    public void testSSTORE_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602260AA57602260BB57"));
+        String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000BB";
+        String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord key = program.storage.keySet().iterator().next();
+        Assert.assertEquals(s_expected_key,
+                Hex.toHexString(key.getData()).toUpperCase());
+
+        DataWord val = program.storage.get(key);
+        Assert.assertEquals(s_expected_val,
+                Hex.toHexString(val.getData()).toUpperCase());
+
+    }
+
+
+    @Test // SSTORE OP
+    public void testSSTORE_3(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("602257"));
+
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test // SLOAD OP
+    public void testSLOAD_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60AA56"));
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test // SLOAD OP
+    public void testSLOAD_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602260AA5760AA56"));
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000022";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test // SLOAD OP
+    public void testSLOAD_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602260AA57603360CC5760CC56"));
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000033";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+
+    @Test // SLOAD OP
+    public void testSLOAD_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("56"));
+
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+    @Test // PC OP
+    public void testPC_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("5A"));
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+
+    @Test // PC OP
+    public void testPC_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602260AA5760AA565A"));
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000008";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+
+    @Test // JUMP OP
+    public void testJUMP_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60AA60BB600C5860CC60DD60EE60FF"));
+        String s_expected = "00000000000000000000000000000000000000000000000000000000000000FF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test // JUMP OP mal data
+    public void testJUMP_2(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("600C5860CC60DD60EE60FF"));
+
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test // JUMPI OP
+    public void testJUMPI_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600160055960CC"));
+        String s_expected = "00000000000000000000000000000000000000000000000000000000000000CC";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+
+    @Test // JUMPI OP
+    public void testJUMPI_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("630000000060445960CC60DD"));
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000000DD";
+        String s_expected_2 = "00000000000000000000000000000000000000000000000000000000000000CC";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        DataWord item2 = program.stack.pop();
+
+        Assert.assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        Assert.assertEquals(s_expected_2, Hex.toHexString(item2.data).toUpperCase());
+    }
+
+    @Test // JUMPI OP mal
+    public void testJUMPI_3(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("600159"));
+
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+    @Test // JUMPI OP mal
+    public void testJUMPI_4(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("6001602259"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
 }
