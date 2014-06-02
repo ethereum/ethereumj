@@ -92,7 +92,7 @@ public class Utils {
 
     public static String oneByteToHexString(byte value){
 
-        String retVal = Integer.toString(value, 16);
+        String retVal = Integer.toString(value & 0xFF, 16);
         if (retVal.length() == 1) retVal = "0" + retVal;
         return retVal;
     }

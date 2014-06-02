@@ -212,16 +212,43 @@ public class VM {
                 break;
 
 
-            case POP:
-                break;
-            case DUP:
-                break;
-            case SWAP:
-                break;
-            case MLOAD:
-                break;
-            case MSTORE:
-                break;
+            case POP:{
+                program.stackPull();
+                program.step();
+            }
+            break;
+            case DUP:{
+                DataWord word_1 =  program.stackPull();
+                DataWord word_2 = word_1.clone();
+                program.stackPush(word_1);
+                program.stackPush(word_2);
+                program.step();
+            }
+            break;
+            case SWAP:{
+                DataWord word_1 =  program.stackPull();
+                DataWord word_2 =  program.stackPull();
+
+                program.stackPush(word_1);
+                program.stackPush(word_2);
+                program.step();
+            }
+            break;
+            case MLOAD:{
+                DataWord addr =  program.stackPull();
+                DataWord data = program.memoryLoad(addr);
+                program.stackPush(data);
+                program.step();
+            }
+            break;
+            case MSTORE:{
+                DataWord addr =  program.stackPull();
+                DataWord value =  program.stackPull();
+
+                program.memorySave(addr, value);
+                program.step();
+            }
+            break;
             case MSTORE8:
                 break;
             case SLOAD:
