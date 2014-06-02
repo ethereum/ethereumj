@@ -26,7 +26,7 @@ public class Program {
     ByteBuffer memory = null;
 
     byte[] ops;
-    int   pc = 0;
+    int    pc = 0;
 
     public Program(byte[] ops) {
 
@@ -69,25 +69,58 @@ public class Program {
         return stack.pop();
     };
 
-    public void memorySave(byte[] addrB, byte[] value){
+    public void memorySave(DataWord addrB, DataWord value){
+        memorySave(addrB.data, value.data);
+    }
 
-        BigInteger address = new BigInteger(1, addrB);
+    public void memorySave(byte[] addr, byte[] value){
+
+        int address = new BigInteger(1, addr).intValue();
+        allocateMemory(address, value);
+
+        System.arraycopy(value, 0, memory.array(), address, value.length);
+    }
+
+    public DataWord memoryLoad(DataWord addr){
+
+        int address = new BigInteger(1, addr.getData()).intValue();
+        allocateMemory(address, DataWord.ZERO.data);
+
+        byte[] data = new byte[32];
+        System.arraycopy(memory.array(), address,  data , 0  ,32);
+
+        return new DataWord(data);
+    }
+
+    private void allocateMemory(int address, byte[] value){
 
         int memSize = 0;
         if (memory != null) memSize = memory.limit();
 
-        if (memSize < address.intValue()){
+        // check if you need to allocate
+        if (memSize < (address + value.length)){
 
-            int sizeToAllocate = address.intValue() + (32 - address.intValue() % 32);
+            int sizeToAllocate = 0;
+            if (memSize > address){
+
+                sizeToAllocate = memSize + value.length;
+            } else {
+                sizeToAllocate = memSize + (address - memSize) + value.length;
+            }
+
+            // complete to 32
+            sizeToAllocate = (sizeToAllocate % 32)==0 ? sizeToAllocate :
+                                                        sizeToAllocate + (32 - sizeToAllocate % 32);
+
+            sizeToAllocate = (sizeToAllocate == 0)? 32: sizeToAllocate;
+
             ByteBuffer tmpMem = ByteBuffer.allocate(sizeToAllocate);
-            if (memory != null) tmpMem.put(memory);
+            if (memory != null)
+                System.arraycopy(memory.array(), 0, tmpMem.array(), 0, memory.limit());
+
             memory = tmpMem;
         }
-        System.arraycopy(value, 0, memory.array(), address.intValue(), value.length);
     }
-
-
-    public void memoryLoad(){};
 
     public void storageSave(byte[] key, byte[] val){
 
@@ -127,10 +160,10 @@ public class Program {
 
                 if ((i + 1) % 16 == 0) {
 
-                    String tmp = String.format(" [%4s]-[%4s]", Integer.toString(i, 16),
-                            Integer.toString(i - 15, 16)).replace(" ", "0");
-                    memoryData.append(tmp).append(" ");
-                    memoryData.append(oneLine.reverse());
+                    String tmp = String.format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
+                            Integer.toString(i, 16)).replace(" ", "0");
+                    memoryData.append("" ).append(tmp).append(" ");
+                    memoryData.append(oneLine);
                     if (i < memory.limit()) memoryData.append("\n");
                     oneLine.setLength(0);
                 }

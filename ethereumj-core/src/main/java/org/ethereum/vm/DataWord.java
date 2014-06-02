@@ -1,5 +1,7 @@
 package org.ethereum.vm;
 
+import com.fasterxml.jackson.databind.ser.std.ArraySerializerBase;
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -46,10 +48,6 @@ public class DataWord {
         return result == 0;
     }
 
-    public String toString(){
-        return Hex.toHexString(data);
-    }
-
     public DataWord and(DataWord w2){
 
         for (int i = 0; i < this.data.length; ++i){
@@ -92,5 +90,13 @@ public class DataWord {
         }
     }
 
+
+    public String toString(){
+        return Hex.toHexString(data);
+    }
+
+    public DataWord clone(){
+        return new DataWord(Arrays.clone(data));
+    }
 
 }

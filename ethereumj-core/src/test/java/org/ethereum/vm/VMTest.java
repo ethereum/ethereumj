@@ -25,7 +25,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH2 OP
@@ -38,7 +38,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH3 OP
@@ -51,7 +51,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH4 OP
@@ -64,7 +64,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH5 OP
@@ -77,7 +77,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH6 OP
@@ -90,7 +90,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH7 OP
@@ -103,7 +103,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH8 OP
@@ -116,7 +116,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH9 OP
@@ -129,7 +129,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
 
@@ -143,7 +143,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH11 OP
@@ -156,7 +156,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH12 OP
@@ -169,7 +169,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH13 OP
@@ -182,7 +182,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH14 OP
@@ -195,7 +195,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH15 OP
@@ -208,7 +208,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH16 OP
@@ -221,7 +221,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH17 OP
@@ -234,7 +234,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH18 OP
@@ -247,7 +247,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH19 OP
@@ -260,7 +260,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH20 OP
@@ -273,7 +273,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH21 OP
@@ -286,7 +286,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH22 OP
@@ -299,7 +299,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH23 OP
@@ -312,7 +312,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH24 OP
@@ -325,7 +325,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH25 OP
@@ -338,7 +338,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH26 OP
@@ -351,7 +351,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH27 OP
@@ -364,7 +364,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH28 OP
@@ -377,7 +377,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH29 OP
@@ -390,7 +390,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH30 OP
@@ -403,7 +403,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH31 OP
@@ -416,7 +416,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSH32 OP
@@ -429,7 +429,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // PUSHN OP mal data
@@ -475,7 +475,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // AND OP
@@ -489,7 +489,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // AND OP mal data
@@ -519,7 +519,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // OR OP
@@ -533,7 +533,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // OR OP mal data
@@ -563,7 +563,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // XOR OP
@@ -577,7 +577,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
 
@@ -609,7 +609,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // BYTE OP
@@ -623,7 +623,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // BYTE OP
@@ -637,7 +637,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
 
@@ -667,7 +667,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // NOT OP
@@ -680,7 +680,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // NOT OP mal data
@@ -710,7 +710,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // EQ OP
@@ -724,7 +724,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase()  );
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
     @Test  // EQ OP
@@ -738,7 +738,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // EQ OP mal data
@@ -769,7 +769,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // GT OP
@@ -783,7 +783,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // GT OP
@@ -797,7 +797,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // GT OP mal data
@@ -829,7 +829,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // LT OP
@@ -843,7 +843,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // LT OP
@@ -857,7 +857,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // LT OP mal data
@@ -888,7 +888,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // NEG OP
@@ -901,7 +901,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // NEG OP
@@ -914,7 +914,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Assert.assertEquals(expected, Hex.toHexString(program.stack.get(0).data).toUpperCase());
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // NEG OP
@@ -927,6 +927,318 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
 
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test // POP OP
+    public void testPOP_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61000060016200000250"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test // POP OP
+    public void testPOP_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6100006001620000025050"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test  // POP OP mal data
+    public void testPOP_3(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("61000060016200000250505050"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+    @Test // DUP OP
+    public void testDUP_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("601251"));
+        String expected     = "0000000000000000000000000000000000000000000000000000000000000012";
+        int    expectedLen  = 2;
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        Assert.assertEquals(expectedLen, program.stack.toArray().length);
+
+    }
+
+
+    @Test  // DUP OP mal data
+    public void testDUP_2(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("51"));
+
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+
+    @Test // SWAP OP
+    public void testSWAP_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6011602252"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000000011";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test // SWAP OP
+    public void testSWAP_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60116022623333335252"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000333333";
+        int    expectedLen  = 3;
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        Assert.assertEquals(expectedLen, program.stack.toArray().length);
+    }
+
+    @Test // MSTORE OP
+    public void testMSTORE_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("611234600054"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000001234";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.memory.array()));
+    }
+
+    @Test // MSTORE OP
+    public void testMSTORE_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("611234600054615566602054"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000001234" +
+                          "0000000000000000000000000000000000000000000000000000000000005566";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.memory.array()));
+    }
+
+    @Test // MSTORE OP
+    public void testMSTORE_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("611234600054615566602054618888600054"));
+        String expected = "0000000000000000000000000000000000000000000000000000000000008888" +
+                          "0000000000000000000000000000000000000000000000000000000000005566";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.memory.array()));
+    }
+
+    @Test // MSTORE OP
+    public void testMSTORE_4(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61123460A054"));
+        String expected = "" +
+                "0000000000000000000000000000000000000000000000000000000000000000" +
+                "0000000000000000000000000000000000000000000000000000000000000000" +
+                "0000000000000000000000000000000000000000000000000000000000000000" +
+                "0000000000000000000000000000000000000000000000000000000000000000" +
+                "0000000000000000000000000000000000000000000000000000000000000000" +
+                "0000000000000000000000000000000000000000000000000000000000001234";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(expected, Hex.toHexString(program.memory.array()));
+    }
+
+
+    @Test // MSTORE OP
+    public void testMSTORE_5(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("61123454"));
+
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            return;
+        }
+        fail();
+    }
+
+    @Test // MLOAD OP
+    public void testMLOAD_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600053"));
+        String m_expected = "0000000000000000000000000000000000000000000000000000000000000000";
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test // MLOAD OP
+    public void testMLOAD_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602253"));
+        String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
+                          "0000000000000000000000000000000000000000000000000000000000000000" +
+                          "0000000000000000000000000000000000000000000000000000000000000000";
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+
+    @Test // MLOAD OP
+    public void testMLOAD_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602053"));
+        String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
+                            "0000000000000000000000000000000000000000000000000000000000000000";
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+
+    }
+
+    @Test // MLOAD OP
+    public void testMLOAD_4(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("611234602054602053"));
+        String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
+                            "0000000000000000000000000000000000000000000000000000000000001234";
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000001234";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test // MLOAD OP
+    public void testMLOAD_5(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("611234602054601F53"));
+        String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
+                            "0000000000000000000000000000000000000000000000000000000000001234";
+        String s_expected = "0000000000000000000000000000000000000000000000000000000000000012";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        Assert.assertEquals(m_expected, Hex.toHexString(program.memory.array()));
+        Assert.assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+
+    @Test // MLOAD OP mal data
+    public void testMLOAD_6(){
+
+        try {
+            VM vm = new VM();
+            Program program = new Program(Hex.decode("53"));
+
+            vm.step(program);
         } catch (RuntimeException e) {
             return;
         }
