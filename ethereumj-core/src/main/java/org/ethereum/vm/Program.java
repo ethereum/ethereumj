@@ -49,6 +49,19 @@ public class Program {
         stack.push(stackWord);
     }
 
+    public int getPC() {
+        return pc;
+    }
+
+    public void setPC(DataWord pc) {
+        this.pc = pc.value().intValue();
+
+        if (this.pc > ops.length) throw new RuntimeException("pc overflow pc: " + pc);
+    }
+
+    public void setPC(int pc) {
+        this.pc = pc;
+    }
 
     public void step(){
         ++pc;
@@ -122,15 +135,20 @@ public class Program {
         }
     }
 
-    public void storageSave(byte[] key, byte[] val){
+    public void storageSave(DataWord word1, DataWord word2){
+        storageSave(word1.getData(), word2.getData());
+    }
 
+    public void storageSave(byte[] key, byte[] val){
         DataWord keyWord = new DataWord(key);
         DataWord valWord = new DataWord(val);
         storage.put(keyWord, valWord);
     }
 
 
-    public void storageLoad(){}
+    public DataWord storageLoad(DataWord key){
+        return storage.get(key);
+    }
 
 
     public void fullTrace(){

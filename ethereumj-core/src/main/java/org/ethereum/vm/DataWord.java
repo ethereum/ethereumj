@@ -7,6 +7,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
+import static java.util.Arrays.*;
+
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
@@ -15,12 +17,19 @@ import java.nio.ByteBuffer;
 
 public class DataWord {
 
-    static DataWord ZERO = new DataWord(new byte[32]); // don't push it in to the stack
+    static DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
 
     byte[] data = new byte[32];
 
     public DataWord(){
         data = new byte[32];
+    }
+
+    public DataWord(int num){
+        ByteBuffer bInt   = ByteBuffer.allocate(4).putInt(num);
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        System.arraycopy(bInt.array(), 0, data.array(), 28, 4);
+        this.data = data.array();
     }
 
     public DataWord(byte[] data){
@@ -35,9 +44,8 @@ public class DataWord {
     }
 
     public BigInteger value(){
-        return new BigInteger(data);
+        return new BigInteger(1, data);
     }
-
 
     public boolean isZero(){
 
@@ -99,4 +107,21 @@ public class DataWord {
         return new DataWord(Arrays.clone(data));
     }
 
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        DataWord dataWord = (DataWord) o;
+
+        if (!java.util.Arrays.equals(data, dataWord.data)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Arrays.hashCode(data);
+    }
 }
