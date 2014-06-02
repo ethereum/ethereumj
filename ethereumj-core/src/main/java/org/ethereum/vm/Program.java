@@ -20,6 +20,7 @@ import java.util.*;
 public class Program {
 
     Logger logger = LoggerFactory.getLogger("VM");
+    ProgramListener listener;
 
     Stack<DataWord> stack = new Stack<DataWord>();
     Map<DataWord, DataWord> storage = new HashMap<DataWord, DataWord>();
@@ -209,7 +210,24 @@ public class Program {
             logger.debug(" -- STORAGE -- {}\n", storageData);
 
 
+            StringBuilder global = new StringBuilder();
+            global.append(" -- OPS --     ").append(opsString).append("\n");
+            global.append(" -- STACK --   ").append(stackData).append("\n");
+            global.append(" -- MEMORY --  ").append(memoryData).append("\n");
+            global.append(" -- STORAGE -- ").append(storageData).append("\n");
+
+            if (listener != null){
+                listener.output(global.toString());
+            }
+
         };
     }
 
+    public void addListener(ProgramListener listener){
+        this.listener = listener;
+    }
+
+    public interface ProgramListener{
+        public void output(String out);
+    }
 }

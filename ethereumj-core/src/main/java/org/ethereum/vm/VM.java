@@ -71,10 +71,10 @@ public class VM {
                 program.stackPush(word1);
                 program.step();
             }break;
-//            case SLT:
-//                break;
-//            case SGT:
-//                break;
+            case SLT:
+                break;
+            case SGT:
+                break;
             case GT:{
                 DataWord word1 = program.stackPull();
                 DataWord word2 = program.stackPull();
@@ -165,8 +165,8 @@ public class VM {
              * SHA3
              */
 
-//            case SHA3:
-//                break;
+            case SHA3:
+                break;
 
             /**
              * Environmental Information
