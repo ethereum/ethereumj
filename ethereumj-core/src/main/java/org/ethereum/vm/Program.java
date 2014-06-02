@@ -210,7 +210,9 @@ public class Program {
             logger.debug(" -- STORAGE -- {}\n", storageData);
 
 
-            StringBuilder global = new StringBuilder();
+            StringBuilder global = new StringBuilder("\n");
+            if (stackData.length() > 0) stackData.append("\n");
+
             global.append(" -- OPS --     ").append(opsString).append("\n");
             global.append(" -- STACK --   ").append(stackData).append("\n");
             global.append(" -- MEMORY --  ").append(memoryData).append("\n");
