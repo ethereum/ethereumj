@@ -34,19 +34,8 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         program.addListener(this);
         program.fullTrace();
 
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-
-
+        while(!program.isStoped())
+            vm.step(program);
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 

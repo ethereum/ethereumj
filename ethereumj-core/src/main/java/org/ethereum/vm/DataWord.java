@@ -98,6 +98,69 @@ public class DataWord {
         }
     }
 
+    // todo: add can be done in more efficient way
+    // todo      without BigInteger quick hack
+    public void add(DataWord word){
+
+        BigInteger result = value().add( word.value() );
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
+
+    // todo: mull can be done in more efficient way
+    // todo:     with shift left shift right trick
+    // todo      without BigInteger quick hack
+    public void mull(DataWord word){
+
+        BigInteger result = value().multiply( word.value() );
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
+
+    // todo: improve with no BigInteger
+    public void div(DataWord word){
+
+        if (word.isZero()){
+            this.and(ZERO);
+            return;
+        }
+
+        BigInteger result = value().divide( word.value() );
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
+
+    // todo: improve with no BigInteger
+    public void sub(DataWord word){
+
+        BigInteger result = value().subtract( word.value() );
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
+
+    // todo: improve with no BigInteger
+    public void exp(DataWord word){
+
+        BigInteger result = value().pow( word.value().intValue() );
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
+
 
     public String toString(){
         return Hex.toHexString(data);

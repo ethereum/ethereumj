@@ -26,8 +26,9 @@ public class Program {
     Map<DataWord, DataWord> storage = new HashMap<DataWord, DataWord>();
     ByteBuffer memory = null;
 
-    byte[] ops;
-    int    pc = 0;
+    byte[]   ops;
+    int      pc = 0;
+    boolean  stopped = false;
 
     public Program(byte[] ops) {
 
@@ -64,8 +65,17 @@ public class Program {
         this.pc = pc;
     }
 
+    public boolean isStoped(){
+        return stopped;
+    }
+
+    public void stop(){
+        stopped = true;
+    }
+
     public void step(){
         ++pc;
+        if (pc >= ops.length) stop();
     }
 
     public byte[] sweep(int n){
@@ -74,6 +84,8 @@ public class Program {
 
         byte[] data = Arrays.copyOfRange(ops, pc, pc + n);
         pc += n;
+        if (pc >= ops.length) stop();
+
         return data;
     }
 
@@ -82,6 +94,13 @@ public class Program {
         if (stack.size() == 0) throw new RuntimeException("attempted pull action for empty stack");
         return stack.pop();
     };
+
+    public int getMemSize(){
+
+        int memSize = 0;
+        if (memory != null) memSize = memory.limit();
+        return memSize;
+    }
 
     public void memorySave(DataWord addrB, DataWord value){
         memorySave(addrB.data, value.data);
