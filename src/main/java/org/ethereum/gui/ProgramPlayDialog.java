@@ -65,21 +65,22 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         stepSlider.setPaintLabels(true);
         stepSlider.setBorder(
                 BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        Font font = new Font("Serif", Font.ITALIC, 15);
+        Font font = new Font("Courier New", Font.PLAIN, 10);
         stepSlider.setFont(font);
         stepSlider.addChangeListener(this);
 
 
         //Create the label that displays the animation.
-        add(stepSlider);
 
         int i = stepSlider.getValue();
         console = new JTextArea(outputList.get(i));
         console.setFont(new Font("Courier New", Font.PLAIN, 13));
-        console.setForeground(Color.GRAY);
+        console.setForeground(new Color(143, 170, 220));
+        console.setBackground(Color.BLACK);
 
 
         add(console);
+        add(stepSlider);
 
 
         this.setPreferredSize(new Dimension(600, 300));
