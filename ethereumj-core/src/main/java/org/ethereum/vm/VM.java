@@ -340,7 +340,7 @@ public class VM {
                     program.step();
                 }
                 break;
-                case MEMSIZE:{
+                case MSIZE:{
 
                     int memSize = program.getMemSize();
                     DataWord wordMemSize = new DataWord(memSize);

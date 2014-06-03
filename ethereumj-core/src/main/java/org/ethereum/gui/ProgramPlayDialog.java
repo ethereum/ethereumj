@@ -30,7 +30,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         outputList = new ArrayList<String>();
 
         VM vm = new VM();
-        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054"));
+        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054"));
         program.addListener(this);
         program.fullTrace();
 
@@ -66,6 +66,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         console.setFont(new Font("Courier New", Font.PLAIN, 13));
         console.setForeground(new Color(143, 170, 220));
         console.setBackground(Color.BLACK);
+        console.setLineWrap(true);
 
 
         add(console);
