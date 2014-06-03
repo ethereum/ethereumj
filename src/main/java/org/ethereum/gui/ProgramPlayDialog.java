@@ -33,7 +33,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         outputList = new ArrayList<String>();
         VM vm = new VM();
 //        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054"));
-        Program program = new Program(Hex.decode("6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"), null);
+        Program program = new Program(Hex.decode("60016023576000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"), null);
 
         program.addListener(this);
         program.fullTrace();
@@ -53,6 +53,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         //Turn on labels at major tick marks.
 
         stepSlider.setMajorTickSpacing(1);
+        if (outputList.size() > 40)
+            stepSlider.setMajorTickSpacing(3);
+
         stepSlider.setMinorTickSpacing(1);
         stepSlider.setPaintTicks(true);
         stepSlider.setPaintLabels(true);
@@ -74,7 +77,10 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
 
         stepSlider.setFocusable(true);
 
-        JScrollPane scrollPane = new JScrollPane(console);
+        JScrollPane scrollPane = new JScrollPane(console,
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        scrollPane.getVerticalScrollBar().setPreferredSize(new Dimension(10, 0));
 
         add(scrollPane);
         add(stepSlider);
@@ -111,7 +117,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    private static void createAndShowGUI() {
+    public static void createAndShowGUI() {
 
 
 
@@ -119,9 +125,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
 
         //Create and set up the window.
         JFrame frame = new JFrame("SliderDemo");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        frame.setPreferredSize(new Dimension(600, 500));
+        frame.setPreferredSize(new Dimension(580, 500));
         frame.setLocation(400, 200);
 
 
