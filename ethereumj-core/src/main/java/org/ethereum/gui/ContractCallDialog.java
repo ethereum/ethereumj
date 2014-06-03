@@ -109,7 +109,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
                 new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                        submitContract();
+                        submitContractCall();
                     }
                 }
         );
@@ -215,7 +215,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         this.statusMsg.setText(text);
     }
 
-    public void submitContract(){
+    public void submitContractCall(){
 
         ClientPeer peer = MainData.instance.getActivePeer();
         if (peer == null) {
