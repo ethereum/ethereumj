@@ -20,7 +20,7 @@ public class VM {
     Logger logger = LoggerFactory.getLogger("VM");
 
 
-    public void step(Program program){
+    public void step(Program program) {
 
 
         try {
@@ -28,7 +28,7 @@ public class VM {
             byte op = program.getCurrentOp();
             logger.debug("Op: {}" ,OpCode.code(op).name());
 
-            switch (OpCode.code(op)){
+            switch (OpCode.code(op)) {
 
 
                 /**
@@ -36,12 +36,10 @@ public class VM {
                  */
 
                 case STOP:{
-
                     program.stop();
                 }
                 break;
                 case ADD:{
-
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
                     word1.add(word2);
@@ -50,7 +48,6 @@ public class VM {
                 }
                 break;
                 case MUL:{
-
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
                     word1.mull(word2);
@@ -59,7 +56,6 @@ public class VM {
                 }
                 break;
                 case SUB:{
-
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
                     word1.sub(word2);
@@ -68,7 +64,6 @@ public class VM {
                 }
                 break;
                 case DIV:{
-
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
                     word1.div(word2);
@@ -83,7 +78,6 @@ public class VM {
                 case SMOD:
                     break;
                 case EXP:{
-
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
                     word1.exp(word2);
@@ -96,7 +90,8 @@ public class VM {
                     word1.negate();
                     program.stackPush(word1);
                     program.step();
-                }break;
+                }
+                break;
                 case LT:{
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
@@ -108,12 +103,13 @@ public class VM {
                     }
                     program.stackPush(word1);
                     program.step();
-                }break;
+                }
+                break;
                 case SLT:
                     break;
                 case SGT:
                     break;
-                case GT:{
+                case GT: {
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
                     if (word1.value().compareTo(word2.value()) == 1){
@@ -124,8 +120,9 @@ public class VM {
                     }
                     program.stackPush(word1);
                     program.step();
-                }break;
-                case EQ:{
+                }
+                break;
+                case EQ: {
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
                     if (word1.xor(word2).isZero()){
@@ -149,8 +146,6 @@ public class VM {
                     program.step();
                 }
                 break;
-
-
 
                 /**
                  * Bitwise Logic Operations
@@ -180,20 +175,18 @@ public class VM {
                     program.step();
                 }
                 break;
-                case BYTE:{
-
+                case BYTE: {
                     DataWord word1 = program.stackPull();
                     DataWord word2 = program.stackPull();
-
                     DataWord result = null;
                     if (word1.value().compareTo(_32_) == -1){
                         byte tmp = word2.getData()[word1.value().intValue()];
                         word2.and(DataWord.ZERO);
                         word2.getData()[31] = tmp;
                         result = word2;
-                    } else
+                    } else {
                         result = new DataWord();
-
+                    }
                     program.stackPush(result);
                     program.step();
                 }
@@ -267,7 +260,6 @@ public class VM {
                 case SWAP:{
                     DataWord word_1 =  program.stackPull();
                     DataWord word_2 =  program.stackPull();
-
                     program.stackPush(word_1);
                     program.stackPush(word_2);
                     program.step();
@@ -283,13 +275,11 @@ public class VM {
                 case MSTORE:{
                     DataWord addr  =  program.stackPull();
                     DataWord value =  program.stackPull();
-
                     program.memorySave(addr, value);
                     program.step();
                 }
                 break;
                 case MSTORE8:{
-
                     DataWord addr  =  program.stackPull();
                     DataWord value =  program.stackPull();
                     byte[] byteVal = {value.getData()[31]};
@@ -300,8 +290,7 @@ public class VM {
                 case SLOAD:{
                     DataWord key =  program.stackPull();
                     DataWord val = program.storageLoad(key);
-
-                    if (val == null){
+                    if (val == null) {
                         val = key.and(DataWord.ZERO);
                     }
                     program.stackPush(val);
@@ -311,7 +300,6 @@ public class VM {
                 case SSTORE:{
                     DataWord addr  =  program.stackPull();
                     DataWord value =  program.stackPull();
-
                     program.storageSave(addr, value);
                     program.step();
                 }
@@ -324,7 +312,6 @@ public class VM {
                 case JUMPI:{
                     DataWord pos   =  program.stackPull();
                     DataWord cond  =  program.stackPull();
-
                     if (!cond.isZero()){
                         program.setPC(pos);
                     } else{
@@ -335,13 +322,11 @@ public class VM {
                 case PC:{
                     int pc = program.getPC();
                     DataWord pcWord = new DataWord(pc);
-
                     program.stackPush(pcWord);
                     program.step();
                 }
                 break;
                 case MEMSIZE:{
-
                     int memSize = program.getMemSize();
                     DataWord wordMemSize = new DataWord(memSize);
                     program.stackPush(wordMemSize);
