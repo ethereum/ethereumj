@@ -8,6 +8,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 /**
@@ -54,11 +55,12 @@ public class HelloMessage extends Message {
         byte[] networkIdBytes = 			((RLPItem) paramsList.get(2)).getRLPData();
         this.networkId        = 			networkIdBytes == null ? 0 : networkIdBytes[0] ;
 
-        this.clientId         = new String(((RLPItem) paramsList.get(3)).getRLPData());
+                                            byte[] idData =  ((RLPItem) paramsList.get(3)).getRLPData();
+        this.clientId         =            new String(idData   != null ? idData : new byte[0]);
         this.capabilities     =            ((RLPItem) paramsList.get(4)).getRLPData()[0];
 
         ByteBuffer bb = ByteBuffer.wrap(((RLPItem) paramsList.get(5)).getRLPData());
-        this.peerPort         = 			bb.getShort();
+        this.peerPort         =            new BigInteger(bb.array()).shortValue();
         this.peerId           =            ((RLPItem) paramsList.get(6)).getRLPData();
         this.parsed = true;
         // todo: what to do when mal data ?
