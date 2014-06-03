@@ -83,6 +83,25 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
         rejectLabel.setToolTipText("Cancel");
         rejectLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
+        URL playIconURL = ClassLoader.getSystemResource("buttons/play.png");
+        ImageIcon playIcon = new ImageIcon(playIconURL);
+        JLabel playLabel = new JLabel(playIcon);
+        playLabel.setToolTipText("Play Drafted");
+        playLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        playLabel.setBounds(438, 100, 42, 42);
+        this.getContentPane().add(playLabel);
+
+        playLabel.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+
+                        ProgramPlayDialog.createAndShowGUI();
+                    }}
+        );
+
+
         JLabel statusMessage = new JLabel("");
         statusMessage.setBounds(50, 360, 400, 50);
         statusMessage.setHorizontalAlignment(SwingConstants.CENTER);
