@@ -87,7 +87,7 @@ public enum OpCode {
 	JUMP(0x58),
 	JUMPI(0x59),
 	PC(0x5a),
-	MEMSIZE(0x5b),
+	MSIZE(0x5b),
 	GAS(0x5c),
 	
 	/**

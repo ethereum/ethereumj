@@ -1836,8 +1836,8 @@ public class VMTest {
 
     }
 
-    @Test // MEMSIZE OP
-    public void testMEMSIZE_1(){
+    @Test // MSIZE OP
+    public void testMSIZE_1(){
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("5B"));
@@ -1849,8 +1849,8 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // MEMSIZE OP
-    public void testMEMSIZE_2(){
+    @Test // MSIZE OP
+    public void testMSIZE_2(){
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("60206030545B"));
