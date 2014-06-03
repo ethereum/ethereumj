@@ -1,6 +1,8 @@
 package org.ethereum.gui;
 
+import org.ethereum.vm.DataWord;
 import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
 import org.ethereum.vm.VM;
 import org.spongycastle.util.encoders.Hex;
 
@@ -24,13 +26,15 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
 
     public List<String> outputList;
     public JTextArea console;
+    public JSlider stepSlider;
 
     public ProgramPlayDialog() {
 
         outputList = new ArrayList<String>();
-
         VM vm = new VM();
-        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054"));
+//        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054"));
+        Program program = new Program(Hex.decode("6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"), null);
+
         program.addListener(this);
         program.fullTrace();
 
@@ -40,7 +44,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         //Create the slider.
-        JSlider stepSlider = new JSlider(JSlider.HORIZONTAL,
+        stepSlider = new JSlider(JSlider.HORIZONTAL,
                 0, outputList.size() - 1, 0);
 
 
@@ -64,16 +68,22 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         int i = stepSlider.getValue();
         console = new JTextArea(outputList.get(i));
         console.setFont(new Font("Courier New", Font.PLAIN, 13));
-        console.setForeground(new Color(143, 170, 220));
+        console.setForeground(new Color(183, 209, 253));
         console.setBackground(Color.BLACK);
         console.setLineWrap(true);
 
+        stepSlider.setFocusable(true);
 
-        add(console);
+        JScrollPane scrollPane = new JScrollPane(console);
+
+        add(scrollPane);
         add(stepSlider);
 
 
-        this.setPreferredSize(new Dimension(600, 300));
+    }
+
+    public void setFocus(){
+        stepSlider.requestFocus();
     }
 
     @Override
@@ -92,6 +102,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         String out = outputList.get(i);
 
         console.setText(out);
+        console.setCaretPosition(0);
     }
 
 
@@ -110,12 +121,18 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         JFrame frame = new JFrame("SliderDemo");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
+        frame.setPreferredSize(new Dimension(600, 500));
+        frame.setLocation(400, 200);
+
+
         //Add content to the window.
         frame.add(ppd, BorderLayout.CENTER);
 
         //Display the window.
         frame.pack();
         frame.setVisible(true);
+        ppd.setFocus();
+
     }
 
     @Override

@@ -26,14 +26,19 @@ public class Program {
     Map<DataWord, DataWord> storage = new HashMap<DataWord, DataWord>();
     ByteBuffer memory = null;
 
+    ByteBuffer hReturn = null;
+
     byte[]   ops;
     int      pc = 0;
     boolean  stopped = false;
 
-    public Program(byte[] ops) {
+    ProgramInvoke invokeData;
 
-        if (ops == null) throw new RuntimeException("program can not run with ops: null");
+    public Program(byte[] ops, ProgramInvoke invokeData) {
 
+        if (ops == null)        throw new RuntimeException("program can not run with ops: null");
+
+        this.invokeData = invokeData;
         this.ops = ops;
     }
 
@@ -58,7 +63,10 @@ public class Program {
     public void setPC(DataWord pc) {
         this.pc = pc.value().intValue();
 
-        if (this.pc > ops.length) throw new RuntimeException("pc overflow pc: " + pc);
+        if (this.pc > ops.length) {
+            stop();
+            throw new RuntimeException("pc overflow pc: " + pc);
+        }
     }
 
     public void setPC(int pc) {
@@ -73,6 +81,10 @@ public class Program {
         stopped = true;
     }
 
+    public void setHReturn(ByteBuffer buff){
+        hReturn = buff;
+    }
+
     public void step(){
         ++pc;
         if (pc >= ops.length) stop();
@@ -80,7 +92,10 @@ public class Program {
 
     public byte[] sweep(int n){
 
-        if (pc + n > ops.length) throw new RuntimeException("pc overflow sweep n: " + n + " pc: " + pc);
+        if (pc + n > ops.length) {
+            stop();
+            throw new RuntimeException("pc overflow sweep n: " + n + " pc: " + pc);
+        }
 
         byte[] data = Arrays.copyOfRange(ops, pc, pc + n);
         pc += n;
@@ -89,9 +104,12 @@ public class Program {
         return data;
     }
 
-    public DataWord stackPull(){
+    public DataWord stackPop(){
 
-        if (stack.size() == 0) throw new RuntimeException("attempted pull action for empty stack");
+        if (stack.size() == 0){
+            stop();
+            throw new RuntimeException("attempted pull action for empty stack");
+        }
         return stack.pop();
     };
 
@@ -124,6 +142,21 @@ public class Program {
 
         return new DataWord(data);
     }
+
+    public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData){
+
+        int offset = offsetData.value().intValue();
+        int size   = sizeData.value().intValue();
+
+        byte[] chunk = new byte[size];
+
+        if (memory.limit() < offset + size) size = memory.limit() - offset;
+
+        System.arraycopy(memory.array(), offset, chunk, 0, size);
+
+        return ByteBuffer.wrap(chunk);
+    }
+
 
     private void allocateMemory(int address, byte[] value){
 
@@ -165,6 +198,52 @@ public class Program {
         storage.put(keyWord, valWord);
     }
 
+
+    public DataWord getOwnerAddress(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getOwnerAddress();
+    }
+
+    public DataWord getBalance(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getBalance();
+    }
+
+    public DataWord getOriginAddress(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getOriginAddress();
+    }
+
+    public DataWord getCallerAddress(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getCallerAddress();
+    }
+
+    public DataWord getMinGasPrice(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getMinGasPrice();
+    }
+
+    public DataWord getCallValue(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getCallValue();
+    }
+
+
+    public DataWord getDataSize(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getDataSize();
+    }
+
+    public DataWord getDataValue(DataWord index){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getDataValue(index);
+    }
+
+    public byte[] getDataCopy(DataWord offset, DataWord length){
+        if (invokeData == null) return new byte[0];
+        return invokeData.getDataCopy(offset, length);
+    }
 
     public DataWord storageLoad(DataWord key){
         return storage.get(key);
@@ -236,6 +315,10 @@ public class Program {
             global.append(" -- STACK --   ").append(stackData).append("\n");
             global.append(" -- MEMORY --  ").append(memoryData).append("\n");
             global.append(" -- STORAGE -- ").append(storageData).append("\n");
+
+            if (hReturn != null){
+                global.append("\n  HReturn: ").append(Hex.toHexString( hReturn.array()));
+            }
 
             if (listener != null){
                 listener.output(global.toString());
