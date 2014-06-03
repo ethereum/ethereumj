@@ -1,6 +1,5 @@
 package org.ethereum.vm;
 
-import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -444,7 +443,7 @@ public class VMTest {
             program.fullTrace();
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -460,7 +459,7 @@ public class VMTest {
             program.fullTrace();
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -504,7 +503,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -548,7 +547,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -593,7 +592,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -653,7 +652,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -695,7 +694,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -753,7 +752,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -811,7 +810,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -870,7 +869,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -978,7 +977,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1011,7 +1010,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1236,7 +1235,7 @@ public class VMTest {
         try {
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1296,7 +1295,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1487,7 +1486,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1540,7 +1539,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1615,7 +1614,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1676,7 +1675,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1829,7 +1828,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -1923,7 +1922,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -2054,7 +2053,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertTrue(program.isStoped());
+        assertTrue(program.isStopped());
     }
 
     @Test // CODECOPY OP
@@ -2070,7 +2069,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertTrue(program.isStoped());
+        assertTrue(program.isStopped());
     }
 
 
@@ -2086,7 +2085,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();
@@ -2218,7 +2217,7 @@ public class VMTest {
         try {
             vm.step(program);
         } catch (RuntimeException e) {
-            assertTrue(program.isStoped());
+            assertTrue(program.isStopped());
             return;
         }
         fail();

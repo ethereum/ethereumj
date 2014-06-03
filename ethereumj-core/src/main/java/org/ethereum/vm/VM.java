@@ -21,7 +21,7 @@ public class VM {
     Logger logger = LoggerFactory.getLogger("VM");
 
 
-    public void step(Program program){
+    public void step(Program program) {
 
 
         try {
@@ -29,7 +29,7 @@ public class VM {
             byte op = program.getCurrentOp();
             logger.debug("Op: {}" ,OpCode.code(op).name());
 
-            switch (OpCode.code(op)){
+            switch (OpCode.code(op)) {
 
 
                 /**
@@ -37,7 +37,6 @@ public class VM {
                  */
 
                 case STOP:{
-
                     program.setHReturn(ByteBuffer.allocate(0));
                     program.stop();
                 }
@@ -98,7 +97,8 @@ public class VM {
                     word1.negate();
                     program.stackPush(word1);
                     program.step();
-                }break;
+                }
+                break;
                 case LT:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -110,7 +110,8 @@ public class VM {
                     }
                     program.stackPush(word1);
                     program.step();
-                }break;
+                }
+                break;
                 case SLT:
                     break;
                 case SGT:
@@ -191,9 +192,9 @@ public class VM {
                         word2.and(DataWord.ZERO);
                         word2.getData()[31] = tmp;
                         result = word2;
-                    } else
+                    } else {
                         result = new DataWord();
-
+                    }
                     program.stackPush(result);
                     program.step();
                 }
@@ -332,7 +333,6 @@ public class VM {
                 case SWAP:{
                     DataWord word_1 =  program.stackPop();
                     DataWord word_2 =  program.stackPop();
-
                     program.stackPush(word_1);
                     program.stackPush(word_2);
                     program.step();
@@ -348,7 +348,6 @@ public class VM {
                 case MSTORE:{
                     DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
-
                     program.memorySave(addr, value);
                     program.step();
                 }
@@ -365,8 +364,7 @@ public class VM {
                 case SLOAD:{
                     DataWord key =  program.stackPop();
                     DataWord val = program.storageLoad(key);
-
-                    if (val == null){
+                    if (val == null) {
                         val = key.and(DataWord.ZERO);
                     }
                     program.stackPush(val);
@@ -400,7 +398,6 @@ public class VM {
                 case PC:{
                     int pc = program.getPC();
                     DataWord pcWord = new DataWord(pc);
-
                     program.stackPush(pcWord);
                     program.step();
                 }
