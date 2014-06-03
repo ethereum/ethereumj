@@ -1,13 +1,10 @@
 package org.ethereum.vm;
 
-import com.fasterxml.jackson.databind.ser.std.ArraySerializerBase;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-
-import static java.util.Arrays.*;
 
 /**
  * www.ethereumJ.com

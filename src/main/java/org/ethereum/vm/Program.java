@@ -1,11 +1,8 @@
 package org.ethereum.vm;
 
-import com.google.api.client.util.ByteStreams;
-import io.netty.buffer.UnpooledDirectByteBuf;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -73,7 +70,7 @@ public class Program {
         this.pc = pc;
     }
 
-    public boolean isStoped(){
+    public boolean isStopped(){
         return stopped;
     }
 
