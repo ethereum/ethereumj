@@ -3,6 +3,7 @@ package org.ethereum.vm;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -314,7 +315,7 @@ public class Program {
             global.append(" -- STORAGE -- ").append(storageData).append("\n");
 
             if (hReturn != null){
-                global.append("\n  HReturn: ").append(Hex.toHexString( hReturn.array()));
+                global.append("\n  HReturn: ").append(Hex.toHexString(hReturn.array()));
             }
 
             if (listener != null){
