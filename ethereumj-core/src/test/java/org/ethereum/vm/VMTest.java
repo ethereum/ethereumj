@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.crypto.HashUtil;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -2417,6 +2418,70 @@ public class VMTest {
     }
 
 
+    @Test // SHA3 OP
+    public void testSHA3_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("60016000556001600020"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "5FE7F977E71DBA2EA1A68E21057BEEBB9BE2AC30C6410AA38D4F3FBE41DCFFD2";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // SHA3 OP
+    public void testSHA3_2(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("6102016000546002601E20"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "114A3FE82A0219FCC31ABD15617966A125F12B0FD3409105FC83B487A9D82DE4";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // SHA3 OP mal
+    public void testSHA3_3(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("610201600054600220"),
+                        createProgramInvoke_1());
+
+        try {
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            assertTrue(program.isStopped());
+            return;
+        }
+        fail();
+    }
+
+
+
     /* TEST CASE LIST END */
 
 
@@ -2434,6 +2499,9 @@ public class VMTest {
 }
 
 
+
+
+
 /**
  *   todo:
  *
@@ -2442,7 +2510,6 @@ public class VMTest {
  *   3) SMOD
  *   4) SLT
  *   5) SGT
- *   6) SHA3
 
 
  *   15) PREVHASH:
@@ -2450,9 +2517,10 @@ public class VMTest {
  *   17) TIMESTAMP:
  *   18) NUMBER:
  *   19) DIFFICULTY:
- *   20) GASLIMIT:
- *
- *   21) GAS:
+
+ *   20) GASPRICE
+ *   20) GASLIMIT
+ *   20) GAS
  *
  *   22) CREATE:
  *   23) CALL:

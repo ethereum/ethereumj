@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.crypto.HashUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -204,8 +205,18 @@ public class VM {
                  * SHA3
                  */
 
-                case SHA3:
-                    break;
+                case SHA3:{
+                    DataWord memOffsetData  = program.stackPop();
+                    DataWord lengthData     = program.stackPop();
+                    ByteBuffer buffer = program.memoryChunk(memOffsetData, lengthData);
+
+                    byte[] encoded = HashUtil.sha3(buffer.array());
+                    DataWord word = new DataWord(encoded);
+
+                    program.stackPush(word);
+                    program.step();
+                }
+                break;
 
                 /**
                  * Environmental Information
