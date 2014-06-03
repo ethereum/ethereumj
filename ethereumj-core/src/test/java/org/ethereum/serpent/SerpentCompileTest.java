@@ -1306,7 +1306,7 @@ public class SerpentCompileTest {
         String code =   "c = [5]\n" +
                         "a = [11, 22, 33]\n" +
                         "b = a [0]" ;
-        String expected = "0 31 MSTORE8 MSIZE DUP 32 ADD 5 SWAP MSTORE 64 SWAP MSTORE MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 32 0 MUL 64 ADD 32 ADD MLOAD 0 MSTORE";
+        String expected = "0 31 MSTORE8 MSIZE DUP 32 ADD 5 SWAP MSTORE 64 SWAP MSTORE MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 32 0 MUL 96 ADD 32 ADD MLOAD 0 MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
         Assert.assertEquals(expected, asmResult);
