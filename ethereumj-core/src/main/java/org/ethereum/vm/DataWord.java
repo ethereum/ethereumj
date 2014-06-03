@@ -97,7 +97,7 @@ public class DataWord {
 
     // todo: add can be done in more efficient way
     // todo      without BigInteger quick hack
-    public void add(DataWord word){
+    public void add2(DataWord word){
 
         BigInteger result = value().add( word.value() );
         byte[] bytes = result.toByteArray();
@@ -105,6 +105,20 @@ public class DataWord {
         ByteBuffer data    =  ByteBuffer.allocate(32);
         System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
         this.data = data.array();
+    }
+    
+    // By	: Holger
+    // From	: http://stackoverflow.com/a/24023466/459349
+    public void add(DataWord word) {
+		if (this.data.length != 32 || word.data.length != 32)
+			throw new IllegalArgumentException();
+		byte[] result = new byte[32];
+		for (int i = 31, overflow = 0; i >= 0; i--) {
+			int v = (this.data[i] & 0xff) + (word.data[i] & 0xff) + overflow;
+			result[i] = (byte) v;
+			overflow = v >>> 8;
+		}
+		this.data = result;
     }
 
     // todo: mull can be done in more efficient way
