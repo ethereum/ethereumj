@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -20,31 +19,22 @@ import org.spongycastle.util.encoders.Hex;
 
 public class Blockchain extends ArrayList<Block> {
 
+	private static final long serialVersionUID = -143590724563460486L;
+
 	private static Logger logger = LoggerFactory.getLogger(Blockchain.class);
 	
 	private Database db;
 	private Wallet wallet;
     private long gasPrice = 1000;
-    private Block lastBlock = new Genesis();
+    private Block lastBlock;
 
-    private Map<BigInteger, PendingTransaction> pendingTransactions =
-            Collections.synchronizedMap(new HashMap<BigInteger, PendingTransaction>());
+    private Map<String, PendingTransaction> pendingTransactions =
+            Collections.synchronizedMap(new HashMap<String, PendingTransaction>());
 	
 	public Blockchain(Wallet wallet) {
 		this.db = Config.CHAIN_DB;
 		this.wallet = wallet;
-		
-        // Redesign fetch all to get the chain ordered
-        byte[] payload = db.get(Genesis.PARENT_HASH);
-
-        while (payload != null) {
-
-            Block block = new Block(payload);
-            this.add(block);
-            lastBlock  = block;
-            wallet.processBlock(block);
-            payload = db.get(block.getHash());
-        }
+		this.loadChain();
 	}
 
 	public Block getLastBlock() {
@@ -55,59 +45,65 @@ public class Blockchain extends ArrayList<Block> {
 
         // TODO: redesign this part when the state part and the genesis block is ready
 
-        if (blocks.isEmpty()) return;
+		if (blocks.isEmpty())
+			return;
 
         Block firstBlockToAdd = blocks.get(blocks.size() - 1);
 
         // if it is the first block to add
         // check that the parent is the genesis
-        if (this.isEmpty() &&
-            !Arrays.equals(StaticMessages.GENESIS_HASH, firstBlockToAdd.getParentHash())){
-             return;
-        }	
+		if (this.isEmpty()
+				&& !Arrays.equals(StaticMessages.GENESIS_HASH,
+						firstBlockToAdd.getParentHash())) {
+			return;
+		}
         // if there is some blocks already keep chain continuity
-        if (!this.isEmpty() ){
+        if (!this.isEmpty()) {
             Block lastBlock = this.get(this.size() - 1);
             String hashLast = Hex.toHexString(lastBlock.getHash());
             String blockParentHash = Hex.toHexString(firstBlockToAdd.getParentHash());
             if (!hashLast.equals(blockParentHash)) return;
         }
         for (int i = blocks.size() - 1; i >= 0 ; --i){
-            Block block = blocks.get(i);
-            this.add(block);
-            if(block.getNumber() > lastBlock.getNumber()) lastBlock = block;
-
+        	Block block = blocks.get(i);
+            this.addBlock(block);
             db.put(block.getParentHash(), block.getEncoded());
-
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
-            this.gasPrice = block.getMinGasPrice();
-
-            wallet.processBlock(block);
         }	
         // Remove all pending transactions as they already approved by the net
-        for (Block block : blocks){
-            for (Transaction tx : block.getTransactionsList()){
+        for (Block block : blocks) {
+            for (Transaction tx : block.getTransactionsList()) {
                 if (logger.isDebugEnabled())
                     logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
                 removePendingTransaction(tx);
             }
         }
-
         logger.info("*** Block chain size: [ {} ]", this.size());
     }
     
-    /*
-     *        1) the dialog put a pending transaction on the list
-     *        2) the dialog send the transaction to a net
-     *        3) wherever the transaction got in from the wire it will change to approve state
-     *        4) only after the approve a) Wallet state changes
-     *        5) After the block is received with that tx the pending been clean up
-    */
+    private void addBlock(Block block) {
+		this.wallet.processBlock(block);
+        this.gasPrice = block.getMinGasPrice();
+		if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
+			this.lastBlock = block;
+		this.add(block);
+    }
+    
+    public long getGasPrice() {
+        return gasPrice;
+    }
+    
+    /***********************************************************************
+     *	1) the dialog put a pending transaction on the list
+     *  2) the dialog send the transaction to a net
+     *  3) wherever the transaction got in from the wire it will change to approve state
+     *  4) only after the approve a) Wallet state changes
+     *  5) After the block is received with that tx the pending been clean up
+     */
     public PendingTransaction addPendingTransaction(Transaction transaction) {
-
-        BigInteger hash = new BigInteger(transaction.getHash());
-        logger.info("pending transaction placed hash: {} ", hash.toString(16) );
+        String hash = Hex.toHexString(transaction.getHash());
+        logger.info("pending transaction placed hash: {} ", hash );
 
         PendingTransaction pendingTransaction =  pendingTransactions.get(hash);
 		if (pendingTransaction != null)
@@ -120,24 +116,44 @@ public class Blockchain extends ArrayList<Block> {
     }
 
     public void removePendingTransaction(Transaction transaction){
-
-        BigInteger hash = new BigInteger(transaction.getHash());
-        logger.info("pending transaction removed with hash: {} ",  hash.toString(16) );
+        String hash = Hex.toHexString(transaction.getHash());
+        logger.info("pending transaction removed with hash: {} ",  hash );
         pendingTransactions.remove(hash);
     }
 
-    public long getGasPrice() {
-        return gasPrice;
-    }
-
     public byte[] getLatestBlockHash(){
-
-        if (this.isEmpty())
-            return StaticMessages.GENESIS_HASH;
-        else{
-
-            return lastBlock.getHash();
-        }
-
+		if (this.isEmpty())
+			return StaticMessages.GENESIS_HASH;
+		else
+			return lastBlock.getHash();
     }
+    
+	public void loadChain() {
+		DBIterator iterator = db.iterator();
+		try {
+			if (!iterator.hasNext()) {
+				logger.info("DB is empty - adding Genesis");
+				Block genesis = Genesis.getInstance();
+				this.addBlock(genesis);
+				logger.debug("Block: " + genesis.getNumber() + " ---> " + genesis.toFlatString());
+				db.put(genesis.getParentHash(), genesis.getEncoded());
+			} else {
+				logger.debug("Displaying blocks stored in DB sorted on blocknumber");
+				byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
+				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+					this.addBlock(new Block(db.get(parentHash)));
+					if (logger.isDebugEnabled())
+						logger.debug("Block: " + lastBlock.getNumber() + " ---> " + lastBlock.toFlatString());
+					parentHash = lastBlock.getHash();					
+				}
+			}
+		} finally {
+			// Make sure you close the iterator to avoid resource leaks.
+			try {
+				iterator.close();
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
+	}
 }

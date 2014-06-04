@@ -47,7 +47,7 @@ import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.encoders.Hex;
  
 public class ECKey implements Serializable {
-	private static final Logger log = LoggerFactory.getLogger(ECKey.class);
+	private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
 	
     /** The parameters of the secp256k1 curve that Bitcoin uses. */
     public static final ECDomainParameters CURVE;
@@ -448,11 +448,10 @@ public class ECKey implements Serializable {
         signer.init(false, params);
         try {
             return signer.verifySignature(data, signature.r, signature.s);
-        } catch (NullPointerException e) {
-            // Bouncy Castle contains a bug that can cause NPEs given specially crafted signatures. Those signatures
-            // are inherently invalid/attack sigs so we just fail them here rather than crash the thread.
-            log.error("Caught NPE inside bouncy castle");
-            e.printStackTrace();
+        } catch (NullPointerException npe) {
+            // Bouncy Castle contains a bug that can cause NPEs given specially crafted signatures. 
+        	// Those signatures are inherently invalid/attack sigs so we just fail them here rather than crash the thread.
+            logger.error("Caught NPE inside bouncy castle", npe);
             return false;
         }
     }

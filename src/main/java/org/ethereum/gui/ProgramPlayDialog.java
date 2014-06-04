@@ -1,8 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.vm.DataWord;
 import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvoke;
 import org.ethereum.vm.VM;
 import org.spongycastle.util.encoders.Hex;
 
@@ -12,7 +10,6 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowListener;
 import java.util.*;
 import java.util.List;
 
@@ -22,7 +19,8 @@ import java.util.List;
  * Created on: 02/06/2014 16:58
  */
 
-public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeListener, Program.ProgramListener {
+public class ProgramPlayDialog extends JPanel implements ActionListener,
+		ChangeListener, Program.ProgramListener {
 
     public List<String> outputList;
     public JTextArea console;
@@ -95,8 +93,6 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
     @Override
     public void actionPerformed(ActionEvent e) {
 
-
-
     }
 
     @Override
@@ -111,15 +107,12 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         console.setCaretPosition(0);
     }
 
-
     /**
      * Create the GUI and show it.  For thread safety,
      * this method should be invoked from the
      * event-dispatching thread.
      */
     public static void createAndShowGUI() {
-
-
 
         ProgramPlayDialog ppd = new ProgramPlayDialog();
 
@@ -130,7 +123,6 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         frame.setPreferredSize(new Dimension(580, 500));
         frame.setLocation(400, 200);
 
-
         //Add content to the window.
         frame.add(ppd, BorderLayout.CENTER);
 
@@ -138,7 +130,6 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         frame.pack();
         frame.setVisible(true);
         ppd.setFocus();
-
     }
 
     @Override
@@ -151,10 +142,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener, ChangeL
         /* Turn off metal's use of bold fonts */
         UIManager.put("swing.boldMetal", Boolean.FALSE);
 
-
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
+        SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI();
             }
