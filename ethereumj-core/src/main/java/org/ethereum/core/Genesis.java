@@ -29,8 +29,10 @@ public class Genesis extends Block {
     public static long TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
     public static byte[] NONCE = HashUtil.sha3(new byte[]{42});
-			
-	public Genesis() {
+    
+    private static Block instance;
+    
+	private Genesis() {
 		super(PARENT_HASH, UNCLES_HASH, COINBASE, TX_TRIE_ROOT, DIFFICULTY,
 				NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED, TIMESTAMP,
 				EXTRA_DATA, NONCE, null, null);
@@ -53,9 +55,16 @@ public class Genesis extends Block {
 		this.updateState(Hex.decode("6c386a4b26f73c802f34673f7248bb118f97424a"), acct.getEncoded());
 		// # (R)
 		this.updateState(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), acct.getEncoded());
-		System.out.println(Hex.toHexString(this.getStateRoot()));
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
+		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
 
         Config.CHAIN_DB.put(getParentHash(), getEncoded());
     }
+	
+	public static Block getInstance() {
+		if (instance == null) {
+			instance = new Genesis();
+		}
+		return instance;
+	}
 }

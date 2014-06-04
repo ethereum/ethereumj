@@ -4,19 +4,13 @@ import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
-import org.ethereum.net.message.StaticMessages;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  *  Generic interface for Ethereum database
@@ -47,8 +41,6 @@ public class Database {
 			logger.debug("Initializing new or existing DB: '" + name + "'");
 			options.createIfMissing(true);
 			db = factory.open(new File(name), options);
-
-			printDB();
 //			logger.debug("Showing database stats");
 //			String stats = DATABASE.getProperty("leveldb.stats");
 //			logger.debug(stats);
@@ -68,34 +60,6 @@ public class Database {
 		}
 	}
 	
-	public void printDB() {
-		DBIterator iterator = db.iterator();
-		try {
-			Map<Long, Block> blocks = new HashMap<Long, Block>();
-			int count = 0;
-			if (!iterator.hasNext()) {
-				logger.info("DB is empty");
-			} else {
-				logger.info("Displaying blocks stored in DB sorted on key");
-			}
-			for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-				byte[] key = iterator.peekNext().getKey();
-				byte[] value = iterator.peekNext().getValue();
-				Block block = new Block(value);
-				blocks.put(new Long(block.getNumber()), block);
-				logger.info("Block: " + count + " Key: " + Hex.toHexString(key) + " ---> " + block.toFlatString());
-				count++;
-			}
-		} finally {
-			// Make sure you close the iterator to avoid resource leaks.
-			try {
-				iterator.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-	}
-
 	/** Insert object(value) (key = sha3(value)) */
 	public void put(byte[] key, byte[] value) {
 		db.put(key, value);

@@ -22,17 +22,16 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
 
-
-
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
-class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
+class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
-
-    ContractSubmitDialog dialog;
+    private static final long serialVersionUID = -3622984456084608996L;
+	
+	ContractSubmitDialog dialog;
     JComboBox<AddressStateWraper> creatorAddressCombo;
     final JTextField gasInput;
     final JTextField contractAddrInput;
@@ -100,7 +99,6 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
                         ProgramPlayDialog.createAndShowGUI();
                     }}
         );
-
 
         JLabel statusMessage = new JLabel("");
         statusMessage.setBounds(50, 360, 400, 50);
@@ -291,8 +289,6 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
 
     }
 
-
-
     public static void main(String args[]) {
 
         AccountState as = new AccountState();
@@ -319,8 +315,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog{
             String valueShort   = Utils.getValueShortString(addressState.getBalance());
 
             String result =
-                    String.format(" By: [%s] %s",
-                            addressShort, valueShort);
+                    String.format(" By: [%s] %s", addressShort, valueShort);
 
             return result;
         }
