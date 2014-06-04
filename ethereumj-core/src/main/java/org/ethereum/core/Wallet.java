@@ -89,8 +89,8 @@ public class Wallet {
         AccountState senderState =  rows.get(Hex.toHexString(senderAddress));
         if (senderState != null){
 
-            BigInteger value = new BigInteger(transaction.getValue());
-            senderState.addToBalance(value.negate());
+            BigInteger value = new BigInteger(-1, transaction.getValue());
+            senderState.addToBalance(value);
             senderState.incrementNonce();
         }
 
