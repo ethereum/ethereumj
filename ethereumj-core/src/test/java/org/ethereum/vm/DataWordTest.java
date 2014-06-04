@@ -2,9 +2,8 @@ package org.ethereum.vm;
 
 import static org.junit.Assert.*;
 
-import java.math.BigInteger;
-
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 public class DataWordTest {
 
@@ -41,15 +40,15 @@ public class DataWordTest {
 	@Test
 	public void testAdd2() {
 		byte[] two = new byte[32];
-		two[31] = 0x01; // 0x00000000000000000000000000000000000000000000000000000000000001
+		two[31] = (byte) 0xff; // 0x000000000000000000000000000000000000000000000000000000000000ff
 		
 		DataWord x = new DataWord(two);
 		x.add(new DataWord(two));
-		System.out.println(new BigInteger(1, x.data));
+		System.out.println(Hex.toHexString(x.data));
 		
 		DataWord y = new DataWord(two);
 		y.add2(new DataWord(two));
-		System.out.println(new BigInteger(1, y.data));
+		System.out.println(Hex.toHexString(y.data));
 	}
 	
 	@Test
@@ -62,11 +61,11 @@ public class DataWordTest {
 		DataWord x = new DataWord(three);
 		x.add(new DataWord(three));
 		assertEquals(32, x.data.length);
-		System.out.println(new BigInteger(1, x.data));
+		System.out.println(Hex.toHexString(x.data));
 
 		// FAIL
 //		DataWord y = new DataWord(three);
 //		y.add2(new DataWord(three));
-//		System.out.println(new BigInteger(1, y.data));
+//		System.out.println(Hex.toHexString(y.data));
 	}
 }
