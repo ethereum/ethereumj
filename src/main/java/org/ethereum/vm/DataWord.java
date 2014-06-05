@@ -7,34 +7,31 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 /**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 01/06/2014 19:47
+ * DataWord is the 32-byte array representation of a 256-bit number
+ * Calculations can be done on this word with other DataWords
  */
-
 public class DataWord {
 
     static DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
 
     byte[] data = new byte[32];
 
-    public DataWord(){
-        data = new byte[32];
-    }
+	public DataWord() {
+		data = new byte[32];
+	}
 
-    public DataWord(int num){
-        ByteBuffer bInt   = ByteBuffer.allocate(4).putInt(num);
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        System.arraycopy(bInt.array(), 0, data.array(), 28, 4);
-        this.data = data.array();
-    }
+	public DataWord(int num) {
+		ByteBuffer bInt = ByteBuffer.allocate(4).putInt(num);
+		ByteBuffer data = ByteBuffer.allocate(32);
+		System.arraycopy(bInt.array(), 0, data.array(), 28, 4);
+		this.data = data.array();
+	}
 
-    public DataWord(byte[] data){
-        if (data == null || data.length > 32)
-            throw new RuntimeException("bad push data: " +  data);
-
-        System.arraycopy(data, 0, this.data, 32 - data.length,  data.length);
-    }
+	public DataWord(byte[] data) {
+		if (data == null || data.length > 32)
+			throw new RuntimeException("bad push data: " + data);
+		System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
+	}
 
     public byte[] getData() {
         return data;
@@ -95,9 +92,20 @@ public class DataWord {
         }
     }
 
-    // todo: add can be done in more efficient way
-    // todo      without BigInteger quick hack
-    public void add(DataWord word){
+    // By	: Holger
+    // From	: http://stackoverflow.com/a/24023466/459349
+    public void add(DataWord word) {
+		byte[] result = new byte[32];
+		for (int i = 31, overflow = 0; i >= 0; i--) {
+			int v = (this.data[i] & 0xff) + (word.data[i] & 0xff) + overflow;
+			result[i] = (byte) v;
+			overflow = v >>> 8;
+		}
+		this.data = result;
+    }
+    
+    // old add-method with BigInteger quick hack
+    public void add2(DataWord word){
 
         BigInteger result = value().add( word.value() );
         byte[] bytes = result.toByteArray();
@@ -106,11 +114,11 @@ public class DataWord {
         System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
         this.data = data.array();
     }
-
-    // todo: mull can be done in more efficient way
+    
+    // todo: mul can be done in more efficient way
     // todo:     with shift left shift right trick
     // todo      without BigInteger quick hack
-    public void mull(DataWord word){
+    public void mul(DataWord word){
 
         BigInteger result = value().multiply( word.value() );
         byte[] bytes = result.toByteArray();
