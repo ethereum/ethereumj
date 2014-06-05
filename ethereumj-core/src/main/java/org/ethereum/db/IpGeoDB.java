@@ -4,6 +4,9 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.URL;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.maxmind.geoip.Location;
 import com.maxmind.geoip.LookupService;
 
@@ -14,27 +17,30 @@ import com.maxmind.geoip.LookupService;
  */
 public class IpGeoDB {   // change
 
-    static{
-        try {
-            File file = null;
-            try {
+	private static Logger logger = LoggerFactory.getLogger(IpGeoDB.class);
+	
+	static {
+		try {
+			File file = null;
+			try {
 
-                String dir = System.getProperty("user.dir");
-                String fileName = dir + "/config/GeoLiteCity.dat";
-                file = new File(fileName);
-                if (!file.exists()){
-                    URL geiIpDBFile = ClassLoader.getSystemResource("GeoLiteCity.dat");
-                    file = new File(geiIpDBFile.toURI());
-                }
-            } catch (Throwable th) {
-                th.printStackTrace();
-                System.exit(-1);
-            }
-            cl = new LookupService(file);
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
+				String dir = System.getProperty("user.dir");
+				String fileName = dir + "/config/GeoLiteCity.dat";
+				file = new File(fileName);
+				if (!file.exists()) {
+					URL geiIpDBFile = ClassLoader
+							.getSystemResource("GeoLiteCity.dat");
+					file = new File(geiIpDBFile.toURI());
+				}
+			} catch (Throwable th) {
+				logger.error(th.getMessage(), th);
+				System.exit(-1);
+			}
+			cl = new LookupService(file);
+		} catch (Throwable e) {
+			logger.error(e.getMessage(), e);
+		}
+	}
 
     private static LookupService cl;
 
@@ -42,9 +48,8 @@ public class IpGeoDB {   // change
         try {
             return cl.getLocation(ip);
         } catch (Throwable e) {
-            // todo: think about this exception, maybe you can do something more reasonable
-            System.out.println(e.getMessage());
-//            e.printStackTrace();
+            // TODO: think about this exception, maybe you can do something more reasonable
+        	logger.error(e.getMessage(), e);
         }
         return null;
     }

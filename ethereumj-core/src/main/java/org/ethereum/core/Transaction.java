@@ -164,14 +164,14 @@ public class Transaction {
 
     public byte[] getContractAddress(){
 
-        if (!isContract()) return null;
+        if (!isContractCreation()) return null;
 
         byte[] encSender = RLP.encodeElement(getSender());
         byte[] encNonce = RLP.encodeElement(nonce);
         return HashUtil.sha3omit12(RLP.encodeList(encSender, encNonce));
     }
 
-    public boolean isContract() {
+    public boolean isContractCreation() {
         return Arrays.equals(this.receiveAddress, ZERO_ADDRESS);
     }
 

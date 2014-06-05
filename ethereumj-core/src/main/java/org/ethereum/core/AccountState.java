@@ -27,7 +27,7 @@ public class AccountState {
      * 
      * Since I typically wish to refer not to the trie’s root hash 
      * but to the underlying set of key/value pairs stored within, 
-     * I define a convenient equi valence TRIE (σ[a] s ) ≡ σ[a] s . 
+     * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s . 
      * It shall be understood that σ[a] s is not a ‘physical’ member 
      * of the account and does not contribute to its later serialisation */
     private byte[] stateRoot = new byte[0];

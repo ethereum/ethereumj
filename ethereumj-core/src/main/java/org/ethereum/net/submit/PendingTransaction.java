@@ -10,14 +10,16 @@ import org.ethereum.core.Transaction;
 
 public class PendingTransaction {
 
-    Transaction tx;
+    private Transaction tx;
     int approved = 0; // each time the tx got from the wire this value increased
 
     public PendingTransaction(Transaction tx) {
         this.tx = tx;
     }
 
-    public void incApproved(){++this.approved;}
+	public void incApproved() {
+		++this.approved;
+	}
 
     public int getApproved() {
         return approved;
