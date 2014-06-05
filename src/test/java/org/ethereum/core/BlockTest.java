@@ -22,7 +22,7 @@ public class BlockTest {
     	// from RLP encoding
     	byte[] genesisBytes = Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
     	Block genesisFromRLP = new Block(genesisBytes);
-    	Genesis genesis = new Genesis();
+    	Block genesis = Genesis.getInstance();
     	assertEquals(Hex.toHexString(genesis.getHash()), Hex.toHexString(genesisFromRLP.getHash()));
     	assertEquals(Hex.toHexString(genesis.getParentHash()), Hex.toHexString(genesisFromRLP.getParentHash()));
     	assertEquals(Hex.toHexString(genesis.getStateRoot()), Hex.toHexString(genesisFromRLP.getStateRoot()));
@@ -48,7 +48,7 @@ public class BlockTest {
         				B32(sha3(B(42)))
         			)
          */
-    	Block genesis = new Genesis();
+    	Block genesis = Genesis.getInstance();
         assertEquals(CPP_PoC5_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
         
         // Not really a good test because this compares Genesis.getHash() to itself

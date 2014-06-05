@@ -4,8 +4,6 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.List;
-
 /**
  * www.ethereumJ.com
  * User: Roman Mandeleil

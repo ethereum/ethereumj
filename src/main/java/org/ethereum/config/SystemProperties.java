@@ -19,13 +19,20 @@ public class SystemProperties {
 
 	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 	
+	private static int DEFAULT_TX_APPROVE_TIMEOUT = 10;
+	private static String DEFAULT_DISCOVERY_PEER = "54.201.28.117";
+	private static int DEFAULT_DISCOVERY_PORT = 30303;
+	private static String DEFAULT_ACTIVE_PEER_IP = "54.201.28.117";
+	private static int DEFAULT_ACTIVE_PORT = 30303;
+	private static String DEFAULT_SAMPLES_DIR = "samples";
+	
 	public static SystemProperties CONFIG = new SystemProperties();
     private Properties prop = new Properties();
     private InputStream input = null;
     
     public SystemProperties() {
-        try {
-
+        
+    	try {
             File file = null;
             String dir = System.getProperty("user.dir");
             String fileName = dir + "/config/system.properties";
@@ -41,7 +48,6 @@ public class SystemProperties {
                     return;
                 }
             }
-
             //load a properties file from class path, inside static method
             prop.load(input);
 
@@ -77,18 +83,17 @@ public class SystemProperties {
 
     public int transactionApproveTimeout(){
         if (prop.isEmpty())
-            return 10;
+            return DEFAULT_TX_APPROVE_TIMEOUT;
         return Integer.parseInt(prop.getProperty("transaction.approve.timeout"));
     }
 
-
     public String peerDiscoveryIP(){
-        if(prop.isEmpty()) return "54.201.28.117";
+        if(prop.isEmpty()) return DEFAULT_DISCOVERY_PEER;
         return prop.getProperty("peer.discovery.ip");
     }
 
     public int peerDiscoveryPort(){
-        if(prop.isEmpty()) return 30303;
+        if(prop.isEmpty()) return DEFAULT_DISCOVERY_PORT;
         return Integer.parseInt(prop.getProperty("peer.discovery.port"));
     }
     
@@ -98,21 +103,21 @@ public class SystemProperties {
     }
 
     public String activePeerIP(){
-        if(prop.isEmpty()) return "54.201.28.117";
+        if(prop.isEmpty()) return DEFAULT_ACTIVE_PEER_IP;
         return prop.getProperty("peer.active.ip");
     }
 
     public int activePeerPort(){
-        if(prop.isEmpty()) return 30303;
+        if(prop.isEmpty()) return DEFAULT_ACTIVE_PORT;
         return Integer.parseInt(prop.getProperty("peer.active.port"));
     }
 
     public String samplesDir(){
-        if(prop.isEmpty()) return "samples";
+        if(prop.isEmpty()) return DEFAULT_SAMPLES_DIR;
         return prop.getProperty("samples.dir");
     }
 
-	public String toString() {
+	public void print() {
 		Enumeration<?> e = prop.propertyNames();
 		while (e.hasMoreElements()) {
 			String key = (String) e.nextElement();
@@ -120,11 +125,10 @@ public class SystemProperties {
 			if (!key.equals("null"))
 				logger.info("Key: " + key + ", Value: " + value);
 		}
-		return "";
 	}
 
     public static void main(String args[]){
         SystemProperties systemProperties = new SystemProperties();
-        logger.info(systemProperties.toString());
+        systemProperties.print();
     }
 }

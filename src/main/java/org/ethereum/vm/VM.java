@@ -55,7 +55,7 @@ public class VM {
 
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    word1.mull(word2);
+                    word1.mul(word2);
                     program.stackPush(word1);
                     program.step();
                 }

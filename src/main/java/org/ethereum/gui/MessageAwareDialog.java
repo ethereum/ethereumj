@@ -1,16 +1,12 @@
 package org.ethereum.gui;
 
-import javax.swing.*;
-import java.awt.*;
-
 /**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 26/05/2014 12:29
+ * This interface describes the methods required 
+ * for any dialog that displays info- and alert status messages.
  */
-
 public interface MessageAwareDialog {
-    public void infoStatusMsg(final String text);
-    public void alertStatusMsg(final String text);
 
+	public void infoStatusMsg(final String text);
+
+	public void alertStatusMsg(final String text);
 }

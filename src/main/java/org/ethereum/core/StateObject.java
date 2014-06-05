@@ -160,7 +160,7 @@ public class StateObject {
 	// Converts an transaction in to a state object
 	public static StateObject createContract(Transaction tx, GoState state) {
 		// Create contract if there's no recipient
-		if (tx.isContract()) {
+		if (tx.isContractCreation()) {
 			// FIXME
 			byte[] txHash = tx.getHash();
 			byte[] contractAddress = copyOfRange(txHash, 12, txHash.length);
