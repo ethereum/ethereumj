@@ -15,7 +15,6 @@ import static org.junit.Assert.fail;
 
 public class VMTest {
 
-
     @Test  // PUSH1 OP
     public void testPUSH1(){
 
@@ -817,6 +816,73 @@ public class VMTest {
     }
 
 
+    @Test  // SGT OP
+    public void testSGT_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600160020D"), new ProgramInvokeMockImpl());
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test  // SGT OP
+    public void testSGT_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
+                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                                                 "0D"), new ProgramInvokeMockImpl());
+
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test  // SGT OP
+    public void testSGT_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
+                "0D"), new ProgramInvokeMockImpl());
+
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test  // SGT OP mal
+    public void testSGT_4(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                                                 "0D"), new ProgramInvokeMockImpl());
+        try {
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            assertTrue(program.isStopped());
+            return;
+        }
+        fail();
+    }
+
+
+
     @Test  // LT OP
     public void testLT_1(){
 
@@ -874,6 +940,74 @@ public class VMTest {
         }
         fail();
     }
+
+
+    @Test  // SLT OP
+    public void testSLT_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600160020C"), new ProgramInvokeMockImpl());
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test  // SLT OP
+    public void testSLT_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
+                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                                                 "0C"), new ProgramInvokeMockImpl());
+
+        String expected = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test  // SLT OP
+    public void testSLT_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
+                                                 "0C"), new ProgramInvokeMockImpl());
+
+        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+    }
+
+    @Test  // SLT OP mal
+    public void testSLT_4(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                "0D"), new ProgramInvokeMockImpl());
+        try {
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            assertTrue(program.isStopped());
+            return;
+        }
+        fail();
+
+    }
+
 
 
     @Test  // NEG OP
@@ -1743,6 +1877,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
+
     @Test // DIV OP
     public void testDIV_5(){
 
@@ -1773,6 +1908,70 @@ public class VMTest {
         fail();
 
     }
+
+
+    @Test // SDIV OP
+    public void testSDIV_1(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6103E87FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC1805"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // SDIV OP
+    public void testSDIV_2(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60FF60FF05"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // SDIV OP
+    public void testSDIV_3(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600060FF05"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // SDIV OP mal
+    public void testSDIV_4(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60FF05"), new ProgramInvokeMockImpl());
+
+        try {
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            assertTrue(program.isStopped());
+            return;
+        }
+        fail();
+    }
+
 
     @Test // SUB OP
     public void testSUB_1(){
@@ -2480,6 +2679,128 @@ public class VMTest {
     }
 
 
+    @Test // MOD OP
+    public void testMOD_1(){
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6003600406"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // MOD OP
+    public void testMOD_2(){
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61012C6101F406"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000000C8";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // MOD OP
+    public void testMOD_3(){
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6004600206"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // MOD OP mal
+    public void testMOD_4(){
+
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600406"), new ProgramInvokeMockImpl());
+
+        try {
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } catch (RuntimeException e) {
+            assertTrue(program.isStopped());
+            return;
+        }
+        fail();
+    }
+
+    @Test // SMOD OP
+    public void testSMOD_1(){
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("6003600407"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // SMOD OP
+    public void testSMOD_2(){
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE2" + //  -30
+                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                                                 "07"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // SMOD OP
+    public void testSMOD_3(){
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
+                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
+                                                 "07"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000000A";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // SMOD OP mal
+    public void testSMOD_4(){
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
+                                                "07"), new ProgramInvokeMockImpl());
+        try {
+            vm.step(program);
+            vm.step(program);
+        } catch (Exception e) {
+            assertTrue(program.isStopped());
+            return;
+        }
+        fail();
+    }
 
     /* TEST CASE LIST END */
 
@@ -2498,19 +2819,18 @@ public class VMTest {
 }
 
 
+// todo: add gas expeted and calculated to all test cases
+// todo: considering: G_TXDATA + G_TRANSACTION
 
 
 
 /**
  *   todo:
  *
- *   1) SDIV
  *   2) MOD
  *   3) SMOD
  *   4) SLT
  *   5) SGT
-
-
  *   15) PREVHASH:
  *   16) COINBASE:
  *   17) TIMESTAMP:
@@ -2524,7 +2844,7 @@ public class VMTest {
  *   22) CREATE:
  *   23) CALL:
  *
- *   24) SUICIDE:
  *
  **/
+
 

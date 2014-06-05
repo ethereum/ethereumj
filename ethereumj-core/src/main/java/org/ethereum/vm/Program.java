@@ -190,7 +190,7 @@ public class Program {
 
     public void spendGas(int gasValue){
         // todo: check it against avail gas
-        // todo: out of gas will revert the changes
+        // todo: out of gas will revert the changes [YP 5, 6 ]
         spendGas += gasValue;
     }
 
@@ -257,6 +257,9 @@ public class Program {
 
 
     public void fullTrace(){
+
+        // todo: add gas to full trace calc
+
         if (logger.isDebugEnabled()){
 
             StringBuilder stackData = new StringBuilder();

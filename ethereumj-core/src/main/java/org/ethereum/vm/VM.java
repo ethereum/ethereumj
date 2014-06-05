@@ -30,6 +30,7 @@ public class VM {
             byte op = program.getCurrentOp();
             logger.debug("Op: {}" ,OpCode.code(op).name());
 
+            int oldMemSize = program.getMemSize();
 
             switch (OpCode.code(op)) {
                 case SHA3:
@@ -110,12 +111,33 @@ public class VM {
                     program.step();
                 }
                 break;
-                case SDIV:
-                    break;
-                case MOD:
-                    break;
-                case SMOD:
-                    break;
+                case SDIV:{
+
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    word1.sDiv(word2);
+                    program.stackPush(word1);
+                    program.step();
+                }
+                break;
+                case MOD:{
+
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    word1.mod(word2);
+                    program.stackPush(word1);
+                    program.step();
+                }
+                break;
+                case SMOD:{
+
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    word1.sMod(word2);
+                    program.stackPush(word1);
+                    program.step();
+                }
+                break;
                 case EXP:{
 
                     DataWord word1 = program.stackPop();
@@ -133,6 +155,8 @@ public class VM {
                 }
                 break;
                 case LT:{
+
+                    // todo: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     if (word1.value().compareTo(word2.value()) == -1){
@@ -145,11 +169,37 @@ public class VM {
                     program.step();
                 }
                 break;
-                case SLT:
-                    break;
-                case SGT:
-                    break;
+                case SLT:{
+
+                    // todo: can be improved by not using BigInteger
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    if (word1.sValue().compareTo(word2.sValue()) == -1){
+                        word1.and(DataWord.ZERO);
+                        word1.getData()[31] = 1;
+                    } else {
+                        word1.and(DataWord.ZERO);
+                    }
+                    program.stackPush(word1);
+                    program.step();
+                }break;
+                case SGT:{
+
+                    // todo: can be improved by not using BigInteger
+                    DataWord word1 = program.stackPop();
+                    DataWord word2 = program.stackPop();
+                    if (word1.sValue().compareTo(word2.sValue()) == 1){
+                        word1.and(DataWord.ZERO);
+                        word1.getData()[31] = 1;
+                    } else {
+                        word1.and(DataWord.ZERO);
+                    }
+                    program.stackPush(word1);
+                    program.step();
+                }break;
                 case GT:{
+
+                    // todo: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     if (word1.value().compareTo(word2.value()) == 1){
@@ -418,7 +468,16 @@ public class VM {
                     DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
 
+                    // for gas calculations [YP 9.2]
+                    DataWord oldValue =  program.storageLoad(addr);
                     program.storageSave(addr, value);
+                    if (oldValue == null && !value.isZero()){
+                        program.spendGas(GasLedger.G_SSTORE * 2);
+                    } else if (oldValue != null && value.isZero()){
+                        program.spendGas(GasLedger.G_SSTORE * 0);
+                    } else
+                        program.spendGas(GasLedger.G_SSTORE);
+
                     program.step();
                 }
                 break;
@@ -456,38 +515,10 @@ public class VM {
                 case GAS:
                     break;
 
-                case PUSH1:
-                case PUSH2:
-                case PUSH3:
-                case PUSH4:
-                case PUSH5:
-                case PUSH6:
-                case PUSH7:
-                case PUSH8:
-                case PUSH9:
-                case PUSH10:
-                case PUSH11:
-                case PUSH12:
-                case PUSH13:
-                case PUSH14:
-                case PUSH15:
-                case PUSH16:
-                case PUSH17:
-                case PUSH18:
-                case PUSH19:
-                case PUSH20:
-                case PUSH21:
-                case PUSH22:
-                case PUSH23:
-                case PUSH24:
-                case PUSH25:
-                case PUSH26:
-                case PUSH27:
-                case PUSH28:
-                case PUSH29:
-                case PUSH30:
-                case PUSH31:
-                case PUSH32:{
+                case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
+                case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
+                case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
+                case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:{
 
                     program.step();
                     int nPush = op - PUSH1.val() + 1;
@@ -521,7 +552,9 @@ public class VM {
                 default:{
                 }
 
-
+                // memory gas calc
+                int newMemSize = program.getMemSize();
+                program.spendGas(GasLedger.G_MEMORY * (newMemSize - oldMemSize) /32);
             }
             program.fullTrace();
         } catch (RuntimeException e) {
