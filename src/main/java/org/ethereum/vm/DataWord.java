@@ -41,6 +41,11 @@ public class DataWord {
         return new BigInteger(1, data);
     }
 
+    public BigInteger sValue(){
+        return new BigInteger(data);
+    }
+
+
     public boolean isZero(){
 
         byte result = 0;
@@ -49,6 +54,17 @@ public class DataWord {
         }
         return result == 0;
     }
+
+    // only in case of signed operation
+    // when the number is explicit defined
+    // as negative
+    public boolean isNegative(){
+
+        int result = data[0] & 0x80;
+
+        return result == 0x80;
+    }
+
 
     public DataWord and(DataWord w2){
 
@@ -145,6 +161,26 @@ public class DataWord {
     }
 
     // todo: improve with no BigInteger
+    public void sDiv(DataWord word){
+
+        if (word.isZero()){
+            this.and(ZERO);
+            return;
+        }
+
+        BigInteger result = sValue().divide( word.sValue() );
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        if (result.compareTo(BigInteger.ZERO) == -1)
+            Arrays.fill(data.array(), (byte) 0xFF);
+
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
+
+
+    // todo: improve with no BigInteger
     public void sub(DataWord word){
 
         BigInteger result = value().subtract( word.value() );
@@ -166,6 +202,40 @@ public class DataWord {
         this.data = data.array();
     }
 
+    // todo: improve with no BigInteger
+    public void mod(DataWord word){
+
+        if (word.isZero()){
+            this.and(ZERO);
+            return;
+        }
+
+        BigInteger result = value().mod(word.value());
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
+
+    // todo: improve with no BigInteger
+    public void sMod(DataWord word){
+
+        if (word.isZero() || word.isNegative()){
+            this.and(ZERO);
+            return;
+        }
+
+        BigInteger result = sValue().mod( word.sValue());
+        byte[] bytes = result.toByteArray();
+
+        ByteBuffer data    =  ByteBuffer.allocate(32);
+        if (result.compareTo(BigInteger.ZERO) == -1)
+            Arrays.fill(data.array(), (byte) 0xFF);
+
+        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
+        this.data = data.array();
+    }
 
     public String toString(){
         return Hex.toHexString(data);
