@@ -131,8 +131,8 @@ public enum OpCode {
 	 * System operations
 	 */
 	
-	CREATE(0xf0),
-	CALL(0xf1),
+	CREATE(0xf0),   //       [in_size] [in_offs] [gas_val] CREATE
+	CALL(0xf1),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr] [gas] CALL
 	RETURN(0xf2),
 	SUICIDE(0xff);
 	

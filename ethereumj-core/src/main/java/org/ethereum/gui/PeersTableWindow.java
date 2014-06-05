@@ -37,8 +37,8 @@ public class PeersTableWindow extends JFrame{
 
 		// Set the frame characteristics
 		setTitle("Ethereum Peers");
-		setSize(355, 300);
-		setLocation(815, 80);
+		setSize(355, 400);
+		setLocation(815, 30);
 
 		java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
 		Toolkit kit = Toolkit.getDefaultToolkit();

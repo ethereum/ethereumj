@@ -59,7 +59,7 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
         AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping("text/console", "org.ethereum.gui.ConsoleTokenMaker");
 
-        textArea = new RSyntaxTextArea(16, 47);
+        textArea = new RSyntaxTextArea(16, 44);
         textArea.setSyntaxEditingStyle("text/console");
 //        textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_LISP);
         textArea.setCodeFoldingEnabled(true);
@@ -74,7 +74,7 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
         setTitle("Connection Console");
 //        setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
-        setLocation(775, 390);
+        setLocation(802, 460);
 
         Thread t = new Thread() {
                     public void run() {

@@ -8,7 +8,7 @@ init:
     # this part run only on init stage
     # we are about to set the maxim 
     # amount of currency
-    contract.storage[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 1000000
+    contract.storage[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 10000000
 code:
 
 

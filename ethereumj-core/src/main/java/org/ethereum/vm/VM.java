@@ -30,6 +30,38 @@ public class VM {
             byte op = program.getCurrentOp();
             logger.debug("Op: {}" ,OpCode.code(op).name());
 
+
+            switch (OpCode.code(op)) {
+                case SHA3:
+                   program.spendGas( GasLedger.G_SHA3 );
+                break;
+                case SLOAD:
+                    program.spendGas( GasLedger.G_SLOAD );
+                break;
+                case SSTORE:
+                    // todo: calc gas in the execution
+                    // todo: according to the size
+                break;
+                case BALANCE:
+                    program.spendGas( GasLedger.G_BALANCE );
+                break;
+                case CREATE:
+                    program.spendGas( GasLedger.G_CREATE );
+                break;
+                case CALL:
+                    program.spendGas( GasLedger.G_CALL );
+                break;
+                case MSTORE8:
+                case MSTORE:
+                    // todo: calc gas in the execution
+                    // todo: according to the size
+                break;
+                default:
+                    program.spendGas( GasLedger.G_STEP );
+                break;
+            }
+
+
             switch (OpCode.code(op)) {
 
 
@@ -480,9 +512,15 @@ public class VM {
                     program.stop();
                 }
                 break;
-                case SUICIDE:
-                    break;
-                default:
+                case SUICIDE:{
+                    DataWord address   =  program.stackPop();
+                    // todo: transfer left balance to the address
+                    program.stop();
+                }
+                break;
+                default:{
+                }
+
 
             }
             program.fullTrace();

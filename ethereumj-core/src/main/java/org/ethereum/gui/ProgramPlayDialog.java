@@ -31,7 +31,8 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         outputList = new ArrayList<String>();
         VM vm = new VM();
 //        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054"));
-        Program program = new Program(Hex.decode("60016023576000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"), null);
+//        Program program = new Program(Hex.decode("60016023576000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"), null);
+        Program program = new Program(Hex.decode("620f424073cd2a3d9f938e13cd947ec05abc7fe734df8dd826576086602660003960866000f26001602036040e0f630000002159600060200235600054600053565b525b54602052f263000000765833602054602053566040546000602002356060546001602002356080546080536040530a0f0f630000006c59608053604053036020535760805360605356016060535760015b525b54602052f263000000765860005b525b54602052f2"), null);
 
         program.addListener(this);
         program.fullTrace();
@@ -117,8 +118,14 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         ProgramPlayDialog ppd = new ProgramPlayDialog();
 
         //Create and set up the window.
-        JFrame frame = new JFrame("SliderDemo");
+        JFrame frame = new JFrame("Program Draft Play");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+        java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
+        Toolkit kit = Toolkit.getDefaultToolkit();
+        Image img = kit.createImage(url);
+        frame.setIconImage(img);
+
 
         frame.setPreferredSize(new Dimension(580, 500));
         frame.setLocation(400, 200);
