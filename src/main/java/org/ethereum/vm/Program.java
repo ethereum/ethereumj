@@ -29,6 +29,7 @@ public class Program {
     byte[]   ops;
     int      pc = 0;
     boolean  stopped = false;
+    int      spendGas = 0;
 
     ProgramInvoke invokeData;
 
@@ -184,6 +185,13 @@ public class Program {
 
             memory = tmpMem;
         }
+    }
+
+
+    public void spendGas(int gasValue){
+        // todo: check it against avail gas
+        // todo: out of gas will revert the changes
+        spendGas += gasValue;
     }
 
     public void storageSave(DataWord word1, DataWord word2){
