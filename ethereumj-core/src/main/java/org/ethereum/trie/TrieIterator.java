@@ -7,12 +7,12 @@ import static org.ethereum.util.CompactEncoder.unpackToNibbles;
 
 public class TrieIterator {
 	
-	Trie trie;
-	String key;
-	String value;
+	private Trie trie;
+	private String key;
+	private String value;
 
-	List<byte[]> shas;
-	List<String> values;
+	private List<byte[]> shas;
+	private List<String> values;
 
 	public TrieIterator(Trie t) {
 		this.trie = t;

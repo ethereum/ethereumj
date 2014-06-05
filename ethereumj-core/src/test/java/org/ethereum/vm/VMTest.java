@@ -1,6 +1,5 @@
 package org.ethereum.vm;
 
-import org.ethereum.crypto.HashUtil;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 

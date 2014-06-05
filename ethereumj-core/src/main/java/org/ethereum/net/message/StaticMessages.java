@@ -16,7 +16,7 @@ public class StaticMessages {
     public static final byte[] GET_TRANSACTIONS = Hex.decode("2240089100000002C116");
 
     public static final byte[] DISCONNECT_08 = Hex.decode("2240089100000003C20108");
-    public static final byte[] GENESIS_HASH = Hex.decode("77ef4fdaf389dca53236bcf7f72698e154eab2828f86fbc4fc6cd9225d285c89"); // (new Genesis()).getHash();
+    public static final byte[] GENESIS_HASH = Hex.decode("77ef4fdaf389dca53236bcf7f72698e154eab2828f86fbc4fc6cd9225d285c89");
     public static final byte[] MAGIC_PACKET = Hex.decode("22400891");
 
     static {

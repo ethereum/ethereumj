@@ -22,12 +22,14 @@ import javax.swing.*;
  * User: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
-class PayOutDialog extends JDialog implements MessageAwareDialog{
+class PayOutDialog extends JDialog implements MessageAwareDialog {
 
-    PayOutDialog dialog;
+	private static final long serialVersionUID = -2838121935782110981L;
 
-    AccountState addressState = null;
-    JLabel statusMsg = null;
+	private PayOutDialog dialog;
+
+    private AccountState addressState = null;
+    private JLabel statusMsg = null;
 
     final JTextField receiverInput;
     final JTextField amountInput;
@@ -124,7 +126,6 @@ class PayOutDialog extends JDialog implements MessageAwareDialog{
 				try {
 					tx.sign(senderPrivKey);
 				} catch (Exception e1) {
-
 					dialog.alertStatusMsg("Failed to sign the transaction");
 					return;
 				}
