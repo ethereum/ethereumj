@@ -2827,10 +2827,6 @@ public class VMTest {
 /**
  *   todo:
  *
- *   2) MOD
- *   3) SMOD
- *   4) SLT
- *   5) SGT
  *   15) PREVHASH:
  *   16) COINBASE:
  *   17) TIMESTAMP:
@@ -2848,3 +2844,22 @@ public class VMTest {
  **/
 
 
+/**
+
+ contract creation
+ -----------------
+ G_TRANSACTION =                                (500)
+ 60016000546006601160003960066000f261778e600054 (115)
+ PUSH1    6001 (1)
+ PUSH1    6000 (1)
+ MSTORE   54   (1 + 1)
+ PUSH1    6006 (1)
+ PUSH1    6011 (1)
+ PUSH1    6000 (1)
+ CODECOPY 39   (1)
+ PUSH1    6006 (1)
+ PUSH1    6000 (1)
+ RETURN   f2   (1)
+ 61778e600054
+
+*/

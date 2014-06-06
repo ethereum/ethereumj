@@ -196,6 +196,8 @@ public class BlockHeader {
 	private StringBuffer toStringBuff = new StringBuffer();
 	
 	public String toString() {
+
+        toStringBuff.setLength(0);
         toStringBuff.append("  parentHash=" + ByteUtil.toHexString(parentHash)).append("\n");
         toStringBuff.append("  unclesHash=" + ByteUtil.toHexString(unclesHash)).append("\n");
         toStringBuff.append("  coinbase=" + ByteUtil.toHexString(coinbase)).append("\n");
