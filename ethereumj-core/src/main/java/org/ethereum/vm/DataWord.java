@@ -12,7 +12,7 @@ import java.nio.ByteBuffer;
  */
 public class DataWord {
 
-    static DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
+    public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
 
     byte[] data = new byte[32];
 

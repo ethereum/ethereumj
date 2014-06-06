@@ -4,11 +4,9 @@ import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 
-import org.abego.treelayout.internal.util.Contract;
 import org.ethereum.trie.MockDB;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.RLP;
-import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -55,7 +53,7 @@ public class StateTest {
 
 
     @Test  // right way to calc tx trie hash
-    public void test1(){
+    public void testCalculatePostTxState(){
 
         /*    txTrieHash=a77691cf47bec9021d3f027fc8ef2d51b758b600a79967154354b8e37108896f */
         String expected = "a77691cf47bec9021d3f027fc8ef2d51b758b600a79967154354b8e37108896f";
@@ -73,14 +71,13 @@ public class StateTest {
         byte[] postTxState = Hex.decode("7fa5bd00f6e03b5a5718560f1e25179b227167585a3c3da06a48f554365fb527");
         byte[] cumGas      = Hex.decode("0272");
 
-        TransactionRecipe tr = new TransactionRecipe(tx, postTxState, cumGas);
+        TransactionReceipt tr = new TransactionReceipt(tx, postTxState, cumGas);
 
         Trie trie = new Trie(new MockDB());
-        trie.update(RLP.encodeByte((byte)0), tr.getEncoded());
-        System.out.println(Hex.toHexString(trie.getRootHash()));
-
-        Assert.assertEquals(expected, Hex.toHexString(trie.getRootHash()));
-
+        trie.update(RLP.encodeInt(0), tr.getEncoded());
+        String txTrieRoot = Hex.toHexString(trie.getRootHash());
+        System.out.println(txTrieRoot);
+        assertEquals(expected, txTrieRoot);
 
         /* *** GROSS DATA ***
 
@@ -100,7 +97,7 @@ public class StateTest {
           extraData=null
           nonce=0000000000000000000000000000000000000000000000005d439960040e4505
 
-        TransactionRecipe[
+        TransactionReceipt[
            TransactionData [ hash=1ee6fa3149a5e9c09b54009eb6e108aaa7ecd79483d57eedcf2dff93a1505588  nonce=null,
                gasPrice=09184e72a000, gas=03e8, receiveAddress=0000000000000000000000000000000000000000, value=03e8,
                data=60016000546006601160003960066000f261778e600054, signatureV=27,
