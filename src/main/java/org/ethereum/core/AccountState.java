@@ -3,6 +3,7 @@ package org.ethereum.core;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 import java.math.BigInteger;
@@ -45,7 +46,17 @@ public class AccountState {
     }
 
     public AccountState(ECKey ecKey) {
-    	this(ecKey, BigInteger.ZERO, BigInteger.ZERO);
+        this(ecKey, BigInteger.ZERO, BigInteger.ZERO);
+    }
+
+    public AccountState(byte[] rlpData){
+        this.rlpEncoded = rlpData;
+
+        RLPList items = (RLPList)RLP.decode2(rlpEncoded).get(0);
+        this.nonce   = new BigInteger(1, ((items.get(0).getRLPData()) == null ? new byte[]{} : items.get(0).getRLPData()));
+        this.balance = new BigInteger(1, items.get(1).getRLPData());
+        this.stateRoot =  items.get(2).getRLPData();
+        this.codeHash =  items.get(3).getRLPData();
     }
 
     public AccountState(ECKey ecKey, BigInteger nonce, BigInteger balance) {
@@ -70,6 +81,8 @@ public class AccountState {
     public void incrementNonce(){
         this.nonce = nonce.add(BigInteger.ONE);
     }
+
+    public void setCodeHash(byte[] codeHash){ this.codeHash = codeHash; }
 
     public BigInteger getBalance() {
         return balance;
