@@ -3,31 +3,28 @@ package org.ethereum.core;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Arrays;
-
 /**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 06/06/2014 04:03
+ * The transaction receipt is a tuple of three items 
+ * comprising the transaction, together with the post-transaction state, 
+ * and the cumulative gas used in the block containing the transaction receipt 
+ * as of immediately after the transaction has happened,
  */
-
-public class TransactionRecipe {
+public class TransactionReceipt {
 
     private Transaction transaction;
     private byte[] postTxState;
     private byte[] cumulativeGas;
 
-    /* Tx Recipe in encoded form */
+    /* Tx Receipt in encoded form */
     private byte[] rlpEncoded;
 
-
-    public TransactionRecipe(Transaction transaction, byte[] postTxState, byte[] cumulativeGas) {
+    public TransactionReceipt(Transaction transaction, byte[] postTxState, byte[] cumulativeGas) {
         this.transaction = transaction;
         this.postTxState = postTxState;
         this.cumulativeGas = cumulativeGas;
     }
 
-    public byte[] getEncoded(){
+    public byte[] getEncoded() {
 
         if(rlpEncoded != null) return rlpEncoded;
 
@@ -42,7 +39,7 @@ public class TransactionRecipe {
 
     @Override
     public String toString() {
-        return "TransactionRecipe[" +
+        return "TransactionReceipt[" +
                 "\n   " + transaction +
                 "\n  , postTxState=" + Hex.toHexString(postTxState) +
                 "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +

@@ -150,6 +150,42 @@ public class RLPTest {
         assertArrayEquals(expected5, data);
     }
     
+    @Test /** encode int */
+    public void testEncodeInt(){
+
+        byte[] expected = {(byte)0x80};
+        byte[] data = RLP.encodeInt(0);
+        assertArrayEquals(expected, data);
+
+        byte[] expected2 = {(byte)0x78};
+        data = RLP.encodeInt(120);
+        assertArrayEquals(expected2, data);
+
+        byte[] expected3 = {(byte)0x81, (byte)0x7F};
+        data = RLP.encodeInt(127);
+        assertArrayEquals(expected3, data);
+
+        byte[] expected4 = {(byte)0x82, (byte)0x76, (byte)0x5F};
+        data = RLP.encodeInt(30303);
+        assertArrayEquals(expected4, data);
+
+        byte[] expected5 = {(byte)0x82, (byte)0x4E, (byte)0xEA};
+        data = RLP.encodeInt(20202);
+        assertArrayEquals(expected5, data);
+        
+        byte[] expected6 = {(byte)0x83, 1, 0, 0};
+        data = RLP.encodeInt(65536);
+        assertArrayEquals(expected6, data);
+        
+        byte[] expected7 = {(byte)0x80};
+        data = RLP.encodeInt(Integer.MIN_VALUE);
+        assertArrayEquals(expected7, data);
+
+        byte[] expected8 = {(byte)0x84, (byte)0x7F, (byte)0xFF, (byte)0xFF, (byte)0xFF};
+        data = RLP.encodeInt(Integer.MAX_VALUE);
+        assertArrayEquals(expected8, data);
+    }
+    
     @Test /** encode BigInteger */
     public void test6(){
 
