@@ -9,7 +9,7 @@ public class DataWordTest {
 
 	@Test
 	public void testAddPerformance() {
-		boolean enabled = true;
+		boolean enabled = false;
 		
 		if(enabled) {
 			byte[] one = new byte[] { 0x01, 0x31, 0x54, 0x41, 0x01, 0x31, 0x54,
@@ -67,5 +67,25 @@ public class DataWordTest {
 //		DataWord y = new DataWord(three);
 //		y.add2(new DataWord(three));
 //		System.out.println(Hex.toHexString(y.data));
+	}
+	
+	@Test
+	public void testMod() {
+		String expected = "000000000000000000000000000000000000000000000000000000000000001a";
+		
+		byte[] one = new byte[32];
+		one[31] = 0x1e; // 0x000000000000000000000000000000000000000000000000000000000000001e
+		
+		byte[] two = new byte[32];
+		for (int i = 0; i < two.length; i++) {
+			two[i] = (byte) 0xff;
+		}
+		two[31] = 0x56; // 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff56
+		
+		DataWord x = new DataWord(one);// System.out.println(x.value());
+		DataWord y = new DataWord(two);// System.out.println(y.value());
+		y.mod(x);
+		assertEquals(32, y.data.length);
+		assertEquals(expected, Hex.toHexString(y.data));
 	}
 }
