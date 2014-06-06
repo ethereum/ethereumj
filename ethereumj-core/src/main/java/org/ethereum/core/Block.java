@@ -93,9 +93,9 @@ public class Block {
             RLPElement cummGas    = ((RLPList)rlpTxReceipt).get(1);
             RLPElement pstTxState = ((RLPList)rlpTxReceipt).get(2);
 
-//            TransactionReceipt txReceipt =
-//                new TransactionReceipt(tx, cummGas.getRLPData(), pstTxState.getRLPData());
-//            txReceiptList.add(txReceipt);
+            TransactionReceipt txReceipt =
+                new TransactionReceipt(tx, cummGas.getRLPData(), pstTxState.getRLPData());
+            txReceiptList.add(txReceipt);
         }
         this.header.setTxTrieRoot(txsState.getRootHash());
 
@@ -227,6 +227,7 @@ public class Block {
             toStringBuff.append(txReceipt.toString());
         }
         toStringBuff.append("\n ]");
+
         return toStringBuff.toString();
     }
 

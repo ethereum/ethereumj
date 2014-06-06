@@ -109,15 +109,16 @@ public class StateTest {
         account_2.setCodeHash(HashUtil.sha3(codeData));
         trie.update(Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051"), account_2.getEncoded());
 
-        trie.update(HashUtil.sha3(codeData), codeData);
+//        trie.update(HashUtil.sha3(codeData), codeData);
 
-        AccountState account_3 = new AccountState(BigInteger.ZERO, new BigInteger("6260000000000000"));
+        AccountState account_3 = new AccountState(BigInteger.ZERO, new BigInteger("3006260000000000000"));
         trie.update(Hex.decode("4c5f4d519dff3c16f0d54b6866e256fbbbc1a600"), account_3.getEncoded());
 
+        System.out.println("" + Hex.toHexString(trie.getRootHash()));
 
-
-
-        System.out.println(Hex.toHexString(trie.getRootHash()));
+//      69c21ff84a5af0b53b11c61110a16d6ad43dad37b3eb29ae8e88c936eb06456a
+//      block 1 stateHash=69c21ff84a5af0b53b11c61110a16d6ad43dad37b3eb29ae8e88c936eb06456a
+//      block 2 stateHash=f2ae210b7141ba737fc8e356d539874e57b4aa65a5072aebbf4c53fd4db77b55
 
     }
 

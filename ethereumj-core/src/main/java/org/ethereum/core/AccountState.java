@@ -79,16 +79,21 @@ public class AccountState {
     }
 
     public void incrementNonce(){
+        rlpEncoded = null;
         this.nonce = nonce.add(BigInteger.ONE);
     }
 
-    public void setCodeHash(byte[] codeHash){ this.codeHash = codeHash; }
+    public void setCodeHash(byte[] codeHash){
+        rlpEncoded = null;
+        this.codeHash = codeHash;
+    }
 
     public BigInteger getBalance() {
         return balance;
     }
 
     public void addToBalance(BigInteger value){
+        if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.add(value);
     }
     
