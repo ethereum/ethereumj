@@ -25,7 +25,7 @@ public class HashUtil {
     public static byte[] sha256(byte[] input) {
     	return sha256digest.digest(input);
     }
-    
+
 	public static byte[] sha3(byte[] input) {
 		return SHA3Helper.sha3(input);
 	}

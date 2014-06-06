@@ -109,6 +109,19 @@ public class Trie {
 		return c.asBytes();
 	}
 
+    /**
+     * Retrieve a value from a node
+     *
+     * @param key
+     * @return value
+     */
+    public byte[] get(byte[] key) {
+        byte[] k = binToNibbles(key);
+        Value c = new Value( this.get(this.root, k) );
+        return c.asBytes();
+    }
+
+
 	/**
 	 * Delete a key/value pair from the trie
 	 * 
