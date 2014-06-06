@@ -43,7 +43,8 @@ public class Block {
      * after all transactions are executed and finalisations applied */
     private byte[] stateRoot;
     /* The SHA3 256-bit hash of the root node of the trie structure 
-     * populated with each transaction in the transactions list portion
+     * populated with each transaction recipe in the transaction recipes
+     * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_reciepe)]
      * of the block */
     private byte[] txTrieRoot;
     /* A scalar value corresponding to the difficulty level of this block. 
@@ -72,6 +73,8 @@ public class Block {
     private byte[] nonce;
 
     private List<Transaction> transactionsList = new ArrayList<Transaction>();
+    private List<TransactionRecipe> txRecipeList = new ArrayList<TransactionRecipe>();
+
     private List<Block> uncleList = new ArrayList<Block>();
     private Trie state;
 
@@ -146,9 +149,13 @@ public class Block {
             Transaction tx = new Transaction(txData.getRLPData());
             this.transactionsList.add(tx);
 
-            // YP 4.3.1 should do something with that later
-            RLPElement txRecipe1 = ((RLPList)rlpTx).get(1);
-            RLPElement txRecipe2 = ((RLPList)rlpTx).get(2);
+            // YP 4.3.1
+            RLPElement cummGas    = ((RLPList)rlpTx).get(1);
+            RLPElement pstTxState = ((RLPList)rlpTx).get(2);
+
+            TransactionRecipe txRecipe =
+                new TransactionRecipe(tx, cummGas.getRLPData(), pstTxState.getRLPData());
+            txRecipeList.add(txRecipe);
         }
 
         // Parse Uncles
@@ -244,6 +251,14 @@ public class Block {
         return transactionsList;
     }
 
+    public List<TransactionRecipe> getTxRecipeList() {
+        if (!parsed) parseRLP();
+        if (transactionsList == null) {
+            this.txRecipeList = new ArrayList<TransactionRecipe>();
+        }
+        return txRecipeList;
+    }
+
     public List<Block> getUncleList() {
         if (!parsed) parseRLP();
         if (uncleList == null) {
@@ -278,10 +293,10 @@ public class Block {
         toStringBuff.append("  extraData=" 		+ ByteUtil.toHexString(extraData)).append("\n");
         toStringBuff.append("  nonce=" 			+ ByteUtil.toHexString(nonce)).append("\n");
 
-        for (Transaction tx : getTransactionsList()){
+        for (TransactionRecipe txRecipe : getTxRecipeList()){
 
             toStringBuff.append("\n");
-            toStringBuff.append( tx.toString() );
+            toStringBuff.append(txRecipe.toString());
         }
 
         toStringBuff.append("\n]");

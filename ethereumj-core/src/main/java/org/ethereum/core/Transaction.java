@@ -214,7 +214,7 @@ public class Transaction {
                 ", signatureV=" + signature.v +
                 ", signatureR=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r)) +
                 ", signatureS=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) +
-                ']';
+                "\n  ]";
     }
 
     /**
