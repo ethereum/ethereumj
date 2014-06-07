@@ -556,7 +556,7 @@ public class VM {
                     DataWord size     =  program.stackPop();
 
                     ByteBuffer hReturn = program.memoryChunk(offset, size);
-                    program.hReturn = hReturn;
+                    program.setHReturn(hReturn);
 
                     program.step();
                     program.stop();
@@ -585,8 +585,12 @@ public class VM {
 
 
     public void play(Program program){
-        while(!program.isStopped())
-            this.step(program);
+        try {
+            while(!program.isStopped())
+                this.step(program);
+        } catch (RuntimeException e) {
+            program.setRuntimeFailure(e);
+        }
 
     }
 

@@ -12,6 +12,7 @@ public class ProgramResult {
 
     private int gasUsed = 0;
     private ByteBuffer  hReturn = null;
+    private RuntimeException exception;
 
     public void spendGas(int gas){
         gasUsed += gas;
@@ -21,6 +22,18 @@ public class ProgramResult {
 
         this.hReturn = ByteBuffer.allocate(hReturn.length);
         this.hReturn.put(hReturn);
+    }
+
+    public ByteBuffer gethReturn() {
+        return hReturn;
+    }
+
+    public RuntimeException getException() {
+        return exception;
+    }
+
+    public void setException(RuntimeException exception) {
+        this.exception = exception;
     }
 
 
