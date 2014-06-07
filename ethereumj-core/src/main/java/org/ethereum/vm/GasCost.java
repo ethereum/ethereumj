@@ -6,7 +6,7 @@ package org.ethereum.vm;
  * computation engine; its price is set by the Transaction and miners are free to 
  * ignore Transactions whose Gas price is too low.
  */
-public class Gas {
+public class GasCost {
 
 	public static int STEP = 1;
 	public static int STOP = 0;
