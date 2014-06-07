@@ -56,7 +56,7 @@ public class Block {
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
         this.txsState = new Trie(null);
-        this.header.setStateRoot(WorldManager.instance.allAccountsState.getRootHash());
+        this.header.setStateRoot(WorldManager.instance.worldState.getRootHash());
         this.header.setTxTrieRoot(txsState.getRootHash());
         this.transactionsList = transactionsList;
         this.uncleList = uncleList;
@@ -275,8 +275,8 @@ public class Block {
     
     public byte[] updateState(byte[] key, byte[] value) {
 
-        WorldManager.instance.allAccountsState.update(key, value);
-    	byte[] stateRoot = WorldManager.instance.allAccountsState.getRootHash();
+        WorldManager.instance.worldState.update(key, value);
+    	byte[] stateRoot = WorldManager.instance.worldState.getRootHash();
     	this.header.setStateRoot(stateRoot);
     	return stateRoot;
     }

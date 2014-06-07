@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
@@ -35,11 +36,11 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
     final JTextField amountInput;
     final JTextField feeInput;
 
-	public PayOutDialog(Frame parent, final AccountState addressState) {
+	public PayOutDialog(Frame parent, final Account account) {
 		super(parent, "Payout details: ", false);
 		dialog = this;
 
-		this.addressState = addressState;
+		this.addressState = account.getState();
 
         receiverInput = new JTextField(18);
         GUIUtils.addStyle(receiverInput, "Pay to:");
@@ -114,7 +115,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 					return;
 				}
 
-				byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
+				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
 				byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
 
                 byte[] gasPrice = BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice()).toByteArray();
@@ -189,7 +190,6 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
             return false;
         }
 
-
         // check if the tx is affordable
         BigInteger ammountValue = new BigInteger(amountText);
         BigInteger feeValue = new BigInteger(feeText);
@@ -261,8 +261,8 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
     }
 
     public static void main(String args[]) {
-        AccountState as = new AccountState();
-        PayOutDialog pod = new PayOutDialog(null,  as);
+        Account account = new Account();
+        PayOutDialog pod = new PayOutDialog(null,  account);
         pod.setVisible(true);
     }
 }

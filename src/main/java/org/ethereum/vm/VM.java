@@ -47,7 +47,7 @@ public class VM {
 
     static private BigInteger _32_ = BigInteger.valueOf(32);
 
-    private Logger logger = LoggerFactory.getLogger("VM");
+    private Logger logger = LoggerFactory.getLogger(VM.class);
 
     public void step(Program program) {
 

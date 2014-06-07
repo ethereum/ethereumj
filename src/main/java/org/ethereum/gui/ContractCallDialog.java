@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AccountState;
+import org.ethereum.core.Account;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.client.ClientPeer;
@@ -36,7 +36,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
 
     ContractCallDialog dialog;
-    JComboBox<AddressStateWraper> creatorAddressCombo;
+    JComboBox<AccountWrapper> creatorAddressCombo;
     final JTextField gasInput;
     final JTextField contractAddrInput;
     JTextArea   msgDataTA;
@@ -116,7 +116,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         gasInput.setText("1000");
 
-		JComboBox<AddressStateWraper> creatorAddressCombo = new JComboBox<AddressStateWraper>() {
+		JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>() {
 			@Override
 			public ComboBoxUI getUI() {
 				BasicComboBoxUI ui = (BasicComboBoxUI) super.getUI();
@@ -135,11 +135,11 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         JComponent editor = (JComponent)(creatorAddressCombo.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
-        Collection<AccountState> addressStates =
-                MainData.instance.getWallet().getAddressStateCollection();
+        Collection<Account> accounts =
+                MainData.instance.getWallet().getAccountCollection();
 
-        for (AccountState addressState : addressStates){
-            creatorAddressCombo.addItem(new AddressStateWraper(addressState));
+        for (Account account : accounts){
+            creatorAddressCombo.addItem(new AccountWrapper(account));
         }
 
 		creatorAddressCombo.setRenderer(new DefaultListCellRenderer() {
@@ -229,10 +229,10 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         byte[] contractAddress = Hex.decode( contractAddrInput.getText());
 
-        AccountState addressState = ((AddressStateWraper)creatorAddressCombo.getSelectedItem()).getAddressState();
+        Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
 
-        byte[] senderPrivKey = addressState.getEcKey().getPrivKeyBytes();
-        byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
+        byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
+        byte[] nonce = account.getState().getNonce() == BigInteger.ZERO ? null : account.getState().getNonce().toByteArray();
         byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
@@ -269,22 +269,22 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         worker.execute();
     }
 
-	public class AddressStateWraper {
+	public class AccountWrapper {
 
-        private AccountState addressState;
+        private Account account;
 
-        public AddressStateWraper(AccountState addressState) {
-            this.addressState = addressState;
+        public AccountWrapper(Account account) {
+            this.account = account;
         }
 
-        public AccountState getAddressState() {
-            return addressState;
+        public Account getAccount() {
+            return account;
         }
 
 		@Override
 		public String toString() {
-			String addressShort = Utils.getAddressShortString(addressState.getEcKey().getAddress());
-			String valueShort = Utils.getValueShortString(addressState.getBalance());
+			String addressShort = Utils.getAddressShortString(account.getEcKey().getAddress());
+			String valueShort = Utils.getValueShortString(account.getState().getBalance());
 			String result = String.format(" By: [%s] %s", addressShort,
 					valueShort);
 			return result;

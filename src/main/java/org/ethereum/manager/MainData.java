@@ -47,7 +47,7 @@ public class MainData {
         ECKey key = ECKey.fromPrivate(cowAddr);
 
         wallet.importKey(cowAddr);
-        AccountState state = wallet.getAddressState(key.getAddress());
+        AccountState state = wallet.getAccountState(key.getAddress());
         state.addToBalance(BigInteger.valueOf(2).pow(200));
         wallet.importKey(HashUtil.sha3("cat".getBytes()));
 

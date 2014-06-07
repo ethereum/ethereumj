@@ -18,7 +18,7 @@ public class Blockchain extends ArrayList<Block> {
 
 	private static final long serialVersionUID = -143590724563460486L;
 
-	private static Logger logger = LoggerFactory.getLogger(Blockchain.class);
+	private static Logger logger = LoggerFactory.getLogger("Chain");
 	
 	// to avoid using minGasPrice=0 from Genesis for the wallet
 	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();

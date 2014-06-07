@@ -29,8 +29,8 @@ public class WalletTest {
         wallet.importKey(catKey.getPrivKeyBytes());
 
 
-        AccountState cowAddressState = (AccountState) wallet.getAddressState(cowKey.getAddress());
-        AccountState catAddressState = (AccountState) wallet.getAddressState(catKey.getAddress());
+        AccountState cowAddressState = wallet.getAccountState(cowKey.getAddress());
+        AccountState catAddressState = wallet.getAccountState(catKey.getAddress());
 
         cowAddressState.addToBalance(new BigInteger("234234"));
         catAddressState.addToBalance(new BigInteger("84758"));
