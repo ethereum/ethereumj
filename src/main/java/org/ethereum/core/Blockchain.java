@@ -6,12 +6,11 @@ import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.submit.WalletTransaction;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.util.*;
-
-import javax.inject.Inject;
 
 import static org.ethereum.core.Denomination.*;
 
@@ -19,25 +18,22 @@ public class Blockchain extends ArrayList<Block> {
 
 	private static final long serialVersionUID = -143590724563460486L;
 
-	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue(); // to avoid using minGasPrice=0 from Genesis
+	private static Logger logger = LoggerFactory.getLogger(Blockchain.class);
 	
-	@Inject
-	private Logger logger;
-	
+	// to avoid using minGasPrice=0 from Genesis for the wallet
+	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+		
 	private Database db;
 	private Wallet wallet;
 	
     private long gasPrice = 1000;
     private Block lastBlock;
 
-
     // This map of transaction designed
     // to approve the tx by external trusted peer
     private Map<String, WalletTransaction> walletTransactions =
             Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
 
-
-	
 	public Blockchain(Wallet wallet) {
 		this.db = WorldManager.instance.chainDB;
 		this.wallet = wallet;
