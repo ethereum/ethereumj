@@ -94,13 +94,15 @@ public class BlockTest {
     	Block genesis = Genesis.getInstance();
     	byte[] diffBytes = genesis.calcDifficulty();
     	BigInteger difficulty = new BigInteger(1, diffBytes);
-    	System.out.println(difficulty.toString());
+    	System.out.println("Genesis difficulty = " + difficulty.toString());
     	fail("Yet to be implemented.");
     }
     
     @Test
     public void testCalcGasLimit() {
-    	// Block.calcGasLimit()
+    	Block genesis = Genesis.getInstance();
+    	long gasLimit = genesis.calcGasLimit();
+    	System.out.println("Genesis gasLimit = " + gasLimit);
     	fail("Yet to be implemented.");
     }
 }

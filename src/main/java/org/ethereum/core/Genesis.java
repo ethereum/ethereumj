@@ -9,10 +9,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+/**
+ * The genesis block is the first block in the chain and has fixed values according to 
+ * the protocol specification. The genesis block is 13 items, and is specified thus:
+ * 
+ * ( zerohash_256 , SHA3 RLP () , zerohash_160 , stateRoot, 0, 2^22 , 0, 0, 1000000, 0, 0, 0, SHA3 (42) , (), () )
+ * 
+ * - Where zerohash_256 refers to the parent hash, a 256-bit hash which is all zeroes; 
+ * - zerohash_160 refers to the coinbase address, a 160-bit hash which is all zeroes; 
+ * - 2^22 refers to the difficulty; 
+ * - 0 refers to the timestamp (the Unix epoch); 
+ * - the transaction trie root and extradata are both 0, being equivalent to the empty byte array. 
+ * - The sequences of both uncles and transactions are empty and represented by (). 
+ * - SHA3 (42) refers to the SHA3 hash of a byte array of length one whose first and only byte is of value 42. 
+ * - SHA3 RLP () value refers to the hash of the uncle lists in RLP, both empty lists.
+ * 
+ * See Yellow Paper: http://www.gavwood.com/Paper.pdf (Appendix I. Genesis Block)
+ */
 public class Genesis extends Block {
 	
 	Logger logger = LoggerFactory.getLogger(this.getClass());
 	
+	// The proof-of-concept series include a development premine, making the state root hash 
+	// some value stateRoot. The latest documentation should be consulted for the value of the state root.
 	private AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
 	private String[] premine = new String[] {
 			"2ef47100e0787b915105fd5e3f4ff6752079d5cb", 	// # (M)
@@ -53,8 +72,6 @@ public class Genesis extends Block {
 		}
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
 		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
-
-        Config.CHAIN_DB.put(getParentHash(), getEncoded());
     }
 	
 	public static Block getInstance() {

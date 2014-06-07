@@ -226,7 +226,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
-        toStringBuff.append("  hash=" + ByteUtil.toHexString(hash)).append("");
+        toStringBuff.append("  hash=" + ByteUtil.toHexString(this.getHash())).append("");
         toStringBuff.append(header.toFlatString());
         
         for (Transaction tx : getTransactionsList()){
@@ -313,8 +313,8 @@ public class Block {
 	 * @return
 	 */
 	public long calcGasLimit() {
-		if (this.header.getParentHash() == null)
-			return 1000000L;
+		if (Arrays.equals(this.header.getParentHash(), Genesis.PARENT_HASH))
+			return Genesis.GAS_LIMIT;
 		else {
 			Block parent = this.getParent();
 			return Math.max(MIN_GAS_LIMIT, (parent.header.getGasLimit() * (1024 - 1) + (parent.header.getGasUsed() * 6 / 5)) / 1024);
