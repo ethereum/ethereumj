@@ -90,13 +90,11 @@ public class Blockchain extends ArrayList<Block> {
     private void addBlock(Block block) {
     	if(block.isValid()) {
 			this.wallet.processBlock(block);
-	
 	        // that is the genesis case , we don't want to rely
 	        // on this price will use default 10000000000000
 	        // todo: refactor this longValue some constant defaults class 10000000000000L
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
-	
-			if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
+				if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
 				this.lastBlock = block;
 			this.add(block);
     	}
