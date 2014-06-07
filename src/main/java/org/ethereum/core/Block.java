@@ -9,8 +9,6 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.BigIntegers;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -305,9 +303,8 @@ public class Block {
 	
 	/**
 	 * Calculate GasLimit 
-	 *  max(10000, (parent gas limit * (1024 - 1) + (parent gas used * 6 / 5)) / 1024)
-	 *  
-	 * @return
+	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (25)
+	 * @return long value of the gasLimit
 	 */
 	public long calcGasLimit() {
 		if (this.isGenesis())
@@ -318,6 +315,11 @@ public class Block {
 		}
 	}
 	
+	/**
+	 * Calculate Difficulty 
+	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
+	 * @return byte array value of the difficulty
+	 */
 	public byte[] calcDifficulty() {
 		if (this.isGenesis())
 			return Genesis.DIFFICULTY;
