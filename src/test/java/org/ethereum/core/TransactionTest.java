@@ -143,7 +143,7 @@ public class TransactionTest {
     	assertEquals(HASH_TX, Hex.toHexString(txSigned.getHash()));
     	assertEquals(RLP_ENCODED_SIGNED_TX, Hex.toHexString(txSigned.getEncoded()));
     	
-    	assertNull(txSigned.getNonce());
+    	assertEquals(BigInteger.ZERO, new BigInteger(1, txSigned.getNonce()));
     	assertEquals(new BigInteger(1, testGasPrice), new BigInteger(1, txSigned.getGasPrice()));
     	assertEquals(new BigInteger(1, testGasLimit), new BigInteger(1, txSigned.getGasLimit()));
     	assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txSigned.getReceiveAddress()));
@@ -163,7 +163,7 @@ public class TransactionTest {
     	txUnsigned.sign(Hex.decode(KEY));
     	assertEquals(RLP_ENCODED_SIGNED_TX, Hex.toHexString(txUnsigned.getEncoded()));   	
     	
-    	assertNull(txUnsigned.getNonce());
+    	assertEquals(BigInteger.ZERO, new BigInteger(1, txUnsigned.getNonce()));
     	assertEquals(new BigInteger(1, testGasPrice), new BigInteger(1, txUnsigned.getGasPrice()));
     	assertEquals(new BigInteger(1, testGasLimit), new BigInteger(1, txUnsigned.getGasLimit()));
     	assertEquals(Hex.toHexString(testReceiveAddress), Hex.toHexString(txUnsigned.getReceiveAddress()));
