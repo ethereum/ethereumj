@@ -24,7 +24,7 @@ public class Program {
     Map<DataWord, DataWord> storage = new HashMap<DataWord, DataWord>();
     ByteBuffer memory = null;
 
-    ByteBuffer hReturn = null;
+    ProgramResult result = new ProgramResult();
 
     byte[]   ops;
     int      pc = 0;
@@ -84,7 +84,7 @@ public class Program {
     }
 
     public void setHReturn(ByteBuffer buff){
-        hReturn = buff;
+        result.setHReturn(buff.array());
     }
 
     public void step(){
@@ -267,6 +267,14 @@ public class Program {
     }
 
 
+    public ProgramResult getResult() {
+        return result;
+    }
+
+    public void setRuntimeFailure(RuntimeException e){
+        result.setException(e);
+    }
+
     public void fullTrace(){
 
         // todo: add gas to full trace calc
@@ -336,8 +344,8 @@ public class Program {
             global.append(" -- MEMORY --  ").append(memoryData).append("\n");
             global.append(" -- STORAGE -- ").append(storageData).append("\n");
 
-            if (hReturn != null){
-                global.append("\n  HReturn: ").append(Hex.toHexString(hReturn.array()));
+            if (result.gethReturn() != null){
+                global.append("\n  HReturn: ").append(Hex.toHexString(result.gethReturn().array()));
             }
 
             if (listener != null){

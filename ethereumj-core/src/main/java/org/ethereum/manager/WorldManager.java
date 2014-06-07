@@ -1,11 +1,14 @@
 package org.ethereum.manager;
 
+import io.netty.channel.AddressedEnvelope;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Database;
 import org.ethereum.trie.Trie;
 import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramResult;
 import org.ethereum.vm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,19 +67,23 @@ public class WorldManager {
             return;
         }
 
+        // 2. THE SIMPLE BALANCE CHANGE SHOULD HAPPEN ANYWAY
+        AccountState recieverState = null;
 
-        // 2. FIND OUT WHAT IS THE TRANSACTION TYPE
+        // Check if the receive is a new contract
         if (tx.isContractCreation()){
 
-            // todo 0. run the init method
+            byte[]       contractAddress= tx.getContractAddress();
+            AccountState contractAccount = new AccountState(BigInteger.ZERO, BigInteger.valueOf(0));
+            allAccountsState.update(contractAddress, contractAccount.getEncoded());
+            recieverState = contractAccount;
+            stateLogger.info("New contract created address={}",
+                    Hex.toHexString(contractAddress));
+        }
 
-            VM vm = new VM();
-            Program program = new Program(null, null);
-
-
-        } else{
-
-            AccountState recieverState;
+        // if reciver was not set by
+        // creation of contract
+        if (recieverState == null) {
             byte[] accountData = this.allAccountsState.get(tx.getReceiveAddress());
             if (accountData.length == 0){
 
@@ -90,21 +97,47 @@ public class WorldManager {
                     stateLogger.info("Account updated address={}",
                             Hex.toHexString(tx.getReceiveAddress()));
             }
+        }
 
-            // APPLY THE BALANCE VALUE
-            recieverState.addToBalance(new BigInteger(1, tx.getValue()));
-            senderState.addToBalance(new BigInteger(1, tx.getValue()).negate());
+        recieverState.addToBalance(new BigInteger(1, tx.getValue()));
+        senderState.addToBalance(new BigInteger(1, tx.getValue()).negate());
+
+        if (senderState.getBalance().compareTo(BigInteger.ZERO) == 1){
+
+            senderState.incrementNonce();
+            allAccountsState.update(tx.getSender(), senderState.getEncoded());
+            allAccountsState.update(tx.getReceiveAddress(), recieverState.getEncoded());
+        }
+
+
+
+        // 3. FIND OUT WHAT IS THE TRANSACTION TYPE
+        if (tx.isContractCreation()){
+
+            byte[] initCode = tx.getData();
+
+            VM vm = new VM();
+            Program program = new Program(initCode, null);
+            vm.play(program);
+
+            ProgramResult result = program.getResult();
+            byte[] bodyCode = result.gethReturn().array();
+            // todo: what if the body code is null , still submit ?
+
+            // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
+
+            byte[] key = HashUtil.sha3(bodyCode);
+            chainDB.put(key, bodyCode);
+
+            if (stateLogger.isInfoEnabled())
+                stateLogger.info("saving code of the contract to the db: sha3(code)={} code={}",
+                        Hex.toHexString(key),
+                        Hex.toHexString(bodyCode));
+
+        } else{
 
 
             // todo 2. check if the address is a contract,  if it is perform contract call
-
-
-            if (senderState.getBalance().compareTo(BigInteger.ZERO) == 1){
-
-                senderState.incrementNonce();
-                allAccountsState.update(tx.getSender(), senderState.getEncoded());
-                allAccountsState.update(tx.getReceiveAddress(), recieverState.getEncoded());
-            }
 
         }
 
