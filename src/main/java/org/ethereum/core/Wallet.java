@@ -23,9 +23,8 @@ import java.util.HashMap;
 import java.util.List;
 
 /**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 17/05/14 15:53
+ * The Wallet handles the management of accounts with addresses and private keys.
+ * New accounts can be generated and added to the wallet and existing accounts can be queried.
  */
 public class Wallet {
 
@@ -34,24 +33,24 @@ public class Wallet {
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
 	
     // <address, info> table for a wallet
-    private HashMap<String, AccountState> rows = new HashMap<String, AccountState>();
+    private HashMap<String, Account> rows = new HashMap<String, Account>();
     private long high;
 
     private List<WalletListener> listeners = new ArrayList<WalletListener>();
 
     private HashMap<BigInteger, Transaction> transactionMap = new HashMap<BigInteger, Transaction>();
 
-    public void addNewKey(){
-        AccountState addressState = new AccountState();
-        String address = Hex.toHexString(addressState.getEcKey().getAddress());
-        rows.put(address, addressState);
+    public void addNewAccount() {
+        Account account = new Account();
+        String address = Hex.toHexString(account.getEcKey().getAddress());
+        rows.put(address, account);
         for (WalletListener listener : listeners) listener.valueChanged();
     }
 
     public void importKey(byte[] privKey){
-        AccountState addressState = new AccountState(ECKey.fromPrivate(privKey));
-        String address = Hex.toHexString(addressState.getEcKey().getAddress());
-        rows.put(address, addressState);
+        Account account = new Account(ECKey.fromPrivate(privKey));
+        String address = Hex.toHexString(account.getEcKey().getAddress());
+        rows.put(address, account);
         notifyListeners();
     }
 
@@ -59,24 +58,24 @@ public class Wallet {
         this.listeners.add(walletListener);
     }
 
-    public Collection<AccountState> getAddressStateCollection(){
+    public Collection<Account> getAccountCollection(){
         return rows.values();
     }
 
-    public AccountState getAddressState(byte[] addressBytes){
+    public AccountState getAccountState(byte[] addressBytes){
         String address = Hex.toHexString(addressBytes);
-        return rows.get(address);
+        return rows.get(address).getState();
     }
 
     public BigInteger getBalance(byte[] addressBytes){
         String address = Hex.toHexString(addressBytes);
-        return rows.get(address).getBalance();
+        return rows.get(address).getState().getBalance();
     }
 
     public BigInteger totalBalance(){
         BigInteger sum = BigInteger.ZERO;
-        for (AccountState addressState : rows.values()){
-            sum = sum.add(addressState.getBalance());
+        for (Account account : rows.values()){
+            sum = sum.add(account.getState().getBalance());
         }
         return sum;
     }
@@ -86,18 +85,18 @@ public class Wallet {
         transactionMap.put(new BigInteger(transaction.getHash()), transaction );
 
         byte[] senderAddress = transaction.getSender();
-        AccountState senderState =  rows.get(Hex.toHexString(senderAddress));
-        if (senderState != null){
+        Account sender =  rows.get(Hex.toHexString(senderAddress));
+        if (sender != null){
 
             BigInteger value = new BigInteger(-1, transaction.getValue());
-            senderState.addToBalance(value);
-            senderState.incrementNonce();
+            sender.getState().addToBalance(value);
+            sender.getState().incrementNonce();
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
-        AccountState receiverState =  rows.get(Hex.toHexString(receiveAddress));
-        if (receiverState != null){
-            receiverState.addToBalance(new BigInteger(1, transaction.getValue()));
+        Account receiver =  rows.get(Hex.toHexString(receiveAddress));
+        if (receiver != null){
+            receiver.getState().addToBalance(new BigInteger(1, transaction.getValue()));
         }
 
         notifyListeners();
@@ -214,7 +213,7 @@ public class Wallet {
         walletElement.setAttributeNode(high);
 
         int i = 0;
-        for (AccountState addressState :  getAddressStateCollection()){
+        for (Account account :  getAccountCollection()){
 
             Element raw = doc.createElement("raw");
             Attr id = doc.createAttribute("id");
@@ -222,17 +221,17 @@ public class Wallet {
             raw.setAttributeNode(id);
 
             Element addressE = doc.createElement("address");
-            addressE.setTextContent(Hex.toHexString(addressState.getEcKey().getAddress()));
+            addressE.setTextContent(Hex.toHexString(account.getEcKey().getAddress()));
 
             Attr nonce = doc.createAttribute("nonce");
             nonce.setValue("0");
             addressE.setAttributeNode(nonce);
 
             Element privKey = doc.createElement("privkey");
-            privKey.setTextContent(Hex.toHexString(addressState.getEcKey().getPrivKeyBytes()));
+            privKey.setTextContent(Hex.toHexString(account.getEcKey().getPrivKeyBytes()));
 
             Element value   = doc.createElement("value");
-            value.setTextContent(addressState.getBalance().toString());
+            value.setTextContent(account.getState().getBalance().toString());
 
             raw.appendChild(addressE);
             raw.appendChild(privKey);
