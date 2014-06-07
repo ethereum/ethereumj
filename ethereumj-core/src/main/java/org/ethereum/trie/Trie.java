@@ -104,9 +104,7 @@ public class Trie {
 	 * @return value
 	 */
 	public byte[] get(String key) {
-		byte[] k = binToNibbles(key.getBytes());
-		Value c = new Value( this.get(this.root, k) );
-		return c.asBytes();
+		return this.get(key.getBytes());
 	}
 
     /**
