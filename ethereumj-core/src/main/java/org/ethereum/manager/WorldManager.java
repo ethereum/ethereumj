@@ -1,6 +1,5 @@
 package org.ethereum.manager;
 
-import io.netty.channel.AddressedEnvelope;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
@@ -21,15 +20,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * www.ethereumJ.com
- * User: Roman Mandeleil
- * Created on: 07/06/2014 10:08
+ * WorldManager is the main class to handle the processing of transactions and managing the world state.
  */
-
 public class WorldManager {
 
-    Logger logger = LoggerFactory.getLogger("main");
-    Logger stateLogger = LoggerFactory.getLogger("state");
+    private Logger logger = LoggerFactory.getLogger("main");
+    private Logger stateLogger = LoggerFactory.getLogger("state");
 
     public static WorldManager instance = new WorldManager();
 
@@ -39,17 +35,16 @@ public class WorldManager {
     public Database chainDB = new Database("blockchain");
     public Database stateDB = new Database("state");
 
-    public Trie allAccountsState = new Trie(stateDB.getDb());
+    public Trie worldState = new Trie(stateDB.getDb());
 
+    public void applyTransaction(Transaction tx) {
 
-    public void applyTransaction(Transaction tx){
-
-        // todo: refactor the wallet transactions to the world manager
+        // TODO: refactor the wallet transactions to the world manager
         MainData.instance.getBlockchain().addWalletTransaction(tx);
 
         // 1. VALIDATE THE NONCE
         byte[] senderAddress = tx.getSender();
-        byte[] stateData = allAccountsState.get(senderAddress);
+        byte[] stateData = worldState.get(senderAddress);
 
         if (stateData == null || stateData.length == 0) {
             if (stateLogger.isWarnEnabled())
@@ -58,61 +53,51 @@ public class WorldManager {
         }
 
         AccountState senderState = new AccountState(stateData);
-        if (senderState.getNonce().compareTo(new BigInteger(tx.getNonce())) !=  0){
-
-            if (stateLogger.isWarnEnabled())
-                stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
-                        senderState.getNonce(),
-                        new BigInteger(tx.getNonce()));
+        if (senderState.getNonce().compareTo(new BigInteger(tx.getNonce())) !=  0) {
+			if (stateLogger.isWarnEnabled())
+				stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
+						senderState.getNonce(), new BigInteger(tx.getNonce()));
             return;
         }
 
         // 2. THE SIMPLE BALANCE CHANGE SHOULD HAPPEN ANYWAY
-        AccountState recieverState = null;
+        AccountState receiverState = null;
 
         // Check if the receive is a new contract
-        if (tx.isContractCreation()){
-
-            byte[]       contractAddress= tx.getContractAddress();
-            AccountState contractAccount = new AccountState(BigInteger.ZERO, BigInteger.valueOf(0));
-            allAccountsState.update(contractAddress, contractAccount.getEncoded());
-            recieverState = contractAccount;
+        if (tx.isContractCreation()) {
+            byte[] contractAddress = tx.getContractAddress();
+            receiverState = new AccountState();
+            worldState.update(contractAddress, receiverState.getEncoded());
             stateLogger.info("New contract created address={}",
                     Hex.toHexString(contractAddress));
-        }
-
-        // if reciver was not set by
-        // creation of contract
-        if (recieverState == null) {
-            byte[] accountData = this.allAccountsState.get(tx.getReceiveAddress());
+        } else {
+        	// receiver was not set by creation of contract
+            byte[] accountData = this.worldState.get(tx.getReceiveAddress());
             if (accountData.length == 0){
-
-                recieverState = new AccountState(tx.getKey());
+                receiverState = new AccountState();
                 if (stateLogger.isInfoEnabled())
                     stateLogger.info("New account created address={}",
                             Hex.toHexString(tx.getReceiveAddress()));
             } else {
-                recieverState = new AccountState(accountData);
+                receiverState = new AccountState(accountData);
                 if (stateLogger.isInfoEnabled())
                     stateLogger.info("Account updated address={}",
                             Hex.toHexString(tx.getReceiveAddress()));
             }
         }
-
-        recieverState.addToBalance(new BigInteger(1, tx.getValue()));
-        senderState.addToBalance(new BigInteger(1, tx.getValue()).negate());
-
-        if (senderState.getBalance().compareTo(BigInteger.ZERO) == 1){
-
-            senderState.incrementNonce();
-            allAccountsState.update(tx.getSender(), senderState.getEncoded());
-            allAccountsState.update(tx.getReceiveAddress(), recieverState.getEncoded());
+        if(tx.getValue() != null) {
+        	receiverState.addToBalance(new BigInteger(1, tx.getValue()));
+        	senderState.addToBalance(new BigInteger(1, tx.getValue()).negate());
         }
 
-
+        if (senderState.getBalance().compareTo(BigInteger.ZERO) == 1) {
+            senderState.incrementNonce();
+            worldState.update(tx.getSender(), senderState.getEncoded());
+            worldState.update(tx.getReceiveAddress(), receiverState.getEncoded());
+        }
 
         // 3. FIND OUT WHAT IS THE TRANSACTION TYPE
-        if (tx.isContractCreation()){
+        if (tx.isContractCreation()) {
 
             byte[] initCode = tx.getData();
 
@@ -122,7 +107,7 @@ public class WorldManager {
 
             ProgramResult result = program.getResult();
             byte[] bodyCode = result.gethReturn().array();
-            // todo: what if the body code is null , still submit ?
+            // TODO: what if the body code is null , still submit ?
 
             // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
 
@@ -133,40 +118,31 @@ public class WorldManager {
                 stateLogger.info("saving code of the contract to the db: sha3(code)={} code={}",
                         Hex.toHexString(key),
                         Hex.toHexString(bodyCode));
-
-        } else{
-
-
-            // todo 2. check if the address is a contract,  if it is perform contract call
-
+        } else {
+            // TODO: 2. check if the address is a contract,  if it is perform contract call
         }
-
         pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
     }
 
-    public void applyTransactionList(List<Transaction> txList){
+    public void applyTransactionList(List<Transaction> txList) {
         for (Transaction tx :  txList){
             applyTransaction(tx);
         }
     }
 
-    public void applyBlock(Block block){
-
+    public void applyBlock(Block block) {
         List<Transaction> txList = block.getTransactionsList();
         applyTransactionList(txList);
     }
 
-    public void applyBlockList(List<Block> blocks){
-        for (int i = blocks.size() - 1; i >= 0 ; --i){
+    public void applyBlockList(List<Block> blocks) {
+        for (int i = blocks.size() - 1; i >= 0 ; --i) {
             applyBlock(blocks.get(i));
         }
     }
 
-
-
-    public void close(){
+    public void close() {
         chainDB.close();
         stateDB.close();
     }
-
 }

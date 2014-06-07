@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.AccountState;
+import org.ethereum.core.Account;
 import org.ethereum.core.Wallet;
 import org.ethereum.manager.MainData;
 
@@ -56,10 +56,9 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
 
         Wallet wallet = MainData.instance.getWallet();
 
-        for (AccountState addressState : wallet.getAddressStateCollection()){
+        for (Account account : wallet.getAccountCollection()){
 
-            WalletAddressPanel rowPanel =
-                    new WalletAddressPanel(addressState);
+			WalletAddressPanel rowPanel = new WalletAddressPanel(account);
             contentPane.add(rowPanel);
         }
 
@@ -78,13 +77,13 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             public void mouseClicked(MouseEvent e) {
 
                 Wallet wallet = MainData.instance.getWallet();
-                if (wallet.getAddressStateCollection().size() >=5){
+                if (wallet.getAccountCollection().size() >=5){
                     JOptionPane.showMessageDialog(walletWindow,
                             "Hey do you really need more than 5 address for a demo wallet");
                     return;
                 }
 
-                wallet.addNewKey();
+                wallet.addNewAccount();
                 Dimension dimension = walletWindow.getSize();
                 int height = dimension.height;
                 int width = dimension.width;

@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.net.Command;
@@ -29,13 +28,12 @@ import static org.ethereum.net.Command.*;
  */
 public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    Logger logger = LoggerFactory.getLogger("Wire");
 
     Timer timer = null;
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
 
     private final static byte[] HELLO_MESSAGE = StaticMessages.HELLO_MESSAGE.getPayload();
-    private final static byte[] HELLO_MESSAGE_LEN = ByteUtil.calcPacketLength(HELLO_MESSAGE);
 
     private long lastPongTime = 0;
     private boolean tearDown = false;
@@ -200,7 +198,4 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         buffer.writeBytes(StaticMessages.GET_PEERS);
         ctx.writeAndFlush(buffer);
     }
-
-
-
 }

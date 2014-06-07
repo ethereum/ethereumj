@@ -10,7 +10,6 @@ import io.netty.channel.FixedRecvByteBufAllocator;
 import java.util.*;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
@@ -38,7 +37,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
-    Logger logger = LoggerFactory.getLogger("wire");
+    Logger logger = LoggerFactory.getLogger("Wire");
 
     Timer chainAskTimer = new Timer();
     int secToAskForChain = 1;
