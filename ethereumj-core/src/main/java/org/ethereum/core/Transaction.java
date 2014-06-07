@@ -77,7 +77,7 @@ public class Transaction {
     /* creation contract tx
      * [ nonce, gasPrice, gasLimit, 0000000000000000, endowment, init, signature(v, r, s) ]
      * or simple send tx
-     * [ nonce, gasPrice, gasLimit, receiveAddress, longValue, data, signature(v, r, s) ]
+     * [ nonce, gasPrice, gasLimit, receiveAddress, value, data, signature(v, r, s) ]
      */
     public Transaction(byte[] nonce, byte[] gasPrice, byte[] gasLimit, byte[] receiveAddress, byte[] value, byte[] data) {
         this.nonce = nonce;

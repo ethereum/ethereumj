@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 /**
  *  Generic interface for Ethereum database
  *	
- *	LevelDB key/longValue pair DB implementation will be used.
+ *	LevelDB key/value pair DB implementation will be used.
  *  Choice must be made between:
  *  	Pure Java: https://github.com/dain/leveldb
  *  	JNI binding: https://github.com/fusesource/leveldbjni
@@ -60,12 +60,12 @@ public class Database {
 		}
 	}
 	
-	/** Insert object(longValue) (key = sha3(longValue)) */
+	/** Insert object(value) (key = sha3(value)) */
 	public void put(byte[] key, byte[] value) {
 		db.put(key, value);
 	}
 	
-	/** Get object (key) -> longValue */
+	/** Get object (key) -> value */
 	public byte[] get(byte[] key) {
 		return db.get(key);
 	}
