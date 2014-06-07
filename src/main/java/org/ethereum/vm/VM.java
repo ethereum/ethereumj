@@ -34,23 +34,23 @@ public class VM {
 
             switch (OpCode.code(op)) {
                 case SHA3:
-                   program.spendGas(Gas.SHA3);
+                   program.spendGas(GasCost.SHA3);
                 break;
                 case SLOAD:
-                    program.spendGas(Gas.SLOAD);
+                    program.spendGas(GasCost.SLOAD);
                 break;
                 case SSTORE:
                     // todo: calc gas in the execution
                     // todo: according to the size
                 break;
                 case BALANCE:
-                    program.spendGas(Gas.BALANCE);
+                    program.spendGas(GasCost.BALANCE);
                 break;
                 case CREATE:
-                    program.spendGas(Gas.CREATE);
+                    program.spendGas(GasCost.CREATE);
                 break;
                 case CALL:
-                    program.spendGas(Gas.CALL);
+                    program.spendGas(GasCost.CALL);
                 break;
                 case MSTORE8:
                 case MSTORE:
@@ -58,7 +58,7 @@ public class VM {
                     // todo: according to the size
                 break;
                 default:
-                    program.spendGas(Gas.STEP);
+                    program.spendGas(GasCost.STEP);
                 break;
             }
 
@@ -472,11 +472,11 @@ public class VM {
                     DataWord oldValue =  program.storageLoad(addr);
                     program.storageSave(addr, value);
                     if (oldValue == null && !value.isZero()){
-                        program.spendGas(Gas.SSTORE * 2);
+                        program.spendGas(GasCost.SSTORE * 2);
                     } else if (oldValue != null && value.isZero()){
-                        program.spendGas(Gas.SSTORE * 0);
+                        program.spendGas(GasCost.SSTORE * 0);
                     } else
-                        program.spendGas(Gas.SSTORE);
+                        program.spendGas(GasCost.SSTORE);
 
                     program.step();
                 }
@@ -554,7 +554,7 @@ public class VM {
 
                 // memory gas calc
                 int newMemSize = program.getMemSize();
-                program.spendGas(Gas.MEMORY * (newMemSize - oldMemSize) /32);
+                program.spendGas(GasCost.MEMORY * (newMemSize - oldMemSize) /32);
             }
             program.fullTrace();
         } catch (RuntimeException e) {
