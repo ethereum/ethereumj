@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
