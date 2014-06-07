@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import java.math.BigInteger;
+
 import org.ethereum.net.message.BlocksMessage;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.util.RLPList;
@@ -89,7 +91,10 @@ public class BlockTest {
     
     @Test
     public void testCalcDifficulty() {
-    	// Block.calcDifficulty()
+    	Block genesis = Genesis.getInstance();
+    	byte[] diffBytes = genesis.calcDifficulty();
+    	BigInteger difficulty = new BigInteger(1, diffBytes);
+    	System.out.println(difficulty.toString());
     	fail("Yet to be implemented.");
     }
     

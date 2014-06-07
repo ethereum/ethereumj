@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 import static org.ethereum.vm.OpCode.PUSH1;
+import static org.ethereum.vm.Gas.*;
 
 /**
  * www.ethereumJ.com
@@ -34,23 +35,23 @@ public class VM {
 
             switch (OpCode.code(op)) {
                 case SHA3:
-                   program.spendGas( GasLedger.G_SHA3 );
+                   program.spendGas(G_SHA3.cost());
                 break;
                 case SLOAD:
-                    program.spendGas( GasLedger.G_SLOAD );
+                    program.spendGas(G_SLOAD.cost());
                 break;
                 case SSTORE:
                     // todo: calc gas in the execution
                     // todo: according to the size
                 break;
                 case BALANCE:
-                    program.spendGas( GasLedger.G_BALANCE );
+                    program.spendGas(G_BALANCE.cost());
                 break;
                 case CREATE:
-                    program.spendGas( GasLedger.G_CREATE );
+                    program.spendGas(G_CREATE.cost());
                 break;
                 case CALL:
-                    program.spendGas( GasLedger.G_CALL );
+                    program.spendGas(G_CALL.cost());
                 break;
                 case MSTORE8:
                 case MSTORE:
@@ -58,7 +59,7 @@ public class VM {
                     // todo: according to the size
                 break;
                 default:
-                    program.spendGas( GasLedger.G_STEP );
+                    program.spendGas( G_STEP.cost() );
                 break;
             }
 
@@ -472,11 +473,11 @@ public class VM {
                     DataWord oldValue =  program.storageLoad(addr);
                     program.storageSave(addr, value);
                     if (oldValue == null && !value.isZero()){
-                        program.spendGas(GasLedger.G_SSTORE * 2);
+                        program.spendGas(G_SSTORE.cost() * 2);
                     } else if (oldValue != null && value.isZero()){
-                        program.spendGas(GasLedger.G_SSTORE * 0);
+                        program.spendGas(G_SSTORE.cost() * 0);
                     } else
-                        program.spendGas(GasLedger.G_SSTORE);
+                        program.spendGas(G_SSTORE.cost());
 
                     program.step();
                 }
@@ -554,7 +555,7 @@ public class VM {
 
                 // memory gas calc
                 int newMemSize = program.getMemSize();
-                program.spendGas(GasLedger.G_MEMORY * (newMemSize - oldMemSize) /32);
+                program.spendGas(G_MEMORY.cost() * (newMemSize - oldMemSize) /32);
             }
             program.fullTrace();
         } catch (RuntimeException e) {
