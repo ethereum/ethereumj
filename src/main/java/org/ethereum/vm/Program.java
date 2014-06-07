@@ -17,7 +17,7 @@ import java.util.*;
 
 public class Program {
 
-    Logger logger = LoggerFactory.getLogger("VM");
+    Logger logger = LoggerFactory.getLogger(Program.class);
     ProgramListener listener;
 
     Stack<DataWord> stack = new Stack<DataWord>();
