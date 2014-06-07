@@ -583,4 +583,11 @@ public class VM {
 
     }
 
+
+    public void play(Program program){
+        while(!program.isStopped())
+            this.step(program);
+
+    }
+
 }

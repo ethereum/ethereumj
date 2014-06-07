@@ -71,7 +71,7 @@ public class Blockchain extends ArrayList<Block> {
             db.put(block.getParentHash(), block.getEncoded());
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
-        }	
+        }
         // Remove all wallet transactions as they already approved by the net
         for (Block block : blocks) {
             for (Transaction tx : block.getTransactionsList()) {
