@@ -37,7 +37,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
-    Logger logger = LoggerFactory.getLogger("Wire");
+    Logger logger = LoggerFactory.getLogger("wire");
 
     Timer chainAskTimer = new Timer();
     int secToAskForChain = 1;
