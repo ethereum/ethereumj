@@ -4,7 +4,7 @@ import org.ethereum.core.Transaction;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 23/05/2014 18:41
  */
 

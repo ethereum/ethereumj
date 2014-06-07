@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 21/04/14 16:26
  */
 public class RLPList extends ArrayList<RLPElement> implements RLPElement {

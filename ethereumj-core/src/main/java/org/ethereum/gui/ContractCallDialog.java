@@ -27,7 +27,7 @@ import java.util.Collection;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
 class ContractCallDialog extends JDialog implements MessageAwareDialog{

@@ -10,7 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 06/04/14 14:56
  */
 public class NotInChainMessage extends Message {

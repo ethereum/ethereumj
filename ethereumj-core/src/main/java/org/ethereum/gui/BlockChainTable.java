@@ -13,7 +13,7 @@ import java.awt.event.*;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 15/05/14 12:36
  */
 public class BlockChainTable extends JFrame {

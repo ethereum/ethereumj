@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 06/04/14 14:56
  */
 public class TransactionsMessage extends Message {

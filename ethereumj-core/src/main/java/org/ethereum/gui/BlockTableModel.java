@@ -6,7 +6,7 @@ import javax.swing.table.AbstractTableModel;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 15/05/14 12:42
  */
 public class BlockTableModel extends AbstractTableModel {

@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 13/05/14 10:07
  */
 public class SerpentCompileTest {

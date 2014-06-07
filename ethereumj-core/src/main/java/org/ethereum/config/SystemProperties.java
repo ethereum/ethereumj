@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 22/05/2014 19:22
  */
 public class SystemProperties {

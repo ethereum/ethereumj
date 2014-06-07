@@ -9,7 +9,7 @@ import static org.junit.Assert.fail;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 01/06/2014 11:05
  */
 

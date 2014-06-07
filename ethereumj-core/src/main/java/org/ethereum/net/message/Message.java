@@ -4,7 +4,7 @@ import org.ethereum.util.RLPList;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 06/04/14 14:58
  */
 public abstract class Message {

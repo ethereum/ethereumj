@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 22/05/2014 09:26
  */
 

@@ -2,7 +2,7 @@ package org.ethereum.vm;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 03/06/2014 14:59
  */
 

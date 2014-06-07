@@ -15,7 +15,7 @@ import java.awt.event.WindowEvent;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 30/04/14 06:29
  */
 public class ToolBar extends JFrame {

@@ -16,11 +16,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 24/04/14 11:32
  */
-
-
 public class SerpentEditor extends JFrame {
 
     private String codeSample = "\n\n\n" +

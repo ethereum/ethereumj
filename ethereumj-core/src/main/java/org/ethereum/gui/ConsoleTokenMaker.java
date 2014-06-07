@@ -8,7 +8,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 24/04/14 11:52
  */
 public class ConsoleTokenMaker extends AbstractTokenMaker {

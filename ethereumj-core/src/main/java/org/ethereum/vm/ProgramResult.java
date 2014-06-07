@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 07/06/2014 17:45
  */
 

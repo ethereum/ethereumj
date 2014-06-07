@@ -32,7 +32,7 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 10/04/14 08:19
  */
 public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {

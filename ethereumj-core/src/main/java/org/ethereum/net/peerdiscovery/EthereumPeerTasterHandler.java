@@ -23,7 +23,7 @@ import static org.ethereum.net.Command.*;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 10/04/14 08:19
  */
 public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {

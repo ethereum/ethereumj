@@ -5,7 +5,7 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 13/04/14 20:19
  */
 public class StaticMessages {

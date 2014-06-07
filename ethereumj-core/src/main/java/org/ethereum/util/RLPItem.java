@@ -3,7 +3,7 @@ package org.ethereum.util;
 
 /**
  * www.ethereumJ.com 
- * User: Roman Mandeleil 
+ * @author: Roman Mandeleil
  * Created on: 21/04/14 16:26
  */
 public class RLPItem implements RLPElement {
