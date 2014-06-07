@@ -6,28 +6,18 @@ package org.ethereum.vm;
  * computation engine; its price is set by the Transaction and miners are free to 
  * ignore Transactions whose Gas price is too low.
  */
-public enum Gas {
+public class Gas {
 
-	G_STEP(1),
-	G_STOP(0),
-	G_SUICIDE(0),
-	G_SLOAD(20),
-	G_SHA3(20),
-	G_SSTORE(100),
-	G_BALANCE(20),
-	G_CREATE(100),
-	G_CALL(20),					 
-	G_MEMORY(1),
-	G_TXDATA(5),
-	G_TRANSACTION(500);
-			 
-	private int cost;
-	
-	private Gas(int value) {
-		this.cost = value;
-	}
-	
-	public int cost() {
-		return cost;
-	}
+	public static int STEP = 1;
+	public static int STOP = 0;
+	public static int SUICIDE = 0;
+	public static int SLOAD = 20;
+	public static int SHA3 = 20;
+	public static int SSTORE = 100;
+	public static int BALANCE = 20;
+	public static int CREATE = 100;
+	public static int CALL = 20;			 
+	public static int MEMORY = 1;
+	public static int TXDATA = 5;
+	public static int TRANSACTION = 500;
 }
