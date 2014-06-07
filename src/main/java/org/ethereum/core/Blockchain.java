@@ -83,11 +83,13 @@ public class Blockchain extends ArrayList<Block> {
     }
     
     private void addBlock(Block block) {
-		this.wallet.processBlock(block);
-        this.gasPrice = block.getMinGasPrice();
-		if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
-			this.lastBlock = block;
-		this.add(block);
+    	if(block.isValid()) {
+			this.wallet.processBlock(block);
+	        this.gasPrice = block.getMinGasPrice();
+			if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
+				this.lastBlock = block;
+			this.add(block);
+    	}
     }
     
     public long getGasPrice() {

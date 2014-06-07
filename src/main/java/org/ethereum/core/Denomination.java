@@ -10,15 +10,17 @@ public enum Denomination {
 	SHANNON(newBigInt(9)),
 	SZABO(newBigInt(12)),
 	FINNY(newBigInt(15)),
-	ETHER(newBigInt(18));
-	
+	ETHER(newBigInt(18)),
+	EINSTEIN(newBigInt(21)),
+	DOUGLAS(newBigInt(42));					 
+			 
 	private BigInteger amount;
 	
 	private Denomination(BigInteger value) {
 		this.amount = value;
 	}
 	
-	public BigInteger getDenomination() {
+	public BigInteger value() {
 		return amount;
 	}
 	
