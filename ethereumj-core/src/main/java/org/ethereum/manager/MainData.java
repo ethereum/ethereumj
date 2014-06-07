@@ -48,12 +48,17 @@ public class MainData {
 
         wallet.importKey(cowAddr);
         AccountState state = wallet.getAddressState(key.getAddress());
-        state.addToBalance(BigInteger.valueOf(2).pow(200)); // 1606938044258990275541962092341162602522202993782792835301376
+        state.addToBalance(BigInteger.valueOf(2).pow(200));
         wallet.importKey(HashUtil.sha3("cat".getBytes()));
+
+        String secret = CONFIG.coinbaseSecret();
+        byte[] cbAddr = HashUtil.sha3(secret.getBytes());
+        wallet.importKey(cbAddr);
+
 
     	// Initialize Blockchain
     	blockChain = new Blockchain(wallet);
-        
+
     	// Initialize PeerData
         try {
         	InetAddress ip = InetAddress.getByName(CONFIG.peerDiscoveryIP());
@@ -64,9 +69,9 @@ public class MainData {
         } catch (UnknownHostException e) {
             e.printStackTrace();
             System.exit(-1);
-        }        
+        }
     }
-    
+
     public Blockchain getBlockchain() {
     	return blockChain;
     }

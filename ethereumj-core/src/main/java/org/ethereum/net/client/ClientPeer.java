@@ -7,6 +7,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
@@ -18,6 +19,9 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 
 /**
@@ -63,7 +67,8 @@ public class ClientPeer {
                 @Override
                 public void initChannel(NioSocketChannel ch) throws Exception {
 
-                    ch.pipeline().addLast("readTimeoutHandler", new ReadTimeoutHandler(15));
+                    ch.pipeline().addLast("readTimeoutHandler",
+                            new ReadTimeoutHandler(CONFIG.activePeerChannelTimeout(), TimeUnit.SECONDS));
                     ch.pipeline().addLast(new EthereumFrameDecoder());
                     ch.pipeline().addLast(handler);
                 }

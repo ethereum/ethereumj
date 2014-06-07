@@ -17,11 +17,12 @@ public enum Denomination {
 	private Denomination(BigInteger value) {
 		this.amount = value;
 	}
-	
+
 	public BigInteger getDenomination() {
 		return amount;
 	}
-	
+    public long longValue() {return getDenomination().longValue();}
+
 	private static BigInteger newBigInt(int value) {
 		return BigInteger.valueOf(10).pow(value);
 	}

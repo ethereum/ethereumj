@@ -7,14 +7,13 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.Command;
 import org.ethereum.net.message.BlocksMessage;
 import org.ethereum.net.message.DisconnectMessage;
@@ -201,13 +200,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             RLPList rlpList = RLP.decode2(payload);
             TransactionsMessage transactionsMessage = new TransactionsMessage(rlpList);
-            for (Transaction tx :  transactionsMessage.getTransactions())
-                MainData.instance.getBlockchain().addPendingTransaction(tx);
 
-            // todo: if you got transactions send it to your connected peers
+            WorldManager.instance.applyTransactionList(transactionsMessage.getTransactions());
+
             logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());
         }
+
         // got BLOCKS
         if (Command.fromInt(command) == BLOCKS) {
             logger.info("[Recv: BLOCKS]");
@@ -260,6 +259,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             logger.info(blocksMessage.toString());
             if (peerListener != null) peerListener.console(blocksMessage.toString());
         }
+
         // got GETCHAIN
         if (Command.fromInt(command) == GET_CHAIN) {
             logger.info("[Recv: GET_CHAIN]");
@@ -271,6 +271,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             logger.info(getChainMessage.toString());
             if (peerListener != null) peerListener.console(getChainMessage.toString());
         }
+
         // got NOTINCHAIN
         if (Command.fromInt(command) == NOT_IN_CHAIN) {
             logger.info("[Recv: NOT_IN_CHAIN]");
@@ -282,11 +283,20 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             logger.info(notInChainMessage.toString());
             if (peerListener != null) peerListener.console(notInChainMessage.toString());
         }
+
         // got GETTRANSACTIONS
         if (Command.fromInt(command) == GET_TRANSACTIONS) {
             logger.info("[Recv: GET_TRANSACTIONS]");
             if (peerListener != null) peerListener.console("[Recv: GET_TRANSACTIONS]");
-            // todo: send the queue of the transactions
+
+            // todo: return it in the future
+//            Collection<Transaction> pendingTxList =
+//                    MainData.instance.getBlockchain().getPendingTransactionList();
+
+//            TransactionsMessage txMsg =
+//                    new TransactionsMessage(new ArrayList(pendingTxList));
+
+//            sendMsg(txMsg, ctx);
         }
     }
 

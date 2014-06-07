@@ -13,7 +13,7 @@ public class AccountState {
     private ECKey ecKey;
     private byte[] rlpEncoded;
     
-    /* A value equal to the number of transactions sent 
+    /* A value equal to the number of transactions sent
      * from this address, or, in the case of contract accounts, 
      * the number of contract-creations made by this account */
     private BigInteger nonce;
@@ -27,7 +27,7 @@ public class AccountState {
      * The hash is formally denoted σ[a] s . 
      * 
      * Since I typically wish to refer not to the trie’s root hash 
-     * but to the underlying set of key/value pairs stored within, 
+     * but to the underlying set of key/value pairs stored within,
      * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s . 
      * It shall be understood that σ[a] s is not a ‘physical’ member 
      * of the account and does not contribute to its later serialisation */
@@ -53,7 +53,8 @@ public class AccountState {
         this.rlpEncoded = rlpData;
 
 		RLPList items 	= (RLPList) RLP.decode2(rlpEncoded).get(0);
-		this.nonce 		= new BigInteger(1, ((items.get(0).getRLPData()) == null ? new byte[0] : items.get(0).getRLPData()));
+		this.nonce 		= new BigInteger(1, ((items.get(0).getRLPData()) == null ? new byte[]{0} :
+                                                                                   items.get(0).getRLPData()));
 		this.balance 	= new BigInteger(1, items.get(1).getRLPData());
 		this.stateRoot 	= items.get(2).getRLPData();
 		this.codeHash 	= items.get(3).getRLPData();
