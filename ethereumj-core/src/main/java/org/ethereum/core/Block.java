@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class Block {
 
-	/* A scalar longValue equal to the mininum limit of gas expenditure per block */
+	/* A scalar value equal to the mininum limit of gas expenditure per block */
 	private static long MIN_GAS_LIMIT = BigInteger.valueOf(10).pow(4).longValue();
 
 	private BlockHeader header;
@@ -38,7 +38,6 @@ public class Block {
 	
 	private byte[] rlpEncoded;
     private boolean parsed = false;
-    private byte[] hash;
     
     private Trie txsState;
     
@@ -64,9 +63,6 @@ public class Block {
         this.parsed = true;
     }
 
-	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
-	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
-	// extradata, nonce]
     private void parseRLP() {
 
         RLPList params = (RLPList) RLP.decode2(rlpEncoded);
@@ -87,7 +83,6 @@ public class Block {
             this.uncleList.add(blockData);
         }
         this.parsed = true;
-        this.hash  = this.getHash();
     }
 
     public byte[] getHash(){
@@ -143,6 +138,10 @@ public class Block {
 	public long getMinGasPrice() {
 		if (!parsed) parseRLP();
 		return this.header.getMinGasPrice();
+	}
+	
+	public boolean isGenesis() {
+		return this.header.getNumber() == 0;
 	}
 
 	public long getGasLimit() {
@@ -204,7 +203,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [\n");
-        toStringBuff.append("  hash=" + ByteUtil.toHexString(hash)).append("\n");
+        toStringBuff.append("  hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
         
         for (TransactionReceipt txReceipt : getTxReceiptList()) {
@@ -221,7 +220,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
-        toStringBuff.append("  hash=" + ByteUtil.toHexString(hash)).append("");
+        toStringBuff.append("  hash=" + ByteUtil.toHexString(this.getHash())).append("");
         toStringBuff.append(header.toFlatString());
         
         for (Transaction tx : getTransactionsList()){
@@ -289,36 +288,40 @@ public class Block {
 	 * likely next period. Conversely, if the period is too large, the difficulty, 
 	 * and expected time to the next block, is reduced.
 	 */
-    private boolean isValid() {
-    	boolean isValid = false;
+    public boolean isValid() {
+    	boolean isValid = true;
     	
     	// verify difficulty meets requirements
-    	isValid = this.getDifficulty() == this.calcDifficulty();
+    	//isValid = this.getDifficulty() == this.calcDifficulty();
     	// verify gasLimit meets requirements
-    	isValid = this.getGasLimit() == this.calcGasLimit();
+    	//isValid = this.getGasLimit() == this.calcGasLimit();
     	// verify timestamp meets requirements
-    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+    	//isValid = this.getTimestamp() > this.getParent().getTimestamp();
     	
     	return isValid;
     }
 	
 	/**
 	 * Calculate GasLimit 
-	 *  max(10000, (parent gas limit * (1024 - 1) + (parent gas used * 6 / 5)) / 1024)
-	 *  
-	 * @return
+	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (25)
+	 * @return long value of the gasLimit
 	 */
 	public long calcGasLimit() {
-		if (this.header.getParentHash() == null)
-			return 1000000L;
+		if (this.isGenesis())
+			return Genesis.GAS_LIMIT;
 		else {
 			Block parent = this.getParent();
 			return Math.max(MIN_GAS_LIMIT, (parent.header.getGasLimit() * (1024 - 1) + (parent.header.getGasUsed() * 6 / 5)) / 1024);
 		}
 	}
 	
+	/**
+	 * Calculate Difficulty 
+	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
+	 * @return byte array value of the difficulty
+	 */
 	public byte[] calcDifficulty() {
-		if (this.header.getParentHash() == null)
+		if (this.isGenesis())
 			return Genesis.DIFFICULTY;
 		else {
 			Block parent = this.getParent();

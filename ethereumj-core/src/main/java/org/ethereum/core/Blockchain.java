@@ -20,19 +20,20 @@ public class Blockchain extends ArrayList<Block> {
 
 	private static Logger logger = LoggerFactory.getLogger(Blockchain.class);
 	
+	// to avoid using minGasPrice=0 from Genesis for the wallet
+	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+		
 	private Database db;
 	private Wallet wallet;
+	
     private long gasPrice = 1000;
     private Block lastBlock;
-
 
     // This map of transaction designed
     // to approve the tx by external trusted peer
     private Map<String, WalletTransaction> walletTransactions =
             Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
 
-
-	
 	public Blockchain(Wallet wallet) {
 		this.db = WorldManager.instance.chainDB;
 		this.wallet = wallet;
@@ -83,26 +84,21 @@ public class Blockchain extends ArrayList<Block> {
     }
     
     private void addBlock(Block block) {
-		this.wallet.processBlock(block);
-
-        // that is the genesis case , we don't want to rely
-        // on this price will use default 10000000000000
-        // todo: refactor this longValue some constant defaults class 10000000000000L
-        this.gasPrice = (block.getMinGasPrice() == 0) ? 10 * SZABO.longValue() : block.getMinGasPrice();
-
-		if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
-			this.lastBlock = block;
-		this.add(block);
+    	if(block.isValid()) {
+			this.wallet.processBlock(block);
+	        // that is the genesis case , we don't want to rely
+	        // on this price will use default 10000000000000
+	        // todo: refactor this longValue some constant defaults class 10000000000000L
+			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
+			if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
+				this.lastBlock = block;
+			this.add(block);
+    	}
     }
     
     public long getGasPrice() {
         return gasPrice;
     }
-
-
-
-
-
 
     /***********************************************************************
      *	1) the dialog put a pending transaction on the list
