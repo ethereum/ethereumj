@@ -77,29 +77,10 @@ public class Block {
         // Parse Header
         RLPList header = (RLPList) block.get(0);
         this.header = new BlockHeader(header);
-
+        
         // Parse Transactions
-        this.txsState = new Trie(null);
         RLPList txReceipts = (RLPList) block.get(1);
-        for (int i = 0; i < txReceipts.size(); i++) {
-        	RLPElement rlpTxReceipt = txReceipts.get(i);
-            RLPElement txData = ((RLPList)rlpTxReceipt).get(0);
-
-            Transaction tx = new Transaction(txData.getRLPData());
-            this.transactionsList.add(tx);
-            this.txsState.update(RLP.encodeInt(i), tx.getEncoded());
-            
-//            this.accountState.update();
-
-            // YP 4.3.1
-            RLPElement cummGas    = ((RLPList)rlpTxReceipt).get(1);
-            RLPElement pstTxState = ((RLPList)rlpTxReceipt).get(2);
-
-            TransactionReceipt txReceipt =
-                new TransactionReceipt(tx, cummGas.getRLPData(), pstTxState.getRLPData());
-            txReceiptList.add(txReceipt);
-        }
-        this.header.setTxTrieRoot(txsState.getRootHash());
+        this.processTxs(txReceipts);
 
         // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
@@ -257,6 +238,46 @@ public class Block {
 
         toStringBuff.append("]");
         return toStringBuff.toString();
+    }
+    
+    private void processTxs(RLPList txReceipts) {
+
+        this.txsState = new Trie(null);
+        for (int i = 0; i < txReceipts.size(); i++) {
+        	RLPElement rlpTxReceipt = txReceipts.get(i);
+            RLPElement txData = ((RLPList)rlpTxReceipt).get(0);
+
+            Transaction tx = new Transaction(txData.getRLPData());
+            this.addAndProcessTransaction(i, tx);
+            
+            // YP 4.3.1
+            RLPElement cummGas    = ((RLPList)rlpTxReceipt).get(1);
+            RLPElement pstTxState = ((RLPList)rlpTxReceipt).get(2);
+
+            TransactionReceipt txReceipt =
+                new TransactionReceipt(tx, cummGas.getRLPData(), pstTxState.getRLPData());
+            txReceiptList.add(txReceipt);
+        }
+        this.header.setTxTrieRoot(txsState.getRootHash());
+    }
+    
+    private void addAndProcessTransaction(int counter, Transaction tx) {
+        this.transactionsList.add(tx);
+        this.txsState.update(RLP.encodeInt(counter), tx.getEncoded());
+        
+        /* Figure out type of tx
+         * 1. Contract creation
+         * 		- perform code
+         * 		- create state object
+         * 		- add contract body to DB, 
+         * 2. Contract call			
+         * 		- perform code
+         * 		- update state object
+         * 3. Account to account	- 
+         * 		- update state object
+         */
+        
+//        this.accountState.update();
     }
     
     public byte[] updateState(byte[] key, byte[] value) {
