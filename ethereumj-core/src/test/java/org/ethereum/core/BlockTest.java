@@ -86,4 +86,16 @@ public class BlockTest {
         BlocksMessage blockData = new BlocksMessage(rlpList);
         System.out.println(blockData.toString());
     }
+    
+    @Test
+    public void testCalcDifficulty() {
+    	// Block.calcDifficulty()
+    	fail("Yet to be implemented.");
+    }
+    
+    @Test
+    public void testCalcGasLimit() {
+    	// Block.calcGasLimit()
+    	fail("Yet to be implemented.");
+    }
 }
