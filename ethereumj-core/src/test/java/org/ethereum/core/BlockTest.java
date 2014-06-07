@@ -91,15 +91,9 @@ public class BlockTest {
     
     @Test
     public void testCalcDifficulty() {
-<<<<<<< HEAD
      	Block genesis = Genesis.getInstance();
       	byte[] diffBytes = genesis.calcDifficulty();
       	BigInteger difficulty = new BigInteger(1, diffBytes);
-=======
-    	Block genesis = Genesis.getInstance();
-    	byte[] diffBytes = genesis.calcDifficulty();
-    	BigInteger difficulty = new BigInteger(1, diffBytes);
->>>>>>> Remove call to Blockchain DB from Genesis and fix default calc values
     	System.out.println("Genesis difficulty = " + difficulty.toString());
     	fail("Yet to be implemented.");
     }
