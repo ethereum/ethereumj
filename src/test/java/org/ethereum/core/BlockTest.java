@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import java.math.BigInteger;
+
 import org.ethereum.net.message.BlocksMessage;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.util.RLPList;
@@ -85,5 +87,22 @@ public class BlockTest {
 
         BlocksMessage blockData = new BlocksMessage(rlpList);
         System.out.println(blockData.toString());
+    }
+    
+    @Test
+    public void testCalcDifficulty() {
+     	Block genesis = Genesis.getInstance();
+      	byte[] diffBytes = genesis.calcDifficulty();
+      	BigInteger difficulty = new BigInteger(1, diffBytes);
+    	System.out.println("Genesis difficulty = " + difficulty.toString());
+    	fail("Yet to be implemented.");
+    }
+    
+    @Test
+    public void testCalcGasLimit() {
+    	Block genesis = Genesis.getInstance();
+    	long gasLimit = genesis.calcGasLimit();
+    	System.out.println("Genesis gasLimit = " + gasLimit);
+    	fail("Yet to be implemented.");
     }
 }
