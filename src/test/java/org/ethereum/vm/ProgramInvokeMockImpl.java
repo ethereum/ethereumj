@@ -10,7 +10,7 @@ import org.spongycastle.util.encoders.Hex;
  * Created on: 03/06/2014 15:00
  */
 
-public class ProgramInvokeMockImpl implements ProgramInvoke{
+public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     byte[] msgData;
 
@@ -19,7 +19,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke{
         this.msgData = msgDataRaw;
     }
 
-    ProgramInvokeMockImpl() {
+    public ProgramInvokeMockImpl() {
     }
 
     /*           ADDRESS op         */

@@ -88,6 +88,8 @@ public class Block {
             Transaction tx = new Transaction(txData.getRLPData());
             this.transactionsList.add(tx);
             this.txsState.update(RLP.encodeInt(i), tx.getEncoded());
+            
+//            this.accountState.update();
 
             // YP 4.3.1
             RLPElement cummGas    = ((RLPList)rlpTxReceipt).get(1);
@@ -182,6 +184,14 @@ public class Block {
     public byte[] getNonce() {
         if (!parsed) parseRLP();
         return this.header.getNonce();
+    }
+    
+    public Trie getAccountState() {
+    	return this.accountState;
+    }
+    
+    public Trie getTxsState() {
+    	return this.txsState;
     }
 
     public List<Transaction> getTransactionsList() {

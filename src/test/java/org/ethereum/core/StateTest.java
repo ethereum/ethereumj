@@ -1,15 +1,15 @@
 package org.ethereum.core;
 
+import static org.junit.Assert.*;
+
+import java.math.BigInteger;
+
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.MockDB;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.RLP;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-
-import static org.junit.Assert.assertEquals;
 
 public class StateTest {
 
@@ -19,9 +19,8 @@ public class StateTest {
         assertEquals("23b503734ff34ddb7bd5e478f1645680ec778ab3f90007cb1c854653693e5adc", Hex.toHexString(trie.getRootHash()));
     }
 
-
     @Test  // right way to calc tx trie hash
-    public void testCalculatePostTxState(){
+    public void testCalculatePostTxState() {
 
         /*    txTrieHash=a77691cf47bec9021d3f027fc8ef2d51b758b600a79967154354b8e37108896f */
         String expected = "a77691cf47bec9021d3f027fc8ef2d51b758b600a79967154354b8e37108896f";
@@ -82,12 +81,8 @@ public class StateTest {
           */
     }
 
-
-
-
-
     @Test  // calc state after applying first tx on genesis
-    public void test2(){
+    public void test2() {
 
         // explanation:
         // 0) create genesis
@@ -99,25 +94,29 @@ public class StateTest {
         Trie trie = generateGenesis();
         String expected = "69c21ff84a5af0b53b11c61110a16d6ad43dad37b3eb29ae8e88c936eb06456a";
 
-        byte[] data = trie.get(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"));
-        AccountState account_1 = new AccountState(data);
+        // Get and update sender in world state
+        byte[] cowAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+        byte[] rlpEncodedState = trie.get(cowAddress);
+        AccountState account_1 = new AccountState(rlpEncodedState);
         account_1.addToBalance(new BigInteger("-6260000000001000"));
         account_1.incrementNonce();
-        trie.update(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), account_1.getEncoded());
+        trie.update(cowAddress, account_1.getEncoded());
 
-        String code = "61778e600054";
-        byte[] codeData = Hex.decode(code);
-        AccountState account_2 = new AccountState(BigInteger.ZERO, new BigInteger("1000"));
+        // Add contract to world state
+        byte[] codeData = Hex.decode("61778e600054");
+        AccountState account_2 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(1000));
         account_2.setCodeHash(HashUtil.sha3(codeData));
-        trie.update(Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051"), account_2.getEncoded());
+        byte[] contractAddress = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051"); // generated based on sender + nonce
+        trie.update(contractAddress, account_2.getEncoded());
 
 //        this is saved in the db
 //        trie.update(HashUtil.sha3(codeData), codeData);
 
+        // Update miner in world state
+        byte[] minerAddress = Hex.decode("4c5f4d519dff3c16f0d54b6866e256fbbbc1a600");
         AccountState account_3 = new AccountState(BigInteger.ZERO, new BigInteger("1506260000000000000"));
-        trie.update(Hex.decode("4c5f4d519dff3c16f0d54b6866e256fbbbc1a600"), account_3.getEncoded());
-
-
+        trie.update(minerAddress, account_3.getEncoded());
+        
         assertEquals(expected,  Hex.toHexString(trie.getRootHash()));
 
 
@@ -155,11 +154,10 @@ public class StateTest {
          *   cd2a3d9f938e13cd947ec05abc7fe734df8dd826: #1 1606938044258990275541962092341162602522202987522792835300376 (-6260000000001000)
           */
 
-
+        assertEquals("69c21ff84a5af0b53b11c61110a16d6ad43dad37b3eb29ae8e88c936eb06456a", Hex.toHexString(trie.getRootHash()));
     }
 
-
-    private Trie generateGenesis(){
+    private Trie generateGenesis() {
 
         Trie trie = new Trie(new MockDB());
         // 2ef47100e0787b915105fd5e3f4ff6752079d5cb # (M)
@@ -195,8 +193,5 @@ public class StateTest {
         trie.update(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), acct6.getEncoded());
         return trie;
     }
-
-
-
 }
 
