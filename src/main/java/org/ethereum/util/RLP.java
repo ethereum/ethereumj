@@ -808,7 +808,8 @@ public class RLP {
 
     public static byte[] encodeElement(byte[] srcData) {
 
-        if (srcData == null) {
+        if ( srcData == null ||
+             (srcData.length == 1 && srcData[0] == 0) ) {
             return new byte[]{(byte) 0x80};
         } if (srcData.length == 1 && srcData[0] < 0x80) {
 

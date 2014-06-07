@@ -1,13 +1,12 @@
 package org.ethereum.gui;
 
-import org.ethereum.db.Config;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
@@ -74,8 +73,8 @@ public class ToolBar extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                Config.CHAIN_DB.close();
-                Config.STATE_DB.close();
+
+                WorldManager.instance.close();
             }
         });
 
@@ -124,7 +123,7 @@ public class ToolBar extends JFrame {
 
         logToggle = new JToggleButton();
         logToggle.setIcon(image_2);
-        logToggle.setToolTipText("Log Console");
+        logToggle.setToolTipText("Connect");
         logToggle.setContentAreaFilled(true);
         logToggle.setBackground(Color.WHITE);
         logToggle.setBorderPainted(false);

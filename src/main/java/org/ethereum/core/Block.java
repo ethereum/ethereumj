@@ -1,7 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Config;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -22,7 +22,7 @@ import java.util.List;
  */
 public class Block {
 
-	/* A scalar value equal to the mininum limit of gas expenditure per block */
+	/* A scalar longValue equal to the mininum limit of gas expenditure per block */
 	private static long MIN_GAS_LIMIT = BigInteger.valueOf(10).pow(4).longValue();
 
 	private BlockHeader header;
@@ -40,7 +40,6 @@ public class Block {
     private boolean parsed = false;
     private byte[] hash;
     
-    private Trie accountState;
     private Trie txsState;
     
     /* Constructors */
@@ -57,9 +56,8 @@ public class Block {
 		this.header = new BlockHeader(parentHash, unclesHash, coinbase,
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
-        this.accountState = new Trie(Config.STATE_DB.getDb());
         this.txsState = new Trie(null);
-        this.header.setStateRoot(accountState.getRootHash());
+        this.header.setStateRoot(WorldManager.instance.allAccountsState.getRootHash());
         this.header.setTxTrieRoot(txsState.getRootHash());
         this.transactionsList = transactionsList;
         this.uncleList = uncleList;
@@ -165,10 +163,6 @@ public class Block {
     public byte[] getNonce() {
         if (!parsed) parseRLP();
         return this.header.getNonce();
-    }
-    
-    public Trie getAccountState() {
-    	return this.accountState;
     }
     
     public Trie getTxsState() {
@@ -277,12 +271,13 @@ public class Block {
          * 		- update state object
          */
         
-//        this.accountState.update();
+//        this.allAccountsState.update();
     }
     
     public byte[] updateState(byte[] key, byte[] value) {
-    	this.accountState.update(key, value);
-    	byte[] stateRoot = this.accountState.getRootHash();
+
+        WorldManager.instance.allAccountsState.update(key, value);
+    	byte[] stateRoot = WorldManager.instance.allAccountsState.getRootHash();
     	this.header.setStateRoot(stateRoot);
     	return stateRoot;
     }

@@ -1,13 +1,13 @@
 package org.ethereum.core;
 
-import java.math.BigInteger;
-
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Config;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+
+import java.math.BigInteger;
 
 public class Genesis extends Block {
 	
@@ -54,7 +54,7 @@ public class Genesis extends Block {
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
 		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
 
-        Config.CHAIN_DB.put(getParentHash(), getEncoded());
+        WorldManager.instance.chainDB.put(getParentHash(), getEncoded());
     }
 	
 	public static Block getInstance() {

@@ -24,8 +24,10 @@ public class SystemProperties {
 	private static int DEFAULT_DISCOVERY_PORT = 30303;
 	private static String DEFAULT_ACTIVE_PEER_IP = "54.201.28.117";
 	private static int DEFAULT_ACTIVE_PORT = 30303;
-	private static String DEFAULT_SAMPLES_DIR = "samples";
-	
+    private static String DEFAULT_SAMPLES_DIR = "samples";
+    private static String DEFAULT_COINBASE_SECRET = "monkey";
+    private static int DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
+
 	public static SystemProperties CONFIG = new SystemProperties();
     private Properties prop = new Properties();
     private InputStream input = null;
@@ -117,7 +119,18 @@ public class SystemProperties {
         return prop.getProperty("samples.dir");
     }
 
-	public void print() {
+    public String coinbaseSecret(){
+        if(prop.isEmpty()) return DEFAULT_COINBASE_SECRET;
+        return prop.getProperty("coinbase.secret");
+    }
+
+    public Integer activePeerChannelTimeout(){
+        if(prop.isEmpty()) return DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT;
+        return Integer.parseInt(prop.getProperty("active.peer.channel.timeout"));
+    }
+
+
+    public void print() {
 		Enumeration<?> e = prop.propertyNames();
 		while (e.hasMoreElements()) {
 			String key = (String) e.nextElement();

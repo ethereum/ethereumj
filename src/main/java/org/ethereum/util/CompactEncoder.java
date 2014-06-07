@@ -23,13 +23,13 @@ import static org.spongycastle.util.encoders.Hex.toHexString;
  * 
  * An alternative way of thinking about this to not think of there being a terminator symbol, 
  * but instead treat bit specifying the existence of the terminator symbol as a bit specifying 
- * that the given node encodes a final node, where the value is an actual value, rather than 
+ * that the given node encodes a final node, where the value is an actual value, rather than
  * the hash of yet another node.
  * 
  * To solve both of these issues, we force the first nibble of the final byte-stream to encode 
  * two flags, specifying oddness of length (ignoring the 'T' symbol) and terminator status; 
  * these are placed, respectively, into the two lowest significant bits of the first nibble. 
- * In the case of an even-length hex string, we must introduce a second nibble (of value zero) 
+ * In the case of an even-length hex string, we must introduce a second nibble (of value zero)
  * to ensure the hex-string is even in length and thus is representable by a whole number of bytes. 
  *  
  * Examples:
@@ -80,7 +80,7 @@ public class CompactEncoder {
 	/**
 	 * Unpack a binary string to its nibbles equivalent
 	 * 
-	 * @param string of binary data
+	 * @param str of binary data
 	 * @return array of nibbles in byte-format  
 	 */
 	public static byte[] unpackToNibbles(byte[] str) {

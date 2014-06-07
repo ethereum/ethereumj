@@ -527,10 +527,29 @@ public class VM {
                     program.stackPush(data);
                 }
                 break;
-                case CREATE:
-                    break;
-                case CALL:
-                    break;
+                case CREATE:{
+                    DataWord gas        =  program.stackPop();
+                    DataWord inOffset   =  program.stackPop();
+                    DataWord inSize     =  program.stackPop();
+
+                    // todo: implement contract creation
+
+                    program.step();
+                }
+                break;
+                case CALL:{
+                    DataWord gas        =  program.stackPop();
+                    DataWord toAddress  =  program.stackPop();
+                    DataWord value      =  program.stackPop();
+
+                    program.sendToAddress(toAddress.data, value);
+
+                    // todo: find out if we should or not execute
+                    // todo: the contract for real
+
+                    program.step();
+                }
+                break;
                 case RETURN:{
 
                     DataWord offset   =  program.stackPop();

@@ -1,21 +1,18 @@
 package org.ethereum.core;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.ethereum.db.Config;
 import org.ethereum.db.Database;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.StaticMessages;
-import org.ethereum.net.submit.PendingTransaction;
+import org.ethereum.net.submit.WalletTransaction;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.IOException;
+import java.util.*;
+
+import static org.ethereum.core.Denomination.*;
 
 public class Blockchain extends ArrayList<Block> {
 
@@ -28,11 +25,16 @@ public class Blockchain extends ArrayList<Block> {
     private long gasPrice = 1000;
     private Block lastBlock;
 
-    private Map<String, PendingTransaction> pendingTransactions =
-            Collections.synchronizedMap(new HashMap<String, PendingTransaction>());
+
+    // This map of transaction designed
+    // to approve the tx by external trusted peer
+    private Map<String, WalletTransaction> walletTransactions =
+            Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
+
+
 	
 	public Blockchain(Wallet wallet) {
-		this.db = Config.CHAIN_DB;
+		this.db = WorldManager.instance.chainDB;
 		this.wallet = wallet;
 		this.loadChain();
 	}
@@ -42,8 +44,6 @@ public class Blockchain extends ArrayList<Block> {
 	}
 	
     public void addBlocks(List<Block> blocks) {
-
-        // TODO: redesign this part when the state part and the genesis block is ready
 
 		if (blocks.isEmpty())
 			return;
@@ -71,12 +71,12 @@ public class Blockchain extends ArrayList<Block> {
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
         }	
-        // Remove all pending transactions as they already approved by the net
+        // Remove all wallet transactions as they already approved by the net
         for (Block block : blocks) {
             for (Transaction tx : block.getTransactionsList()) {
                 if (logger.isDebugEnabled())
                     logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
-                removePendingTransaction(tx);
+                removeWalletTransaction(tx);
             }
         }
         logger.info("*** Block chain size: [ {} ]", this.size());
@@ -84,7 +84,12 @@ public class Blockchain extends ArrayList<Block> {
     
     private void addBlock(Block block) {
 		this.wallet.processBlock(block);
-        this.gasPrice = block.getMinGasPrice();
+
+        // that is the genesis case , we don't want to rely
+        // on this price will use default 10000000000000
+        // todo: refactor this longValue some constant defaults class 10000000000000L
+        this.gasPrice = (block.getMinGasPrice() == 0) ? 10 * SZABO.longValue() : block.getMinGasPrice();
+
 		if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
 			this.lastBlock = block;
 		this.add(block);
@@ -93,7 +98,12 @@ public class Blockchain extends ArrayList<Block> {
     public long getGasPrice() {
         return gasPrice;
     }
-    
+
+
+
+
+
+
     /***********************************************************************
      *	1) the dialog put a pending transaction on the list
      *  2) the dialog send the transaction to a net
@@ -101,24 +111,24 @@ public class Blockchain extends ArrayList<Block> {
      *  4) only after the approve a) Wallet state changes
      *  5) After the block is received with that tx the pending been clean up
      */
-    public PendingTransaction addPendingTransaction(Transaction transaction) {
+    public WalletTransaction addWalletTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
         logger.info("pending transaction placed hash: {} ", hash );
 
-        PendingTransaction pendingTransaction =  pendingTransactions.get(hash);
-		if (pendingTransaction != null)
-			pendingTransaction.incApproved();
+        WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
+		if (walletTransaction != null)
+			walletTransaction.incApproved();
 		else {
-			pendingTransaction = new PendingTransaction(transaction);
-			pendingTransactions.put(hash, pendingTransaction);
+			walletTransaction = new WalletTransaction(transaction);
+			this.walletTransactions.put(hash, walletTransaction);
 		}
-        return pendingTransaction;
+        return walletTransaction;
     }
 
-    public void removePendingTransaction(Transaction transaction){
+    public void removeWalletTransaction(Transaction transaction){
         String hash = Hex.toHexString(transaction.getHash());
         logger.info("pending transaction removed with hash: {} ",  hash );
-        pendingTransactions.remove(hash);
+        walletTransactions.remove(hash);
     }
 
     public byte[] getLatestBlockHash(){
