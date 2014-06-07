@@ -1,16 +1,13 @@
 package org.ethereum.core;
 
-import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
 
 import java.math.BigInteger;
 
 public class AccountState {
 
-    private ECKey ecKey;
     private byte[] rlpEncoded;
     
     /* A value equal to the number of transactions sent
@@ -42,37 +39,24 @@ public class AccountState {
     private byte[] codeHash = HashUtil.sha3(new byte[0]);
 
     public AccountState() {
-        this(new ECKey(Utils.getRandom()));
+        this(BigInteger.ZERO, BigInteger.ZERO);
     }
 
-    public AccountState(ECKey ecKey) {
-        this(ecKey, BigInteger.ZERO, BigInteger.ZERO);
+    public AccountState(BigInteger nonce, BigInteger balance) {
+        this.nonce = nonce;
+        this.balance = balance;
     }
-
+    
     public AccountState(byte[] rlpData) {
         this.rlpEncoded = rlpData;
 
 		RLPList items 	= (RLPList) RLP.decode2(rlpEncoded).get(0);
 		this.nonce 		= new BigInteger(1, ((items.get(0).getRLPData()) == null ? new byte[]{0} :
                                                                                    items.get(0).getRLPData()));
-		this.balance 	= new BigInteger(1, items.get(1).getRLPData());
+		this.balance 	= new BigInteger(1, ((items.get(1).getRLPData()) == null ? new byte[]{0} : 
+																					items.get(1).getRLPData()));
 		this.stateRoot 	= items.get(2).getRLPData();
 		this.codeHash 	= items.get(3).getRLPData();
-    }
-
-    public AccountState(ECKey ecKey, BigInteger nonce, BigInteger balance) {
-        this.ecKey = ecKey;
-        this.nonce = nonce;
-        this.balance = balance;
-    }
-    
-    public AccountState(BigInteger nonce, BigInteger balance) {
-        this.nonce = nonce;
-        this.balance = balance;
-    }
-
-    public ECKey getEcKey() {
-        return ecKey;
     }
 
     public BigInteger getNonce() {

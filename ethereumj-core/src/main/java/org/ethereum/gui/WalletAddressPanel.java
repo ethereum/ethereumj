@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
@@ -21,7 +22,7 @@ import java.net.URL;
  */
 public class WalletAddressPanel extends JPanel{
 
-    public WalletAddressPanel(final AccountState addressState) {
+    public WalletAddressPanel(final Account account) {
 
         final WalletAddressPanel walletAddressPanel = this;
 
@@ -35,7 +36,7 @@ public class WalletAddressPanel extends JPanel{
         addressField.setBorder(border);
         addressField.setEnabled(true);
         addressField.setEditable(false);
-        addressField.setText(Hex.toHexString(addressState.getEcKey().getAddress()).toUpperCase());
+        addressField.setText(Hex.toHexString(account.getEcKey().getAddress()).toUpperCase());
         addressField.setForeground(new Color(143, 170, 220));
         addressField.setFont(new Font("Monospaced", 0, 12));
         addressField.setPreferredSize(new Dimension(300, 35));
@@ -46,7 +47,7 @@ public class WalletAddressPanel extends JPanel{
         amount.setBorder(border);
         amount.setEnabled(true);
         amount.setEditable(false);
-        amount.setText(Utils.getValueShortString(addressState.getBalance()));
+        amount.setText(Utils.getValueShortString(account.getState().getBalance()));
         amount.setForeground(new Color(143, 170, 220));
         amount.setBackground(Color.WHITE);
         amount.setPreferredSize(new Dimension(100, 35));
@@ -65,7 +66,7 @@ public class WalletAddressPanel extends JPanel{
 
                 PayOutDialog payOutDialog =
                         new PayOutDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
-                                walletAddressPanel), addressState);
+                                walletAddressPanel), account);
             }
         });
 
