@@ -17,7 +17,7 @@ import java.security.SignatureException;
 import java.util.Arrays;
 
 /**
- * A transaction (formally, T ) is a single cryptographically 
+ * A transaction (formally, T) is a single cryptographically 
  * signed instruction sent by an actor external to Ethereum. 
  * An external actor can be a person (via a mobile device or desktop computer) 
  * or could be from a piece of automated software running on a server. 

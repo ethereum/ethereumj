@@ -6,11 +6,12 @@ import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.submit.WalletTransaction;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.util.*;
+
+import javax.inject.Inject;
 
 import static org.ethereum.core.Denomination.*;
 
@@ -18,10 +19,14 @@ public class Blockchain extends ArrayList<Block> {
 
 	private static final long serialVersionUID = -143590724563460486L;
 
-	private static Logger logger = LoggerFactory.getLogger(Blockchain.class);
+	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue(); // to avoid using minGasPrice=0 from Genesis
+	
+	@Inject
+	private Logger logger;
 	
 	private Database db;
 	private Wallet wallet;
+	
     private long gasPrice = 1000;
     private Block lastBlock;
 
@@ -83,26 +88,23 @@ public class Blockchain extends ArrayList<Block> {
     }
     
     private void addBlock(Block block) {
-		this.wallet.processBlock(block);
-
-        // that is the genesis case , we don't want to rely
-        // on this price will use default 10000000000000
-        // todo: refactor this longValue some constant defaults class 10000000000000L
-        this.gasPrice = (block.getMinGasPrice() == 0) ? 10 * SZABO.longValue() : block.getMinGasPrice();
-
-		if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
-			this.lastBlock = block;
-		this.add(block);
+    	if(block.isValid()) {
+			this.wallet.processBlock(block);
+	
+	        // that is the genesis case , we don't want to rely
+	        // on this price will use default 10000000000000
+	        // todo: refactor this longValue some constant defaults class 10000000000000L
+			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
+	
+			if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
+				this.lastBlock = block;
+			this.add(block);
+    	}
     }
     
     public long getGasPrice() {
         return gasPrice;
     }
-
-
-
-
-
 
     /***********************************************************************
      *	1) the dialog put a pending transaction on the list
