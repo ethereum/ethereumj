@@ -14,7 +14,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 10/04/14 12:28
  */
 public class PeerTaster {

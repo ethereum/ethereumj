@@ -12,7 +12,7 @@ import com.maxmind.geoip.LookupService;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 24/04/14 20:11
  */
 public class IpGeoDB {   // change

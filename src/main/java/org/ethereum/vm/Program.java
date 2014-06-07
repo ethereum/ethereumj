@@ -11,10 +11,9 @@ import java.util.*;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 01/06/2014 10:45
  */
-
 public class Program {
 
     Logger logger = LoggerFactory.getLogger("VM");

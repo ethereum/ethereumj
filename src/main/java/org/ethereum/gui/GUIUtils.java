@@ -13,7 +13,7 @@ import java.util.Arrays;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 23/05/2014 13:51
  */
 

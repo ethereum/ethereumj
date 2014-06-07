@@ -7,7 +7,7 @@ import java.net.UnknownHostException;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 13/04/14 17:36
  */
 public class PeerData {

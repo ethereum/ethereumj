@@ -9,7 +9,7 @@ import javax.swing.table.TableCellRenderer;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 15/05/14 13:08
  */
 public class TableCellLongTextRenderer extends JEditorPane  implements TableCellRenderer{

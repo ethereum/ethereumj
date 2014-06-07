@@ -2,7 +2,7 @@ package org.ethereum.net;
 
 /**
  * www.openchain.info
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 04/04/14 00:51
  */
 public class MessageDeserializer {

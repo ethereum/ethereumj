@@ -38,6 +38,10 @@ import org.ethereum.util.Value;
  * in a persistent lookup table when you create a node with length >= 32, 
  * but if the node is shorter than that then you do not need to store anything 
  * when length < 32 for the obvious reason that the function f(x) = x is reversible.
+ *
+ * www.ethereumJ.com
+ * @author: Nick Savers
+ * Created on: 20/05/2014 10:44
  */
 public class Node {
 

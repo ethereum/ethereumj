@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import static org.ethereum.vm.OpCode.PUSH1;
 
 /**
- * The Ethereum Virtual Machine (EVM) is responsible for initialization 
+ * The Ethereum Virtual Machine (EVM) is responsible for initialization
  * and executing a transaction on a contract.
  * 
  * It is a quasi-Turing-complete machine; the quasi qualification 
@@ -42,6 +42,10 @@ import static org.ethereum.vm.OpCode.PUSH1;
  * Here, the machine halts immediately and reports the issue to 
  * the execution agent (either the transaction processor or, recursively, 
  * the spawning execution environment) and which will deal with it separately.
+ *
+ * www.ethereumJ.com
+ * @author: Roman Mandeleil
+ * Created on: 01/06/2014 10:44
  */
 public class VM {
 

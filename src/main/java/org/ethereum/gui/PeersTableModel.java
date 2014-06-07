@@ -16,7 +16,7 @@ import com.maxmind.geoip.Location;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 25/04/14 07:04
  */
 public class PeersTableModel extends AbstractTableModel {

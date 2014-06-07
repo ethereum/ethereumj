@@ -8,7 +8,7 @@ import org.apache.maven.plugin.MojoFailureException;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 25/04/14 17:06
  */
 public class ParserGenerator {

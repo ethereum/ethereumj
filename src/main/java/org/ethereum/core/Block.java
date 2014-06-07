@@ -19,6 +19,13 @@ import java.util.List;
  * the comprised transactions, R, and a set of other blockheaders U that are known 
  * to have a parent equal to the present block’s parent’s parent 
  * (such blocks are known as uncles).
+ *
+ *
+ * www.ethereumJ.com
+ * @authors: Roman Mandeleil,
+ *           Nick Savers
+ * Created on: 20/05/2014 10:44
+ *
  */
 public class Block {
 

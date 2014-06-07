@@ -25,7 +25,7 @@ import com.maxmind.geoip.Location;
 
 /**
  * www.ethereumJ.com
- * User: Roman Mandeleil
+ * @author: Roman Mandeleil
  * Created on: 21/04/14 20:35
  */
 public class MainData {

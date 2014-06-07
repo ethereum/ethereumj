@@ -20,7 +20,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ *
  * WorldManager is the main class to handle the processing of transactions and managing the world state.
+ *
+ * www.ethereumJ.com
+ * @author: Roman Mandeleil
+ * Created on: 01/06/2014 10:44
+ *
  */
 public class WorldManager {
 

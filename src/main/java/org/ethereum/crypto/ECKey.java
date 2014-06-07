@@ -13,8 +13,13 @@ package org.ethereum.crypto;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ *
+ * www.ethereumJ.com
+ * @author: Nick Savers
+ * Created on: 20/05/2014 10:44
+ *
  */
-
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
 import java.io.Serializable;
