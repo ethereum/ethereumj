@@ -9,6 +9,8 @@ import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.BigIntegers;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
+
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
