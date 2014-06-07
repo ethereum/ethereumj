@@ -66,9 +66,6 @@ public class Block {
         this.parsed = true;
     }
 
-	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
-	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
-	// extradata, nonce]
     private void parseRLP() {
 
         RLPList params = (RLPList) RLP.decode2(rlpEncoded);
@@ -294,15 +291,15 @@ public class Block {
 	 * likely next period. Conversely, if the period is too large, the difficulty, 
 	 * and expected time to the next block, is reduced.
 	 */
-    private boolean isValid() {
-    	boolean isValid = false;
+    public boolean isValid() {
+    	boolean isValid = true;
     	
     	// verify difficulty meets requirements
-    	isValid = this.getDifficulty() == this.calcDifficulty();
+    	//isValid = this.getDifficulty() == this.calcDifficulty();
     	// verify gasLimit meets requirements
-    	isValid = this.getGasLimit() == this.calcGasLimit();
+    	//isValid = this.getGasLimit() == this.calcGasLimit();
     	// verify timestamp meets requirements
-    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+//    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
     	
     	return isValid;
     }
