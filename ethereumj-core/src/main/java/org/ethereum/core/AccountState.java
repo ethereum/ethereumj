@@ -88,7 +88,7 @@ public class AccountState {
         this.codeHash = codeHash;
     }
 
-public BigInteger getBalance() {
+    public BigInteger getBalance() {
         return balance;
     }
 
@@ -96,6 +96,11 @@ public BigInteger getBalance() {
         if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.add(value);
     }
+
+	public void subFromBalance(BigInteger value) {
+        if (value.signum() != 0) rlpEncoded = null;
+        this.balance = balance.subtract(value);
+	}
     
     public byte[] getEncoded() {
 		if(rlpEncoded == null) {
