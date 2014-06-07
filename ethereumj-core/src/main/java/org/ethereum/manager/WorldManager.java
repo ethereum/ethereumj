@@ -1,12 +1,14 @@
 package org.ethereum.manager;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.Database;
 import org.ethereum.trie.Trie;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.VM;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -24,6 +26,7 @@ import java.util.Map;
 public class WorldManager {
 
     Logger logger = LoggerFactory.getLogger("main");
+    Logger stateLogger = LoggerFactory.getLogger("state");
 
     public static WorldManager instance = new WorldManager();
 
@@ -45,17 +48,17 @@ public class WorldManager {
         byte[] senderAddress = tx.getSender();
         byte[] stateData = allAccountsState.get(senderAddress);
 
-        if (stateData == null) {
-            if (logger.isWarnEnabled())
-                logger.warn("No such address: {}", Hex.toHexString(senderAddress));
+        if (stateData == null || stateData.length == 0) {
+            if (stateLogger.isWarnEnabled())
+                stateLogger.warn("No such address: {}", Hex.toHexString(senderAddress));
             return;
         }
 
         AccountState senderState = new AccountState(stateData);
         if (senderState.getNonce().compareTo(new BigInteger(tx.getNonce())) !=  0){
 
-            if (logger.isWarnEnabled())
-                logger.warn("Invalid nonce account.nonce={} tx.nonce={}",
+            if (stateLogger.isWarnEnabled())
+                stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
                         senderState.getNonce(),
                         new BigInteger(tx.getNonce()));
             return;
@@ -67,6 +70,9 @@ public class WorldManager {
 
             // todo 0. run the init method
 
+            VM vm = new VM();
+            Program program = new Program(null, null);
+
 
         } else{
 
@@ -74,12 +80,15 @@ public class WorldManager {
             byte[] accountData = this.allAccountsState.get(tx.getReceiveAddress());
             if (accountData.length == 0){
 
-                if (logger.isInfoEnabled())
-                    logger.info("New account created address={}",
-                            Hex.toHexString(tx.getReceiveAddress()));
                 recieverState = new AccountState(tx.getKey());
+                if (stateLogger.isInfoEnabled())
+                    stateLogger.info("New account created address={}",
+                            Hex.toHexString(tx.getReceiveAddress()));
             } else {
                 recieverState = new AccountState(accountData);
+                if (stateLogger.isInfoEnabled())
+                    stateLogger.info("Account updated address={}",
+                            Hex.toHexString(tx.getReceiveAddress()));
             }
 
             // APPLY THE BALANCE VALUE
@@ -108,8 +117,16 @@ public class WorldManager {
         }
     }
 
-    public void applyBlock(){
+    public void applyBlock(Block block){
 
+        List<Transaction> txList = block.getTransactionsList();
+        applyTransactionList(txList);
+    }
+
+    public void applyBlockList(List<Block> blocks){
+        for (int i = blocks.size() - 1; i >= 0 ; --i){
+            applyBlock(blocks.get(i));
+        }
     }
 
 
