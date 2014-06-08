@@ -7,7 +7,10 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -29,6 +32,8 @@ import java.util.List;
  */
 public class Block {
 
+	private static Logger logger = LoggerFactory.getLogger(Block.class);
+	
 	/* A scalar value equal to the mininum limit of gas expenditure per block */
 	private static long MIN_GAS_LIMIT = BigInteger.valueOf(10).pow(4).longValue();
 
@@ -51,6 +56,7 @@ public class Block {
     /* Constructors */
     
     public Block(byte[] rawData) {
+    	logger.debug("RLP encoded [ " + Hex.toHexString(rawData) + " ]");
         this.rlpEncoded = rawData;
         this.parsed = false;
     }
@@ -98,7 +104,7 @@ public class Block {
     }
 
     public Block getParent() {
-    	// TODO: Implement
+    	// TODO retrieve Parent from chain
     	return null;
     }
     
@@ -148,7 +154,7 @@ public class Block {
 	}
 	
 	public boolean isGenesis() {
-		return this.header.getNumber() == 0;
+		return this.getNumber() == 0;
 	}
 
 	public long getGasLimit() {
@@ -332,8 +338,8 @@ public class Block {
 			return Genesis.DIFFICULTY;
 		else {
 			Block parent = this.getParent();
-			long parentDifficulty = new BigInteger(1, parent.header.getDifficulty()).longValue();
-			long newDifficulty = this.header.getTimestamp() >= parent.header.getTimestamp() + 42 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
+			long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
+			long newDifficulty = this.header.getTimestamp() >= parent.getTimestamp() + 42 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
 			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
 		}
 	}
