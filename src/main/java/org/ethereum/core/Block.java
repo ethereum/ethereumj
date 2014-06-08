@@ -121,6 +121,11 @@ public class Block {
         if (!parsed) parseRLP();
         return this.header.getStateRoot();
     }
+    
+    public void setStateRoot(byte[] stateRoot) {
+        if (!parsed) parseRLP();
+        this.header.setStateRoot(stateRoot);
+    }
 
     public byte[] getTxTrieRoot() {
         if (!parsed) parseRLP();
@@ -169,6 +174,11 @@ public class Block {
     public byte[] getNonce() {
         if (!parsed) parseRLP();
         return this.header.getNonce();
+    }
+    
+    public void setNonce(BigInteger nonce) {
+        this.header.setNonce(BigIntegers.asUnsignedByteArray(nonce));
+        rlpEncoded = this.getEncoded();
     }
     
     public Trie getTxsState() {
@@ -343,15 +353,6 @@ public class Block {
 
 	public byte[] getEncoded() {
 		if(rlpEncoded == null) {
-
-	        // TODO: Alternative clean way to encode, using RLP.encode() after it's optimized
-	        // Object[] header = new Object[] { parentHash, unclesHash, coinbase,
-	        // stateRoot, txTrieRoot, difficulty, number, minGasPrice,
-	        // gasLimit, gasUsed, timestamp, extraData, nonce };
-	        // Object[] transactions = this.getTransactionsList().toArray();
-	        // Object[] uncles = this.getUncleList().toArray();        
-	        // return RLP.encode(new Object[] { header, transactions, uncles });
-
 			byte[] header = this.header.getEncoded();
 	        byte[] transactions = RLP.encodeList();
 	        byte[] uncles = RLP.encodeList();       
@@ -359,5 +360,14 @@ public class Block {
 	        this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
 		}
 		return rlpEncoded;
+	}
+	
+	public byte[] getEncodedWithoutNonce() {
+		if (!parsed) parseRLP();
+		byte[] header = this.header.getEncodedWithoutNonce();
+        byte[] transactions = RLP.encodeList();
+        byte[] uncles = RLP.encodeList();       
+        
+        return RLP.encodeList(header, transactions, uncles);
 	}
 }
