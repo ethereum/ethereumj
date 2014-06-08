@@ -3,6 +3,7 @@ package org.ethereum.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.spongycastle.util.encoders.Hex;
@@ -35,6 +36,10 @@ public class ByteUtil {
         int length = Math.min(biBytes.length, numBytes);
         System.arraycopy(biBytes, start, bytes, numBytes - length, length);
         return bytes;        
+    }
+    
+    public static byte[] longToBytes(long l) {
+    	return ByteBuffer.allocate(8).putLong(l).array();
     }
     
     public static String toHexString(byte[] data){
