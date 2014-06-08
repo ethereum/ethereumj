@@ -2,11 +2,12 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
+import static org.spongycastle.util.encoders.Hex.decode;
+import static org.spongycastle.util.encoders.Hex.toHexString;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * The genesis block is the first block in the chain and has fixed values according to 
@@ -44,7 +45,7 @@ public class Genesis extends Block {
 	
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
-	private static byte[] sha3EmptyList = HashUtil.sha3(RLP.encodeList());
+	private static byte[] sha3EmptyList = sha3(RLP.encodeList());
 
 	public static byte[] PARENT_HASH = zeroHash256;
 	public static byte[] UNCLES_HASH = sha3EmptyList;
@@ -56,9 +57,9 @@ public class Genesis extends Block {
     public static long GAS_USED = 0;
     public static long TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
-    public static byte[] NONCE = HashUtil.sha3(new byte[]{42});
+    public static byte[] NONCE = sha3(new byte[]{42});
     
-    private static Block instance;
+    private static Block genesisBlock;
     
 	private Genesis() {
 		super(PARENT_HASH, UNCLES_HASH, COINBASE, DIFFICULTY,
@@ -67,16 +68,16 @@ public class Genesis extends Block {
 
 		// Premine state
 		for (String address : premine) {
-			this.updateState(Hex.decode(address), acct.getEncoded());
+			this.updateState(decode(address), acct.getEncoded());
 		}
-		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
-		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
+		logger.info("Genesis-hash: " + toHexString(this.getHash()));
+		logger.info("Genesis-stateRoot: " + toHexString(this.getStateRoot()));
     }
 	
 	public static Block getInstance() {
-		if (instance == null) {
-			instance = new Genesis();
+		if (genesisBlock == null) {
+			genesisBlock = new Genesis();
 		}
-		return instance;
+		return genesisBlock;
 	}
 }
