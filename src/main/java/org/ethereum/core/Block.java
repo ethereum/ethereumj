@@ -319,7 +319,7 @@ public class Block {
 			return Genesis.GAS_LIMIT;
 		else {
 			Block parent = this.getParent();
-			return Math.max(MIN_GAS_LIMIT, (parent.header.getGasLimit() * (1024 - 1) + (parent.header.getGasUsed() * 6 / 5)) / 1024);
+			return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
 		}
 	}
 	

@@ -172,7 +172,7 @@ public class BlockTest {
     	BigInteger actualDifficulty = new BigInteger(1, block1.getDifficulty());
     	System.out.println("Block#1 actual difficulty = " + actualDifficulty.toString());
     	System.out.println("Block#1 calculated difficulty = " + calcDifficulty.toString());
-    	assertEquals(new BigInteger("4190208"), difficulty);
+    	assertEquals(actualDifficulty, calcDifficulty);
     }
     
     @Test
@@ -183,8 +183,10 @@ public class BlockTest {
     	
     	// Test with block
     	Block block1 = new Block(Hex.decode(block_1));
-    	gasLimit = block1.calcGasLimit();
-    	System.out.println("Block#1 gasLimit = " + gasLimit);
-    	assertEquals(999023, gasLimit);
+    	long calcGasLimit = block1.calcGasLimit();
+    	long actualGasLimit = block1.getGasLimit();
+    	System.out.println("Block#1 actual gasLimit = " + actualGasLimit);
+    	System.out.println("Block#1 calculated gasLimit = " + calcGasLimit);
+    	assertEquals(actualGasLimit, calcGasLimit);
     }
 }
