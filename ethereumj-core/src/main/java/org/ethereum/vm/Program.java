@@ -27,15 +27,18 @@ public class Program {
 
     byte[]   ops;
     int      pc = 0;
+    byte     lastOp = 0;
     boolean  stopped = false;
 
     ProgramInvoke invokeData;
 
     Map<byte[], DataWord> addressChange;
-    int      spendGas = 0;
 
 
     public Program(byte[] ops, ProgramInvoke invokeData) {
+
+        spendGas(GasCost.TRANSACTION);
+        spendGas(GasCost.TXDATA * invokeData.getDataSize().intValue());
 
         if (ops == null)        throw new RuntimeException("program can not run with ops: null");
 
@@ -47,6 +50,9 @@ public class Program {
         return ops[pc];
     }
 
+    public void setLastOp(byte op){
+        this.lastOp = op;
+    }
 
     public void stackPush(byte[] data){
         DataWord stackWord = new DataWord(data);
@@ -203,7 +209,7 @@ public class Program {
     public void spendGas(int gasValue){
         // todo: check it against avail gas
         // todo: out of gas will revert the changes [YP 5, 6 ]
-        spendGas += gasValue;
+        result.spendGas(gasValue);
     }
 
     public void storageSave(DataWord word1, DataWord word2){
@@ -276,9 +282,7 @@ public class Program {
 
     public void fullTrace(){
 
-        // todo: add gas to full trace calc
-
-        if (logger.isDebugEnabled()){
+        if (logger.isDebugEnabled() || listener != null){
 
             StringBuilder stackData = new StringBuilder();
             for (int i = 0; i < stack.size(); ++i){
@@ -335,22 +339,26 @@ public class Program {
             logger.debug(" -- STORAGE -- {}\n", storageData);
 
 
-            StringBuilder global = new StringBuilder("\n");
+            StringBuilder globalOutput = new StringBuilder("\n");
             if (stackData.length() > 0) stackData.append("\n");
 
-            global.append(" -- OPS --     ").append(opsString).append("\n");
-            global.append(" -- STACK --   ").append(stackData).append("\n");
-            global.append(" -- MEMORY --  ").append(memoryData).append("\n");
-            global.append(" -- STORAGE -- ").append(storageData).append("\n");
+            if (pc != 0)
+                globalOutput.append("[Op: ").append(OpCode.code(lastOp).name()).append("]\n");
+
+            globalOutput.append(" -- OPS --     ").append(opsString).append("\n");
+            globalOutput.append(" -- STACK --   ").append(stackData).append("\n");
+            globalOutput.append(" -- MEMORY --  ").append(memoryData).append("\n");
+            globalOutput.append(" -- STORAGE -- ").append(storageData).append("\n");
 
             if (result.gethReturn() != null){
-                global.append("\n  HReturn: ").append(Hex.toHexString(result.gethReturn().array()));
+                globalOutput.append("\n  HReturn: ").append(Hex.toHexString(result.gethReturn().array()));
             }
+
+            globalOutput.append("\n\n  Spent Gas: ").append(result.getGasUsed());
 
             if (listener != null){
-                listener.output(global.toString());
+                listener.output(globalOutput.toString());
             }
-
         };
     }
 

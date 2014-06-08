@@ -58,6 +58,7 @@ public class VM {
         try {
 
             byte op = program.getCurrentOp();
+            program.setLastOp(op);
             logger.debug("Op: {}" ,OpCode.code(op).name());
 
             int oldMemSize = program.getMemSize();
@@ -70,8 +71,6 @@ public class VM {
                     program.spendGas(GasCost.SLOAD);
                     break;
                 case SSTORE:
-                    // todo: calc gas in the execution
-                    // todo: according to the size
                 	break;
                 case BALANCE:
                     program.spendGas(GasCost.BALANCE);
@@ -84,8 +83,9 @@ public class VM {
                     break;
                 case MSTORE8:
                 case MSTORE:
-                    // todo: calc gas in the execution
-                    // todo: according to the size
+                    // TODO: [cpp impl] do this when [go impl] spend just the usage size
+                    // TODO: https://github.com/ethereum/cpp-ethereum/blob/develop/libevm/VM.h#L183
+                    program.spendGas(GasCost.STEP);
                 	break;
                 default:
                     program.spendGas(GasCost.STEP);
@@ -527,11 +527,12 @@ public class VM {
                 }	break;
                 default:{
                 }
-
-                // memory gas calc
-                int newMemSize = program.getMemSize();
-                program.spendGas(GasCost.MEMORY * (newMemSize - oldMemSize) /32);
             }
+
+            // memory gas calc
+            int newMemSize = program.getMemSize();
+            program.spendGas(GasCost.MEMORY * (newMemSize - oldMemSize) /32);
+
             program.fullTrace();
         } catch (RuntimeException e) {
             program.stop();
