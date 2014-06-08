@@ -44,6 +44,9 @@ public class DataWord {
     public BigInteger value(){
         return new BigInteger(1, data);
     }
+    public int intValue(){
+        return new BigInteger(1, data).intValue();
+    }
 
     public BigInteger sValue(){
         return new BigInteger(data);

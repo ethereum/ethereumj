@@ -32,6 +32,10 @@ public class ProgramResult {
         return exception;
     }
 
+    public int getGasUsed() {
+        return gasUsed;
+    }
+
     public void setException(RuntimeException exception) {
         this.exception = exception;
     }
