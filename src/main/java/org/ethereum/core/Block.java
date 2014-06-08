@@ -97,7 +97,6 @@ public class Block {
     }
 
     public Block getParent() {
-    	// TODO retrieve Parent from chain
 		byte[] rlpEncoded = WorldManager.instance.chainDB.get(ByteUtil
 				.longToBytes(this.getNumber() - 1));
     	return new Block(rlpEncoded);
@@ -149,7 +148,7 @@ public class Block {
 	}
 	
 	public boolean isGenesis() {
-		return this.getNumber() == 0;
+		return this.getNumber() == Genesis.NUMBER;
 	}
 
 	public long getGasLimit() {

@@ -87,9 +87,7 @@ public class Blockchain extends ArrayList<Block> {
     private void addBlock(Block block) {
     	if(block.isValid()) {
 			this.wallet.processBlock(block);
-	        // that is the genesis case , we don't want to rely
-	        // on this price will use default 10000000000000
-	        // todo: refactor this longValue some constant defaults class 10000000000000L
+	        // In case of the genesis block we don't want to rely on the min gas price 
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
 			if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
 				this.lastBlock = block;
@@ -140,19 +138,18 @@ public class Blockchain extends ArrayList<Block> {
 		try {
 			if (!iterator.hasNext()) {
 				logger.info("DB is empty - adding Genesis");
-				Block genesis = Genesis.getInstance();
-				this.addBlock(genesis);
-				logger.debug("Block #" + Genesis.NUMBER + " -> " + genesis.toFlatString());
-				db.put(ByteUtil.longToBytes(Genesis.NUMBER), genesis.getEncoded());
+				this.lastBlock = Genesis.getInstance();
+				this.addBlock(lastBlock);
+				logger.debug("Block #" + Genesis.NUMBER + " -> " + lastBlock.toFlatString());
+				db.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
 			} else {
 				logger.debug("Displaying blocks stored in DB sorted on blocknumber");
-				Block block;
 				long blockNr = Genesis.NUMBER;
 				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-					block = new Block(db.get(ByteUtil.longToBytes(blockNr)));
-					logger.debug("Block #" + block.getNumber() + " -> " + block.toFlatString());
-					this.addBlock(block);
-					blockNr = block.getNumber()+1;
+					this.lastBlock = new Block(db.get(ByteUtil.longToBytes(blockNr)));
+					logger.debug("Block #" + lastBlock.getNumber() + " -> " + lastBlock.toFlatString());
+					this.addBlock(lastBlock);
+					blockNr = lastBlock.getNumber()+1;
 				}
 			}
 		} finally {

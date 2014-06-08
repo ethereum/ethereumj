@@ -2,7 +2,9 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
@@ -162,10 +164,14 @@ public class BlockTest {
     
     @Test
     public void testCalcDifficulty() {
-    	byte[] diffBytes = Genesis.getInstance().calcDifficulty();
-      	BigInteger difficulty = new BigInteger(1, diffBytes);
+    	Block genesis = Genesis.getInstance();
+      	BigInteger difficulty = new BigInteger(1, genesis.calcDifficulty());
     	System.out.println("Genesis difficulty = " + difficulty.toString());
     	assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
+    	
+    	// Storing genesis because the parent needs to be in the DB for calculation.
+		WorldManager.instance.chainDB.put(ByteUtil.longToBytes(Genesis.NUMBER),
+				genesis.getEncoded());
     	
     	Block block1 = new Block(Hex.decode(block_1));
     	BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
@@ -177,9 +183,14 @@ public class BlockTest {
     
     @Test
     public void testCalcGasLimit() {
-    	long gasLimit = Genesis.getInstance().calcGasLimit();
+    	Block genesis = Genesis.getInstance();
+    	long gasLimit = genesis.calcGasLimit();
     	System.out.println("Genesis gasLimit = " + gasLimit);
     	assertEquals(Genesis.GAS_LIMIT, gasLimit);
+    	
+    	// Storing genesis because the parent needs to be in the DB for calculation.
+		WorldManager.instance.chainDB.put(ByteUtil.longToBytes(Genesis.NUMBER),
+				genesis.getEncoded());
     	
     	// Test with block
     	Block block1 = new Block(Hex.decode(block_1));
