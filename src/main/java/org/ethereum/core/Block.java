@@ -98,7 +98,9 @@ public class Block {
 
     public Block getParent() {
     	// TODO retrieve Parent from chain
-    	return null;
+		byte[] rlpEncoded = WorldManager.instance.chainDB.get(ByteUtil
+				.longToBytes(this.getNumber() - 1));
+    	return new Block(rlpEncoded);
     }
     
     public byte[] getParentHash() {
@@ -209,7 +211,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [\n");
-        toStringBuff.append("  hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
+        toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
         
         for (TransactionReceipt txReceipt : getTxReceiptList()) {
@@ -226,7 +228,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
-        toStringBuff.append("  hash=" + ByteUtil.toHexString(this.getHash())).append("");
+        toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("");
         toStringBuff.append(header.toFlatString());
         
         for (Transaction tx : getTransactionsList()){

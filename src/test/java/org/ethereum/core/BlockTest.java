@@ -168,10 +168,11 @@ public class BlockTest {
     	assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
     	
     	Block block1 = new Block(Hex.decode(block_1));
-    	diffBytes = block1.calcDifficulty();
-    	difficulty = new BigInteger(1, diffBytes);
-    	System.out.println("Block#1 difficulty = " + difficulty.toString());
-    	assertEquals(new BigInteger(""), difficulty);
+    	BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
+    	BigInteger actualDifficulty = new BigInteger(1, block1.getDifficulty());
+    	System.out.println("Block#1 actual difficulty = " + actualDifficulty.toString());
+    	System.out.println("Block#1 calculated difficulty = " + calcDifficulty.toString());
+    	assertEquals(new BigInteger("4190208"), difficulty);
     }
     
     @Test

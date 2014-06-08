@@ -4,6 +4,7 @@ import org.ethereum.db.Database;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.submit.WalletTransaction;
+import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -68,7 +69,7 @@ public class Blockchain extends ArrayList<Block> {
         for (int i = blocks.size() - 1; i >= 0 ; --i){
         	Block block = blocks.get(i);
             this.addBlock(block);
-            db.put(block.getParentHash(), block.getEncoded());
+            db.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
         }
@@ -141,16 +142,17 @@ public class Blockchain extends ArrayList<Block> {
 				logger.info("DB is empty - adding Genesis");
 				Block genesis = Genesis.getInstance();
 				this.addBlock(genesis);
-				logger.debug("Block: " + genesis.getNumber() + " ---> " + genesis.toFlatString());
-				db.put(genesis.getParentHash(), genesis.getEncoded());
+				logger.debug("Block #" + Genesis.NUMBER + " -> " + genesis.toFlatString());
+				db.put(ByteUtil.longToBytes(Genesis.NUMBER), genesis.getEncoded());
 			} else {
 				logger.debug("Displaying blocks stored in DB sorted on blocknumber");
-				byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
+				Block block;
+				long blockNr = Genesis.NUMBER;
 				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-					this.addBlock(new Block(db.get(parentHash)));
-					if (logger.isDebugEnabled())
-						logger.debug("Block: " + lastBlock.getNumber() + " ---> " + lastBlock.toFlatString());
-					parentHash = lastBlock.getHash();					
+					block = new Block(db.get(ByteUtil.longToBytes(blockNr)));
+					logger.debug("Block #" + block.getNumber() + " -> " + block.toFlatString());
+					this.addBlock(block);
+					blockNr = block.getNumber()+1;
 				}
 			}
 		} finally {
