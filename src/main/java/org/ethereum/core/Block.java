@@ -298,14 +298,17 @@ public class Block {
 	 */
     public boolean isValid() {
     	boolean isValid = true;
-    	
-    	// verify difficulty meets requirements
-    	//isValid = this.getDifficulty() == this.calcDifficulty();
-    	// verify gasLimit meets requirements
-    	//isValid = this.getGasLimit() == this.calcGasLimit();
-    	// verify timestamp meets requirements
-    	//isValid = this.getTimestamp() > this.getParent().getTimestamp();
-    	
+
+    	if(!this.isGenesis()) {
+	    	// verify difficulty meets requirements
+	    	isValid = this.getDifficulty() == this.calcDifficulty();
+	    	// verify gasLimit meets requirements
+	    	isValid = this.getGasLimit() == this.calcGasLimit();
+	    	// verify timestamp meets requirements
+	    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+    	}
+    	if(!isValid)
+    		logger.warn("!!!Invalid block!!!");
     	return isValid;
     }
 	
