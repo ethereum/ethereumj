@@ -28,7 +28,7 @@ import static org.ethereum.net.Command.*;
  */
 public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
-    Logger logger = LoggerFactory.getLogger("wire");
+    Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     Timer timer = null;
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};

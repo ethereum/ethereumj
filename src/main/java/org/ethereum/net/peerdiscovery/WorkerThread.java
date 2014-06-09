@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class WorkerThread implements Runnable {
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     ThreadPoolExecutor poolExecutor;
     private PeerData peerData;

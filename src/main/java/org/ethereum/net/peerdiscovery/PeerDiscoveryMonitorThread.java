@@ -8,7 +8,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class PeerDiscoveryMonitorThread implements Runnable
 {
-    Logger logger = LoggerFactory.getLogger(getClass());
+    Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     private ThreadPoolExecutor executor;
     private int seconds;
