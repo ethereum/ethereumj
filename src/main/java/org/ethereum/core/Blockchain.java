@@ -4,24 +4,17 @@ import org.ethereum.db.Database;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.submit.WalletTransaction;
+import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 import static org.ethereum.core.Denomination.*;
 
-/*
- *
- * www.ethereumJ.com
- * @author: Nick Savers
- * Created on: 20/05/2014 10:44
- *
- */
 public class Blockchain {
 
 	private static final long serialVersionUID = -143590724563460486L;
@@ -64,10 +57,8 @@ public class Blockchain {
         return index.size();
     }
 
-    public Block getByNumber(int rowIndex){
-        byte[] parentHash = index.get((long)rowIndex);
-        if (parentHash == null) return null;
-        return new Block(db.get(parentHash));
+    public Block getByNumber(long rowIndex){
+        return new Block(db.get(ByteUtil.longToBytes(rowIndex)));
     }
 
     public void addBlocks(List<Block> blocks) {
@@ -93,7 +84,7 @@ public class Blockchain {
         for (int i = blocks.size() - 1; i >= 0 ; --i){
         	Block block = blocks.get(i);
             this.addBlock(block);
-            db.put(block.getParentHash(), block.getEncoded());
+            db.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
         }
@@ -111,14 +102,14 @@ public class Blockchain {
     private void addBlock(Block block) {
     	if(block.isValid()) {
 			this.wallet.processBlock(block);
-	        // that is the genesis case , we don't want to rely
-	        // on this price will use default 10000000000000
-	        // todo: refactor this longValue some constant defaults class 10000000000000L
+	        // In case of the genesis block we don't want to rely on the min gas price 
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
 			if(getLastBlock() == null || block.getNumber() > getLastBlock().getNumber()){
-				setLastBlock( block );
+				setLastBlock(block);
                 index.put(block.getNumber(), block.getParentHash());
             }
+    	} else {
+    		logger.warn("Invalid block with nr: " + block.getNumber());
     	}
     }
     
@@ -165,18 +156,18 @@ public class Blockchain {
 		try {
 			if (!iterator.hasNext()) {
 				logger.info("DB is empty - adding Genesis");
-				Block genesis = Genesis.getInstance();
-                this.addBlock(genesis);
-				logger.debug("Block: " + genesis.getNumber() + " ---> " + genesis.toFlatString());
-				db.put(genesis.getParentHash(), genesis.getEncoded());
+				this.lastBlock = Genesis.getInstance();
+				this.addBlock(lastBlock);
+				logger.debug("Block #" + Genesis.NUMBER + " -> " + lastBlock.toFlatString());
+				db.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
 			} else {
 				logger.debug("Displaying blocks stored in DB sorted on blocknumber");
-				byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
+				long blockNr = Genesis.NUMBER;
 				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                    this.addBlock(new Block(db.get(parentHash)));
-                    if (logger.isDebugEnabled())
-						logger.debug("Block: " + getLastBlock().getNumber() + " ---> " + getLastBlock().toFlatString());
-					parentHash = getLastBlock().getHash();
+					this.lastBlock = new Block(db.get(ByteUtil.longToBytes(blockNr)));
+					logger.debug("Block #" + lastBlock.getNumber() + " -> " + lastBlock.toFlatString());
+					this.addBlock(lastBlock);
+					blockNr = lastBlock.getNumber()+1;
 				}
 			}
 		} finally {
