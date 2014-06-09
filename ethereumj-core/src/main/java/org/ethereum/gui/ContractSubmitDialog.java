@@ -260,6 +260,9 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
     public void submitContract(){
 
+        if (!validInput())
+            return;
+
         Transaction tx = null;
         try {
             tx = createTransaction();
@@ -303,6 +306,24 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         return tx;
     }
+
+
+    private boolean validInput() {
+
+        Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
+        BigInteger currentBalance = account.getState().getBalance();
+        BigInteger gasPrice = BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
+        BigInteger gasInput = new BigInteger( this.gasInput.getText());
+
+        boolean canAfford = currentBalance.compareTo(gasPrice.multiply(gasInput)) >= 0;
+
+        if (!canAfford){
+            alertStatusMsg("The address can't afford this transaction");
+            return false;
+        }
+        return true;
+    }
+
 
     public static void main(String args[]) {
 

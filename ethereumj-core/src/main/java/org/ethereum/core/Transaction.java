@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
+import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
@@ -152,6 +153,11 @@ public class Transaction {
     public byte[] getGasLimit() {
         if (!parsed) rlpParse();
         return gasLimit;
+    }
+
+    // TODO: performance improve multiply without BigInteger
+    public BigInteger getTotalGasDebit(){
+        return new BigInteger(1, gasLimit).multiply(new BigInteger(1,gasPrice));
     }
 
     public byte[] getData() {

@@ -368,6 +368,8 @@ public class Program {
             logger.debug(" -- MEMORY --  {}", memoryData);
             logger.debug(" -- STORAGE -- {}\n", storageData);
 
+            logger.debug("\n\n  Spent Gas: {}", result.getGasUsed());
+
 
             StringBuilder globalOutput = new StringBuilder("\n");
             if (stackData.length() > 0) stackData.append("\n");
