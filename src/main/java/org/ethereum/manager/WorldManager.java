@@ -115,6 +115,20 @@ public class WorldManager {
                 logger.info("running the init for contract: addres={}" ,
                         Hex.toHexString(tx.getContractAddress()));
 
+            // first of all debit the gas from the issuer
+            BigInteger gasDebit = tx.getTotalGasDebit();
+            senderState.addToBalance(gasDebit.negate());
+            if (senderState.getBalance().signum() == -1){
+                // todo: the sender can't afford this contract do Out-Of-Gas
+
+            }
+
+            if(stateLogger.isInfoEnabled())
+                stateLogger.info("Before contract execution the sender address debit with gas total cost, \n sender={} \n contract={}  \n gas_debit= {}",
+                         Hex.toHexString( tx.getSender() ),    Hex.toHexString(tx.getContractAddress()), gasDebit);
+            worldState.update(senderAddress, senderState.getEncoded());
+
+
             VM vm = new VM();
             Program program = new Program(initCode, programInvoke);
             vm.play(program);
@@ -129,8 +143,19 @@ public class WorldManager {
 
             // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
 
-            if (bodyCode != null){
+            BigInteger gasPrice = BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
+            BigInteger refund =
+                    gasDebit.subtract(BigInteger.valueOf( result.getGasUsed()).multiply(gasPrice));
 
+            if (refund.signum() > 0){
+                if(stateLogger.isInfoEnabled())
+                    stateLogger.info("After contract execution the sender address refunded with gas leftover , \n sender={} \n contract={}  \n gas_refund= {}",
+                            Hex.toHexString(tx.getSender()) ,Hex.toHexString(tx.getContractAddress()), refund);
+                senderState.addToBalance(refund);
+                worldState.update(senderAddress, senderState.getEncoded());
+            }
+
+            if (bodyCode != null){
                 byte[] codeKey = HashUtil.sha3(bodyCode);
                 chainDB.put(codeKey, bodyCode);
                 receiverState.setCodeHash(codeKey);
@@ -148,7 +173,7 @@ public class WorldManager {
             if (receiverState.getCodeHash() != HashUtil.EMPTY_DATA_HASH){
 
                 byte[] programCode = chainDB.get(receiverState.getCodeHash());
-                if (programCode.length != 0){
+                if (programCode != null && programCode.length != 0){
 
                     Block lastBlock =
                             MainData.instance.getBlockchain().getLastBlock();
