@@ -7,22 +7,20 @@ import org.spongycastle.util.encoders.Hex;
 
 public class SHA3Helper {
 	
-	private static SHA3Digest DEFAULT_DIGEST_256 = new SHA3Digest(256);
-
 	public static String sha3String(String message) {
-		return sha3String(message, DEFAULT_DIGEST_256, true);
+		return sha3String(message, new SHA3Digest(256), true);
 	}
 	
 	public static String sha3String(byte[] message) {
-		return sha3String(message, DEFAULT_DIGEST_256, true);
+		return sha3String(message, new SHA3Digest(256), true);
 	}
 
 	public static byte[] sha3(String message) {
-		return sha3(Hex.decode(message), DEFAULT_DIGEST_256, true);
+		return sha3(Hex.decode(message), new SHA3Digest(256), true);
 	}
 	
 	public static byte[] sha3(byte[] message) {
-		return sha3(message, DEFAULT_DIGEST_256, true);
+		return sha3(message, new SHA3Digest(256), true);
 	}
 	
 	protected static String sha3String(String message, Size bitSize) {
