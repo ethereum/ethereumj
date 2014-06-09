@@ -34,6 +34,7 @@ public class GetChainMessage extends Message {
         encodedElements[0] = new byte[]{0x14};
         int i = 1;
         for (byte[] hash : blockHashList){
+            this.blockHashList.add(hash);
             byte[] element = RLP.encodeElement(hash);
             encodedElements[i] = element;
             ++i;
@@ -41,6 +42,8 @@ public class GetChainMessage extends Message {
         encodedElements[i] = RLP.encodeByte(number);
 
         this.payload = RLP.encodeList(encodedElements);
+        this.parsed = true;
+
     }
 
     @Override

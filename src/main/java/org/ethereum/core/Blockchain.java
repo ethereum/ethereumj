@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 
 import static org.ethereum.core.Denomination.*;
@@ -21,7 +22,7 @@ import static org.ethereum.core.Denomination.*;
  * Created on: 20/05/2014 10:44
  *
  */
-public class Blockchain extends ArrayList<Block> {
+public class Blockchain {
 
 	private static final long serialVersionUID = -143590724563460486L;
 
@@ -35,6 +36,10 @@ public class Blockchain extends ArrayList<Block> {
 	
     private long gasPrice = 1000;
     private Block lastBlock;
+
+    // keep the index of the chain for
+    // convenient usage, <block_number, block_hash>
+    private HashMap<Long, byte[]> index = new HashMap<Long, byte[]>();
 
     // This map of transaction designed
     // to approve the tx by external trusted peer
@@ -50,7 +55,17 @@ public class Blockchain extends ArrayList<Block> {
 	public Block getLastBlock() {
 		return lastBlock;
 	}
-	
+
+    public int getSize(){
+        return index.size();
+    }
+
+    public Block getByNumber(int rowIndex){
+        byte[] parentHash = index.get((long)rowIndex);
+        if (parentHash == null) return null;
+        return new Block(db.get(parentHash));
+    }
+
     public void addBlocks(List<Block> blocks) {
 
 		if (blocks.isEmpty())
@@ -60,15 +75,14 @@ public class Blockchain extends ArrayList<Block> {
 
         // if it is the first block to add
         // check that the parent is the genesis
-		if (this.isEmpty()
+		if (index.isEmpty()
 				&& !Arrays.equals(StaticMessages.GENESIS_HASH,
 						firstBlockToAdd.getParentHash())) {
 			return;
 		}
         // if there is some blocks already keep chain continuity
-        if (!this.isEmpty()) {
-            Block lastBlock = this.get(this.size() - 1);
-            String hashLast = Hex.toHexString(lastBlock.getHash());
+        if (!index.isEmpty()) {
+            String hashLast = Hex.toHexString(getLastBlock().getHash());
             String blockParentHash = Hex.toHexString(firstBlockToAdd.getParentHash());
             if (!hashLast.equals(blockParentHash)) return;
         }
@@ -87,7 +101,7 @@ public class Blockchain extends ArrayList<Block> {
                 removeWalletTransaction(tx);
             }
         }
-        logger.info("*** Block chain size: [ {} ]", this.size());
+        logger.info("*** Block chain size: [ {} ]", index.size());
     }
     
     private void addBlock(Block block) {
@@ -97,9 +111,10 @@ public class Blockchain extends ArrayList<Block> {
 	        // on this price will use default 10000000000000
 	        // todo: refactor this longValue some constant defaults class 10000000000000L
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
-			if(lastBlock == null || block.getNumber() > lastBlock.getNumber())
+			if(lastBlock == null || block.getNumber() > lastBlock.getNumber()){
 				this.lastBlock = block;
-			this.add(block);
+                index.put(block.getNumber(), block.getParentHash());
+            }
     	}
     }
     
@@ -135,7 +150,7 @@ public class Blockchain extends ArrayList<Block> {
     }
 
     public byte[] getLatestBlockHash(){
-		if (this.isEmpty())
+		if (index.isEmpty())
 			return StaticMessages.GENESIS_HASH;
 		else
 			return lastBlock.getHash();
@@ -147,15 +162,15 @@ public class Blockchain extends ArrayList<Block> {
 			if (!iterator.hasNext()) {
 				logger.info("DB is empty - adding Genesis");
 				Block genesis = Genesis.getInstance();
-				this.addBlock(genesis);
+                this.addBlock(genesis);
 				logger.debug("Block: " + genesis.getNumber() + " ---> " + genesis.toFlatString());
 				db.put(genesis.getParentHash(), genesis.getEncoded());
 			} else {
 				logger.debug("Displaying blocks stored in DB sorted on blocknumber");
 				byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
 				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-					this.addBlock(new Block(db.get(parentHash)));
-					if (logger.isDebugEnabled())
+                    this.addBlock(new Block(db.get(parentHash)));
+                    if (logger.isDebugEnabled())
 						logger.debug("Block: " + lastBlock.getNumber() + " ---> " + lastBlock.toFlatString());
 					parentHash = lastBlock.getHash();					
 				}

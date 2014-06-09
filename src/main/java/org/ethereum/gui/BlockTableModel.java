@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Block;
 import org.ethereum.manager.MainData;
 
 import javax.swing.table.AbstractTableModel;
@@ -15,7 +16,7 @@ public class BlockTableModel extends AbstractTableModel {
     public int getRowCount() {
 
         fireTableDataChanged();
-        int rowCount = MainData.instance.getBlockchain().size();
+        int rowCount = MainData.instance.getBlockchain().getSize();
         return rowCount;
     }
 
@@ -30,6 +31,9 @@ public class BlockTableModel extends AbstractTableModel {
 //        byte[] hash = MainData.instance.getAllBlocks().get(rowIndex).getHash();
 //        return Hex.toHexString(hash);
 
-        return MainData.instance.getBlockchain().get(rowIndex).toString();
+        Block block = MainData.instance.getBlockchain().getByNumber(rowIndex);
+        if (block == null) return "";
+
+        return block.toString();
     }
 }
