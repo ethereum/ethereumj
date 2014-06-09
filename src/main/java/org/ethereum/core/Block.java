@@ -4,11 +4,13 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -176,9 +178,9 @@ public class Block {
         return this.header.getNonce();
     }
     
-    public void setNonce(BigInteger nonce) {
-        this.header.setNonce(BigIntegers.asUnsignedByteArray(nonce));
-        rlpEncoded = this.getEncoded();
+    public void setNonce(byte[] nonce) {
+        this.header.setNonce(nonce);
+        rlpEncoded = null;
     }
     
     public Trie getTxsState() {
@@ -311,6 +313,8 @@ public class Block {
     	if(!this.isGenesis()) {
 	    	// verify difficulty meets requirements
 	    	isValid = this.getDifficulty() == this.calcDifficulty();
+	    	// verify nonce meest difficulty requirements
+//	    	isValid = this.validateNonce();
 	    	// verify gasLimit meets requirements
 	    	isValid = this.getGasLimit() == this.calcGasLimit();
 	    	// verify timestamp meets requirements
@@ -349,6 +353,24 @@ public class Block {
 			long newDifficulty = this.header.getTimestamp() >= parent.getTimestamp() + 42 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
 			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
 		}
+	}
+	
+	/**
+	 * Verify that block is valid for its difficulty
+	 * 
+	 * @param block
+	 * @param difficulty
+	 * @param testNonce
+	 * @return
+	 */
+	public boolean validateNonce() {
+		BigInteger max = BigInteger.valueOf(2).pow(256);
+		byte[] target = BigIntegers.asUnsignedByteArray(32,
+				max.divide(new BigInteger(1, this.getDifficulty())));
+		byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
+		byte[] concat = Arrays.concatenate(hash, this.getNonce());
+		byte[] result = HashUtil.sha3(concat);
+		return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
 	}
 
 	public byte[] getEncoded() {
