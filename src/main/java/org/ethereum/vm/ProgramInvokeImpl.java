@@ -12,6 +12,14 @@ import org.spongycastle.util.encoders.Hex;
 
 public class    ProgramInvokeImpl implements ProgramInvoke {
 
+    DataWord address;
+    DataWord origin;
+    DataWord caller;
+    DataWord balance;
+    DataWord gas;
+    DataWord gasPrice;
+    DataWord callValue;
+
     byte[] msgData;
 
 
@@ -19,56 +27,50 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
         this.msgData = msgDataRaw;
     }
 
-    public ProgramInvokeImpl() {
+    public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
+                             byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData) {
+
+        this.address   = new DataWord(address);
+        this.origin    = new DataWord(origin);
+        this.caller    = new DataWord(caller);
+        this.balance   = new DataWord(balance);
+        this.gasPrice  = new DataWord(gasPrice);
+        this.gas       = new DataWord(gas);
+        this.callValue = new DataWord(callValue);
+
+        this.msgData = msgData;
     }
 
     /*           ADDRESS op         */
     public DataWord getOwnerAddress(){
 
-        byte[] cowPrivKey = HashUtil.sha3("cow".getBytes());
-        byte[] addr = ECKey.fromPrivate(cowPrivKey).getAddress();
-
-        return new DataWord(addr);
+        return address;
     }
 
     /*           BALANCE op         */
     public DataWord getBalance(){
-        byte[] balance = Hex.decode("0DE0B6B3A7640000");
-        return new DataWord(balance);
+        return balance;
     }
-
 
     /*           ORIGIN op         */
     public DataWord getOriginAddress(){
-
-        byte[] cowPrivKey = HashUtil.sha3("horse".getBytes());
-        byte[] addr = ECKey.fromPrivate(cowPrivKey).getAddress();
-
-        return new DataWord(addr);
+        return origin;
     }
 
     /*           CALLER op         */
     public DataWord getCallerAddress(){
-
-        byte[] cowPrivKey = HashUtil.sha3("monkey".getBytes());
-        byte[] addr = ECKey.fromPrivate(cowPrivKey).getAddress();
-
-        return new DataWord(addr);
+        return caller;
     }
-
 
     /*           GASPRICE op       */
     public DataWord getMinGasPrice(){
-
-        byte[] minGasPrice = Hex.decode("09184e72a000");
-        return new DataWord(minGasPrice);
+        return gasPrice;
     }
 
 
     /*          CALLVALUE op    */
     public DataWord getCallValue(){
-        byte[] balance = Hex.decode("0DE0B6B3A7640000");
-        return new DataWord(balance);
+        return callValue;
     }
 
 

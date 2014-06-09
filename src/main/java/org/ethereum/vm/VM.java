@@ -371,6 +371,9 @@ public class VM {
                     program.step();
                 }	break;
                 case GASPRICE:
+
+
+                    program.step();
                     break;
 
                 /**
@@ -378,16 +381,22 @@ public class VM {
                  */
 
                 case PREVHASH:
+                    program.step();
                     break;
                 case COINBASE:
+                    program.step();
                     break;
                 case TIMESTAMP:
+                    program.step();
                     break;
                 case NUMBER:
+                    program.step();
                     break;
                 case DIFFICULTY:
+                    program.step();
                     break;
                 case GASLIMIT:
+                    program.step();
                     break;
                 case POP:{
                     program.stackPop();
@@ -477,6 +486,7 @@ public class VM {
                     program.step();
                 }	break;
                 case GAS:
+                    program.step();
                     break;
 
                 case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:

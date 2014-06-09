@@ -1,6 +1,8 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Transaction;
 import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvokeFactory;
 import org.ethereum.vm.ProgramInvokeImpl;
 import org.ethereum.vm.VM;
 import org.spongycastle.util.encoders.Hex;
@@ -27,20 +29,25 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     public JTextArea console;
     public JSlider stepSlider;
 
-    public ProgramPlayDialog() {
+    private Transaction tx;
+
+    public ProgramPlayDialog(Transaction tx) {
+
+        this.tx = tx;
 
         outputList = new ArrayList<String>();
         VM vm = new VM();
 //        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054"));
 //        Program program = new Program(Hex.decode("60016023576000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"), null);
 
-        String code = "60016000546006601160003960066000f261778e600054";
+//        String code = "60016000546006601160003960066000f261778e600054";
 //        String code = "620f424073cd2a3d9f938e13cd947ec05abc7fe734df8dd826576086602660003960866000f26001602036040e0f630000002159600060200235600054600053565b525b54602052f263000000765833602054602053566040546000602002356060546001602002356080546080536040530a0f0f630000006c59608053604053036020535760805360605356016060535760015b525b54602052f263000000765860005b525b54602052f2";
 
-        byte[] codeBytes =
-            Hex.decode(code);
-        Program program = new Program(codeBytes ,
-                new ProgramInvokeImpl(codeBytes));
+//        byte[] codeBytes =
+//            Hex.decode(code);
+
+        Program program = new Program(tx.getData() ,
+                ProgramInvokeFactory.createProgramInvoke(tx));
 
         program.addListener(this);
         program.fullTrace();
@@ -121,9 +128,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    public static void createAndShowGUI() {
+    public static void createAndShowGUI(Transaction tx) {
 
-        ProgramPlayDialog ppd = new ProgramPlayDialog();
+        ProgramPlayDialog ppd = new ProgramPlayDialog(tx);
 
         //Create and set up the window.
         JFrame frame = new JFrame("Program Draft Play");
@@ -159,11 +166,14 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
+
+/*  todo: make dummy tx for dialog single invokation
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI();
             }
         });
+*/
 
     }
 }

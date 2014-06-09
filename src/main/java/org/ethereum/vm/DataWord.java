@@ -32,8 +32,14 @@ public class DataWord {
 	}
 
 	public DataWord(byte[] data) {
-		if (data == null || data.length > 32)
-			throw new RuntimeException("bad push data: " + data);
+
+        if (data == null){
+            this.data = new byte[]{};
+            return;
+        }
+
+		if (data.length > 32)
+			throw new RuntimeException("Data word can't exit 32 bytes: " + data);
 		System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
 	}
 
