@@ -3,6 +3,8 @@ package org.ethereum.core;
 import java.math.BigInteger;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 
@@ -25,7 +27,7 @@ import org.spongycastle.util.BigIntegers;
 public class Miner {
 
 	/**
-	 * Produces a block with a nonce that results in a hash that complies with the given difficulty
+	 * Adds a nonce to given block which complies with the given difficulty
 	 * 
 	 * For the PoC series, we use a simplified proof-of-work. 
 	 * This is not ASIC resistant and is meant merely as a placeholder. 
@@ -47,25 +49,27 @@ public class Miner {
 	 * 
 	 * @param block without a valid nonce
 	 * @param the mining difficulty
-	 * @return block with a valid nonce
+	 * @return true if valid nonce has been added to the block
 	 */
-	public Block mine(Block newBlock, byte[] difficulty) {
+	public boolean mine(Block newBlock, byte[] difficulty) {
 
 		BigInteger max = BigInteger.valueOf(2).pow(256);
-		BigInteger target = max.divide(new BigInteger(1, difficulty));
-		BigInteger counter = BigInteger.ZERO;
-		while(counter.compareTo(max) < 0) {
-			if(counter.mod(BigInteger.valueOf(10000)).longValue() == 0)
-				System.out.println(counter.longValue());
-			byte[] encodedWithoutNonce = newBlock.getEncodedWithoutNonce();
-			byte[] concat = Arrays.concatenate(HashUtil.sha3(encodedWithoutNonce), BigIntegers.asUnsignedByteArray(counter));
-			BigInteger result = new BigInteger(1, HashUtil.sha3(concat));
-			if(result.compareTo(target) < 0) {
-				newBlock.setNonce(counter);
-				return newBlock;
+		byte[] target = BigIntegers.asUnsignedByteArray(32,
+				max.divide(new BigInteger(1, difficulty)));
+
+		byte[] hash = HashUtil.sha3(newBlock.getEncodedWithoutNonce());
+		byte[] testNonce = new byte[32];
+		byte[] concat;
+		
+		while(ByteUtil.increment(testNonce)) {
+			concat = Arrays.concatenate(hash, testNonce);
+			byte[] result = HashUtil.sha3(concat);
+			if(FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0) {
+				newBlock.setNonce(testNonce);
+//				System.out.println(Hex.toHexString(newBlock.getEncoded()));
+				return true;
 			}
-			counter = counter.add(BigInteger.ONE);
 		}
-		return null; // couldn't find a valid nonce
+		return false; // couldn't find a valid nonce
 	}
 }
