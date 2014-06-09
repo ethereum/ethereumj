@@ -6,9 +6,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Database;
 import org.ethereum.trie.Trie;
-import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramResult;
-import org.ethereum.vm.VM;
+import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -107,23 +105,34 @@ public class WorldManager {
 
             byte[] initCode = tx.getData();
 
+            ProgramInvoke programInvoke =
+                ProgramInvokeFactory.createProgramInvoke(tx);
+
             VM vm = new VM();
-            Program program = new Program(initCode, null);
+            Program program = new Program(initCode, programInvoke);
             vm.play(program);
 
             ProgramResult result = program.getResult();
-            byte[] bodyCode = result.gethReturn().array();
+            byte[] bodyCode = null;
+            if (result.gethReturn() != null){
+
+                result.gethReturn().array();
+            }
             // TODO: what if the body code is null , still submit ?
 
             // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
 
-            byte[] key = HashUtil.sha3(bodyCode);
-            chainDB.put(key, bodyCode);
+            if (bodyCode != null){
 
-            if (stateLogger.isInfoEnabled())
-                stateLogger.info("saving code of the contract to the db: sha3(code)={} code={}",
-                        Hex.toHexString(key),
-                        Hex.toHexString(bodyCode));
+                byte[] key = HashUtil.sha3(bodyCode);
+                chainDB.put(key, bodyCode);
+
+                if (stateLogger.isInfoEnabled())
+                    stateLogger.info("saving code of the contract to the db: sha3(code)={} code={}",
+                            Hex.toHexString(key),
+                            Hex.toHexString(bodyCode));
+            }
+
         } else {
             // TODO: 2. check if the address is a contract,  if it is perform contract call
         }

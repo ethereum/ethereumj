@@ -97,7 +97,17 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                     @Override
                     public void mouseClicked(MouseEvent e) {
 
-                        ProgramPlayDialog.createAndShowGUI();
+                        Transaction tx = null;
+                        try {
+                            tx = createTransaction();
+                        } catch (Exception e1) {
+
+                            dialog.alertStatusMsg("Failed to sign the transaction");
+                            return;
+                        }
+                        contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
+
+                        ProgramPlayDialog.createAndShowGUI(tx);
                     }}
         );
 
@@ -248,8 +258,31 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         this.statusMsg.setText(text);
     }
 
-
     public void submitContract(){
+
+        Transaction tx = null;
+        try {
+            tx = createTransaction();
+        } catch (Exception e1) {
+
+            dialog.alertStatusMsg("Failed to sign the transaction");
+            return;
+        }
+        contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
+
+        ClientPeer peer = MainData.instance.getActivePeer();
+        if (peer == null) {
+            dialog.alertStatusMsg("Not connected to any peer");
+            return;
+        }
+
+        // SwingWorker
+        DialogWorker worker = new DialogWorker(tx, this);
+        worker.execute();
+
+    }
+
+    private Transaction createTransaction(){
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
 
@@ -266,27 +299,9 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         Transaction tx = new Transaction(nonce, gasPrice, gasValue,
                 zeroAddress, endowment, initByteCode);
 
-        try {
-            tx.sign(senderPrivKey);
-        } catch (Exception e1) {
+        tx.sign(senderPrivKey);
 
-            dialog.alertStatusMsg("Failed to sign the transaction");
-            return;
-        }
-
-        contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
-
-
-        ClientPeer peer = MainData.instance.getActivePeer();
-        if (peer == null) {
-            dialog.alertStatusMsg("Not connected to any peer");
-            return;
-        }
-
-        // SwingWorker
-        DialogWorker worker = new DialogWorker(tx, this);
-        worker.execute();
-
+        return tx;
     }
 
     public static void main(String args[]) {
