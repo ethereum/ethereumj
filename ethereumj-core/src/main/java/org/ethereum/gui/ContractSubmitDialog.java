@@ -4,6 +4,7 @@ import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.BigIntegers;
@@ -107,7 +108,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                         }
                         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
-                        ProgramPlayDialog.createAndShowGUI(tx);
+                        ProgramPlayDialog.createAndShowGUI(tx.getData(), tx, MainData.instance.getBlockchain().getLastBlock());
                     }}
         );
 
@@ -312,7 +313,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
         BigInteger currentBalance = account.getState().getBalance();
-        BigInteger gasPrice = BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
+        BigInteger gasPrice = BigInteger.valueOf(MainData.instance.getBlockchain().getGasPrice());
         BigInteger gasInput = new BigInteger( this.gasInput.getText());
 
         boolean canAfford = currentBalance.compareTo(gasPrice.multiply(gasInput)) >= 0;

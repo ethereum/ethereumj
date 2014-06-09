@@ -1,8 +1,10 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Account;
+import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
@@ -32,7 +34,7 @@ import java.util.Collection;
  */
 class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    Logger logger = LoggerFactory.getLogger("ui");
 
 
     ContractCallDialog dialog;
@@ -78,6 +80,24 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         JLabel rejectLabel = new JLabel(rejectIcon);
         rejectLabel.setToolTipText("Cancel");
         rejectLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        URL playIconURL = ClassLoader.getSystemResource("buttons/play.png");
+        ImageIcon playIcon = new ImageIcon(playIconURL);
+        JLabel playLabel = new JLabel(playIcon);
+        playLabel.setToolTipText("Play Drafted");
+        playLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        playLabel.addMouseListener(
+                new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+
+                          ContractCallDialog.this.playContractCall();
+                    }}
+        );
+
+        playLabel.setBounds(438, 100, 42, 42);
+        this.getContentPane().add(playLabel);
+
 
         JLabel statusMessage = new JLabel("");
         statusMessage.setBounds(50, 360, 400, 50);
@@ -178,6 +198,29 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         this.setResizable(false);
     }
 
+
+    private void playContractCall() {
+
+        byte[] contractAddress = Hex.decode( contractAddrInput.getText());
+        byte[] contractStateB = WorldManager.instance.worldState.get(contractAddress);
+        if (contractStateB == null || contractStateB.length == 0){
+            alertStatusMsg("No contract for that address");
+            return;
+        }
+
+        AccountState contractState = new AccountState(contractStateB);
+        byte[] programCode = WorldManager.instance.chainDB.get(contractState.getCodeHash());
+        if (programCode == null || programCode.length == 0){
+            alertStatusMsg("Such account exist but no code in the db");
+            return;
+        }
+
+        Transaction tx = createTransaction();
+        if (tx == null) return;
+
+        ProgramPlayDialog.createAndShowGUI(programCode, tx, MainData.instance.getBlockchain().getLastBlock());
+    }
+
     protected JRootPane createRootPane() {
 
         Container parent = this.getParent();
@@ -223,9 +266,28 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
             return;
         }
 
-        // todo: check up how the HEX value is encoded
-        Object[] lexaList = msgDataTA.getText().split(",");
-        byte[] data = ByteUtil.encodeDataList(lexaList);
+        Transaction tx = createTransaction();
+        if (tx == null) return;
+
+        if (logger.isInfoEnabled()) {
+            logger.info("tx.hash: {}", (new BigInteger(tx.getHash()).toString(16)));
+        }
+
+
+        // SwingWorker
+        DialogWorker worker = new DialogWorker(tx, this);
+        worker.execute();
+    }
+
+    private Transaction createTransaction(){
+
+        byte[] data;
+        if (!msgDataTA.getText().trim().equals("")){
+            Object[] lexaList = msgDataTA.getText().split(",");
+            data = ByteUtil.encodeDataList(lexaList);
+        } else {
+            data = new byte[]{};
+        }
 
         byte[] contractAddress = Hex.decode( contractAddrInput.getText());
 
@@ -249,25 +311,20 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
             logger.info("tx.data: {}", Hex.toHexString(data));
         }
 
-		Transaction tx = new Transaction(nonce, gasPrice, gasValue,
-				contractAddress, endowment, data);
-
-        if (logger.isInfoEnabled()) {
-            logger.info("tx.hash: {}", (new BigInteger(tx.getHash()).toString(16)));
-        }
+        Transaction tx = new Transaction(nonce, gasPrice, gasValue,
+                contractAddress, endowment, data);
 
         try {
             tx.sign(senderPrivKey);
         } catch (Exception e1) {
 
             dialog.alertStatusMsg("Failed to sign the transaction");
-            return;
+            return null;
         }
 
-        // SwingWorker
-        DialogWorker worker = new DialogWorker(tx, this);
-        worker.execute();
+        return tx;
     }
+
 
 	public class AccountWrapper {
 

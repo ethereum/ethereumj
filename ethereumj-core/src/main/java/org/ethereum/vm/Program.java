@@ -72,7 +72,11 @@ public class Program {
 
         if (this.pc > ops.length) {
             stop();
-            throw new RuntimeException("pc overflow pc: " + pc);
+            throw new RuntimeException("pc overflow pc= " + pc);
+        }
+
+        if (this.pc == ops.length) {
+            stop();
         }
     }
 
@@ -386,7 +390,15 @@ public class Program {
                 globalOutput.append("\n  HReturn: ").append(Hex.toHexString(result.gethReturn().array()));
             }
 
+            // soffisticated assumption that msg.data != codedata
+            // means we are calling the contract not creating it
+            byte[] txData = invokeData.getDataCopy(DataWord.ZERO, getDataSize());
+            if (!Arrays.equals(txData, ops)){
+                globalOutput.append("\n  msg.data: ").append(Hex.toHexString( txData ));
+            }
+
             globalOutput.append("\n\n  Spent Gas: ").append(result.getGasUsed());
+
 
             if (listener != null){
                 listener.output(globalOutput.toString());
