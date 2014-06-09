@@ -53,8 +53,12 @@ public class Blockchain {
 	}
 
 	public Block getLastBlock() {
-		return lastBlock;
+            return lastBlock;
 	}
+
+    public void setLastBlock(Block block){
+            lastBlock = block;
+    }
 
     public int getSize(){
         return index.size();
@@ -111,8 +115,8 @@ public class Blockchain {
 	        // on this price will use default 10000000000000
 	        // todo: refactor this longValue some constant defaults class 10000000000000L
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
-			if(lastBlock == null || block.getNumber() > lastBlock.getNumber()){
-				this.lastBlock = block;
+			if(getLastBlock() == null || block.getNumber() > getLastBlock().getNumber()){
+				setLastBlock( block );
                 index.put(block.getNumber(), block.getParentHash());
             }
     	}
@@ -150,10 +154,10 @@ public class Blockchain {
     }
 
     public byte[] getLatestBlockHash(){
-		if (index.isEmpty())
-			return StaticMessages.GENESIS_HASH;
-		else
-			return lastBlock.getHash();
+            if (index.isEmpty())
+                return StaticMessages.GENESIS_HASH;
+            else
+                return getLastBlock().getHash();
     }
     
 	public void loadChain() {
@@ -171,8 +175,8 @@ public class Blockchain {
 				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
                     this.addBlock(new Block(db.get(parentHash)));
                     if (logger.isDebugEnabled())
-						logger.debug("Block: " + lastBlock.getNumber() + " ---> " + lastBlock.toFlatString());
-					parentHash = lastBlock.getHash();					
+						logger.debug("Block: " + getLastBlock().getNumber() + " ---> " + getLastBlock().toFlatString());
+					parentHash = getLastBlock().getHash();
 				}
 			}
 		} finally {
