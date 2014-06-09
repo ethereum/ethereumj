@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.Program;
 import org.ethereum.vm.ProgramInvokeFactory;
@@ -31,7 +32,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
     private Transaction tx;
 
-    public ProgramPlayDialog(Transaction tx) {
+    public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
 
         this.tx = tx;
 
@@ -46,8 +47,8 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 //        byte[] codeBytes =
 //            Hex.decode(code);
 
-        Program program = new Program(tx.getData() ,
-                ProgramInvokeFactory.createProgramInvoke(tx, null));
+        Program program = new Program(code ,
+                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock));
 
         program.addListener(this);
         program.fullTrace();
@@ -128,9 +129,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    public static void createAndShowGUI(Transaction tx) {
+    public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock) {
 
-        ProgramPlayDialog ppd = new ProgramPlayDialog(tx);
+        ProgramPlayDialog ppd = new ProgramPlayDialog(runCode, tx, lastBlock);
 
         //Create and set up the window.
         JFrame frame = new JFrame("Program Draft Play");
