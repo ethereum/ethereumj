@@ -332,7 +332,6 @@ public class VM {
                 }	break;
                 case CALLDATASIZE:{
                     DataWord dataSize = program.getDataSize();
-
                     program.stackPush(dataSize);
                     program.step();
                 }	break;
@@ -370,34 +369,47 @@ public class VM {
                     program.memorySave(memOffsetData.getData(), code);
                     program.step();
                 }	break;
-                case GASPRICE:
+                case GASPRICE:{
 
-
+                    DataWord gasPrice = program.getGasPrice();
+                    program.stackPush(gasPrice);
                     program.step();
-                    break;
+                }   break;
 
                 /**
                  * Block Information
                  */
 
-                case PREVHASH:
+                case PREVHASH: {
+                    DataWord prevHash = program.getPrevHash();
+                    program.stackPush(prevHash);
                     program.step();
-                    break;
-                case COINBASE:
+                }   break;
+                case COINBASE: {
+                    DataWord coinbase = program.getCoinbase();
+                    program.stackPush(coinbase);
                     program.step();
-                    break;
-                case TIMESTAMP:
+                }   break;
+                case TIMESTAMP:{
+                    DataWord timestamp = program.getTimestamp();
+                    program.stackPush(timestamp);
                     program.step();
-                    break;
-                case NUMBER:
+                }   break;
+                case NUMBER:{
+                    DataWord number = program.getNumber();
+                    program.stackPush(number);
                     program.step();
-                    break;
-                case DIFFICULTY:
+                }   break;
+                case DIFFICULTY:{
+                    DataWord difficulty = program.getDifficulty();
+                    program.stackPush(difficulty);
                     program.step();
-                    break;
-                case GASLIMIT:
+                }   break;
+                case GASLIMIT:{
+                    DataWord gaslimit = program.getGaslimit();
+                    program.stackPush(gaslimit);
                     program.step();
-                    break;
+                }   break;
                 case POP:{
                     program.stackPop();
                     program.step();
@@ -485,9 +497,12 @@ public class VM {
                     program.stackPush(wordMemSize);
                     program.step();
                 }	break;
-                case GAS:
+                case GAS:{
+                    DataWord gas = program.getGas();
+                    program.stackPush(gas);
                     program.step();
-                    break;
+                }   break;
+
 
                 case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
                 case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:

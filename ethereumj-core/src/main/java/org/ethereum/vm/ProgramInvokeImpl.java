@@ -1,8 +1,6 @@
 package org.ethereum.vm;
 
-import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.HashUtil;
-import org.spongycastle.util.encoders.Hex;
+import org.ethereum.util.ByteUtil;
 
 /**
  * www.ethereumJ.com
@@ -12,6 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 
 public class    ProgramInvokeImpl implements ProgramInvoke {
 
+    /*** TRANSACTION  env ***/
     DataWord address;
     DataWord origin;
     DataWord caller;
@@ -22,14 +21,22 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
 
     byte[] msgData;
 
+    /*** BLOCK  env ***/
+    DataWord prevHash;
+    DataWord coinbase;
+    DataWord timestamp;
+    DataWord number;
+    DataWord difficulty;
+    DataWord gaslimit;
 
-    public ProgramInvokeImpl(byte[] msgDataRaw){
-        this.msgData = msgDataRaw;
-    }
+
 
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
-                             byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData) {
+                             byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
+                             byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
+                             long gaslimit) {
 
+        // Transaction env
         this.address   = new DataWord(address);
         this.origin    = new DataWord(origin);
         this.caller    = new DataWord(caller);
@@ -37,8 +44,16 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
         this.gasPrice  = new DataWord(gasPrice);
         this.gas       = new DataWord(gas);
         this.callValue = new DataWord(callValue);
-
         this.msgData = msgData;
+
+        // last Block env
+        this.prevHash = new DataWord(lastHash);
+        this.coinbase = new DataWord(coinbase);
+        this.timestamp = new DataWord(timestamp);
+        this.number = new DataWord(number);
+        this.difficulty = new DataWord(difficulty);
+        this.gaslimit   = new DataWord(gaslimit);
+
     }
 
     /*           ADDRESS op         */
@@ -66,6 +81,12 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
     public DataWord getMinGasPrice(){
         return gasPrice;
     }
+
+    /*           GAS op       */
+    public DataWord getGas(){
+        return gas;
+    }
+
 
 
     /*          CALLVALUE op    */
@@ -120,4 +141,34 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
         return data;
     }
 
+
+    /*     PREVHASH op    */
+    public DataWord getPrevHash() {
+        return prevHash;
+    }
+
+    /*     COINBASE op    */
+    public DataWord getCoinbase() {
+        return coinbase;
+    }
+
+    /*     TIMESTAMP op    */
+    public DataWord getTimestamp() {
+        return timestamp;
+    }
+
+    /*     NUMBER op    */
+    public DataWord getNumber() {
+        return number;
+    }
+
+    /*     DIFFICULTY op    */
+    public DataWord getDifficulty() {
+        return difficulty;
+    }
+
+    /*     GASLIMIT op    */
+    public DataWord getGaslimit() {
+        return gaslimit;
+    }
 }

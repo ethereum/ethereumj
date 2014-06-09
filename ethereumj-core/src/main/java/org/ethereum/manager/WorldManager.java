@@ -2,6 +2,7 @@ package org.ethereum.manager;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Database;
@@ -105,8 +106,11 @@ public class WorldManager {
 
             byte[] initCode = tx.getData();
 
+            Block lastBlock =
+                    MainData.instance.getBlockchain().getLastBlock();
+
             ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(tx);
+                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock);
 
             VM vm = new VM();
             Program program = new Program(initCode, programInvoke);

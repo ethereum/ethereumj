@@ -56,7 +56,6 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(addr);
     }
 
-
     /*           GASPRICE op       */
     public DataWord getMinGasPrice(){
 
@@ -64,6 +63,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(minGasPrice);
     }
 
+    /*           GAS op       */
+    public DataWord getGas() {
+        byte[] minGasPrice = Hex.decode("03E8");
+        return new DataWord(minGasPrice);
+    }
 
     /*          CALLVALUE op    */
     public DataWord getCallValue(){
@@ -118,4 +122,40 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return data;
     }
 
+
+    @Override
+    public DataWord getPrevHash() {
+        byte[] prevHash = Hex.decode("961CB117ABA86D1E596854015A1483323F18883C2D745B0BC03E87F146D2BB1C");
+        return new DataWord(prevHash);
+    }
+
+    @Override
+    public DataWord getCoinbase() {
+        byte[] coinBase = Hex.decode("E559DE5527492BCB42EC68D07DF0742A98EC3F1E");
+        return new DataWord(coinBase);
+    }
+
+    @Override
+    public DataWord getTimestamp() {
+        long timestamp = 1401421348;
+        return new DataWord(timestamp);
+    }
+
+    @Override
+    public DataWord getNumber() {
+        long number = 33;
+        return new DataWord(number);
+    }
+
+    @Override
+    public DataWord getDifficulty() {
+        byte[] difficulty = Hex.decode("3ED290");
+        return new DataWord(difficulty);
+    }
+
+    @Override
+    public DataWord getGaslimit() {
+        long gasLimit = 968269;
+        return new DataWord(gasLimit);
+    }
 }

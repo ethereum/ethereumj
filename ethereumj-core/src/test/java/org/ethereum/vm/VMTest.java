@@ -2802,6 +2802,131 @@ public class VMTest {
         fail();
     }
 
+    @Test // PREVHASH OP
+    public void testPREVHASH_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("40"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "961CB117ABA86D1E596854015A1483323F18883C2D745B0BC03E87F146D2BB1C";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // COINBASE OP
+    public void testCOINBASE_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("41"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "000000000000000000000000E559DE5527492BCB42EC68D07DF0742A98EC3F1E";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // TIMESTAMP OP
+    public void testTIMESTAMP_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("42"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "000000000000000000000000000000000000000000000000000000005387FE24";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // NUMBER OP
+    public void testNUMBER_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("43"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000021";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // DIFFICULTY OP
+    public void testDIFFICULTY_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("44"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000003ED290";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
+    @Test // GASPRICE OP
+    public void testGASPRICE_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("3A"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "000000000000000000000000000000000000000000000000000009184E72A000";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // GAS OP
+    public void testGAS_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("5C"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000003E8";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+    @Test // GASLIMIT OP
+    public void testGASLIMIT_1(){
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("45"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000EC64D";
+
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+    }
+
+
     /* TEST CASE LIST END */
 
 
@@ -2827,16 +2952,6 @@ public class VMTest {
 /**
  *   todo:
  *
- *   15) PREVHASH:
- *   16) COINBASE:
- *   17) TIMESTAMP:
- *   18) NUMBER:
- *   19) DIFFICULTY:
-
- *   20) GASPRICE
- *   20) GASLIMIT
- *   20) GAS
- *
  *   22) CREATE:
  *   23) CALL:
  *
@@ -2846,8 +2961,8 @@ public class VMTest {
 
 /**
 
- contract creation
- -----------------
+ contract creation (gas usage)
+ -----------------------------
  G_TRANSACTION =                                (500)
  60016000546006601160003960066000f261778e600054 (115)
  PUSH1    6001 (1)

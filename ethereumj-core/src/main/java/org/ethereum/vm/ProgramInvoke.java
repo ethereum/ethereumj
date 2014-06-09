@@ -14,11 +14,17 @@ public interface ProgramInvoke {
     public DataWord getOriginAddress();
     public DataWord getCallerAddress();
     public DataWord getMinGasPrice();
+    public DataWord getGas();
     public DataWord getCallValue();
-
-
     public DataWord getDataSize();
     public DataWord getDataValue(DataWord indexData);
-    public byte[] getDataCopy(DataWord offsetData, DataWord lengthData);
+    public byte[]   getDataCopy(DataWord offsetData, DataWord lengthData);
+
+    public DataWord getPrevHash();
+    public DataWord getCoinbase();
+    public DataWord getTimestamp();
+    public DataWord getNumber();
+    public DataWord getDifficulty();
+    public DataWord getGaslimit();
 
 }
