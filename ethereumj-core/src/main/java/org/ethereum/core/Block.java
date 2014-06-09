@@ -78,7 +78,7 @@ public class Block {
 
     private void parseRLP() {
 
-        RLPList params = (RLPList) RLP.decode2(rlpEncoded);
+        RLPList params = RLP.decode2(rlpEncoded);
         RLPList block = (RLPList) params.get(0);
         
         // Parse Header

@@ -359,6 +359,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
         byte[] hash = MainData.instance.getBlockchain().getLatestBlockHash();
         GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
+        chainMessage.toString();
 
         ByteBuf buffer = ctx.alloc().buffer(chainMessage.getPayload().length + 8);
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
