@@ -174,6 +174,14 @@ public class BlockHeader {
 	}
 	
 	public byte[] getEncoded() {
+		return this.getEncoded(true); // with nonce
+	}
+	
+	public byte[] getEncodedWithoutNonce() {
+        return this.getEncoded(false);
+	}
+	
+	public byte[] getEncoded(boolean withNonce) {
         byte[] parentHash		= RLP.encodeElement(this.parentHash);
         byte[] unclesHash		= RLP.encodeElement(this.unclesHash);
         byte[] coinbase			= RLP.encodeElement(this.coinbase);
@@ -186,11 +194,16 @@ public class BlockHeader {
         byte[] gasUsed			= RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
         byte[] timestamp		= RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
         byte[] extraData		= RLP.encodeElement(this.extraData);
-        byte[] nonce			= RLP.encodeElement(this.nonce);
-
-        return RLP.encodeList(parentHash, unclesHash, coinbase,
-				stateRoot, txTrieRoot, difficulty, number,
-				minGasPrice, gasLimit, gasUsed, timestamp, extraData, nonce);
+        if(withNonce) {
+        	byte[] nonce			= RLP.encodeElement(this.nonce);
+        	return RLP.encodeList(parentHash, unclesHash, coinbase,
+    				stateRoot, txTrieRoot, difficulty, number,
+    				minGasPrice, gasLimit, gasUsed, timestamp, extraData, nonce);
+        } else {
+        	return RLP.encodeList(parentHash, unclesHash, coinbase,
+    				stateRoot, txTrieRoot, difficulty, number,
+    				minGasPrice, gasLimit, gasUsed, timestamp, extraData);
+        }
 	}
 	
 	private StringBuffer toStringBuff = new StringBuffer();
@@ -201,7 +214,7 @@ public class BlockHeader {
         toStringBuff.append("  parentHash=" + ByteUtil.toHexString(parentHash)).append("\n");
         toStringBuff.append("  unclesHash=" + ByteUtil.toHexString(unclesHash)).append("\n");
         toStringBuff.append("  coinbase=" + ByteUtil.toHexString(coinbase)).append("\n");
-        toStringBuff.append("  stateHash=" 		+ ByteUtil.toHexString(stateRoot)).append("\n");
+        toStringBuff.append("  stateRoot=" 		+ ByteUtil.toHexString(stateRoot)).append("\n");
         toStringBuff.append("  txTrieHash=" 	+ ByteUtil.toHexString(txTrieRoot)).append("\n");
         toStringBuff.append("  difficulty=" 	+ ByteUtil.toHexString(difficulty)).append("\n");
         toStringBuff.append("  number=" 		+ number).append("\n");
@@ -218,7 +231,7 @@ public class BlockHeader {
         toStringBuff.append("  parentHash=" + ByteUtil.toHexString(parentHash)).append("");
         toStringBuff.append("  unclesHash=" + ByteUtil.toHexString(unclesHash)).append("");
         toStringBuff.append("  coinbase=" + ByteUtil.toHexString(coinbase)).append("");
-        toStringBuff.append("  stateHash=" 		+ ByteUtil.toHexString(stateRoot)).append("");
+        toStringBuff.append("  stateRoot=" 		+ ByteUtil.toHexString(stateRoot)).append("");
         toStringBuff.append("  txTrieHash=" 	+ ByteUtil.toHexString(txTrieRoot)).append("");
         toStringBuff.append("  difficulty=" 	+ ByteUtil.toHexString(difficulty)).append("");
         toStringBuff.append("  number=" 		+ number).append("");
