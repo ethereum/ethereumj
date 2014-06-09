@@ -112,6 +112,10 @@ public class WorldManager {
             ProgramInvoke programInvoke =
                 ProgramInvokeFactory.createProgramInvoke(tx, lastBlock);
 
+            if (logger.isInfoEnabled())
+                logger.info("running the init for contract: addres={}" ,
+                        Hex.toHexString(tx.getContractAddress()));
+
             VM vm = new VM();
             Program program = new Program(initCode, programInvoke);
             vm.play(program);
@@ -120,7 +124,7 @@ public class WorldManager {
             byte[] bodyCode = null;
             if (result.gethReturn() != null){
 
-                result.gethReturn().array();
+                bodyCode = result.gethReturn().array();
             }
             // TODO: what if the body code is null , still submit ?
 
@@ -128,17 +132,46 @@ public class WorldManager {
 
             if (bodyCode != null){
 
-                byte[] key = HashUtil.sha3(bodyCode);
-                chainDB.put(key, bodyCode);
+                byte[] codeKey = HashUtil.sha3(bodyCode);
+                chainDB.put(codeKey, bodyCode);
+                receiverState.setCodeHash(codeKey);
+                worldState.update(tx.getContractAddress(), receiverState.getEncoded());
 
                 if (stateLogger.isInfoEnabled())
-                    stateLogger.info("saving code of the contract to the db: sha3(code)={} code={}",
-                            Hex.toHexString(key),
+                    stateLogger.info("saving code of the contract to the db:\n contract={} sha3(code)={} code={}",
+                            Hex.toHexString(tx.getContractAddress()),
+                            Hex.toHexString(codeKey),
                             Hex.toHexString(bodyCode));
             }
 
         } else {
-            // TODO: 2. check if the address is a contract,  if it is perform contract call
+
+            if (receiverState.getCodeHash() != HashUtil.EMPTY_DATA_HASH){
+
+                byte[] programCode = chainDB.get(receiverState.getCodeHash());
+                if (programCode.length != 0){
+
+                    Block lastBlock =
+                            MainData.instance.getBlockchain().getLastBlock();
+
+                    ProgramInvoke programInvoke =
+                            ProgramInvokeFactory.createProgramInvoke(tx, lastBlock);
+
+                    if (logger.isInfoEnabled())
+                        logger.info("calling for existing contract: addres={}" , Hex.toHexString(tx.getReceiveAddress()));
+
+                    VM vm = new VM();
+                    Program program = new Program(programCode, programInvoke);
+                    vm.play(program);
+
+                    ProgramResult result = program.getResult();
+
+                    // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
+
+
+                }
+            }
+
         }
         pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
     }

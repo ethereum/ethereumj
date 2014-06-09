@@ -12,6 +12,8 @@ import org.spongycastle.util.encoders.Hex;
 
 public class HashUtil {
 
+    public static byte[] EMPTY_DATA_HASH = HashUtil.sha3(new byte[0]);
+
     private static final MessageDigest sha256digest;
     
     static {

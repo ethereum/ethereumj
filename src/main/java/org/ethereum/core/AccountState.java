@@ -68,6 +68,10 @@ public class AccountState {
         this.nonce = nonce.add(BigInteger.ONE);
     }
 
+    public byte[] getCodeHash() {
+        return codeHash;
+    }
+
     public void setCodeHash(byte[] codeHash){
         rlpEncoded = null;
         this.codeHash = codeHash;
