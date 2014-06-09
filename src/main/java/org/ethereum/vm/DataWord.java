@@ -31,6 +31,14 @@ public class DataWord {
 		this.data = data.array();
 	}
 
+    public DataWord(long num) {
+        ByteBuffer bLong = ByteBuffer.allocate(8).putLong(num);
+        ByteBuffer data = ByteBuffer.allocate(32);
+        System.arraycopy(bLong.array(), 0, data.array(), 24, 8);
+        this.data = data.array();
+    }
+
+
 	public DataWord(byte[] data) {
 
         if (data == null){

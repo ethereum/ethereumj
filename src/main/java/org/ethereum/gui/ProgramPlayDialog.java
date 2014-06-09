@@ -47,7 +47,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 //            Hex.decode(code);
 
         Program program = new Program(tx.getData() ,
-                ProgramInvokeFactory.createProgramInvoke(tx));
+                ProgramInvokeFactory.createProgramInvoke(tx, null));
 
         program.addListener(this);
         program.fullTrace();

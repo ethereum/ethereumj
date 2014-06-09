@@ -242,10 +242,16 @@ public class Program {
         return invokeData.getCallerAddress();
     }
 
-    public DataWord getMinGasPrice(){
+    public DataWord getGasPrice(){
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getMinGasPrice();
     }
+
+    public DataWord getGas(){
+        if (invokeData == null) return new DataWord( new byte[0]);
+        return invokeData.getGas();
+    }
+
 
     public DataWord getCallValue(){
         if (invokeData == null) return new DataWord( new byte[0]);
@@ -269,6 +275,30 @@ public class Program {
 
     public DataWord storageLoad(DataWord key){
         return storage.get(key);
+    }
+
+    public DataWord getPrevHash(){
+       return invokeData.getPrevHash();
+    }
+
+    public DataWord getCoinbase(){
+        return invokeData.getCoinbase();
+    }
+
+    public DataWord getTimestamp(){
+        return  invokeData.getTimestamp();
+    }
+
+    public DataWord getNumber(){
+        return invokeData.getNumber();
+    }
+
+    public DataWord getDifficulty(){
+        return  invokeData.getDifficulty();
+    }
+
+    public DataWord getGaslimit(){
+        return invokeData.getGaslimit();
     }
 
 
