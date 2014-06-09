@@ -17,8 +17,6 @@ import static org.ethereum.core.Denomination.*;
 
 public class Blockchain {
 
-	private static final long serialVersionUID = -143590724563460486L;
-
 	private static Logger logger = LoggerFactory.getLogger("blockchain");
 	
 	// to avoid using minGasPrice=0 from Genesis for the wallet
@@ -45,11 +43,11 @@ public class Blockchain {
 	}
 
 	public Block getLastBlock() {
-            return lastBlock;
+        return lastBlock;
 	}
 
     public void setLastBlock(Block block){
-            lastBlock = block;
+    	this.lastBlock = block;
     }
 
     public int getSize(){
@@ -103,10 +101,8 @@ public class Blockchain {
 			this.wallet.processBlock(block);
 	        // In case of the genesis block we don't want to rely on the min gas price 
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
-			if(getLastBlock() == null || block.getNumber() > getLastBlock().getNumber()){
-				setLastBlock(block);
-                index.put(block.getNumber(), block.getParentHash());
-            }
+			setLastBlock(block);
+			index.put(block.getNumber(), block.getParentHash());
     	} else {
     		logger.warn("Invalid block with nr: " + block.getNumber());
     	}
