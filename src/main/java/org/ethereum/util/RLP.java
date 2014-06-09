@@ -42,11 +42,6 @@ import org.ethereum.util.RLPList;
  * are used and no knowledge about the content of the strings is implied.
  * 
  * See: https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP
- *
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 01/04/2014 10:45
- *
  */
 public class RLP {
 

@@ -28,10 +28,6 @@ import org.spongycastle.util.encoders.Hex;
  * store the cached value. 
  * 
  * Please note that the data isn't persisted unless `sync` is explicitly called.
- *
- * www.ethereumJ.com
- * @author: Nick Savers
- * Created on: 20/05/2014 10:44
  */
 public class Trie implements TrieFacade{
 
