@@ -2,7 +2,9 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
@@ -162,28 +164,40 @@ public class BlockTest {
     
     @Test
     public void testCalcDifficulty() {
-    	byte[] diffBytes = Genesis.getInstance().calcDifficulty();
-      	BigInteger difficulty = new BigInteger(1, diffBytes);
+    	Block genesis = Genesis.getInstance();
+      	BigInteger difficulty = new BigInteger(1, genesis.calcDifficulty());
     	System.out.println("Genesis difficulty = " + difficulty.toString());
     	assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
     	
+    	// Storing genesis because the parent needs to be in the DB for calculation.
+		WorldManager.instance.chainDB.put(ByteUtil.longToBytes(Genesis.NUMBER),
+				genesis.getEncoded());
+    	
     	Block block1 = new Block(Hex.decode(block_1));
-    	diffBytes = block1.calcDifficulty();
-    	difficulty = new BigInteger(1, diffBytes);
-    	System.out.println("Block#1 difficulty = " + difficulty.toString());
-    	assertEquals(new BigInteger(""), difficulty);
+    	BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
+    	BigInteger actualDifficulty = new BigInteger(1, block1.getDifficulty());
+    	System.out.println("Block#1 actual difficulty = " + actualDifficulty.toString());
+    	System.out.println("Block#1 calculated difficulty = " + calcDifficulty.toString());
+    	assertEquals(actualDifficulty, calcDifficulty);
     }
     
     @Test
     public void testCalcGasLimit() {
-    	long gasLimit = Genesis.getInstance().calcGasLimit();
+    	Block genesis = Genesis.getInstance();
+    	long gasLimit = genesis.calcGasLimit();
     	System.out.println("Genesis gasLimit = " + gasLimit);
     	assertEquals(Genesis.GAS_LIMIT, gasLimit);
     	
+    	// Storing genesis because the parent needs to be in the DB for calculation.
+		WorldManager.instance.chainDB.put(ByteUtil.longToBytes(Genesis.NUMBER),
+				genesis.getEncoded());
+    	
     	// Test with block
     	Block block1 = new Block(Hex.decode(block_1));
-    	gasLimit = block1.calcGasLimit();
-    	System.out.println("Block#1 gasLimit = " + gasLimit);
-    	assertEquals(999023, gasLimit);
+    	long calcGasLimit = block1.calcGasLimit();
+    	long actualGasLimit = block1.getGasLimit();
+    	System.out.println("Block#1 actual gasLimit = " + actualGasLimit);
+    	System.out.println("Block#1 calculated gasLimit = " + calcGasLimit);
+    	assertEquals(actualGasLimit, calcGasLimit);
     }
 }
