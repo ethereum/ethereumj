@@ -15,8 +15,7 @@ import java.util.*;
 
 import static org.ethereum.core.Denomination.*;
 
-
-public class Blockchain extends ArrayList<Block> {
+public class Blockchain {
 
 	private static final long serialVersionUID = -143590724563460486L;
 
