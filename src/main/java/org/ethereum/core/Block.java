@@ -314,11 +314,13 @@ public class Block {
 	    	// verify difficulty meets requirements
 	    	isValid = this.getDifficulty() == this.calcDifficulty();
 	    	// verify nonce meest difficulty requirements
-//	    	isValid = this.validateNonce();
+	    	isValid = this.validateNonce();
 	    	// verify gasLimit meets requirements
 	    	isValid = this.getGasLimit() == this.calcGasLimit();
 	    	// verify timestamp meets requirements
 	    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+	    	// verify extraData doesn't exceed 1024 bytes
+	    	isValid = this.getExtraData() == null || this.getExtraData().length <= 1024;
     	}
     	if(!isValid)
     		logger.warn("!!!Invalid block!!!");

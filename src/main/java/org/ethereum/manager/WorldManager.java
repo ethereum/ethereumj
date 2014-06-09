@@ -38,6 +38,7 @@ public class WorldManager {
 
     public Database chainDB = new Database("blockchain");
     public Database stateDB = new Database("state");
+    public Database contractDB = new Database("contracts");
 
     public Trie worldState = new Trie(stateDB.getDb());
 
@@ -132,7 +133,7 @@ public class WorldManager {
             if (bodyCode != null){
 
                 byte[] codeKey = HashUtil.sha3(bodyCode);
-                chainDB.put(codeKey, bodyCode);
+                contractDB.put(codeKey, bodyCode);
                 receiverState.setCodeHash(codeKey);
                 worldState.update(tx.getContractAddress(), receiverState.getEncoded());
 
@@ -147,7 +148,7 @@ public class WorldManager {
 
             if (receiverState.getCodeHash() != HashUtil.EMPTY_DATA_HASH){
 
-                byte[] programCode = chainDB.get(receiverState.getCodeHash());
+                byte[] programCode = contractDB.get(receiverState.getCodeHash());
                 if (programCode.length != 0){
 
                     Block lastBlock =
@@ -195,5 +196,6 @@ public class WorldManager {
     public void close() {
         chainDB.close();
         stateDB.close();
+        contractDB.close();
     }
 }

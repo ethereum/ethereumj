@@ -15,7 +15,8 @@ import java.util.*;
 
 import static org.ethereum.core.Denomination.*;
 
-public class Blockchain {
+
+public class Blockchain extends ArrayList<Block> {
 
 	private static final long serialVersionUID = -143590724563460486L;
 
@@ -57,10 +58,8 @@ public class Blockchain {
         return index.size();
     }
 
-    public Block getByNumber(int rowIndex){
-        byte[] parentHash = index.get((long)rowIndex);
-        if (parentHash == null) return null;
-        return new Block(db.get(parentHash));
+    public Block getByNumber(long rowIndex){
+        return new Block(db.get(ByteUtil.longToBytes(rowIndex)));
     }
 
     public void addBlocks(List<Block> blocks) {
@@ -107,9 +106,11 @@ public class Blockchain {
 	        // In case of the genesis block we don't want to rely on the min gas price 
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
 			if(getLastBlock() == null || block.getNumber() > getLastBlock().getNumber()){
-				setLastBlock( block );
+				setLastBlock(block);
                 index.put(block.getNumber(), block.getParentHash());
             }
+    	} else {
+    		logger.warn("Invalid block with nr: " + block.getNumber());
     	}
     }
     

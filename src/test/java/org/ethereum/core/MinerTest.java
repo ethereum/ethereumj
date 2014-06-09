@@ -20,7 +20,7 @@ public class MinerTest {
 	
 	@Test
 	public void testMine() {
-		boolean miningTestEnabled = true;
+		boolean miningTestEnabled = false;
 		
 		if(miningTestEnabled) {
 			Block block = createBlock();
@@ -78,7 +78,7 @@ public class MinerTest {
 	 */
 	@Test
 	public void testIncrementPerformance() {
-		boolean testEnabled = true;
+		boolean testEnabled = false;
 		
 		if(testEnabled) {
 			byte[] counter1 = new byte[4];
