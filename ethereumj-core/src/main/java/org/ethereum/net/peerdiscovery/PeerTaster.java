@@ -19,7 +19,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class PeerTaster {
 
-    Logger logger = LoggerFactory.getLogger(getClass());
+    Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     PeerListener peerListener;
     Channel channel;
