@@ -78,7 +78,7 @@ public class MinerTest {
 	 */
 	@Test
 	public void testIncrementPerformance() {
-		boolean testEnabled = true;
+		boolean testEnabled = false;
 		
 		if(testEnabled) {
 			byte[] counter1 = new byte[4];
