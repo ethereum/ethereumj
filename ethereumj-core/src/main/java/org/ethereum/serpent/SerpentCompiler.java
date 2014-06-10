@@ -135,8 +135,22 @@ public class SerpentCompiler {
 
         }
 
+        // encode ref for 5 bytes
+        for (int i = 0; i < lexaList.size(); ++i){
+
+            String lexa  = lexaList.get(i);
+            if (!lexa.contains("REF_")) continue;
+            lexaList.add(i + 1, lexa);
+            lexaList.add(i + 2, lexa);
+            lexaList.add(i + 3, lexa);
+            lexaList.add(i + 4, lexa);
+            i += 4;
+        }
+
+
         // calc label pos & remove labels
         HashMap<String, Integer> labels = new HashMap<String, Integer>();
+
         for (int i = 0; i < lexaList.size(); ++i){
 
             String lexa  = lexaList.get(i);
@@ -145,7 +159,9 @@ public class SerpentCompiler {
             String label = lexaList.remove(i);
             String labelNum = label.split("LABEL_")[1];
 
-            labels.put(labelNum, i);
+            int labelPos = i;
+
+            labels.put(labelNum, labelPos);
             --i;
         }
 
@@ -156,6 +172,10 @@ public class SerpentCompiler {
             if (!lexa.contains("REF_")) continue;
 
             String ref = lexaList.remove(i);
+            lexaList.remove(i);
+            lexaList.remove(i);
+            lexaList.remove(i);
+            lexaList.remove(i);
             String labelNum = ref.split("REF_")[1];
 
             Integer pos = labels.get(labelNum);
