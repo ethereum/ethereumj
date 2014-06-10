@@ -81,12 +81,6 @@ public class VM {
                 case CALL:
                     program.spendGas(GasCost.CALL);
                     break;
-                case MSTORE8:
-                case MSTORE:
-                    // TODO: [cpp impl] do this when [go impl] spend just the usage size
-                    // TODO: https://github.com/ethereum/cpp-ethereum/blob/develop/libevm/VM.h#L183
-                    program.spendGas(GasCost.STEP);
-                	break;
                 default:
                     program.spendGas(GasCost.STEP);
                     break;
@@ -572,6 +566,9 @@ public class VM {
                 this.step(program);
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
+        } finally{
+
+            // todo: Here wrap the storage into result;
         }
     }
 }
