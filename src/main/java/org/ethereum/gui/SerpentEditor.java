@@ -231,6 +231,7 @@ public class SerpentEditor extends JFrame {
             }else{
                 asmResult = SerpentCompiler.compile(codeArea.getText());
                 machineCode = SerpentCompiler.compileAssemblyToMachine(asmResult);
+                machineCode = SerpentCompiler.encodeMachineCodeForVMRun(machineCode, null);
             }
 
         } catch (Throwable th) {
