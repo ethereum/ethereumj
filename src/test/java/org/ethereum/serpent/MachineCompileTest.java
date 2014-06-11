@@ -45,4 +45,25 @@ public class MachineCompileTest {
         Assert.assertEquals(expected, result);
     }
 
+    @Test // contract for if jump
+    public void test3(){
+
+        String code = "a=2\n" +
+                      "if a>0:\n" +
+                      "  b = 3\n" +
+                      "else: \n" +
+                      "  c = 4";
+//        String expected = "610100600e6000396101006000f260026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005460026000546002600054600260005469";
+        String asm = SerpentCompiler.compile(code);
+        byte[] machineCode = SerpentCompiler.compileAssemblyToMachine(asm);
+        byte[] vmReadyCode = SerpentCompiler.encodeMachineCodeForVMRun(machineCode, null);
+
+        System.out.println(asm);
+        System.out.println(GUIUtils.getHexStyledText(vmReadyCode));
+        String result = Hex.toHexString(vmReadyCode);
+
+//        Assert.assertEquals(expected, result);
+    }
+
+
 }

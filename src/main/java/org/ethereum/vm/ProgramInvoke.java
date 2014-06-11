@@ -1,5 +1,7 @@
 package org.ethereum.vm;
 
+import java.util.Map;
+
 /**
  * www.ethereumJ.com
  * @author: Roman Mandeleil
@@ -26,5 +28,7 @@ public interface ProgramInvoke {
     public DataWord getNumber();
     public DataWord getDifficulty();
     public DataWord getGaslimit();
+
+    public Map<DataWord, DataWord> getStorage();
 
 }

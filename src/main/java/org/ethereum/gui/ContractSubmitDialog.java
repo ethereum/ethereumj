@@ -108,7 +108,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                         }
                         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
-                        ProgramPlayDialog.createAndShowGUI(tx.getData(), tx, MainData.instance.getBlockchain().getLastBlock());
+                        ProgramPlayDialog.createAndShowGUI(tx.getData(), tx,
+                                MainData.instance.getBlockchain().getLastBlock(), null);
                     }}
         );
 

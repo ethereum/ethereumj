@@ -2,6 +2,7 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
+import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
@@ -215,10 +216,17 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
             return;
         }
 
+        byte[] contractDetailsB =
+                WorldManager.instance.detaildDB.get(contractAddress);
+
+        ContractDetails contractDetails = null;
+        if (contractDetailsB.length > 0)
+            contractDetails = new ContractDetails(contractDetailsB);
+
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        ProgramPlayDialog.createAndShowGUI(programCode, tx, MainData.instance.getBlockchain().getLastBlock());
+        ProgramPlayDialog.createAndShowGUI(programCode, tx, MainData.instance.getBlockchain().getLastBlock(), contractDetails);
     }
 
     protected JRootPane createRootPane() {

@@ -1,10 +1,14 @@
 package org.ethereum.vm;
 
+import org.abego.treelayout.internal.util.Contract;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.ByteUtil;
+
+import java.util.Map;
 
 /**
  * www.ethereumJ.com
@@ -15,15 +19,9 @@ import org.ethereum.util.ByteUtil;
 
 public class ProgramInvokeFactory {
 
-    // Invocation by the other program
-    public static ProgramInvoke createProgramInvoke(Program program){
-
-        return null;
-    }
-
 
         // Invocation by the wire tx
-    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock){
+    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock, ContractDetails details){
 
         // https://ethereum.etherpad.mozilla.org/26
 
@@ -83,10 +81,14 @@ public class ProgramInvokeFactory {
         /*** GASLIMIT op ***/
         long gaslimit = lastBlock.getGasLimit();
 
+        /*** Map of storage values ***/
+        Map<DataWord, DataWord> storage = null;
+        if (details != null)
+            storage =  details.getStorage();
 
         ProgramInvoke programInvoke =
             new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
-                    lastHash,  coinbase,  timestamp,  number,  difficulty,  gaslimit);
+                    lastHash,  coinbase,  timestamp,  number,  difficulty,  gaslimit, storage);
 
         return programInvoke;
     }

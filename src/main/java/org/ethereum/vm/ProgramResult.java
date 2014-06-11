@@ -1,6 +1,8 @@
 package org.ethereum.vm;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * www.ethereumJ.com
@@ -13,6 +15,8 @@ public class ProgramResult {
     private int gasUsed = 0;
     private ByteBuffer  hReturn = null;
     private RuntimeException exception;
+    private Map<DataWord, DataWord> storage;
+
 
     public void spendGas(int gas){
         gasUsed += gas;
@@ -40,5 +44,11 @@ public class ProgramResult {
         this.exception = exception;
     }
 
+    public Map<DataWord, DataWord> getStorage() {
+        return storage;
+    }
 
+    public void setStorage(Map<DataWord, DataWord> storage) {
+        this.storage = storage;
+    }
 }
