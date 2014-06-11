@@ -133,60 +133,8 @@ public class WorldManager {
             VM vm = new VM();
             Program program = new Program(initCode, programInvoke);
             vm.play(program);
-
             ProgramResult result = program.getResult();
-
-            // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
-            // TODO: (!!!!!) consider introduce one method for applying results
-            if (result.getException() != null &&
-                result.getException() instanceof Program.OutOfGasException){
-
-                // The out of gas means nothing applied
-            }
-
-
-            // Save the code created by init
-            byte[] bodyCode = null;
-            if (result.gethReturn() != null){
-
-                bodyCode = result.gethReturn().array();
-            }
-
-            BigInteger gasPrice =
-                    BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
-            BigInteger refund =
-                    gasDebit.subtract(BigInteger.valueOf( result.getGasUsed()).multiply(gasPrice));
-
-            if (refund.signum() > 0){
-                if(stateLogger.isInfoEnabled())
-                    stateLogger.info("After contract execution the sender address refunded with gas leftover , \n sender={} \n contract={}  \n gas_refund= {}",
-                            Hex.toHexString(tx.getSender()) ,Hex.toHexString(tx.getContractAddress()), refund);
-                senderState.addToBalance(refund);
-                worldState.update(senderAddress, senderState.getEncoded());
-            }
-
-            if (bodyCode != null){
-                byte[] codeKey = HashUtil.sha3(bodyCode);
-                chainDB.put(codeKey, bodyCode);
-                receiverState.setCodeHash(codeKey);
-                worldState.update(tx.getContractAddress(), receiverState.getEncoded());
-
-                if (stateLogger.isInfoEnabled())
-                    stateLogger.info("saving code of the contract to the db:\n contract={} sha3(code)={} code={}",
-                            Hex.toHexString(tx.getContractAddress()),
-                            Hex.toHexString(codeKey),
-                            Hex.toHexString(bodyCode));
-            }
-
-            // Save the storage changes.
-            Map<DataWord, DataWord> storage =  result.getStorage();
-            if (storage != null){
-                ContractDetails contractDetails = new ContractDetails(storage);
-                detaildDB.put(tx.getContractAddress() , contractDetails.getEncoded());
-            }
-
-
-
+            applyProgramResult(result, gasDebit, senderState, receiverState, senderAddress, tx.getContractAddress());
 
         } else {
 
@@ -200,6 +148,18 @@ public class WorldManager {
 
                     if (logger.isInfoEnabled())
                         logger.info("calling for existing contract: addres={}" , Hex.toHexString(tx.getReceiveAddress()));
+
+                    // first of all debit the gas from the issuer
+                    BigInteger gasDebit = tx.getTotalGasDebit();
+                    senderState.addToBalance(gasDebit.negate());
+                    if (senderState.getBalance().signum() == -1){
+                        // todo: the sender can't afford this contract do Out-Of-Gas
+                    }
+
+                    if(stateLogger.isInfoEnabled())
+                        stateLogger.info("Before contract execution the sender address debit with gas total cost, \n sender={} \n contract={}  \n gas_debit= {}",
+                                Hex.toHexString( tx.getSender() ),    Hex.toHexString(tx.getReceiveAddress()), gasDebit);
+                    worldState.update(senderAddress, senderState.getEncoded());
 
                     // FETCH THE SAVED STORAGE
                     ContractDetails details = null;
@@ -215,16 +175,76 @@ public class WorldManager {
                     vm.play(program);
 
                     ProgramResult result = program.getResult();
-
-                    // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
-
-
+                    applyProgramResult(result, gasDebit, senderState, receiverState, senderAddress, tx.getReceiveAddress());
                 }
             }
+        }
+        pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
+    }
 
+
+    /**
+     * After any contract code finish the run
+     * the certain result should take place,
+     * according the given circumstances
+     *
+     * @param result
+     * @param gasDebit
+     * @param senderState
+     * @param receiverState
+     * @param senderAddress
+     * @param contractAddress
+     */
+    private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
+                                    AccountState senderState, AccountState receiverState,
+                                    byte[] senderAddress, byte[] contractAddress) {
+
+        if (result.getException() != null &&
+                result.getException() instanceof Program.OutOfGasException){
+
+            // todo: find out what exactly should be reverted in that case
+            return;
         }
 
-        pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
+        // Save the code created by init
+        byte[] bodyCode = null;
+        if (result.gethReturn() != null){
+
+            bodyCode = result.gethReturn().array();
+        }
+
+        BigInteger gasPrice =
+                BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
+        BigInteger refund =
+                gasDebit.subtract(BigInteger.valueOf( result.getGasUsed()).multiply(gasPrice));
+
+        if (refund.signum() > 0){
+            if(stateLogger.isInfoEnabled())
+                stateLogger.info("After contract execution the sender address refunded with gas leftover , \n sender={} \n contract={}  \n gas_refund= {}",
+                        Hex.toHexString(senderAddress) ,Hex.toHexString(contractAddress), refund);
+            senderState.addToBalance(refund);
+            worldState.update(senderAddress, senderState.getEncoded());
+        }
+
+        if (bodyCode != null){
+            byte[] codeKey = HashUtil.sha3(bodyCode);
+            chainDB.put(codeKey, bodyCode);
+            receiverState.setCodeHash(codeKey);
+            worldState.update(contractAddress, receiverState.getEncoded());
+
+            if (stateLogger.isInfoEnabled())
+                stateLogger.info("saving code of the contract to the db:\n contract={} sha3(code)={} code={}",
+                        Hex.toHexString(contractAddress),
+                        Hex.toHexString(codeKey),
+                        Hex.toHexString(bodyCode));
+        }
+
+        // Save the storage changes.
+        Map<DataWord, DataWord> storage =  result.getStorage();
+        if (storage != null){
+            ContractDetails contractDetails = new ContractDetails(storage);
+            detaildDB.put(contractAddress , contractDetails.getEncoded());
+        }
     }
 
     public void applyTransactionList(List<Transaction> txList) {

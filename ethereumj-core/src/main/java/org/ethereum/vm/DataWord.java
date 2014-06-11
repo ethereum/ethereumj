@@ -61,6 +61,9 @@ public class DataWord {
     public int intValue(){
         return new BigInteger(1, data).intValue();
     }
+    public long longValue(){
+        return new BigInteger(1, data).longValue();
+    }
 
     public BigInteger sValue(){
         return new BigInteger(data);

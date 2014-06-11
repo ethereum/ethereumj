@@ -41,7 +41,7 @@ public class Program {
         spendGas(GasCost.TRANSACTION);
         spendGas(GasCost.TXDATA * invokeData.getDataSize().intValue());
 
-        if (ops == null)        throw new RuntimeException("program can not run with ops: null");
+        if (ops == null) throw new RuntimeException("program can not run with ops: null");
 
         this.invokeData = invokeData;
         this.ops = ops;
@@ -173,7 +173,6 @@ public class Program {
         return ByteBuffer.wrap(chunk);
     }
 
-
     private void allocateMemory(int address, byte[] value){
 
         int memSize = 0;
@@ -216,8 +215,11 @@ public class Program {
 
 
     public void spendGas(int gasValue){
-        // todo: check it against avail gas
-        // todo: out of gas will revert the changes [YP 5, 6 ]
+
+        long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
+        if (afterSpend < 0)
+            throw new OutOfGasException();
+
         result.spendGas(gasValue);
     }
 
@@ -257,8 +259,11 @@ public class Program {
     }
 
     public DataWord getGas(){
+
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getGas();
+
+        long afterSpend = invokeData.getGas().longValue() - result.getGasUsed();
+        return new DataWord(afterSpend);
     }
 
 
@@ -401,17 +406,13 @@ public class Program {
             if (!Arrays.equals(txData, ops)){
                 globalOutput.append("\n  msg.data: ").append(Hex.toHexString( txData ));
             }
-
             globalOutput.append("\n\n  Spent Gas: ").append(result.getGasUsed());
-
 
             if (listener != null){
                 listener.output(globalOutput.toString());
             }
         };
     }
-
-
 
     public void addListener(ProgramListener listener){
         this.listener = listener;
