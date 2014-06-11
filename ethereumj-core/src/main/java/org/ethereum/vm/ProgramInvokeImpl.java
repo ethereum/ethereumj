@@ -2,6 +2,8 @@ package org.ethereum.vm;
 
 import org.ethereum.util.ByteUtil;
 
+import java.util.Map;
+
 /**
  * www.ethereumJ.com
  * @author: Roman Mandeleil
@@ -29,12 +31,12 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
     DataWord difficulty;
     DataWord gaslimit;
 
-
+    Map<DataWord, DataWord> storage;
 
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
-                             long gaslimit) {
+                             long gaslimit, Map<DataWord, DataWord> storage) {
 
         // Transaction env
         this.address   = new DataWord(address);
@@ -54,6 +56,7 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
         this.difficulty = new DataWord(difficulty);
         this.gaslimit   = new DataWord(gaslimit);
 
+        this.storage = storage;
     }
 
     /*           ADDRESS op         */
@@ -171,4 +174,7 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
     public DataWord getGaslimit() {
         return gaslimit;
     }
+
+    /*  Storage */
+    public Map<DataWord, DataWord> getStorage(){ return storage; }
 }

@@ -45,11 +45,12 @@ public class MainData {
         // Initialize Wallet
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
         ECKey key = ECKey.fromPrivate(cowAddr);
-
         wallet.importKey(cowAddr);
+
         AccountState state = wallet.getAccountState(key.getAddress());
         state.addToBalance(BigInteger.valueOf(2).pow(200));
-        wallet.importKey(HashUtil.sha3("cat".getBytes()));
+
+//        wallet.importKey(HashUtil.sha3("cat".getBytes()));
 
         String secret = CONFIG.coinbaseSecret();
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());

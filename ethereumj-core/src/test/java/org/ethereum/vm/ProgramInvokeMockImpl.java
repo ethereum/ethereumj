@@ -4,6 +4,8 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.Map;
+
 /**
  * www.ethereumJ.com
  * @author: Roman Mandeleil
@@ -157,5 +159,10 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public DataWord getGaslimit() {
         long gasLimit = 968269;
         return new DataWord(gasLimit);
+    }
+
+    @Override
+    public Map<DataWord, DataWord> getStorage() {
+        return null;
     }
 }

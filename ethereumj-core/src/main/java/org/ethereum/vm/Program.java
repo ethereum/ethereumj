@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.core.ContractDetails;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +45,10 @@ public class Program {
 
         this.invokeData = invokeData;
         this.ops = ops;
+
+        if (invokeData.getStorage() != null){
+            storage = invokeData.getStorage();
+        }
     }
 
     public byte getCurrentOp(){
@@ -414,5 +419,10 @@ public class Program {
 
     public interface ProgramListener{
         public void output(String out);
+    }
+
+
+    public class OutOfGasException extends RuntimeException{
+
     }
 }

@@ -2,6 +2,7 @@ package org.ethereum.manager;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Database;
@@ -36,8 +37,9 @@ public class WorldManager {
     private Map<String, Transaction> pendingTransactions =
             Collections.synchronizedMap(new HashMap<String, Transaction>());
 
-    public Database chainDB = new Database("blockchain");
-    public Database stateDB = new Database("state");
+    public Database chainDB   = new Database("blockchain");
+    public Database stateDB   = new Database("state");
+    public Database detaildDB = new Database("details");
 
     public Trie worldState = new Trie(stateDB.getDb());
 
@@ -109,7 +111,7 @@ public class WorldManager {
                     MainData.instance.getBlockchain().getLastBlock();
 
             ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock);
+                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, null);
 
             if (logger.isInfoEnabled())
                 logger.info("running the init for contract: addres={}" ,
@@ -128,22 +130,30 @@ public class WorldManager {
                          Hex.toHexString( tx.getSender() ),    Hex.toHexString(tx.getContractAddress()), gasDebit);
             worldState.update(senderAddress, senderState.getEncoded());
 
-
             VM vm = new VM();
             Program program = new Program(initCode, programInvoke);
             vm.play(program);
 
             ProgramResult result = program.getResult();
+
+            // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
+            // TODO: (!!!!!) consider introduce one method for applying results
+            if (result.getException() != null &&
+                result.getException() instanceof Program.OutOfGasException){
+
+                // The out of gas means nothing applied
+            }
+
+
+            // Save the code created by init
             byte[] bodyCode = null;
             if (result.gethReturn() != null){
 
                 bodyCode = result.gethReturn().array();
             }
-            // TODO: what if the body code is null , still submit ?
 
-            // TODO: (!!!!!) ALL THE CHECKS FOR THE PROGRAM RESULT
-
-            BigInteger gasPrice = BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
+            BigInteger gasPrice =
+                    BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
             BigInteger refund =
                     gasDebit.subtract(BigInteger.valueOf( result.getGasUsed()).multiply(gasPrice));
 
@@ -168,6 +178,16 @@ public class WorldManager {
                             Hex.toHexString(bodyCode));
             }
 
+            // Save the storage changes.
+            Map<DataWord, DataWord> storage =  result.getStorage();
+            if (storage != null){
+                ContractDetails contractDetails = new ContractDetails(storage);
+                detaildDB.put(tx.getContractAddress() , contractDetails.getEncoded());
+            }
+
+
+
+
         } else {
 
             if (receiverState.getCodeHash() != HashUtil.EMPTY_DATA_HASH){
@@ -178,11 +198,17 @@ public class WorldManager {
                     Block lastBlock =
                             MainData.instance.getBlockchain().getLastBlock();
 
-                    ProgramInvoke programInvoke =
-                            ProgramInvokeFactory.createProgramInvoke(tx, lastBlock);
-
                     if (logger.isInfoEnabled())
                         logger.info("calling for existing contract: addres={}" , Hex.toHexString(tx.getReceiveAddress()));
+
+                    // FETCH THE SAVED STORAGE
+                    ContractDetails details = null;
+                    byte[] detailsRLPData = detaildDB.get(tx.getReceiveAddress());
+                    if (detailsRLPData.length > 0)
+                        details = new ContractDetails(detailsRLPData);
+
+                    ProgramInvoke programInvoke =
+                            ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, details);
 
                     VM vm = new VM();
                     Program program = new Program(programCode, programInvoke);
@@ -197,6 +223,7 @@ public class WorldManager {
             }
 
         }
+
         pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
     }
 

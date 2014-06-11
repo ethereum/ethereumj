@@ -1,6 +1,7 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.Program;
 import org.ethereum.vm.ProgramInvokeFactory;
@@ -32,29 +33,19 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
     private Transaction tx;
 
-    public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
+    public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock, ContractDetails contractDetails) {
 
         this.tx = tx;
 
         outputList = new ArrayList<String>();
         VM vm = new VM();
-//        Program program = new Program(Hex.decode("630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054630000000060445960CC60DD611234600054615566602054"));
-//        Program program = new Program(Hex.decode("60016023576000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"), null);
-
-//        String code = "60016000546006601160003960066000f261778e600054";
-//        String code = "620f424073cd2a3d9f938e13cd947ec05abc7fe734df8dd826576086602660003960866000f26001602036040e0f630000002159600060200235600054600053565b525b54602052f263000000765833602054602053566040546000602002356060546001602002356080546080536040530a0f0f630000006c59608053604053036020535760805360605356016060535760015b525b54602052f263000000765860005b525b54602052f2";
-
-//        byte[] codeBytes =
-//            Hex.decode(code);
 
         Program program = new Program(code ,
-                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock));
+                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, contractDetails));
 
         program.addListener(this);
         program.fullTrace();
-
-        while(!program.isStopped())
-            vm.step(program);
+        vm.play(program);
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
@@ -70,6 +61,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         stepSlider.setMajorTickSpacing(1);
         if (outputList.size() > 40)
             stepSlider.setMajorTickSpacing(3);
+        if (outputList.size() > 100)
+            stepSlider.setMajorTickSpacing(20);
+
 
         stepSlider.setMinorTickSpacing(1);
         stepSlider.setPaintTicks(true);
@@ -129,9 +123,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock) {
+    public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock, ContractDetails details) {
 
-        ProgramPlayDialog ppd = new ProgramPlayDialog(runCode, tx, lastBlock);
+        ProgramPlayDialog ppd = new ProgramPlayDialog(runCode, tx, lastBlock, details);
 
         //Create and set up the window.
         JFrame frame = new JFrame("Program Draft Play");
@@ -141,7 +135,6 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
         frame.setIconImage(img);
-
 
         frame.setPreferredSize(new Dimension(580, 500));
         frame.setLocation(400, 200);

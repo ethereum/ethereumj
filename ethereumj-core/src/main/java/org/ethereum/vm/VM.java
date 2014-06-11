@@ -567,8 +567,7 @@ public class VM {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         } finally{
-
-            // todo: Here wrap the storage into result;
+            program.getResult().setStorage(program.storage);
         }
     }
 }
