@@ -4,11 +4,13 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -22,13 +24,6 @@ import java.util.List;
  * the comprised transactions, R, and a set of other blockheaders U that are known 
  * to have a parent equal to the present block’s parent’s parent 
  * (such blocks are known as uncles).
- *
- *
- * www.ethereumJ.com
- * @authors: Roman Mandeleil,
- *           Nick Savers
- * Created on: 20/05/2014 10:44
- *
  */
 public class Block {
 
@@ -104,8 +99,9 @@ public class Block {
     }
 
     public Block getParent() {
-    	// TODO retrieve Parent from chain
-    	return null;
+		byte[] rlpEncoded = WorldManager.instance.chainDB.get(ByteUtil
+				.longToBytes(this.getNumber() - 1));
+    	return new Block(rlpEncoded);
     }
     
     public byte[] getParentHash() {
@@ -126,6 +122,11 @@ public class Block {
     public byte[] getStateRoot() {
         if (!parsed) parseRLP();
         return this.header.getStateRoot();
+    }
+    
+    public void setStateRoot(byte[] stateRoot) {
+        if (!parsed) parseRLP();
+        this.header.setStateRoot(stateRoot);
     }
 
     public byte[] getTxTrieRoot() {
@@ -154,7 +155,7 @@ public class Block {
 	}
 	
 	public boolean isGenesis() {
-		return this.getNumber() == 0;
+		return this.getNumber() == Genesis.NUMBER;
 	}
 
 	public long getGasLimit() {
@@ -175,6 +176,11 @@ public class Block {
     public byte[] getNonce() {
         if (!parsed) parseRLP();
         return this.header.getNonce();
+    }
+    
+    public void setNonce(byte[] nonce) {
+        this.header.setNonce(nonce);
+        rlpEncoded = null;
     }
     
     public Trie getTxsState() {
@@ -216,7 +222,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [\n");
-        toStringBuff.append("  hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
+        toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
         
         for (TransactionReceipt txReceipt : getTxReceiptList()) {
@@ -233,7 +239,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
-        toStringBuff.append("  hash=" + ByteUtil.toHexString(this.getHash())).append("");
+        toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("");
         toStringBuff.append(header.toFlatString());
         
         for (Transaction tx : getTransactionsList()){
@@ -303,14 +309,21 @@ public class Block {
 	 */
     public boolean isValid() {
     	boolean isValid = true;
-    	
-    	// verify difficulty meets requirements
-    	//isValid = this.getDifficulty() == this.calcDifficulty();
-    	// verify gasLimit meets requirements
-    	//isValid = this.getGasLimit() == this.calcGasLimit();
-    	// verify timestamp meets requirements
-    	//isValid = this.getTimestamp() > this.getParent().getTimestamp();
-    	
+
+    	if(!this.isGenesis()) {
+	    	// verify difficulty meets requirements
+	    	isValid = this.getDifficulty() == this.calcDifficulty();
+	    	// verify nonce meest difficulty requirements
+	    	isValid = this.validateNonce();
+	    	// verify gasLimit meets requirements
+	    	isValid = this.getGasLimit() == this.calcGasLimit();
+	    	// verify timestamp meets requirements
+	    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+	    	// verify extraData doesn't exceed 1024 bytes
+	    	isValid = this.getExtraData() == null || this.getExtraData().length <= 1024;
+    	}
+    	if(!isValid)
+    		logger.warn("!!!Invalid block!!!");
     	return isValid;
     }
 	
@@ -324,7 +337,7 @@ public class Block {
 			return Genesis.GAS_LIMIT;
 		else {
 			Block parent = this.getParent();
-			return Math.max(MIN_GAS_LIMIT, (parent.header.getGasLimit() * (1024 - 1) + (parent.header.getGasUsed() * 6 / 5)) / 1024);
+			return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
 		}
 	}
 	
@@ -343,18 +356,27 @@ public class Block {
 			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
 		}
 	}
+	
+	/**
+	 * Verify that block is valid for its difficulty
+	 * 
+	 * @param block
+	 * @param difficulty
+	 * @param testNonce
+	 * @return
+	 */
+	public boolean validateNonce() {
+		BigInteger max = BigInteger.valueOf(2).pow(256);
+		byte[] target = BigIntegers.asUnsignedByteArray(32,
+				max.divide(new BigInteger(1, this.getDifficulty())));
+		byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
+		byte[] concat = Arrays.concatenate(hash, this.getNonce());
+		byte[] result = HashUtil.sha3(concat);
+		return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
+	}
 
 	public byte[] getEncoded() {
 		if(rlpEncoded == null) {
-
-	        // TODO: Alternative clean way to encode, using RLP.encode() after it's optimized
-	        // Object[] header = new Object[] { parentHash, unclesHash, coinbase,
-	        // stateRoot, txTrieRoot, difficulty, number, minGasPrice,
-	        // gasLimit, gasUsed, timestamp, extraData, nonce };
-	        // Object[] transactions = this.getTransactionsList().toArray();
-	        // Object[] uncles = this.getUncleList().toArray();        
-	        // return RLP.encode(new Object[] { header, transactions, uncles });
-
 			byte[] header = this.header.getEncoded();
 	        byte[] transactions = RLP.encodeList();
 	        byte[] uncles = RLP.encodeList();       
@@ -362,5 +384,14 @@ public class Block {
 	        this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
 		}
 		return rlpEncoded;
+	}
+	
+	public byte[] getEncodedWithoutNonce() {
+		if (!parsed) parseRLP();
+		byte[] header = this.header.getEncodedWithoutNonce();
+        byte[] transactions = RLP.encodeList();
+        byte[] uncles = RLP.encodeList();       
+        
+        return RLP.encodeList(header, transactions, uncles);
 	}
 }

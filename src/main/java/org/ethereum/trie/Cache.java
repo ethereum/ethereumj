@@ -8,11 +8,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 
-/*
- * www.ethereumJ.com
- * @author: Nick Savers
- * Created on: 20/05/2014 10:44
- */
 public class Cache {
 	
 	private Map<byte[], Node> nodes;

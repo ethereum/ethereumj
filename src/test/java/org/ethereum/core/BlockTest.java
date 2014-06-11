@@ -2,7 +2,9 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
@@ -13,7 +15,7 @@ import static org.junit.Assert.*;
 public class BlockTest {
 	
 	// https://ethereum.etherpad.mozilla.org/12
-	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a023b503734ff34ddb7bd5e478f1645680ec778ab3f90007cb1c854653693e5adc80834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a011cc4aaa3b2f97cd6c858fcc0903b9b34b071e1798c91645f0e05e267028cb4a80834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
 	private String CPP_PoC5_GENESIS_HEX_HASH = Hex.toHexString(StaticMessages.GENESIS_HASH);
 
 	String block_1 = "f9072df8d3a077ef4fdaf389dca53236bcf7f72698e154eab2828f86fbc4fc6c"
@@ -162,28 +164,40 @@ public class BlockTest {
     
     @Test
     public void testCalcDifficulty() {
-    	byte[] diffBytes = Genesis.getInstance().calcDifficulty();
-      	BigInteger difficulty = new BigInteger(1, diffBytes);
+    	Block genesis = Genesis.getInstance();
+      	BigInteger difficulty = new BigInteger(1, genesis.calcDifficulty());
     	System.out.println("Genesis difficulty = " + difficulty.toString());
     	assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
     	
+    	// Storing genesis because the parent needs to be in the DB for calculation.
+		WorldManager.instance.chainDB.put(ByteUtil.longToBytes(Genesis.NUMBER),
+				genesis.getEncoded());
+    	
     	Block block1 = new Block(Hex.decode(block_1));
-    	diffBytes = block1.calcDifficulty();
-    	difficulty = new BigInteger(1, diffBytes);
-    	System.out.println("Block#1 difficulty = " + difficulty.toString());
-    	assertEquals(new BigInteger(""), difficulty);
+    	BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
+    	BigInteger actualDifficulty = new BigInteger(1, block1.getDifficulty());
+    	System.out.println("Block#1 actual difficulty = " + actualDifficulty.toString());
+    	System.out.println("Block#1 calculated difficulty = " + calcDifficulty.toString());
+    	assertEquals(actualDifficulty, calcDifficulty);
     }
     
     @Test
     public void testCalcGasLimit() {
-    	long gasLimit = Genesis.getInstance().calcGasLimit();
+    	Block genesis = Genesis.getInstance();
+    	long gasLimit = genesis.calcGasLimit();
     	System.out.println("Genesis gasLimit = " + gasLimit);
     	assertEquals(Genesis.GAS_LIMIT, gasLimit);
     	
+    	// Storing genesis because the parent needs to be in the DB for calculation.
+		WorldManager.instance.chainDB.put(ByteUtil.longToBytes(Genesis.NUMBER),
+				genesis.getEncoded());
+    	
     	// Test with block
     	Block block1 = new Block(Hex.decode(block_1));
-    	gasLimit = block1.calcGasLimit();
-    	System.out.println("Block#1 gasLimit = " + gasLimit);
-    	assertEquals(999023, gasLimit);
+    	long calcGasLimit = block1.calcGasLimit();
+    	long actualGasLimit = block1.getGasLimit();
+    	System.out.println("Block#1 actual gasLimit = " + actualGasLimit);
+    	System.out.println("Block#1 calculated gasLimit = " + calcGasLimit);
+    	assertEquals(actualGasLimit, calcGasLimit);
     }
 }

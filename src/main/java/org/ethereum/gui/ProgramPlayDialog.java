@@ -3,9 +3,7 @@ package org.ethereum.gui;
 import org.ethereum.core.Transaction;
 import org.ethereum.vm.Program;
 import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.ProgramInvokeImpl;
 import org.ethereum.vm.VM;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;

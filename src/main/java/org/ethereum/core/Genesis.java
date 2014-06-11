@@ -2,11 +2,12 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
+import static org.spongycastle.util.encoders.Hex.decode;
+import static org.spongycastle.util.encoders.Hex.toHexString;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
  * The genesis block is the first block in the chain and has fixed values according to 
@@ -36,7 +37,7 @@ public class Genesis extends Block {
 			"2ef47100e0787b915105fd5e3f4ff6752079d5cb", 	// # (M)
 			"1a26338f0d905e295fccb71fa9ea849ffa12aaf4",		// # (A)
 			"e6716f9544a56c530d868e4bfbacb172315bdead",		// # (J)
-			"8a40bfaa73256b60764c1bf40675a99083efb075",		// # (G)
+			"51ba59315b3a95761d0863b05ccc7a7f54703d99",		// # (G)
 			"e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
 			"1e12515ce3e0f817a4ddef9ca55788a1d66bd2df",		// # (V)
 			"6c386a4b26f73c802f34673f7248bb118f97424a",		// # (HH)
@@ -44,7 +45,7 @@ public class Genesis extends Block {
 	
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
-	private static byte[] sha3EmptyList = HashUtil.sha3(RLP.encodeList());
+	private static byte[] sha3EmptyList = sha3(RLP.encodeList());
 
 	public static byte[] PARENT_HASH = zeroHash256;
 	public static byte[] UNCLES_HASH = sha3EmptyList;
@@ -56,9 +57,9 @@ public class Genesis extends Block {
     public static long GAS_USED = 0;
     public static long TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
-    public static byte[] NONCE = HashUtil.sha3(new byte[]{42});
+    public static byte[] NONCE = sha3(new byte[]{42});
     
-    private static Block instance;
+    private static Block genesisBlock;
     
 	private Genesis() {
 		super(PARENT_HASH, UNCLES_HASH, COINBASE, DIFFICULTY,
@@ -67,16 +68,16 @@ public class Genesis extends Block {
 
 		// Premine state
 		for (String address : premine) {
-			this.updateState(Hex.decode(address), acct.getEncoded());
+			this.updateState(decode(address), acct.getEncoded());
 		}
-		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
-		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
+		logger.info("Genesis-hash: " + toHexString(this.getHash()));
+		logger.info("Genesis-stateRoot: " + toHexString(this.getStateRoot()));
     }
 	
 	public static Block getInstance() {
-		if (instance == null) {
-			instance = new Genesis();
+		if (genesisBlock == null) {
+			genesisBlock = new Genesis();
 		}
-		return instance;
+		return genesisBlock;
 	}
 }
