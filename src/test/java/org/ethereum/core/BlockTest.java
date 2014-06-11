@@ -3,7 +3,6 @@ package org.ethereum.core;
 import java.math.BigInteger;
 
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.message.StaticMessages;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.core.Block;

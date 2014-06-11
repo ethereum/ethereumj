@@ -29,7 +29,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 public class Genesis extends Block {
 
     private String[] premine = new String[] {
-            "51ba59315b3a95761d0863b05ccc7a7f54703d99",
+            "51ba59315b3a95761d0863b05ccc7a7f54703d99",		// # (G)
             "e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
             "1e12515ce3e0f817a4ddef9ca55788a1d66bd2df",		// # (V)
             "6c386a4b26f73c802f34673f7248bb118f97424a",		// # (HH)
@@ -43,7 +43,6 @@ public class Genesis extends Block {
     // The proof-of-concept series include a development premine, making the state root hash
 	// some value stateRoot. The latest documentation should be consulted for the value of the state root.
 	private AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-
 
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
