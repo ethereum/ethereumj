@@ -1,7 +1,9 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.TrackDatabase;
+import org.ethereum.trie.TrackTrie;
+
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -15,8 +17,10 @@ public class ProgramResult {
     private int gasUsed = 0;
     private ByteBuffer  hReturn = null;
     private RuntimeException exception;
-    private Map<DataWord, DataWord> storage;
 
+    TrackDatabase detailDB;
+    TrackDatabase chainDb;
+    TrackTrie stateDb;
 
     public void spendGas(int gas){
         gasUsed += gas;
@@ -44,11 +48,27 @@ public class ProgramResult {
         this.exception = exception;
     }
 
-    public Map<DataWord, DataWord> getStorage() {
-        return storage;
+    public TrackDatabase getDetailDB() {
+        return detailDB;
     }
 
-    public void setStorage(Map<DataWord, DataWord> storage) {
-        this.storage = storage;
+    public void setDetailDB(TrackDatabase detailDB) {
+        this.detailDB = detailDB;
+    }
+
+    public TrackDatabase getChainDb() {
+        return chainDb;
+    }
+
+    public void setChainDb(TrackDatabase chainDb) {
+        this.chainDb = chainDb;
+    }
+
+    public TrackTrie getStateDb() {
+        return stateDb;
+    }
+
+    public void setStateDb(TrackTrie stateDb) {
+        this.stateDb = stateDb;
     }
 }

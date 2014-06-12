@@ -2,6 +2,8 @@ package org.ethereum.vm;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.TrackDatabase;
+import org.ethereum.trie.TrackTrie;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Map;
@@ -163,6 +165,21 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
+        return null;
+    }
+
+    @Override
+    public TrackDatabase getDetaildDB() {
+        return null;
+    }
+
+    @Override
+    public TrackDatabase getChainDb() {
+        return null;
+    }
+
+    @Override
+    public TrackTrie getStateDb() {
         return null;
     }
 }

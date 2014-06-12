@@ -5,7 +5,9 @@ import org.ethereum.core.Block;
 import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Database;
+import org.ethereum.db.DatabaseImpl;
+import org.ethereum.db.TrackDatabase;
+import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
@@ -37,9 +39,9 @@ public class WorldManager {
     private Map<String, Transaction> pendingTransactions =
             Collections.synchronizedMap(new HashMap<String, Transaction>());
 
-    public Database chainDB   = new Database("blockchain");
-    public Database stateDB   = new Database("state");
-    public Database detaildDB = new Database("details");
+    public DatabaseImpl chainDB   = new DatabaseImpl("blockchain");
+    public DatabaseImpl stateDB   = new DatabaseImpl("state");
+    public DatabaseImpl detaildDB = new DatabaseImpl("details");
 
     public Trie worldState = new Trie(stateDB.getDb());
 
@@ -47,6 +49,8 @@ public class WorldManager {
 
         // TODO: refactor the wallet transactions to the world manager
         MainData.instance.getBlockchain().addWalletTransaction(tx);
+
+        // TODO: what is going on with simple wallet transfer
 
         // 1. VALIDATE THE NONCE
         byte[] senderAddress = tx.getSender();
@@ -66,18 +70,26 @@ public class WorldManager {
             return;
         }
 
-        // 2. THE SIMPLE BALANCE CHANGE SHOULD HAPPEN ANYWAY
-        AccountState receiverState = null;
+        // 2.1 PERFORM THE GAS VALUE TX
+        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
 
-        // Check if the receive is a new contract
+        // first of all debit the gas from the issuer
+        AccountState receiverState = null;
+        BigInteger gasDebit = tx.getTotalGasValueDebit();
+        byte[] contractAddress;
+
+        // Contract creation or existing Contract call
         if (tx.isContractCreation()) {
-            byte[] contractAddress = tx.getContractAddress();
+
+            // credit the receiver
+            contractAddress = tx.getContractAddress();
             receiverState = new AccountState();
             worldState.update(contractAddress, receiverState.getEncoded());
             stateLogger.info("New contract created address={}",
                     Hex.toHexString(contractAddress));
         } else {
-        	// receiver was not set by creation of contract
+
+            contractAddress = tx.getReceiveAddress();
             byte[] accountData = this.worldState.get(tx.getReceiveAddress());
             if (accountData.length == 0){
                 receiverState = new AccountState();
@@ -87,98 +99,134 @@ public class WorldManager {
             } else {
                 receiverState = new AccountState(accountData);
                 if (stateLogger.isInfoEnabled())
-                    stateLogger.info("Account updated address={}",
+                    stateLogger.info("Account found address={}",
                             Hex.toHexString(tx.getReceiveAddress()));
             }
         }
-        if(tx.getValue() != null) {
-        	receiverState.addToBalance(new BigInteger(1, tx.getValue()));
-        	senderState.addToBalance(new BigInteger(1, tx.getValue()).negate());
-        }
 
+        // 2.2 UPDATE THE NONCE
+        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
         if (senderState.getBalance().compareTo(BigInteger.ZERO) == 1) {
             senderState.incrementNonce();
             worldState.update(tx.getSender(), senderState.getEncoded());
-            worldState.update(tx.getReceiveAddress(), receiverState.getEncoded());
-        }
-
-        // 3. FIND OUT WHAT IS THE TRANSACTION TYPE
-        if (tx.isContractCreation()) {
-
-            byte[] initCode = tx.getData();
-
-            Block lastBlock =
-                    MainData.instance.getBlockchain().getLastBlock();
-
-            ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, null);
-
-            if (logger.isInfoEnabled())
-                logger.info("running the init for contract: addres={}" ,
-                        Hex.toHexString(tx.getContractAddress()));
-
-            // first of all debit the gas from the issuer
-            BigInteger gasDebit = tx.getTotalGasDebit();
-            senderState.addToBalance(gasDebit.negate());
-            if (senderState.getBalance().signum() == -1){
-                // todo: the sender can't afford this contract do Out-Of-Gas
-
-            }
 
             if(stateLogger.isInfoEnabled())
-                stateLogger.info("Before contract execution the sender address debit with gas total cost, \n sender={} \n contract={}  \n gas_debit= {}",
-                         Hex.toHexString( tx.getSender() ),    Hex.toHexString(tx.getContractAddress()), gasDebit);
+                stateLogger.info("Before contract execution the sender address debit with gas total cost, " +
+                                "\n sender={} \n gas_debit= {}",
+                        Hex.toHexString( tx.getSender() ),    gasDebit);
+
+        }
+
+        // actual gas value debit from the sender
+        // the purchase gas will be available for the
+        // contract in the execution state, and
+        // can be validate using GAS op
+        if (gasDebit.signum() == 1){
+
+            if (senderState.getBalance().subtract(gasDebit).signum() == -1){
+                logger.info("No gas to start the execution: sender={}" , Hex.toHexString(tx.getSender()));
+                return;
+            }
+            senderState.addToBalance(gasDebit.negate());
             worldState.update(senderAddress, senderState.getEncoded());
+        }
 
-            VM vm = new VM();
-            Program program = new Program(initCode, programInvoke);
-            vm.play(program);
-            ProgramResult result = program.getResult();
-            applyProgramResult(result, gasDebit, senderState, receiverState, senderAddress, tx.getContractAddress());
+        // 3. START TRACKING FOR REVERT CHANGES OPTION !!!
+        TrackDatabase trackDetailDB = new TrackDatabase( WorldManager.instance.detaildDB );
+        TrackDatabase trackChainDb  = new TrackDatabase( WorldManager.instance.chainDB);
+        TrackTrie     trackStateDB  = new TrackTrie(WorldManager.instance.worldState );
 
-        } else {
+        trackDetailDB.startTrack();
+        trackChainDb.startTrack();
+        trackStateDB.startTrack();
 
-            if (receiverState.getCodeHash() != HashUtil.EMPTY_DATA_HASH){
+        try {
 
-                byte[] programCode = chainDB.get(receiverState.getCodeHash());
-                if (programCode != null && programCode.length != 0){
+            // 4. THE SIMPLE VALUE/BALANCE CHANGE
+            if(tx.getValue() != null) {
 
-                    Block lastBlock =
-                            MainData.instance.getBlockchain().getLastBlock();
+                if (senderState.getBalance().subtract(new BigInteger(1, tx.getValue())).signum() >= 0){
+                    receiverState.addToBalance(new BigInteger(1, tx.getValue()));
+                    senderState.addToBalance(new BigInteger(1, tx.getValue()).negate());
 
-                    if (logger.isInfoEnabled())
-                        logger.info("calling for existing contract: addres={}" , Hex.toHexString(tx.getReceiveAddress()));
+                    trackStateDB.update(senderAddress, senderState.getEncoded());
+                    trackStateDB.update(contractAddress, receiverState.getEncoded());
 
-                    // first of all debit the gas from the issuer
-                    BigInteger gasDebit = tx.getTotalGasDebit();
-                    senderState.addToBalance(gasDebit.negate());
-                    if (senderState.getBalance().signum() == -1){
-                        // todo: the sender can't afford this contract do Out-Of-Gas
-                    }
-
-                    if(stateLogger.isInfoEnabled())
-                        stateLogger.info("Before contract execution the sender address debit with gas total cost, \n sender={} \n contract={}  \n gas_debit= {}",
-                                Hex.toHexString( tx.getSender() ),    Hex.toHexString(tx.getReceiveAddress()), gasDebit);
-                    worldState.update(senderAddress, senderState.getEncoded());
-
-                    // FETCH THE SAVED STORAGE
-                    ContractDetails details = null;
-                    byte[] detailsRLPData = detaildDB.get(tx.getReceiveAddress());
-                    if (detailsRLPData.length > 0)
-                        details = new ContractDetails(detailsRLPData);
-
-                    ProgramInvoke programInvoke =
-                            ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, details);
-
-                    VM vm = new VM();
-                    Program program = new Program(programCode, programInvoke);
-                    vm.play(program);
-
-                    ProgramResult result = program.getResult();
-                    applyProgramResult(result, gasDebit, senderState, receiverState, senderAddress, tx.getReceiveAddress());
+                    if (stateLogger.isInfoEnabled())
+                        stateLogger.info("Update value balance \n " +
+                                        "sender={}, receiver={}, value={}",
+                                Hex.toHexString(senderAddress),
+                                Hex.toHexString(contractAddress),
+                                new BigInteger( tx.getValue()));
                 }
             }
+
+            // 3. FIND OUT WHAT IS THE TRANSACTION TYPE
+            if (tx.isContractCreation()) {
+
+                byte[] initCode = tx.getData();
+
+                Block lastBlock =
+                        MainData.instance.getBlockchain().getLastBlock();
+
+                ProgramInvoke programInvoke =
+                    ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, null, trackDetailDB, trackChainDb, trackStateDB);
+
+                if (logger.isInfoEnabled())
+                    logger.info("running the init for contract: addres={}" ,
+                            Hex.toHexString(tx.getContractAddress()));
+
+
+                VM vm = new VM();
+                Program program = new Program(initCode, programInvoke);
+                vm.play(program);
+                ProgramResult result = program.getResult();
+                applyProgramResult(result, gasDebit, senderState, receiverState, senderAddress, tx.getContractAddress());
+
+            } else {
+
+                if (receiverState.getCodeHash() != HashUtil.EMPTY_DATA_HASH){
+
+                    byte[] programCode = chainDB.get(receiverState.getCodeHash());
+                    if (programCode != null && programCode.length != 0){
+
+                        Block lastBlock =
+                                MainData.instance.getBlockchain().getLastBlock();
+
+                        if (logger.isInfoEnabled())
+                            logger.info("calling for existing contract: addres={}" , Hex.toHexString(tx.getReceiveAddress()));
+
+
+                        // FETCH THE SAVED STORAGE
+                        ContractDetails details = null;
+                        byte[] detailsRLPData = detaildDB.get(tx.getReceiveAddress());
+                        if (detailsRLPData.length > 0)
+                            details = new ContractDetails(detailsRLPData);
+
+                        ProgramInvoke programInvoke =
+                                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, details, trackDetailDB, trackChainDb, trackStateDB);
+
+                        VM vm = new VM();
+                        Program program = new Program(programCode, programInvoke);
+                        vm.play(program);
+
+                        ProgramResult result = program.getResult();
+                        applyProgramResult(result, gasDebit, senderState, receiverState, senderAddress, tx.getReceiveAddress());
+                    }
+                }
+            }
+        } catch (RuntimeException e) {
+
+            trackDetailDB.rollbackTrack();
+            trackChainDb.rollbackTrack();
+            trackStateDB.rollbackTrack();
+            return;
         }
+
+        trackDetailDB.commitTrack();
+        trackChainDb.commitTrack();
+        trackStateDB.commitTrack();
+
         pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
     }
 
@@ -201,9 +249,9 @@ public class WorldManager {
 
         if (result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException){
+            logger.info("contract run halted by OutOfGas: contract={}", Hex.toHexString(contractAddress));
 
-            // todo: find out what exactly should be reverted in that case
-            return;
+            throw result.getException();
         }
 
         // Save the code created by init
@@ -239,12 +287,6 @@ public class WorldManager {
                         Hex.toHexString(bodyCode));
         }
 
-        // Save the storage changes.
-        Map<DataWord, DataWord> storage =  result.getStorage();
-        if (storage != null){
-            ContractDetails contractDetails = new ContractDetails(storage);
-            detaildDB.put(contractAddress , contractDetails.getEncoded());
-        }
     }
 
     public void applyTransactionList(List<Transaction> txList) {

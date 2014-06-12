@@ -1,5 +1,7 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.TrackDatabase;
+import org.ethereum.trie.TrackTrie;
 import org.ethereum.util.ByteUtil;
 
 import java.util.Map;
@@ -10,7 +12,7 @@ import java.util.Map;
  * Created on: 03/06/2014 15:00
  */
 
-public class    ProgramInvokeImpl implements ProgramInvoke {
+public class  ProgramInvokeImpl implements ProgramInvoke {
 
     /*** TRANSACTION  env ***/
     DataWord address;
@@ -33,10 +35,48 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
 
     Map<DataWord, DataWord> storage;
 
+    TrackDatabase detaildDB;
+    TrackDatabase chainDb;
+    TrackTrie stateDb;
+
+    public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
+                             DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
+                             DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord difficulty,
+                             DataWord gaslimit, Map<DataWord, DataWord> storage,
+                             TrackDatabase detaildDB, TrackDatabase chainDb, TrackTrie stateDB) {
+
+        // Transaction env
+        this.address   = address;
+        this.origin    = origin;
+        this.caller    = caller;
+        this.balance   = balance;
+        this.gasPrice  = gasPrice;
+        this.gas       = gas;
+        this.callValue = callValue;
+        this.msgData = msgData;
+
+        // last Block env
+        this.prevHash = lastHash;
+        this.coinbase = coinbase;
+        this.timestamp = timestamp;
+        this.number = number;
+        this.difficulty = difficulty;
+        this.gaslimit   = gaslimit;
+
+        this.storage = storage;
+
+        this.detaildDB = detaildDB;
+        this.chainDb = chainDb;
+        this.stateDb = stateDB;
+
+    }
+
+
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
-                             long gaslimit, Map<DataWord, DataWord> storage) {
+                             long gaslimit, Map<DataWord, DataWord> storage,
+                             TrackDatabase detaildDB, TrackDatabase chainDb, TrackTrie stateDB) {
 
         // Transaction env
         this.address   = new DataWord(address);
@@ -57,6 +97,10 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
         this.gaslimit   = new DataWord(gaslimit);
 
         this.storage = storage;
+
+        this.detaildDB = detaildDB;
+        this.chainDb = chainDb;
+        this.stateDb = stateDB;
     }
 
     /*           ADDRESS op         */
@@ -177,4 +221,17 @@ public class    ProgramInvokeImpl implements ProgramInvoke {
 
     /*  Storage */
     public Map<DataWord, DataWord> getStorage(){ return storage; }
+
+
+    public TrackDatabase getDetaildDB() {
+        return detaildDB;
+    }
+
+    public TrackDatabase getChainDb() {
+        return chainDb;
+    }
+
+    public TrackTrie getStateDb() {
+        return stateDb;
+    }
 }

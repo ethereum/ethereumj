@@ -26,22 +26,24 @@ import org.spongycastle.util.encoders.Hex;
  * See Yellow Paper: http://www.gavwood.com/Paper.pdf (Appendix I. Genesis Block)
  */
 public class Genesis extends Block {
-	
+
+    private String[] premine = new String[] {
+            "51ba59315b3a95761d0863b05ccc7a7f54703d99",
+            "e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
+            "1e12515ce3e0f817a4ddef9ca55788a1d66bd2df",		// # (V)
+            "6c386a4b26f73c802f34673f7248bb118f97424a",		// # (HH)
+            "cd2a3d9f938e13cd947ec05abc7fe734df8dd826",     // # (R)
+            "2ef47100e0787b915105fd5e3f4ff6752079d5cb", 	// # (M)
+            "e6716f9544a56c530d868e4bfbacb172315bdead",		// # (J)
+            "1a26338f0d905e295fccb71fa9ea849ffa12aaf4",		// # (A)
+    };
+
 	Logger logger = LoggerFactory.getLogger(this.getClass());
-	
-	// The proof-of-concept series include a development premine, making the state root hash 
+    // The proof-of-concept series include a development premine, making the state root hash
 	// some value stateRoot. The latest documentation should be consulted for the value of the state root.
 	private AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-	private String[] premine = new String[] {
-			"2ef47100e0787b915105fd5e3f4ff6752079d5cb", 	// # (M)
-			"1a26338f0d905e295fccb71fa9ea849ffa12aaf4",		// # (A)
-			"e6716f9544a56c530d868e4bfbacb172315bdead",		// # (J)
-			"8a40bfaa73256b60764c1bf40675a99083efb075",		// # (G)
-			"e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
-			"1e12515ce3e0f817a4ddef9ca55788a1d66bd2df",		// # (V)
-			"6c386a4b26f73c802f34673f7248bb118f97424a",		// # (HH)
-			"cd2a3d9f938e13cd947ec05abc7fe734df8dd826" };	// # (R)
-	
+
+
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
 	private static byte[] sha3EmptyList = HashUtil.sha3(RLP.encodeList());

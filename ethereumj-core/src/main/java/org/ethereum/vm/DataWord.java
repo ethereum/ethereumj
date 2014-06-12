@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
@@ -55,6 +56,10 @@ public class DataWord {
         return data;
     }
 
+    public byte[] getNoLeadZeroesData() {
+        return ByteUtil.stripLeadingZeroes(data);
+    }
+
     public BigInteger value(){
         return new BigInteger(1, data);
     }
@@ -83,9 +88,7 @@ public class DataWord {
     // when the number is explicit defined
     // as negative
     public boolean isNegative(){
-
         int result = data[0] & 0x80;
-
         return result == 0x80;
     }
 

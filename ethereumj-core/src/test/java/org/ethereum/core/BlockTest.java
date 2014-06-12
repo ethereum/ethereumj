@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 public class BlockTest {
 	
 	// https://ethereum.etherpad.mozilla.org/12
-	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a023b503734ff34ddb7bd5e478f1645680ec778ab3f90007cb1c854653693e5adc80834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a011cc4aaa3b2f97cd6c858fcc0903b9b34b071e1798c91645f0e05e267028cb4a80834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
 	private String CPP_PoC5_GENESIS_HEX_HASH = Hex.toHexString(StaticMessages.GENESIS_HASH);
 
 	String block_1 = "f9072df8d3a077ef4fdaf389dca53236bcf7f72698e154eab2828f86fbc4fc6c"
@@ -168,7 +168,7 @@ public class BlockTest {
     	assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
     	
     	Block block1 = new Block(Hex.decode(block_1));
-    	diffBytes = block1.calcDifficulty();
+        	diffBytes = block1.calcDifficulty();
     	difficulty = new BigInteger(1, diffBytes);
     	System.out.println("Block#1 difficulty = " + difficulty.toString());
     	assertEquals(new BigInteger(""), difficulty);

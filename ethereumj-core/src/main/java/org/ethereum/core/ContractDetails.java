@@ -48,8 +48,6 @@ public class ContractDetails {
             RLPItem rlpItem = (RLPItem)values.get(i);
             storageValues.add(new DataWord(rlpItem.getRLPData()));
         }
-
-        System.out.println();
     }
 
     public ContractDetails(Map<DataWord, DataWord> storage) {
@@ -97,7 +95,9 @@ public class ContractDetails {
 
         Map<DataWord, DataWord> storage = new HashMap<>();
 
-        for (int i = 0; i < storageKeys.size(); ++i){
+        for (int i = 0;
+             storageKeys != null &&
+             i < storageKeys.size(); ++i){
             storage.put(storageKeys.get(i), storageValues.get(i));
         }
 

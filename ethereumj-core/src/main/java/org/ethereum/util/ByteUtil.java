@@ -154,4 +154,23 @@ public class ByteUtil {
 		}
 		return baos.toByteArray();
 	}
+
+    public static byte[] stripLeadingZeroes(byte[] data){
+
+        if (data == null) return null;
+
+        int firstNonZero = 0;
+        for (int i = 0; i < data.length; ++i)
+            if (data[i] != 0){
+                firstNonZero = i;
+                break;
+            }
+
+        if (firstNonZero == 0) return data;
+
+        byte[] result = new byte[data.length - firstNonZero];
+        System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
+
+        return result;
+    }
 }

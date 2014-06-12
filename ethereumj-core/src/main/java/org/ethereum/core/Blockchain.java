@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.db.Database;
+import org.ethereum.db.DatabaseImpl;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.submit.WalletTransaction;
@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 import static org.ethereum.core.Denomination.*;
@@ -31,7 +30,7 @@ public class Blockchain {
 	// to avoid using minGasPrice=0 from Genesis for the wallet
 	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 		
-	private Database db;
+	private DatabaseImpl db;
 	private Wallet wallet;
 	
     private long gasPrice = 1000;
