@@ -42,28 +42,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitIf_elif_else_stmt(@NotNull SerpentParser.If_elif_else_stmtContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#get_var}.
-	 * @param ctx the parse tree
-	 */
-	void enterGet_var(@NotNull SerpentParser.Get_varContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#get_var}.
-	 * @param ctx the parse tree
-	 */
-	void exitGet_var(@NotNull SerpentParser.Get_varContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#block}.
-	 * @param ctx the parse tree
-	 */
-	void enterBlock(@NotNull SerpentParser.BlockContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#block}.
-	 * @param ctx the parse tree
-	 */
-	void exitBlock(@NotNull SerpentParser.BlockContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#tx_origin}.
 	 * @param ctx the parse tree
 	 */
@@ -97,17 +75,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitContract_storage_assign(@NotNull SerpentParser.Contract_storage_assignContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#tx_gas}.
-	 * @param ctx the parse tree
-	 */
-	void enterTx_gas(@NotNull SerpentParser.Tx_gasContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#tx_gas}.
-	 * @param ctx the parse tree
-	 */
-	void exitTx_gas(@NotNull SerpentParser.Tx_gasContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#block_number}.
 	 * @param ctx the parse tree
 	 */
@@ -117,17 +84,6 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitBlock_number(@NotNull SerpentParser.Block_numberContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#in_or_exp}.
-	 * @param ctx the parse tree
-	 */
-	void enterIn_or_exp(@NotNull SerpentParser.In_or_expContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#in_or_exp}.
-	 * @param ctx the parse tree
-	 */
-	void exitIn_or_exp(@NotNull SerpentParser.In_or_expContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#add_expr}.
@@ -141,28 +97,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitAdd_expr(@NotNull SerpentParser.Add_exprContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#msg_datasize}.
-	 * @param ctx the parse tree
-	 */
-	void enterMsg_datasize(@NotNull SerpentParser.Msg_datasizeContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#msg_datasize}.
-	 * @param ctx the parse tree
-	 */
-	void exitMsg_datasize(@NotNull SerpentParser.Msg_datasizeContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#msg_sender}.
-	 * @param ctx the parse tree
-	 */
-	void enterMsg_sender(@NotNull SerpentParser.Msg_senderContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#msg_sender}.
-	 * @param ctx the parse tree
-	 */
-	void exitMsg_sender(@NotNull SerpentParser.Msg_senderContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#block_difficulty}.
 	 * @param ctx the parse tree
 	 */
@@ -174,17 +108,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#array_assign}.
-	 * @param ctx the parse tree
-	 */
-	void enterArray_assign(@NotNull SerpentParser.Array_assignContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#array_assign}.
-	 * @param ctx the parse tree
-	 */
-	void exitArray_assign(@NotNull SerpentParser.Array_assignContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#array_retreive}.
 	 * @param ctx the parse tree
 	 */
@@ -194,17 +117,6 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#parse_init_code_block}.
-	 * @param ctx the parse tree
-	 */
-	void enterParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#parse_init_code_block}.
-	 * @param ctx the parse tree
-	 */
-	void exitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#tx_gasprice}.
@@ -229,17 +141,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitContract_storage_load(@NotNull SerpentParser.Contract_storage_loadContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#ex_or_exp}.
-	 * @param ctx the parse tree
-	 */
-	void enterEx_or_exp(@NotNull SerpentParser.Ex_or_expContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#ex_or_exp}.
-	 * @param ctx the parse tree
-	 */
-	void exitEx_or_exp(@NotNull SerpentParser.Ex_or_expContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#block_gaslimit}.
 	 * @param ctx the parse tree
 	 */
@@ -260,6 +161,215 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitRel_exp(@NotNull SerpentParser.Rel_expContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#hex_num}.
+	 * @param ctx the parse tree
+	 */
+	void enterHex_num(@NotNull SerpentParser.Hex_numContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#hex_num}.
+	 * @param ctx the parse tree
+	 */
+	void exitHex_num(@NotNull SerpentParser.Hex_numContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#eq_exp}.
+	 * @param ctx the parse tree
+	 */
+	void enterEq_exp(@NotNull SerpentParser.Eq_expContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#eq_exp}.
+	 * @param ctx the parse tree
+	 */
+	void exitEq_exp(@NotNull SerpentParser.Eq_expContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void enterCondition(@NotNull SerpentParser.ConditionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void exitCondition(@NotNull SerpentParser.ConditionContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#send_func}.
+	 * @param ctx the parse tree
+	 */
+	void enterSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#send_func}.
+	 * @param ctx the parse tree
+	 */
+	void exitSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#block_prevhash}.
+	 * @param ctx the parse tree
+	 */
+	void enterBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#block_prevhash}.
+	 * @param ctx the parse tree
+	 */
+	void exitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#mul_expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterMul_expr(@NotNull SerpentParser.Mul_exprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#mul_expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#msg_data}.
+	 * @param ctx the parse tree
+	 */
+	void enterMsg_data(@NotNull SerpentParser.Msg_dataContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#msg_data}.
+	 * @param ctx the parse tree
+	 */
+	void exitMsg_data(@NotNull SerpentParser.Msg_dataContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#asm}.
+	 * @param ctx the parse tree
+	 */
+	void enterAsm(@NotNull SerpentParser.AsmContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#asm}.
+	 * @param ctx the parse tree
+	 */
+	void exitAsm(@NotNull SerpentParser.AsmContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#msg_value}.
+	 * @param ctx the parse tree
+	 */
+	void enterMsg_value(@NotNull SerpentParser.Msg_valueContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#msg_value}.
+	 * @param ctx the parse tree
+	 */
+	void exitMsg_value(@NotNull SerpentParser.Msg_valueContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#get_var}.
+	 * @param ctx the parse tree
+	 */
+	void enterGet_var(@NotNull SerpentParser.Get_varContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#get_var}.
+	 * @param ctx the parse tree
+	 */
+	void exitGet_var(@NotNull SerpentParser.Get_varContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#block}.
+	 * @param ctx the parse tree
+	 */
+	void enterBlock(@NotNull SerpentParser.BlockContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#block}.
+	 * @param ctx the parse tree
+	 */
+	void exitBlock(@NotNull SerpentParser.BlockContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#tx_gas}.
+	 * @param ctx the parse tree
+	 */
+	void enterTx_gas(@NotNull SerpentParser.Tx_gasContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#tx_gas}.
+	 * @param ctx the parse tree
+	 */
+	void exitTx_gas(@NotNull SerpentParser.Tx_gasContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#in_or_exp}.
+	 * @param ctx the parse tree
+	 */
+	void enterIn_or_exp(@NotNull SerpentParser.In_or_expContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#in_or_exp}.
+	 * @param ctx the parse tree
+	 */
+	void exitIn_or_exp(@NotNull SerpentParser.In_or_expContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#msg_datasize}.
+	 * @param ctx the parse tree
+	 */
+	void enterMsg_datasize(@NotNull SerpentParser.Msg_datasizeContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#msg_datasize}.
+	 * @param ctx the parse tree
+	 */
+	void exitMsg_datasize(@NotNull SerpentParser.Msg_datasizeContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#msg_sender}.
+	 * @param ctx the parse tree
+	 */
+	void enterMsg_sender(@NotNull SerpentParser.Msg_senderContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#msg_sender}.
+	 * @param ctx the parse tree
+	 */
+	void exitMsg_sender(@NotNull SerpentParser.Msg_senderContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#array_assign}.
+	 * @param ctx the parse tree
+	 */
+	void enterArray_assign(@NotNull SerpentParser.Array_assignContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#array_assign}.
+	 * @param ctx the parse tree
+	 */
+	void exitArray_assign(@NotNull SerpentParser.Array_assignContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#parse_init_code_block}.
+	 * @param ctx the parse tree
+	 */
+	void enterParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#parse_init_code_block}.
+	 * @param ctx the parse tree
+	 */
+	void exitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#single_send_fund}.
+	 * @param ctx the parse tree
+	 */
+	void enterSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#single_send_fund}.
+	 * @param ctx the parse tree
+	 */
+	void exitSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#ex_or_exp}.
+	 * @param ctx the parse tree
+	 */
+	void enterEx_or_exp(@NotNull SerpentParser.Ex_or_expContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#ex_or_exp}.
+	 * @param ctx the parse tree
+	 */
+	void exitEx_or_exp(@NotNull SerpentParser.Ex_or_expContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#msg_func}.
@@ -295,17 +405,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitSuicide_func(@NotNull SerpentParser.Suicide_funcContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#hex_num}.
-	 * @param ctx the parse tree
-	 */
-	void enterHex_num(@NotNull SerpentParser.Hex_numContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#hex_num}.
-	 * @param ctx the parse tree
-	 */
-	void exitHex_num(@NotNull SerpentParser.Hex_numContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#contract_balance}.
 	 * @param ctx the parse tree
 	 */
@@ -315,28 +414,6 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitContract_balance(@NotNull SerpentParser.Contract_balanceContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void enterCondition(@NotNull SerpentParser.ConditionContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void exitCondition(@NotNull SerpentParser.ConditionContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#eq_exp}.
-	 * @param ctx the parse tree
-	 */
-	void enterEq_exp(@NotNull SerpentParser.Eq_expContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#eq_exp}.
-	 * @param ctx the parse tree
-	 */
-	void exitEq_exp(@NotNull SerpentParser.Eq_expContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#stop_func}.
@@ -372,15 +449,15 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitBlock_timestamp(@NotNull SerpentParser.Block_timestampContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#send_func}.
+	 * Enter a parse tree produced by {@link SerpentParser#while_stmt}.
 	 * @param ctx the parse tree
 	 */
-	void enterSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+	void enterWhile_stmt(@NotNull SerpentParser.While_stmtContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SerpentParser#send_func}.
+	 * Exit a parse tree produced by {@link SerpentParser#while_stmt}.
 	 * @param ctx the parse tree
 	 */
-	void exitSend_func(@NotNull SerpentParser.Send_funcContext ctx);
+	void exitWhile_stmt(@NotNull SerpentParser.While_stmtContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#arr_def}.
@@ -392,17 +469,6 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitArr_def(@NotNull SerpentParser.Arr_defContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#while_stmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterWhile_stmt(@NotNull SerpentParser.While_stmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#while_stmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitWhile_stmt(@NotNull SerpentParser.While_stmtContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#special_func}.
@@ -449,28 +515,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitAnd_exp(@NotNull SerpentParser.And_expContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#block_prevhash}.
-	 * @param ctx the parse tree
-	 */
-	void enterBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#block_prevhash}.
-	 * @param ctx the parse tree
-	 */
-	void exitBlock_prevhash(@NotNull SerpentParser.Block_prevhashContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#mul_expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterMul_expr(@NotNull SerpentParser.Mul_exprContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#mul_expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#int_val}.
 	 * @param ctx the parse tree
 	 */
@@ -482,17 +526,6 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitInt_val(@NotNull SerpentParser.Int_valContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#msg_data}.
-	 * @param ctx the parse tree
-	 */
-	void enterMsg_data(@NotNull SerpentParser.Msg_dataContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#msg_data}.
-	 * @param ctx the parse tree
-	 */
-	void exitMsg_data(@NotNull SerpentParser.Msg_dataContext ctx);
-
-	/**
 	 * Enter a parse tree produced by {@link SerpentParser#ret_func_2}.
 	 * @param ctx the parse tree
 	 */
@@ -502,28 +535,6 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitRet_func_2(@NotNull SerpentParser.Ret_func_2Context ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#msg_value}.
-	 * @param ctx the parse tree
-	 */
-	void enterMsg_value(@NotNull SerpentParser.Msg_valueContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#msg_value}.
-	 * @param ctx the parse tree
-	 */
-	void exitMsg_value(@NotNull SerpentParser.Msg_valueContext ctx);
-
-	/**
-	 * Enter a parse tree produced by {@link SerpentParser#asm}.
-	 * @param ctx the parse tree
-	 */
-	void enterAsm(@NotNull SerpentParser.AsmContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link SerpentParser#asm}.
-	 * @param ctx the parse tree
-	 */
-	void exitAsm(@NotNull SerpentParser.AsmContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#ret_func_1}.
