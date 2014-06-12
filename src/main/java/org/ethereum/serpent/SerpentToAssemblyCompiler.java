@@ -599,7 +599,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand2 = visit(ctx.int_val(2));
 
 //        OUTDATASIZE OUTDATASTART INDATASIZE INDATASTART VALUE TO GAS CALL
-        return  String.format("0 0 0 0 %s %s %s CALL ", operand1, operand0, operand2);
+        return  String.format("0 0 0 0 %s %s %s CALL ", operand2, operand1, operand0);
     }
 
     @Override
