@@ -7,8 +7,10 @@ import static org.ethereum.util.CompactEncoder.*;
 import java.util.Arrays;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.Database;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure 
@@ -31,7 +33,7 @@ import org.iq80.leveldb.DB;
  * @author: Nick Savers
  * Created on: 20/05/2014 10:44
  */
-public class Trie {
+public class Trie implements TrieFacade{
 
 	private static byte PAIR_SIZE = 2;
 	private static byte LIST_SIZE = 17;
@@ -121,6 +123,16 @@ public class Trie {
         byte[] k = binToNibbles(key);
         Value c = new Value( this.get(this.root, k) );
         return c.asBytes();
+    }
+
+
+    /**
+     * Delete a key/value pair from the trie
+     *
+     * @param key
+     */
+    public void delete(byte[] key) {
+        delete(Hex.encode(key));
     }
 
 

@@ -17,7 +17,7 @@ public class TrackDatabaseTest {
     @Test
     public void test1(){
 
-        Database db1 = new Database("temp");
+        DatabaseImpl db1 = new DatabaseImpl("temp");
         TrackDatabase trackDatabase1 = new TrackDatabase(db1);
 
         trackDatabase1.put(Hex.decode("abcdef"), Hex.decode("abcdef"));

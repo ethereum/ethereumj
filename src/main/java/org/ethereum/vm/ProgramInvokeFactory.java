@@ -1,13 +1,17 @@
 package org.ethereum.vm;
 
-import org.abego.treelayout.internal.util.Contract;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.TrackDatabase;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.util.ByteUtil;
+import org.ethereum.trie.TrackTrie;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.Map;
 
 /**
@@ -19,9 +23,11 @@ import java.util.Map;
 
 public class ProgramInvokeFactory {
 
+    private static Logger logger = LoggerFactory.getLogger("VM");
 
         // Invocation by the wire tx
-    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock, ContractDetails details){
+    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock, ContractDetails details,
+                                                    TrackDatabase detaildDB, TrackDatabase chainDb, TrackTrie stateDB){
 
         // https://ethereum.etherpad.mozilla.org/26
 
@@ -38,7 +44,7 @@ public class ProgramInvokeFactory {
         byte[] caller = tx.getSender();
 
         /***         BALANCE op       ***/
-        byte[] addressStateData = WorldManager.instance.worldState.get(address);
+        byte[] addressStateData = stateDB.get(address);
 
         byte[] balance = null;
         if (addressStateData.length == 0)
@@ -86,10 +92,117 @@ public class ProgramInvokeFactory {
         if (details != null)
             storage =  details.getStorage();
 
+        detaildDB.startTrack();
+        chainDb.startTrack();
+        stateDB.startTrack();
+
+        if (logger.isInfoEnabled()){
+            logger.info("Program invocation: \n" +
+                    "address={}\n" +
+                    "origin={}\n"  +
+                    "caller={}\n"  +
+                    "balance={}\n" +
+                    "gasPrice={}\n" +
+                    "gas={}\n" +
+                    "callValue={}\n" +
+                    "data={}\n" +
+                    "lastHash={}\n" +
+                    "coinbase={}\n" +
+                    "timestamp={}\n" +
+                    "blockNumber={}\n" +
+                    "difficulty={}\n" +
+                    "gaslimit={}\n"
+                    ,
+                    Hex.toHexString(address),
+                    Hex.toHexString(origin),
+                    Hex.toHexString(caller),
+                    Hex.toHexString(balance),
+                    Hex.toHexString(gasPrice),
+                    Hex.toHexString(gas),
+                    Hex.toHexString(callValue),
+                    Hex.toHexString(data),
+                    Hex.toHexString(lastHash),
+                    Hex.toHexString(coinbase),
+                    timestamp,
+                    number,
+                    Hex.toHexString(difficulty),
+                    gaslimit);
+        }
+
         ProgramInvoke programInvoke =
             new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
-                    lastHash,  coinbase,  timestamp,  number,  difficulty,  gaslimit, storage);
+                    lastHash,  coinbase,  timestamp,  number,  difficulty,  gaslimit, storage,
+                    detaildDB, chainDb, stateDB);
 
         return programInvoke;
     }
+
+
+    /**
+     * This invocation created for contract call contract
+     */
+    public static ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
+                                                    Map<DataWord, DataWord> storageIn,
+                                                    DataWord inValue, DataWord inGas,
+                                                    BigInteger balanceInt,  byte[] dataIn,
+                                                    TrackDatabase detailDB, TrackDatabase chainDB, TrackTrie stateDB){
+
+
+        DataWord address = toAddress;
+        DataWord origin = program.getOriginAddress();
+        DataWord caller = program.getOwnerAddress();
+
+        DataWord balance = new DataWord(balanceInt.toByteArray());
+        DataWord gasPrice = program.getGasPrice();
+        DataWord gas = inGas;
+        DataWord callValue = inValue;
+
+        byte[] data = dataIn;
+        DataWord lastHash =  program.getPrevHash();
+        DataWord coinbase =  program.getCoinbase();
+        DataWord timestamp = program.getTimestamp();
+        DataWord number =  program.getNumber();
+        DataWord difficulty = program.getDifficulty();
+        DataWord gasLimit = program.getGaslimit();
+
+        Map<DataWord, DataWord> storage = storageIn;
+
+        if (logger.isInfoEnabled()){
+            logger.info("Program invocation: \n" +
+                            "address={}\n" +
+                            "origin={}\n"  +
+                            "caller={}\n"  +
+                            "balance={}\n" +
+                            "gasPrice={}\n" +
+                            "gas={}\n" +
+                            "callValue={}\n" +
+                            "data={}\n" +
+                            "lastHash={}\n" +
+                            "coinbase={}\n" +
+                            "timestamp={}\n" +
+                            "blockNumber={}\n" +
+                            "difficulty={}\n" +
+                            "gaslimit={}\n"
+                    ,
+                    Hex.toHexString(address.getData()),
+                    Hex.toHexString(origin.getData()),
+                    Hex.toHexString(caller.getData()),
+                    Hex.toHexString(balance.getData()),
+                    Hex.toHexString(gasPrice.getData()),
+                    Hex.toHexString(gas.getData()),
+                    Hex.toHexString(callValue.getData()),
+                    Hex.toHexString(data),
+                    Hex.toHexString(lastHash.getData()),
+                    Hex.toHexString(coinbase.getData()),
+                    Hex.toHexString(timestamp.getData()),
+                    Hex.toHexString(number.getData()),
+                    Hex.toHexString(difficulty.getData()),
+                    Hex.toHexString(gasLimit.getData()));
+        }
+
+        return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
+                data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
+                storage, detailDB, chainDB, stateDB);
+    }
+
 }

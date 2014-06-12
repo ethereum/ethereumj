@@ -3,6 +3,9 @@ package org.ethereum.gui;
 import org.ethereum.core.Block;
 import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.TrackDatabase;
+import org.ethereum.manager.WorldManager;
+import org.ethereum.trie.TrackTrie;
 import org.ethereum.vm.Program;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.ethereum.vm.ProgramInvokeImpl;
@@ -40,8 +43,17 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         outputList = new ArrayList<String>();
         VM vm = new VM();
 
+        TrackDatabase trackDetailDB = new TrackDatabase( WorldManager.instance.detaildDB );
+        TrackDatabase trackChainDb  = new TrackDatabase( WorldManager.instance.chainDB);
+        TrackTrie trackStateDB  = new TrackTrie(WorldManager.instance.worldState );
+
         Program program = new Program(code ,
-                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, contractDetails));
+                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, contractDetails,
+                        trackDetailDB, trackChainDb, trackStateDB));
+
+        trackDetailDB.rollbackTrack();
+        trackChainDb.rollbackTrack();
+        trackStateDB.rollbackTrack();
 
         program.addListener(this);
         program.fullTrace();
@@ -52,7 +64,6 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         //Create the slider.
         stepSlider = new JSlider(JSlider.HORIZONTAL,
                 0, outputList.size() - 1, 0);
-
 
         stepSlider.addChangeListener(this);
 

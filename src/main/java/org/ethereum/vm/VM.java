@@ -518,14 +518,18 @@ public class VM {
                     program.step();
                 }	break;
                 case CALL:{
+
                     DataWord gas        =  program.stackPop();
                     DataWord toAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
 
-                    program.sendToAddress(toAddress.data, value);
+                    DataWord inDataOffs =  program.stackPop();
+                    DataWord inDataSize =  program.stackPop();
 
-                    // todo: find out if we should or not execute
-                    // todo: the contract for real
+                    DataWord outDataOffs =  program.stackPop();
+                    DataWord outDataSize =  program.stackPop();
+
+                    program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize,outDataOffs, outDataSize);
 
                     program.step();
                 }	break;
@@ -566,8 +570,6 @@ public class VM {
                 this.step(program);
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
-        } finally{
-            program.getResult().setStorage(program.storage);
         }
     }
 }

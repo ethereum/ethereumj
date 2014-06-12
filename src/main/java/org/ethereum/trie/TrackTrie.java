@@ -1,4 +1,7 @@
-package org.ethereum.db;
+package org.ethereum.trie;
+
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.Database;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,19 +10,20 @@ import java.util.Map;
  * www.ethereumJ.com
  *
  * @author: Roman Mandeleil
- * Created on: 11/06/2014 14:09
+ * Created on: 11/06/2014 19:47
  */
 
-public class TrackDatabase implements Database{
+public class TrackTrie implements TrieFacade {
 
-    private Database db;
+
+    private TrieFacade trie;
 
     private boolean trackingChanges;
     private Map<ByteArrayWrapper, byte[]> changes;
     private Map<ByteArrayWrapper, byte[]> deletes;
 
-    public TrackDatabase(Database db) {
-        this.db = db;
+    public TrackTrie(TrieFacade trie) {
+        this.trie = trie ;
     }
 
 
@@ -31,7 +35,7 @@ public class TrackDatabase implements Database{
 
     public void commitTrack(){
         for(ByteArrayWrapper key : changes.keySet()){
-            db.put(key.getData(), changes.get(key));
+            trie.update(key.getData(), changes.get(key));
         }
         changes = null;
         trackingChanges = false;
@@ -44,33 +48,36 @@ public class TrackDatabase implements Database{
         trackingChanges = false;
     }
 
-    public void put(byte[] key, byte[] value) {
+
+    @Override
+    public void update(byte[] key, byte[] value) {
         if (trackingChanges){
             changes.put(  new ByteArrayWrapper(key)  , value);
         } else {
-            db.put(key, value);
+            trie.update(key, value);
         }
     }
 
+    @Override
     public byte[] get(byte[] key) {
         if(trackingChanges){
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             if (deletes.get(wKey) != null) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
-            return db.get(key);
+            return trie.get(key);
         }
-        return db.get(key);
+        return trie.get(key);
     }
 
-    /** Delete object (key) from db **/
+    @Override
     public void delete(byte[] key) {
         if (trackingChanges){
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             deletes.put(wKey, null);
         } else {
-            db.delete(key);
+            trie.delete(key);
         }
     }
-
-
 }
+
+

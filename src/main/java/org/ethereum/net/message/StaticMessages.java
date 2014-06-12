@@ -16,7 +16,7 @@ public class StaticMessages {
     public static final byte[] GET_TRANSACTIONS = Hex.decode("2240089100000002C116");
 
     public static final byte[] DISCONNECT_08 = Hex.decode("2240089100000003C20108");
-    public static final byte[] GENESIS_HASH = Hex.decode("77ef4fdaf389dca53236bcf7f72698e154eab2828f86fbc4fc6cd9225d285c89");
+    public static final byte[] GENESIS_HASH = Hex.decode("56fff6ab5ef6f1ef8dafb7b4571b89a9ae1ab870e54197c59ea10ba6f2c7eb60");
     public static final byte[] MAGIC_PACKET = Hex.decode("22400891");
 
     static {
@@ -26,7 +26,7 @@ public class StaticMessages {
     public static HelloMessage generateHelloMessage(){
         byte[] peerIdBytes = HashUtil.randomPeerId();
 
-        return new HelloMessage((byte) 0x13, (byte) 0x00,
+        return new HelloMessage((byte) 0x14, (byte) 0x00,
                 "EthereumJ [v0.5.1]  by RomanJ", (byte) 0b00000111,
                 (short) 30303, peerIdBytes);
     }

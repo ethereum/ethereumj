@@ -1,6 +1,9 @@
 package org.ethereum.vm;
 
+import org.ethereum.core.AccountState;
 import org.ethereum.core.ContractDetails;
+import org.ethereum.db.TrackDatabase;
+import org.ethereum.trie.TrackTrie;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,18 +36,19 @@ public class Program {
 
     ProgramInvoke invokeData;
 
-    Map<byte[], DataWord> addressChange;
-
-
     public Program(byte[] ops, ProgramInvoke invokeData) {
 
-        spendGas(GasCost.TRANSACTION);
-        spendGas(GasCost.TXDATA * invokeData.getDataSize().intValue());
+        result.setStateDb(invokeData.getStateDb());
+        result.setChainDb(invokeData.getChainDb());
+        result.setDetailDB(invokeData.getDetaildDB());
 
         if (ops == null) throw new RuntimeException("program can not run with ops: null");
 
         this.invokeData = invokeData;
         this.ops = ops;
+
+        spendGas(GasCost.TRANSACTION);
+        spendGas(GasCost.TXDATA * invokeData.getDataSize().intValue());
 
         if (invokeData.getStorage() != null){
             storage = invokeData.getStorage();
@@ -63,6 +67,12 @@ public class Program {
         DataWord stackWord = new DataWord(data);
         stack.push(stackWord);
     }
+
+    public void stackPushZero(){
+        DataWord stackWord = new DataWord(0);
+        stack.push(stackWord);
+    }
+
 
     public void stackPush(DataWord stackWord){
         stack.push(stackWord);
@@ -127,7 +137,7 @@ public class Program {
             throw new RuntimeException("attempted pull action for empty stack");
         }
         return stack.pop();
-    };
+    }
 
     public int getMemSize(){
 
@@ -163,12 +173,14 @@ public class Program {
 
         int offset = offsetData.value().intValue();
         int size   = sizeData.value().intValue();
+        allocateMemory(offset, new byte[sizeData.intValue()]);
 
         byte[] chunk = new byte[size];
 
-        if (memory.limit() < offset + size) size = memory.limit() - offset;
-
-        System.arraycopy(memory.array(), offset, chunk, 0, size);
+        if (memory != null){
+            if (memory.limit() < offset + size) size = memory.limit() - offset;
+            System.arraycopy(memory.array(), offset, chunk, 0, size);
+        }
 
         return ByteBuffer.wrap(chunk);
     }
@@ -203,13 +215,135 @@ public class Program {
         }
     }
 
-    public void sendToAddress(byte[] addr, DataWord bChange ){
 
-        DataWord currentBChange = addressChange.get(addr);
-        if (currentBChange == null){
-            addressChange.put(addr, bChange);
-        } else {
-            currentBChange.add(bChange);
+    /**
+     * That method implement internal calls
+     * and code invocations
+     *
+     * @param gas
+     * @param toAddressDW
+     * @param endowmentValue
+     * @param inDataOffs
+     * @param inDataSize
+     * @param outDataOffs
+     * @param outDataSize
+     */
+    public void callToAddress(DataWord gas, DataWord toAddressDW, DataWord endowmentValue,
+                              DataWord inDataOffs, DataWord inDataSize,DataWord outDataOffs, DataWord outDataSize){
+
+        ByteBuffer data = memoryChunk(inDataOffs, inDataSize);
+
+        // FETCH THE SAVED STORAGE
+        ContractDetails details = null;
+        byte[] toAddress = toAddressDW.getNoLeadZeroesData();
+
+        byte[] detailsRLPData = invokeData.getDetaildDB().get(toAddress);
+        if (detailsRLPData != null &&  detailsRLPData.length > 0)
+            details = new ContractDetails(detailsRLPData);
+
+        AccountState receiverState;
+        byte[] accountData = result.getStateDb().get(toAddress);
+        if (accountData == null){
+
+            logger.info("no saved address in db to call: address={}" ,Hex.toHexString(toAddress));
+            return;
+        } else{
+
+            receiverState = new AccountState(accountData);
+        }
+
+        // todo: endowment rollbacked move it from here
+        receiverState.addToBalance(endowmentValue.value());
+        result.getStateDb().update(toAddress, receiverState.getEncoded());
+        // todo: endowment rollbacked move it from here
+
+        byte[] programCode = result.getChainDb().get(receiverState.getCodeHash());
+        if (programCode != null && programCode.length != 0){
+
+            if (logger.isInfoEnabled())
+                logger.info("calling for existing contract: address={}" ,
+                        Hex.toHexString(toAddress));
+
+            byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
+            byte[] senderStateB = this.result.getStateDb().get(senderAddress);
+            if (senderStateB == null){
+                logger.info("This should not happen in any case, this inside contract run is is evidence for contract to exist: \n" +
+                        "address={}", Hex.toHexString(senderAddress));
+                return;
+            }
+
+            AccountState senderState = new AccountState(senderStateB);
+
+            // 2.1 PERFORM THE GAS VALUE TX
+            // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+            if (this.getGas().longValue() - gas.longValue() < 0 ){
+                logger.info("No gas for the internal call, \n" +
+                        "fromAddress={}, toAddress={}",
+                        Hex.toHexString(senderAddress), Hex.toHexString(toAddress));
+
+                this.stackPushZero();
+                return;
+            }
+
+
+            // 2.2 UPDATE THE NONCE
+            // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+            senderState.incrementNonce();
+
+            TrackTrie stateDB = new TrackTrie( result.getStateDb() );
+            TrackDatabase chainDB = new TrackDatabase( result.getChainDb() );
+            TrackDatabase detailDB = new TrackDatabase( result.getDetailDB() );
+
+            detailDB.startTrack();
+            chainDB.startTrack();
+            stateDB.startTrack();
+
+            // todo: update the balance/value simple transfer
+
+            Map<DataWord, DataWord> storage = null;
+            if (details != null)
+                storage = details.getStorage();
+
+            ProgramInvoke programInvoke =
+                    ProgramInvokeFactory.createProgramInvoke(this, toAddressDW, storage, endowmentValue,  gas,receiverState.getBalance(),
+                            data.array(),
+                            detailDB, chainDB, stateDB);
+
+            VM vm = new VM();
+            Program program = new Program(programCode, programInvoke);
+            vm.play(program);
+            ProgramResult result = program.getResult();
+
+            if (result.getException() != null &&
+                    result.getException() instanceof Program.OutOfGasException){
+                logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
+
+                detailDB.rollbackTrack();
+                chainDB.rollbackTrack();
+                stateDB.rollbackTrack();
+                stackPushZero();
+                return;
+            }
+
+            // todo: apply results: result.gethReturn()
+            // todo: refund for remain gas
+
+            detailDB.commitTrack();
+            chainDB.commitTrack();
+            stateDB.commitTrack();
+            stackPush(new DataWord(1));
+
+            // the gas spent in any internal outcome
+            spendGas(result.getGasUsed());
+            logger.info("The usage of the gas in external call updated", result.getGasUsed());
+
+            // update the storage , it could
+            // change by the call
+            byte[]  contractDetailBytes =
+                result.getDetailDB().get(getOwnerAddress().getNoLeadZeroesData());
+            if (contractDetailBytes != null){
+                this.storage = new ContractDetails(contractDetailBytes).getStorage();
+            }
         }
     }
 
@@ -231,6 +365,11 @@ public class Program {
         DataWord keyWord = new DataWord(key);
         DataWord valWord = new DataWord(val);
         storage.put(keyWord, valWord);
+
+        if (storage != null){
+            ContractDetails contractDetails = new ContractDetails(storage);
+            result.getDetailDB().put(getOwnerAddress().getNoLeadZeroesData() , contractDetails.getEncoded());
+        }
     }
 
     public DataWord getOwnerAddress(){
@@ -411,7 +550,7 @@ public class Program {
             if (listener != null){
                 listener.output(globalOutput.toString());
             }
-        };
+        }
     }
 
     public void addListener(ProgramListener listener){
