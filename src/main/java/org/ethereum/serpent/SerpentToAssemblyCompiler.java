@@ -1,6 +1,8 @@
 package org.ethereum.serpent;
 
 import org.antlr.v4.runtime.misc.NotNull;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -199,7 +201,23 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String varName = ctx.VAR().toString();
         int addr = 0;
 
-        if (ctx.arr_def() != null){
+        // msg assigned has two arrays to calc
+        if (ctx.msg_func() != null){
+
+            String msgCode = visitMsg_func(ctx.msg_func());
+            int outSize = getMsgOutputArraySize(msgCode);
+            int inSize = getMsgInputArraySize(msgCode);
+            msgCode = cleanMsgString(msgCode);
+
+            String randomArrayName = new String(HashUtil.randomPeerId());
+            arraysSize.put(randomArrayName, inSize * 32 + 32);
+            arraysIndex.add(randomArrayName);
+
+            arraysSize.put(varName, outSize * 32 + 32);
+            arraysIndex.add(varName);
+
+            return msgCode;
+        } else if (ctx.arr_def() != null){
             // if it's an array the all management is different
             String arrayCode = visitArr_def(ctx.arr_def());
 
@@ -211,7 +229,6 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             return arrayCode;
         } else{
 
-            // if it's an array the all management is different
             String expression = visitExpression(ctx.expression());
             addr = vars.indexOf(varName);
             if (addr == -1){
@@ -260,9 +277,6 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         if (ctx.special_func() != null)
             return visitSpecial_func(ctx.special_func());
 
-        if (ctx.msg_func() != null)
-            return visitMsg_func(ctx.msg_func());
-
         if (ctx.msg_data() != null)
             return visitMsg_data(ctx.msg_data());
 
@@ -292,7 +306,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             i += 32;
         }
 
-       return String.format(" MSIZE %s %d SWAP MSTORE ", arrayInit, arraySize);
+       return String.format(" MSIZE 32 ADD MSIZE %s %d SWAP MSTORE ", arrayInit, arraySize);
     }
 
     @Override
@@ -581,14 +595,19 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     @Override
     public String visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx) {
 
+//        msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' arr_def ',' int_val  ',' int_val')' ;
+//        msg_func: 'msg' '(' [gas] ',' [to] ',' [value] ',' arr_def ',' [in_len]  ',' [out_len]')' ;
+
         String operand0 = visit(ctx.int_val(0));
         String operand1 = visit(ctx.int_val(1));
         String operand2 = visit(ctx.int_val(2));
-        String operand3 = visit(ctx.int_val(3));
-        String operand4 = visit(ctx.int_val(4));
+        String operand3 = visit(ctx.arr_def());
+        String operand4 = visit(ctx.int_val(3));
+        String operand5 = visit(ctx.int_val(4));
 
 //        OUTDATASIZE OUTDATASTART INDATASIZE INDATASTART VALUE TO GAS CALL
-        return  String.format("0 0 %s %s %s %s %s CALL ",  operand4, operand3, operand1, operand0, operand2);
+        return  String.format("<out_size %s out_size> <in_size %s in_size> %s %s %s %s %s %s CALL ",
+                operand5, operand4, operand5, operand4,  operand3, operand2, operand1, operand0);
     }
 
     @Override
@@ -672,6 +691,46 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             super("attempt to access not assigned variable: " + name);
         }
     }
+
+
+    private Integer getMsgOutputArraySize(String code){
+
+        String result = "0";
+        Pattern pattern = Pattern.compile("<out_size ([0-9])* out_size>");
+        Matcher matcher = pattern.matcher(code.trim());
+        if (matcher.find()) {
+
+            String group = matcher.group(0);
+            result = group.replaceAll("<out_size ([0-9]*) out_size>", "$1").trim();
+        }
+
+        return Integer.parseInt(result);
+    }
+
+    private Integer getMsgInputArraySize(String code){
+
+        String result = "0";
+        Pattern pattern = Pattern.compile("<in_size ([0-9])* in_size>");
+        Matcher matcher = pattern.matcher(code.trim());
+        if (matcher.find()) {
+
+            String group = matcher.group(0);
+            result = group.replaceAll("<in_size ([0-9]*) in_size>", "$1").trim();
+        }
+
+        return Integer.parseInt(result);
+    }
+
+    private String cleanMsgString (String code){
+
+        String result = "";
+
+        Pattern pattern = Pattern.compile("<(.*?)>");
+        result= code.replaceAll("<(.*?)>", "");
+
+        return result;
+    }
+
 
 
     private Integer getArraySize(String code){

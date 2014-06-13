@@ -34,7 +34,7 @@ parse: block EOF
 parse_init_code_block : 'init' ':' INDENT block DEDENT 'code' ':' INDENT block DEDENT;
 
 block:  ( asm | array_assign | assign | contract_storage_assign | special_func | if_elif_else_stmt |
-          while_stmt | ret_func_1 | ret_func_2 | suicide_func | stop_func | single_send_fund)* ;
+          while_stmt | ret_func_1 | ret_func_2 | suicide_func | stop_func | single_send_fund | msg_func)* ;
 
 
 asm: '[asm' asm_symbol 'asm]' NL;
@@ -105,7 +105,8 @@ block_difficulty
 block_gaslimit
       : 'block.gaslimit' ;
 
-msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' int_val ',' int_val  ')' ;
+msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' arr_def ',' int_val  ',' int_val')' ;
+
 send_func: 'send' '(' int_val ',' int_val ',' int_val ')';
 single_send_fund: send_func NL;
 
@@ -114,7 +115,7 @@ msg_data: 'msg.data' '[' expression ']' ;
 array_assign: VAR '[' int_val ']' EQ_OP expression  NL;
 array_retreive:  VAR '[' int_val ']';
 
-assign:  VAR EQ_OP (expression | arr_def) NL;
+assign:  VAR EQ_OP (expression | arr_def | msg_func) NL;
 arr_def : '[' (int_val ','?)* ']';
 
 
@@ -179,7 +180,6 @@ int_val : INT |
           special_func |
           '(' expression ')' |
           OP_NOT '(' expression ')' |
-          msg_func |
           msg_data |
           send_func |
           contract_storage_load |
