@@ -1258,7 +1258,7 @@ public class SerpentCompileTest {
         String code =   "c = 2\n" +
                         "d = 3\n" +
                         "a = [11, 22, 33]" ;
-        String expected = "0 63 MSTORE8 2 0 MSTORE 3 32 MSTORE MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE";
+        String expected = "0 63 MSTORE8 2 0 MSTORE 3 32 MSTORE MSIZE DUP DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
         Assert.assertEquals(expected, asmResult);
@@ -1269,11 +1269,23 @@ public class SerpentCompileTest {
     public void test46(){
         String code =   "a = [11, 22, 33]\n" +
                         "a[ 2 ] = 3" ;
-        String expected = "MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 32 2 MUL 32 ADD 0 ADD 0 ADD MSTORE";
+        String expected = "MSIZE DUP DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 32 2 MUL 32 ADD 0 ADD 0 ADD MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
         Assert.assertEquals(expected, asmResult);
     }
+
+    @Test // test arrays 3 simple
+    public void test46_1(){
+        String code =   "a = [11, 22, 33]\n" ;
+        String expected = "";
+
+        String asmResult = SerpentCompiler.compile(code);
+        System.out.println(asmResult);
+
+//        Assert.assertEquals(expected, asmResult);
+    }
+
 
 
     @Test // test arrays 3 complicated set after 2 arrays
@@ -1282,7 +1294,7 @@ public class SerpentCompileTest {
                         "b = [12, 14]\n" +
                         "c = [22, 24, 25]\n" +
                         "c[ 0 ] = 3" ;
-        String expected = "MSIZE DUP 32 ADD 2 SWAP MSTORE DUP 64 ADD 4 SWAP MSTORE DUP 96 ADD 6 SWAP MSTORE 128 SWAP MSTORE MSIZE DUP 32 ADD 12 SWAP MSTORE DUP 64 ADD 14 SWAP MSTORE 96 SWAP MSTORE MSIZE DUP 32 ADD 22 SWAP MSTORE DUP 64 ADD 24 SWAP MSTORE DUP 96 ADD 25 SWAP MSTORE 128 SWAP MSTORE 3 32 0 MUL 32 ADD 224 ADD 0 ADD MSTORE";
+        String expected = "MSIZE DUP DUP 32 ADD 2 SWAP MSTORE DUP 64 ADD 4 SWAP MSTORE DUP 96 ADD 6 SWAP MSTORE 128 SWAP MSTORE MSIZE DUP DUP 32 ADD 12 SWAP MSTORE DUP 64 ADD 14 SWAP MSTORE 96 SWAP MSTORE MSIZE DUP DUP 32 ADD 22 SWAP MSTORE DUP 64 ADD 24 SWAP MSTORE DUP 96 ADD 25 SWAP MSTORE 128 SWAP MSTORE 3 32 0 MUL 32 ADD 224 ADD 0 ADD MSTORE";
         String asmResult = SerpentCompiler.compile(code);
         Assert.assertEquals(expected, asmResult);
     }
@@ -1293,7 +1305,7 @@ public class SerpentCompileTest {
                         "c = 2\n" +
                         "a = [11, 22, 33]\n" +
                         "a[ 2 ] = 3" ;
-        String expected = "0 63 MSTORE8 1 0 MSTORE 2 32 MSTORE MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 32 2 MUL 32 ADD 0 ADD 64 ADD MSTORE";
+        String expected = "0 63 MSTORE8 1 0 MSTORE 2 32 MSTORE MSIZE DUP DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 32 2 MUL 32 ADD 0 ADD 64 ADD MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
         Assert.assertEquals(expected, asmResult);
@@ -1306,11 +1318,24 @@ public class SerpentCompileTest {
         String code =   "c = [5]\n" +
                         "a = [11, 22, 33]\n" +
                         "b = a [0]" ;
-        String expected = "0 31 MSTORE8 MSIZE DUP 32 ADD 5 SWAP MSTORE 64 SWAP MSTORE MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 32 0 MUL 96 ADD 32 ADD MLOAD 0 MSTORE";
+        String expected = "0 31 MSTORE8 MSIZE DUP DUP 32 ADD 5 SWAP MSTORE 64 SWAP MSTORE MSIZE DUP DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 32 0 MUL 96 ADD 32 ADD MLOAD 0 MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
         Assert.assertEquals(expected, asmResult);
     }
+
+    @Test // test msg(gas, to , val, [arr_in], in_len, out_len), and out access
+    public void test50(){
+        String code =   "\n" +
+                "a = msg(1, 2, 3, [11, 22, 33], 3, 6) \n" +
+                "b = a[0]\n" ;
+        String expected = "0 31 MSTORE8 6 3 MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 2 1 CALL 32 0 MUL 160 ADD 32 ADD MLOAD 0 MSTORE";
+
+        String asmResult = SerpentCompiler.compile(code);
+
+        Assert.assertEquals(expected, asmResult);
+    }
+
 
 
 
@@ -1334,6 +1359,7 @@ public class SerpentCompileTest {
      */
 
     /**
+     * todo: a = msg(gas, to , value, in_ptr, in_len, out_ptr, out_len) testing
      *
      * todo: return(1) testing
      * todo: return (1,2) testing
@@ -1379,4 +1405,7 @@ public class SerpentCompileTest {
     "            return(0)" +
 
 */
+
+
+//    MSTORE DUP DUP MSOTRE8 FUCK I AM LOST FUCK SWAP DUP SWAP DUP DUP
 }
