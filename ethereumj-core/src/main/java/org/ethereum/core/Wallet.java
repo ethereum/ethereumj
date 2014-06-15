@@ -105,8 +105,9 @@ public class Wallet {
 
     public void processBlock(Block block){
 
-        // todo: proceed coinbase when you are the miner that gets an award
+        if (block == null) return;
 
+        // todo: proceed coinbase when you are the miner that gets an award
         boolean walletUpdated = false;
 
         List<Transaction> transactions = block.getTransactionsList();
