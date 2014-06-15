@@ -4,6 +4,7 @@ import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -118,7 +119,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
 				byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
 
-                byte[] gasPrice = BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice()).toByteArray();
+                byte[] gasPrice = BigInteger.valueOf( WorldManager.instance.getBlockChain().getGasPrice()).toByteArray();
 
 				Transaction tx = new Transaction(nonce, gasPrice, BigIntegers
 						.asUnsignedByteArray(fee), address, BigIntegers
@@ -193,7 +194,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         // check if the tx is affordable
         BigInteger ammountValue = new BigInteger(amountText);
         BigInteger feeValue = new BigInteger(feeText);
-        BigInteger gasPrice = BigInteger.valueOf(MainData.instance.getBlockchain().getGasPrice());
+        BigInteger gasPrice = BigInteger.valueOf(WorldManager.instance.getBlockChain().getGasPrice());
         BigInteger currentBalance = addressState.getBalance();
 
         boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;

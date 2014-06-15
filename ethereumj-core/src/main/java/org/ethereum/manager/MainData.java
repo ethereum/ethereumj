@@ -33,8 +33,6 @@ public class MainData {
     Logger logger = LoggerFactory.getLogger(getClass().getName());
 
     private List<PeerData> peers = Collections.synchronizedList(new ArrayList<PeerData>());
-    private Blockchain blockChain;
-    private Wallet wallet = new Wallet();
     private ClientPeer activePeer;
 
     PeerDiscovery peerDiscovery;
@@ -42,23 +40,6 @@ public class MainData {
     public static MainData instance = new MainData();
 
     public MainData() {
-        // Initialize Wallet
-        byte[] cowAddr = HashUtil.sha3("cow".getBytes());
-        ECKey key = ECKey.fromPrivate(cowAddr);
-        wallet.importKey(cowAddr);
-
-        AccountState state = wallet.getAccountState(key.getAddress());
-        state.addToBalance(BigInteger.valueOf(2).pow(200));
-
-//        wallet.importKey(HashUtil.sha3("cat".getBytes()));
-
-        String secret = CONFIG.coinbaseSecret();
-        byte[] cbAddr = HashUtil.sha3(secret.getBytes());
-        wallet.importKey(cbAddr);
-
-
-    	// Initialize Blockchain
-    	blockChain = new Blockchain(wallet);
 
     	// Initialize PeerData
         try {
@@ -73,13 +54,6 @@ public class MainData {
         }
     }
 
-    public Blockchain getBlockchain() {
-    	return blockChain;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
-    }
 
     public void setActivePeer(ClientPeer peer){
         this.activePeer = peer;

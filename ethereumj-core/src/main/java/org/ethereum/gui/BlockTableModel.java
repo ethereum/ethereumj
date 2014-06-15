@@ -2,6 +2,7 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Block;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -16,7 +17,7 @@ public class BlockTableModel extends AbstractTableModel {
     public int getRowCount() {
 
         fireTableDataChanged();
-        int rowCount = MainData.instance.getBlockchain().getSize();
+        int rowCount = WorldManager.instance.getBlockChain().getSize();
         return rowCount;
     }
 
@@ -31,7 +32,7 @@ public class BlockTableModel extends AbstractTableModel {
 //        byte[] hash = MainData.instance.getAllBlocks().get(rowIndex).getHash();
 //        return Hex.toHexString(hash);
 
-        Block block = MainData.instance.getBlockchain().getByNumber(rowIndex);
+        Block block = WorldManager.instance.getBlockChain().getByNumber(rowIndex);
         if (block == null) return "";
 
         return block.toString();

@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import com.sun.javafx.binding.StringFormatter;
 import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.ContractDetails;
@@ -9,6 +10,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
+import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -16,17 +18,22 @@ import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
 import javax.swing.border.Border;
+import javax.swing.border.EtchedBorder;
+import javax.swing.border.TitledBorder;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
@@ -42,8 +49,14 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
     JComboBox<AccountWrapper> creatorAddressCombo;
     final JTextField gasInput;
     final JTextField contractAddrInput;
+
+    JScrollPane contractDataInput;
     JTextArea   msgDataTA;
+
     JLabel statusMsg = null;
+    JLabel playLabel = null;
+    JLabel rejectLabel = null;
+    JLabel approveLabel = null;
 
     public ContractCallDialog(Frame parent) {
         super(parent, "Call Contract: ", false);
@@ -51,6 +64,20 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         contractAddrInput = new JTextField(5);
         GUIUtils.addStyle(contractAddrInput, "Contract Address: ");
+        contractAddrInput.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        populateContractDetails();
+                    }
+                });
+
+            }
+        });
+
+
 
         contractAddrInput.setBounds(70, 30, 350, 45);
         this.getContentPane().add(contractAddrInput);
@@ -60,9 +87,9 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         msgDataTA = new JTextArea();
         msgDataTA.setLineWrap(true);
-        JScrollPane contractDataInput = new JScrollPane(msgDataTA);
+        contractDataInput = new JScrollPane(msgDataTA);
         GUIUtils.addStyle(msgDataTA, null, false);
-        GUIUtils.addStyle(contractDataInput, "Data:");
+        GUIUtils.addStyle(contractDataInput, "Input:");
 
         msgDataTA.setText("");
         msgDataTA.setCaretPosition(0);
@@ -78,20 +105,19 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         URL rejectIconURL = ClassLoader.getSystemResource("buttons/reject.png");
         ImageIcon rejectIcon = new ImageIcon(rejectIconURL);
-        JLabel rejectLabel = new JLabel(rejectIcon);
+        rejectLabel = new JLabel(rejectIcon);
         rejectLabel.setToolTipText("Cancel");
         rejectLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
         URL playIconURL = ClassLoader.getSystemResource("buttons/play.png");
         ImageIcon playIcon = new ImageIcon(playIconURL);
-        JLabel playLabel = new JLabel(playIcon);
+        playLabel = new JLabel(playIcon);
         playLabel.setToolTipText("Play Drafted");
         playLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         playLabel.addMouseListener(
                 new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-
                           ContractCallDialog.this.playContractCall();
                     }}
         );
@@ -118,7 +144,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
         ImageIcon approveIcon = new ImageIcon(approveIconURL);
-        JLabel approveLabel = new JLabel(approveIcon);
+        approveLabel = new JLabel(approveIcon);
         approveLabel.setToolTipText("Submit the transaction");
         approveLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
@@ -157,7 +183,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         editor.setForeground(Color.RED);
 
         Collection<Account> accounts =
-                MainData.instance.getWallet().getAccountCollection();
+                WorldManager.instance.getWallet().getAccountCollection();
 
         for (Account account : accounts){
             creatorAddressCombo.addItem(new AccountWrapper(account));
@@ -191,12 +217,123 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
                 ((AbstractButton) creatorAddressCombo.getComponent(i)).setBorder(line);
             }
         }
-        creatorAddressCombo.setBounds(73, 267, 230, 36);
+        creatorAddressCombo.setBounds(70, 267, 230, 36);
         this.getContentPane().add(creatorAddressCombo);
 
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
         this.setResizable(false);
+    }
+
+    private void populateContractDetails() {
+
+        String contractAddr = contractAddrInput.getText();
+        if (!Pattern.matches("[0-9a-fA-F]+", contractAddr) || (contractAddr.length() != 40)){
+            return;
+        }
+
+        byte[] contractAddress = Hex.decode( contractAddr );
+        byte[] contractStateB = WorldManager.instance.worldState.get(contractAddress);
+        if (contractStateB == null || contractStateB.length == 0){
+            return;
+        }
+
+        AccountState contractState = new AccountState(contractStateB);
+        final byte[] programCode = WorldManager.instance.chainDB.get(contractState.getCodeHash());
+        if (programCode == null || programCode.length == 0){
+            return;
+        }
+
+        byte[] contractDetailsB =
+                WorldManager.instance.detaildDB.get(contractAddress);
+
+        ContractDetails contractDetails = null;
+        final Map storageMap = new HashMap();
+
+        if (contractDetailsB != null){
+
+            contractDetails = new ContractDetails(contractDetailsB);
+            Map<DataWord, DataWord> tmpStorage = contractDetails.getStorage();
+            if (tmpStorage != null){
+                for (DataWord key : tmpStorage.keySet()){
+                    String keyToSave = Hex.toHexString (key.getNoLeadZeroesData());
+                    String valueToSave = Hex.toHexString (tmpStorage.get(key).getNoLeadZeroesData());
+                    storageMap.put(keyToSave, valueToSave);
+                }
+            }
+        }
+
+        contractDataInput.setBounds(70, 80, 350, 145);
+        contractDataInput.setViewportView(msgDataTA);
+
+        URL expandIconURL = ClassLoader.getSystemResource("buttons/add-23x23.png");
+        ImageIcon expandIcon = new ImageIcon(expandIconURL);
+        final JLabel expandLabel = new JLabel(expandIcon);
+        expandLabel.setToolTipText("Cancel");
+        expandLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        expandLabel.setBounds(235, 232, 23, 23);
+        this.getContentPane().add(expandLabel);
+        expandLabel.setVisible(true);
+
+        final Border border = BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
+        final JPanel detailPanel = new JPanel();
+        detailPanel.setBorder(border);
+        detailPanel.setBounds(135, 242, 230, 2);
+
+        final JPanel spacer = new JPanel();
+        spacer.setForeground(Color.white);
+        spacer.setBackground(Color.white);
+        spacer.setBorder(null);
+        spacer.setBounds(225, 232, 40, 20);
+
+        this.getContentPane().add(spacer);
+        this.getContentPane().add(detailPanel);
+
+
+        expandLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                ContractCallDialog.this.setSize(500, 530);
+
+                ContractCallDialog.this.creatorAddressCombo.setBounds(70, 367, 230, 36);
+                ContractCallDialog.this.gasInput.setBounds(330, 360, 90, 45);
+                ContractCallDialog.this.rejectLabel.setBounds(260, 425, 45, 45);
+                ContractCallDialog.this.approveLabel.setBounds(200, 425, 45, 45);
+                ContractCallDialog.this.statusMsg.setBounds(50, 460, 400, 50);
+
+                spacer.setVisible(false);
+                expandLabel.setVisible(false);
+                detailPanel.setVisible(false);
+
+
+                JTextField contractCode = new JTextField(15);
+                contractCode.setText(Hex.toHexString( programCode ));
+                GUIUtils.addStyle(contractCode, "Code: ");
+                contractCode.setBounds(70, 230, 350, 45);
+
+                JTable storage = new JTable(2, 2);
+                storage.setTableHeader(null);
+                storage.setShowGrid(false);
+                storage.setIntercellSpacing(new Dimension(15, 0));
+                storage.setCellSelectionEnabled(false);
+                GUIUtils.addStyle(storage);
+
+                JTableStorageModel tableModel = new JTableStorageModel(storageMap);
+                storage.setModel(tableModel);
+
+                JScrollPane scrollPane = new JScrollPane(storage);
+                scrollPane.setBorder(null);
+                scrollPane.getViewport().setBackground(Color.WHITE);
+                scrollPane.setBounds(70, 290, 350, 50);
+
+
+                ContractCallDialog.this.getContentPane().add(contractCode);
+                ContractCallDialog.this.getContentPane().add(scrollPane);
+            }
+        });
+
+
+        this.repaint();
     }
 
 
@@ -226,7 +363,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        ProgramPlayDialog.createAndShowGUI(programCode, tx, MainData.instance.getBlockchain().getLastBlock(), contractDetails);
+        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.instance.getBlockChain().getLastBlock(), contractDetails);
     }
 
     protected JRootPane createRootPane() {
@@ -354,6 +491,39 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 					valueShort);
 			return result;
 		}
+    }
+
+    private class JTableStorageModel extends DefaultTableModel {
+        private JTableStorageModel(Map<String, String> data) {
+
+            if (data != null){
+
+                this.setColumnCount(2);
+                this.setRowCount(data.size());
+
+                int i = 0;
+                for (String key : data.keySet()){
+                    this.setValueAt(key, i, 0);
+                    this.setValueAt(data.get(key), i, 1);
+                    ++i;
+                }
+            }
+        }
+    }
+
+
+    public static void main(String args[]){
+        WorldManager.instance.getWallet();
+        WorldManager.instance.loadChain();
+        ContractCallDialog ccd = new ContractCallDialog(null);
+        ccd.setVisible(true);
+        ccd.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+        ccd.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                WorldManager.instance.close();
+            }
+        });
     }
 }
 

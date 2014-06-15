@@ -1,9 +1,7 @@
 package org.ethereum.manager;
 
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
-import org.ethereum.core.ContractDetails;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.db.TrackDatabase;
@@ -20,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 /**
  *
  * WorldManager is the main class to handle the processing of transactions and managing the world state.
@@ -34,7 +34,10 @@ public class WorldManager {
     private Logger logger = LoggerFactory.getLogger("main");
     private Logger stateLogger = LoggerFactory.getLogger("state");
 
-    public static WorldManager instance = new WorldManager();
+
+    private Blockchain blockChain;
+    private Wallet wallet = new Wallet();
+
 
     private Map<String, Transaction> pendingTransactions =
             Collections.synchronizedMap(new HashMap<String, Transaction>());
@@ -45,10 +48,37 @@ public class WorldManager {
 
     public Trie worldState = new Trie(stateDB.getDb());
 
+    public static WorldManager instance = new WorldManager();
+    public WorldManager() {
+    }
+
+    public void loadChain(){
+
+        // Initialize Wallet
+        byte[] cowAddr = HashUtil.sha3("cow".getBytes());
+        ECKey key = ECKey.fromPrivate(cowAddr);
+        wallet.importKey(cowAddr);
+
+        AccountState state = wallet.getAccountState(key.getAddress());
+        state.addToBalance(BigInteger.valueOf(2).pow(200));
+
+//        wallet.importKey(HashUtil.sha3("cat".getBytes()));
+
+        String secret = CONFIG.coinbaseSecret();
+        byte[] cbAddr = HashUtil.sha3(secret.getBytes());
+        wallet.importKey(cbAddr);
+
+
+        // Initialize Blockchain
+        blockChain = new Blockchain(wallet);
+        blockChain.loadChain();
+    }
+
     public void applyTransaction(Transaction tx) {
 
         // TODO: refactor the wallet transactions to the world manager
-        MainData.instance.getBlockchain().addWalletTransaction(tx);
+        if (blockChain != null)
+            blockChain.addWalletTransaction(tx);
 
         // TODO: what is going on with simple wallet transfer
 
@@ -167,7 +197,7 @@ public class WorldManager {
                 byte[] initCode = tx.getData();
 
                 Block lastBlock =
-                        MainData.instance.getBlockchain().getLastBlock();
+                        blockChain.getLastBlock();
 
                 ProgramInvoke programInvoke =
                     ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, null, trackDetailDB, trackChainDb, trackStateDB);
@@ -191,7 +221,7 @@ public class WorldManager {
                     if (programCode != null && programCode.length != 0){
 
                         Block lastBlock =
-                                MainData.instance.getBlockchain().getLastBlock();
+                                blockChain.getLastBlock();
 
                         if (logger.isInfoEnabled())
                             logger.info("calling for existing contract: addres={}" , Hex.toHexString(tx.getReceiveAddress()));
@@ -262,7 +292,7 @@ public class WorldManager {
         }
 
         BigInteger gasPrice =
-                BigInteger.valueOf( MainData.instance.getBlockchain().getGasPrice());
+                BigInteger.valueOf( blockChain.getGasPrice());
         BigInteger refund =
                 gasDebit.subtract(BigInteger.valueOf( result.getGasUsed()).multiply(gasPrice));
 
@@ -304,6 +334,14 @@ public class WorldManager {
         for (int i = blocks.size() - 1; i >= 0 ; --i) {
             applyBlock(blocks.get(i));
         }
+    }
+
+    public Blockchain getBlockChain() {
+        return blockChain;
+    }
+
+    public Wallet getWallet() {
+        return wallet;
     }
 
     public void close() {
