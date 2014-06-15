@@ -232,6 +232,9 @@ public class ToolBar extends JFrame {
         cp.add(chainToggle);
         cp.add(walletToggle);
 
+        WorldManager.instance.getWallet();
+        WorldManager.instance.loadChain();
+
         MainData.instance.toString();
     }
 
