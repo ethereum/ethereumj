@@ -51,13 +51,14 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
                 ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, contractDetails,
                         trackDetailDB, trackChainDb, trackStateDB));
 
+        program.addListener(this);
+        program.fullTrace();
+        vm.play(program);
+
         trackDetailDB.rollbackTrack();
         trackChainDb.rollbackTrack();
         trackStateDB.rollbackTrack();
 
-        program.addListener(this);
-        program.fullTrace();
-        vm.play(program);
 
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 

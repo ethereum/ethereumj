@@ -357,7 +357,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
                 WorldManager.instance.detaildDB.get(contractAddress);
 
         ContractDetails contractDetails = null;
-        if (contractDetailsB.length > 0)
+        if (contractDetailsB != null && contractDetailsB.length > 0)
             contractDetails = new ContractDetails(contractDetailsB);
 
         Transaction tx = createTransaction();
