@@ -172,7 +172,10 @@ public class Blockchain {
 				logger.debug("Displaying blocks stored in DB sorted on blocknumber");
 				byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
 				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                    this.addBlock(new Block(db.get(parentHash)));
+                    byte[] parentRLP = db.get(parentHash);
+                    if (parentRLP == null) return;
+
+                    this.addBlock(new Block(parentRLP));
                     if (logger.isDebugEnabled())
 						logger.debug("Block: " + getLastBlock().getNumber() + " ---> " + getLastBlock().toFlatString());
 					parentHash = getLastBlock().getHash();
