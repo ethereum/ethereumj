@@ -3,6 +3,7 @@ package org.ethereum.gui;
 import org.ethereum.core.Account;
 import org.ethereum.core.Wallet;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 
 import javax.swing.*;
 
@@ -41,7 +42,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         Container contentPane = this.getContentPane();
         contentPane.setBackground(new Color(255, 255, 255));
 
-        Wallet wallet = MainData.instance.getWallet();
+        Wallet wallet = WorldManager.instance.getWallet();
         wallet.addListener(this);
         loadWallet();
 
@@ -54,7 +55,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         contentPane.removeAll();
         contentPane.setLayout(new FlowLayout());
 
-        Wallet wallet = MainData.instance.getWallet();
+        Wallet wallet = WorldManager.instance.getWallet();
 
         for (Account account : wallet.getAccountCollection()){
 
@@ -76,7 +77,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             @Override
             public void mouseClicked(MouseEvent e) {
 
-                Wallet wallet = MainData.instance.getWallet();
+                Wallet wallet = WorldManager.instance.getWallet();
                 if (wallet.getAccountCollection().size() >=5){
                     JOptionPane.showMessageDialog(walletWindow,
                             "Hey do you really need more than 5 address for a demo wallet");

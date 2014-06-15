@@ -2,6 +2,7 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.slf4j.Logger;
@@ -58,7 +59,7 @@ public class DialogWorker extends SwingWorker {
         }
 
         dialog.infoStatusMsg("Transaction got approved");
-        MainData.instance.getWallet().applyTransaction(tx);
+        WorldManager.instance.getWallet().applyTransaction(tx);
         return null;
     }
 }

@@ -2,6 +2,7 @@ package org.ethereum.net.submit;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,8 +35,8 @@ public class TransactionTask implements Callable<Transaction> {
 
             ClientPeer peer = MainData.instance.getActivePeer();
 
-			WalletTransaction walletTransaction = MainData.instance
-					.getBlockchain().addWalletTransaction(tx);
+			WalletTransaction walletTransaction = WorldManager.instance
+					.getBlockChain().addWalletTransaction(tx);
             peer.sendTransaction(tx);
 
             while(walletTransaction.getApproved() < 1 ){
@@ -45,7 +46,7 @@ public class TransactionTask implements Callable<Transaction> {
             logger.info("return approved: {}", walletTransaction.getApproved());
         } catch (Throwable th) {
             logger.info("exception caugh: {}", th.getCause());
-            MainData.instance.getBlockchain().removeWalletTransaction(tx);
+            WorldManager.instance.getBlockChain().removeWalletTransaction(tx);
         }
 
         return null;

@@ -64,6 +64,11 @@ public class GUIUtils {
         jScrollPane.setHorizontalScrollBar(null);
     }
 
+    public static void addStyle(JTable jTable){
+        jTable.setForeground(new Color(143, 170, 220));
+        jTable.setBackground(Color.WHITE);
+        jTable.setFont(new Font("Monospaced", 0, 13));
+    }
 
     public static String getHexStyledText(byte[] data){
         String[] dataHex = Hex.toHexString(data).split("(?<=\\G.{2})");

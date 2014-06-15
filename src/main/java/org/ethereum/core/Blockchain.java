@@ -48,7 +48,6 @@ public class Blockchain {
 	public Blockchain(Wallet wallet) {
 		this.db = WorldManager.instance.chainDB;
 		this.wallet = wallet;
-		this.loadChain();
 	}
 
 	public Block getLastBlock() {
@@ -162,24 +161,31 @@ public class Blockchain {
 	public void loadChain() {
 		DBIterator iterator = db.iterator();
 		try {
-			if (!iterator.hasNext()) {
-				logger.info("DB is empty - adding Genesis");
-				Block genesis = Genesis.getInstance();
+			if (index.size() == 0) {
+                logger.info("DB is empty - adding Genesis");
+                Block genesis = Genesis.getInstance();
                 this.addBlock(genesis);
-				logger.debug("Block: " + genesis.getNumber() + " ---> " + genesis.toFlatString());
-				db.put(genesis.getParentHash(), genesis.getEncoded());
-			} else {
-				logger.debug("Displaying blocks stored in DB sorted on blocknumber");
-				byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
-				for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                    byte[] parentRLP = db.get(parentHash);
-                    if (parentRLP == null) return;
+                logger.debug("Block: " + genesis.getNumber() + " ---> " + genesis.toFlatString());
+                db.put(genesis.getParentHash(), genesis.getEncoded());
+            }
 
-                    this.addBlock(new Block(parentRLP));
-                    if (logger.isDebugEnabled())
-						logger.debug("Block: " + getLastBlock().getNumber() + " ---> " + getLastBlock().toFlatString());
-					parentHash = getLastBlock().getHash();
-				}
+            logger.debug("Displaying blocks stored in DB sorted on blocknumber");
+            byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
+            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+
+                byte[] parentRLP = db.get(parentHash);
+                if (parentRLP == null) return;
+
+                Block block = new Block(parentRLP);
+                this.addBlock(block);
+
+                // in case of cold load play the contracts
+                WorldManager.instance.applyBlock(block);
+
+                if (logger.isDebugEnabled())
+                    logger.debug("Block: " + getLastBlock().getNumber() + " ---> " + getLastBlock().toFlatString());
+                parentHash = getLastBlock().getHash();
+
 			}
 		} finally {
 			// Make sure you close the iterator to avoid resource leaks.
