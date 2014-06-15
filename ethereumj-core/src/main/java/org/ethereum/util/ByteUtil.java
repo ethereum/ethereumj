@@ -160,12 +160,14 @@ public class ByteUtil {
         if (data == null) return null;
 
         int firstNonZero = 0;
-        for (int i = 0; i < data.length; ++i)
+        int i = 0;
+        for (i = 0; i < data.length; ++i)
             if (data[i] != 0){
                 firstNonZero = i;
                 break;
             }
 
+        if (i == data.length) return new byte[1];
         if (firstNonZero == 0) return data;
 
         byte[] result = new byte[data.length - firstNonZero];
