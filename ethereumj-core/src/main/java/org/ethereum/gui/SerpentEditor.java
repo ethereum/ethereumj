@@ -49,15 +49,15 @@ public class SerpentEditor extends JFrame {
             "\n" +
             "init: \n" +
             "\n" +
-            "  # [init block] - executed once when contract\n" +
-            "  # being initialized.\n" +
+            "  // [init block] - executed once when contract\n" +
+            "  // being initialized.\n" +
             "  contract.storage[999] = 3 \n" +
             "\n" +
             "code:\n" +
             "\n" +
-            "  # [code block] - the actual code\n" +
-            "  # executed when the call msg\n" +
-            "  # hit the peer\n" +
+            "  // [code block] - the actual code\n" +
+            "  // executed when the call msg\n" +
+            "  // hit the peer\n" +
             "  a = contract.storage[999]\n" +
             "  b = msg.data[a]\n";
 

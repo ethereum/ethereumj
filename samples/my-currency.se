@@ -1,27 +1,27 @@
 
 
-# the sample is good example how one can
-# save program that manage his own currency
+// the sample is good example how one can
+// save program that manage his own currency
 
 init:
 
-    # this part run only on init stage
-    # we are about to set the maxim 
-    # amount of currency
+    // this part run only on init stage
+    // we are about to set the maxim
+    // amount of currency
     contract.storage[0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826] = 10000000
 code:
 
 
-    # the currency manager
-    # support two functions
+    // the currency manager
+    // support two functions
     if msg.datasize == 1:
 
-    	   # 1. balance check
+    	// 1. balance check
         addr = msg.data[0]
         return(contract.storage[addr])
     else:
 
-    	   # 2. balance manipulation        
+    	// 2. balance manipulation
         from = msg.sender
         fromvalue = contract.storage[from]
         to = msg.data[0]
