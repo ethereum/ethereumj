@@ -217,9 +217,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             break;
 
-                        case '%':
-                            currentTokenType = Token.VARIABLE;
-                            break;
 
                         // The "separators".
                         case '(':
@@ -281,7 +278,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                     switch (c) {
 
                         case '/':
-                            addToken(text, currentTokenStart,i-1, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart,i-1,
+                                    Token.COMMENT_EOL, newStartOffset+currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.COMMENT_EOL;
                             break;
@@ -295,11 +293,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             break;
 
-                        case '%':
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
-                            currentTokenStart = i;
-                            currentTokenType = Token.VARIABLE;
-                            break;
 
                         // The "separators".
                         case '(':
@@ -387,11 +380,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             break;
 
-                        case '%':
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
-                            currentTokenStart = i;
-                            currentTokenType = Token.VARIABLE;
-                            break;
 
                         // Should be part of identifiers, but not at end of "REM".
                         case '\\':
@@ -447,10 +435,17 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                 case Token.COMMENT_EOL:
 
-                    i = end - 1;
-                    addToken(text, currentTokenStart,i, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
-                    // We need to set token type to null so at the bottom we don't add one more token.
-                    currentTokenType = Token.NULL;
+                    if (i+1 >= array.length)
+                        break;
+
+                    char nextC = array[i+1];
+                    if (nextC == '/'){
+
+                        i = end - 1;
+                        addToken(text, currentTokenStart,i, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
+                        // We need to set token type to null so at the bottom we don't add one more token.
+                        currentTokenType = Token.NULL;
+                    }
                     break;
 
                 case Token.PREPROCESSOR: // Used for labels
@@ -499,12 +494,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                     else { // Character other than first after the '%'.
                         if (bracketVariable==true) {
                             if (c=='}') {
-                                addToken(text, currentTokenStart,i, Token.VARIABLE, newStartOffset+currentTokenStart);
-                                currentTokenType = Token.NULL;
-                            }
-                        }
-                        else {
-                            if (c=='%') {
                                 addToken(text, currentTokenStart,i, Token.VARIABLE, newStartOffset+currentTokenStart);
                                 currentTokenType = Token.NULL;
                             }
