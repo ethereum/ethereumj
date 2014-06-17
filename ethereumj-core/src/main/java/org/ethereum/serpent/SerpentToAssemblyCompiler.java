@@ -510,6 +510,11 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     }
 
     @Override
+    public String visitContract_address(@NotNull SerpentParser.Contract_addressContext ctx) {
+        return " ADDRESS ";
+    }
+
+    @Override
     public String visitTx_origin(@NotNull SerpentParser.Tx_originContext ctx) {
         return " ORIGIN ";
     }

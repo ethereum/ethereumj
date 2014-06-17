@@ -108,6 +108,17 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#contract_address}.
+	 * @param ctx the parse tree
+	 */
+	void enterContract_address(@NotNull SerpentParser.Contract_addressContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#contract_address}.
+	 * @param ctx the parse tree
+	 */
+	void exitContract_address(@NotNull SerpentParser.Contract_addressContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#array_retreive}.
 	 * @param ctx the parse tree
 	 */
