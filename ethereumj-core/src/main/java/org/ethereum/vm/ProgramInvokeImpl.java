@@ -4,6 +4,7 @@ import org.ethereum.db.TrackDatabase;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.util.ByteUtil;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -38,6 +39,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
     TrackDatabase detaildDB;
     TrackDatabase chainDb;
     TrackTrie stateDb;
+    private boolean byTransaction = true;
 
     public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
@@ -68,6 +70,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
         this.detaildDB = detaildDB;
         this.chainDb = chainDb;
         this.stateDb = stateDB;
+        this.byTransaction = false;
 
     }
 
@@ -233,5 +236,64 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
 
     public TrackTrie getStateDb() {
         return stateDb;
+    }
+
+    @Override
+    public boolean byTransaction() {
+        return byTransaction;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ProgramInvokeImpl that = (ProgramInvokeImpl) o;
+
+        if (byTransaction != that.byTransaction) return false;
+        if (address != null ? !address.equals(that.address) : that.address != null) return false;
+        if (balance != null ? !balance.equals(that.balance) : that.balance != null) return false;
+        if (callValue != null ? !callValue.equals(that.callValue) : that.callValue != null) return false;
+        if (caller != null ? !caller.equals(that.caller) : that.caller != null) return false;
+        if (chainDb != null ? !chainDb.equals(that.chainDb) : that.chainDb != null) return false;
+        if (coinbase != null ? !coinbase.equals(that.coinbase) : that.coinbase != null) return false;
+        if (detaildDB != null ? !detaildDB.equals(that.detaildDB) : that.detaildDB != null) return false;
+        if (difficulty != null ? !difficulty.equals(that.difficulty) : that.difficulty != null) return false;
+        if (gas != null ? !gas.equals(that.gas) : that.gas != null) return false;
+        if (gasPrice != null ? !gasPrice.equals(that.gasPrice) : that.gasPrice != null) return false;
+        if (gaslimit != null ? !gaslimit.equals(that.gaslimit) : that.gaslimit != null) return false;
+        if (!Arrays.equals(msgData, that.msgData)) return false;
+        if (number != null ? !number.equals(that.number) : that.number != null) return false;
+        if (origin != null ? !origin.equals(that.origin) : that.origin != null) return false;
+        if (prevHash != null ? !prevHash.equals(that.prevHash) : that.prevHash != null) return false;
+        if (stateDb != null ? !stateDb.equals(that.stateDb) : that.stateDb != null) return false;
+        if (storage != null ? !storage.equals(that.storage) : that.storage != null) return false;
+        if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = address != null ? address.hashCode() : 0;
+        result = 31 * result + (origin != null ? origin.hashCode() : 0);
+        result = 31 * result + (caller != null ? caller.hashCode() : 0);
+        result = 31 * result + (balance != null ? balance.hashCode() : 0);
+        result = 31 * result + (gas != null ? gas.hashCode() : 0);
+        result = 31 * result + (gasPrice != null ? gasPrice.hashCode() : 0);
+        result = 31 * result + (callValue != null ? callValue.hashCode() : 0);
+        result = 31 * result + (msgData != null ? Arrays.hashCode(msgData) : 0);
+        result = 31 * result + (prevHash != null ? prevHash.hashCode() : 0);
+        result = 31 * result + (coinbase != null ? coinbase.hashCode() : 0);
+        result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
+        result = 31 * result + (number != null ? number.hashCode() : 0);
+        result = 31 * result + (difficulty != null ? difficulty.hashCode() : 0);
+        result = 31 * result + (gaslimit != null ? gaslimit.hashCode() : 0);
+        result = 31 * result + (storage != null ? storage.hashCode() : 0);
+        result = 31 * result + (detaildDB != null ? detaildDB.hashCode() : 0);
+        result = 31 * result + (chainDb != null ? chainDb.hashCode() : 0);
+        result = 31 * result + (stateDb != null ? stateDb.hashCode() : 0);
+        result = 31 * result + (byTransaction ? 1 : 0);
+        return result;
     }
 }

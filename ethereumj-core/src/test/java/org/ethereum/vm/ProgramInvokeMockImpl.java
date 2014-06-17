@@ -1,8 +1,10 @@
 package org.ethereum.vm;
 
+import org.ethereum.core.ContractDetails;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.TrackDatabase;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
 import org.spongycastle.util.encoders.Hex;
 
@@ -18,6 +20,13 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     byte[] msgData;
 
+    TrackTrie stateDB       = null;
+    TrackDatabase chainDb   = null;
+    TrackDatabase detaildDB = null;
+
+    ContractDetails details = null;
+
+
 
     public ProgramInvokeMockImpl(byte[] msgDataRaw){
         this.msgData = msgDataRaw;
@@ -29,9 +38,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     /*           ADDRESS op         */
     public DataWord getOwnerAddress(){
 
-        byte[] cowPrivKey = HashUtil.sha3("cow".getBytes());
-        byte[] addr = ECKey.fromPrivate(cowPrivKey).getAddress();
-
+        byte[] addr = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
         return new DataWord(addr);
     }
 
@@ -69,7 +76,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     /*           GAS op       */
     public DataWord getGas() {
-        byte[] minGasPrice = Hex.decode("03E8");
+        byte[] minGasPrice = Hex.decode("0F4240");
         return new DataWord(minGasPrice);
     }
 
@@ -159,27 +166,50 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     @Override
     public DataWord getGaslimit() {
-        long gasLimit = 968269;
+        long gasLimit = 1000000;
         return new DataWord(gasLimit);
+    }
+
+
+    public void setStateDB(TrackTrie stateDB) {
+        this.stateDB = stateDB;
+    }
+
+    public void setChainDb(TrackDatabase chainDb) {
+        this.chainDb = chainDb;
+    }
+
+    public void setDetaildDB(TrackDatabase detaildDB) {
+        this.detaildDB = detaildDB;
+    }
+
+    public void setDetails(ContractDetails details) {
+        this.details = details;
     }
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
-        return null;
+        if (details == null) return null;
+        return details.getStorage();
     }
 
     @Override
     public TrackDatabase getDetaildDB() {
-        return null;
+        return detaildDB;
     }
 
     @Override
     public TrackDatabase getChainDb() {
-        return null;
+        return chainDb;
     }
 
     @Override
     public TrackTrie getStateDb() {
-        return null;
+        return stateDB;
+    }
+
+    @Override
+    public boolean byTransaction() {
+        return true;
     }
 }

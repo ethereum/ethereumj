@@ -38,5 +38,7 @@ public interface ProgramInvoke {
     public TrackDatabase getChainDb();
     public TrackTrie getStateDb();
 
+    public boolean byTransaction();
+
 
 }

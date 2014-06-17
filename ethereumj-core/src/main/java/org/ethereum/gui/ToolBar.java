@@ -39,10 +39,10 @@ public class ToolBar extends JFrame {
     public ToolBar() throws HeadlessException {
 
         introLogger.info("");
-        introLogger.info("<>  EthereumJ [v0.5.1]  by RomanJ");
-        introLogger.info("<>  Code by Roman Mandeleil, (c) 2014.");
-        introLogger.info("<>  Contribution: Nick Savers ");
-        introLogger.info("<>  Based on a design by Vitalik Buterin.");
+        introLogger.info("|Ξ|  EthereumJ [v0.5.1]  by RomanJ");
+        introLogger.info("|Ξ|  Code by Roman Mandeleil, (c) 2014.");
+        introLogger.info("|Ξ|  Contribution: Nick Savers ");
+        introLogger.info("|Ξ|  Based on a design by Vitalik Buterin.");
         introLogger.info("");
         introLogger.info("java.version: " + System.getProperty("java.version"));
         introLogger.info("java.home:    " + System.getProperty("java.home"));
