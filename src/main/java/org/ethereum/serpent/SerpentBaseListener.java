@@ -134,6 +134,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterContract_address(@NotNull SerpentParser.Contract_addressContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitContract_address(@NotNull SerpentParser.Contract_addressContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx) { }
 	/**
 	 * {@inheritDoc}

@@ -75,6 +75,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitBlock_difficulty(@NotNull SerpentParser.Block_difficultyContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#contract_address}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitContract_address(@NotNull SerpentParser.Contract_addressContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#array_retreive}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

@@ -58,6 +58,7 @@ special_func :
   tx_origin |
   tx_gas |
   contract_balance |
+  contract_address |
   block_prevhash |
   block_coinbase |
   block_timestamp |
@@ -86,6 +87,9 @@ tx_gas
 
 contract_balance
       : 'contract.balance' ;
+
+contract_address
+      : 'contract.address' ;
 
 block_prevhash
       : 'block.prevhash' ;
