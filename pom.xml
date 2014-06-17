@@ -131,6 +131,13 @@ mvn clean package -Dmaven.test.skip=true
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
         </dependency>
+
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>apache-log4j-extras</artifactId>
+            <version>1.2.17</version>
+        </dependency>
+
         <dependency>
             <groupId>com.yuvalshavit</groupId>
             <artifactId>antlr-denter</artifactId>
