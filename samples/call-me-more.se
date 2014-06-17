@@ -1,0 +1,19 @@
+
+
+init: 
+
+  # Setting the storage value
+  contract.storage[999] = 3
+
+code:
+
+  # Using the storage on the call
+  a = contract.storage[999]
+  
+  if a > 0: 
+      contract.storage[999] = a - 1
+
+      # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
+      send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
+  else: 
+     stop      
