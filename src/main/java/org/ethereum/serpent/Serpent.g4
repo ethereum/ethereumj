@@ -222,14 +222,14 @@ EQ_OP: '='  ;
 
 NL: ('\r'? '\n' ' '*); // note the ' '*;
 WS: [ \t]+ -> skip;
-LINE_COMMENT: '#' ~[\r\n]* -> skip;
+LINE_COMMENT: '//' ~[\r\n]* -> skip;
 
 VAR:  [a-zA-Z][a-zA-Z0-9]* ;
 
 
 
 OP_ADD : '+' | '-';
-OP_MUL : '*' | '/' | '^' | '%' ;
+OP_MUL : '*' | '/' | '^' | '%' | '#/' | '#%' ;
 
 OP_REL : '<' | '>' | '<=' | '>=';
 OP_EQ : '==' | '!=';

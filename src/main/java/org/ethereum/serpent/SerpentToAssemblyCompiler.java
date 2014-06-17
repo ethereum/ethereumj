@@ -362,6 +362,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             case "/": return operand0 + " " + operand1 + " DIV";
             case "^": return operand0 + " " + operand1 + " EXP";
             case "%": return operand0 + " " + operand1 + " MOD";
+            case "#/": return operand0 + " " + operand1 + " SDIV";
+            case "#%": return operand0 + " " + operand1 + " SMOD";
             default: throw new UnknownOperandException(ctx.OP_MUL().getText());
         }
     }

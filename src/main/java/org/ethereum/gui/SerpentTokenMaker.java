@@ -280,7 +280,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                     switch (c) {
 
-                        case '#':
+                        case '/':
                             addToken(text, currentTokenStart,i-1, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.COMMENT_EOL;
@@ -446,6 +446,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                     break;
 
                 case Token.COMMENT_EOL:
+
                     i = end - 1;
                     addToken(text, currentTokenStart,i, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
                     // We need to set token type to null so at the bottom we don't add one more token.
