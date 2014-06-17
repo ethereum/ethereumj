@@ -76,7 +76,7 @@ public class WorldManager {
 
     public void applyTransaction(Transaction tx) {
 
-        // TODO: refactor the wallet transactions to the world manager
+        // TODO: refactor the wallet pending transactions to the world manager
         if (blockChain != null)
             blockChain.addWalletTransaction(tx);
 

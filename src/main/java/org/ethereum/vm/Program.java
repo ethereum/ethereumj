@@ -21,6 +21,7 @@ import java.util.*;
 public class Program {
 
     private Logger logger = LoggerFactory.getLogger("VM");
+    private Logger gasLogger = null;
     ProgramListener listener;
 
     Stack<DataWord> stack = new Stack<DataWord>();
@@ -38,6 +39,8 @@ public class Program {
 
     public Program(byte[] ops, ProgramInvoke invokeData) {
 
+        gasLogger = LoggerFactory.getLogger("gas - " + invokeData.hashCode());
+
         result.setStateDb(invokeData.getStateDb());
         result.setChainDb(invokeData.getChainDb());
         result.setDetailDB(invokeData.getDetaildDB());
@@ -47,8 +50,14 @@ public class Program {
         this.invokeData = invokeData;
         this.ops = ops;
 
-        spendGas(GasCost.TRANSACTION);
-        spendGas(GasCost.TXDATA * invokeData.getDataSize().intValue());
+        // In case the program invoked by wire got
+        // transaction, this will be the gas cost,
+        // otherwise the call done by other contract
+        // charged by CALL op
+        if (invokeData.byTransaction()){
+            spendGas(GasCost.TRANSACTION, "TRANSACTION");
+            spendGas(GasCost.TXDATA * invokeData.getDataSize().intValue(), "DATA");
+        }
 
         if (invokeData.getStorage() != null){
             storage = invokeData.getStorage();
@@ -220,13 +229,13 @@ public class Program {
      * That method implement internal calls
      * and code invocations
      *
-     * @param gas
-     * @param toAddressDW
-     * @param endowmentValue
-     * @param inDataOffs
-     * @param inDataSize
-     * @param outDataOffs
-     * @param outDataSize
+     * @param gas - gas to pay for the call, remain gas will be refunded to the caller
+     * @param toAddressDW - address to call
+     * @param endowmentValue - the value that can be transfer along with the code execution
+     * @param inDataOffs - start of memory to be input data to the call
+     * @param inDataSize - size of memory to be input data to the call
+     * @param outDataOffs - start of memory to be output of the call
+     * @param outDataSize - size of memory to be output data to the call
      */
     public void callToAddress(DataWord gas, DataWord toAddressDW, DataWord endowmentValue,
                               DataWord inDataOffs, DataWord inDataSize,DataWord outDataOffs, DataWord outDataSize){
@@ -251,11 +260,6 @@ public class Program {
 
             receiverState = new AccountState(accountData);
         }
-
-        // todo: endowment rollbacked move it from here
-        receiverState.addToBalance(endowmentValue.value());
-        result.getStateDb().update(toAddress, receiverState.getEncoded());
-        // todo: endowment rollbacked move it from here
 
         byte[] programCode = result.getChainDb().get(receiverState.getCodeHash());
         if (programCode != null && programCode.length != 0){
@@ -285,7 +289,6 @@ public class Program {
                 return;
             }
 
-
             // 2.2 UPDATE THE NONCE
             // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
             senderState.incrementNonce();
@@ -298,14 +301,17 @@ public class Program {
             chainDB.startTrack();
             stateDB.startTrack();
 
-            // todo: update the balance/value simple transfer
+            // todo: check if the endowment can really be done
+            receiverState.addToBalance(endowmentValue.value());
+            stateDB.update(toAddress, receiverState.getEncoded());
 
             Map<DataWord, DataWord> storage = null;
             if (details != null)
                 storage = details.getStorage();
 
             ProgramInvoke programInvoke =
-                    ProgramInvokeFactory.createProgramInvoke(this, toAddressDW, storage, endowmentValue,  gas,receiverState.getBalance(),
+                    ProgramInvokeFactory.createProgramInvoke(this, toAddressDW, storage,
+                            endowmentValue,  gas, receiverState.getBalance(),
                             data.array(),
                             detailDB, chainDB, stateDB);
 
@@ -326,7 +332,8 @@ public class Program {
             }
 
             // todo: apply results: result.gethReturn()
-            // todo: refund for remain gas
+            // todo: if there is out specified place hReturn on the out
+
 
             detailDB.commitTrack();
             chainDB.commitTrack();
@@ -334,7 +341,7 @@ public class Program {
             stackPush(new DataWord(1));
 
             // the gas spent in any internal outcome
-            spendGas(result.getGasUsed());
+            spendGas(result.getGasUsed(), " 'Total for CALL run' ");
             logger.info("The usage of the gas in external call updated", result.getGasUsed());
 
             // update the storage , it could
@@ -348,7 +355,9 @@ public class Program {
     }
 
 
-    public void spendGas(int gasValue){
+    public void spendGas(int gasValue, String cause){
+
+        gasLogger.info("Spent: for cause={} gas={}", cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
         if (afterSpend < 0)

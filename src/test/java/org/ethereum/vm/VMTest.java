@@ -2544,7 +2544,7 @@ public class VMTest {
         Program program =
                 new Program(Hex.decode("30"),
                         createProgramInvoke_1());
-        String s_expected_1 = "000000000000000000000000CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826";
+        String s_expected_1 = "00000000000000000000000077045E71A7A2C50903D88E564CD72FAB11E82051";
 
         vm.step(program);
 

@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import com.sun.javafx.binding.StringFormatter;
 import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.ContractDetails;
@@ -19,13 +18,10 @@ import org.spongycastle.util.encoders.Hex;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
-import javax.swing.border.TitledBorder;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableModel;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigInteger;
