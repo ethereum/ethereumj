@@ -50,14 +50,6 @@ public class Program {
         this.invokeData = invokeData;
         this.ops = ops;
 
-        // In case the program invoked by wire got
-        // transaction, this will be the gas cost,
-        // otherwise the call done by other contract
-        // charged by CALL op
-        if (invokeData.byTransaction()){
-            spendGas(GasCost.TRANSACTION, "TRANSACTION");
-            spendGas(GasCost.TXDATA * invokeData.getDataSize().intValue(), "DATA");
-        }
 
         if (invokeData.getStorage() != null){
             storage = invokeData.getStorage();

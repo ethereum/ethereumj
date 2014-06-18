@@ -569,6 +569,17 @@ public class VM {
 
     public void play(Program program) {
         try {
+
+            // In case the program invoked by wire got
+            // transaction, this will be the gas cost,
+            // otherwise the call done by other contract
+            // charged by CALL op
+            if (program.invokeData.byTransaction()){
+                program.spendGas(GasCost.TRANSACTION, "TRANSACTION");
+                program.spendGas(GasCost.TXDATA * program.invokeData.getDataSize().intValue(), "DATA");
+            }
+
+
             while(!program.isStopped())
                 this.step(program);
         } catch (RuntimeException e) {
