@@ -1,5 +1,6 @@
 package org.ethereum.net.message;
 
+import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
@@ -16,7 +17,8 @@ public class StaticMessages {
     public static final byte[] GET_TRANSACTIONS = Hex.decode("2240089100000002C116");
 
     public static final byte[] DISCONNECT_08 = Hex.decode("2240089100000003C20108");
-    public static final byte[] GENESIS_HASH = Hex.decode("56fff6ab5ef6f1ef8dafb7b4571b89a9ae1ab870e54197c59ea10ba6f2c7eb60");
+    public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
+
     public static final byte[] MAGIC_PACKET = Hex.decode("22400891");
 
     static {
