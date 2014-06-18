@@ -14,6 +14,6 @@ code:
       contract.storage[999] = a - 1
 
       // call to myself:
-      send((tx.gas / 10 * 8), contract.address, 0)
+      send((tx.gas/10 * 8), contract.address, 0)
   else: 
      stop      

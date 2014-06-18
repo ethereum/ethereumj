@@ -11,10 +11,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class BlockTest {
-	
+
+
 	// https://ethereum.etherpad.mozilla.org/12
 	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a011cc4aaa3b2f97cd6c858fcc0903b9b34b071e1798c91645f0e05e267028cb4a80834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
-	private String CPP_PoC5_GENESIS_HEX_HASH = Hex.toHexString(StaticMessages.GENESIS_HASH);
+	private String CPP_PoC5_GENESIS_HEX_HASH = "56fff6ab5ef6f1ef8dafb7b4571b89a9ae1ab870e54197c59ea10ba6f2c7eb60";
 
 	String block_1 = "f9072df8d3a077ef4fdaf389dca53236bcf7f72698e154eab2828f86fbc4fc6c"
 			+ "d9225d285c89a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0"
