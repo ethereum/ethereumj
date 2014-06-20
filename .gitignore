@@ -20,6 +20,8 @@ bin
 /src/main/java/samples
 /blockchain
 /state
+/details
+/logs
 
 *.db
 *.xlsx
