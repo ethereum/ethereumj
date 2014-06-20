@@ -151,28 +151,21 @@ public class Blockchain {
 		try {
 			if (index.size() == 0) {
                 logger.info("DB is empty - adding Genesis");
-                Block genesis = Genesis.getInstance();
-                this.addBlock(genesis);
-                logger.debug("Block: " + genesis.getNumber() + " ---> " + genesis.toFlatString());
-                db.put(genesis.getParentHash(), genesis.getEncoded());
+                this.lastBlock = Genesis.getInstance();
+                this.addBlock(lastBlock);
+                logger.debug("Block #" + Genesis.NUMBER + " -> " + lastBlock.toFlatString());
+                db.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
             }
 
             logger.debug("Displaying blocks stored in DB sorted on blocknumber");
-            byte[] parentHash = Genesis.PARENT_HASH; // get Genesis block by parentHash
+            long blockNr = Genesis.NUMBER;
             for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-
-                byte[] parentRLP = db.get(parentHash);
-                if (parentRLP == null) return;
-
-                Block block = new Block(parentRLP);
-                this.addBlock(block);
-
+                this.lastBlock = new Block(db.get(ByteUtil.longToBytes(blockNr)));
                 // in case of cold load play the contracts
-                WorldManager.instance.applyBlock(block);
-
-                if (logger.isDebugEnabled())
-                    logger.debug("Block: " + getLastBlock().getNumber() + " ---> " + getLastBlock().toFlatString());
-                parentHash = getLastBlock().getHash();
+                WorldManager.instance.applyBlock(lastBlock);
+                logger.debug("Block #" + lastBlock.getNumber() + " -> " + lastBlock.toFlatString());
+                this.addBlock(lastBlock);
+                blockNr = lastBlock.getNumber()+1;
 			}
 		} finally {
 			// Make sure you close the iterator to avoid resource leaks.
