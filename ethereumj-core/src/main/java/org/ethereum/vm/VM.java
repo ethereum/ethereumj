@@ -70,8 +70,6 @@ public class VM {
                 case SLOAD:
                     program.spendGas(GasCost.SLOAD, OpCode.code(op).name());
                     break;
-                case SSTORE:
-                	break;
                 case BALANCE:
                     program.spendGas(GasCost.BALANCE, OpCode.code(op).name());
                     break;
@@ -80,6 +78,10 @@ public class VM {
                     break;
                 case CALL:
                     program.spendGas(GasCost.CALL, OpCode.code(op).name());
+                    break;
+                case SSTORE: case STOP:
+                    // The ops that doesn't charged by step, or charge
+                    // in the following section
                     break;
                 default:
                     program.spendGas(GasCost.STEP, OpCode.code(op).name());
@@ -557,7 +559,7 @@ public class VM {
             int memoryUsage = (newMemSize - oldMemSize) /32;
 
             if (memoryUsage > 0)
-                program.spendGas(GasCost.MEMORY * memoryUsage, OpCode.code(op).name());
+                program.spendGas(GasCost.MEMORY * memoryUsage, OpCode.code(op).name() + " (memory usage)");
 
             program.fullTrace();
         } catch (RuntimeException e) {
