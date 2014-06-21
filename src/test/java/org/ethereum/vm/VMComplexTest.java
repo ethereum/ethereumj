@@ -12,6 +12,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.HashMap;
 
+import static org.junit.Assert.assertEquals;
+
 /**
  * www.ethereumJ.com
  *
@@ -38,6 +40,8 @@ public class VMComplexTest {
          else:
              stop
  */
+
+        int expectedGas = 438;
 
         DataWord key1 = new DataWord(999);
         DataWord value1 = new DataWord(3);
@@ -91,6 +95,7 @@ public class VMComplexTest {
         }
 
 
+        System.out.println();
         System.out.println("============ Results ============");
         AccountState as =
                 new AccountState(WorldManager.instance.worldState.get(
@@ -100,6 +105,7 @@ public class VMComplexTest {
         System.out.println("*** Contract Balance: " + as.getBalance());
 
 
+        assertEquals(expectedGas, program.result.getGasUsed());
 
 
 

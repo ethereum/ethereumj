@@ -80,8 +80,8 @@ public class VM {
                     program.spendGas(GasCost.CALL, OpCode.code(op).name());
                     break;
                 case SSTORE: case STOP:
-                    // The ops that doesn't charged by step, or charge
-                    // in the following section
+                    // The ops that doesn't charged by step, or
+                    // charged in the following section
                     break;
                 default:
                     program.spendGas(GasCost.STEP, OpCode.code(op).name());
@@ -119,7 +119,6 @@ public class VM {
                     program.step();
                 }	break;
                 case DIV:{
-
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     word1.div(word2);
@@ -127,7 +126,6 @@ public class VM {
                     program.step();
                 }	break;
                 case SDIV:{
-
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     word1.sDiv(word2);
