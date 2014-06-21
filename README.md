@@ -2,7 +2,7 @@
 
 
  By **Roman Mandaleil** @romanman 2014.   
- * Based on a design by **Vitalik Buterin**.
+ * Based on a design by **Vitalik Buterin** @vbuterin. 
 
  
  Major contribution by:   
