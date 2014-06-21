@@ -113,13 +113,14 @@ public class ProgramInvokeFactory {
                     "difficulty={}\n" +
                     "gaslimit={}\n"
                     ,
+
                     Hex.toHexString(address),
                     Hex.toHexString(origin),
                     Hex.toHexString(caller),
-                    Hex.toHexString(balance),
-                    Hex.toHexString(gasPrice),
-                    Hex.toHexString(gas),
-                    Hex.toHexString(callValue),
+                    new BigInteger(balance).longValue(),
+                    new BigInteger(gasPrice).longValue(),
+                    new BigInteger(gas).longValue(),
+                    new BigInteger(callValue).longValue(),
                     Hex.toHexString(data),
                     Hex.toHexString(lastHash),
                     Hex.toHexString(coinbase),
@@ -187,17 +188,17 @@ public class ProgramInvokeFactory {
                     Hex.toHexString(address.getData()),
                     Hex.toHexString(origin.getData()),
                     Hex.toHexString(caller.getData()),
-                    Hex.toHexString(balance.getData()),
-                    Hex.toHexString(gasPrice.getData()),
-                    Hex.toHexString(gas.getData()),
+                    new BigInteger(balance.getData()).longValue(),
+                    new BigInteger(gasPrice.getData()).longValue(),
+                    new BigInteger(gas.getData()).longValue(),
                     Hex.toHexString(callValue.getData()),
                     Hex.toHexString(data),
                     Hex.toHexString(lastHash.getData()),
                     Hex.toHexString(coinbase.getData()),
                     Hex.toHexString(timestamp.getData()),
-                    Hex.toHexString(number.getData()),
+                    new BigInteger(number.getData()).longValue(),
                     Hex.toHexString(difficulty.getData()),
-                    Hex.toHexString(gasLimit.getData()));
+                    new BigInteger(gasLimit.getData()).longValue());
         }
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
