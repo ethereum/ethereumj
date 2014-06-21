@@ -1,7 +1,7 @@
 # Ethereum Java Implementation
 
 
- By **Roman Mandaleil** @romanman 2014.   
+ By **Roman Mandeleil** @romanman 2014.   
  * Based on a design by **Vitalik Buterin** @vbuterin. 
 
  
@@ -16,7 +16,7 @@
   * **Vitalik Buterin** @vbuterin
 
 
-:gem: *We appreciate any contribution to this epic project and encourage you   
+:small_blue_diamond: *We appreciate any contribution to this epic project and encourage you   
  to contact us with your enthusiasm*
  
 ###### TODO list [here](TODO.md)
