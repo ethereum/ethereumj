@@ -6,7 +6,8 @@
 
  
  Major contribution by:   
-  * **Nick Savers** @nicksavers (Trie & Level DB support & Mining implementation, Testing and in-code documentation)
+  * **Nick Savers** @nicksavers (Trie & Level DB support & Mining implementation,   
+     key cryptography, Testing and in-code documentation)
  
  
  Many thanks for help to:   
