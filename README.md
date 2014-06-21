@@ -1,11 +1,13 @@
 # Ethereum Java Implementation
-------------------------------
+
 
  By **Roman Mandaleil** @romanman 2014.   
  * Based on a design by **Vitalik Buterin**.
+
  
  Major contribution by:   
  * **Nick Savers** @nicksavers (Trie & Level DB support & Mining implementation, Testing and in-code documentation)
+ 
  
  Many thanks for help to:   
  * **Gavin Wood** @gavofyork   
@@ -38,9 +40,10 @@ https://app.box.com/s/eotjb06lzdh5bmwheror
 ###### TODO list [here](TODO.md)
 ###### License [content](LICENSE)
 
+
 :sparkles::sparkles::sparkles::sparkles::sparkles::sparkles:
  
  
- .
+
 
 
