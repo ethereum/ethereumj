@@ -19,6 +19,7 @@
 :gem: *We appreciate any contribution to this epic project and encourage you   
  to contact us with your enthusiasm*
  
+###### TODO list [here](TODO.md)
  
 ### Website (community)
 
@@ -38,8 +39,6 @@ https://app.box.com/s/eotjb06lzdh5bmwheror
 
 ### Build instructions (maven)
  *no test run one zip application build:* ~> ` mvn clean package -Dmaven.test.skip=true `
-
-###### TODO list [here](TODO.md)
 
 
 [![ScreenShot](http://i.imgur.com/FQiBihl.jpg)](https://www.youtube.com/watch?v=D5ok7jh7AOg)
