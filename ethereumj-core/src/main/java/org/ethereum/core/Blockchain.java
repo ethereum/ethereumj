@@ -15,16 +15,32 @@ import java.util.*;
 
 import static org.ethereum.core.Denomination.*;
 
-/*
- *
- * www.ethereumJ.com
- * @author: Nick Savers
- * Created on: 20/05/2014 10:44
- *
+/**
+ * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain, 
+ * although it does have some differences. 
+ * 
+ * The main difference between Ethereum and Bitcoin with regard to the blockchain architecture 
+ * is that, unlike Bitcoin, Ethereum blocks contain a copy of both the transaction list 
+ * and the most recent state. Aside from that, two other values, the block number and 
+ * the difficulty, are also stored in the block. 
+ * 
+ * The block validation algorithm in Ethereum is as follows:
+ * <ol>
+ * <li>Check if the previous block referenced exists and is valid.</li>
+ * <li>Check that the timestamp of the block is greater than that of the referenced previous block and less than 15 minutes into the future</li>
+ * <li>Check that the block number, difficulty, transaction root, uncle root and gas limit (various low-level Ethereum-specific concepts) are valid.</li>
+ * <li>Check that the proof of work on the block is valid.</li>
+ * <li>Let S[0] be the STATE_ROOT of the previous block.</li>
+ * <li>Let TX be the block's transaction list, with n transactions. 
+ * 	For all in in 0...n-1, set S[i+1] = APPLY(S[i],TX[i]). 
+ * If any applications returns an error, or if the total gas consumed in the block 
+ * up until this point exceeds the GASLIMIT, return an error.</li>
+ * <li>Let S_FINAL be S[n], but adding the block reward paid to the miner.</li>
+ * <li>Check if S_FINAL is the same as the STATE_ROOT. If it is, the block is valid; otherwise, it is not valid.</li>
+ * </ol>
+ * See <a href="https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper#blockchain-and-mining">Ethereum Whitepaper</a>
  */
 public class Blockchain {
-
-	private static final long serialVersionUID = -143590724563460486L;
 
 	private static Logger logger = LoggerFactory.getLogger("blockchain");
 	
@@ -113,7 +129,7 @@ public class Blockchain {
 			setLastBlock(block);
 			index.put(block.getNumber(), block.getParentHash());
     	} else {
-    		logger.warn("Invalid block with nr: " + block.getNumber());
+    		logger.warn("Invalid block with nr: {}", block.getNumber());
     	}
     }
     
@@ -130,7 +146,7 @@ public class Blockchain {
      */
     public WalletTransaction addWalletTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction placed hash: {} ", hash );
+        logger.info("pending transaction placed hash: {}", hash );
 
         WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
 		if (walletTransaction != null)
@@ -144,7 +160,7 @@ public class Blockchain {
 
     public void removeWalletTransaction(Transaction transaction){
         String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction removed with hash: {} ",  hash );
+        logger.info("pending transaction removed with hash: {} ",  hash);
         walletTransactions.remove(hash);
     }
 
@@ -162,7 +178,7 @@ public class Blockchain {
                 logger.info("DB is empty - adding Genesis");
                 this.lastBlock = Genesis.getInstance();
                 this.addBlock(lastBlock);
-                logger.debug("Block #" + Genesis.NUMBER + " -> " + lastBlock.toFlatString());
+                logger.debug("Block #{} -> {}", Genesis.NUMBER, lastBlock.toFlatString());
                 db.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
             }
 
@@ -172,7 +188,7 @@ public class Blockchain {
                 this.lastBlock = new Block(db.get(ByteUtil.longToBytes(blockNr)));
                 // in case of cold load play the contracts
                 WorldManager.instance.applyBlock(lastBlock);
-                logger.debug("Block #" + lastBlock.getNumber() + " -> " + lastBlock.toFlatString());
+                logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
                 this.addBlock(lastBlock);
                 blockNr = lastBlock.getNumber()+1;
 			}
