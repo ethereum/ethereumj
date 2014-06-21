@@ -13,7 +13,7 @@ goto :end
 
 
 rem # I use this to stop push every local propertie change 
-:trackProps
+:untrackProps
 @echo on
 git update-index --assume-unchanged src/main/resources/log4j.properties
 git update-index --assume-unchanged src/main/resources/system.properties
@@ -23,7 +23,7 @@ git update-index --assume-unchanged src/test/resources/system.properties
 goto end
 
 rem # If I want to get back to push this changes e.g. for some new propertie I run this
-:untrackProps
+:trackProps
 @echo on
 git update-index --no-assume-unchanged src/main/resources/log4j.properties
 git update-index --no-assume-unchanged src/main/resources/system.properties
