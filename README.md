@@ -38,11 +38,14 @@ http://gavwood.com/Paper.pdf
 https://app.box.com/s/eotjb06lzdh5bmwheror
 
 ### Build instructions (maven)
- *no test run one zip application build:* ~> ` mvn clean package -Dmaven.test.skip=true `
-
-
-[![ScreenShot](http://i.imgur.com/FQiBihl.jpg)](https://www.youtube.com/watch?v=D5ok7jh7AOg)
-
+ *no test run one zip application build:* ~> ` mvn clean package -Dmaven.test.skip=true `   
+.   
+.   
+.   
+[![ScreenShot](http://i.imgur.com/FQiBihl.jpg)](https://www.youtube.com/watch?v=D5ok7jh7AOg)   
+.   
+.   
+.   
 
 ###### License [content](LICENSE)
 :sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles:
