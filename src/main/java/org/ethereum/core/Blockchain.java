@@ -39,6 +39,13 @@ import static org.ethereum.core.Denomination.*;
  * <li>Check if S_FINAL is the same as the STATE_ROOT. If it is, the block is valid; otherwise, it is not valid.</li>
  * </ol>
  * See <a href="https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper#blockchain-and-mining">Ethereum Whitepaper</a>
+ *
+ *
+ * www.ethereumJ.com
+ * @authors: Roman Mandeleil,
+ *           Nick Savers
+ * Created on: 20/05/2014 10:44
+ *
  */
 public class Blockchain {
 
