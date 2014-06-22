@@ -13,12 +13,6 @@ package org.ethereum.crypto;
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- *
- * www.ethereumJ.com
- * @author: Nick Savers
- * Created on: 20/05/2014 10:44
- *
  */
 import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
@@ -50,11 +44,34 @@ import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.encoders.Hex;
- 
+
+/**
+ * <p>Represents an elliptic curve public and (optionally) private key, usable for digital signatures but not encryption.
+ * Creating a new ECKey with the empty constructor will generate a new random keypair. Other static methods can be used
+ * when you already have the public or private parts. If you create a key with only the public part, you can check
+ * signatures but not create them.</p>
+ * 
+ * <p>The ECDSA algorithm supports <i>key recovery</i> in which a signature plus a couple of discriminator bits can
+ * be reversed to find the public key used to calculate it. This can be convenient when you have a message and a
+ * signature and want to find out who signed it, rather than requiring the user to provide the expected identity.</p>
+ *
+ * <p>A key can be <i>compressed</i> or <i>uncompressed</i>. This refers to whether the public key is represented
+ * when encoded into bytes as an (x, y) coordinate on the elliptic curve, or whether it's represented as just an X
+ * co-ordinate and an extra byte that carries a sign bit. With the latter form the Y coordinate can be calculated
+ * dynamically, however, <b>because the binary serialization is different the address of a key changes if its
+ * compression status is changed</b>. If you deviate from the defaults it's important to understand this: money sent
+ * to a compressed version of the key will have a different address to the same key in uncompressed form. Whether
+ * a public key is compressed or not is recorded in the SEC binary serialisation format, and preserved in a flag in
+ * this class so round-tripping preserves state. Unless you're working with old software or doing unusual things, you
+ * can usually ignore the compressed/uncompressed distinction.</p>
+ *
+ * This code is borrowed from the bitcoinj project and altered to fit Ethereum.</br> 
+ * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey.java">bitcoinj on GitHub</a>
+ */
 public class ECKey implements Serializable {
 	private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
 	
-    /** The parameters of the secp256k1 curve that Bitcoin uses. */
+    /** The parameters of the secp256k1 curve that Ethereum uses. */
     public static final ECDomainParameters CURVE;
 
     /**
@@ -67,7 +84,7 @@ public class ECKey implements Serializable {
     private static final long serialVersionUID = -728224901792295832L;
 
     static {
-        // All clients must agree on the curve to use by agreement. Bitcoin uses secp256k1.
+        // All clients must agree on the curve to use by agreement. Ethereum uses secp256k1.
         X9ECParameters params = SECNamedCurves.getByName("secp256k1");
         CURVE = new ECDomainParameters(params.getCurve(), params.getG(), params.getN(), params.getH());
         HALF_CURVE_ORDER = params.getN().shiftRight(1);
@@ -278,8 +295,8 @@ public class ECKey implements Serializable {
     }
    
     /**
-     * Groups the two components that make up a signature, and provides a way to encode to DER form, which is
-     * how ECDSA signatures are represented when embedded in other data structures in the Bitcoin protocol. The raw
+     * Groups the two components that make up a signature, and provides a way to encode to Base64 form, which is
+     * how ECDSA signatures are represented when embedded in other data structures in the Ethereum protocol. The raw
      * components can be useful for doing further EC maths on them.
      */
     public static class ECDSASignature {
@@ -308,7 +325,7 @@ public class ECKey implements Serializable {
         /**
          * Will automatically adjust the S component to be less than or equal to half the curve order, if necessary.
          * This is required because for every signature (r,s) the signature (r, -s (mod N)) is a valid signature of
-         * the same message. However, we dislike the ability to modify the bits of a Bitcoin transaction after it's
+         * the same message. However, we dislike the ability to modify the bits of a Ethereum transaction after it's
          * been signed, as that violates various assumed invariants. Thus in future only one of those forms will be
          * considered legal and the other will be banned.
          */
@@ -403,7 +420,7 @@ public class ECKey implements Serializable {
      * determine if the signature was correct.
      * 
      * @param message a piece of human readable text that was signed
-     * @param signatureBase64 The Bitcoin-format message signature in base64
+     * @param signatureBase64 The Ethereum-format message signature in base64
      * @throws SignatureException If the public key could not be recovered or if there was a signature format error.
      */
     public static ECKey signatureToKey(byte[] messageHash, String signatureBase64) throws SignatureException {
