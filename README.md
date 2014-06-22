@@ -25,7 +25,7 @@ any crazy idea, be in touch... cheers!!!*
 TODO list is right [here](TODO.md)
  
 ######  :small_blue_diamond: Build instructions (maven)
-  *no test run one zip application build:* ~> ` mvn clean package -Dmaven.test.skip=true `   
+  1. build_1:  [no test run] , [one zip] : ~> ` mvn clean package -Dmaven.test.skip=true `   
 
 ######  :small_blue_diamond: Latest stable binaries can be found [here](https://app.box.com/s/eotjb06lzdh5bmwheror)
  
