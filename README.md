@@ -29,15 +29,13 @@ TODO list is right [here](TODO.md)
 
 ######  :small_blue_diamond:Latest stable binaries can be found [here](https://app.box.com/s/eotjb06lzdh5bmwheror)
  
-###### :small_blue_diamond: Community website  http://www.ethereum.org
+######  :small_blue_diamond: Community website  http://www.ethereum.org
 
-### Yellow Paper (Gavin precise definition of every corner in the Ethereum protocol)
+######  :small_blue_diamond: Yellow Paper (Gav precise definition of every corner in the Ethereum protocol)   
+  http://gavwood.com/Paper.pdf
 
-http://gavwood.com/Paper.pdf
-
-### Whitepaper 
-
-https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
+######  :small_blue_diamond: Whitepaper (Vitalik overview of the protocol)    
+  https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
 
 .   
 .   
@@ -47,8 +45,8 @@ https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
 .   
 .   
 
-###### License [content](LICENSE)
-:sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles:
+###### License details read [here](LICENSE)
+:sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles:
 
  
  
