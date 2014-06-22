@@ -26,6 +26,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     ContractDetails details = null;
 
+    String ownerAddress;
 
 
     public ProgramInvokeMockImpl(byte[] msgDataRaw){
@@ -38,7 +39,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     /*           ADDRESS op         */
     public DataWord getOwnerAddress(){
 
-        byte[] addr = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
+        byte[] addr = Hex.decode(ownerAddress);
         return new DataWord(addr);
     }
 
@@ -186,6 +187,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public void setDetails(ContractDetails details) {
         this.details = details;
     }
+
+    public void setOwnerAddress(String ownerAddress) {
+        this.ownerAddress = ownerAddress;
+    }
+
 
     @Override
     public Map<DataWord, DataWord> getStorage() {

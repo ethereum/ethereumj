@@ -204,18 +204,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         // msg assigned has two arrays to calc
         if (ctx.msg_func() != null){
 
-            String msgCode = visitMsg_func(ctx.msg_func());
-            int outSize = getMsgOutputArraySize(msgCode);
-            int inSize = getMsgInputArraySize(msgCode);
-            msgCode = cleanMsgString(msgCode);
-
-            String randomArrayName = new String(HashUtil.randomPeerId());
-            arraysSize.put(randomArrayName, inSize * 32 + 32);
-            arraysIndex.add(randomArrayName);
-
-            arraysSize.put(varName, outSize * 32 + 32);
-            arraysIndex.add(varName);
-
+            String msgCode = visitMsg_func(ctx.msg_func(), varName);
             return msgCode;
         } else if (ctx.arr_def() != null){
             // if it's an array the all management is different
@@ -599,22 +588,46 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return String.format("%s 32 MUL CALLDATALOAD ",  operand0);
     }
 
-    @Override
-    public String visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx) {
+    public String visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx, String varName) {
 
 //        msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' arr_def ',' int_val  ',' int_val')' ;
 //        msg_func: 'msg' '(' [gas] ',' [to] ',' [value] ',' arr_def ',' [in_len]  ',' [out_len]')' ;
 
-        String operand0 = visit(ctx.int_val(0));
-        String operand1 = visit(ctx.int_val(1));
-        String operand2 = visit(ctx.int_val(2));
-        String operand3 = visit(ctx.arr_def());
-        String operand4 = visit(ctx.int_val(3));
-        String operand5 = visit(ctx.int_val(4));
+        String operand0   = visit(ctx.int_val(0));
+        String operand1   = visit(ctx.int_val(1));
+        String operand2   = visit(ctx.int_val(2));
 
-//        OUTDATASIZE OUTDATASTART INDATASIZE INDATASTART VALUE TO GAS CALL
-        return  String.format("<out_size %s out_size> <in_size %s in_size> %s %s %s %s %s %s CALL ",
-                operand5, operand4, operand5, operand4,  operand3, operand2, operand1, operand0);
+        String loadInData = visit(ctx.arr_def());
+
+        String inSizeCallParam   = visit(ctx.int_val(3));
+        String outSizeCallParam   = visit(ctx.int_val(4));
+
+        // todo: 1. allocate out_memory and push ptr
+        // todo: 2. push ptr for in_memory allocated
+
+        String randomArrayName = new String(HashUtil.randomPeerId());
+
+        int inSize = Integer.parseInt( inSizeCallParam );
+        int outSize = Integer.parseInt( outSizeCallParam );
+
+        arraysSize.put(randomArrayName, inSize * 32 + 32);
+        arraysIndex.add(randomArrayName);
+
+        int outSizeVal = outSize * 32 + 32;
+        arraysSize.put(varName, outSize * 32 + 32);
+        arraysIndex.add(varName);
+
+
+//        [OUTDATASIZE] [OUTDATASTART] [INDATASIZE] [INDATASTART] [VALUE] [TO] [GAS] CALL
+//        [OUTDATASIZE] [OUTDATASTART] [INDATASIZE] [INDATASTART] ***ARR_IN_SET*** [VALUE] [TO] [GAS] CALL
+        //X_X = [ 32 + 128 + 6 * 32 ] = [ var_table_size + in_arr_size + out_arr_size ]
+
+        // this code allocates the memory block for the out data,
+        // and saves the size in typical array format [size, element_1, element_2, ...]
+        String outArrSet = String.format( " %d MSIZE MSTORE   0 %d MSIZE ADD MSTORE8 ", outSizeVal, outSizeVal - 32 );
+
+        return  String.format("%d MSIZE %s %d %s %s %s %s CALL ",
+                outSizeVal, outArrSet ,inSize * 32, loadInData, operand2, operand1, operand0);
     }
 
     @Override
@@ -685,8 +698,6 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return (new BigInteger(1, numberBytes)).toString();
     }
 
-
-
     public static class UnknownOperandException extends RuntimeException {
         public UnknownOperandException(String name) {
             super("unknown operand: " + name);
@@ -739,7 +750,10 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     }
 
 
-
+    /**
+     * After the array deff code is set
+     * extract the size out of code string
+     */
     private Integer getArraySize(String code){
 
         String result = "0";

@@ -244,7 +244,7 @@ public class Program {
 
         AccountState receiverState;
         byte[] accountData = result.getStateDb().get(toAddress);
-        if (accountData == null){
+        if (accountData == null || accountData.length == 0){
 
             logger.info("no saved address in db to call: address={}" ,Hex.toHexString(toAddress));
             return;
