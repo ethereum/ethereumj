@@ -32,7 +32,7 @@ public class ProgramResult {
         this.hReturn.put(hReturn);
     }
 
-    public ByteBuffer gethReturn() {
+    public ByteBuffer getHReturn() {
         return hReturn;
     }
 

@@ -198,7 +198,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
 
-        String asmCode ="0 31 MSTORE8 224 MSIZE 224 MSIZE MSTORE 0 192 MSIZE ADD MSTORE8 96 MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 0 752278364205682983151548199104072833112320979438 1000 CALL 32 0 MUL 160 ADD 32 ADD MLOAD 0 MSTORE";
+        String asmCode ="11 0 MSTORE 22 32 MSTORE 33 64 MSTORE 44 96 MSTORE 55 128 MSTORE 66 160 MSTORE 192 0 RETURN";
         final byte[] code = SerpentCompiler.compileAssemblyToMachine(asmCode);
 
 

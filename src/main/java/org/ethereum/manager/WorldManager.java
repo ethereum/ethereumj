@@ -286,9 +286,9 @@ public class WorldManager {
 
         // Save the code created by init
         byte[] bodyCode = null;
-        if (result.gethReturn() != null){
+        if (result.getHReturn() != null){
 
-            bodyCode = result.gethReturn().array();
+            bodyCode = result.getHReturn().array();
         }
 
         BigInteger gasPrice =
