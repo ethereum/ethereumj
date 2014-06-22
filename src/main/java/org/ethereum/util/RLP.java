@@ -536,7 +536,7 @@ public class RLP {
      *
      * @param msgData
      *            - raw RLP data
-     * @param rlpList
+     * @return rlpList
      *            - outcome of recursive RLP structure
      */
     public static RLPList decode2(byte[] msgData) {
@@ -728,7 +728,7 @@ public class RLP {
 	 * Turn Object into its RLP encoded equivalent of a byte-array
 	 * Support for String, Integer, BigInteger and Lists of any of these types.
 	 * 
-	 * @param item as object or List of objects
+	 * @param input as object or List of objects
 	 * @return byte[] RLP encoded 
 	 */
 	public static byte[] encode(Object input) {
