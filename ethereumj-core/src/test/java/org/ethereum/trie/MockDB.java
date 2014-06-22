@@ -2,8 +2,6 @@ package org.ethereum.trie;
 
 import java.io.IOException;
 import java.util.Map.Entry;
-import java.util.Spliterator;
-import java.util.function.Consumer;
 
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
@@ -132,16 +130,16 @@ public class MockDB implements DB {
 		return addedItems;
 	}
 
-	@Override
-	public void forEach(Consumer<? super Entry<byte[], byte[]>> action) {
-		// TODO Auto-generated method stub
-		
-	}
+//	@Override
+//	public void forEach(Consumer<? super Entry<byte[], byte[]>> action) {
+//		TODO Auto-generated method stub
+//
+//	}
 
-	@Override
-	public Spliterator<Entry<byte[], byte[]>> spliterator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+//	@Override
+//	public Spliterator<Entry<byte[], byte[]>> spliterator() {
+//		TODO Auto-generated method stub
+//		return null;
+//	}
 	
 }
