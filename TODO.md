@@ -6,6 +6,7 @@
 - [x] **VM execution:** support CALL op   
 - [x] **VM execution:** support CALL op with in/out data   
 - [ ] **VM execution:** support CREATE op
+- [ ] **SerpentCompiler** compile return(array) correct
 - [ ] **VM execution:** SUICIDE op adjust
 - [ ] **ProgramPlayDialog** support internal calls
 - [ ] **Build:** extract core module and studio application
@@ -19,7 +20,9 @@ economy for memory allocation
 += -= *= /= %= @/= @%= - short form operations      
 share - code section
     
+- [ ] **LLL_to_ASM compiler** list style language to EVM assembly compiler:    
 
+- 
 
 ##### UnitTest:   
 ----------------
@@ -28,5 +31,6 @@ share - code section
 - [x] **VM complex:** CALL testing for out result
 - [ ] **VM complex:** CREATE testing 
 - [ ] **VM complex:** SUICIDE testing
+- [ ] **SerpentCompiler** compile return(array) correct
 - [ ] **WorldManager** apply transactions
 
