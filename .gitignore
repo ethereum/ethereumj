@@ -9,7 +9,7 @@
 .project
 .classpath
 .settings
-bin
+/bin
 
 # Package Files #
 *.zip
