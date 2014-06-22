@@ -21,13 +21,13 @@ project and encourage you to contact us
 with your enthusiasm, we are open to discuss   
 any crazy idea, be in touch... cheers!!!*   
  
-###### :small_blue_diamond:If you want to find out what we are cooking now   
+###### :small_blue_diamond: If you want to find out what we are cooking now   
 TODO list is right [here](TODO.md)
  
-######  :small_blue_diamond:Build instructions (maven)
+######  :small_blue_diamond: Build instructions (maven)
   *no test run one zip application build:* ~> ` mvn clean package -Dmaven.test.skip=true `   
 
-######  :small_blue_diamond:Latest stable binaries can be found [here](https://app.box.com/s/eotjb06lzdh5bmwheror)
+######  :small_blue_diamond: Latest stable binaries can be found [here](https://app.box.com/s/eotjb06lzdh5bmwheror)
  
 ######  :small_blue_diamond: Community website  http://www.ethereum.org
 
