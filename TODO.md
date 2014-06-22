@@ -4,6 +4,7 @@
 ----------------
 
 - [x] **VM execution:** support CALL op   
+- [ ] **VM execution:** support CALL op with in/out data   
 - [ ] **VM execution:** support CREATE op
 - [ ] **Build:** extract core module and studio application
 - [ ] **Performance:** BigInteger math change for constant arrays implementation   
