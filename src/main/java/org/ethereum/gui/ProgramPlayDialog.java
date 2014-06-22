@@ -5,11 +5,9 @@ import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.TrackDatabase;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.serpent.SerpentCompiler;
 import org.ethereum.trie.TrackTrie;
-import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.ProgramInvokeImpl;
-import org.ethereum.vm.VM;
+import org.ethereum.vm.*;
 import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
@@ -36,6 +34,24 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
     private Transaction tx;
 
+    public ProgramPlayDialog(byte[] code){
+
+        outputList = new ArrayList<String>();
+        VM vm = new VM();
+
+        ProgramInvoke pi = new ProgramInvokeMockImpl();
+
+        Program program = new Program(code ,
+                pi);
+
+        program.addListener(this);
+        program.fullTrace();
+        vm.play(program);
+
+        doGUI();
+    }
+
+
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock, ContractDetails contractDetails) {
 
         this.tx = tx;
@@ -60,6 +76,10 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         trackStateDB.rollbackTrack();
 
 
+        doGUI();
+    }
+
+    public void doGUI(){
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         //Create the slider.
@@ -137,7 +157,12 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
      */
     public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock, ContractDetails details) {
 
-        ProgramPlayDialog ppd = new ProgramPlayDialog(runCode, tx, lastBlock, details);
+        ProgramPlayDialog ppd;
+        if (tx != null)
+            ppd = new ProgramPlayDialog(runCode, tx, lastBlock, details);
+        else{
+            ppd = new ProgramPlayDialog(runCode);
+        }
 
         //Create and set up the window.
         JFrame frame = new JFrame("Program Draft Play");
@@ -173,13 +198,15 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
 
-/*  todo: make dummy tx for dialog single invokation
+        String asmCode ="0 31 MSTORE8 224 MSIZE 224 MSIZE MSTORE 0 192 MSIZE ADD MSTORE8 96 MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 0 752278364205682983151548199104072833112320979438 1000 CALL 32 0 MUL 160 ADD 32 ADD MLOAD 0 MSTORE";
+        final byte[] code = SerpentCompiler.compileAssemblyToMachine(asmCode);
+
+
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                createAndShowGUI();
+                createAndShowGUI(code, null, null, null);
             }
         });
-*/
 
     }
 }
