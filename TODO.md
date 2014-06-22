@@ -9,7 +9,13 @@
 - [ ] **Performance:** BigInteger math change for constant arrays implementation   
 economy for memory allocation
 - [ ] **Command Line:** add the headless run option   
-- [ ] **Testing by JSON files:** follow cpp client performs test case by getting json file contains the test describe   
+- [ ] **Testing by JSON files:** follow cpp client performs test case by getting json file contains the test describe
+- [ ] Serpent new syntax:   
+(@> @< @/ @%) - unsigned operations   
+ > < / % - default are all signed operations   
++= -= *= /= %= @/= @%= - short form operations      
+share - code section
+    
 
 
 ##### UnitTest:   
