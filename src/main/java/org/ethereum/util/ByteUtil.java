@@ -160,16 +160,6 @@ public class ByteUtil {
 		return baos.toByteArray();
 	}
 
-
-
-
-
-
-
-
-
-
-
     public static byte[] stripLeadingZeroes(byte[] data){
 
         if (data == null) return null;

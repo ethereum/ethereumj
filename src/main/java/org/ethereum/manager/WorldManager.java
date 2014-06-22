@@ -206,7 +206,6 @@ public class WorldManager {
                     logger.info("running the init for contract: addres={}" ,
                             Hex.toHexString(tx.getContractAddress()));
 
-
                 VM vm = new VM();
                 Program program = new Program(initCode, programInvoke);
                 vm.play(program);

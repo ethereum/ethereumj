@@ -15,16 +15,7 @@ import java.util.*;
 
 import static org.ethereum.core.Denomination.*;
 
-/*
- *
- * www.ethereumJ.com
- * @author: Nick Savers
- * Created on: 20/05/2014 10:44
- *
- */
 public class Blockchain {
-
-	private static final long serialVersionUID = -143590724563460486L;
 
 	private static Logger logger = LoggerFactory.getLogger("blockchain");
 	
@@ -52,7 +43,7 @@ public class Blockchain {
 	}
 
 	public Block getLastBlock() {
-            return lastBlock;
+        return lastBlock;
 	}
 
     public void setLastBlock(Block block){
