@@ -16,29 +16,29 @@
   * **Vitalik Buterin** @vbuterin
 
 
-:small_blue_diamond: *We appreciate any contribution to this epic project and encourage you   
- to contact us with your enthusiasm*
+:small_blue_diamond: *We appreciate any contribution to this epic   
+project and encourage you to contact us   
+with your enthusiasm, we are open to discuss   
+any crazy idea, cheers... be in touch.*   
  
-###### TODO list [here](TODO.md)
+###### :small_blue_diamond:If you want to find out what we are cooking now   
+TODO list is right [here](TODO.md)
  
-### Website (community)
+######  :small_blue_diamond:Build instructions (maven)
+  *no test run one zip application build:* ~> ` mvn clean package -Dmaven.test.skip=true `   
 
-http://www.ethereum.org
+######  :small_blue_diamond:Latest stable binaries can be found [here](https://app.box.com/s/eotjb06lzdh5bmwheror)
+ 
+###### :small_blue_diamond: Community website  http://www.ethereum.org
 
-### Whitepaper
-
-https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
-
-### Yellow Paper
+### Yellow Paper (Gavin precise definition of every corner in the Ethereum protocol)
 
 http://gavwood.com/Paper.pdf
 
-### Latest stable binaries can be found here
+### Whitepaper 
 
-https://app.box.com/s/eotjb06lzdh5bmwheror
+https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
 
-### Build instructions (maven)
- *no test run one zip application build:* ~> ` mvn clean package -Dmaven.test.skip=true `   
 .   
 .   
 .   
