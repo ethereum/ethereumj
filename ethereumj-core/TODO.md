@@ -21,6 +21,7 @@ share - code section
 ##### UnitTest:   
 ----------------
 
-- [ ] **VM** complex testing for calls
+- [ ] **VM complex: CALL testing for in/out arrays
+- [ ] **VM complex: CREATE testing 
 - [ ] **WorldManager** apply transactions
 
