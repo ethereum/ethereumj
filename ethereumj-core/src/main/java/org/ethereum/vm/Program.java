@@ -323,9 +323,20 @@ public class Program {
                 return;
             }
 
-            // todo: apply results: result.gethReturn()
-            // todo: if there is out specified place hReturn on the out
+            // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
+            ByteBuffer buffer = result.getHReturn();
+            if (buffer != null){
 
+                int retSize = buffer.array().length;
+                int allocSize = outDataSize.intValue();
+                if (retSize > allocSize){
+
+                    byte[] outArray =  Arrays.copyOf(buffer.array(), allocSize );
+                    this.memorySave(outArray, buffer.array());
+                } else{
+                    this.memorySave(outDataOffs.getData(), buffer.array());
+                }
+            }
 
             detailDB.commitTrack();
             chainDB.commitTrack();
@@ -333,6 +344,7 @@ public class Program {
             stackPush(new DataWord(1));
 
             // the gas spent in any internal outcome
+            // even if execution was halted by an exception
             spendGas(result.getGasUsed(), " 'Total for CALL run' ");
             logger.info("The usage of the gas in external call updated", result.getGasUsed());
 
@@ -536,8 +548,8 @@ public class Program {
             globalOutput.append(" -- MEMORY --  ").append(memoryData).append("\n");
             globalOutput.append(" -- STORAGE -- ").append(storageData).append("\n");
 
-            if (result.gethReturn() != null){
-                globalOutput.append("\n  HReturn: ").append(Hex.toHexString(result.gethReturn().array()));
+            if (result.getHReturn() != null){
+                globalOutput.append("\n  HReturn: ").append(Hex.toHexString(result.getHReturn().array()));
             }
 
             // soffisticated assumption that msg.data != codedata
