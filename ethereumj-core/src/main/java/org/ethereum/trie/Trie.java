@@ -7,7 +7,6 @@ import static org.ethereum.util.CompactEncoder.*;
 import java.util.Arrays;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Database;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 import org.spongycastle.util.encoders.Hex;
@@ -125,7 +124,6 @@ public class Trie implements TrieFacade{
         return c.asBytes();
     }
 
-
     /**
      * Delete a key/value pair from the trie
      *
@@ -134,7 +132,6 @@ public class Trie implements TrieFacade{
     public void delete(byte[] key) {
         delete(Hex.encode(key));
     }
-
 
 	/**
 	 * Delete a key/value pair from the trie
