@@ -7,6 +7,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
@@ -42,6 +43,22 @@ public class HashUtil {
     public static byte[] sha3omit12(byte[] input) {
     	byte[] hash = sha3(input);
     	return copyOfRange(hash, 12, hash.length);
+    }
+
+    /**
+     * The way to calculate new address inside ethereum
+     *
+     * @param addr  - creating addres
+     * @param nonce - nonce of creating address
+     * @return new address
+     */
+    public static byte[] calcNewAddr(byte[] addr, byte[] nonce){
+
+        byte[] encSender = RLP.encodeElement(addr);
+        byte[] encNonce = RLP.encodeElement(nonce);
+        byte[] newAddress = HashUtil.sha3omit12(RLP.encodeList(encSender, encNonce));
+
+        return newAddress;
     }
     
     /**
