@@ -513,7 +513,7 @@ public class VM {
                     DataWord inOffset   =  program.stackPop();
                     DataWord inSize     =  program.stackPop();
 
-                    // todo: implement contract creation
+                    program.createContract(gas, inOffset, inSize);
 
                     program.step();
                 }	break;

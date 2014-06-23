@@ -169,6 +169,7 @@ public class ProgramInvokeFactory {
         Map<DataWord, DataWord> storage = storageIn;
 
         if (logger.isInfoEnabled()){
+
             logger.info("Program invocation: \n" +
                             "address={}\n" +
                             "origin={}\n"  +
@@ -192,7 +193,7 @@ public class ProgramInvokeFactory {
                     new BigInteger(gasPrice.getData()).longValue(),
                     new BigInteger(gas.getData()).longValue(),
                     Hex.toHexString(callValue.getData()),
-                    Hex.toHexString(data),
+                    data == null ? "null": Hex.toHexString(data),
                     Hex.toHexString(lastHash.getData()),
                     Hex.toHexString(coinbase.getData()),
                     Hex.toHexString(timestamp.getData()),

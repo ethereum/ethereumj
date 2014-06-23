@@ -216,6 +216,9 @@ public class VMComplexTest {
         assertEquals(expectedVal_1, value_1.longValue());
         assertEquals(expectedVal_2, value_2.longValue());
 
+        // todo: check that the value pushed after exec is 1
+
+
     }
 
 
@@ -332,6 +335,96 @@ public class VMComplexTest {
         assertEquals(expectedVal_4, value4.longValue());
         assertEquals(expectedVal_5, value5.longValue());
         assertEquals(expectedVal_6, value6.longValue());
+
+        // todo: check that the value pushed after exec is 1
+
+    }
+
+
+    @Test // CREATE magic
+    public void test4(){
+
+        /**
+         *       #The code will run
+         *       ------------------
+
+         contract A: 77045e71a7a2c50903d88e564cd72fab11e82051
+         -----------
+
+         a = 0x7f60c860005461012c6020540000000000000000000000000000000000000000
+         b = 0x0060005460206000f20000000000000000000000000000000000000000000000
+         create(100, 0 41)
+
+
+         contract B: (the contract to be created the addr will be defined to: 8e45367623a2865132d9bf875d5cfa31b9a0cd94)
+         -----------
+         a = 200
+         b = 300
+
+         */
+
+
+        // Set contract into Database
+        String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+
+        String contractA_addr = "77045e71a7a2c50903d88e564cd72fab11e82051";
+
+        String code_a = "7f7f60c860005461012c602054000000000000" +
+                        "00000000000000000000000000006000547e60" +
+                        "005460206000f2000000000000000000000000" +
+                        "0000000000000000000000602054602960006064f0";
+
+        byte[] caller_addr_bytes = Hex.decode(callerAddr);
+
+        byte[] contractA_addr_bytes = Hex.decode(contractA_addr);
+        byte[] codeA = Hex.decode(code_a);
+        byte[] codeA_Key = HashUtil.sha3(codeA);
+        AccountState accountState_a = new AccountState();
+        accountState_a.setCodeHash(codeA_Key);
+        WorldManager.instance.worldState.update(contractA_addr_bytes, accountState_a.getEncoded());
+
+        AccountState callerAcountState = new AccountState();
+        callerAcountState.addToBalance(new BigInteger("100000000000000000000"));
+        WorldManager.instance.worldState.update(caller_addr_bytes, callerAcountState.getEncoded());
+
+        WorldManager.instance.chainDB.put(codeA_Key, codeA);
+
+        TrackTrie     stateDB   = new TrackTrie(WorldManager.instance.worldState);
+        TrackDatabase chainDb   = new TrackDatabase(WorldManager.instance.chainDB);
+        TrackDatabase detaildDB = new TrackDatabase(WorldManager.instance.detaildDB);
+
+        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        pi.setDetaildDB(detaildDB);
+        pi.setChainDb(chainDb);
+        pi.setStateDB(stateDB);
+        pi.setDetails(null);
+        pi.setOwnerAddress(contractA_addr);
+
+        // ****************** //
+        //  Play the program  //
+        // ****************** //
+        VM vm = new VM();
+        Program program = new Program(codeA, pi);
+
+        try {
+            while(!program.isStopped())
+                vm.step(program);
+        } catch (RuntimeException e) {
+            program.setRuntimeFailure(e);
+        }
+
+
+        System.out.println();
+        System.out.println("============ Results ============");
+        AccountState as =
+                new AccountState(WorldManager.instance.worldState.get(
+                        Hex.decode( contractA_addr) ));
+
+
+        System.out.println("*** Used gas: " + program.result.getGasUsed());
+
+
+        // todo: check that the value pushed after exec is the new address
 
     }
 

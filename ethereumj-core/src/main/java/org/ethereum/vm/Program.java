@@ -2,8 +2,11 @@ package org.ethereum.vm;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.ContractDetails;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.TrackDatabase;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
+import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +53,6 @@ public class Program {
         this.invokeData = invokeData;
         this.ops = ops;
 
-
         if (invokeData.getStorage() != null){
             storage = invokeData.getStorage();
         }
@@ -71,6 +73,11 @@ public class Program {
 
     public void stackPushZero(){
         DataWord stackWord = new DataWord(0);
+        stack.push(stackWord);
+    }
+
+    public void stackPushOne(){
+        DataWord stackWord = new DataWord(1);
         stack.push(stackWord);
     }
 
@@ -217,6 +224,91 @@ public class Program {
     }
 
 
+    public void createContract(DataWord gas, DataWord memStart, DataWord memSize){
+
+        // 1. FETCH THE CODE FROM THE MEMORY
+        ByteBuffer programCode = memoryChunk(memStart, memSize);
+
+        TrackTrie stateDB = new TrackTrie( result.getStateDb() );
+        TrackDatabase chainDB = new TrackDatabase( result.getChainDb() );
+        TrackDatabase detailDB = new TrackDatabase( result.getDetailDB() );
+
+        detailDB.startTrack();
+        chainDB.startTrack();
+        stateDB.startTrack();
+
+        if (logger.isInfoEnabled())
+            logger.info("creating a new contract");
+
+        byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
+
+        byte[] data = stateDB.get( senderAddress );
+        AccountState senderState = new AccountState(data);
+
+
+        // 2.1 PERFORM THE GAS VALUE TX
+        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+        if (this.getGas().longValue() - gas.longValue() < 0 ){
+
+            logger.info("No gas for the internal CREATE op, \n" +
+                            "contract={}",
+                    Hex.toHexString(senderAddress));
+
+            this.stackPushZero();
+            return;
+        }
+
+        // 2.2 CREATE THE CONTRACT ADDRESS
+        byte[] nonce = senderState.getNonce().toByteArray();
+        byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getNoLeadZeroesData(), nonce);
+
+        // 2.3 UPDATE THE NONCE
+        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+        senderState.incrementNonce();
+
+        // 3. COOK THE INVOKE AND EXECUTE
+        ProgramInvoke programInvoke =
+                ProgramInvokeFactory.createProgramInvoke(this, DataWord.ZERO, null,
+                        DataWord.ZERO,  gas, BigInteger.ZERO,
+                        null,
+                        detailDB, chainDB, stateDB);
+
+        VM vm = new VM();
+        Program program = new Program(programCode.array(), programInvoke);
+        vm.play(program);
+        ProgramResult result = program.getResult();
+
+        if (result.getException() != null &&
+                result.getException() instanceof Program.OutOfGasException){
+            logger.info("contract run halted by OutOfGas: new contract init ={}" , Hex.toHexString(newAddress));
+
+            detailDB.rollbackTrack();
+            chainDB.rollbackTrack();
+            stateDB.rollbackTrack();
+            stackPushZero();
+            return;
+        }
+
+        // 4. CREATE THE CONTRACT OUT OF RETURN
+        byte[] code    = result.getHReturn().array();
+        byte[] keyCode = HashUtil.sha3(code);
+
+        ContractDetails contractDetails =  new ContractDetails(program.storage);
+        AccountState state = new AccountState();
+        state.setCodeHash(keyCode);
+
+        stateDB.update(newAddress, state.getEncoded());
+        chainDB.put(keyCode, code);
+        detailDB.put(newAddress, contractDetails.getEncoded());
+
+        // IN SUCCESS PUSH THE ADDRESS IN THE STACK
+        stackPush(new DataWord(newAddress));
+
+        detailDB.commitTrack();
+        chainDB.commitTrack();
+        stateDB.commitTrack();
+    }
+
     /**
      * That method implement internal calls
      * and code invocations
@@ -253,6 +345,7 @@ public class Program {
             receiverState = new AccountState(accountData);
         }
 
+        // FETCH THE CODE
         byte[] programCode = result.getChainDb().get(receiverState.getCodeHash());
         if (programCode != null && programCode.length != 0){
 
@@ -337,6 +430,9 @@ public class Program {
                     this.memorySave(outDataOffs.getData(), buffer.array());
                 }
             }
+
+            // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+            stackPushOne();
 
             detailDB.commitTrack();
             chainDB.commitTrack();
