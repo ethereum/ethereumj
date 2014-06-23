@@ -5,10 +5,6 @@
 
 - [ ] **State management** trie for storage hash calculation 
                            and update hash into AccountState
-- [x] **VM execution:** support CALL op   
-- [x] **VM execution:** support CALL op with in/out data   
-- [ ] **VM execution:** support CREATE op
-- [x] **SerpentCompiler** compile create(gas, mem_start, mem_size)
 - [ ] **GUI screen** a screen that will hold table with full state representation
 - [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))                                  
 - [ ] **SerpentCompiler** compile return(array) correct
@@ -32,10 +28,20 @@ share - code section
 ##### UnitTest:   
 ----------------
 
-- [x] **VM complex:** CALL testing for in arrays
-- [x] **VM complex:** CALL testing for out result
 - [ ] **VM complex:** CREATE testing 
 - [ ] **VM complex:** SUICIDE testing
 - [ ] **SerpentCompiler** compile return(array) correct
 - [ ] **WorldManager** apply transactions
 
+
+
+##### DONE:
+-----------
+
+- [x] **VM execution:** support CALL op   
+- [x] **VM execution:** support CALL op with in/out data   
+- [x] **VM execution:** support CREATE op
+- [x] **SerpentCompiler** compile create(gas, mem_start, mem_size)
+
+- [x] **VM complex:** CALL testing for in arrays
+- [x] **VM complex:** CALL testing for out result
