@@ -6,6 +6,8 @@
 - [x] **VM execution:** support CALL op   
 - [x] **VM execution:** support CALL op with in/out data   
 - [ ] **VM execution:** support CREATE op
+- [ ] **SerpentCompiler** compile create(gas, mem_start, mem_size)
+- [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))                                  
 - [ ] **SerpentCompiler** compile return(array) correct
 - [ ] **VM execution:** SUICIDE op adjust
 - [ ] **ProgramPlayDialog** support internal calls
