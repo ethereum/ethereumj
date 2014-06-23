@@ -1,4 +1,4 @@
-// Generated from E:\WorkingArea\ethereum\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
+// Generated from E:\WorkingArea\ethereum\ethereumj\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
 package org.ethereum.serpent;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -141,6 +141,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * The default implementation does nothing.
 	 */
 	@Override public void exitContract_address(@NotNull SerpentParser.Contract_addressContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void enterSingle_create_func(@NotNull SerpentParser.Single_create_funcContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitSingle_create_func(@NotNull SerpentParser.Single_create_funcContext ctx) { }
 
 	/**
 	 * {@inheritDoc}
@@ -290,6 +303,19 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
+	@Override public void enterCreate_func(@NotNull SerpentParser.Create_funcContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
+	@Override public void exitCreate_func(@NotNull SerpentParser.Create_funcContext ctx) { }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation does nothing.
+	 */
 	@Override public void enterMsg_data(@NotNull SerpentParser.Msg_dataContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -433,13 +459,13 @@ public class SerpentBaseListener implements SerpentListener {
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
-	@Override public void enterSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx) { }
+	@Override public void enterSingle_send_func(@NotNull SerpentParser.Single_send_funcContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 * <p/>
 	 * The default implementation does nothing.
 	 */
-	@Override public void exitSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx) { }
+	@Override public void exitSingle_send_func(@NotNull SerpentParser.Single_send_funcContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

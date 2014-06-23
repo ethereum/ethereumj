@@ -1,4 +1,4 @@
-// Generated from E:\WorkingArea\ethereum\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
+// Generated from E:\WorkingArea\ethereum\ethereumj\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
 package org.ethereum.serpent;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeListener;
@@ -117,6 +117,17 @@ public interface SerpentListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitContract_address(@NotNull SerpentParser.Contract_addressContext ctx);
+
+	/**
+	 * Enter a parse tree produced by {@link SerpentParser#single_create_func}.
+	 * @param ctx the parse tree
+	 */
+	void enterSingle_create_func(@NotNull SerpentParser.Single_create_funcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#single_create_func}.
+	 * @param ctx the parse tree
+	 */
+	void exitSingle_create_func(@NotNull SerpentParser.Single_create_funcContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#array_retreive}.
@@ -240,6 +251,17 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx);
 
 	/**
+	 * Enter a parse tree produced by {@link SerpentParser#create_func}.
+	 * @param ctx the parse tree
+	 */
+	void enterCreate_func(@NotNull SerpentParser.Create_funcContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link SerpentParser#create_func}.
+	 * @param ctx the parse tree
+	 */
+	void exitCreate_func(@NotNull SerpentParser.Create_funcContext ctx);
+
+	/**
 	 * Enter a parse tree produced by {@link SerpentParser#msg_data}.
 	 * @param ctx the parse tree
 	 */
@@ -361,15 +383,15 @@ public interface SerpentListener extends ParseTreeListener {
 	void exitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
 
 	/**
-	 * Enter a parse tree produced by {@link SerpentParser#single_send_fund}.
+	 * Enter a parse tree produced by {@link SerpentParser#single_send_func}.
 	 * @param ctx the parse tree
 	 */
-	void enterSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx);
+	void enterSingle_send_func(@NotNull SerpentParser.Single_send_funcContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link SerpentParser#single_send_fund}.
+	 * Exit a parse tree produced by {@link SerpentParser#single_send_func}.
 	 * @param ctx the parse tree
 	 */
-	void exitSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx);
+	void exitSingle_send_func(@NotNull SerpentParser.Single_send_funcContext ctx);
 
 	/**
 	 * Enter a parse tree produced by {@link SerpentParser#ex_or_exp}.

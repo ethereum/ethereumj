@@ -1,4 +1,4 @@
-// Generated from E:\WorkingArea\ethereum\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
+// Generated from E:\WorkingArea\ethereum\ethereumj\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
 package org.ethereum.serpent;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.ParseTreeVisitor;
@@ -82,6 +82,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitContract_address(@NotNull SerpentParser.Contract_addressContext ctx);
 
 	/**
+	 * Visit a parse tree produced by {@link SerpentParser#single_create_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitSingle_create_func(@NotNull SerpentParser.Single_create_funcContext ctx);
+
+	/**
 	 * Visit a parse tree produced by {@link SerpentParser#array_retreive}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -157,6 +164,13 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	 * @return the visitor result
 	 */
 	T visitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx);
+
+	/**
+	 * Visit a parse tree produced by {@link SerpentParser#create_func}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCreate_func(@NotNull SerpentParser.Create_funcContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#msg_data}.
@@ -236,11 +250,11 @@ public interface SerpentVisitor<T> extends ParseTreeVisitor<T> {
 	T visitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx);
 
 	/**
-	 * Visit a parse tree produced by {@link SerpentParser#single_send_fund}.
+	 * Visit a parse tree produced by {@link SerpentParser#single_send_func}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx);
+	T visitSingle_send_func(@NotNull SerpentParser.Single_send_funcContext ctx);
 
 	/**
 	 * Visit a parse tree produced by {@link SerpentParser#ex_or_exp}.
