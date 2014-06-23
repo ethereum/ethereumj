@@ -7,6 +7,7 @@ import static org.ethereum.util.CompactEncoder.*;
 import java.util.Arrays;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 import org.spongycastle.util.encoders.Hex;
@@ -372,7 +373,7 @@ public class Trie implements TrieFacade{
 	// Returns a copy of this trie
 	public Trie copy() {
 		Trie trie = new Trie(this.cache.getDb(), this.root);
-		for (byte[] key : this.cache.getNodes().keySet()) {
+		for (ByteArrayWrapper key : this.cache.getNodes().keySet()) {
 			Node node = this.cache.getNodes().get(key);
 			trie.cache.getNodes().put(key, node.copy());
 		}
