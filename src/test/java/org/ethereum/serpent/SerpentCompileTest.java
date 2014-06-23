@@ -1336,6 +1336,16 @@ public class SerpentCompileTest {
         Assert.assertEquals(expected, asmResult);
     }
 
+    @Test // test create(gas, mem_start , mem_size)
+    public void test51(){
+        String code =   "\n" +
+                "create(100, 0, 32) \n";
+        String expected = "32 0 100 CREATE";
+
+        String asmResult = SerpentCompiler.compile(code);
+
+        Assert.assertEquals(expected, asmResult);
+    }
 
 
 
@@ -1345,7 +1355,6 @@ public class SerpentCompileTest {
 
 # *) a = msg.data
 # 0) sha();
-# 2) create(1, 2, 3, 4)
 # 3) x = sha3(v)
 # 4) x = byte(y,z)
 # 5) v = getch(x,i)

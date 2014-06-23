@@ -34,7 +34,8 @@ parse: block EOF
 parse_init_code_block : 'init' ':' INDENT block DEDENT 'code' ':' INDENT block DEDENT;
 
 block:  ( asm | array_assign | assign | contract_storage_assign | special_func | if_elif_else_stmt |
-          while_stmt | ret_func_1 | ret_func_2 | suicide_func | stop_func | single_send_fund | msg_func)* ;
+          while_stmt | ret_func_1 | ret_func_2 | suicide_func | stop_func | single_send_func | msg_func |
+          single_create_func)* ;
 
 
 asm: '[asm' asm_symbol 'asm]' NL;
@@ -112,7 +113,10 @@ block_gaslimit
 msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' arr_def ',' int_val  ',' int_val')' ;
 
 send_func: 'send' '(' int_val ',' int_val ',' int_val ')';
-single_send_fund: send_func NL;
+single_send_func: send_func NL;
+
+create_func: 'create' '(' int_val ',' int_val ',' int_val ')';
+single_create_func: create_func NL;
 
 msg_data: 'msg.data' '[' expression ']' ;
 

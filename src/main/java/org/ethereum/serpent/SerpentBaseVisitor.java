@@ -1,4 +1,4 @@
-// Generated from E:\WorkingArea\ethereum\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
+// Generated from E:\WorkingArea\ethereum\ethereumj\ethereumj\src\main\java\org\ethereum\serpent\Serpent.g4 by ANTLR 4.1
 package org.ethereum.serpent;
 import org.antlr.v4.runtime.misc.NotNull;
 import org.antlr.v4.runtime.tree.AbstractParseTreeVisitor;
@@ -98,6 +98,14 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
+	@Override public T visitSingle_create_func(@NotNull SerpentParser.Single_create_funcContext ctx) { return visitChildren(ctx); }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 */
 	@Override public T visitArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx) { return visitChildren(ctx); }
 
 	/**
@@ -179,6 +187,14 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
 	@Override public T visitMul_expr(@NotNull SerpentParser.Mul_exprContext ctx) { return visitChildren(ctx); }
+
+	/**
+	 * {@inheritDoc}
+	 * <p/>
+	 * The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.
+	 */
+	@Override public T visitCreate_func(@NotNull SerpentParser.Create_funcContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}
@@ -274,7 +290,7 @@ public class SerpentBaseVisitor<T> extends AbstractParseTreeVisitor<T> implement
 	 * The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.
 	 */
-	@Override public T visitSingle_send_fund(@NotNull SerpentParser.Single_send_fundContext ctx) { return visitChildren(ctx); }
+	@Override public T visitSingle_send_func(@NotNull SerpentParser.Single_send_funcContext ctx) { return visitChildren(ctx); }
 
 	/**
 	 * {@inheritDoc}

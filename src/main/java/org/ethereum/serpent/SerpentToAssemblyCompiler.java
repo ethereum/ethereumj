@@ -642,6 +642,16 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     }
 
     @Override
+    public String visitCreate_func(@NotNull SerpentParser.Create_funcContext ctx) {
+        String operand0 = visit(ctx.int_val(0));
+        String operand1 = visit(ctx.int_val(1));
+        String operand2 = visit(ctx.int_val(2));
+
+//        MEM_SIZE MEM_START GAS CREATE
+        return  String.format(" %s %s %s CREATE ", operand2, operand1, operand0);
+    }
+
+    @Override
     public String visitAsm(@NotNull SerpentParser.AsmContext ctx) {
 
         int size = ctx.asm_symbol().getChildCount();
