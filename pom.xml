@@ -236,6 +236,7 @@ mvn clean package -Dmaven.test.skip=true
                                             [2.0,)
                                         </versionRange>
                                         <goals>
+                                        	<goal>copy-dependencies</goal>
                                             <goal>unpack</goal>
                                         </goals>
                                     </pluginExecutionFilter>
