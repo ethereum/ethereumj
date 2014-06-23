@@ -181,7 +181,7 @@ public class Blockchain {
 	public void loadChain() {
 		DBIterator iterator = db.iterator();
 		try {
-			if (index.size() == 0) {
+			if (!iterator.hasNext()) {
                 logger.info("DB is empty - adding Genesis");
                 this.lastBlock = Genesis.getInstance();
                 this.addBlock(lastBlock);
