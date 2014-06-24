@@ -1,17 +1,14 @@
 package org.ethereum.vm;
 
-import org.abego.treelayout.internal.util.Contract;
 import org.ethereum.core.AccountState;
-import org.ethereum.core.ContractDetails;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.trie.TrackTrie;
+import org.ethereum.db.Repository;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.HashMap;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,6 +19,7 @@ import static org.junit.Assert.assertEquals;
  * Created on: 16/06/2014 10:37
  */
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMComplexTest {
 
 
@@ -47,12 +45,6 @@ public class VMComplexTest {
         DataWord key1 = new DataWord(999);
         DataWord value1 = new DataWord(3);
 
-        HashMap<DataWord, DataWord> storage = new HashMap<>();
-        storage.put(key1, value1);
-
-        ContractDetails contractDetails = new ContractDetails(storage);
-
-
         // Set contract into Database
         String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         String contractAddr = "77045e71a7a2c50903d88e564cd72fab11e82051";
@@ -66,24 +58,18 @@ public class VMComplexTest {
         AccountState accountState = new AccountState();
         accountState.setCodeHash(codeKey);
 
-        AccountState callerAcountState = new AccountState();
-        callerAcountState.addToBalance(new BigInteger("100000000000000000000"));
-
-        WorldManager.instance.worldState.update(callerAddrB, callerAcountState.getEncoded());
-        WorldManager.instance.worldState.update(contractAddrB, accountState.getEncoded());
-        WorldManager.instance.chainDB.put(codeKey, codeB);
-        WorldManager.instance.detaildDB.put(contractAddrB, contractDetails.getEncoded());
-
-        TrackTrie     stateDB = new TrackTrie(WorldManager.instance.worldState);
-        TrackDatabase chainDb   = new TrackDatabase(WorldManager.instance.chainDB);
-        TrackDatabase detaildDB = new TrackDatabase(WorldManager.instance.detaildDB);
-
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setDetaildDB(detaildDB);
-        pi.setChainDb(chainDb);
-        pi.setStateDB(stateDB);
-        pi.setDetails(contractDetails);
         pi.setOwnerAddress("77045e71a7a2c50903d88e564cd72fab11e82051");
+        Repository repository = pi.getRepository();
+
+        repository.createAccount(callerAddrB);
+        repository.addBalance(callerAddrB, new BigInteger("100000000000000000000"));
+
+        repository.createAccount(contractAddrB);
+        repository.saveCode(contractAddrB, codeB);
+        repository.addStorageRow(contractAddrB, key1, value1);
+
+
 
 
         // Play the program
@@ -100,15 +86,15 @@ public class VMComplexTest {
 
         System.out.println();
         System.out.println("============ Results ============");
-        AccountState as =
-                new AccountState(WorldManager.instance.worldState.get(
-                        Hex.decode( contractAddr) ));
+
+        BigInteger balance = repository.getBalance(callerAddrB);
 
         System.out.println("*** Used gas: " + program.result.getGasUsed());
-        System.out.println("*** Contract Balance: " + as.getBalance());
+        System.out.println("*** Contract Balance: " + balance);
 
         // todo: assert caller balance after contract exec
 
+        repository.close();
         assertEquals(expectedGas, program.result.getGasUsed());
     }
 
@@ -153,34 +139,23 @@ public class VMComplexTest {
 
         byte[] contractA_addr_bytes = Hex.decode(contractA_addr);
         byte[] codeA = Hex.decode(code_a);
-        byte[] codeA_Key = HashUtil.sha3(codeA);
-        AccountState accountState_a = new AccountState();
-        accountState_a.setCodeHash(codeA_Key);
-        WorldManager.instance.worldState.update(contractA_addr_bytes, accountState_a.getEncoded());
+
+        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        pi.setOwnerAddress(contractB_addr);
+        Repository repository = pi.repository;
 
         byte[] contractB_addr_bytes = Hex.decode(contractB_addr);
         byte[] codeB = Hex.decode(code_b);
-        byte[] codeB_Key = HashUtil.sha3(codeB);
-        AccountState accountState_b = new AccountState();
-        accountState_b.setCodeHash(codeB_Key);
-        WorldManager.instance.worldState.update(contractB_addr_bytes, accountState_a.getEncoded());
 
-        AccountState callerAcountState = new AccountState();
-        callerAcountState.addToBalance(new BigInteger("100000000000000000000"));
-        WorldManager.instance.worldState.update(caller_addr_bytes, callerAcountState.getEncoded());
+        repository.createAccount(contractA_addr_bytes);
+        repository.saveCode(contractA_addr_bytes, codeA);
 
-        WorldManager.instance.chainDB.put(codeA_Key, codeA);
+        repository.createAccount(contractB_addr_bytes);
+        repository.saveCode(contractB_addr_bytes, codeB);
 
-        TrackTrie     stateDB   = new TrackTrie(WorldManager.instance.worldState);
-        TrackDatabase chainDb   = new TrackDatabase(WorldManager.instance.chainDB);
-        TrackDatabase detaildDB = new TrackDatabase(WorldManager.instance.detaildDB);
+        repository.createAccount(caller_addr_bytes);
+        repository.addBalance(caller_addr_bytes, new BigInteger("100000000000000000000"));
 
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setDetaildDB(detaildDB);
-        pi.setChainDb(chainDb);
-        pi.setStateDB(stateDB);
-        pi.setDetails(null);
-        pi.setOwnerAddress(contractB_addr);
 
         // ****************** //
         //  Play the program  //
@@ -198,27 +173,20 @@ public class VMComplexTest {
 
         System.out.println();
         System.out.println("============ Results ============");
-        AccountState as =
-                new AccountState(WorldManager.instance.worldState.get(
-                        Hex.decode( contractA_addr) ));
 
 
         System.out.println("*** Used gas: " + program.result.getGasUsed());
 
 
-        byte[] rlpBytes =  WorldManager.instance.detaildDB.get(contractA_addr_bytes);
-
-        ContractDetails details = new ContractDetails(rlpBytes);
-        DataWord value_1 = details.getStorage().get(new DataWord(00));
-        DataWord value_2 = details.getStorage().get(new DataWord(01));
+        DataWord value_1 = repository.getStorageValue(contractA_addr_bytes, new DataWord(00));
+        DataWord value_2 = repository.getStorageValue(contractA_addr_bytes, new DataWord(01));
 
 
+        repository.close();
         assertEquals(expectedVal_1, value_1.longValue());
         assertEquals(expectedVal_2, value_2.longValue());
 
         // todo: check that the value pushed after exec is 1
-
-
     }
 
 
@@ -270,34 +238,22 @@ public class VMComplexTest {
 
         byte[] contractA_addr_bytes = Hex.decode(contractA_addr);
         byte[] codeA = Hex.decode(code_a);
-        byte[] codeA_Key = HashUtil.sha3(codeA);
-        AccountState accountState_a = new AccountState();
-        accountState_a.setCodeHash(codeA_Key);
-        WorldManager.instance.worldState.update(contractA_addr_bytes, accountState_a.getEncoded());
 
         byte[] contractB_addr_bytes = Hex.decode(contractB_addr);
         byte[] codeB = Hex.decode(code_b);
-        byte[] codeB_Key = HashUtil.sha3(codeB);
-        AccountState accountState_b = new AccountState();
-        accountState_b.setCodeHash(codeB_Key);
-        WorldManager.instance.worldState.update(contractB_addr_bytes, accountState_a.getEncoded());
-
-        AccountState callerAcountState = new AccountState();
-        callerAcountState.addToBalance(new BigInteger("100000000000000000000"));
-        WorldManager.instance.worldState.update(caller_addr_bytes, callerAcountState.getEncoded());
-
-        WorldManager.instance.chainDB.put(codeA_Key, codeA);
-
-        TrackTrie     stateDB   = new TrackTrie(WorldManager.instance.worldState);
-        TrackDatabase chainDb   = new TrackDatabase(WorldManager.instance.chainDB);
-        TrackDatabase detaildDB = new TrackDatabase(WorldManager.instance.detaildDB);
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setDetaildDB(detaildDB);
-        pi.setChainDb(chainDb);
-        pi.setStateDB(stateDB);
-        pi.setDetails(null);
         pi.setOwnerAddress(contractB_addr);
+        Repository repository  = pi.getRepository();
+        repository.createAccount(contractA_addr_bytes);
+        repository.saveCode(contractA_addr_bytes, codeA);
+
+        repository.createAccount(contractB_addr_bytes);
+        repository.saveCode(contractB_addr_bytes, codeB);
+
+        repository.createAccount(caller_addr_bytes);
+        repository.addBalance(caller_addr_bytes, new BigInteger("100000000000000000000"));
+
 
         // ****************** //
         //  Play the program  //
@@ -312,12 +268,8 @@ public class VMComplexTest {
             program.setRuntimeFailure(e);
         }
 
-
         System.out.println();
         System.out.println("============ Results ============");
-        AccountState as =
-                new AccountState(WorldManager.instance.worldState.get(
-                        Hex.decode( contractA_addr) ));
 
 
         System.out.println("*** Used gas: " + program.result.getGasUsed());
@@ -329,6 +281,8 @@ public class VMComplexTest {
         DataWord value5 = program.memoryLoad(new DataWord(160));
         DataWord value6 = program.memoryLoad(new DataWord(192));
 
+        repository.close();
+
         assertEquals(expectedVal_1, value1.longValue());
         assertEquals(expectedVal_2, value2.longValue());
         assertEquals(expectedVal_3, value3.longValue());
@@ -337,7 +291,6 @@ public class VMComplexTest {
         assertEquals(expectedVal_6, value6.longValue());
 
         // todo: check that the value pushed after exec is 1
-
     }
 
 
@@ -374,31 +327,20 @@ public class VMComplexTest {
                         "005460206000f2000000000000000000000000" +
                         "0000000000000000000000602054602960006064f0";
 
+        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        pi.setOwnerAddress(contractA_addr);
+
+        Repository repository = pi.repository;
+
         byte[] caller_addr_bytes = Hex.decode(callerAddr);
 
         byte[] contractA_addr_bytes = Hex.decode(contractA_addr);
         byte[] codeA = Hex.decode(code_a);
-        byte[] codeA_Key = HashUtil.sha3(codeA);
-        AccountState accountState_a = new AccountState();
-        accountState_a.setCodeHash(codeA_Key);
-        WorldManager.instance.worldState.update(contractA_addr_bytes, accountState_a.getEncoded());
 
-        AccountState callerAcountState = new AccountState();
-        callerAcountState.addToBalance(new BigInteger("100000000000000000000"));
-        WorldManager.instance.worldState.update(caller_addr_bytes, callerAcountState.getEncoded());
+        repository.createAccount(contractA_addr_bytes);
+        repository.saveCode(contractA_addr_bytes, codeA);
 
-        WorldManager.instance.chainDB.put(codeA_Key, codeA);
-
-        TrackTrie     stateDB   = new TrackTrie(WorldManager.instance.worldState);
-        TrackDatabase chainDb   = new TrackDatabase(WorldManager.instance.chainDB);
-        TrackDatabase detaildDB = new TrackDatabase(WorldManager.instance.detaildDB);
-
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setDetaildDB(detaildDB);
-        pi.setChainDb(chainDb);
-        pi.setStateDB(stateDB);
-        pi.setDetails(null);
-        pi.setOwnerAddress(contractA_addr);
+        repository.createAccount(caller_addr_bytes);
 
         // ****************** //
         //  Play the program  //
@@ -416,16 +358,11 @@ public class VMComplexTest {
 
         System.out.println();
         System.out.println("============ Results ============");
-        AccountState as =
-                new AccountState(WorldManager.instance.worldState.get(
-                        Hex.decode( contractA_addr) ));
 
 
         System.out.println("*** Used gas: " + program.result.getGasUsed());
-
-
         // todo: check that the value pushed after exec is the new address
-
+        repository.close();
     }
 
 

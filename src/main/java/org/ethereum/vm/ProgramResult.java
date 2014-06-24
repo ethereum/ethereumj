@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.Repository;
 import org.ethereum.db.TrackDatabase;
 import org.ethereum.trie.TrackTrie;
 
@@ -18,9 +19,7 @@ public class ProgramResult {
     private ByteBuffer  hReturn = null;
     private RuntimeException exception;
 
-    TrackDatabase detailDB;
-    TrackDatabase chainDb;
-    TrackTrie stateDb;
+    Repository repository = null;
 
     public void spendGas(int gas){
         gasUsed += gas;
@@ -48,27 +47,11 @@ public class ProgramResult {
         this.exception = exception;
     }
 
-    public TrackDatabase getDetailDB() {
-        return detailDB;
+    public Repository getRepository() {
+        return repository;
     }
 
-    public void setDetailDB(TrackDatabase detailDB) {
-        this.detailDB = detailDB;
-    }
-
-    public TrackDatabase getChainDb() {
-        return chainDb;
-    }
-
-    public void setChainDb(TrackDatabase chainDb) {
-        this.chainDb = chainDb;
-    }
-
-    public TrackTrie getStateDb() {
-        return stateDb;
-    }
-
-    public void setStateDb(TrackTrie stateDb) {
-        this.stateDb = stateDb;
+    public void setRepository(Repository repository) {
+        this.repository = repository;
     }
 }

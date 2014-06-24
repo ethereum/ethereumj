@@ -1,14 +1,11 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
-import org.ethereum.db.TrackDatabase;
+import org.ethereum.db.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.serpent.SerpentCompiler;
-import org.ethereum.trie.TrackTrie;
 import org.ethereum.vm.*;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -16,7 +13,7 @@ import javax.swing.event.ChangeListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.*;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -52,29 +49,23 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     }
 
 
-    public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock, ContractDetails contractDetails) {
+    public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
 
         this.tx = tx;
 
         outputList = new ArrayList<String>();
         VM vm = new VM();
 
-        TrackDatabase trackDetailDB = new TrackDatabase( WorldManager.instance.detaildDB );
-        TrackDatabase trackChainDb  = new TrackDatabase( WorldManager.instance.chainDB);
-        TrackTrie trackStateDB  = new TrackTrie(WorldManager.instance.worldState );
+        Repository tractRepository = WorldManager.instance.repository.getTrack();
 
         Program program = new Program(code ,
-                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, contractDetails,
-                        trackDetailDB, trackChainDb, trackStateDB));
+                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, tractRepository));
 
         program.addListener(this);
         program.fullTrace();
         vm.play(program);
 
-        trackDetailDB.rollbackTrack();
-        trackChainDb.rollbackTrack();
-        trackStateDB.rollbackTrack();
-
+        tractRepository.rollback();
 
         doGUI();
     }
@@ -155,11 +146,11 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock, ContractDetails details) {
+    public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock) {
 
         ProgramPlayDialog ppd;
         if (tx != null)
-            ppd = new ProgramPlayDialog(runCode, tx, lastBlock, details);
+            ppd = new ProgramPlayDialog(runCode, tx, lastBlock);
         else{
             ppd = new ProgramPlayDialog(runCode);
         }
@@ -204,7 +195,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                createAndShowGUI(code, null, null, null);
+                createAndShowGUI(code, null, null);
             }
         });
 

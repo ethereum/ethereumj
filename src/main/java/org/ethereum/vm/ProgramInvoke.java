@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.Repository;
 import org.ethereum.db.TrackDatabase;
 import org.ethereum.trie.TrackTrie;
 
@@ -32,11 +33,7 @@ public interface ProgramInvoke {
     public DataWord getDifficulty();
     public DataWord getGaslimit();
 
-    public Map<DataWord, DataWord> getStorage();
-
-    public TrackDatabase getDetaildDB();
-    public TrackDatabase getChainDb();
-    public TrackTrie getStateDb();
+    public Repository getRepository();
 
     public boolean byTransaction();
 

@@ -1,15 +1,13 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Account;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.ContractDetails;
 import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
-import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -27,7 +25,6 @@ import java.awt.event.*;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -229,35 +226,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         }
 
         byte[] contractAddress = Hex.decode( contractAddr );
-        byte[] contractStateB = WorldManager.instance.worldState.get(contractAddress);
-        if (contractStateB == null || contractStateB.length == 0){
-            return;
-        }
-
-        AccountState contractState = new AccountState(contractStateB);
-        final byte[] programCode = WorldManager.instance.chainDB.get(contractState.getCodeHash());
-        if (programCode == null || programCode.length == 0){
-            return;
-        }
-
-        byte[] contractDetailsB =
-                WorldManager.instance.detaildDB.get(contractAddress);
-
-        ContractDetails contractDetails = null;
-        final Map storageMap = new HashMap();
-
-        if (contractDetailsB != null){
-
-            contractDetails = new ContractDetails(contractDetailsB);
-            Map<DataWord, DataWord> tmpStorage = contractDetails.getStorage();
-            if (tmpStorage != null){
-                for (DataWord key : tmpStorage.keySet()){
-                    String keyToSave = Hex.toHexString (key.getNoLeadZeroesData());
-                    String valueToSave = Hex.toHexString (tmpStorage.get(key).getNoLeadZeroesData());
-                    storageMap.put(keyToSave, valueToSave);
-                }
-            }
-        }
+        final byte[] programCode = WorldManager.instance.repository.getCode(contractAddress);
+        final Map storageMap = WorldManager.instance.repository.getContractDetails(contractAddress).getStorage();
 
         contractDataInput.setBounds(70, 80, 350, 145);
         contractDataInput.setViewportView(msgDataTA);
@@ -335,31 +305,23 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
     private void playContractCall() {
 
-        byte[] contractAddress = Hex.decode( contractAddrInput.getText());
-        byte[] contractStateB = WorldManager.instance.worldState.get(contractAddress);
-        if (contractStateB == null || contractStateB.length == 0){
+        byte[] contractAddress = Hex.decode(contractAddrInput.getText());
+        ContractDetails contractDetails =  WorldManager.instance.repository.getContractDetails(contractAddress);
+        if (contractDetails == null){
             alertStatusMsg("No contract for that address");
             return;
         }
 
-        AccountState contractState = new AccountState(contractStateB);
-        byte[] programCode = WorldManager.instance.chainDB.get(contractState.getCodeHash());
+        byte[] programCode = WorldManager.instance.repository.getCode(contractAddress);
         if (programCode == null || programCode.length == 0){
             alertStatusMsg("Such account exist but no code in the db");
             return;
         }
 
-        byte[] contractDetailsB =
-                WorldManager.instance.detaildDB.get(contractAddress);
-
-        ContractDetails contractDetails = null;
-        if (contractDetailsB != null && contractDetailsB.length > 0)
-            contractDetails = new ContractDetails(contractDetailsB);
-
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.instance.getBlockChain().getLastBlock(), contractDetails);
+        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.instance.getBlockChain().getLastBlock());
     }
 
     protected JRootPane createRootPane() {

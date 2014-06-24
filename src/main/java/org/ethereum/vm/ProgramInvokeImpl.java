@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.Repository;
 import org.ethereum.db.TrackDatabase;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.util.ByteUtil;
@@ -36,16 +37,13 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
 
     Map<DataWord, DataWord> storage;
 
-    TrackDatabase detaildDB;
-    TrackDatabase chainDb;
-    TrackTrie stateDb;
+    Repository repository;
     private boolean byTransaction = true;
 
     public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
                              DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord difficulty,
-                             DataWord gaslimit, Map<DataWord, DataWord> storage,
-                             TrackDatabase detaildDB, TrackDatabase chainDb, TrackTrie stateDB) {
+                             DataWord gaslimit, Repository repository) {
 
         // Transaction env
         this.address   = address;
@@ -67,9 +65,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
 
         this.storage = storage;
 
-        this.detaildDB = detaildDB;
-        this.chainDb = chainDb;
-        this.stateDb = stateDB;
+        this.repository = repository;
         this.byTransaction = false;
 
     }
@@ -78,8 +74,8 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
-                             long gaslimit, Map<DataWord, DataWord> storage,
-                             TrackDatabase detaildDB, TrackDatabase chainDb, TrackTrie stateDB) {
+                             long gaslimit,
+                             Repository repository) {
 
         // Transaction env
         this.address   = new DataWord(address);
@@ -101,9 +97,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
 
         this.storage = storage;
 
-        this.detaildDB = detaildDB;
-        this.chainDb = chainDb;
-        this.stateDb = stateDB;
+        this.repository = repository;
     }
 
     /*           ADDRESS op         */
@@ -225,17 +219,8 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
     /*  Storage */
     public Map<DataWord, DataWord> getStorage(){ return storage; }
 
-
-    public TrackDatabase getDetaildDB() {
-        return detaildDB;
-    }
-
-    public TrackDatabase getChainDb() {
-        return chainDb;
-    }
-
-    public TrackTrie getStateDb() {
-        return stateDb;
+    public Repository getRepository() {
+        return repository;
     }
 
     @Override
@@ -255,9 +240,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
         if (balance != null ? !balance.equals(that.balance) : that.balance != null) return false;
         if (callValue != null ? !callValue.equals(that.callValue) : that.callValue != null) return false;
         if (caller != null ? !caller.equals(that.caller) : that.caller != null) return false;
-        if (chainDb != null ? !chainDb.equals(that.chainDb) : that.chainDb != null) return false;
         if (coinbase != null ? !coinbase.equals(that.coinbase) : that.coinbase != null) return false;
-        if (detaildDB != null ? !detaildDB.equals(that.detaildDB) : that.detaildDB != null) return false;
         if (difficulty != null ? !difficulty.equals(that.difficulty) : that.difficulty != null) return false;
         if (gas != null ? !gas.equals(that.gas) : that.gas != null) return false;
         if (gasPrice != null ? !gasPrice.equals(that.gasPrice) : that.gasPrice != null) return false;
@@ -266,7 +249,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
         if (number != null ? !number.equals(that.number) : that.number != null) return false;
         if (origin != null ? !origin.equals(that.origin) : that.origin != null) return false;
         if (prevHash != null ? !prevHash.equals(that.prevHash) : that.prevHash != null) return false;
-        if (stateDb != null ? !stateDb.equals(that.stateDb) : that.stateDb != null) return false;
+        if (repository != null ? !repository.equals(that.repository) : that.repository != null) return false;
         if (storage != null ? !storage.equals(that.storage) : that.storage != null) return false;
         if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) return false;
 
@@ -290,9 +273,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
         result = 31 * result + (difficulty != null ? difficulty.hashCode() : 0);
         result = 31 * result + (gaslimit != null ? gaslimit.hashCode() : 0);
         result = 31 * result + (storage != null ? storage.hashCode() : 0);
-        result = 31 * result + (detaildDB != null ? detaildDB.hashCode() : 0);
-        result = 31 * result + (chainDb != null ? chainDb.hashCode() : 0);
-        result = 31 * result + (stateDb != null ? stateDb.hashCode() : 0);
+        result = 31 * result + (repository!= null ? repository.hashCode() : 0);
         result = 31 * result + (byTransaction ? 1 : 0);
         return result;
     }

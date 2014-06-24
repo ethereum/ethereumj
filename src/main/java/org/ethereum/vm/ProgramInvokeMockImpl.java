@@ -1,14 +1,9 @@
 package org.ethereum.vm;
 
-import org.ethereum.core.ContractDetails;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.trie.TrackTrie;
+import org.ethereum.db.Repository;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Map;
 
 /**
  * www.ethereumJ.com
@@ -20,20 +15,18 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     byte[] msgData;
 
-    TrackTrie stateDB       = null;
-    TrackDatabase chainDb   = null;
-    TrackDatabase detaildDB = null;
-
-    ContractDetails details = null;
-
-    String ownerAddress;
+    Repository repository = null;
+    String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
 
     public ProgramInvokeMockImpl(byte[] msgDataRaw){
+        this();
         this.msgData = msgDataRaw;
     }
 
     public ProgramInvokeMockImpl() {
+        this.repository = new Repository();
+        this.repository.createAccount(Hex.decode(ownerAddress));
     }
 
     /*           ADDRESS op         */
@@ -171,51 +164,21 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(gasLimit);
     }
 
-
-    public void setStateDB(TrackTrie stateDB) {
-        this.stateDB = stateDB;
-    }
-
-    public void setChainDb(TrackDatabase chainDb) {
-        this.chainDb = chainDb;
-    }
-
-    public void setDetaildDB(TrackDatabase detaildDB) {
-        this.detaildDB = detaildDB;
-    }
-
-    public void setDetails(ContractDetails details) {
-        this.details = details;
-    }
-
     public void setOwnerAddress(String ownerAddress) {
         this.ownerAddress = ownerAddress;
-    }
-
-
-    @Override
-    public Map<DataWord, DataWord> getStorage() {
-        if (details == null) return null;
-        return details.getStorage();
-    }
-
-    @Override
-    public TrackDatabase getDetaildDB() {
-        return detaildDB;
-    }
-
-    @Override
-    public TrackDatabase getChainDb() {
-        return chainDb;
-    }
-
-    @Override
-    public TrackTrie getStateDb() {
-        return stateDB;
     }
 
     @Override
     public boolean byTransaction() {
         return true;
+    }
+
+    @Override
+    public Repository getRepository() {
+        return this.repository;
+    }
+
+    public void setRepository(Repository repository) {
+        this.repository = repository;
     }
 }
