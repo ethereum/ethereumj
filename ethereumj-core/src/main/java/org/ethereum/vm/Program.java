@@ -244,6 +244,7 @@ public class Program {
         // 2.2 CREATE THE CONTRACT ADDRESS
         byte[] nonce =  trackRepository.getNonce(senderAddress).toByteArray();
         byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getNoLeadZeroesData(), nonce);
+        trackRepository.createAccount(newAddress);
 
         // 2.3 UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
@@ -251,7 +252,7 @@ public class Program {
 
         // 3. COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(this, DataWord.ZERO, DataWord.ZERO,
+                ProgramInvokeFactory.createProgramInvoke(this, new DataWord(newAddress), DataWord.ZERO,
                         gas, BigInteger.ZERO, null, trackRepository);
 
         VM vm = new VM();

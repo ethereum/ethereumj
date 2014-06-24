@@ -238,7 +238,7 @@ public class Repository {
         state.setCodeHash(codeHash);
 
         if (logger.isInfoEnabled())
-            logger.info("Program code saved: account: [ {} ] codeHash: [ {} ] \n code: [ {} ]",
+            logger.info("Program code saved:\n account: [ {} ]\n codeHash: [ {} ] \n code: [ {} ]",
                     Hex.toHexString(address),
                     Hex.toHexString(codeHash),
                     Hex.toHexString(code));
