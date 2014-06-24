@@ -49,6 +49,9 @@ public class Cache {
 		if (this.nodes.get(keyObj) != null) {
 			return this.nodes.get(keyObj).getValue();
 		}
+
+        if (db != null) return new Value(null);
+
 		// Get the key of the database instead and cache it
 		byte[] data = this.db.get(key);
 		Value value = new Value(data);
@@ -61,10 +64,15 @@ public class Cache {
 	public void delete(byte[] key) {
 		ByteArrayWrapper keyObj = new ByteArrayWrapper(key);
 		this.nodes.remove(keyObj);
+
+        if (db == null) return;
 		this.db.delete(key);
 	}
 
 	public void commit() {
+
+        if (db == null) return;
+
 		// Don't try to commit if it isn't dirty
 		if (!this.isDirty) {
 			return;

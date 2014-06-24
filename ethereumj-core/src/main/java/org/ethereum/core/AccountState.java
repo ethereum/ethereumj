@@ -63,6 +63,15 @@ public class AccountState {
         return nonce;
     }
 
+    public byte[] getStateRoot() {
+        return stateRoot;
+    }
+
+    public void setStateRoot(byte[] stateRoot) {
+        rlpEncoded = null;
+        this.stateRoot = stateRoot;
+    }
+
     public void incrementNonce(){
         rlpEncoded = null;
         this.nonce = nonce.add(BigInteger.ONE);
@@ -81,9 +90,11 @@ public class AccountState {
         return balance;
     }
 
-    public void addToBalance(BigInteger value){
+    public BigInteger addToBalance(BigInteger value){
         if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.add(value);
+
+        return this.balance;
     }
 
 	public void subFromBalance(BigInteger value) {
