@@ -3,6 +3,7 @@ package org.ethereum.core;
 import java.math.BigInteger;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,8 +70,9 @@ public class Genesis extends Block {
 
 		// Premine state
 		for (String address : premine) {
-			this.updateState(Hex.decode(address), acct.getEncoded());
-		}
+            WorldManager.instance.repository.createAccount(Hex.decode(address));
+            WorldManager.instance.repository.addBalance(Hex.decode(address), BigInteger.valueOf(2).pow(200) );
+        }
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
 		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
     }

@@ -1,18 +1,13 @@
 package org.ethereum.vm;
 
-import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.core.ContractDetails;
 import org.ethereum.core.Transaction;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.trie.TrackTrie;
+import org.ethereum.db.Repository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Map;
 
 /**
  * www.ethereumJ.com
@@ -26,8 +21,7 @@ public class ProgramInvokeFactory {
     private static Logger logger = LoggerFactory.getLogger("VM");
 
         // Invocation by the wire tx
-    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock, ContractDetails details,
-                                                    TrackDatabase detaildDB, TrackDatabase chainDb, TrackTrie stateDB){
+    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock, Repository repository){
 
         // https://ethereum.etherpad.mozilla.org/26
 
@@ -44,13 +38,7 @@ public class ProgramInvokeFactory {
         byte[] caller = tx.getSender();
 
         /***         BALANCE op       ***/
-        byte[] addressStateData = stateDB.get(address);
-
-        byte[] balance = null;
-        if (addressStateData.length == 0)
-            balance = new byte[]{0};
-        else
-            balance = new AccountState(addressStateData).getBalance().toByteArray();
+        byte[] balance = repository.getBalance(address).toByteArray();
 
 
         /***         GASPRICE op       ***/
@@ -87,14 +75,8 @@ public class ProgramInvokeFactory {
         /*** GASLIMIT op ***/
         long gaslimit = lastBlock.getGasLimit();
 
-        /*** Map of storage values ***/
-        Map<DataWord, DataWord> storage = null;
-        if (details != null)
-            storage =  details.getStorage();
 
-        detaildDB.startTrack();
-        chainDb.startTrack();
-        stateDB.startTrack();
+        repository.startTracking();
 
         if (logger.isInfoEnabled()){
             logger.info("Program invocation: \n" +
@@ -132,8 +114,8 @@ public class ProgramInvokeFactory {
 
         ProgramInvoke programInvoke =
             new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
-                    lastHash,  coinbase,  timestamp,  number,  difficulty,  gaslimit, storage,
-                    detaildDB, chainDb, stateDB);
+                    lastHash,  coinbase,  timestamp,  number,  difficulty,  gaslimit,
+                    repository);
 
         return programInvoke;
     }
@@ -143,10 +125,9 @@ public class ProgramInvokeFactory {
      * This invocation created for contract call contract
      */
     public static ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
-                                                    Map<DataWord, DataWord> storageIn,
                                                     DataWord inValue, DataWord inGas,
                                                     BigInteger balanceInt,  byte[] dataIn,
-                                                    TrackDatabase detailDB, TrackDatabase chainDB, TrackTrie stateDB){
+                                                    Repository repository){
 
 
         DataWord address = toAddress;
@@ -165,8 +146,6 @@ public class ProgramInvokeFactory {
         DataWord number =  program.getNumber();
         DataWord difficulty = program.getDifficulty();
         DataWord gasLimit = program.getGaslimit();
-
-        Map<DataWord, DataWord> storage = storageIn;
 
         if (logger.isInfoEnabled()){
 
@@ -204,7 +183,7 @@ public class ProgramInvokeFactory {
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                storage, detailDB, chainDB, stateDB);
+                repository);
     }
 
 }

@@ -1,6 +1,9 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.Repository;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
 import static org.junit.Assert.assertEquals;
@@ -13,6 +16,7 @@ import static org.junit.Assert.fail;
  * Created on: 01/06/2014 11:05
  */
 
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMTest {
 
     @Test  // PUSH1 OP
@@ -25,6 +29,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -38,6 +43,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -51,6 +57,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -64,6 +71,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -77,6 +85,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -90,6 +99,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -103,6 +113,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -116,6 +127,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -129,6 +141,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -143,6 +156,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -156,6 +170,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -169,6 +184,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -182,6 +198,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -195,6 +212,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -208,6 +226,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -221,6 +240,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -234,6 +254,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -247,6 +268,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -260,6 +282,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -273,6 +296,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -286,6 +310,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -299,6 +324,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -312,6 +338,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -325,6 +352,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -338,6 +366,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -351,6 +380,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -364,6 +394,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -377,6 +408,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -390,6 +422,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -403,6 +436,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -416,6 +450,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -429,6 +464,7 @@ public class VMTest {
         program.fullTrace();
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -442,9 +478,11 @@ public class VMTest {
             program.fullTrace();
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -459,8 +497,10 @@ public class VMTest {
             vm.step(program);
         } catch (RuntimeException e) {
             assertTrue(program.isStopped());
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -475,6 +515,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -489,6 +530,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -502,9 +544,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -519,6 +563,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -533,6 +578,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -546,9 +592,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -563,6 +611,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -577,6 +626,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -591,9 +641,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -609,6 +661,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -623,6 +676,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -637,6 +691,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -651,9 +706,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -667,6 +724,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -680,6 +738,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -693,9 +752,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -710,6 +771,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -724,6 +786,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
@@ -738,6 +801,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -751,9 +815,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -768,6 +834,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -782,6 +849,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -796,6 +864,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -809,9 +878,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -827,6 +898,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -844,6 +916,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -861,6 +934,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -876,8 +950,10 @@ public class VMTest {
             vm.step(program);
         } catch (RuntimeException e) {
             assertTrue(program.isStopped());
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -894,6 +970,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -908,6 +985,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -922,6 +1000,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -936,8 +1015,10 @@ public class VMTest {
             vm.step(program);
         } catch (RuntimeException e) {
             assertTrue(program.isStopped());
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -953,6 +1034,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -970,6 +1052,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -987,6 +1070,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1001,9 +1085,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
 
     }
@@ -1020,6 +1106,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1033,6 +1120,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1046,22 +1134,25 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
     @Test  // NEG OP
     public void testNEG_4(){
 
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("09"), new ProgramInvokeMockImpl());
         try {
-            VM vm = new VM();
-            Program program = new Program(Hex.decode("09"), new ProgramInvokeMockImpl());
 
             vm.step(program);
             vm.step(program);
 
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1078,6 +1169,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1094,6 +1186,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1111,9 +1204,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1128,9 +1223,9 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
         assertEquals(expectedLen, program.stack.toArray().length);
-
     }
 
 
@@ -1144,9 +1239,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1162,6 +1259,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1179,6 +1277,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
         assertEquals(expectedLen, program.stack.toArray().length);
     }
@@ -1194,6 +1293,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.memory.array()));
     }
 
@@ -1212,6 +1312,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.memory.array()));
     }
 
@@ -1233,6 +1334,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.memory.array()));
     }
 
@@ -1253,6 +1355,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(expected, Hex.toHexString(program.memory.array()));
     }
 
@@ -1260,15 +1363,17 @@ public class VMTest {
     @Test // MSTORE OP
     public void testMSTORE_5(){
 
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61123454"), new ProgramInvokeMockImpl());
         try {
-            VM vm = new VM();
-            Program program = new Program(Hex.decode("61123454"), new ProgramInvokeMockImpl());
 
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1283,6 +1388,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
@@ -1300,6 +1406,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()).toUpperCase());
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
@@ -1317,9 +1424,9 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
-
     }
 
     @Test // MLOAD OP
@@ -1337,6 +1444,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
@@ -1356,6 +1464,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
@@ -1370,8 +1479,10 @@ public class VMTest {
             vm.step(program);
         } catch (RuntimeException e) {
             assertTrue(program.isStopped());
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1387,6 +1498,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
     }
 
@@ -1402,6 +1514,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
     }
 
@@ -1417,6 +1530,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
     }
 
@@ -1429,11 +1543,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
-
     }
 
 
@@ -1441,7 +1556,9 @@ public class VMTest {
     public void testSSTORE_1(){
 
         VM vm = new VM();
-        Program program = new Program(Hex.decode("602260AA57"), new ProgramInvokeMockImpl());
+        ProgramInvokeMockImpl invoke = new ProgramInvokeMockImpl();
+
+        Program program = new Program(Hex.decode("602260AA57"), invoke);
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000AA";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1449,21 +1566,20 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        DataWord key = program.storage.keySet().iterator().next();
-        assertEquals(s_expected_key,
-                Hex.toHexString(key.getData()).toUpperCase());
+        DataWord key = new DataWord(Hex.decode(s_expected_key));
+        DataWord val = program.result.getRepository().getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(), key);
 
-        DataWord val = program.storage.get(key);
-        assertEquals(s_expected_val,
-                Hex.toHexString(val.getData()).toUpperCase());
-
+        program.getResult().repository.close();
+        assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
     }
 
     @Test // SSTORE OP
     public void testSSTORE_2(){
 
         VM vm = new VM();
-        Program program = new Program(Hex.decode("602260AA57602260BB57"), new ProgramInvokeMockImpl());
+        ProgramInvokeMockImpl invoke = new ProgramInvokeMockImpl();
+
+        Program program = new Program(Hex.decode("602260AA57602260BB57"), invoke);
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000BB";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1474,29 +1590,29 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        DataWord key = program.storage.keySet().iterator().next();
-        assertEquals(s_expected_key,
-                Hex.toHexString(key.getData()).toUpperCase());
+        Repository repository = program.result.getRepository();
+        DataWord key = new DataWord(Hex.decode(s_expected_key));
+        DataWord val = repository.getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(),  key);
 
-        DataWord val = program.storage.get(key);
-        assertEquals(s_expected_val,
-                Hex.toHexString(val.getData()).toUpperCase());
-
+        program.getResult().repository.close();
+        assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
     }
 
 
     @Test // SSTORE OP
     public void testSSTORE_3(){
 
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("602257"), new ProgramInvokeMockImpl());
         try {
-            VM vm = new VM();
-            Program program = new Program(Hex.decode("602257"), new ProgramInvokeMockImpl());
 
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1511,6 +1627,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1527,6 +1644,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1546,6 +1664,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1553,14 +1672,16 @@ public class VMTest {
     @Test // SLOAD OP
     public void testSLOAD_4(){
 
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("56"), new ProgramInvokeMockImpl());
         try {
-            VM vm = new VM();
-            Program program = new Program(Hex.decode("56"), new ProgramInvokeMockImpl());
 
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1573,6 +1694,7 @@ public class VMTest {
 
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1591,6 +1713,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1608,6 +1731,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1620,9 +1744,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1639,6 +1765,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
@@ -1660,6 +1787,7 @@ public class VMTest {
         DataWord item1 = program.stack.pop();
         DataWord item2 = program.stack.pop();
 
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
         assertEquals(s_expected_2, Hex.toHexString(item2.data).toUpperCase());
     }
@@ -1673,9 +1801,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1689,8 +1819,10 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1706,6 +1838,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1721,6 +1854,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1736,6 +1870,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1748,11 +1883,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
-
     }
 
     @Test // MULL OP
@@ -1767,6 +1903,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1782,6 +1919,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1797,6 +1935,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1809,9 +1948,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1828,6 +1969,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1843,6 +1985,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1859,6 +2002,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1874,6 +2018,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1890,23 +2035,25 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
     @Test // DIV OP
     public void testDIV_6(){
 
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600704"), new ProgramInvokeMockImpl());
         try {
-            VM vm = new VM();
-            Program program = new Program(Hex.decode("600704"), new ProgramInvokeMockImpl());
 
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             return;
         }
+        program.getResult().repository.close();
         fail();
-
     }
 
 
@@ -1922,6 +2069,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1937,6 +2085,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1952,6 +2101,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -1966,9 +2116,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -1986,6 +2138,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        program.getResult().repository.close();
     }
 
     @Test // SUB OP
@@ -2000,6 +2153,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2015,6 +2169,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2027,11 +2182,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
-
     }
 
     @Test // MSIZE OP
@@ -2044,6 +2200,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2060,6 +2217,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2077,6 +2235,7 @@ public class VMTest {
             vm.step(program);
             ++i;
         }
+        program.getResult().repository.close();
         assertEquals(expectedSteps, i);
     }
 
@@ -2093,6 +2252,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2108,6 +2268,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2121,9 +2282,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -2141,6 +2304,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
         assertTrue(program.stopped);
     }
@@ -2160,6 +2324,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
         assertTrue(program.stopped);
     }
@@ -2180,6 +2345,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
         assertTrue(program.stopped);
     }
@@ -2201,6 +2367,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
         assertTrue(program.stopped);
     }
@@ -2219,6 +2386,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected_1, Hex.toHexString(program.memory.array()).toUpperCase());
     }
 
@@ -2236,6 +2404,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected_1, Hex.toHexString(program.memory.array()).toUpperCase());
     }
 
@@ -2252,6 +2421,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertTrue(program.isStopped());
     }
 
@@ -2268,6 +2438,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertTrue(program.isStopped());
     }
 
@@ -2284,9 +2455,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -2303,6 +2476,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2319,6 +2493,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2336,6 +2511,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2352,6 +2528,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2369,6 +2546,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2386,6 +2564,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2402,6 +2581,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2416,9 +2596,11 @@ public class VMTest {
         try {
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -2437,6 +2619,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()).toUpperCase());
     }
 
@@ -2455,6 +2638,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()).toUpperCase());
     }
 
@@ -2474,6 +2658,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()).toUpperCase());
     }
 
@@ -2494,6 +2679,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()).toUpperCase());
     }
 
@@ -2513,6 +2699,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        program.getResult().repository.close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()).toUpperCase());
     }
 
@@ -2530,9 +2717,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.stopped);
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -2549,6 +2738,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2565,6 +2755,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2581,6 +2772,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2597,6 +2789,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2612,6 +2805,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2633,6 +2827,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2654,6 +2849,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2672,9 +2868,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -2690,6 +2888,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2704,6 +2903,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2718,6 +2918,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2733,9 +2934,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (RuntimeException e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -2750,6 +2953,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2766,6 +2970,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2783,6 +2988,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2796,9 +3002,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } catch (Exception e) {
+            program.getResult().repository.close();
             assertTrue(program.isStopped());
             return;
         }
+        program.getResult().repository.close();
         fail();
     }
 
@@ -2814,6 +3022,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2830,6 +3039,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2845,6 +3055,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2861,6 +3072,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2876,6 +3088,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2892,6 +3105,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2902,11 +3116,12 @@ public class VMTest {
         Program program =
                 new Program(Hex.decode("5C"),
                         createProgramInvoke_1());
-        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000003E8";
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000F423F";
 
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2917,12 +3132,12 @@ public class VMTest {
         Program program =
                 new Program(Hex.decode("45"),
                         createProgramInvoke_1());
-        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000EC64D";
-
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000F4240";
 
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
+        program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
@@ -2932,14 +3147,20 @@ public class VMTest {
 
     public ProgramInvoke createProgramInvoke_1(){
 
+        String ownerAddress = "77045E71A7A2C50903D88E564CD72FAB11E82051";
+        byte[] address = Hex.decode(ownerAddress);
 
         byte[] msgData = Hex.decode("00000000000000000000000000000000000000000000000000000000000000A1" +
                                     "00000000000000000000000000000000000000000000000000000000000000B1");
 
         ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl(msgData);
+        pi.setOwnerAddress(ownerAddress);
+
+        pi.getRepository().createAccount(address);
 
         return pi;
     }
+
 
 }
 

@@ -1,7 +1,6 @@
 package org.ethereum.db;
 
 import org.ethereum.core.AccountState;
-import org.ethereum.core.ContractDetails;
 import org.ethereum.vm.DataWord;
 import org.junit.*;
 import org.junit.runners.MethodSorters;

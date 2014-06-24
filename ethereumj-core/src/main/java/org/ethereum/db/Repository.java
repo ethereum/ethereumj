@@ -1,7 +1,6 @@
 package org.ethereum.db;
 
 import org.ethereum.core.AccountState;
-import org.ethereum.core.ContractDetails;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
@@ -98,7 +97,7 @@ public class Repository {
         accountStateDB.update(addr, state.getEncoded());
 
         // 2. Save ContractDetails
-        NewContractDetails details = new NewContractDetails();
+        ContractDetails details = new ContractDetails();
         contractDetailsDB.put(addr, details.getEncoded());
 
         return state;
@@ -119,7 +118,7 @@ public class Repository {
         return state;
     }
 
-    public NewContractDetails getContractDetails(byte[] addr){
+    public ContractDetails getContractDetails(byte[] addr){
 
         byte[] accountDetailsRLP = contractDetailsDB.get(addr);
 
@@ -130,7 +129,7 @@ public class Repository {
             return null;
         }
 
-        NewContractDetails details = new NewContractDetails(accountDetailsRLP);
+        ContractDetails details = new ContractDetails(accountDetailsRLP);
         return details;
     }
 
@@ -186,7 +185,7 @@ public class Repository {
 
         if (address == null || key == null) return;
         AccountState       state = getAccountState(address);
-        NewContractDetails details = getContractDetails(address);
+        ContractDetails details = getContractDetails(address);
 
         if (state == null || details == null) return;
         details.put(key, value);
@@ -211,7 +210,7 @@ public class Repository {
         AccountState state = getAccountState(address);
         if (state == null) return null;
 
-        NewContractDetails details = getContractDetails(address);
+        ContractDetails details = getContractDetails(address);
         DataWord value = details.get(key);
 
         return value;
@@ -219,7 +218,7 @@ public class Repository {
 
     public byte[] getCode(byte[] address){
 
-        NewContractDetails details = getContractDetails(address);
+        ContractDetails details = getContractDetails(address);
         if (details == null) return null;
 
         return details.getCode();
@@ -232,7 +231,7 @@ public class Repository {
         AccountState state = getAccountState(address);
         if (state == null) return;
 
-        NewContractDetails details = getContractDetails(address);
+        ContractDetails details = getContractDetails(address);
         details.setCode(code);
 
         byte[] codeHash = HashUtil.sha3(code);

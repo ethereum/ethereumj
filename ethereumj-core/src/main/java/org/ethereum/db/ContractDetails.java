@@ -17,7 +17,7 @@ import java.util.*;
  * Created on: 24/06/2014 00:12
  */
 
-public class NewContractDetails {
+public class ContractDetails {
 
     private byte[] rlpEncoded;
 
@@ -29,18 +29,27 @@ public class NewContractDetails {
     Trie storageTrie = new Trie(null);
 
 
-    public NewContractDetails(){}
-    public NewContractDetails(byte[] rlpCode) {
+    public ContractDetails(){}
+    public ContractDetails(byte[] rlpCode) {
         decode(rlpCode);
     }
 
-    public NewContractDetails(Map<DataWord, DataWord> storage, byte[] code) {}
+    public ContractDetails(Map<DataWord, DataWord> storage, byte[] code) {}
 
     public void put(DataWord key, DataWord value){
 
         storageTrie.update(key.getData(), value.getData());
+
+        int index = storageKeys.indexOf(key);
+
+        if (index != -1){
+            storageKeys.remove(index);
+            storageValues.remove(index);
+        }
+
         storageKeys.add(key);
         storageValues.add(value);
+
         this.rlpEncoded = null;
     }
 
@@ -145,7 +154,7 @@ public class NewContractDetails {
 
     public Map<DataWord, DataWord> getStorage(){
 
-        Map<DataWord, DataWord> storage = Collections.unmodifiableMap(new HashMap<DataWord, DataWord>());
+        Map<DataWord, DataWord> storage = new HashMap<DataWord, DataWord>();
 
         for (int i = 0;
              storageKeys != null &&
@@ -153,7 +162,7 @@ public class NewContractDetails {
             storage.put(storageKeys.get(i), storageValues.get(i));
         }
 
-        return storage;
+        return Collections.unmodifiableMap(storage);
     }
 
 }

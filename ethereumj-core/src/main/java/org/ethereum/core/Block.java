@@ -71,7 +71,11 @@ public class Block {
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
         this.txsState = new Trie(null);
-        this.header.setStateRoot(WorldManager.instance.worldState.getRootHash());
+
+        // TODO: REFACTOR REPOSITORY TO GET ROOT HASH FOR HERE
+        // TODO: REFACTOR REPOSITORY TO GET ROOT HASH FOR HERE
+        // TODO: REFACTOR REPOSITORY TO GET ROOT HASH FOR HERE
+        this.header.setStateRoot(null);
         this.header.setTxTrieRoot(txsState.getRootHash());
         this.transactionsList = transactionsList;
         this.uncleList = uncleList;
@@ -197,7 +201,7 @@ public class Block {
     public List<Transaction> getTransactionsList() {
         if (!parsed) parseRLP();
         if (transactionsList == null) {
-        	this.transactionsList = new ArrayList<Transaction>();
+        	this.transactionsList = new ArrayList<>();
         }
         return transactionsList;
     }
@@ -205,7 +209,7 @@ public class Block {
     public List<TransactionReceipt> getTxReceiptList() {
         if (!parsed) parseRLP();
         if (transactionsList == null) {
-            this.txReceiptList = new ArrayList<TransactionReceipt>();
+            this.txReceiptList = new ArrayList<>();
         }
         return txReceiptList;
     }
@@ -213,7 +217,7 @@ public class Block {
     public List<Block> getUncleList() {
         if (!parsed) parseRLP();
         if (uncleList == null) {
-        	this.uncleList = new ArrayList<Block>();
+        	this.uncleList = new ArrayList<>();
         }
         return uncleList;
     }
@@ -299,14 +303,6 @@ public class Block {
 //        this.allAccountsState.update();
     }
     
-    public byte[] updateState(byte[] key, byte[] value) {
-
-        WorldManager.instance.worldState.update(key, value);
-    	byte[] stateRoot = WorldManager.instance.worldState.getRootHash();
-    	this.header.setStateRoot(stateRoot);
-    	return stateRoot;
-    }
-    
 	/**
 	 * This mechanism enforces a homeostasis in terms of the time between blocks; 
 	 * a smaller period between the last two blocks results in an increase in the 
@@ -320,7 +316,6 @@ public class Block {
     	if(!this.isGenesis()) {
 	    	// verify difficulty meets requirements
 	    	isValid = this.getDifficulty() == this.calcDifficulty();
-	    	// verify nonce meest difficulty requirements
 	    	isValid = this.validateNonce();
 	    	// verify gasLimit meets requirements
 	    	isValid = this.getGasLimit() == this.calcGasLimit();
@@ -367,9 +362,6 @@ public class Block {
 	/**
 	 * Verify that block is valid for its difficulty
 	 * 
-	 * @param block
-	 * @param difficulty
-	 * @param testNonce
 	 * @return
 	 */
 	public boolean validateNonce() {
