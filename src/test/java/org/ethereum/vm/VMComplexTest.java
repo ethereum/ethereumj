@@ -304,15 +304,15 @@ public class VMComplexTest {
          contract A: 77045e71a7a2c50903d88e564cd72fab11e82051
          -----------
 
-         a = 0x7f60c860005461012c6020540000000000000000000000000000000000000000
-         b = 0x0060005460206000f20000000000000000000000000000000000000000000000
-         create(100, 0 41)
+             a = 0x7f60c860005461012c6020540000000000000000000000000000000000000000
+             b = 0x0060005460206000f20000000000000000000000000000000000000000000000
+             create(100, 0 41)
 
 
          contract B: (the contract to be created the addr will be defined to: 8e45367623a2865132d9bf875d5cfa31b9a0cd94)
          -----------
-         a = 200
-         b = 300
+             a = 200
+             b = 300
 
          */
 
@@ -355,10 +355,8 @@ public class VMComplexTest {
             program.setRuntimeFailure(e);
         }
 
-
         System.out.println();
         System.out.println("============ Results ============");
-
 
         System.out.println("*** Used gas: " + program.result.getGasUsed());
         // todo: check that the value pushed after exec is the new address
