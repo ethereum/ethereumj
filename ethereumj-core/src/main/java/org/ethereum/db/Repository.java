@@ -37,6 +37,8 @@ public class Repository {
 
     private Logger logger = LoggerFactory.getLogger("repository");
 
+    Trie worldState;
+
     TrackTrie     accountStateDB;
     TrackDatabase contractDetailsDB;
 
@@ -54,7 +56,8 @@ public class Repository {
 
 
         stateDB = new DatabaseImpl("state");
-        Trie worldState = new Trie(stateDB.getDb());
+        worldState = new Trie(stateDB.getDb());
+
         accountStateDB = new TrackTrie(worldState);
     }
 
@@ -142,7 +145,7 @@ public class Repository {
 
         if (logger.isInfoEnabled())
             logger.info("Changing balance: account: [ {} ] new balance: [ {} ]",
-                    Hex.toHexString(address), newBalance.longValue());
+                    Hex.toHexString(address), newBalance.toString());
 
         accountStateDB.update(address, state.getEncoded());
 
@@ -245,6 +248,10 @@ public class Repository {
 
         accountStateDB.update(address, state.getEncoded());
         contractDetailsDB.put(address, details.getEncoded());
+    }
+
+    public byte[] getRootHash(){
+        return this.worldState.getRootHash();
     }
 
 
