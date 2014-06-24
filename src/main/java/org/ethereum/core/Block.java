@@ -72,10 +72,9 @@ public class Block {
 				timestamp, extraData, nonce);
         this.txsState = new Trie(null);
 
-        // TODO: REFACTOR REPOSITORY TO GET ROOT HASH FOR HERE
-        // TODO: REFACTOR REPOSITORY TO GET ROOT HASH FOR HERE
-        // TODO: REFACTOR REPOSITORY TO GET ROOT HASH FOR HERE
-        this.header.setStateRoot(null);
+        byte[] stateRoot = WorldManager.instance.repository.getRootHash();
+        this.header.setStateRoot(stateRoot);
+
         this.header.setTxTrieRoot(txsState.getRootHash());
         this.transactionsList = transactionsList;
         this.uncleList = uncleList;
