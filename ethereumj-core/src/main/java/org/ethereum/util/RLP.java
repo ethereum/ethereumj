@@ -828,7 +828,7 @@ public class RLP {
         if ( srcData == null ||
              (srcData.length == 1 && srcData[0] == 0) ) {
             return new byte[]{(byte) 0x80};
-        } if (srcData.length == 1 && srcData[0] < 0x80) {
+        } if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
 
             return srcData;
 
