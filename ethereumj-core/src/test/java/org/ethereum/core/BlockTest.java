@@ -137,8 +137,6 @@ public class BlockTest {
          */
     	Block genesis = Genesis.getInstance();
         assertEquals(CPP_PoC5_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
-        
-        // Not really a good test because this compares Genesis.getHash() to itself
         assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
     }
     

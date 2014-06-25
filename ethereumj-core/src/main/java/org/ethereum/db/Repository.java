@@ -103,6 +103,10 @@ public class Repository {
         ContractDetails details = new ContractDetails();
         contractDetailsDB.put(addr, details.getEncoded());
 
+        if (logger.isInfoEnabled())
+            logger.info("New account created: [ {} ]", Hex.toHexString(addr));
+
+
         return state;
     }
 
