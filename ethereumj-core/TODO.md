@@ -3,7 +3,7 @@
 ##### TODO list:
 ----------------
 
-- [ ] **State management** trie for storage hash calculation 
+- [X] **State management** trie for storage hash calculation 
                            and update hash into AccountState
 - [ ] **GUI screen** a screen that will hold table with full state representation
 - [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))                                  
