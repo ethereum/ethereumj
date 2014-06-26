@@ -17,8 +17,6 @@ INDENT, DEDENT }
     public Token pullToken() {
       return SerpentLexer.super.nextToken(); // must be to super.nextToken, or we'll recurse forever!
     }
-
-
   };
 
   @Override
@@ -193,8 +191,6 @@ int_val : INT |
           contract_storage_load |
           array_retreive
           ;
-
-
 
 hex_num
    : HEX_NUMBER
