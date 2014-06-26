@@ -38,5 +38,7 @@ public class TrackDatabaseTest {
         trackDatabase1.commitTrack();
         value  = trackDatabase1.get(Hex.decode("abcdef"));
         Assert.assertEquals("ffffff", Hex.toHexString(value));
+
+        db1.close();
     }
 }
