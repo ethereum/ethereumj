@@ -1,11 +1,13 @@
 package org.ethereum.vm;
 
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.Comparator;
 
 /**
  * DataWord is the 32-byte array representation of a 256-bit number
@@ -15,7 +17,7 @@ import java.nio.ByteBuffer;
  * @author: Roman Mandeleil
  * Created on: 01/06/2014 10:45
  */
-public class DataWord {
+public class DataWord implements Comparable<DataWord>{
 
     public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
 
@@ -289,4 +291,17 @@ public class DataWord {
     public int hashCode() {
         return java.util.Arrays.hashCode(data);
     }
+
+    @Override
+    public int compareTo(DataWord o) {
+        if (o == null || o.getData() == null) return -1;
+
+        return FastByteComparisons.compareTo(
+                data, 0, data.length,
+
+                o.getData(), 0, o.getData().length);
+    }
+
+
+
 }
