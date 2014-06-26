@@ -1,4 +1,4 @@
-# Ethereum Java Implementation
+# Ethereum Java Implementation [![Build Status](https://travis-ci.org/ethereum/ethereumj.svg?branch=master)](https://travis-ci.org/ethereum/ethereumj)
 
 
 :small_orange_diamond: By **Roman Mandeleil** @romanman 2014.   
