@@ -19,14 +19,17 @@ public class SystemProperties {
 
 	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 	
-	private static int DEFAULT_TX_APPROVE_TIMEOUT = 10;
-	private static String DEFAULT_DISCOVERY_PEER = "54.201.28.117";
-	private static int DEFAULT_DISCOVERY_PORT = 30303;
-	private static String DEFAULT_ACTIVE_PEER_IP = "54.201.28.117";
-	private static int DEFAULT_ACTIVE_PORT = 30303;
-    private static String DEFAULT_SAMPLES_DIR = "samples";
-    private static String DEFAULT_COINBASE_SECRET = "monkey";
-    private static int DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
+	private static int     DEFAULT_TX_APPROVE_TIMEOUT = 10;
+	private static String  DEFAULT_DISCOVERY_PEER = "54.201.28.117";
+	private static int     DEFAULT_DISCOVERY_PORT = 30303;
+	private static String  DEFAULT_ACTIVE_PEER_IP = "54.201.28.117";
+	private static int     DEFAULT_ACTIVE_PORT = 30303;
+    private static String  DEFAULT_SAMPLES_DIR = "samples";
+    private static String  DEFAULT_COINBASE_SECRET = "monkey";
+    private static int     DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
+    private static Boolean DEFAULT_DUMP_FULL = false;
+    private static String  DEFAULT_DUMP_DIR = "dmp";
+    private static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
 
 	public static SystemProperties CONFIG = new SystemProperties();
     private Properties prop = new Properties();
@@ -128,6 +131,22 @@ public class SystemProperties {
         if(prop.isEmpty()) return DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT;
         return Integer.parseInt(prop.getProperty("active.peer.channel.timeout"));
     }
+
+    public Boolean dumpFull(){
+        if(prop.isEmpty()) return DEFAULT_DUMP_FULL;
+        return Boolean.parseBoolean(prop.getProperty("dump.full"));
+    }
+
+    public String dumpDir(){
+        if(prop.isEmpty()) return DEFAULT_DUMP_DIR;
+        return prop.getProperty("dump.dir");
+    }
+
+    public Boolean dumpCleanOnRestart(){
+        if(prop.isEmpty()) return DEFAULT_DUMP_CLEAN_ON_RESTART;
+        return Boolean.parseBoolean( prop.getProperty("dump.clean.on.restart") );
+    }
+
 
 
     public void print() {

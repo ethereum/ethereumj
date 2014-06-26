@@ -2,6 +2,7 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
+import com.sun.xml.internal.fastinfoset.algorithm.BuiltInEncodingAlgorithm;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.RLP;
@@ -74,6 +75,8 @@ public class Genesis extends Block {
         this.setStateRoot( WorldManager.instance.repository.getRootHash() );
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
 		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
+
+        WorldManager.instance.repository.dumpState(0, 0, null);
     }
 	
 	public static Block getInstance() {
