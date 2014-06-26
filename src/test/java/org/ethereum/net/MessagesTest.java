@@ -504,7 +504,7 @@ public class MessagesTest {
 
         assertEquals(expected, Hex.toHexString(getChainMessage.getPayload()).toUpperCase());
 
-        byte[] size = ByteUtil.calcPacketSize( getChainMessage.getPayload());
+        byte[] size = ByteUtil.calcPacketLength( getChainMessage.getPayload());
 
         assertEquals("00000067", Hex.toHexString(size));
     }
