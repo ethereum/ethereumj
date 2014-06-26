@@ -27,7 +27,8 @@ public class JSONHelper {
         Map outMap = new LinkedHashMap();
 
         for (DataWord key : storageKeys){
-            outMap.put(key.getNoLeadZeroesData(), storageMap.get(key).getNoLeadZeroesData());
+            outMap.put(Hex.toHexString(key.getNoLeadZeroesData()),
+                       Hex.toHexString(storageMap.get(key).getNoLeadZeroesData()));
         }
 
         String mapString =  JSONValue.toJSONString(outMap);
