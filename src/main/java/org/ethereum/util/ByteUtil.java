@@ -47,19 +47,6 @@ public class ByteUtil {
         else return Hex.toHexString(data);
     }
     
-    // The packet size should be 4 byte long
-    public static byte[] calcPacketSize(byte[] packet){
-
-        byte[] size = new byte[4];
-
-        size[0] = (byte)(packet.length >> 24 & 0xFF);
-        size[1] = (byte)(packet.length >> 16 & 0xFF);
-        size[2] = (byte)(packet.length >> 8 & 0xFF);
-        size[3] = (byte)(packet.length >> 0 & 0xFF);
-
-        return size;
-    }
-    
     /**
      * Calculate packet length
      * @param msg
@@ -118,19 +105,15 @@ public class ByteUtil {
 		byte[] data;
 
 		// check if the string is numeric
-		if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?")) {
+		if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?"))
 			data = new BigInteger(arg.toString().trim()).toByteArray();
-
-               // check if it's hex number
-		} else if (arg.toString().trim().matches("0[xX][0-9a-fA-F]+")){
+		// check if it's hex number
+		else if (arg.toString().trim().matches("0[xX][0-9a-fA-F]+"))
             data = new BigInteger(arg.toString().trim().substring(2), 16).toByteArray();
-
-        } else {
+        else
 			data = arg.toString().trim().getBytes();
-		}
 
-
-
+		
 		if (data.length > 32)
 			throw new RuntimeException("values can't be more than 32 byte");
 
@@ -160,36 +143,29 @@ public class ByteUtil {
 		return baos.toByteArray();
 	}
 
+	public static byte[] stripLeadingZeroes(byte[] data) {
 
+		if (data == null)
+			return null;
 
+		int firstNonZero = 0;
+		int i = 0;
+		for (i = 0; i < data.length; ++i) {
+			if (data[i] != 0) {
+				firstNonZero = i;
+				break;
+			}
+		}
+		if (i == data.length)
+			return new byte[1];
+		if (firstNonZero == 0)
+			return data;
 
+		byte[] result = new byte[data.length - firstNonZero];
+		System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
 
-
-
-
-
-
-
-    public static byte[] stripLeadingZeroes(byte[] data){
-
-        if (data == null) return null;
-
-        int firstNonZero = 0;
-        int i = 0;
-        for (i = 0; i < data.length; ++i)
-            if (data[i] != 0){
-                firstNonZero = i;
-                break;
-            }
-
-        if (i == data.length) return new byte[1];
-        if (firstNonZero == 0) return data;
-
-        byte[] result = new byte[data.length - firstNonZero];
-        System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
-
-        return result;
-    }
+		return result;
+	}
 
     /**
      * increment byte array as a number until max is reached

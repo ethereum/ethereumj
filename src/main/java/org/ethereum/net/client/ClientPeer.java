@@ -111,7 +111,7 @@ public class ClientPeer {
 
         ByteBuf buffer = channel.alloc().buffer(payload.length + 8);
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(ByteUtil.calcPacketSize(payload));
+        buffer.writeBytes(ByteUtil.calcPacketLength(payload));
         buffer.writeBytes(payload);
 
         logger.info("Send msg: [ " +
