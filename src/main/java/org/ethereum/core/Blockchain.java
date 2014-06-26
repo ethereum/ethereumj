@@ -130,6 +130,10 @@ public class Blockchain {
     
     private void addBlock(Block block) {
     	if(block.isValid()) {
+
+            if (!block.isGenesis())
+                WorldManager.instance.applyBlock(block);
+
 			this.wallet.processBlock(block);
 	        // In case of the genesis block we don't want to rely on the min gas price 
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
@@ -193,8 +197,6 @@ public class Blockchain {
             long blockNr = Genesis.NUMBER;
             for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
                 this.lastBlock = new Block(db.get(ByteUtil.longToBytes(blockNr)));
-                // in case of cold load play the contracts
-                WorldManager.instance.applyBlock(lastBlock);
                 logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
                 this.addBlock(lastBlock);
                 blockNr = lastBlock.getNumber()+1;

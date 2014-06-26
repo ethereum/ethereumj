@@ -255,7 +255,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
 
             WorldManager.instance.getBlockChain().addBlocks(blockList);
-            WorldManager.instance.applyBlockList(blockList);
             if (peerListener != null) peerListener.console(blocksMessage.toString());
         }
 
