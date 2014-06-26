@@ -26,14 +26,18 @@ public class RepositoryTest {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
-        AccountState createdState = repository.createAccount(Hex.decode(addr));
 
-        AccountState fetchedState =
-            repository.getAccountState(Hex.decode(addr));
+        try {
+            AccountState createdState = repository.createAccount(Hex.decode(addr));
 
-        assertEquals(createdState.getEncoded(), fetchedState.getEncoded());
+            AccountState fetchedState =
+                repository.getAccountState(Hex.decode(addr));
 
-        repository.close();
+            assertEquals(createdState.getEncoded(), fetchedState.getEncoded());
+        } finally {
+            repository.close();
+        }
+
     }
 
 
@@ -42,19 +46,23 @@ public class RepositoryTest {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
-        BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
 
-        repository.createAccount(Hex.decode(addr));
-        BigInteger nonce1 = repository.getNonce(Hex.decode(addr));
+        try {
+            BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
 
-        repository.increaseNonce(Hex.decode(addr));
-        BigInteger nonce2 = repository.getNonce(Hex.decode(addr));
+            repository.createAccount(Hex.decode(addr));
+            BigInteger nonce1 = repository.getNonce(Hex.decode(addr));
 
-        assertEquals(0, nonce0.intValue());
-        assertEquals(0, nonce1.intValue());
-        assertEquals(1, nonce2.intValue());
+            repository.increaseNonce(Hex.decode(addr));
+            BigInteger nonce2 = repository.getNonce(Hex.decode(addr));
 
-        repository.close();
+            assertEquals(0, nonce0.intValue());
+            assertEquals(0, nonce1.intValue());
+            assertEquals(1, nonce2.intValue());
+        } finally {
+            repository.close();
+        }
+
     }
 
     @Test  // increase nonce
@@ -62,21 +70,24 @@ public class RepositoryTest {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
-        BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
+        try {
+            BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
 
-        repository.createAccount(Hex.decode(addr));
-        BigInteger nonce1 = repository.getNonce(Hex.decode(addr));
+            repository.createAccount(Hex.decode(addr));
+            BigInteger nonce1 = repository.getNonce(Hex.decode(addr));
 
-        repository.increaseNonce(Hex.decode(addr));
-        repository.increaseNonce(Hex.decode(addr));
-        repository.increaseNonce(Hex.decode(addr));
-        BigInteger nonce2 = repository.getNonce(Hex.decode(addr));
+            repository.increaseNonce(Hex.decode(addr));
+            repository.increaseNonce(Hex.decode(addr));
+            repository.increaseNonce(Hex.decode(addr));
+            BigInteger nonce2 = repository.getNonce(Hex.decode(addr));
 
-        assertEquals(0, nonce0.intValue());
-        assertEquals(0, nonce1.intValue());
-        assertEquals(3, nonce2.intValue());
+            assertEquals(0, nonce0.intValue());
+            assertEquals(0, nonce1.intValue());
+            assertEquals(3, nonce2.intValue());
+        } finally {
+            repository.close();
+        }
 
-        repository.close();
     }
 
 
@@ -85,19 +96,23 @@ public class RepositoryTest {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
-        BigInteger balance0 = repository.getBalance(Hex.decode(addr));
+        try {
+            BigInteger balance0 = repository.getBalance(Hex.decode(addr));
 
-        repository.createAccount(Hex.decode(addr));
-        BigInteger balance1 = repository.getBalance(Hex.decode(addr));
+            repository.createAccount(Hex.decode(addr));
+            BigInteger balance1 = repository.getBalance(Hex.decode(addr));
 
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(300));
-        BigInteger balance2 = repository.getBalance(Hex.decode(addr));
+            repository.addBalance(Hex.decode(addr), BigInteger.valueOf(300));
+            BigInteger balance2 = repository.getBalance(Hex.decode(addr));
 
-        assertEquals(0, balance0.intValue());
-        assertEquals(0,   balance1.intValue());
-        assertEquals(300, balance2.intValue());
+            assertEquals(0, balance0.intValue());
+            assertEquals(0,   balance1.intValue());
+            assertEquals(300, balance2.intValue());
+        } finally {
 
-        repository.close();
+            repository.close();
+        }
+
     }
 
 
@@ -106,23 +121,27 @@ public class RepositoryTest {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
-        BigInteger balance0 = repository.getBalance(Hex.decode(addr));
+        try {
+            BigInteger balance0 = repository.getBalance(Hex.decode(addr));
 
-        repository.createAccount(Hex.decode(addr));
-        BigInteger balance1 = repository.getBalance(Hex.decode(addr));
+            repository.createAccount(Hex.decode(addr));
+            BigInteger balance1 = repository.getBalance(Hex.decode(addr));
 
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(300));
-        BigInteger balance2 = repository.getBalance(Hex.decode(addr));
+            repository.addBalance(Hex.decode(addr), BigInteger.valueOf(300));
+            BigInteger balance2 = repository.getBalance(Hex.decode(addr));
 
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(-150));
-        BigInteger balance3 = repository.getBalance(Hex.decode(addr));
+            repository.addBalance(Hex.decode(addr), BigInteger.valueOf(-150));
+            BigInteger balance3 = repository.getBalance(Hex.decode(addr));
 
-        assertEquals(0, balance0.intValue());
-        assertEquals(0,   balance1.intValue());
-        assertEquals(300, balance2.intValue());
-        assertEquals(150, balance3.intValue());
+            assertEquals(0, balance0.intValue());
+            assertEquals(0,   balance1.intValue());
+            assertEquals(300, balance2.intValue());
+            assertEquals(150, balance3.intValue());
+        } finally {
 
-        repository.close();
+            repository.close();
+        }
+
     }
 
 
@@ -131,11 +150,15 @@ public class RepositoryTest {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
-        byte[] code = repository.getCode(Hex.decode(addr));
 
-        assertTrue(code == null);
+        byte[] code;
+        try {
+            code = repository.getCode(Hex.decode(addr));
+            assertTrue(code == null);
+        } finally {
+            repository.close();
+        }
 
-        repository.close();
     }
 
     @Test  // get/set code
@@ -146,18 +169,22 @@ public class RepositoryTest {
         String codeHash = "8f0d7fc8cc6fdd688fa58ae9256310069f5659ed2a8a3af994d80350fbf1e798";
 
         Repository repository = new Repository();
-        byte[] code0 = repository.getCode(Hex.decode(addr));
 
-        repository.createAccount(Hex.decode(addr));
-        repository.saveCode(Hex.decode(addr), Hex.decode(codeString));
-        byte[] code1 = repository.getCode(Hex.decode(addr));
-        AccountState accountState = repository.getAccountState(Hex.decode(addr));
+        try {
+            byte[] code0 = repository.getCode(Hex.decode(addr));
+            repository.createAccount(Hex.decode(addr));
+            repository.saveCode(Hex.decode(addr), Hex.decode(codeString));
+            byte[] code1 = repository.getCode(Hex.decode(addr));
+            AccountState accountState = repository.getAccountState(Hex.decode(addr));
 
-        assertTrue(code0 == null);
-        assertEquals(codeString, Hex.toHexString(code1));
-        assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
+            assertTrue(code0 == null);
+            assertEquals(codeString, Hex.toHexString(code1));
+            assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
+        } finally {
 
-        repository.close();
+            repository.close();
+        }
+
     }
 
 
@@ -168,18 +195,21 @@ public class RepositoryTest {
         String codeHash = "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 
         Repository repository = new Repository();
-        byte[] code0 = repository.getCode(Hex.decode(addr));
 
-        repository.createAccount(Hex.decode(addr));
-        repository.saveCode(Hex.decode(addr), null);
-        byte[] code1 = repository.getCode(Hex.decode(addr));
-        AccountState accountState = repository.getAccountState(Hex.decode(addr));
+        try {
+            byte[] code0 = repository.getCode(Hex.decode(addr));
+            repository.createAccount(Hex.decode(addr));
+            repository.saveCode(Hex.decode(addr), null);
+            byte[] code1 = repository.getCode(Hex.decode(addr));
+            AccountState accountState = repository.getAccountState(Hex.decode(addr));
+            assertTrue(code0 == null);
+            assertNull(code1);
+            assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
+        } finally {
 
-        assertTrue(code0 == null);
-        assertNull(code1);
-        assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
+            repository.close();
+        }
 
-        repository.close();
     }
 
 
@@ -191,11 +221,15 @@ public class RepositoryTest {
         DataWord key = new DataWord(keyBytes);
 
         Repository repository = new Repository();
-        DataWord value = repository.getStorageValue(Hex.decode(addr), key);
 
-        assertNull(value);
+        try {
+            DataWord value = repository.getStorageValue(Hex.decode(addr), key);
+            assertNull(value);
+        } finally {
 
-        repository.close();
+            repository.close();
+        }
+
     }
 
     @Test // storage set/get
@@ -203,21 +237,21 @@ public class RepositoryTest {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
-        repository.createAccount(Hex.decode(addr));
 
-        byte[] keyBytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-        DataWord key = new DataWord(keyBytes);
+        try {
+            repository.createAccount(Hex.decode(addr));
+            byte[] keyBytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+            DataWord key = new DataWord(keyBytes);
+            byte[] valueBytes = Hex.decode("0F4240");
+            DataWord value = new DataWord(valueBytes);
+            repository.addStorageRow(Hex.decode(addr), key, value);
+            DataWord fetchedValue = repository.getStorageValue(Hex.decode(addr), key);
+            assertEquals(value, fetchedValue);
+        } finally {
 
-        byte[] valueBytes = Hex.decode("0F4240");
-        DataWord value = new DataWord(valueBytes);
+            repository.close();
+        }
 
-        repository.addStorageRow(Hex.decode(addr), key, value);
-
-        DataWord fetchedValue = repository.getStorageValue(Hex.decode(addr), key);
-
-        assertEquals(value, fetchedValue);
-
-        repository.close();
     }
 
     @Test // storage set/get
@@ -227,44 +261,48 @@ public class RepositoryTest {
         String expectedStorageHash = "365ed874ad42c2b4af335212465291e03dcd1f0c5b600f40f048ed238ad61fd3";
 
         Repository repository = new Repository();
-        repository.createAccount(Hex.decode(addr));
 
-        byte[] keyBytes = Hex.decode("03E8");
-        DataWord key1 = new DataWord(keyBytes);
+        try {
+            repository.createAccount(Hex.decode(addr));
 
-        keyBytes = Hex.decode("03E9");
-        DataWord key2 = new DataWord(keyBytes);
+            byte[] keyBytes = Hex.decode("03E8");
+            DataWord key1 = new DataWord(keyBytes);
 
-        keyBytes = Hex.decode("03F0");
-        DataWord key3 = new DataWord(keyBytes);
+            keyBytes = Hex.decode("03E9");
+            DataWord key2 = new DataWord(keyBytes);
 
+            keyBytes = Hex.decode("03F0");
+            DataWord key3 = new DataWord(keyBytes);
 
-        byte[] valueBytes = Hex.decode("0F4240");
-        DataWord value1 = new DataWord(valueBytes);
+            byte[] valueBytes = Hex.decode("0F4240");
+            DataWord value1 = new DataWord(valueBytes);
 
-        valueBytes = Hex.decode("0F4241");
-        DataWord value2 = new DataWord(valueBytes);
+            valueBytes = Hex.decode("0F4241");
+            DataWord value2 = new DataWord(valueBytes);
 
-        valueBytes = Hex.decode("0F4242");
-        DataWord value3 = new DataWord(valueBytes);
+            valueBytes = Hex.decode("0F4242");
+            DataWord value3 = new DataWord(valueBytes);
 
-        repository.addStorageRow(Hex.decode(addr), key1, value1);
-        repository.addStorageRow(Hex.decode(addr), key2, value2);
-        repository.addStorageRow(Hex.decode(addr), key3, value3);
+            repository.addStorageRow(Hex.decode(addr), key1, value1);
+            repository.addStorageRow(Hex.decode(addr), key2, value2);
+            repository.addStorageRow(Hex.decode(addr), key3, value3);
 
-        DataWord fetchedValue1 = repository.getStorageValue(Hex.decode(addr), key1);
-        DataWord fetchedValue2 = repository.getStorageValue(Hex.decode(addr), key2);
-        DataWord fetchedValue3 = repository.getStorageValue(Hex.decode(addr), key3);
+            DataWord fetchedValue1 = repository.getStorageValue(Hex.decode(addr), key1);
+            DataWord fetchedValue2 = repository.getStorageValue(Hex.decode(addr), key2);
+            DataWord fetchedValue3 = repository.getStorageValue(Hex.decode(addr), key3);
 
-        AccountState accountState = repository.getAccountState(Hex.decode(addr));
-        String stateRoot = Hex.toHexString(accountState.getStateRoot());
+            AccountState accountState = repository.getAccountState(Hex.decode(addr));
+            String stateRoot = Hex.toHexString(accountState.getStateRoot());
 
-        assertEquals(value1, fetchedValue1);
-        assertEquals(value2, fetchedValue2);
-        assertEquals(value3, fetchedValue3);
-        assertEquals(expectedStorageHash, stateRoot);
+            assertEquals(value1, fetchedValue1);
+            assertEquals(value2, fetchedValue2);
+            assertEquals(value3, fetchedValue3);
+            assertEquals(expectedStorageHash, stateRoot);
+        } finally {
 
-        repository.close();
+            repository.close();
+        }
+
     }
 
 
@@ -276,19 +314,23 @@ public class RepositoryTest {
         long expectedBalance = 333;
 
         Repository origRepository = new Repository();
-        Repository repository = origRepository.getTrack();
-        repository.startTracking();
 
-        repository.createAccount(Hex.decode(addr));
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(expectedBalance));
+        try {
+            Repository repository = origRepository.getTrack();
+            repository.startTracking();
 
-        repository.commit();
+            repository.createAccount(Hex.decode(addr));
+            repository.addBalance(Hex.decode(addr), BigInteger.valueOf(expectedBalance));
 
-        BigInteger balance =  repository.getBalance(Hex.decode(addr));
+            repository.commit();
 
-        assertEquals(expectedBalance, balance.longValue());
+            BigInteger balance =  repository.getBalance(Hex.decode(addr));
 
-        origRepository.close();
+            assertEquals(expectedBalance, balance.longValue());
+        } finally {
+            origRepository.close();
+        }
+
     }
 
     @Test // commit/rollback
@@ -329,24 +371,28 @@ public class RepositoryTest {
         Repository origRepository = new Repository();
         Repository repository = origRepository.getTrack();
 
-        repository.createAccount(Hex.decode(addr_1));
-        repository.addBalance(Hex.decode(addr_1), BigInteger.valueOf(expectedBalance));
-        repository.startTracking();
+        try {
+            repository.createAccount(Hex.decode(addr_1));
+            repository.addBalance(Hex.decode(addr_1), BigInteger.valueOf(expectedBalance));
+            repository.startTracking();
 
-        repository.createAccount(Hex.decode(addr_2));
-        repository.saveCode(Hex.decode(addr_2), Hex.decode(codeString));
-        repository.addStorageRow(Hex.decode(addr_2), new DataWord(101), new DataWord(1000001));
-        repository.addStorageRow(Hex.decode(addr_2), new DataWord(102), new DataWord(1000002));
-        repository.addStorageRow(Hex.decode(addr_2), new DataWord(103), new DataWord(1000003));
-        repository.rollback();
+            repository.createAccount(Hex.decode(addr_2));
+            repository.saveCode(Hex.decode(addr_2), Hex.decode(codeString));
+            repository.addStorageRow(Hex.decode(addr_2), new DataWord(101), new DataWord(1000001));
+            repository.addStorageRow(Hex.decode(addr_2), new DataWord(102), new DataWord(1000002));
+            repository.addStorageRow(Hex.decode(addr_2), new DataWord(103), new DataWord(1000003));
+            repository.rollback();
 
-        BigInteger balance =  repository.getBalance(Hex.decode(addr_1));
-        assertEquals(expectedBalance, balance.longValue());
+            BigInteger balance =  repository.getBalance(Hex.decode(addr_1));
+            assertEquals(expectedBalance, balance.longValue());
 
-        DataWord value = repository.getStorageValue(Hex.decode(addr_2), new DataWord(101));
-        assertNull(value);
+            DataWord value = repository.getStorageValue(Hex.decode(addr_2), new DataWord(101));
+            assertNull(value);
+        } finally {
 
-        origRepository.close();
+            origRepository.close();
+        }
+
     }
 
 }
