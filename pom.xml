@@ -152,11 +152,11 @@
 
 	<build>
 
-        <resources>
-            <resource>
-                <directory>src/main/antlr4</directory>
-            </resource>
-        </resources>
+        <!--<resources>-->
+            <!--<resource>-->
+                <!--<directory>src/main/antlr4</directory>-->
+            <!--</resource>-->
+        <!--</resources>-->
 
 		<plugins>
 			<plugin>
