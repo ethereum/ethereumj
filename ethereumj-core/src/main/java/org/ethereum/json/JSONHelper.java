@@ -2,11 +2,9 @@ package org.ethereum.json;
 
 import org.ethereum.vm.DataWord;
 import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -18,14 +16,12 @@ import java.util.*;
 
 public class JSONHelper {
 
-
-
     public static String dumpLine(byte[] address, byte[] nonce, byte[] balance, byte[] stateRoot,
                         byte[] codeHash, byte[] code, Map<DataWord, DataWord> storageMap){
 
 //            {address: x, nonce: n1, balance: b1, stateRoot: s1, codeHash: c1, code: c2, sotrage: [key: k1, value: v1, key:k2, value: v2 ] }
 
-        ArrayList<DataWord> storageKeys = new ArrayList(storageMap.keySet());
+        List<DataWord> storageKeys = new ArrayList<DataWord>(storageMap.keySet());
         Collections.sort((List)storageKeys);
 
         Map outMap = new LinkedHashMap();

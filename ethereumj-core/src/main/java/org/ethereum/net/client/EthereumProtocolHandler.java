@@ -361,7 +361,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
         ByteBuf buffer = ctx.alloc().buffer(chainMessage.getPayload().length + 8);
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(ByteUtil.calcPacketSize(chainMessage.getPayload()));
+        buffer.writeBytes(ByteUtil.calcPacketLength(chainMessage.getPayload()));
         buffer.writeBytes(chainMessage.getPayload());
 
         ctx.writeAndFlush(buffer);
