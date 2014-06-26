@@ -1,7 +1,5 @@
 package org.ethereum.serpent;
 
-import java.io.File;
-
 import org.antlr.v4.Tool;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -17,19 +15,13 @@ public class ParserGenerator {
 
         String userDir = System.getProperty("user.dir");
 
-        String grammarName = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent.g4";
-
-        File inputDir = new File(userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\");
+        String grammarName = userDir + "\\src\\main\\antlr4\\org\\ethereum\\serpent\\Serpent.g4";
 
         String options[] = {grammarName, "-visitor",  "-package", "org.ethereum.serpent"};
         Tool tool = new Tool(options);
         tool.outputDirectory = userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\";
         tool.processGrammarsOnCommandLine();
 
-//        org.antlr.Tool.main(new String[]{userDir + "\\src\\main\\java\\org\\ethereum\\serpent\\Serpent.g4"});
-//        org.antlr.Tool.main(new String[]{userDir + "\\src\\main\\java\\samples\\antlr\\PyEsque.g"});
-
+//        org.antlr.Tool.main(new String[]{userDir + "\\src\\main\\antlr4\\org\\ethereum\\serpent\\Serpent.g4"});
     }
-
-
 }
