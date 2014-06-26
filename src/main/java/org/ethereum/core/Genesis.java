@@ -1,14 +1,13 @@
 package org.ethereum.core;
 
-import java.math.BigInteger;
-
-import com.sun.xml.internal.fastinfoset.algorithm.BuiltInEncodingAlgorithm;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+
+import java.math.BigInteger;
 
 /**
  * The genesis block is the first block in the chain and has fixed values according to 
