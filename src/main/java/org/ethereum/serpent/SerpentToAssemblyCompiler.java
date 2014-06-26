@@ -2,7 +2,6 @@ package org.ethereum.serpent;
 
 import org.antlr.v4.runtime.misc.NotNull;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
