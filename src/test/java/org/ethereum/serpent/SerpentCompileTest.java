@@ -1329,7 +1329,7 @@ public class SerpentCompileTest {
         String code =   "\n" +
                 "a = msg(1, 2, 3, [11, 22, 33], 3, 6) \n" +
                 "b = a[0]\n" ;
-        String expected = "0 31 MSTORE8 MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 6 3 3 2 1 CALL 32 0 MUL 160 ADD 32 ADD MLOAD 0 MSTORE";
+        String expected = "0 31 MSTORE8 224 MSIZE 224 MSIZE MSTORE 0 192 MSIZE ADD MSTORE8 96 MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 2 1 CALL 32 0 MUL 160 ADD 32 ADD MLOAD 0 MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
 
