@@ -74,13 +74,14 @@ public class WorldManager {
         blockChain.loadChain();
     }
 
-    public void applyTransaction(Transaction tx) {
+    public void applyTransaction(Transaction tx, byte[] coinbase) {
+
 
         // TODO: refactor the wallet pending transactions to the world manager
         if (blockChain != null)
             blockChain.addWalletTransaction(tx);
 
-        // TODO: what is going on with simple wallet transfer
+        // TODO: what is going on with simple wallet transfer ?
 
         // 1. VALIDATE THE NONCE
         byte[] senderAddress = tx.getSender();
@@ -108,6 +109,9 @@ public class WorldManager {
         // first of all debit the gas from the issuer
         BigInteger gasDebit = tx.getTotalGasValueDebit();
         gasDebit = gasDebit.multiply(new BigInteger(tx.getGasPrice()));
+
+        // The coinbase get the gas cost
+        repository.addBalance(coinbase, gasDebit);
 
         byte[] contractAddress;
 
@@ -205,7 +209,7 @@ public class WorldManager {
                 Program program = new Program(initCode, programInvoke);
                 vm.play(program);
                 ProgramResult result = program.getResult();
-                applyProgramResult(result, gasDebit, trackRepository, senderAddress, tx.getContractAddress());
+                applyProgramResult(result, gasDebit, trackRepository, senderAddress, tx.getContractAddress(), coinbase);
 
             } else {
 
@@ -227,7 +231,7 @@ public class WorldManager {
                         vm.play(program);
 
                         ProgramResult result = program.getResult();
-                        applyProgramResult(result, gasDebit, trackRepository, senderAddress, tx.getReceiveAddress());
+                        applyProgramResult(result, gasDebit, trackRepository, senderAddress, tx.getReceiveAddress(), coinbase);
                 }
             }
         } catch (RuntimeException e) {
@@ -253,7 +257,8 @@ public class WorldManager {
      */
     private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
                                     Repository repository,
-                                    byte[] senderAddress, byte[] contractAddress) {
+                                    byte[] senderAddress, byte[] contractAddress,
+                                    byte[] coinbase) {
 
         if (result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException){
@@ -279,7 +284,10 @@ public class WorldManager {
                 stateLogger.info("After contract execution the sender address refunded with gas leftover , \n sender={} \n contract={}  \n gas_refund= {}",
                         Hex.toHexString(senderAddress) ,Hex.toHexString(contractAddress), refund);
 
+            // gas refund
             repository.addBalance(senderAddress, refund);
+            repository.addBalance(coinbase, refund.negate());
+
         }
 
         if (bodyCode != null){
@@ -300,10 +308,16 @@ public class WorldManager {
 
     public void applyBlock(Block block) {
 
+
+        // miner reward
+        if (repository.getAccountState(block.getCoinbase()) == null  )
+            repository.createAccount(block.getCoinbase());
+        repository.addBalance(block.getCoinbase(), Block.coinbaseReward);
+
         int i = 0;
         List<Transaction> txList = block.getTransactionsList();
         for (Transaction tx :  txList){
-            applyTransaction(tx);
+            applyTransaction(tx, block.getCoinbase());
 
             repository.dumpState(block.getNumber(), i, Hex.toHexString(tx.getHash()));
             ++i;
