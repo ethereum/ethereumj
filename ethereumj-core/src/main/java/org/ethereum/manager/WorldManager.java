@@ -1,5 +1,6 @@
 package org.ethereum.manager;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
@@ -294,14 +295,19 @@ public class WorldManager {
     }
 
     public void applyTransactionList(List<Transaction> txList) {
-        for (Transaction tx :  txList){
-            applyTransaction(tx);
-        }
+
     }
 
     public void applyBlock(Block block) {
+
+        int i = 0;
         List<Transaction> txList = block.getTransactionsList();
-        applyTransactionList(txList);
+        for (Transaction tx :  txList){
+            applyTransaction(tx);
+
+            repository.dumpState(block.getNumber(), i, Hex.toHexString(tx.getHash()));
+            ++i;
+        }
     }
 
     public void applyBlockList(List<Block> blocks) {

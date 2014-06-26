@@ -4,6 +4,11 @@ import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 import org.ethereum.config.SystemProperties;
 import org.iq80.leveldb.DB;
@@ -11,6 +16,7 @@ import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  *  Generic interface for Ethereum database
@@ -92,4 +98,20 @@ public class DatabaseImpl implements Database{
         }
     }
 
+
+    public ArrayList<ByteArrayWrapper> dumpKeys(){
+
+        DBIterator iterator = getDb().iterator();
+        ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
+
+        while(iterator.hasNext()){
+
+            ByteArrayWrapper key = new ByteArrayWrapper(iterator.next().getKey());
+            keys.add(key);
+        }
+
+        Collections.sort((List)keys);
+
+        return keys;
+    }
 }

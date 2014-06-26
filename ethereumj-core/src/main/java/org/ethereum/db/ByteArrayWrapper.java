@@ -1,6 +1,9 @@
 package org.ethereum.db;
 
+import com.google.common.primitives.UnsignedBytes;
+
 import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * www.ethereumJ.com
@@ -9,7 +12,7 @@ import java.util.Arrays;
  * Created on: 11/06/2014 15:02
  */
 
-public class ByteArrayWrapper {
+public class ByteArrayWrapper implements Comparable{
 
     private final byte[] data;
 
@@ -41,5 +44,13 @@ public class ByteArrayWrapper {
 
     public byte[] getData() {
         return data;
+    }
+
+    @Override
+    public int compareTo(Object second) {
+
+        Comparator<byte[]> comparator = UnsignedBytes.lexicographicalComparator();
+
+        return comparator.compare(this.data, ((ByteArrayWrapper)second).getData());
     }
 }
