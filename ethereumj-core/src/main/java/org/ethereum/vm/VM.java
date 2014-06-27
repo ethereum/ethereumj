@@ -49,9 +49,8 @@ import static org.ethereum.vm.OpCode.PUSH1;
  */
 public class VM {
 
-    static private BigInteger _32_ = BigInteger.valueOf(32);
-
-    private Logger logger = LoggerFactory.getLogger("VM");
+	private Logger logger = LoggerFactory.getLogger("VM");
+	private static BigInteger _32_ = BigInteger.valueOf(32);
 
     public void step(Program program) {
 
@@ -89,7 +88,6 @@ public class VM {
             }
 
             switch (OpCode.code(op)) {
-
                 /**
                  * Stop and Arithmetic Operations
                  */
@@ -160,10 +158,10 @@ public class VM {
                     program.step();
                 }	break;
                 case LT:{
-                    // todo: can be improved by not using BigInteger
+                    // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    if (word1.value().compareTo(word2.value()) == -1){
+                    if (word1.value().compareTo(word2.value()) == -1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
                     } else {
@@ -173,10 +171,10 @@ public class VM {
                     program.step();
                 }	break;
                 case SLT:{
-                    // todo: can be improved by not using BigInteger
+                    // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    if (word1.sValue().compareTo(word2.sValue()) == -1){
+                    if (word1.sValue().compareTo(word2.sValue()) == -1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
                     } else {
@@ -186,10 +184,10 @@ public class VM {
                     program.step();
                 }	break;
                 case SGT:{
-                    // todo: can be improved by not using BigInteger
+                    // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    if (word1.sValue().compareTo(word2.sValue()) == 1){
+                    if (word1.sValue().compareTo(word2.sValue()) == 1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
                     } else {
@@ -199,10 +197,10 @@ public class VM {
                     program.step();
                 }	break;
                 case GT:{
-                    // todo: can be improved by not using BigInteger
+                    // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    if (word1.value().compareTo(word2.value()) == 1){
+                    if (word1.value().compareTo(word2.value()) == 1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
                     } else {
@@ -214,7 +212,7 @@ public class VM {
                 case EQ:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    if (word1.xor(word2).isZero()){
+                    if (word1.xor(word2).isZero()) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
                     } else {
@@ -225,7 +223,7 @@ public class VM {
                 }	break;
                 case NOT: {
                     DataWord word1 = program.stackPop();
-                    if (word1.isZero()){
+                    if (word1.isZero()) {
                         word1.getData()[31] = 1;
                     } else {
                         word1.and(DataWord.ZERO);
@@ -262,7 +260,7 @@ public class VM {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     DataWord result = null;
-                    if (word1.value().compareTo(_32_) == -1){
+                    if (word1.value().compareTo(_32_) == -1) {
                         byte tmp = word2.getData()[word1.value().intValue()];
                         word2.and(DataWord.ZERO);
                         word2.getData()[31] = tmp;
@@ -352,7 +350,7 @@ public class VM {
                     int codeOffset = codeOffsetData.value().intValue();
                     int memOffset  = memOffsetData.value().intValue();
 
-                    if (program.ops.length < length + codeOffset){
+                    if (program.ops.length < length + codeOffset) {
                         program.stop();
                         break;
                     }
@@ -364,7 +362,6 @@ public class VM {
                     program.step();
                 }	break;
                 case GASPRICE:{
-
                     DataWord gasPrice = program.getGasPrice();
                     program.stackPush(gasPrice);
                     program.step();
@@ -373,7 +370,6 @@ public class VM {
                 /**
                  * Block Information
                  */
-
                 case PREVHASH: {
                     DataWord prevHash = program.getPrevHash();
                     program.stackPush(prevHash);
@@ -457,9 +453,9 @@ public class VM {
                     // for gas calculations [YP 9.2]
                     DataWord oldValue =  program.storageLoad(addr);
                     program.storageSave(addr, value);
-                    if (oldValue == null && !value.isZero()){
+                    if (oldValue == null && !value.isZero()) {
                         program.spendGas(GasCost.SSTORE * 2, OpCode.code(op).name());
-                    } else if (oldValue != null && value.isZero()){
+                    } else if (oldValue != null && value.isZero()) {
                         program.spendGas(GasCost.SSTORE * 0, OpCode.code(op).name());
                     } else
                         program.spendGas(GasCost.SSTORE, OpCode.code(op).name());
@@ -473,7 +469,7 @@ public class VM {
                     DataWord pos   =  program.stackPop();
                     DataWord cond  =  program.stackPop();
 
-                    if (!cond.isZero()){
+                    if (!cond.isZero()) {
                         program.setPC(pos);
                     } else{
                         program.step();
@@ -497,7 +493,6 @@ public class VM {
                     program.step();
                 }   break;
 
-
                 case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
                 case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
                 case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
@@ -518,7 +513,6 @@ public class VM {
                     program.step();
                 }	break;
                 case CALL:{
-
                     DataWord gas        =  program.stackPop();
                     DataWord toAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
@@ -545,7 +539,7 @@ public class VM {
                 }	break;
                 case SUICIDE:{
                     DataWord address   =  program.stackPop();
-                    // todo: transfer left balance to the address
+                    // TODO: transfer left balance to the address
                     program.stop();
                 }	break;
                 default:{
@@ -564,22 +558,18 @@ public class VM {
             program.stop();
             throw e;
         }
-
     }
 
     public void play(Program program) {
         try {
-
             // In case the program invoked by wire got
             // transaction, this will be the gas cost,
             // otherwise the call done by other contract
             // charged by CALL op
-            if (program.invokeData.byTransaction()){
+            if (program.invokeData.byTransaction()) {
                 program.spendGas(GasCost.TRANSACTION, "TRANSACTION");
                 program.spendGas(GasCost.TXDATA * program.invokeData.getDataSize().intValue(), "DATA");
             }
-
-
             while(!program.isStopped())
                 this.step(program);
         } catch (RuntimeException e) {

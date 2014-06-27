@@ -33,9 +33,9 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
     private AccountState accountState = null;
     private JLabel statusMsg = null;
 
-    final JTextField receiverInput;
-    final JTextField amountInput;
-    final JTextField feeInput;
+    private final JTextField receiverInput;
+    private final JTextField amountInput;
+    private final JTextField feeInput;
 
 	public PayOutDialog(Frame parent, final Account account) {
 		super(parent, "Payout details: ", false);
@@ -149,44 +149,44 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
     private boolean validInput() {
 
         String receiverText = receiverInput.getText();
-        if (receiverText == null || receiverText.isEmpty()){
+        if (receiverText == null || receiverText.isEmpty()) {
             alertStatusMsg("Should specify valid receiver address");
             return false;
         }
 
-        if (!Pattern.matches("[0-9a-fA-F]+", receiverText)){
+        if (!Pattern.matches("[0-9a-fA-F]+", receiverText)) {
             alertStatusMsg("Should specify valid receiver address");
             return false;
         }
 
-        if (Hex.decode(receiverText).length != 20){
+        if (Hex.decode(receiverText).length != 20) {
             alertStatusMsg("Should specify valid receiver address");
             return false;
         }
 
         String amountText = amountInput.getText();
-        if (amountText == null || amountText.isEmpty()){
+        if (amountText == null || amountText.isEmpty()) {
             alertStatusMsg("Should specify amount to transfer");
             return false;
         }
 
-        if (!Pattern.matches("[0-9]+", amountText)){
+        if (!Pattern.matches("[0-9]+", amountText)) {
             alertStatusMsg("Should specify numeric value for amount ");
             return false;
         }
 
-        if (amountText.equals("0")){
+        if (amountText.equals("0")) {
             alertStatusMsg("Should specify more than zero for transaction");
             return false;
         }
 
         String feeText = feeInput.getText();
-        if (feeText == null || feeText.isEmpty()){
+        if (feeText == null || feeText.isEmpty()) {
             alertStatusMsg("Should specify fee to fund the transaction");
             return false;
         }
 
-        if (!Pattern.matches("[0-9]+", feeText)){
+        if (!Pattern.matches("[0-9]+", feeText)) {
             alertStatusMsg("Should specify numeric value for a fee");
             return false;
         }
@@ -199,7 +199,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
         boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;
 
-        if (!canAfford){
+        if (!canAfford) {
             alertStatusMsg("The address can't afford this transaction");
             return false;
         }
@@ -233,7 +233,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         return rootPane;
     }
 
-    public void infoStatusMsg(final String text){
+    public void infoStatusMsg(final String text) {
 
         final PayOutDialog dialog = this;
 
@@ -245,10 +245,9 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
                 dialog.repaint();
             }
         });
-
     }
 
-    public void alertStatusMsg(final String text){
+    public void alertStatusMsg(final String text) {
         final PayOutDialog dialog = this;
 
         SwingUtilities.invokeLater(new Runnable() {

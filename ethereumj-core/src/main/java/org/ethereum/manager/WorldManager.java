@@ -1,18 +1,6 @@
 package org.ethereum.manager;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.core.*;
-import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.DatabaseImpl;
-import org.ethereum.db.Repository;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.trie.TrackTrie;
-import org.ethereum.trie.Trie;
-import org.ethereum.vm.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 import java.math.BigInteger;
 import java.util.Collections;
@@ -20,319 +8,328 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.Wallet;
+import org.ethereum.crypto.ECKey;
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.DatabaseImpl;
+import org.ethereum.db.Repository;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.ProgramResult;
+import org.ethereum.vm.VM;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 /**
- *
- * WorldManager is the main class to handle the processing of transactions and managing the world state.
- *
+ * 
+ * WorldManager is the main class to handle the processing of transactions and
+ * managing the world state.
+ * 
  * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 01/06/2014 10:44
- *
+ * 
+ * @author: Roman Mandeleil Created on: 01/06/2014 10:44
+ * 
  */
 public class WorldManager {
 
-    private Logger logger = LoggerFactory.getLogger("main");
-    private Logger stateLogger = LoggerFactory.getLogger("state");
+	private Logger logger = LoggerFactory.getLogger("main");
+	private Logger stateLogger = LoggerFactory.getLogger("state");
 
+	private Blockchain blockChain;
+	private Wallet wallet = new Wallet();
 
-    private Blockchain blockChain;
-    private Wallet wallet = new Wallet();
+	private Map<String, Transaction> pendingTransactions = Collections
+			.synchronizedMap(new HashMap<String, Transaction>());
 
+	public DatabaseImpl chainDB = new DatabaseImpl("blockchain");
 
-    private Map<String, Transaction> pendingTransactions =
-            Collections.synchronizedMap(new HashMap<String, Transaction>());
+	public Repository repository = new Repository();
 
-    public DatabaseImpl chainDB   = new DatabaseImpl("blockchain");
+	public static WorldManager instance = new WorldManager();
 
-    public Repository repository = new Repository();
+	public WorldManager() {
+	}
 
-    public static WorldManager instance = new WorldManager();
-    public WorldManager() {
-    }
+	public void loadChain() {
 
-    public void loadChain(){
+		// Initialize Wallet
+		byte[] cowAddr = HashUtil.sha3("cow".getBytes());
+		ECKey key = ECKey.fromPrivate(cowAddr);
+		wallet.importKey(cowAddr);
 
-        // Initialize Wallet
-        byte[] cowAddr = HashUtil.sha3("cow".getBytes());
-        ECKey key = ECKey.fromPrivate(cowAddr);
-        wallet.importKey(cowAddr);
+		AccountState state = wallet.getAccountState(key.getAddress());
+		state.addToBalance(BigInteger.valueOf(2).pow(200));
 
-        AccountState state = wallet.getAccountState(key.getAddress());
-        state.addToBalance(BigInteger.valueOf(2).pow(200));
+		String secret = CONFIG.coinbaseSecret();
+		byte[] cbAddr = HashUtil.sha3(secret.getBytes());
+		wallet.importKey(cbAddr);
 
-//        wallet.importKey(HashUtil.sha3("cat".getBytes()));
+		// Initialize Blockchain
+		blockChain = new Blockchain(wallet);
+		blockChain.loadChain();
+	}
 
-        String secret = CONFIG.coinbaseSecret();
-        byte[] cbAddr = HashUtil.sha3(secret.getBytes());
-        wallet.importKey(cbAddr);
+	public void applyTransaction(Transaction tx, byte[] coinbase) {
 
+		// TODO: refactor the wallet pending transactions to the world manager
+		if (blockChain != null)
+			blockChain.addWalletTransaction(tx);
 
-        // Initialize Blockchain
-        blockChain = new Blockchain(wallet);
-        blockChain.loadChain();
-    }
+		// TODO: what is going on with simple wallet transfer ?
 
-    public void applyTransaction(Transaction tx, byte[] coinbase) {
+		// 1. VALIDATE THE NONCE
+		byte[] senderAddress = tx.getSender();
 
-        // TODO: refactor the wallet pending transactions to the world manager
-        if (blockChain != null)
-            blockChain.addWalletTransaction(tx);
+		AccountState senderAccount = repository.getAccountState(senderAddress);
 
-        // TODO: what is going on with simple wallet transfer ?
+		if (senderAccount == null) {
+			if (stateLogger.isWarnEnabled())
+				stateLogger.warn("No such address: {}",
+						Hex.toHexString(senderAddress));
+			return;
+		}
 
-        // 1. VALIDATE THE NONCE
-        byte[] senderAddress = tx.getSender();
-
-        AccountState senderAccount = repository.getAccountState(senderAddress);
-
-        if (senderAccount == null) {
-            if (stateLogger.isWarnEnabled())
-                stateLogger.warn("No such address: {}", Hex.toHexString(senderAddress));
-            return;
-        }
-
-        BigInteger nonce = repository.getNonce(senderAddress);
-        if (nonce.compareTo(new BigInteger(tx.getNonce())) !=  0) {
+		BigInteger nonce = repository.getNonce(senderAddress);
+		if (nonce.compareTo(new BigInteger(tx.getNonce())) != 0) {
 			if (stateLogger.isWarnEnabled())
 				stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
 						nonce.longValue(), new BigInteger(tx.getNonce()));
-            return;
-        }
+			return;
+		}
 
-        // 2.1 PERFORM THE GAS VALUE TX
-        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+		// 2.1 PERFORM THE GAS VALUE TX
+		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
 
-        // first of all debit the gas from the issuer
-        BigInteger gasDebit = tx.getTotalGasValueDebit();
+		// first of all debit the gas from the issuer
+		BigInteger gasDebit = tx.getTotalGasValueDebit();
 
-        // The coinbase get the gas cost
-        repository.addBalance(coinbase, gasDebit);
+		// The coinbase get the gas cost
+		repository.addBalance(coinbase, gasDebit);
 
-        byte[] contractAddress;
+		byte[] contractAddress;
 
-        // Contract creation or existing Contract call
-        if (tx.isContractCreation()) {
+		// Contract creation or existing Contract call
+		if (tx.isContractCreation()) {
 
-            // credit the receiver
-            contractAddress = tx.getContractAddress();
-            repository.createAccount(contractAddress);
-            stateLogger.info("New contract created address={}",
-                    Hex.toHexString(contractAddress));
-        } else {
+			// credit the receiver
+			contractAddress = tx.getContractAddress();
+			repository.createAccount(contractAddress);
+			stateLogger.info("New contract created address={}",
+					Hex.toHexString(contractAddress));
+		} else {
 
-            contractAddress = tx.getReceiveAddress();
-            AccountState receiverState =  repository.getAccountState(tx.getReceiveAddress());
+			contractAddress = tx.getReceiveAddress();
+			AccountState receiverState = repository.getAccountState(tx
+					.getReceiveAddress());
 
-            if (receiverState == null){
-                repository.createAccount(tx.getReceiveAddress());
-                if (stateLogger.isInfoEnabled())
-                    stateLogger.info("New account created address={}",
-                            Hex.toHexString(tx.getReceiveAddress()));
-            }
-        }
+			if (receiverState == null) {
+				repository.createAccount(tx.getReceiveAddress());
+				if (stateLogger.isInfoEnabled())
+					stateLogger.info("New account created address={}",
+							Hex.toHexString(tx.getReceiveAddress()));
+			}
+		}
 
-        // 2.2 UPDATE THE NONCE
-        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        BigInteger balance = repository.getBalance(senderAddress);
-        if (balance.compareTo(BigInteger.ZERO) == 1) {
-            repository.increaseNonce(senderAddress);
+		// 2.2 UPDATE THE NONCE
+		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+		BigInteger balance = repository.getBalance(senderAddress);
+		if (balance.compareTo(BigInteger.ZERO) == 1) {
+			repository.increaseNonce(senderAddress);
 
-            if(stateLogger.isInfoEnabled())
-                stateLogger.info("Before contract execution the sender address debit with gas total cost, " +
-                                "\n sender={} \n gas_debit= {}",
-                        Hex.toHexString( tx.getSender() ),    gasDebit);
+			if (stateLogger.isInfoEnabled())
+				stateLogger.info(
+						"Before contract execution the sender address debit with gas total cost, "
+								+ "\n sender={} \n gas_debit= {}",
+						Hex.toHexString(tx.getSender()), gasDebit);
+		}
 
-        }
+		// actual gas value debit from the sender
+		// the purchase gas will be available for the
+		// contract in the execution state, and
+		// can be validate using GAS op
+		if (gasDebit.signum() == 1) {
+			if (balance.compareTo(gasDebit) == -1) {
+				logger.info("No gas to start the execution: sender={}",
+						Hex.toHexString(tx.getSender()));
+				return;
+			}
+			repository.addBalance(senderAddress, gasDebit.negate());
+		}
 
-        // actual gas value debit from the sender
-        // the purchase gas will be available for the
-        // contract in the execution state, and
-        // can be validate using GAS op
-        if (gasDebit.signum() == 1){
+		// 3. START TRACKING FOR REVERT CHANGES OPTION !!!
+		Repository trackRepository = repository.getTrack();
+		trackRepository.startTracking();
 
-            if (balance.compareTo( gasDebit )  == -1){
-                logger.info("No gas to start the execution: sender={}" , Hex.toHexString(tx.getSender()));
-                return;
-            }
-            repository.addBalance(senderAddress, gasDebit.negate());
-        }
+		try {
 
-        // 3. START TRACKING FOR REVERT CHANGES OPTION !!!
-        Repository trackRepository = repository.getTrack();
-        trackRepository.startTracking();
+			// 4. THE SIMPLE VALUE/BALANCE CHANGE
+			if (tx.getValue() != null) {
 
-        try {
+				BigInteger senderBalance = repository.getBalance(senderAddress);
+				BigInteger contractBalance = repository
+						.getBalance(contractAddress);
 
-            // 4. THE SIMPLE VALUE/BALANCE CHANGE
-            if(tx.getValue() != null) {
+				if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
 
-                BigInteger senderBalance   = repository.getBalance(senderAddress);
-                BigInteger contractBalance = repository.getBalance(contractAddress);
+					repository.addBalance(contractAddress,
+							new BigInteger(1, tx.getValue()));
+					repository.addBalance(senderAddress,
+							new BigInteger(1, tx.getValue()).negate());
 
+					if (stateLogger.isInfoEnabled())
+						stateLogger.info("Update value balance \n "
+								+ "sender={}, receiver={}, value={}",
+								Hex.toHexString(senderAddress),
+								Hex.toHexString(contractAddress),
+								new BigInteger(tx.getValue()));
+				}
+			}
 
-                if ( senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0){
+			// 3. FIND OUT WHAT IS THE TRANSACTION TYPE
+			if (tx.isContractCreation()) {
 
-                    repository.addBalance(contractAddress, new BigInteger(1, tx.getValue()));
-                    repository.addBalance(senderAddress, new BigInteger(1, tx.getValue()).negate());
+				byte[] initCode = tx.getData();
 
-                    if (stateLogger.isInfoEnabled())
-                        stateLogger.info("Update value balance \n " +
-                                        "sender={}, receiver={}, value={}",
-                                Hex.toHexString(senderAddress),
-                                Hex.toHexString(contractAddress),
-                                new BigInteger( tx.getValue()));
-                }
-            }
+				Block lastBlock = blockChain.getLastBlock();
 
-            // 3. FIND OUT WHAT IS THE TRANSACTION TYPE
-            if (tx.isContractCreation()) {
+				ProgramInvoke programInvoke = ProgramInvokeFactory
+						.createProgramInvoke(tx, lastBlock, trackRepository);
 
-                byte[] initCode = tx.getData();
+				if (logger.isInfoEnabled())
+					logger.info("running the init for contract: addres={}",
+							Hex.toHexString(tx.getContractAddress()));
 
-                Block lastBlock =
-                        blockChain.getLastBlock();
+				VM vm = new VM();
+				Program program = new Program(initCode, programInvoke);
+				vm.play(program);
+				ProgramResult result = program.getResult();
+				applyProgramResult(result, gasDebit, trackRepository,
+						senderAddress, tx.getContractAddress(), coinbase);
 
-                ProgramInvoke programInvoke =
-                    ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, trackRepository);
+			} else {
 
-                if (logger.isInfoEnabled())
-                    logger.info("running the init for contract: addres={}" ,
-                            Hex.toHexString(tx.getContractAddress()));
+				byte[] programCode = trackRepository.getCode(tx
+						.getReceiveAddress());
+				if (programCode != null) {
 
+					Block lastBlock = blockChain.getLastBlock();
 
-                VM vm = new VM();
-                Program program = new Program(initCode, programInvoke);
-                vm.play(program);
-                ProgramResult result = program.getResult();
-                applyProgramResult(result, gasDebit, trackRepository, senderAddress, tx.getContractAddress(), coinbase);
+					if (logger.isInfoEnabled())
+						logger.info("calling for existing contract: addres={}",
+								Hex.toHexString(tx.getReceiveAddress()));
 
-            } else {
+					ProgramInvoke programInvoke = ProgramInvokeFactory
+							.createProgramInvoke(tx, lastBlock, trackRepository);
 
-                byte[] programCode = trackRepository.getCode(tx.getReceiveAddress());
-                if (programCode != null){
+					VM vm = new VM();
+					Program program = new Program(programCode, programInvoke);
+					vm.play(program);
 
-                        Block lastBlock =
-                                blockChain.getLastBlock();
+					ProgramResult result = program.getResult();
+					applyProgramResult(result, gasDebit, trackRepository,
+							senderAddress, tx.getReceiveAddress(), coinbase);
+				}
+			}
+		} catch (RuntimeException e) {
+			trackRepository.rollback();
+			return;
+		}
+		trackRepository.commit();
+		pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
+	}
 
-                        if (logger.isInfoEnabled())
-                            logger.info("calling for existing contract: addres={}" , Hex.toHexString(tx.getReceiveAddress()));
+	/**
+	 * After any contract code finish the run the certain result should take
+	 * place, according the given circumstances
+	 * 
+	 * @param result
+	 * @param gasDebit
+	 * @param senderAddress
+	 * @param contractAddress
+	 */
+	private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
+			Repository repository, byte[] senderAddress,
+			byte[] contractAddress, byte[] coinbase) {
 
+		if (result.getException() != null
+				&& result.getException() instanceof Program.OutOfGasException) {
+			logger.info("contract run halted by OutOfGas: contract={}",
+					Hex.toHexString(contractAddress));
 
-                        ProgramInvoke programInvoke =
-                                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, trackRepository);
+			throw result.getException();
+		}
 
-                        VM vm = new VM();
-                        Program program = new Program(programCode, programInvoke);
-                        vm.play(program);
+		// Save the code created by init
+		byte[] bodyCode = null;
+		if (result.getHReturn() != null) {
+			bodyCode = result.getHReturn().array();
+		}
 
-                        ProgramResult result = program.getResult();
-                        applyProgramResult(result, gasDebit, trackRepository, senderAddress, tx.getReceiveAddress(), coinbase);
-                }
-            }
-        } catch (RuntimeException e) {
+		BigInteger gasPrice = BigInteger.valueOf(blockChain.getGasPrice());
+		BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
+				result.getGasUsed()).multiply(gasPrice));
 
-            trackRepository.rollback();
-            return;
-        }
+		if (refund.signum() > 0) {
+			if (stateLogger.isInfoEnabled())
+				stateLogger
+						.info("After contract execution the sender address refunded with gas leftover, "
+								+ "\n sender={} \n contract={}  \n gas_refund= {}",
+								Hex.toHexString(senderAddress),
+								Hex.toHexString(contractAddress), refund);
+			// gas refund
+			repository.addBalance(senderAddress, refund);
+			repository.addBalance(coinbase, refund.negate());
+		}
 
-        trackRepository.commit();
-        pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
-    }
+		if (bodyCode != null) {
+			repository.saveCode(contractAddress, bodyCode);
+			if (stateLogger.isInfoEnabled())
+				stateLogger
+						.info("saving code of the contract to the db:\n contract={} code={}",
+								Hex.toHexString(contractAddress),
+								Hex.toHexString(bodyCode));
+		}
+	}
 
+	public void applyBlock(Block block) {
 
-    /**
-     * After any contract code finish the run
-     * the certain result should take place,
-     * according the given circumstances
-     *
-     * @param result
-     * @param gasDebit
-     * @param senderAddress
-     * @param contractAddress
-     */
-    private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
-                                    Repository repository,
-                                    byte[] senderAddress, byte[] contractAddress,
-                                    byte[] coinbase) {
+		// miner reward
+		if (repository.getAccountState(block.getCoinbase()) == null)
+			repository.createAccount(block.getCoinbase());
+		repository.addBalance(block.getCoinbase(), Block.coinbaseReward);
 
-        if (result.getException() != null &&
-                result.getException() instanceof Program.OutOfGasException){
-            logger.info("contract run halted by OutOfGas: contract={}", Hex.toHexString(contractAddress));
+		int i = 0;
+		List<Transaction> txList = block.getTransactionsList();
+		for (Transaction tx : txList) {
+			applyTransaction(tx, block.getCoinbase());
+			repository.dumpState(block.getNumber(), i,
+					Hex.toHexString(tx.getHash()));
+			++i;
+		}
+	}
 
-            throw result.getException();
-        }
+	public void applyBlockList(List<Block> blocks) {
+		for (int i = blocks.size() - 1; i >= 0; --i) {
+			applyBlock(blocks.get(i));
+		}
+	}
 
-        // Save the code created by init
-        byte[] bodyCode = null;
-        if (result.getHReturn() != null){
+	public Blockchain getBlockChain() {
+		return blockChain;
+	}
 
-            bodyCode = result.getHReturn().array();
-        }
+	public Wallet getWallet() {
+		return wallet;
+	}
 
-        BigInteger gasPrice =
-                BigInteger.valueOf( blockChain.getGasPrice());
-        BigInteger refund =
-                gasDebit.subtract(BigInteger.valueOf( result.getGasUsed()).multiply(gasPrice));
-
-        if (refund.signum() > 0){
-            if(stateLogger.isInfoEnabled())
-                stateLogger.info("After contract execution the sender address refunded with gas leftover , \n sender={} \n contract={}  \n gas_refund= {}",
-                        Hex.toHexString(senderAddress) ,Hex.toHexString(contractAddress), refund);
-
-            // gas refund
-            repository.addBalance(senderAddress, refund);
-            repository.addBalance(coinbase, refund.negate());
-
-        }
-
-        if (bodyCode != null){
-            repository.saveCode(contractAddress, bodyCode);
-
-
-            if (stateLogger.isInfoEnabled())
-                stateLogger.info("saving code of the contract to the db:\n contract={} code={}",
-                        Hex.toHexString(contractAddress),
-                        Hex.toHexString(bodyCode));
-        }
-
-    }
-
-
-    public void applyBlock(Block block) {
-
-        // miner reward
-        if (repository.getAccountState(block.getCoinbase()) == null  )
-            repository.createAccount(block.getCoinbase());
-        repository.addBalance(block.getCoinbase(), Block.coinbaseReward);
-
-        int i = 0;
-        List<Transaction> txList = block.getTransactionsList();
-        for (Transaction tx :  txList){
-            applyTransaction(tx, block.getCoinbase());
-
-            repository.dumpState(block.getNumber(), i, Hex.toHexString(tx.getHash()));
-            ++i;
-        }
-    }
-
-    public void applyBlockList(List<Block> blocks) {
-        for (int i = blocks.size() - 1; i >= 0 ; --i) {
-            applyBlock(blocks.get(i));
-        }
-    }
-
-    public Blockchain getBlockChain() {
-        return blockChain;
-    }
-
-    public Wallet getWallet() {
-        return wallet;
-    }
-
-    public void close() {
-        chainDB.close();
-        repository.close();
-    }
+	public void close() {
+		chainDB.close();
+		repository.close();
+	}
 }

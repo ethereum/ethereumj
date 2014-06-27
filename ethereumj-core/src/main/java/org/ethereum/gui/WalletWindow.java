@@ -2,7 +2,6 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Account;
 import org.ethereum.core.Wallet;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 
 import javax.swing.*;
@@ -48,8 +47,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
 
     }
 
-
-    private void loadWallet(){
+    private void loadWallet() {
 
         Container contentPane = this.getContentPane();
         contentPane.removeAll();
@@ -57,8 +55,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
 
         Wallet wallet = WorldManager.instance.getWallet();
 
-        for (Account account : wallet.getAccountCollection()){
-
+        for (Account account : wallet.getAccountCollection()) {
 			WalletAddressPanel rowPanel = new WalletAddressPanel(account);
             contentPane.add(rowPanel);
         }
@@ -66,8 +63,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         WalletSumPanel sumPanel = new WalletSumPanel(wallet.totalBalance());
         contentPane.add(sumPanel);
 
-
-        // Todo: move this to some add button method
+        // TODO: move this to some add button method
         URL addAddressIconURL = ClassLoader.getSystemResource("buttons/add-address.png");
         ImageIcon addAddressIcon = new ImageIcon(addAddressIconURL);
         JLabel addAddressLabel = new JLabel(addAddressIcon);
@@ -78,7 +74,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             public void mouseClicked(MouseEvent e) {
 
                 Wallet wallet = WorldManager.instance.getWallet();
-                if (wallet.getAccountCollection().size() >=5){
+				if (wallet.getAccountCollection().size() >= 5) {
                     JOptionPane.showMessageDialog(walletWindow,
                             "Hey do you really need more than 5 address for a demo wallet");
                     return;
@@ -98,17 +94,13 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         contentPane.repaint();
     }
 
-    public void addCloseAction(){
-        this.addWindowListener( new WindowAdapter()
-        {
-            public void windowClosing(WindowEvent e)
-            {
-                toolBar.walletToggle.setSelected(false);
-
-            }
-        });
-    }
-
+	public void addCloseAction() {
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				toolBar.walletToggle.setSelected(false);
+			}
+		});
+	}
 
     @Override
     public void valueChanged() {

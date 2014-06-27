@@ -9,8 +9,7 @@ import java.util.Map;
  * @author: Roman Mandeleil
  * Created on: 11/06/2014 14:09
  */
-
-public class TrackDatabase implements Database{
+public class TrackDatabase implements Database {
 
     private Database db;
 
@@ -22,22 +21,21 @@ public class TrackDatabase implements Database{
         this.db = db;
     }
 
-
-    public void startTrack(){
+    public void startTrack() {
         changes = new HashMap<>();
         deletes = new HashMap<>();
         trackingChanges = true;
     }
 
-    public void commitTrack(){
-        for(ByteArrayWrapper key : changes.keySet()){
+    public void commitTrack() {
+        for(ByteArrayWrapper key : changes.keySet()) {
             db.put(key.getData(), changes.get(key));
         }
         changes = null;
         trackingChanges = false;
     }
 
-    public void rollbackTrack(){
+    public void rollbackTrack() {
         changes = new HashMap<>();
         deletes = new HashMap<>();
         changes = null;
@@ -45,7 +43,7 @@ public class TrackDatabase implements Database{
     }
 
     public void put(byte[] key, byte[] value) {
-        if (trackingChanges){
+        if (trackingChanges) {
             changes.put(  new ByteArrayWrapper(key)  , value);
         } else {
             db.put(key, value);
@@ -53,7 +51,7 @@ public class TrackDatabase implements Database{
     }
 
     public byte[] get(byte[] key) {
-        if(trackingChanges){
+        if(trackingChanges) {
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             if (deletes.get(wKey) != null) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
@@ -64,13 +62,11 @@ public class TrackDatabase implements Database{
 
     /** Delete object (key) from db **/
     public void delete(byte[] key) {
-        if (trackingChanges){
+        if (trackingChanges) {
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             deletes.put(wKey, null);
         } else {
             db.delete(key);
         }
     }
-
-
 }
