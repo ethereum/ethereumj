@@ -30,7 +30,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
 	private PayOutDialog dialog;
 
-    private AccountState addressState = null;
+    private AccountState accountState = null;
     private JLabel statusMsg = null;
 
     final JTextField receiverInput;
@@ -41,7 +41,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 		super(parent, "Payout details: ", false);
 		dialog = this;
 
-		this.addressState = account.getState();
+		this.accountState = account;
 
         receiverInput = new JTextField(18);
         GUIUtils.addStyle(receiverInput, "Pay to:");
@@ -117,7 +117,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 				}
 
 				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-				byte[] nonce = addressState.getNonce() == BigInteger.ZERO ? null : addressState.getNonce().toByteArray();
+				byte[] nonce = accountState.getNonce() == BigInteger.ZERO ? null : accountState.getNonce().toByteArray();
 
                 byte[] gasPrice = BigInteger.valueOf( WorldManager.instance.getBlockChain().getGasPrice()).toByteArray();
 
@@ -195,7 +195,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         BigInteger ammountValue = new BigInteger(amountText);
         BigInteger feeValue = new BigInteger(feeText);
         BigInteger gasPrice = BigInteger.valueOf(WorldManager.instance.getBlockChain().getGasPrice());
-        BigInteger currentBalance = addressState.getBalance();
+        BigInteger currentBalance = accountState.getBalance();
 
         boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;
 
