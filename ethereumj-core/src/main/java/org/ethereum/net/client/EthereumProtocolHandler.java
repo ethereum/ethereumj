@@ -200,8 +200,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             RLPList rlpList = RLP.decode2(payload);
             TransactionsMessage transactionsMessage = new TransactionsMessage(rlpList);
 
-            WorldManager.instance.applyTransactionList(transactionsMessage.getTransactions());
-
             logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());
         }
