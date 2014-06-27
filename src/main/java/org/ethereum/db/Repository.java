@@ -23,7 +23,6 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  *
- *
  ***********************************************************************************
          Repository
          |
@@ -47,17 +46,15 @@ public class Repository {
 
     private Logger logger = LoggerFactory.getLogger("repository");
 
-    public Trie worldState;
+    private Trie 			worldState;
+    private TrackTrie     	accountStateDB;
+    private TrackDatabase 	contractDetailsDB;
 
-    TrackTrie     accountStateDB;
-    TrackDatabase contractDetailsDB;
-
-    // todo: Listeners listeners
-    // todo: cash impl
+    // TODO: Listeners listeners
+    // TODO: cash impl
 
     private DatabaseImpl detailsDB = null;
     private DatabaseImpl stateDB = null;
-
 
     public Repository() {
         detailsDB     = new DatabaseImpl("details");
@@ -67,12 +64,12 @@ public class Repository {
         accountStateDB = new TrackTrie(worldState);
     }
 
-    private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB){
+    private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
         this.accountStateDB = accountStateDB;
         this.contractDetailsDB = contractDetailsDB;
     }
 
-    public Repository getTrack(){
+    public Repository getTrack() {
         TrackTrie     trackState   = new TrackTrie(accountStateDB);
         TrackDatabase trackDetails = new TrackDatabase(contractDetailsDB);
         return new Repository (trackState, trackDetails);
@@ -116,7 +113,7 @@ public class Repository {
 
         byte[] accountStateRLP = accountStateDB.get(addr);
 
-        if (accountStateRLP.length == 0){
+        if (accountStateRLP.length == 0) {
             if (logger.isInfoEnabled())
                 logger.info("No account: [ {} ]", Hex.toHexString(addr));
             return null;
@@ -154,19 +151,19 @@ public class Repository {
 		return newBalance;
 	}
 
-    public BigInteger getBalance(byte[] address){
+    public BigInteger getBalance(byte[] address) {
         AccountState state = getAccountState(address);
         if (state == null) return BigInteger.ZERO;
         return state.getBalance();
     }
 
-    public BigInteger getNonce(byte[] address){
+    public BigInteger getNonce(byte[] address) {
         AccountState state = getAccountState(address);
         if (state == null) return BigInteger.ZERO;
         return state.getNonce();
     }
 
-    public BigInteger increaseNonce(byte[] address){
+    public BigInteger increaseNonce(byte[] address) {
 
         AccountState state = getAccountState(address);
         if (state == null) return BigInteger.ZERO;
@@ -180,7 +177,7 @@ public class Repository {
         return state.getNonce();
     }
 
-    public void addStorageRow(byte[] address, DataWord key, DataWord value){
+    public void addStorageRow(byte[] address, DataWord key, DataWord value) {
 
         if (address == null || key == null) return;
         AccountState      state = getAccountState(address);
@@ -203,7 +200,7 @@ public class Repository {
         contractDetailsDB.put(address, details.getEncoded());
     }
 
-    public DataWord getStorageValue(byte[] address, DataWord key){
+    public DataWord getStorageValue(byte[] address, DataWord key) {
 
         if (key == null) return null;
         AccountState state = getAccountState(address);
@@ -215,7 +212,7 @@ public class Repository {
         return value;
     }
 
-    public byte[] getCode(byte[] address){
+    public byte[] getCode(byte[] address) {
         ContractDetails details = getContractDetails(address);
         if (details == null) return null;
         return details.getCode();
@@ -283,7 +280,7 @@ public class Repository {
             List<ByteArrayWrapper> keys = this.detailsDB.dumpKeys();
 
             // dump json file
-            for (ByteArrayWrapper key : keys){
+            for (ByteArrayWrapper key : keys) {
 
                 byte[] keyBytes = key.getData();
                 AccountState    state    = getAccountState(keyBytes);
@@ -306,12 +303,9 @@ public class Repository {
 
     //            {address: x, nonce: n1, balance: b1, stateRoot: s1, codeHash: c1, code: c2, sotrage: [key: k1, value: v1, key:k2, value: v2 ] }
             }
-
             bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 }

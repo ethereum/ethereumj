@@ -19,7 +19,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 25/04/14 07:11
  */
-public class PeersTableWindow extends JFrame{
+public class PeersTableWindow extends JFrame {
 
     // Instance attributes used in this example
     private JPanel topPanel;
@@ -97,20 +97,15 @@ public class PeersTableWindow extends JFrame{
             MainData.instance.startPeerDiscovery();
     }
 
-    public void addCloseAction(){
-        this.addWindowListener( new WindowAdapter()
-        {
-            public void windowClosing(WindowEvent e)
-            {
-                toolBar.peersToggle.setSelected(false);
-
-            }
-        });
-    }
-
+	public void addCloseAction() {
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				toolBar.peersToggle.setSelected(false);
+			}
+		});
+	}
 
 	public static void main(String args[]) {
-
 		PeersTableWindow mainFrame = new PeersTableWindow(null);
 		mainFrame.setVisible(true);
 		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

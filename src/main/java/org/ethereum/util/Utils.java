@@ -20,7 +20,7 @@ public class Utils {
      * @param hexNum should be in form '0x34fabd34....'
      * @return
      */
-    public static String hexStringToDecimalString(String hexNum){
+    public static String hexStringToDecimalString(String hexNum) {
 
         boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", hexNum);
         if (!match) throw new Error("The string doesn't conains hex num in form 0x.. : [" + hexNum + "]");
@@ -42,17 +42,17 @@ public class Utils {
     	return formatter.format(date);
     }
     
-    public static ImageIcon getImageIcon(String resource){
+    public static ImageIcon getImageIcon(String resource) {
         URL imageURL = ClassLoader.getSystemResource(resource);
         ImageIcon image = new ImageIcon(imageURL);
         return image;
     }
 
     static BigInteger _1000_ = new BigInteger("1000");
-    public static String getValueShortString(BigInteger number){
+    public static String getValueShortString(BigInteger number) {
         BigInteger result = number;
         int pow = 0;
-        while (result.compareTo(_1000_) == 1 || result.compareTo(_1000_) == 0){
+        while (result.compareTo(_1000_) == 1 || result.compareTo(_1000_) == 0) {
             result = result.divide(_1000_);
             pow += 3;
         }
@@ -63,7 +63,7 @@ public class Utils {
      * @param addr length should be 20
      * @return short string represent 1f21c...
      */
-    public static String getAddressShortString(byte[] addr){
+    public static String getAddressShortString(byte[] addr) {
 
         if (addr == null || addr.length != 20) throw new Error("not an address");
 
@@ -76,7 +76,7 @@ public class Utils {
         return sb.toString();
     }
 
-    public static SecureRandom getRandom(){
+    public static SecureRandom getRandom() {
         return random;
     }
 
@@ -90,8 +90,7 @@ public class Utils {
         return Double.parseDouble (version.substring (0, pos - 1));
     }
 
-    public static String oneByteToHexString(byte value){
-
+    public static String oneByteToHexString(byte value) {
         String retVal = Integer.toString(value & 0xFF, 16);
         if (retVal.length() == 1) retVal = "0" + retVal;
         return retVal;

@@ -25,7 +25,7 @@ public class PeerData {
         this.peerId = peerId;
     }
 
-    public InetAddress getInetAddress(){
+    public InetAddress getInetAddress() {
         InetAddress addr = null;
         try {
             addr = InetAddress.getByAddress(ip);

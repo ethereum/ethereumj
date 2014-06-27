@@ -43,7 +43,7 @@ public class SystemProperties {
             String fileName = dir + "/config/system.properties";
             file = new File(fileName);
 
-            if (file.exists()){
+            if (file.exists()) {
                 input = new FileInputStream(file);
             }  else{
                 fileName = "system.properties";
@@ -75,81 +75,79 @@ public class SystemProperties {
 		return Boolean.parseBoolean(prop.getProperty("peer.discovery"));
 	}
 
-    public int peerDiscoveryWorkers(){
+    public int peerDiscoveryWorkers() {
         if(prop.isEmpty()) return 2;
-        return Integer.parseInt( prop.getProperty("peer.discovery.workers") );
+		return Integer.parseInt(prop.getProperty("peer.discovery.workers"));
     }
 
-    public int peerDiscoveryTimeout(){
+    public int peerDiscoveryTimeout() {
 		if (prop.isEmpty())
 			return 10000;
 		return Integer.parseInt(prop.getProperty("peer.discovery.timeout")) * 1000;
     }
 
-    public int transactionApproveTimeout(){
+    public int transactionApproveTimeout() {
         if (prop.isEmpty())
             return DEFAULT_TX_APPROVE_TIMEOUT;
         return Integer.parseInt(prop.getProperty("transaction.approve.timeout"));
     }
 
-    public String peerDiscoveryIP(){
+    public String peerDiscoveryIP() {
         if(prop.isEmpty()) return DEFAULT_DISCOVERY_PEER;
         return prop.getProperty("peer.discovery.ip");
     }
 
-    public int peerDiscoveryPort(){
+    public int peerDiscoveryPort() {
         if(prop.isEmpty()) return DEFAULT_DISCOVERY_PORT;
         return Integer.parseInt(prop.getProperty("peer.discovery.port"));
     }
     
-    public boolean databaseReset(){
+    public boolean databaseReset() {
         if(prop.isEmpty()) return false;
         return Boolean.parseBoolean(prop.getProperty("database.reset"));
     }
 
-    public String activePeerIP(){
+    public String activePeerIP() {
         if(prop.isEmpty()) return DEFAULT_ACTIVE_PEER_IP;
         return prop.getProperty("peer.active.ip");
     }
 
-    public int activePeerPort(){
+    public int activePeerPort() {
         if(prop.isEmpty()) return DEFAULT_ACTIVE_PORT;
         return Integer.parseInt(prop.getProperty("peer.active.port"));
     }
 
-    public String samplesDir(){
+    public String samplesDir() {
         if(prop.isEmpty()) return DEFAULT_SAMPLES_DIR;
         return prop.getProperty("samples.dir");
     }
 
-    public String coinbaseSecret(){
+    public String coinbaseSecret() {
         if(prop.isEmpty()) return DEFAULT_COINBASE_SECRET;
         return prop.getProperty("coinbase.secret");
     }
 
-    public Integer activePeerChannelTimeout(){
+    public Integer activePeerChannelTimeout() {
         if(prop.isEmpty()) return DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT;
         return Integer.parseInt(prop.getProperty("active.peer.channel.timeout"));
     }
 
-    public Boolean dumpFull(){
+    public Boolean dumpFull() {
         if(prop.isEmpty()) return DEFAULT_DUMP_FULL;
         return Boolean.parseBoolean(prop.getProperty("dump.full"));
     }
 
-    public String dumpDir(){
+    public String dumpDir() {
         if(prop.isEmpty()) return DEFAULT_DUMP_DIR;
         return prop.getProperty("dump.dir");
     }
 
-    public Boolean dumpCleanOnRestart(){
+    public Boolean dumpCleanOnRestart() {
         if(prop.isEmpty()) return DEFAULT_DUMP_CLEAN_ON_RESTART;
-        return Boolean.parseBoolean( prop.getProperty("dump.clean.on.restart") );
+		return Boolean.parseBoolean(prop.getProperty("dump.clean.on.restart"));
     }
 
-
-
-    public void print() {
+	public void print() {
 		Enumeration<?> e = prop.propertyNames();
 		while (e.hasMoreElements()) {
 			String key = (String) e.nextElement();
@@ -159,7 +157,7 @@ public class SystemProperties {
 		}
 	}
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         SystemProperties systemProperties = new SystemProperties();
         systemProperties.print();
     }

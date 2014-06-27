@@ -15,13 +15,12 @@ import java.math.BigInteger;
  * @author: Roman Mandeleil
  * Created on: 08/06/2014 09:59
  */
-
 public class ProgramInvokeFactory {
 
     private static Logger logger = LoggerFactory.getLogger("VM");
 
         // Invocation by the wire tx
-    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock, Repository repository){
+    public static ProgramInvoke createProgramInvoke(Transaction tx, Block lastBlock, Repository repository) {
 
         // https://ethereum.etherpad.mozilla.org/26
 
@@ -40,7 +39,6 @@ public class ProgramInvokeFactory {
         /***         BALANCE op       ***/
         byte[] balance = repository.getBalance(address).toByteArray();
 
-
         /***         GASPRICE op       ***/
         byte[] gasPrice = tx.getGasPrice();
 
@@ -49,7 +47,6 @@ public class ProgramInvokeFactory {
 
         /***        CALLVALUE op      ***/
         byte[] callValue = tx.getValue() == null ? new byte[]{0} : tx.getValue();
-
 
         /***     CALLDATALOAD  op   ***/
         /***     CALLDATACOPY  op   ***/
@@ -75,8 +72,7 @@ public class ProgramInvokeFactory {
         /*** GASLIMIT op ***/
         long gaslimit = lastBlock.getGasLimit();
 
-
-        if (logger.isInfoEnabled()){
+        if (logger.isInfoEnabled()) {
             logger.info("Program invocation: \n" +
                     "address={}\n" +
                     "origin={}\n"  +
@@ -125,8 +121,7 @@ public class ProgramInvokeFactory {
     public static ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
                                                     DataWord inValue, DataWord inGas,
                                                     BigInteger balanceInt,  byte[] dataIn,
-                                                    Repository repository){
-
+                                                    Repository repository) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
@@ -145,7 +140,7 @@ public class ProgramInvokeFactory {
         DataWord difficulty = program.getDifficulty();
         DataWord gasLimit = program.getGaslimit();
 
-        if (logger.isInfoEnabled()){
+        if (logger.isInfoEnabled()) {
 
             logger.info("Program invocation: \n" +
                             "address={}\n" +
@@ -161,8 +156,7 @@ public class ProgramInvokeFactory {
                             "timestamp={}\n" +
                             "blockNumber={}\n" +
                             "difficulty={}\n" +
-                            "gaslimit={}\n"
-                    ,
+                            "gaslimit={}\n",
                     Hex.toHexString(address.getData()),
                     Hex.toHexString(origin.getData()),
                     Hex.toHexString(caller.getData()),
@@ -178,10 +172,9 @@ public class ProgramInvokeFactory {
                     Hex.toHexString(difficulty.getData()),
                     new BigInteger(gasLimit.getData()).longValue());
         }
-
+        
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
                 repository);
     }
-
 }

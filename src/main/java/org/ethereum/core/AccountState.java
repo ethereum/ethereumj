@@ -72,7 +72,7 @@ public class AccountState {
         this.stateRoot = stateRoot;
     }
 
-    public void incrementNonce(){
+    public void incrementNonce() {
         rlpEncoded = null;
         this.nonce = nonce.add(BigInteger.ONE);
     }
@@ -81,7 +81,7 @@ public class AccountState {
         return codeHash;
     }
 
-    public void setCodeHash(byte[] codeHash){
+    public void setCodeHash(byte[] codeHash) {
         rlpEncoded = null;
         this.codeHash = codeHash;
     }
@@ -90,7 +90,7 @@ public class AccountState {
         return balance;
     }
 
-    public BigInteger addToBalance(BigInteger value){
+    public BigInteger addToBalance(BigInteger value) {
         if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.add(value);
 

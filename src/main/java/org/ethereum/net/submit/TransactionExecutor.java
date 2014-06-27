@@ -11,16 +11,13 @@ import org.ethereum.core.Transaction;
  * @author: Roman Mandeleil
  * Created on: 23/05/2014 19:07
  */
-
 public class TransactionExecutor {
 
     static {instance = new TransactionExecutor();}
     public static TransactionExecutor instance;
+    private ExecutorService executor = Executors.newFixedThreadPool(1);
 
-    ExecutorService executor = Executors.newFixedThreadPool(1);
-
-    public Future<Transaction> submitTransaction(TransactionTask task){
+    public Future<Transaction> submitTransaction(TransactionTask task) {
         return executor.submit(task);
     }
-
 }

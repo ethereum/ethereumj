@@ -13,7 +13,6 @@ import org.spongycastle.util.encoders.Hex;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.ComboBoxUI;
-import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import java.awt.*;
@@ -152,12 +151,9 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         gasInput.setText("1000");
 
-        JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>(){
+        JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>() {
             @Override
             public ComboBoxUI getUI() {
-
-                BasicComboBoxUI ui = (BasicComboBoxUI)super.getUI();
-
                 return super.getUI();
             }
         };
@@ -176,7 +172,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         Collection<Account> accounts =
                 WorldManager.instance.getWallet().getAccountCollection();
 
-        for (Account account : accounts){
+        for (Account account : accounts) {
             creatorAddressCombo.addItem(new AccountWrapper(account));
         }
 
@@ -202,21 +198,18 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         list.setSelectionBackground(Color.cyan);
         list.setBorder(null);
 
-        for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++)
-        {
-            if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
-
-                CellRendererPane crp = ((CellRendererPane) (creatorAddressCombo.getComponent(i)));
-            }
-
-            if (creatorAddressCombo.getComponent(i) instanceof AbstractButton) {
-                ((AbstractButton) creatorAddressCombo.getComponent(i)).setBorder(line);
-            }
-        }
+		for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++) {
+			if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
+				CellRendererPane crp = ((CellRendererPane) 
+						(creatorAddressCombo.getComponent(i)));
+			}
+			if (creatorAddressCombo.getComponent(i) instanceof AbstractButton) {
+				((AbstractButton) creatorAddressCombo.getComponent(i))
+						.setBorder(line);
+			}
+		}
         creatorAddressCombo.setBounds(73, 267, 230, 36);
         this.getContentPane().add(creatorAddressCombo);
-
-
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
         this.setResizable(false);
@@ -245,22 +238,20 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         this.setSize(500, 430);
         this.setVisible(true);
-
-
         return rootPane;
     }
 
-    public void infoStatusMsg(String text){
+    public void infoStatusMsg(String text) {
         this.statusMsg.setForeground(Color.GREEN.darker().darker());
         this.statusMsg.setText(text);
     }
 
-    public void alertStatusMsg(String text){
+    public void alertStatusMsg(String text) {
         this.statusMsg.setForeground(Color.RED);
         this.statusMsg.setText(text);
     }
 
-    public void submitContract(){
+    public void submitContract() {
 
         if (!validInput())
             return;
@@ -280,14 +271,12 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
             dialog.alertStatusMsg("Not connected to any peer");
             return;
         }
-
         // SwingWorker
         DialogWorker worker = new DialogWorker(tx, this);
         worker.execute();
-
     }
 
-    private Transaction createTransaction(){
+    private Transaction createTransaction() {
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
 
@@ -309,7 +298,6 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         return tx;
     }
 
-
     private boolean validInput() {
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
@@ -319,23 +307,20 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         boolean canAfford = currentBalance.compareTo(gasPrice.multiply(gasInput)) >= 0;
 
-        if (!canAfford){
+        if (!canAfford) {
             alertStatusMsg("The address can't afford this transaction");
             return false;
         }
         return true;
     }
 
-
     public static void main(String args[]) {
-
         AccountState as = new AccountState();
-
         ContractSubmitDialog pod = new ContractSubmitDialog(null, null);
         pod.setVisible(true);
     }
 
-    public class AccountWrapper{
+    public class AccountWrapper {
 
         private Account account;
 
@@ -352,9 +337,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
             String addressShort = Utils.getAddressShortString(account.getEcKey().getAddress());
             String valueShort   = Utils.getValueShortString(account.getBalance());
 
-            String result =
-                    String.format(" By: [%s] %s", addressShort, valueShort);
-
+			String result = String.format(" By: [%s] %s", addressShort, valueShort);
             return result;
         }
     }

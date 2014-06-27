@@ -25,7 +25,7 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
         if (!((magicBytes >> 24   &  0xFF) == 0x22  &&
               (magicBytes >> 16   &  0xFF) == 0x40  &&
               (magicBytes >>  8   &  0xFF) == 0x08  &&
-              (magicBytes         &  0xFF) == 0x91 )){
+              (magicBytes         &  0xFF) == 0x91 )) {
 
             System.out.println("Not ethereum packet");
             ctx.close();

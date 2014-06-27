@@ -1,7 +1,6 @@
 package org.ethereum.trie;
 
 import java.io.IOException;
-import java.util.Map.Entry;
 
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;

@@ -28,12 +28,10 @@ import static org.ethereum.net.Command.*;
  */
 public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
-    Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    private Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-    Timer timer = null;
+    private Timer timer = null;
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
-
-    private final static byte[] HELLO_MESSAGE = StaticMessages.HELLO_MESSAGE.getPayload();
 
     private long lastPongTime = 0;
     private boolean tearDown = false;
@@ -74,7 +72,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
                 if (tearDown) this.cancel();
 
                 long currTime = System.currentTimeMillis();
-                if (currTime - lastPongTime > 30000){
+                if (currTime - lastPongTime > 30000) {
                     logger.info("No ping answer for [30 sec]");
                     throw new Error("No ping return for 30 [sec]");
                     // TODO: shutdown the handler
@@ -173,27 +171,27 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         throw new Error("Peer is dead");
     }
 
-    private void sendPing(ChannelHandlerContext ctx){
+    private void sendPing(ChannelHandlerContext ctx) {
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PING.length);
         buffer.writeBytes(StaticMessages.PING);
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendPong(ChannelHandlerContext ctx){
+    private void sendPong(ChannelHandlerContext ctx) {
         logger.info("[Send: PONG]");
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PONG.length);
         buffer.writeBytes(StaticMessages.PONG);
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendDisconnectNice(ChannelHandlerContext ctx){
+    private void sendDisconnectNice(ChannelHandlerContext ctx) {
         logger.info("[Send: DISCONNECT]");
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.DISCONNECT_08.length);
         buffer.writeBytes(StaticMessages.DISCONNECT_08);
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendGetPeers(ChannelHandlerContext ctx){
+    private void sendGetPeers(ChannelHandlerContext ctx) {
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_PEERS.length);
         buffer.writeBytes(StaticMessages.GET_PEERS);
         ctx.writeAndFlush(buffer);

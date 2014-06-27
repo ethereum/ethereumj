@@ -15,7 +15,7 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
         this.rlpData = rlpData;
     }
 
-    public byte[] getRLPData(){
+    public byte[] getRLPData() {
         return rlpData;
     }
 

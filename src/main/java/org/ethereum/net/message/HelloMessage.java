@@ -45,8 +45,8 @@ public class HelloMessage extends Message {
         RLPList paramsList = (RLPList) rawData.get(0);
 
         // the message does no distinguish between the 0 and null so here I check command code for null
-        // todo: find out if it can be 00
-        if (((RLPItem)(paramsList).get(0)).getRLPData() != null){
+        // TODO: find out if it can be 00
+        if (((RLPItem)(paramsList).get(0)).getRLPData() != null) {
             throw new Error("HelloMessage: parsing for mal data");
         }
 
@@ -63,10 +63,10 @@ public class HelloMessage extends Message {
         this.peerPort         =            new BigInteger(bb.array()).shortValue();
         this.peerId           =            ((RLPItem) paramsList.get(6)).getRLPData();
         this.parsed = true;
-        // todo: what to do when mal data ?
+        // TODO: what to do when mal data ?
     }
 
-    public byte[] getPayload(){
+    public byte[] getPayload() {
 
         byte[] command         = RLP.encodeByte(HELLO.asByte());
         byte[] protocolVersion = RLP.encodeByte(this.protocolVersion);
@@ -117,7 +117,7 @@ public class HelloMessage extends Message {
         return peerId;
     }
 
-    public String toString(){
+    public String toString() {
         if (!parsed) parseRLP();
         return "Hello Message [ command=" + HELLO.asByte() + " " +
                 " protocolVersion=" + this.protocolVersion + " " +

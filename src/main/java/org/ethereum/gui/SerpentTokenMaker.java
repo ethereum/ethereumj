@@ -5,14 +5,11 @@ import javax.swing.text.Segment;
 import org.ethereum.vm.OpCode;
 import org.fife.ui.rsyntaxtextarea.*;
 
-
-
 /**
  * www.ethereumJ.com
  * @author: Roman Mandeleil
  * Created on: 24/04/14 11:52
  */
-
 public class SerpentTokenMaker extends AbstractTokenMaker {
 
 // http://fifesoft.com/rsyntaxtextarea/doc/CustomSyntaxHighlighting.html
@@ -24,14 +21,12 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
     private boolean bracketVariable;			// Whether a variable is of the format %{...}
 
-
     /**
      * Constructor.
      */
     public SerpentTokenMaker() {
         super();	// Initializes tokensToHighlight.
     }
-
 
     /**
      * Checks the token to give it the exact ID it deserves before
@@ -44,7 +39,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
      * @param startOffset The offset in the document at which the token occurs.
      */
     @Override
-    public void addToken(Segment segment, int start, int end, int tokenType, int startOffset) {
+	public void addToken(Segment segment, int start, int end, int tokenType, int startOffset) {
 
         switch (tokenType) {
             // Since reserved words, functions, and data types are all passed
@@ -61,13 +56,9 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                 if (value!=-1)
                     tokenType = value;
                 break;
-
         }
-
         super.addToken(segment, start, end, tokenType, startOffset);
-
     }
-
 
     /**
      * Returns the text to place at the beginning and end of a
@@ -81,7 +72,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         return new String[] { "#", null };
     }
 
-
     /**
      * Returns whether tokens of the specified type should have "mark
      * occurrences" enabled for the current programming language.
@@ -94,7 +84,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
     public boolean getMarkOccurrencesOfTokenType(int type) {
         return type==Token.IDENTIFIER || type==Token.VARIABLE;
     }
-
 
     /**
      * Returns the words to highlight for Windows batch files.
@@ -134,7 +123,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         tokenMap.put("return",		reservedWord);
         tokenMap.put("suicide",		reservedWord);
 
-
         tokenMap.put("stop",			reservedWord);
 
         int function = Token.FUNCTION;
@@ -147,7 +135,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
         // ALL the assembly tokens
         int reservedWord2 = Token.RESERVED_WORD_2;
-        for (OpCode value : OpCode.values()){
+        for (OpCode value : OpCode.values()) {
             tokenMap.put(value.name(), reservedWord2);
             tokenMap.put("[asm", reservedWord2);
             tokenMap.put("asm]", reservedWord2);
@@ -157,11 +145,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         tokenMap.put("init",			dataType);
         tokenMap.put("code",			dataType);
 
-
-
-
         return tokenMap;
-
     }
 
 
@@ -236,8 +220,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         case ':':
                             // If this will be the first token added, it is
                             // a new-style comment or a label
-                            if (firstToken==null) {
-                                if (i<end-1 && array[i+1]==':') { // new-style comment
+                        	if (firstToken == null) {
+                            	if (i < end - 1 && array[i + 1] == ':') { // new-style comment
                                     currentTokenType = Token.COMMENT_EOL;
                                 }
                                 else { // Label
@@ -251,7 +235,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         // Newer version of EOL comments, or a label
 
                         default:
-
                             // Just to speed things up a tad, as this will usually be the case (if spaces above failed).
                             if (RSyntaxUtilities.isLetterOrDigit(c) || c=='\\') {
                                 currentTokenType = Token.IDENTIFIER;
@@ -259,7 +242,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             }
 
                             int indexOf = operators.indexOf(c,0);
-                            if (indexOf>-1) {
+                            if (indexOf > -1) {
                                 addToken(text, currentTokenStart,i, Token.OPERATOR, newStartOffset+currentTokenStart);
                                 currentTokenType = Token.NULL;
                                 break;
@@ -268,9 +251,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                                 currentTokenType = Token.IDENTIFIER;
                                 break;
                             }
-
                     } // End of switch (c).
-
                     break;
 
                 case Token.WHITESPACE:
@@ -316,8 +297,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             currentTokenStart = i;
                             // If the previous (whitespace) token was the first token
                             // added, this is a new-style comment or a label
-                            if (firstToken.getNextToken()==null) {
-                                if (i<end-1 && array[i+1]==':') { // new-style comment
+                            if (firstToken.getNextToken() == null) {
+                            	if (i < end - 1 && array[i + 1] == ':') { // new-style comment
                                     currentTokenType = Token.COMMENT_EOL;
                                 }
                                 else { // Label
@@ -330,7 +311,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             break;
 
                         default:	// Add the whitespace token and start anew.
-
                             addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
                             currentTokenStart = i;
 
@@ -341,7 +321,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             }
 
                             int indexOf = operators.indexOf(c,0);
-                            if (indexOf>-1) {
+                            if (indexOf > -1) {
                                 addToken(text, currentTokenStart,i, Token.OPERATOR, newStartOffset+currentTokenStart);
                                 currentTokenType = Token.NULL;
                                 break;
@@ -349,9 +329,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             else {
                                 currentTokenType = Token.IDENTIFIER;
                             }
-
                     } // End of switch (c).
-
                     break;
 
                 default: // Should never happen
@@ -426,20 +404,17 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                                 currentTokenType = Token.NULL;
                                 break;
                             }
-
                             // Otherwise, fall through and assume we're still okay as an IDENTIFIER...
-
                     } // End of switch (c).
-
                     break;
 
                 case Token.COMMENT_EOL:
 
-                    if (i+1 >= array.length)
+                	if (i + 1 >= array.length)
                         break;
 
                     char nextC = array[i+1];
-                    if (nextC == '/'){
+                    if (nextC == '/') {
 
                         i = end - 1;
                         addToken(text, currentTokenStart,i, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
@@ -457,18 +432,17 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                 case Token.ERROR_STRING_DOUBLE:
 
-                    if (c=='"') {
+                	if (c == '"') {
                         addToken(text, currentTokenStart,i, Token.LITERAL_STRING_DOUBLE_QUOTE, newStartOffset+currentTokenStart);
                         currentTokenStart = i + 1;
                         currentTokenType = Token.NULL;
                     }
                     // Otherwise, we're still an unclosed string...
-
                     break;
 
                 case Token.VARIABLE:
 
-                    if (i==currentTokenStart+1) { // first character after '%'.
+                	if (i == currentTokenStart + 1) { // first character after '%'.
                         bracketVariable = false;
                         switch (c) {
                             case '{':
@@ -492,10 +466,10 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         } // End of switch (c).
                     }
                     else { // Character other than first after the '%'.
-                        if (bracketVariable==true) {
-                            if (c=='}') {
-                                addToken(text, currentTokenStart,i, Token.VARIABLE, newStartOffset+currentTokenStart);
-                                currentTokenType = Token.NULL;
+                    	if (bracketVariable == true) {
+                    		if (c == '}') {
+                    			addToken(text, currentTokenStart, i, Token.VARIABLE, newStartOffset + currentTokenStart);
+								currentTokenType = Token.NULL;
                             }
                         }
                         break;
@@ -508,7 +482,6 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
         // Deal with the (possibly there) last token.
         if (currentTokenType != Token.NULL) {
-
             // Check for REM comments.
             if (end-currentTokenStart==3 &&
                     (array[end-3]=='r' || array[end-3]=='R') &&
@@ -516,16 +489,10 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                     (array[end-1]=='m' || array[end-1]=='M')) {
                 currentTokenType = Token.COMMENT_EOL;
             }
-
             addToken(text, currentTokenStart,end-1, currentTokenType, newStartOffset+currentTokenStart);
         }
-
         addNullToken();
-
         // Return the first token in our linked peerInfoList.
         return firstToken;
-
     }
-
-
 }

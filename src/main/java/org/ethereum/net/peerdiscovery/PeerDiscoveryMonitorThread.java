@@ -6,28 +6,25 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
-public class PeerDiscoveryMonitorThread implements Runnable
-{
-    Logger logger = LoggerFactory.getLogger("peerdiscovery");
+public class PeerDiscoveryMonitorThread implements Runnable {
+    private Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     private ThreadPoolExecutor executor;
     private int seconds;
     private boolean run=true;
 
-    public PeerDiscoveryMonitorThread(ThreadPoolExecutor executor, int delay)
-    {
-        this.executor = executor;
-        this.seconds=delay;
-    }
+	public PeerDiscoveryMonitorThread(ThreadPoolExecutor executor, int delay) {
+		this.executor = executor;
+		this.seconds = delay;
+	}
 
-    public void shutdown(){
-        this.run=false;
+    public void shutdown() {
+		this.run = false;
     }
 
     @Override
-    public void run()
-    {
-        while(run){
+    public void run() {
+        while(run) {
             logger.info(
                     String.format("[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s, peersDiscovered: %d ",
                             this.executor.getPoolSize(),
@@ -41,9 +38,8 @@ public class PeerDiscoveryMonitorThread implements Runnable
             try {
                 Thread.sleep(seconds*1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+            	logger.error("Thread interrupted", e);
             }
         }
-
     }
 }
