@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Account;
-import org.ethereum.core.AccountState;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
@@ -47,7 +46,7 @@ public class WalletAddressPanel extends JPanel{
         amount.setBorder(border);
         amount.setEnabled(true);
         amount.setEditable(false);
-        amount.setText(Utils.getValueShortString(account.getState().getBalance()));
+        amount.setText(Utils.getValueShortString(account.getBalance()));
         amount.setForeground(new Color(143, 170, 220));
         amount.setBackground(Color.WHITE);
         amount.setPreferredSize(new Dimension(100, 35));

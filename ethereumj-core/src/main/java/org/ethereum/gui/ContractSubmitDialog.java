@@ -292,7 +292,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
 
         byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-        byte[] nonce = account.getState().getNonce() == BigInteger.ZERO ? null : account.getState().getNonce().toByteArray();
+        byte[] nonce = account.getNonce() == BigInteger.ZERO ? null : account.getNonce().toByteArray();
         byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
@@ -313,7 +313,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
     private boolean validInput() {
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
-        BigInteger currentBalance = account.getState().getBalance();
+        BigInteger currentBalance = account.getBalance();
         BigInteger gasPrice = BigInteger.valueOf(WorldManager.instance.getBlockChain().getGasPrice());
         BigInteger gasInput = new BigInteger( this.gasInput.getText());
 
@@ -350,7 +350,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         @Override
         public String toString() {
             String addressShort = Utils.getAddressShortString(account.getEcKey().getAddress());
-            String valueShort   = Utils.getValueShortString(account.getState().getBalance());
+            String valueShort   = Utils.getValueShortString(account.getBalance());
 
             String result =
                     String.format(" By: [%s] %s", addressShort, valueShort);

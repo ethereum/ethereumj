@@ -64,18 +64,18 @@ public class Wallet {
 
     public AccountState getAccountState(byte[] addressBytes){
         String address = Hex.toHexString(addressBytes);
-        return rows.get(address).getState();
+        return rows.get(address);
     }
 
     public BigInteger getBalance(byte[] addressBytes){
         String address = Hex.toHexString(addressBytes);
-        return rows.get(address).getState().getBalance();
+        return rows.get(address).getBalance();
     }
 
     public BigInteger totalBalance(){
         BigInteger sum = BigInteger.ZERO;
         for (Account account : rows.values()){
-            sum = sum.add(account.getState().getBalance());
+            sum = sum.add(account.getBalance());
         }
         return sum;
     }
@@ -89,17 +89,16 @@ public class Wallet {
         if (sender != null){
 
             BigInteger value = new BigInteger(-1, transaction.getValue());
-            sender.getState().addToBalance(value);
-            sender.getState().incrementNonce();
+            sender.addToBalance(value);
+            sender.incrementNonce();
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
         Account receiver =  rows.get(Hex.toHexString(receiveAddress));
         if (receiver != null){
-            receiver.getState().addToBalance(new BigInteger(1, transaction.getValue()));
+            receiver.addToBalance(new BigInteger(1, transaction.getValue()));
         }
-
-        notifyListeners();
+        this.notifyListeners();
     }
 
 
@@ -232,7 +231,7 @@ public class Wallet {
             privKey.setTextContent(Hex.toHexString(account.getEcKey().getPrivKeyBytes()));
 
             Element value   = doc.createElement("value");
-            value.setTextContent(account.getState().getBalance().toString());
+            value.setTextContent(account.getBalance().toString());
 
             raw.appendChild(addressE);
             raw.appendChild(privKey);
