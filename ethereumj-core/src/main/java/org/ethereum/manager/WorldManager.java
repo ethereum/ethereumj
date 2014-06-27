@@ -76,7 +76,6 @@ public class WorldManager {
 
     public void applyTransaction(Transaction tx, byte[] coinbase) {
 
-
         // TODO: refactor the wallet pending transactions to the world manager
         if (blockChain != null)
             blockChain.addWalletTransaction(tx);
@@ -94,7 +93,6 @@ public class WorldManager {
             return;
         }
 
-
         BigInteger nonce = repository.getNonce(senderAddress);
         if (nonce.compareTo(new BigInteger(tx.getNonce())) !=  0) {
 			if (stateLogger.isWarnEnabled())
@@ -108,7 +106,6 @@ public class WorldManager {
 
         // first of all debit the gas from the issuer
         BigInteger gasDebit = tx.getTotalGasValueDebit();
-        gasDebit = gasDebit.multiply(new BigInteger(tx.getGasPrice()));
 
         // The coinbase get the gas cost
         repository.addBalance(coinbase, gasDebit);
@@ -302,12 +299,8 @@ public class WorldManager {
 
     }
 
-    public void applyTransactionList(List<Transaction> txList) {
-
-    }
 
     public void applyBlock(Block block) {
-
 
         // miner reward
         if (repository.getAccountState(block.getCoinbase()) == null  )
