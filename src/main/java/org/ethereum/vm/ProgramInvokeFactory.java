@@ -48,7 +48,7 @@ public class ProgramInvokeFactory {
         byte[] gas = tx.getGasLimit();
 
         /***        CALLVALUE op      ***/
-        byte[] callValue = tx.getValue();
+        byte[] callValue = tx.getValue() == null ? new byte[]{0} : tx.getValue();
 
 
         /***     CALLDATALOAD  op   ***/
@@ -75,8 +75,6 @@ public class ProgramInvokeFactory {
         /*** GASLIMIT op ***/
         long gaslimit = lastBlock.getGasLimit();
 
-
-        repository.startTracking();
 
         if (logger.isInfoEnabled()){
             logger.info("Program invocation: \n" +
