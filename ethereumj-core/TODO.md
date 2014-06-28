@@ -22,8 +22,7 @@ economy for memory allocation
 share - code section
     
 - [ ] **LLL_to_ASM compiler** list style language to EVM assembly compiler:    
-
-- 
+- [ ] **Use home-directory** Create .ethereumj in home-directory for blockchain, state & details database. Make configurable in system.properties so developer can choose user.dir without the creation of .ethereumj directory.
 
 ##### UnitTest:   
 ----------------
