@@ -18,10 +18,13 @@
 *.ear
 /target
 /src/main/java/samples
+
+# Output #
 /blockchain
 /state
 /details
 /logs
+/dmp
 
 *.db
 *.xlsx

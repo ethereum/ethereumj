@@ -22,7 +22,6 @@ import javax.swing.table.DefaultTableModel;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
@@ -156,6 +155,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         gasInput.setText("1000");
 
 		JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>() {
+			private static final long serialVersionUID = -3748305421049121671L;
 			@Override
 			public ComboBoxUI getUI() {
 				return super.getUI();
