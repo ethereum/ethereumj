@@ -8,25 +8,22 @@ import org.ethereum.util.Utils;
 /**
  * Representation of an actual account or contract
  */
-public class Account {
+public class Account extends AccountState {
 
 	private ECKey ecKey;
 	private byte[] address;
-	private AccountState state;
 	
 	public Account() {
 		this.ecKey = new ECKey(Utils.getRandom());
-		this.state = new AccountState();
 	}
 	
 	public Account(ECKey ecKey) {
 		this.ecKey = ecKey;
-		this.state = new AccountState();
 	}
 
 	public Account(ECKey ecKey, BigInteger nonce, BigInteger balance) {
+		super(nonce, balance);
 		this.ecKey = ecKey;
-		this.state = new AccountState(nonce, balance);
 	}	
 	
     public ECKey getEcKey() {
@@ -40,12 +37,4 @@ public class Account {
 	public void setAddress(byte[] address) {
 		this.address = address;
 	}
-
-	public AccountState getState() {
-		return state;
-	}
-
-	public void setState(AccountState state) {
-		this.state = state;
-	}	
 }

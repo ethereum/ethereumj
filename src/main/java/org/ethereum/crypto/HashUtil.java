@@ -52,7 +52,7 @@ public class HashUtil {
      * @param nonce - nonce of creating address
      * @return new address
      */
-    public static byte[] calcNewAddr(byte[] addr, byte[] nonce){
+    public static byte[] calcNewAddr(byte[] addr, byte[] nonce) {
 
         byte[] encSender = RLP.encodeElement(addr);
         byte[] encNonce = RLP.encodeElement(nonce);
@@ -81,11 +81,10 @@ public class HashUtil {
         }
     }
 
-
     /**
      * @return generates random peer id for the HelloMessage
      */
-    public static byte[] randomPeerId(){
+    public static byte[] randomPeerId() {
 
         byte[] peerIdBytes = new BigInteger(512, Utils.getRandom()).toByteArray();
 

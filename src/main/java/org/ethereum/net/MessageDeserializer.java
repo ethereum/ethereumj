@@ -9,16 +9,16 @@ public class MessageDeserializer {
     /**
      * Get exactly one message payload
      */
-    private static void deserialize(byte [] msgData, int level, int startPos, int endPos){
+    private static void deserialize(byte [] msgData, int level, int startPos, int endPos) {
 
         if (msgData == null || msgData.length == 0) return ;
         int pos = startPos;
 
-        while(pos < endPos){
+        while(pos < endPos) {
             // It's a list with a payload more than 55 bytes
             // data[0] - 0xF7 = how many next bytes allocated
             // for  the length of the list
-        	if ((msgData[pos] & 0xFF) >= 0xF7){
+        	if ((msgData[pos] & 0xFF) >= 0xF7) {
                 byte lengthOfLength = (byte) (msgData[pos] -  0xF7);
                 int length = calcLength(lengthOfLength, msgData, pos);
                 // now we can parse an item for data[1]..data[length]
@@ -28,7 +28,7 @@ public class MessageDeserializer {
                 continue;
             }
             // It's a list with a payload less than 55 bytes
-            if ((msgData[pos] & 0xFF) >= 0xC0 && (msgData[pos] & 0xFF) < 0xF7){
+            if ((msgData[pos] & 0xFF) >= 0xC0 && (msgData[pos] & 0xFF) < 0xF7) {
                 byte length = (byte) (msgData[pos] -  0xC0);
                 System.out.println("-- level: [" + level + "] Found small list length: " + length);
                 deserialize(msgData, level + 1, pos + 1, pos + length + 1);
@@ -55,7 +55,7 @@ public class MessageDeserializer {
                 continue;
             }
             //  null item
-            if ((msgData[pos] & 0xFF) == 0x80){
+            if ((msgData[pos] & 0xFF) == 0x80) {
                 System.out.println("-- level: [" + level + "] Found null item: ");
                 pos += 1;
                 continue;
@@ -72,7 +72,7 @@ public class MessageDeserializer {
     private static int calcLength(int lengthOfLength, byte[] msgData, int pos) {
     	byte pow = (byte) (lengthOfLength - 1);
         int length = 0;
-        for (int i = 1; i <= lengthOfLength; ++i){
+        for (int i = 1; i <= lengthOfLength; ++i) {
             length += msgData[pos + i] << (8 *  pow);
             pow--;
         }

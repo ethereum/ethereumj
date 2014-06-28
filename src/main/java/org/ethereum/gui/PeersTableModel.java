@@ -24,14 +24,13 @@ public class PeersTableModel extends AbstractTableModel {
 	private List<PeerInfo> peerInfoList = new ArrayList<PeerInfo>();
     Timer updater = new Timer();
 
-    public PeersTableModel() {
-
-        updater.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                updateModel();
-            }
-        }, 0, 1000);
-    }
+	public PeersTableModel() {
+		updater.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				updateModel();
+			}
+		}, 0, 1000);
+	}
 
     public String getColumnName(int column) {
         if (column == 0) return "Location";
@@ -55,7 +54,7 @@ public class PeersTableModel extends AbstractTableModel {
 
         PeerInfo peerInfo = peerInfoList.get(row);
 
-        if (column == 0){
+        if (column == 0) {
             String countryCode = peerInfo.getLocation().countryCode;
             URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode.toLowerCase() + ".png");
             ImageIcon flagIcon = new ImageIcon(flagURL);
@@ -66,7 +65,7 @@ public class PeersTableModel extends AbstractTableModel {
         if (column == 2) {
 
             ImageIcon flagIcon = null;
-            if (peerInfo.connected){
+            if (peerInfo.connected) {
                 flagIcon = Utils.getImageIcon("connected.png");
             } else {
                 flagIcon = Utils.getImageIcon("disconnected.png");
@@ -84,11 +83,10 @@ public class PeersTableModel extends AbstractTableModel {
         return 3;
     }
 
-    public void updateModel(){
-        synchronized (peerInfoList){
-
+    public void updateModel() {
+        synchronized (peerInfoList) {
             peerInfoList.clear();
-            for (PeerData peer : MainData.instance.getPeers()){
+            for (PeerData peer : MainData.instance.getPeers()) {
                 InetAddress addr = peer.getInetAddress();
                 Location cr = IpGeoDB.getLocationForIp(addr);
                 peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline()));
@@ -102,18 +100,18 @@ public class PeersTableModel extends AbstractTableModel {
         InetAddress      ip;
         boolean          connected;
 
-        private PeerInfo(Location location, InetAddress ip, boolean isConnected) {
+		private PeerInfo(Location location, InetAddress ip, boolean isConnected) {
             this.location = location;
             this.ip = ip;
             this.connected = isConnected;
         }
 
-        private InetAddress getIp() {
-            return ip;
-        }
-
         private Location getLocation() {
             return location;
+        }
+
+        private InetAddress getIp() {
+            return ip;
         }
 
         private boolean isConnected() {

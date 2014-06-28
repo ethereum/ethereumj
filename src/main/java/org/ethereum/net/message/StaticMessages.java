@@ -25,7 +25,7 @@ public class StaticMessages {
         HELLO_MESSAGE = generateHelloMessage();
     }
     public static HelloMessage HELLO_MESSAGE;
-    public static HelloMessage generateHelloMessage(){
+    public static HelloMessage generateHelloMessage() {
         byte[] peerIdBytes = HashUtil.randomPeerId();
 
         return new HelloMessage((byte) 0x14, (byte) 0x00,

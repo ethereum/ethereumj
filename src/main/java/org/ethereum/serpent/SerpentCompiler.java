@@ -5,7 +5,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.OpCode;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
@@ -23,7 +22,7 @@ import java.util.regex.Pattern;
  */
 public class SerpentCompiler {
 
-    public static String compile(String code){
+    public static String compile(String code) {
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
                 code);
         ParseTree tree = parser.parse();
@@ -35,52 +34,44 @@ public class SerpentCompiler {
         return result;
     }
 
-    public static String compileFullNotion(String code){
-        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
-                code);
+    public static String compileFullNotion(String code) {
+		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+				SerpentParser.class, code);
         ParseTree tree = parser.parse_init_code_block();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
         result = result.replaceAll("\\s+", " ");
         result = result.trim();
-
         return result;
     }
 
-    public static byte[] compileFullNotionAssemblyToMachine(String code){
-
+    public static byte[] compileFullNotionAssemblyToMachine(String code) {
         byte[] initCode = compileAssemblyToMachine(extractInitBlock(code));
         byte[] codeCode = compileAssemblyToMachine(extractCodeBlock(code));
-
         return encodeMachineCodeForVMRun(codeCode, initCode);
     }
 
-
-    public static String extractInitBlock(String code){
-
+    public static String extractInitBlock(String code) {
         String result = "";
         Pattern pattern = Pattern.compile("\\[init (.*?) init\\]");
         Matcher matcher = pattern.matcher(code);
         if (matcher.find()) {
             result = matcher.group(1);
         }
-
         return result;
     }
 
-    public static String extractCodeBlock(String code){
+    public static String extractCodeBlock(String code) {
         String result = "";
         Pattern pattern = Pattern.compile("\\[code (.*?) code\\]");
         Matcher matcher = pattern.matcher(code);
         if (matcher.find()) {
             result = matcher.group(1);
         }
-
         return result;
     }
 
-
-    public static byte[] compileAssemblyToMachine(String code){
+    public static byte[] compileAssemblyToMachine(String code) {
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -91,27 +82,26 @@ public class SerpentCompiler {
 
         // Encode push_n numbers
         boolean skiping = false;
-        for (int i = 0; i < lexaList.size(); ++i){
+        for (int i = 0; i < lexaList.size(); ++i) {
 
             String lexa  = lexaList.get(i);
 
-            { // skiping the [asm asm] block
-                if (lexa.equals("asm]")){
-                    skiping = false;
-                    lexaList.remove(i);
-                    --i;
-                    continue;
-                }
-
-                if (lexa.equals("[asm")){
-                    skiping = true;
-                    lexaList.remove(i);
-                    --i;
-                    continue;
-                }
-
-                if (skiping) continue;
-            }
+			{ // skiping the [asm asm] block
+				if (lexa.equals("asm]")) {
+					skiping = false;
+					lexaList.remove(i);
+					--i;
+					continue;
+				}
+				if (lexa.equals("[asm")) {
+					skiping = true;
+					lexaList.remove(i);
+					--i;
+					continue;
+				}
+				if (skiping)
+					continue;
+			}
 
             if (OpCode.contains(lexa) ||
                 lexa.contains("REF_") ||
@@ -119,25 +109,21 @@ public class SerpentCompiler {
 
             int bytesNum = ByteUtil.numBytes(lexa);
 
-
             String num = lexaList.remove(i);
             BigInteger bNum = new BigInteger(num);
             byte[] bytes = BigIntegers.asUnsignedByteArray(bNum);
             if (bytes.length == 0) bytes = new byte[]{0};
 
             for (int j = bytes.length; j > 0; --j) {
-
                 lexaList.add(i, (bytes[j - 1] & 0xFF) + "");
             }
-
             lexaList.add(i, "PUSH" + bytesNum);
             i = i + bytesNum;
-
         }
 
         // encode ref for 5 bytes
-        for (int i = 0; i < lexaList.size(); ++i){
-
+        for (int i = 0; i < lexaList.size(); ++i) {
+        	
             String lexa  = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
             lexaList.add(i + 1, lexa);
@@ -147,11 +133,10 @@ public class SerpentCompiler {
             i += 4;
         }
 
-
         // calc label pos & remove labels
         HashMap<String, Integer> labels = new HashMap<String, Integer>();
 
-        for (int i = 0; i < lexaList.size(); ++i){
+        for (int i = 0; i < lexaList.size(); ++i) {
 
             String lexa  = lexaList.get(i);
             if (!lexa.contains("LABEL_")) continue;
@@ -166,7 +151,7 @@ public class SerpentCompiler {
         }
 
         // encode all ref occurrence
-        for (int i = 0; i < lexaList.size(); ++i){
+        for (int i = 0; i < lexaList.size(); ++i) {
 
             String lexa  = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
@@ -190,17 +175,15 @@ public class SerpentCompiler {
             ++i;
         }
 
-        for (String lexa : lexaList){
+        for (String lexa : lexaList) {
 
             if (OpCode.contains(lexa))
                 baos.write( OpCode.byteVal(lexa) );
             else{
-
-                // todo: support for number more than one byte
+                // TODO: support for number more than one byte
                 baos.write(Integer.parseInt(lexa) & 0xFF);
             }
         }
-
 
         // wrap plan
         // 1) that is the code
@@ -209,14 +192,13 @@ public class SerpentCompiler {
         return baos.toByteArray();
     }
 
-
     /**
      *
      * @param code
      * @param init
      * @return
      */
-    public static byte[] encodeMachineCodeForVMRun(byte[] code, byte[] init){
+    public static byte[] encodeMachineCodeForVMRun(byte[] code, byte[] init) {
 
         if (code == null || code.length == 0) throw new RuntimeException("code can't be empty code: " + code);
 
@@ -224,8 +206,7 @@ public class SerpentCompiler {
         byte[] lenBytes = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(code.length));
 
         StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < lenBytes.length; ++i){
-
+        for (int i = 0; i < lenBytes.length; ++i) {
             sb.append(lenBytes[i]).append(" ");
         }
 
@@ -244,7 +225,4 @@ public class SerpentCompiler {
 
         return result;
     }
-
-
-
 }

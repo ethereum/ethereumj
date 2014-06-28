@@ -10,7 +10,6 @@ public enum OpCode {
     /**
 	 * Stop and Arithmetic Operations
 	 */
-	
 	STOP(0x00),
 	ADD(0x01),
 	MUL(0x02),
@@ -21,19 +20,16 @@ public enum OpCode {
 	SMOD(0x07),
 	EXP(0x08),
 	NEG(0x09),
-	LT(0X0A),
-    GT(0X0B),
-    SLT(0X0C),
-    SGT(0X0D),
-	EQ(0X0E),
-	NOT(0X0F),
-
-
+	LT(0X0a),
+    GT(0X0b),
+    SLT(0X0c),
+    SGT(0X0d),
+	EQ(0X0e),
+	NOT(0X0f),
 
 	/**
 	 * Bitwise Logic Operations
 	 */
-	
 	AND(0x10),
 	OR(0x11),
 	XOR(0x12),
@@ -42,13 +38,11 @@ public enum OpCode {
 	/**
 	 * SHA3
 	 */
-	
 	SHA3(0x20),
 	
 	/**
 	 * Environmental Information
 	 */
-
 	ADDRESS(0x30),
 	BALANCE(0x31),
 	ORIGIN(0x32),
@@ -64,7 +58,6 @@ public enum OpCode {
 	/**
 	 * Block Information
 	 */
-
 	PREVHASH(0x40),
 	COINBASE(0x41),
 	TIMESTAMP(0x42),
@@ -75,7 +68,6 @@ public enum OpCode {
 	/**
 	 * Memory, Storage and Flow Operations
 	 */
-
 	POP(0x50),
 	DUP(0x51),
 	SWAP(0x52),
@@ -93,7 +85,6 @@ public enum OpCode {
 	/**
 	 * Push Operations
 	 */
-		
 	PUSH1(0x60),
 	PUSH2(0x61),
 	PUSH3(0x62),
@@ -130,7 +121,6 @@ public enum OpCode {
 	/**
 	 * System operations
 	 */
-	
 	CREATE(0xf0),   //       [in_size] [in_offs] [gas_val] CREATE
 	CALL(0xf1),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr] [gas] CALL
 	RETURN(0xf2),
@@ -140,7 +130,6 @@ public enum OpCode {
     
     private static final Map<Byte, OpCode> intToTypeMap = new HashMap<Byte, OpCode>();
     private static final Map<String, Byte> stringToByteMap = new HashMap<String, Byte>();
-
 
     static {
         for (OpCode type : OpCode.values()) {
@@ -160,7 +149,7 @@ public enum OpCode {
         return type;
     }
 
-    public byte val(){
+    public byte val() {
         return opcode;
     }
 
@@ -168,16 +157,15 @@ public enum OpCode {
     	return opcode;
     }
 
-    public static boolean contains(String code){
-
+    public static boolean contains(String code) {
        return stringToByteMap.containsKey(code.trim());
     }
 
-    public static byte byteVal(String code){
+    public static byte byteVal(String code) {
         return stringToByteMap.get(code);
     }
 
-    public static OpCode code(byte op){
+    public static OpCode code(byte op) {
         return intToTypeMap.get(op);
     }
 }

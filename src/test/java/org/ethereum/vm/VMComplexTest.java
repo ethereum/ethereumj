@@ -18,27 +18,25 @@ import static org.junit.Assert.assertEquals;
  * @author: Roman Mandeleil
  * Created on: 16/06/2014 10:37
  */
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMComplexTest {
 
-
     @Test // contract call recursive
-    public void test1(){
+    public void test1() {
 
-/**
- *       #The code will run
- *       ------------------
-
-         a = contract.storage[999]
-         if a > 0:
-             contract.storage[999] = a - 1
-
-             # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
-             send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
-         else:
-             stop
- */
+		/**
+		 *       #The code will run
+		 *       ------------------
+		
+		         a = contract.storage[999]
+		         if a > 0:
+		             contract.storage[999] = a - 1
+		
+		             # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
+		             send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
+		         else:
+		             stop
+		 */
 
         int expectedGas = 438;
 
@@ -69,9 +67,6 @@ public class VMComplexTest {
         repository.saveCode(contractAddrB, codeB);
         repository.addStorageRow(contractAddrB, key1, value1);
 
-
-
-
         // Play the program
         VM vm = new VM();
         Program program = new Program(codeB, pi);
@@ -82,7 +77,6 @@ public class VMComplexTest {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
-
 
         System.out.println();
         System.out.println("============ Results ============");
@@ -98,10 +92,8 @@ public class VMComplexTest {
         assertEquals(expectedGas, program.result.getGasUsed());
     }
 
-
-
     @Test // contractB call contractA with data to storage
-    public void test2(){
+    public void test2() {
 
         /**
          *       #The code will run
@@ -122,7 +114,6 @@ public class VMComplexTest {
 
          */
 
-
         long expectedVal_1 = 11;
         long expectedVal_2 = 22;
 
@@ -142,7 +133,7 @@ public class VMComplexTest {
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr);
-        Repository repository = pi.repository;
+        Repository repository = pi.getRepository();
 
         byte[] contractB_addr_bytes = Hex.decode(contractB_addr);
         byte[] codeB = Hex.decode(code_b);
@@ -186,12 +177,11 @@ public class VMComplexTest {
         assertEquals(expectedVal_1, value_1.longValue());
         assertEquals(expectedVal_2, value_2.longValue());
 
-        // todo: check that the value pushed after exec is 1
+        // TODO: check that the value pushed after exec is 1
     }
 
-
     @Test // contractB call contractA with return expectation
-    public void test3(){
+    public void test3() {
 
         /**
          *       #The code will run
@@ -216,7 +206,6 @@ public class VMComplexTest {
              a = msg((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0, [11, 22, 33], 3, 6)
 
          */
-
 
         long expectedVal_1 = 11;
         long expectedVal_2 = 22;
@@ -254,7 +243,6 @@ public class VMComplexTest {
         repository.createAccount(caller_addr_bytes);
         repository.addBalance(caller_addr_bytes, new BigInteger("100000000000000000000"));
 
-
         // ****************** //
         //  Play the program  //
         // ****************** //
@@ -270,8 +258,6 @@ public class VMComplexTest {
 
         System.out.println();
         System.out.println("============ Results ============");
-
-
         System.out.println("*** Used gas: " + program.result.getGasUsed());
 
         DataWord value1 = program.memoryLoad(new DataWord(32));
@@ -290,12 +276,11 @@ public class VMComplexTest {
         assertEquals(expectedVal_5, value5.longValue());
         assertEquals(expectedVal_6, value6.longValue());
 
-        // todo: check that the value pushed after exec is 1
+        // TODO: check that the value pushed after exec is 1
     }
 
-
     @Test // CREATE magic
-    public void test4(){
+    public void test4() {
 
         /**
          *       #The code will run
@@ -316,7 +301,6 @@ public class VMComplexTest {
 
          */
 
-
         // Set contract into Database
         String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
@@ -330,7 +314,7 @@ public class VMComplexTest {
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractA_addr);
 
-        Repository repository = pi.repository;
+        Repository repository = pi.getRepository();
 
         byte[] caller_addr_bytes = Hex.decode(callerAddr);
 
@@ -348,22 +332,18 @@ public class VMComplexTest {
         VM vm = new VM();
         Program program = new Program(codeA, pi);
 
-        try {
-            while(!program.isStopped())
-                vm.step(program);
-        } catch (RuntimeException e) {
-            program.setRuntimeFailure(e);
-        }
+		try {
+			while (!program.isStopped())
+				vm.step(program);
+		} catch (RuntimeException e) {
+			program.setRuntimeFailure(e);
+		}
 
         System.out.println();
         System.out.println("============ Results ============");
 
         System.out.println("*** Used gas: " + program.result.getGasUsed());
-        // todo: check that the value pushed after exec is the new address
+        // TODO: check that the value pushed after exec is the new address
         repository.close();
     }
-
-
-
-
 }

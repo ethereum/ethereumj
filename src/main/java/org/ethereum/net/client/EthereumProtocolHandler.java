@@ -7,7 +7,9 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 
-import java.util.*;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import org.ethereum.core.Block;
 import org.ethereum.gui.PeerListener;
@@ -37,12 +39,12 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
-    Logger logger = LoggerFactory.getLogger("wire");
+    private Logger logger = LoggerFactory.getLogger("wire");
 
-    Timer chainAskTimer = new Timer();
-    int secToAskForChain = 1;
+    private Timer chainAskTimer = new Timer();
+    private int secToAskForChain = 1;
 
-    final Timer timer = new Timer();
+    private final Timer timer = new Timer();
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
 
     private final static byte[] HELLO_MESSAGE = StaticMessages.HELLO_MESSAGE.getPayload();
@@ -81,9 +83,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 if (tearDown) this.cancel();
 
                 long currTime = System.currentTimeMillis();
-                if (currTime - lastPongTime > 30000){
+                if (currTime - lastPongTime > 30000) {
                     logger.info("No ping answer for [30 sec]");
-                    throw new Error("No ping return for 30 [sec]");
+                    throw new RuntimeException("No ping return for 30 [sec]");
                     // TODO: shutdown the handler
                 }
                 logger.info("[Send: PING]");
@@ -216,7 +218,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             // If we get one block from a peer
             // we ask less greedy
-            if (blockList.size() <= 1 && secToAskForChain != 10){
+            if (blockList.size() <= 1 && secToAskForChain != 10) {
 
                 logger.info("Now we ask for a chain each 10 seconds");
                 secToAskForChain = 10;
@@ -235,7 +237,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             // If we get more blocks from a peer
             // we ask more greedy
-            if (blockList.size() > 2 && secToAskForChain != 1){
+            if (blockList.size() > 2 && secToAskForChain != 1) {
 
                 logger.info("Now we ask for a chain each 1 seconds");
                 secToAskForChain = 1;
@@ -285,7 +287,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             logger.info("[Recv: GET_TRANSACTIONS]");
             if (peerListener != null) peerListener.console("[Recv: GET_TRANSACTIONS]");
 
-            // todo: return it in the future
+            // TODO: return it in the future
 //            Collection<Transaction> pendingTxList =
 //                    MainData.instance.getBlockchain().getPendingTransactionList();
 
@@ -312,7 +314,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         timer.cancel();
     }
 
-    private void sendMsg(Message msg, ChannelHandlerContext ctx){
+    private void sendMsg(Message msg, ChannelHandlerContext ctx) {
         byte[] data = msg.getPayload();
 
         if (peerListener != null) peerListener.console(Hex.toHexString(data));
@@ -325,32 +327,32 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendPing(ChannelHandlerContext ctx){
+    private void sendPing(ChannelHandlerContext ctx) {
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PING.length);
         buffer.writeBytes(StaticMessages.PING);
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendPong(ChannelHandlerContext ctx){
+    private void sendPong(ChannelHandlerContext ctx) {
         logger.info("[Send: PONG]");
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PONG.length);
         buffer.writeBytes(StaticMessages.PONG);
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendGetPeers(ChannelHandlerContext ctx){
+    private void sendGetPeers(ChannelHandlerContext ctx) {
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_PEERS.length);
         buffer.writeBytes(StaticMessages.GET_PEERS);
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendGetTransactions(ChannelHandlerContext ctx){
+    private void sendGetTransactions(ChannelHandlerContext ctx) {
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_TRANSACTIONS.length);
         buffer.writeBytes(StaticMessages.GET_TRANSACTIONS);
         ctx.writeAndFlush(buffer);
     }
 
-    private void sendGetChain(ChannelHandlerContext ctx){
+    private void sendGetChain(ChannelHandlerContext ctx) {
 
         byte[] hash = WorldManager.instance.getBlockChain().getLatestBlockHash();
         GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
@@ -360,8 +362,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         buffer.writeBytes(StaticMessages.MAGIC_PACKET);
         buffer.writeBytes(ByteUtil.calcPacketLength(chainMessage.getPayload()));
         buffer.writeBytes(chainMessage.getPayload());
-
         ctx.writeAndFlush(buffer);
     }
-
 }

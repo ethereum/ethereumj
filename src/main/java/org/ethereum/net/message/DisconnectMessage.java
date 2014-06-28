@@ -25,18 +25,18 @@ public class DisconnectMessage extends Message {
 
         RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0]) != DISCONNECT){
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0]) != DISCONNECT) {
             throw new Error("Disconnect: parsing for mal data");
         }
 
         byte[] reasonB = ((RLPItem)paramsList.get(1)).getRLPData();
-        if (reasonB == null){
+        if (reasonB == null) {
             this.reason = DISCONNECT_REQUESTED;
         } else {
             this.reason = ReasonCode.fromInt(reasonB[0]);
         }
         this.parsed = true;
-        // todo: what to do when mal data ?
+        // TODO: what to do when mal data ?
     }
 
     @Override
@@ -49,7 +49,7 @@ public class DisconnectMessage extends Message {
         return reason;
     }
 
-    public String toString(){
+    public String toString() {
         if (!parsed) parseRLP();
         return "Disconnect Message [ reason=" + reason + " ]";
     }

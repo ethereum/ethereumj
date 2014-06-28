@@ -29,11 +29,10 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class ClientPeer {
 
-    Logger logger = LoggerFactory.getLogger("wire");
+    private Logger logger = LoggerFactory.getLogger("wire");
 
-
-    PeerListener peerListener;
-    Channel channel;
+    private PeerListener peerListener;
+    private Channel channel;
 
     public ClientPeer() {
     }
@@ -42,7 +41,7 @@ public class ClientPeer {
         this.peerListener = peerListener;
     }
 
-    public void connect(String host, int port){
+    public void connect(String host, int port) {
 
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
@@ -54,7 +53,7 @@ public class ClientPeer {
             b.option(ChannelOption.SO_KEEPALIVE, true);
 
             final EthereumProtocolHandler handler;
-            if (peerListener != null){
+            if (peerListener != null) {
                 handler = new EthereumProtocolHandler(peerListener);
                 peerListener.console("connecting to: " + host + ":" + port);
             }
@@ -72,7 +71,6 @@ public class ClientPeer {
                 }
             });
 
-
             // Start the client.
             ChannelFuture f = b.connect(host, port).sync(); // (5)
             this.channel = f.channel();
@@ -81,21 +79,19 @@ public class ClientPeer {
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
 
-        } catch (InterruptedException ie){
-           System.out.println("-- ClientPeer: catch (InterruptedException ie) --");
-           ie.printStackTrace();
+        } catch (InterruptedException ie) {
+           logger.error("-- ClientPeer: catch (InterruptedException ie) --", ie);
         } finally {
             workerGroup.shutdownGracefully();
         }
     }
 
-
     /*
      * The wire gets data for signed transactions and
      * sends it to the net.
-     * todo: find a way to set all "send to wire methods" in one place.
+     * TODO: find a way to set all "send to wire methods" in one place.
      */
-    public void sendTransaction(Transaction transaction){
+    public void sendTransaction(Transaction transaction) {
 
         transaction.getEncoded();
         java.util.List<Transaction> txList =  new ArrayList<Transaction>();

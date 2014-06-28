@@ -44,7 +44,7 @@ public class IpGeoDB {   // change
 
     private static LookupService cl;
 
-    public static Location getLocationForIp(InetAddress ip){
+    public static Location getLocationForIp(InetAddress ip) {
         try {
             return cl.getLocation(ip);
         } catch (Throwable e) {

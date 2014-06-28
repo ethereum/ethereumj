@@ -78,15 +78,15 @@ public class Blockchain {
             return lastBlock;
 	}
 
-    public void setLastBlock(Block block){
+    public void setLastBlock(Block block) {
     	this.lastBlock = block;
     }
 
-    public int getSize(){
+    public int getSize() {
         return index.size();
     }
 
-    public Block getByNumber(long rowIndex){
+    public Block getByNumber(long rowIndex) {
         return new Block(db.get(ByteUtil.longToBytes(rowIndex)));
     }
 
@@ -110,9 +110,15 @@ public class Blockchain {
             String blockParentHash = Hex.toHexString(firstBlockToAdd.getParentHash());
             if (!hashLast.equals(blockParentHash)) return;
         }
-        for (int i = blocks.size() - 1; i >= 0 ; --i){
+        for (int i = blocks.size() - 1; i >= 0 ; --i) {
         	Block block = blocks.get(i);
             this.addBlock(block);
+            
+            // Check stateRoot
+//            String newState = Hex.toHexString(WorldManager.instance.repository.worldState.getRootHash());
+//            String blockState = Hex.toHexString(block.getStateRoot());
+//            logger.debug("New world stateRoot {} and block stateRoot {}", newState, blockState);
+            
             db.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
@@ -169,13 +175,13 @@ public class Blockchain {
         return walletTransaction;
     }
 
-    public void removeWalletTransaction(Transaction transaction){
+    public void removeWalletTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
         logger.info("pending transaction removed with hash: {} ",  hash);
         walletTransactions.remove(hash);
     }
 
-    public byte[] getLatestBlockHash(){
+    public byte[] getLatestBlockHash() {
             if (index.isEmpty())
                 return StaticMessages.GENESIS_HASH;
             else

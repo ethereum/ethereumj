@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Block;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 
 import javax.swing.table.AbstractTableModel;

@@ -42,6 +42,4 @@ public class ValueTest {
 		BigInteger bigExp = BigInteger.valueOf(10);
 		assertEquals(bigInt.asBigInt(), bigExp);
 	}
-
-	
 }

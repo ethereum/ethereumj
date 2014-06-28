@@ -12,22 +12,21 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 22/05/2014 09:10
  */
-
 public class PeerDiscovery {
 
-    RejectedExecutionHandlerImpl rejectionHandler;
-    ThreadFactory threadFactory;
-    ThreadPoolExecutor executorPool;
-    PeerDiscoveryMonitorThread monitor;
-    List<PeerData> peers;
+    private RejectedExecutionHandlerImpl rejectionHandler;
+    private ThreadFactory threadFactory;
+    private ThreadPoolExecutor executorPool;
+    private PeerDiscoveryMonitorThread monitor;
+    private List<PeerData> peers;
 
-    boolean started = false;
+    private boolean started = false;
 
     public PeerDiscovery(List<PeerData> peers) {
         this.peers = peers;
     }
 
-    public void start(){
+    public void start() {
 
         //RejectedExecutionHandler implementation
         rejectionHandler = new RejectedExecutionHandlerImpl();
@@ -47,19 +46,17 @@ public class PeerDiscovery {
         for (PeerData peerData : this.peers) {
             executorPool.execute(new WorkerThread(peerData, executorPool));
         }
-
         started = true;
     }
 
-    public void addNewPeerData(PeerData peerData){
+    public void addNewPeerData(PeerData peerData) {
         executorPool.execute(new WorkerThread(peerData, executorPool));
     }
 
-    public void stop(){
+    public void stop() {
         executorPool.shutdown();
         monitor.shutdown();
     }
-
 
     public boolean isStarted() {
         return started;

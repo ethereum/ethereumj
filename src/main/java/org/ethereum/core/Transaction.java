@@ -156,7 +156,7 @@ public class Transaction {
     }
 
     // TODO: performance improve multiply without BigInteger
-    public BigInteger getTotalGasValueDebit(){
+    public BigInteger getTotalGasValueDebit() {
         return new BigInteger(1, gasLimit).multiply(new BigInteger(1,gasPrice));
     }
 
@@ -170,7 +170,7 @@ public class Transaction {
         return signature;
     }
 
-    public byte[] getContractAddress(){
+    public byte[] getContractAddress() {
 
         if (!isContractCreation()) return null;
 
@@ -229,7 +229,7 @@ public class Transaction {
      *  For signatures you have to keep also
      *  RLP of the transaction without any signature data
      */
-    public byte[] getEncodedRaw(){
+    public byte[] getEncodedRaw() {
 
         if (!parsed) rlpParse();
         if (rlpRaw != null) return rlpRaw;
@@ -273,6 +273,4 @@ public class Transaction {
 				receiveAddress, value, data, v, r, s);
         return rlpEncoded;
     }
-
-
 }

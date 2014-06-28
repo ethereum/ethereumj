@@ -1,19 +1,13 @@
 package org.ethereum.vm;
 
 import org.ethereum.db.Repository;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.trie.TrackTrie;
-
-import java.util.Map;
 
 /**
  * www.ethereumJ.com
  * @author: Roman Mandeleil
  * Created on: 03/06/2014 14:59
  */
-
 public interface ProgramInvoke {
-
 
     public DataWord getOwnerAddress();
     public DataWord getBalance();
@@ -36,6 +30,4 @@ public interface ProgramInvoke {
     public Repository getRepository();
 
     public boolean byTransaction();
-
-
 }

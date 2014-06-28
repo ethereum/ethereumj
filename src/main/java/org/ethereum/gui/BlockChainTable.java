@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Block;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 
 import javax.swing.*;
@@ -82,7 +81,7 @@ public class BlockChainTable extends JFrame {
                 Clipboard system = Toolkit.getDefaultToolkit().getSystemClipboard();
                 system.setContents(stsel,stsel);
             }
-        } );
+        });
 
         table.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK), "Find");
         table.getActionMap().put("Find", new AbstractAction() {
@@ -103,9 +102,9 @@ public class BlockChainTable extends JFrame {
                     Block block = WorldManager.instance.getBlockChain().getByNumber(i);
                     boolean found = block.toString().toLowerCase().contains(toFind.toLowerCase());
                     if (found) {
-                        // todo: now we find the first occur
-                        // todo: in the future I should keep
-                        // todo: all of them and allow to jump over them
+                        // TODO: now we find the first occur
+                        // TODO: in the future I should keep
+                        // TODO: all of them and allow to jump over them
                         table.scrollRectToVisible(table.getCellRect(i, 0, true));
                         lastFindIndex = i;
                         break;
@@ -114,36 +113,30 @@ public class BlockChainTable extends JFrame {
             }
         });
 
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-
-                lastFindIndex = ((JTable)(e.getSource())).rowAtPoint(e.getPoint());
-
-                super.mouseClicked(e);
-            }
-        });
-
+		table.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				lastFindIndex = ((JTable) (e.getSource())).rowAtPoint(e.getPoint());
+				super.mouseClicked(e);
+			}
+		});
         // Add the table to a scrolling pane
         scrollPane = new JScrollPane(table);
         topPanel.add(scrollPane, BorderLayout.CENTER);
     }
 
-    public void addCloseAction(){
-        this.addWindowListener( new WindowAdapter()
-        {
-            public void windowClosing(WindowEvent e)
-            {
-                toolBar.chainToggle.setSelected(false);
+	public void addCloseAction() {
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				toolBar.chainToggle.setSelected(false);
 
-            }
-        });
-    }
+			}
+		});
+	}
 
-
-    public static void main(String args[]){
-        BlockChainTable mainFrame = new BlockChainTable(null);
-        mainFrame.setVisible(true);
-        mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    }
+	public static void main(String args[]) {
+		BlockChainTable mainFrame = new BlockChainTable(null);
+		mainFrame.setVisible(true);
+		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	}
 }
