@@ -9,7 +9,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 
-/*
+/**
  * www.ethereumJ.com
  * @author: Nick Savers
  * Created on: 20/05/2014 10:44
@@ -97,7 +97,7 @@ public class Cache {
 	public void undo() {
 		Iterator<Map.Entry<ByteArrayWrapper, Node>> iter = this.nodes.entrySet().iterator();
 		while (iter.hasNext()) {
-		    if(iter.next().getValue().isDirty()){
+		    if(iter.next().getValue().isDirty()) {
 		        iter.remove();
 		    }
 		}

@@ -25,13 +25,11 @@ import java.util.List;
 public class ProgramPlayDialog extends JPanel implements ActionListener,
 		ChangeListener, Program.ProgramListener {
 
-    public List<String> outputList;
-    public JTextArea console;
-    public JSlider stepSlider;
+    private List<String> outputList;
+    private JTextArea console;
+    private JSlider stepSlider;
 
-    private Transaction tx;
-
-    public ProgramPlayDialog(byte[] code){
+    public ProgramPlayDialog(byte[] code) {
 
         outputList = new ArrayList<String>();
         VM vm = new VM();
@@ -48,10 +46,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         doGUI();
     }
 
-
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
-
-        this.tx = tx;
 
         outputList = new ArrayList<String>();
         VM vm = new VM();
@@ -70,7 +65,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         doGUI();
     }
 
-    public void doGUI(){
+    public void doGUI() {
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         //Create the slider.
@@ -87,7 +82,6 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         if (outputList.size() > 100)
             stepSlider.setMajorTickSpacing(20);
 
-
         stepSlider.setMinorTickSpacing(1);
         stepSlider.setPaintTicks(true);
         stepSlider.setPaintLabels(true);
@@ -96,7 +90,6 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         Font font = new Font("Courier New", Font.PLAIN, 10);
         stepSlider.setFont(font);
         stepSlider.addChangeListener(this);
-
 
         //Create the label that displays the animation.
 
@@ -116,17 +109,14 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
         add(scrollPane);
         add(stepSlider);
-
-
     }
 
-    public void setFocus(){
+    public void setFocus() {
         stepSlider.requestFocus();
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-
     }
 
     @Override
@@ -181,7 +171,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         outputList.add(out);
     }
 
-    public static void main(String []args){
+    public static void main(String []args) {
 
         /* Turn off metal's use of bold fonts */
         UIManager.put("swing.boldMetal", Boolean.FALSE);
@@ -192,12 +182,10 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         String asmCode ="11 0 MSTORE 22 32 MSTORE 33 64 MSTORE 44 96 MSTORE 55 128 MSTORE 66 160 MSTORE 192 0 RETURN";
         final byte[] code = SerpentCompiler.compileAssemblyToMachine(asmCode);
 
-
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI(code, null, null);
             }
         });
-
     }
 }

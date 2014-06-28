@@ -30,7 +30,7 @@ public class TransactionsMessage extends Message {
         this.transactions = transactionList;
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        for (Transaction tx : transactionList){
+        for (Transaction tx : transactionList) {
 
             byte[] txPayload = tx.getEncoded();
             try {
@@ -42,10 +42,9 @@ public class TransactionsMessage extends Message {
 
         byte[][] elements = new byte[transactionList.size() + 1][];
         elements[0] = new byte[]{Command.TRANSACTIONS.asByte()};
-        for (int i = 0; i < transactionList.size(); ++i){
+        for (int i = 0; i < transactionList.size(); ++i) {
             elements[i + 1] = transactionList.get(i).getEncoded();
         }
-
         payload = RLP.encodeList(elements);
     }
 
@@ -63,7 +62,7 @@ public class TransactionsMessage extends Message {
 
         transactions = new ArrayList<Transaction>();
         int size = paramsList.size();
-        for (int i = 1; i < size; ++i){
+        for (int i = 1; i < size; ++i) {
             RLPList rlpTxData = (RLPList) paramsList.get(i);
             Transaction tx = new Transaction(rlpTxData.getRLPData());
             transactions.add(tx);
@@ -84,7 +83,7 @@ public class TransactionsMessage extends Message {
     public String toString() {
         if(!parsed) parseRLP();
         StringBuffer sb = new StringBuffer();
-        for (Transaction transaction : transactions){
+        for (Transaction transaction : transactions) {
             sb.append("   ").append(transaction).append("\n");
         }
         return "Transactions Message [\n" + sb.toString() + " ]";

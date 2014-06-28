@@ -19,21 +19,21 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class GetChainMessage extends Message {
 
-    List<byte[]> blockHashList = new ArrayList<byte[]>();
-    BigInteger blockNum;
+    private List<byte[]> blockHashList = new ArrayList<byte[]>();
+    private BigInteger blockNum;
 
     public GetChainMessage(RLPList rawData) {
         super(rawData);
     }
 
-    // todo: it get's byte for now change it to int
-    public GetChainMessage(byte number , byte[]... blockHashList){
+    // TODO: it get's byte for now change it to int
+    public GetChainMessage(byte number , byte[]... blockHashList) {
 
         byte[][] encodedElements = new byte[blockHashList.length + 2][];
 
         encodedElements[0] = new byte[]{0x14};
         int i = 1;
-        for (byte[] hash : blockHashList){
+        for (byte[] hash : blockHashList) {
             this.blockHashList.add(hash);
             byte[] element = RLP.encodeElement(hash);
             encodedElements[i] = element;
@@ -43,7 +43,6 @@ public class GetChainMessage extends Message {
 
         this.payload = RLP.encodeList(encodedElements);
         this.parsed = true;
-
     }
 
     @Override
@@ -51,12 +50,12 @@ public class GetChainMessage extends Message {
 
         RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0]) != GET_CHAIN){
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0]) != GET_CHAIN) {
             throw new Error("GetChain: parsing for mal data");
         }
 
         int size = paramsList.size();
-        for (int i = 1; i < size - 1; ++i){
+        for (int i = 1; i < size - 1; ++i) {
             blockHashList.add(((RLPItem) paramsList.get(i)).getRLPData());
         }
 
@@ -65,7 +64,7 @@ public class GetChainMessage extends Message {
         this.blockNum = new BigInteger(blockNumB);
 
         this.parsed = true;
-        // todo: what to do when mal data ?
+        // TODO: what to do when mal data ?
     }
 
     @Override
@@ -83,15 +82,14 @@ public class GetChainMessage extends Message {
         return blockNum;
     }
 
-    public String toString(){
+    public String toString() {
 
         if (!parsed) parseRLP();
 
         StringBuffer sb = new StringBuffer();
-        for (byte[] blockHash : blockHashList){
+        for (byte[] blockHash : blockHashList) {
             sb.append("").append(Hex.toHexString(blockHash)).append(", ");
         }
-
         sb.append(" blockNum=").append(blockNum);
         return "GetChain Message [" + sb.toString() + " ]";
     }

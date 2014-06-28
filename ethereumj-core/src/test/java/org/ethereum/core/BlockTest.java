@@ -104,7 +104,7 @@ public class BlockTest {
     		+ "b192c4ea97c0c0";
 	
     @Test /* got from go guy */
-    public void testGenesisFromRLP(){
+    public void testGenesisFromRLP() {
     	// from RLP encoding
     	byte[] genesisBytes = Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
     	Block genesisFromRLP = new Block(genesisBytes);

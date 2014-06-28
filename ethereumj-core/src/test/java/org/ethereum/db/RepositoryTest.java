@@ -19,30 +19,23 @@ import static org.junit.Assert.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RepositoryTest {
 
+    @Test // create account, get account
+	public void test1() {
 
-    @Test // create account,
-          // get account
-    public void test1(){
+		String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+		Repository repository = new Repository();
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = new Repository();
-
-        try {
-            AccountState createdState = repository.createAccount(Hex.decode(addr));
-
-            AccountState fetchedState =
-                repository.getAccountState(Hex.decode(addr));
-
-            assertEquals(createdState.getEncoded(), fetchedState.getEncoded());
-        } finally {
-            repository.close();
-        }
-
-    }
-
+		try {
+			AccountState createdState = repository.createAccount(Hex.decode(addr));
+			AccountState fetchedState = repository.getAccountState(Hex.decode(addr));
+			assertEquals(createdState.getEncoded(), fetchedState.getEncoded());
+		} finally {
+			repository.close();
+		}
+	}
 
     @Test  // increase nonce
-    public void test2(){
+    public void test2() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
@@ -62,11 +55,10 @@ public class RepositoryTest {
         } finally {
             repository.close();
         }
-
     }
 
     @Test  // increase nonce
-    public void test3(){
+    public void test3() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
@@ -87,12 +79,10 @@ public class RepositoryTest {
         } finally {
             repository.close();
         }
-
     }
 
-
     @Test  // change balance
-    public void test4(){
+    public void test4() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
@@ -109,15 +99,12 @@ public class RepositoryTest {
             assertEquals(0,   balance1.intValue());
             assertEquals(300, balance2.intValue());
         } finally {
-
             repository.close();
         }
-
     }
 
-
     @Test  // change balance
-    public void test5(){
+    public void test5() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
@@ -138,12 +125,9 @@ public class RepositoryTest {
             assertEquals(300, balance2.intValue());
             assertEquals(150, balance3.intValue());
         } finally {
-
             repository.close();
         }
-
     }
-
 
     @Test  // get/set code
     public void test6() {
@@ -158,7 +142,6 @@ public class RepositoryTest {
         } finally {
             repository.close();
         }
-
     }
 
     @Test  // get/set code
@@ -181,12 +164,9 @@ public class RepositoryTest {
             assertEquals(codeString, Hex.toHexString(code1));
             assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
         } finally {
-
             repository.close();
         }
-
     }
-
 
     @Test  // get/set code
     public void test8() {
@@ -206,15 +186,12 @@ public class RepositoryTest {
             assertNull(code1);
             assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
         } finally {
-
             repository.close();
         }
-
     }
 
-
     @Test // storage set/get
-    public void test9(){
+    public void test9() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         byte[] keyBytes = Hex.decode("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
@@ -226,14 +203,12 @@ public class RepositoryTest {
             DataWord value = repository.getStorageValue(Hex.decode(addr), key);
             assertNull(value);
         } finally {
-
             repository.close();
         }
-
     }
 
     @Test // storage set/get
-    public void test10(){
+    public void test10() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         Repository repository = new Repository();
@@ -248,14 +223,12 @@ public class RepositoryTest {
             DataWord fetchedValue = repository.getStorageValue(Hex.decode(addr), key);
             assertEquals(value, fetchedValue);
         } finally {
-
             repository.close();
         }
-
     }
 
     @Test // storage set/get
-    public void test11(){
+    public void test11() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         String expectedStorageHash = "365ed874ad42c2b4af335212465291e03dcd1f0c5b600f40f048ed238ad61fd3";
@@ -299,12 +272,9 @@ public class RepositoryTest {
             assertEquals(value3, fetchedValue3);
             assertEquals(expectedStorageHash, stateRoot);
         } finally {
-
             repository.close();
         }
-
     }
-
 
     @Test // commit/rollback
     public void test12() {
@@ -330,7 +300,6 @@ public class RepositoryTest {
         } finally {
             origRepository.close();
         }
-
     }
 
     @Test // commit/rollback
@@ -357,7 +326,6 @@ public class RepositoryTest {
 
         origRepository.close();
     }
-
 
     @Test // commit/rollback
     public void test14() {
@@ -389,10 +357,7 @@ public class RepositoryTest {
             DataWord value = repository.getStorageValue(Hex.decode(addr_2), new DataWord(101));
             assertNull(value);
         } finally {
-
             origRepository.close();
         }
-
     }
-
 }

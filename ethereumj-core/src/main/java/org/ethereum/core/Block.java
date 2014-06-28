@@ -25,12 +25,10 @@ import java.util.List;
  * to have a parent equal to the present block’s parent’s parent 
  * (such blocks are known as uncles).
  *
- *
  * www.ethereumJ.com
  * @authors: Roman Mandeleil,
  *           Nick Savers
  * Created on: 20/05/2014 10:44
- *
  */
 public class Block {
 
@@ -97,14 +95,14 @@ public class Block {
 
         // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
-        for (RLPElement rawUncle : uncleBlocks){
+        for (RLPElement rawUncle : uncleBlocks) {
             Block blockData = new Block(rawUncle.getRLPData());
             this.uncleList.add(blockData);
         }
         this.parsed = true;
     }
 
-    public byte[] getHash(){
+    public byte[] getHash() {
         if (!parsed) parseRLP();
        	return HashUtil.sha3(this.getEncoded());
     }
@@ -245,7 +243,7 @@ public class Block {
         return toStringBuff.toString();
     }
 
-    public String toFlatString(){
+    public String toFlatString() {
         if (!parsed) parseRLP();
 
         toStringBuff.setLength(0);
@@ -253,7 +251,7 @@ public class Block {
         toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("");
         toStringBuff.append(header.toFlatString());
         
-        for (Transaction tx : getTransactionsList()){
+        for (Transaction tx : getTransactionsList()) {
 
             toStringBuff.append("\n");
             toStringBuff.append( tx.toString() );

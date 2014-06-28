@@ -1,9 +1,6 @@
 package org.ethereum.vm;
 
 import org.ethereum.db.Repository;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.trie.TrackTrie;
-import org.ethereum.util.ByteUtil;
 
 import java.util.Arrays;
 import java.util.Map;
@@ -13,8 +10,7 @@ import java.util.Map;
  * @author: Roman Mandeleil
  * Created on: 03/06/2014 15:00
  */
-
-public class  ProgramInvokeImpl implements ProgramInvoke {
+public class ProgramInvokeImpl implements ProgramInvoke {
 
     /*** TRANSACTION  env ***/
     DataWord address;
@@ -37,7 +33,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
 
     Map<DataWord, DataWord> storage;
 
-    Repository repository;
+    private Repository repository;
     private boolean byTransaction = true;
 
     public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
@@ -63,13 +59,9 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
         this.difficulty = difficulty;
         this.gaslimit   = gaslimit;
 
-        this.storage = storage;
-
         this.repository = repository;
         this.byTransaction = false;
-
     }
-
 
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
@@ -95,56 +87,51 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
         this.difficulty = new DataWord(difficulty);
         this.gaslimit   = new DataWord(gaslimit);
 
-        this.storage = storage;
-
         this.repository = repository;
     }
 
     /*           ADDRESS op         */
-    public DataWord getOwnerAddress(){
+    public DataWord getOwnerAddress() {
 
         return address;
     }
 
     /*           BALANCE op         */
-    public DataWord getBalance(){
+    public DataWord getBalance() {
         return balance;
     }
 
     /*           ORIGIN op         */
-    public DataWord getOriginAddress(){
+    public DataWord getOriginAddress() {
         return origin;
     }
 
     /*           CALLER op         */
-    public DataWord getCallerAddress(){
+    public DataWord getCallerAddress() {
         return caller;
     }
 
     /*           GASPRICE op       */
-    public DataWord getMinGasPrice(){
+    public DataWord getMinGasPrice() {
         return gasPrice;
     }
 
     /*           GAS op       */
-    public DataWord getGas(){
+    public DataWord getGas() {
         return gas;
     }
 
-
-
     /*          CALLVALUE op    */
-    public DataWord getCallValue(){
+    public DataWord getCallValue() {
         return callValue;
     }
-
 
       /*****************/
      /***  msg data ***/
     /*****************/
 
     /*     CALLDATALOAD  op   */
-    public DataWord getDataValue(DataWord indexData){
+    public DataWord getDataValue(DataWord indexData) {
 
         byte[] data = new byte[32];
 
@@ -161,7 +148,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
     }
 
     /*  CALLDATASIZE */
-    public DataWord getDataSize(){
+    public DataWord getDataSize() {
 
         if (msgData == null || msgData.length == 0) return new DataWord(new byte[32]);
         int size = msgData.length;
@@ -169,7 +156,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
     }
 
     /*  CALLDATACOPY */
-    public byte[] getDataCopy(DataWord offsetData, DataWord lengthData){
+    public byte[] getDataCopy(DataWord offsetData, DataWord lengthData) {
 
         int offset = offsetData.value().intValue();
         int length = lengthData.value().intValue();
@@ -184,7 +171,6 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
 
         return data;
     }
-
 
     /*     PREVHASH op    */
     public DataWord getPrevHash() {
@@ -217,7 +203,7 @@ public class  ProgramInvokeImpl implements ProgramInvoke {
     }
 
     /*  Storage */
-    public Map<DataWord, DataWord> getStorage(){ return storage; }
+    public Map<DataWord, DataWord> getStorage() { return storage; }
 
     public Repository getRepository() {
         return repository;

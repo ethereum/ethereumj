@@ -18,10 +18,10 @@ import org.ethereum.util.RLPList;
  */
 public class PeersMessage extends Message {
 
-    RLPList rawData;
-    boolean parsed = false;
+	private RLPList rawData;
+    private boolean parsed = false;
 
-    List<PeerData> peers = new ArrayList<PeerData>();
+    private List<PeerData> peers = new ArrayList<PeerData>();
 
     public PeersMessage(RLPList rawData) {
         this.rawData = rawData;
@@ -33,11 +33,11 @@ public class PeersMessage extends Message {
 
         RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != PEERS){
+        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != PEERS) {
             throw new Error("PeersMessage: parsing for mal data");
         }
 
-        for (int i = 1; i < paramsList.size(); ++i){
+        for (int i = 1; i < paramsList.size(); ++i) {
 
             RLPList peerParams = (RLPList)paramsList.get(i);
             byte[] ip = ((RLPItem) peerParams.get(0)).getRLPData();
@@ -54,7 +54,7 @@ public class PeersMessage extends Message {
             peers.add(peer);
         }
         this.parsed = true;
-        // todo: what to do when mal data ?
+        // TODO: what to do when mal data ?
     }
 
     @Override
@@ -68,7 +68,7 @@ public class PeersMessage extends Message {
         return peers;
     }
 
-    public String toString(){
+    public String toString() {
         if (!parsed)
             parseRLP();
         

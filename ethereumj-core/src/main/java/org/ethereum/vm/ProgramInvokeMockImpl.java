@@ -10,16 +10,14 @@ import org.spongycastle.util.encoders.Hex;
  * @author: Roman Mandeleil
  * Created on: 03/06/2014 15:00
  */
-
 public class ProgramInvokeMockImpl implements ProgramInvoke {
 
-    byte[] msgData;
+    private byte[] msgData;
 
-    Repository repository = null;
-    String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+    private Repository repository = null;
+    private String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
-
-    public ProgramInvokeMockImpl(byte[] msgDataRaw){
+    public ProgramInvokeMockImpl(byte[] msgDataRaw) {
         this();
         this.msgData = msgDataRaw;
     }
@@ -30,21 +28,19 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     /*           ADDRESS op         */
-    public DataWord getOwnerAddress(){
-
+    public DataWord getOwnerAddress() {
         byte[] addr = Hex.decode(ownerAddress);
         return new DataWord(addr);
     }
 
     /*           BALANCE op         */
-    public DataWord getBalance(){
+    public DataWord getBalance() {
         byte[] balance = Hex.decode("0DE0B6B3A7640000");
         return new DataWord(balance);
     }
 
-
     /*           ORIGIN op         */
-    public DataWord getOriginAddress(){
+    public DataWord getOriginAddress() {
 
         byte[] cowPrivKey = HashUtil.sha3("horse".getBytes());
         byte[] addr = ECKey.fromPrivate(cowPrivKey).getAddress();
@@ -53,7 +49,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     /*           CALLER op         */
-    public DataWord getCallerAddress(){
+    public DataWord getCallerAddress() {
 
         byte[] cowPrivKey = HashUtil.sha3("monkey".getBytes());
         byte[] addr = ECKey.fromPrivate(cowPrivKey).getAddress();
@@ -62,7 +58,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     /*           GASPRICE op       */
-    public DataWord getMinGasPrice(){
+    public DataWord getMinGasPrice() {
 
         byte[] minGasPrice = Hex.decode("09184e72a000");
         return new DataWord(minGasPrice);
@@ -75,18 +71,17 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     /*          CALLVALUE op    */
-    public DataWord getCallValue(){
+    public DataWord getCallValue() {
         byte[] balance = Hex.decode("0DE0B6B3A7640000");
         return new DataWord(balance);
     }
-
 
       /*****************/
      /***  msg data ***/
     /*****************/
 
     /*     CALLDATALOAD  op   */
-    public DataWord getDataValue(DataWord indexData){
+    public DataWord getDataValue(DataWord indexData) {
 
         byte[] data = new byte[32];
 
@@ -103,7 +98,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     /*  CALLDATASIZE */
-    public DataWord getDataSize(){
+    public DataWord getDataSize() {
 
         if (msgData == null || msgData.length == 0) return new DataWord(new byte[32]);
         int size = msgData.length;
@@ -111,7 +106,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     /*  CALLDATACOPY */
-    public byte[] getDataCopy(DataWord offsetData, DataWord lengthData){
+    public byte[] getDataCopy(DataWord offsetData, DataWord lengthData) {
 
         int offset = offsetData.value().intValue();
         int length = lengthData.value().intValue();
@@ -126,7 +121,6 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
         return data;
     }
-
 
     @Override
     public DataWord getPrevHash() {

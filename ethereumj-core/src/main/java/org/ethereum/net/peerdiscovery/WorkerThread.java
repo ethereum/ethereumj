@@ -11,7 +11,6 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author: Roman Mandeleil
  * Created on: 22/05/2014 09:26
  */
-
 public class WorkerThread implements Runnable {
 
     Logger logger = LoggerFactory.getLogger("peerdiscovery");
@@ -19,7 +18,7 @@ public class WorkerThread implements Runnable {
     ThreadPoolExecutor poolExecutor;
     private PeerData peerData;
 
-    public WorkerThread(PeerData peerData, ThreadPoolExecutor poolExecutor){
+    public WorkerThread(PeerData peerData, ThreadPoolExecutor poolExecutor) {
         this.poolExecutor = poolExecutor;
         this.peerData = peerData;
     }
@@ -49,7 +48,7 @@ public class WorkerThread implements Runnable {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return " Worker for: " + this.peerData.toString();
     }
 }

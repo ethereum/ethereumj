@@ -17,11 +17,12 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import javax.swing.plaf.ComboBoxUI;
-import javax.swing.plaf.basic.BasicComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
@@ -33,23 +34,24 @@ import java.util.regex.Pattern;
  * @author: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
-class ContractCallDialog extends JDialog implements MessageAwareDialog{
+class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
-    Logger logger = LoggerFactory.getLogger("ui");
+	private static final long serialVersionUID = -7561153561155037293L;
 
+	private Logger logger = LoggerFactory.getLogger("ui");
 
-    ContractCallDialog dialog;
-    JComboBox<AccountWrapper> creatorAddressCombo;
-    final JTextField gasInput;
-    final JTextField contractAddrInput;
+	private ContractCallDialog dialog;
+	private JComboBox<AccountWrapper> creatorAddressCombo;
+	private final JTextField gasInput;
+	private final JTextField contractAddrInput;
 
-    JScrollPane contractDataInput;
-    JTextArea   msgDataTA;
+	private JScrollPane contractDataInput;
+	private JTextArea   msgDataTA;
 
-    JLabel statusMsg = null;
-    JLabel playLabel = null;
-    JLabel rejectLabel = null;
-    JLabel approveLabel = null;
+	private JLabel statusMsg = null;
+	private JLabel playLabel = null;
+	private JLabel rejectLabel = null;
+	private JLabel approveLabel = null;
 
     public ContractCallDialog(Frame parent) {
         super(parent, "Call Contract: ", false);
@@ -69,8 +71,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 
             }
         });
-
-
 
         contractAddrInput.setBounds(70, 30, 350, 45);
         this.getContentPane().add(contractAddrInput);
@@ -118,7 +118,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         playLabel.setBounds(438, 100, 42, 42);
         this.getContentPane().add(playLabel);
 
-
         JLabel statusMessage = new JLabel("");
         statusMessage.setBounds(50, 360, 400, 50);
         statusMessage.setHorizontalAlignment(SwingConstants.CENTER);
@@ -159,7 +158,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 		JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>() {
 			@Override
 			public ComboBoxUI getUI() {
-				BasicComboBoxUI ui = (BasicComboBoxUI) super.getUI();
 				return super.getUI();
 			}
 		};
@@ -178,11 +176,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         Collection<Account> accounts =
                 WorldManager.instance.getWallet().getAccountCollection();
 
-        for (Account account : accounts){
+        for (Account account : accounts) {
             creatorAddressCombo.addItem(new AccountWrapper(account));
         }
 
 		creatorAddressCombo.setRenderer(new DefaultListCellRenderer() {
+			private static final long serialVersionUID = 6100091092527477892L;
+
 			@Override
 			public void paint(Graphics g) {
 				setBackground(Color.WHITE);
@@ -221,7 +221,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
     private void populateContractDetails() {
 
         String contractAddr = contractAddrInput.getText();
-        if (!Pattern.matches("[0-9a-fA-F]+", contractAddr) || (contractAddr.length() != 40)){
+        if (!Pattern.matches("[0-9a-fA-F]+", contractAddr) || (contractAddr.length() != 40)) {
             return;
         }
 
@@ -255,7 +255,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         this.getContentPane().add(spacer);
         this.getContentPane().add(detailPanel);
 
-
         expandLabel.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -270,7 +269,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
                 spacer.setVisible(false);
                 expandLabel.setVisible(false);
                 detailPanel.setVisible(false);
-
 
                 JTextField contractCode = new JTextField(15);
                 contractCode.setText(Hex.toHexString( programCode ));
@@ -297,23 +295,20 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
                 ContractCallDialog.this.getContentPane().add(scrollPane);
             }
         });
-
-
         this.repaint();
     }
-
 
     private void playContractCall() {
 
         byte[] contractAddress = Hex.decode(contractAddrInput.getText());
         ContractDetails contractDetails =  WorldManager.instance.repository.getContractDetails(contractAddress);
-        if (contractDetails == null){
+        if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
         }
 
         byte[] programCode = WorldManager.instance.repository.getCode(contractAddress);
-        if (programCode == null || programCode.length == 0){
+        if (programCode == null || programCode.length == 0) {
             alertStatusMsg("Such account exist but no code in the db");
             return;
         }
@@ -351,17 +346,17 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         return rootPane;
     }
 
-    public void infoStatusMsg(String text){
+    public void infoStatusMsg(String text) {
         this.statusMsg.setForeground(Color.GREEN.darker().darker());
         this.statusMsg.setText(text);
     }
 
-    public void alertStatusMsg(String text){
+    public void alertStatusMsg(String text) {
         this.statusMsg.setForeground(Color.RED);
         this.statusMsg.setText(text);
     }
 
-    public void submitContractCall(){
+    public void submitContractCall() {
 
         ClientPeer peer = MainData.instance.getActivePeer();
         if (peer == null) {
@@ -375,29 +370,27 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         if (logger.isInfoEnabled()) {
             logger.info("tx.hash: {}", (new BigInteger(tx.getHash()).toString(16)));
         }
-
-
         // SwingWorker
         DialogWorker worker = new DialogWorker(tx, this);
         worker.execute();
     }
 
-    private Transaction createTransaction(){
+	private Transaction createTransaction() {
 
-        byte[] data;
-        if (!msgDataTA.getText().trim().equals("")){
-            Object[] lexaList = msgDataTA.getText().split(",");
-            data = ByteUtil.encodeDataList(lexaList);
-        } else {
-            data = new byte[]{};
-        }
+		byte[] data;
+		if (!msgDataTA.getText().trim().equals("")) {
+			Object[] lexaList = msgDataTA.getText().split(",");
+			data = ByteUtil.encodeDataList(lexaList);
+		} else {
+			data = new byte[] {};
+		}
 
         byte[] contractAddress = Hex.decode( contractAddrInput.getText());
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
 
         byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-        byte[] nonce = account.getState().getNonce() == BigInteger.ZERO ? null : account.getState().getNonce().toByteArray();
+        byte[] nonce = account.getNonce() == BigInteger.ZERO ? null : account.getNonce().toByteArray();
         byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
@@ -420,18 +413,15 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         try {
             tx.sign(senderPrivKey);
         } catch (Exception e1) {
-
             dialog.alertStatusMsg("Failed to sign the transaction");
             return null;
         }
-
         return tx;
     }
 
-
 	public class AccountWrapper {
 
-        private Account account;
+		private Account account;
 
         public AccountWrapper(Account account) {
             this.account = account;
@@ -444,7 +434,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
 		@Override
 		public String toString() {
 			String addressShort = Utils.getAddressShortString(account.getEcKey().getAddress());
-			String valueShort = Utils.getValueShortString(account.getState().getBalance());
+			String valueShort = Utils.getValueShortString(account.getBalance());
 			String result = String.format(" By: [%s] %s", addressShort,
 					valueShort);
 			return result;
@@ -454,13 +444,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
     private class JTableStorageModel extends DefaultTableModel {
         private JTableStorageModel(Map<String, String> data) {
 
-            if (data != null){
+            if (data != null) {
 
                 this.setColumnCount(2);
                 this.setRowCount(data.size());
 
                 int i = 0;
-                for (String key : data.keySet()){
+                for (String key : data.keySet()) {
                     this.setValueAt(key, i, 0);
                     this.setValueAt(data.get(key), i, 1);
                     ++i;
@@ -469,8 +459,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog{
         }
     }
 
-
-    public static void main(String args[]){
+    public static void main(String args[]) {
         WorldManager.instance.getWallet();
         WorldManager.instance.loadChain();
         ContractCallDialog ccd = new ContractCallDialog(null);

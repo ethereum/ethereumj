@@ -96,5 +96,4 @@ public class ByteUtilTest {
 			System.out.println(System.currentTimeMillis() - start2 + "ms to reach: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
 		}
 	}
-
 }

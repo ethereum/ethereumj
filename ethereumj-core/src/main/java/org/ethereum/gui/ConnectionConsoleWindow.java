@@ -24,18 +24,14 @@ import org.slf4j.LoggerFactory;
  * Project Home: http://fifesoft.com/rsyntaxtextarea<br>
  * Downloads: https://sourceforge.net/projects/rsyntaxtextarea
  */
-public class ConnectionConsoleWindow extends JFrame implements PeerListener{
+public class ConnectionConsoleWindow extends JFrame implements PeerListener {
 
-    Logger logger = LoggerFactory.getLogger(getClass());
-
-
+    private Logger logger = LoggerFactory.getLogger(getClass());
     private static final long serialVersionUID = 1L;
 
     private boolean autoScroll = false;
-
     private RSyntaxTextArea textArea;
-
-    ToolBar toolBar = null;
+    private ToolBar toolBar = null;
 
     /**
      * ERROR (exceptions) WARN (when something happens that's not supposed to)
@@ -43,7 +39,6 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
      *                    DEBUG (test/displaying intermediate values),
      *                    TRACE (start/end method)
      */
-
     public ConnectionConsoleWindow(ToolBar toolBar) {
         final ConnectionConsoleWindow thisConsole = this;
         this.toolBar = toolBar;
@@ -78,7 +73,6 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
 
         Thread t = new Thread() {
                     public void run() {
-
                         new ClientPeer(thisConsole).connect(SystemProperties.CONFIG.activePeerIP(),
                                 SystemProperties.CONFIG.activePeerPort());
                     }
@@ -118,7 +112,6 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
                 Font.ITALIC, 10);
 
         textArea.revalidate();
-
     }
 
     public static void setFont(RSyntaxTextArea textArea, Font font) {
@@ -135,17 +128,13 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener{
         }
     }
 
-    public void addCloseAction(){
-        this.addWindowListener( new WindowAdapter()
-        {
-            public void windowClosing(WindowEvent e)
-            {
-                toolBar.logToggle.setSelected(false);
-
-            }
-        });
-
-    }
+	public void addCloseAction() {
+		this.addWindowListener(new WindowAdapter() {
+			public void windowClosing(WindowEvent e) {
+				toolBar.logToggle.setSelected(false);
+			}
+		});
+	}
 
 	public static void main(String[] args) {
 		// Start all Swing applications on the EDT.

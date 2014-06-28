@@ -28,8 +28,8 @@ import java.util.List;
  */
 public class Wallet {
 
-    // todo: a) the values I need to keep for address state is balance & nonce & ECKey
-    // todo: b) keep it to be easy accessed by the toAddress()
+    // TODO: a) the values I need to keep for address state is balance & nonce & ECKey
+    // TODO: b) keep it to be easy accessed by the toAddress()
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
 	
     // <address, info> table for a wallet
@@ -47,76 +47,75 @@ public class Wallet {
         for (WalletListener listener : listeners) listener.valueChanged();
     }
 
-    public void importKey(byte[] privKey){
+    public void importKey(byte[] privKey) {
         Account account = new Account(ECKey.fromPrivate(privKey));
         String address = Hex.toHexString(account.getEcKey().getAddress());
         rows.put(address, account);
         notifyListeners();
     }
 
-    public void addListener(WalletListener walletListener){
+    public void addListener(WalletListener walletListener) {
         this.listeners.add(walletListener);
     }
 
-    public Collection<Account> getAccountCollection(){
+    public Collection<Account> getAccountCollection() {
         return rows.values();
     }
 
-    public AccountState getAccountState(byte[] addressBytes){
+    public AccountState getAccountState(byte[] addressBytes) {
         String address = Hex.toHexString(addressBytes);
-        return rows.get(address).getState();
+        return rows.get(address);
     }
 
-    public BigInteger getBalance(byte[] addressBytes){
+    public BigInteger getBalance(byte[] addressBytes) {
         String address = Hex.toHexString(addressBytes);
-        return rows.get(address).getState().getBalance();
+        return rows.get(address).getBalance();
     }
 
-    public BigInteger totalBalance(){
+    public BigInteger totalBalance() {
         BigInteger sum = BigInteger.ZERO;
-        for (Account account : rows.values()){
-            sum = sum.add(account.getState().getBalance());
+        for (Account account : rows.values()) {
+            sum = sum.add(account.getBalance());
         }
         return sum;
     }
 
-    public void applyTransaction(Transaction transaction){
+    public void applyTransaction(Transaction transaction) {
 
         transactionMap.put(new BigInteger(transaction.getHash()), transaction );
 
         byte[] senderAddress = transaction.getSender();
         Account sender =  rows.get(Hex.toHexString(senderAddress));
-        if (sender != null){
+        if (sender != null) {
 
             BigInteger value = new BigInteger(-1, transaction.getValue());
-            sender.getState().addToBalance(value);
-            sender.getState().incrementNonce();
+            sender.addToBalance(value);
+            sender.incrementNonce();
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
         Account receiver =  rows.get(Hex.toHexString(receiveAddress));
-        if (receiver != null){
-            receiver.getState().addToBalance(new BigInteger(1, transaction.getValue()));
+        if (receiver != null) {
+            receiver.addToBalance(new BigInteger(1, transaction.getValue()));
         }
-
-        notifyListeners();
+        this.notifyListeners();
     }
 
 
-    public void processBlock(Block block){
+    public void processBlock(Block block) {
 
         if (block == null) return;
 
-        // todo: proceed coinbase when you are the miner that gets an award
+        // TODO: proceed coinbase when you are the miner that gets an award
         boolean walletUpdated = false;
 
         List<Transaction> transactions = block.getTransactionsList();
 
-        for (Transaction tx : transactions){
+        for (Transaction tx : transactions) {
             boolean txExist = transactionMap.get(new BigInteger(tx.getHash())) != null;
             if (txExist) break;
             else {
-                applyTransaction(tx);
+                this.applyTransaction(tx);
                 walletUpdated = true;
             }
         }
@@ -160,14 +159,14 @@ public class Wallet {
 
         NodeList rowNodes = walletNode.getChildNodes();
 
-        for (int i = 0; i <  rowNodes.getLength(); ++i ){
+        for (int i = 0; i <  rowNodes.getLength(); ++i ) {
 
             Node rowNode   = rowNodes.item(i);
             Node addrNode  = rowNode.getChildNodes().item(0);
             Node privNode  = rowNode.getChildNodes().item(1);
             Node valueNode = rowNode.getChildNodes().item(2);
 
-            // todo: complete load func
+            // TODO: complete load func
 //            byte[] privKey = Hex.decode(privNode.getTextContent());
 //            Address address = new Address(privKey);
 //            BigInteger value = new BigInteger(valueNode.getTextContent());
@@ -214,7 +213,7 @@ public class Wallet {
         walletElement.setAttributeNode(high);
 
         int i = 0;
-        for (Account account :  getAccountCollection()){
+        for (Account account :  getAccountCollection()) {
 
             Element raw = doc.createElement("raw");
             Attr id = doc.createAttribute("id");
@@ -232,7 +231,7 @@ public class Wallet {
             privKey.setTextContent(Hex.toHexString(account.getEcKey().getPrivKeyBytes()));
 
             Element value   = doc.createElement("value");
-            value.setTextContent(account.getState().getBalance().toString());
+            value.setTextContent(account.getBalance().toString());
 
             raw.appendChild(addressE);
             raw.appendChild(privKey);
@@ -252,7 +251,7 @@ public class Wallet {
         transformer.transform(source, result);
     }
 
-    private void notifyListeners(){
+    private void notifyListeners() {
 		for (WalletListener listener : listeners)
 			listener.valueChanged();
     }

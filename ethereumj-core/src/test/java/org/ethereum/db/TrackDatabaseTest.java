@@ -10,12 +10,10 @@ import org.spongycastle.util.encoders.Hex;
  * @author: Roman Mandeleil
  * Created on: 11/06/2014 14:54
  */
-
 public class TrackDatabaseTest {
 
-
     @Test
-    public void test1(){
+    public void test1() {
 
         DatabaseImpl db1 = new DatabaseImpl("temp");
         TrackDatabase trackDatabase1 = new TrackDatabase(db1);

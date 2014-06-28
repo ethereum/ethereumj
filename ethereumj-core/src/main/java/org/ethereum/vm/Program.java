@@ -22,7 +22,7 @@ public class Program {
 
     private Logger logger = LoggerFactory.getLogger("VM");
     private Logger gasLogger = null;
-    ProgramListener listener;
+    private ProgramListener listener;
 
     Stack<DataWord> stack = new Stack<DataWord>();
     ByteBuffer memory = null;
@@ -47,35 +47,33 @@ public class Program {
 
         this.invokeData = invokeData;
         this.ops = ops;
-
-        programAddress = invokeData.getOwnerAddress().getNoLeadZeroesData();
+        this.programAddress = invokeData.getOwnerAddress().getNoLeadZeroesData();
     }
 
-    public byte getCurrentOp(){
+    public byte getCurrentOp() {
         return ops[pc];
     }
 
-    public void setLastOp(byte op){
+    public void setLastOp(byte op) {
         this.lastOp = op;
     }
 
-    public void stackPush(byte[] data){
+    public void stackPush(byte[] data) {
         DataWord stackWord = new DataWord(data);
         stack.push(stackWord);
     }
 
-    public void stackPushZero(){
+    public void stackPushZero() {
         DataWord stackWord = new DataWord(0);
         stack.push(stackWord);
     }
 
-    public void stackPushOne(){
+    public void stackPushOne() {
         DataWord stackWord = new DataWord(1);
         stack.push(stackWord);
     }
 
-
-    public void stackPush(DataWord stackWord){
+    public void stackPush(DataWord stackWord) {
         stack.push(stackWord);
     }
 
@@ -86,13 +84,13 @@ public class Program {
     public void setPC(DataWord pc) {
         this.pc = pc.value().intValue();
 
-        if (this.pc > ops.length) {
-            stop();
-            throw new RuntimeException("pc overflow pc= " + pc);
-        }
-
         if (this.pc == ops.length) {
             stop();
+        }
+        
+        if (this.pc > ops.length) {
+            stop();
+            throw new RuntimeException("pc overflow pc=" + pc);
         }
     }
 
@@ -100,24 +98,24 @@ public class Program {
         this.pc = pc;
     }
 
-    public boolean isStopped(){
+    public boolean isStopped() {
         return stopped;
     }
 
-    public void stop(){
+    public void stop() {
         stopped = true;
     }
 
-    public void setHReturn(ByteBuffer buff){
+    public void setHReturn(ByteBuffer buff) {
         result.setHReturn(buff.array());
     }
 
-    public void step(){
+    public void step() {
         ++pc;
         if (pc >= ops.length) stop();
     }
 
-    public byte[] sweep(int n){
+    public byte[] sweep(int n) {
 
         if (pc + n > ops.length) {
             stop();
@@ -131,35 +129,32 @@ public class Program {
         return data;
     }
 
-    public DataWord stackPop(){
-
-        if (stack.size() == 0){
+    public DataWord stackPop() {
+        if (stack.size() == 0) {
             stop();
             throw new RuntimeException("attempted pull action for empty stack");
         }
         return stack.pop();
     }
 
-    public int getMemSize(){
-
+    public int getMemSize() {
         int memSize = 0;
         if (memory != null) memSize = memory.limit();
         return memSize;
     }
 
-    public void memorySave(DataWord addrB, DataWord value){
+    public void memorySave(DataWord addrB, DataWord value) {
         memorySave(addrB.data, value.data);
     }
 
-    public void memorySave(byte[] addr, byte[] value){
+    public void memorySave(byte[] addr, byte[] value) {
 
         int address = new BigInteger(1, addr).intValue();
         allocateMemory(address, value);
-
         System.arraycopy(value, 0, memory.array(), address, value.length);
     }
 
-    public DataWord memoryLoad(DataWord addr){
+    public DataWord memoryLoad(DataWord addr) {
 
         int address = new BigInteger(1, addr.getData()).intValue();
         allocateMemory(address, DataWord.ZERO.data);
@@ -170,7 +165,7 @@ public class Program {
         return new DataWord(data);
     }
 
-    public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData){
+    public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData) {
 
         int offset = offsetData.value().intValue();
         int size   = sizeData.value().intValue();
@@ -178,25 +173,23 @@ public class Program {
 
         byte[] chunk = new byte[size];
 
-        if (memory != null){
+        if (memory != null) {
             if (memory.limit() < offset + size) size = memory.limit() - offset;
             System.arraycopy(memory.array(), offset, chunk, 0, size);
         }
-
         return ByteBuffer.wrap(chunk);
     }
 
-    private void allocateMemory(int address, byte[] value){
+    private void allocateMemory(int address, byte[] value) {
 
         int memSize = 0;
         if (memory != null) memSize = memory.limit();
 
         // check if you need to allocate
-        if (memSize < (address + value.length)){
+        if (memSize < (address + value.length)) {
 
             int sizeToAllocate = 0;
-            if (memSize > address){
-
+            if (memSize > address) {
                 sizeToAllocate = memSize + value.length;
             } else {
                 sizeToAllocate = memSize + (address - memSize) + value.length;
@@ -205,7 +198,6 @@ public class Program {
             // complete to 32
             sizeToAllocate = (sizeToAllocate % 32)==0 ? sizeToAllocate :
                                                         sizeToAllocate + (32 - sizeToAllocate % 32);
-
             sizeToAllocate = (sizeToAllocate == 0)? 32: sizeToAllocate;
 
             ByteBuffer tmpMem = ByteBuffer.allocate(sizeToAllocate);
@@ -216,8 +208,7 @@ public class Program {
         }
     }
 
-
-    public void createContract(DataWord gas, DataWord memStart, DataWord memSize){
+    public void createContract(DataWord gas, DataWord memStart, DataWord memSize) {
 
         // 1. FETCH THE CODE FROM THE MEMORY
         ByteBuffer programCode = memoryChunk(memStart, memSize);
@@ -231,12 +222,9 @@ public class Program {
 
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        if (this.getGas().longValue() - gas.longValue() < 0 ){
-
-            logger.info("No gas for the internal CREATE op, \n" +
-                            "contract={}",
-                    Hex.toHexString(senderAddress));
-
+        if (this.getGas().longValue() - gas.longValue() < 0 ) {
+			logger.info("No gas for the internal CREATE op, \n" + "contract={}",
+					Hex.toHexString(senderAddress));
             this.stackPushZero();
             return;
         }
@@ -261,7 +249,7 @@ public class Program {
         ProgramResult result = program.getResult();
 
         if (result.getException() != null &&
-                result.getException() instanceof Program.OutOfGasException){
+                result.getException() instanceof Program.OutOfGasException) {
             logger.info("contract run halted by OutOfGas: new contract init ={}" , Hex.toHexString(newAddress));
 
             trackRepository.rollback();
@@ -291,31 +279,29 @@ public class Program {
      * @param outDataSize - size of memory to be output data to the call
      */
     public void callToAddress(DataWord gas, DataWord toAddressDW, DataWord endowmentValue,
-                              DataWord inDataOffs, DataWord inDataSize,DataWord outDataOffs, DataWord outDataSize){
+                              DataWord inDataOffs, DataWord inDataSize,DataWord outDataOffs, DataWord outDataSize) {
 
         ByteBuffer data = memoryChunk(inDataOffs, inDataSize);
 
         // FETCH THE SAVED STORAGE
         byte[] toAddress = toAddressDW.getNoLeadZeroesData();
 
-
         // FETCH THE CODE
         byte[] programCode = this.result.getRepository().getCode(toAddress);
-        if (programCode != null && programCode.length != 0){
+        if (programCode != null && programCode.length != 0) {
 
-            if (logger.isInfoEnabled())
-                logger.info("calling for existing contract: address={}" ,
-                        Hex.toHexString(toAddress));
+			if (logger.isInfoEnabled())
+				logger.info("calling for existing contract: address={}",
+						Hex.toHexString(toAddress));
 
             byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
 
             // 2.1 PERFORM THE GAS VALUE TX
             // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-            if (this.getGas().longValue() - gas.longValue() < 0 ){
+            if (this.getGas().longValue() - gas.longValue() < 0 ) {
                 logger.info("No gas for the internal call, \n" +
                         "fromAddress={}, toAddress={}",
                         Hex.toHexString(senderAddress), Hex.toHexString(toAddress));
-
                 this.stackPushZero();
                 return;
             }
@@ -342,7 +328,7 @@ public class Program {
             ProgramResult result = program.getResult();
 
             if (result.getException() != null &&
-                    result.getException() instanceof Program.OutOfGasException){
+                    result.getException() instanceof Program.OutOfGasException) {
                 logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
 
                 trackRepository.rollback();
@@ -351,23 +337,20 @@ public class Program {
             }
 
             // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
-            ByteBuffer buffer = result.getHReturn();
-            if (buffer != null){
-
-                int retSize = buffer.array().length;
-                int allocSize = outDataSize.intValue();
-                if (retSize > allocSize){
-
-                    byte[] outArray =  Arrays.copyOf(buffer.array(), allocSize );
-                    this.memorySave(outArray, buffer.array());
-                } else{
-                    this.memorySave(outDataOffs.getData(), buffer.array());
-                }
-            }
+			ByteBuffer buffer = result.getHReturn();
+			if (buffer != null) {
+				int retSize = buffer.array().length;
+				int allocSize = outDataSize.intValue();
+				if (retSize > allocSize) {
+					byte[] outArray = Arrays.copyOf(buffer.array(), allocSize);
+					this.memorySave(outArray, buffer.array());
+				} else {
+					this.memorySave(outDataOffs.getData(), buffer.array());
+				}
+			}
 
             // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
             stackPushOne();
-
             trackRepository.commit();
             stackPush(new DataWord(1));
 
@@ -375,111 +358,104 @@ public class Program {
             // even if execution was halted by an exception
             spendGas(result.getGasUsed(), " 'Total for CALL run' ");
             logger.info("The usage of the gas in external call updated", result.getGasUsed());
-
         }
     }
 
-
-    public void spendGas(int gasValue, String cause){
-
+    public void spendGas(int gasValue, String cause) {
         gasLogger.info("Spent: for cause={} gas={}", cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
         if (afterSpend < 0)
             throw new OutOfGasException();
-
         result.spendGas(gasValue);
     }
 
-    public void storageSave(DataWord word1, DataWord word2){
+    public void storageSave(DataWord word1, DataWord word2) {
         storageSave(word1.getData(), word2.getData());
     }
 
-    public void storageSave(byte[] key, byte[] val){
+    public void storageSave(byte[] key, byte[] val) {
         DataWord keyWord = new DataWord(key);
         DataWord valWord = new DataWord(val);
         result.repository.addStorageRow(this.programAddress, keyWord, valWord);
     }
 
-    public DataWord getOwnerAddress(){
+    public DataWord getOwnerAddress() {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getOwnerAddress();
     }
 
-    public DataWord getBalance(){
+    public DataWord getBalance() {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getBalance();
     }
 
-    public DataWord getOriginAddress(){
+    public DataWord getOriginAddress() {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getOriginAddress();
     }
 
-    public DataWord getCallerAddress(){
+    public DataWord getCallerAddress() {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getCallerAddress();
     }
 
-    public DataWord getGasPrice(){
+    public DataWord getGasPrice() {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getMinGasPrice();
     }
 
-    public DataWord getGas(){
-
+    public DataWord getGas() {
         if (invokeData == null) return new DataWord( new byte[0]);
-
         long afterSpend = invokeData.getGas().longValue() - result.getGasUsed();
         return new DataWord(afterSpend);
     }
 
-
-    public DataWord getCallValue(){
+    public DataWord getCallValue() {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getCallValue();
     }
 
-    public DataWord getDataSize(){
+    public DataWord getDataSize() {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getDataSize();
     }
 
-    public DataWord getDataValue(DataWord index){
+    public DataWord getDataValue(DataWord index) {
         if (invokeData == null) return new DataWord( new byte[0]);
         return invokeData.getDataValue(index);
     }
 
-    public byte[] getDataCopy(DataWord offset, DataWord length){
+    public byte[] getDataCopy(DataWord offset, DataWord length) {
         if (invokeData == null) return new byte[0];
         return invokeData.getDataCopy(offset, length);
     }
 
-    public DataWord storageLoad(DataWord key){
+    public DataWord storageLoad(DataWord key) {
         return result.repository.getStorageValue(this.programAddress, key);
     }
 
-    public DataWord getPrevHash(){
+    public DataWord getPrevHash() {
        return invokeData.getPrevHash();
     }
 
-    public DataWord getCoinbase(){
+    public DataWord getCoinbase() {
         return invokeData.getCoinbase();
     }
 
-    public DataWord getTimestamp(){
+    public DataWord getTimestamp() {
         return  invokeData.getTimestamp();
     }
 
-    public DataWord getNumber(){
+    public DataWord getNumber() {
         return invokeData.getNumber();
     }
 
-    public DataWord getDifficulty(){
+    public DataWord getDifficulty() {
         return  invokeData.getDifficulty();
     }
 
-    public DataWord getGaslimit(){
+    public DataWord getGaslimit() {
         return invokeData.getGaslimit();
     }
 
@@ -488,17 +464,16 @@ public class Program {
         return result;
     }
 
-    public void setRuntimeFailure(RuntimeException e){
+    public void setRuntimeFailure(RuntimeException e) {
         result.setException(e);
     }
 
-    public void fullTrace(){
+    public void fullTrace() {
 
-        if (logger.isDebugEnabled() || listener != null){
+        if (logger.isDebugEnabled() || listener != null) {
 
             StringBuilder stackData = new StringBuilder();
-            for (int i = 0; i < stack.size(); ++i){
-
+            for (int i = 0; i < stack.size(); ++i) {
                 stackData.append(" ").append(stack.get(i));
                 if (i < stack.size() - 1) stackData.append("\n");
             }
@@ -506,8 +481,7 @@ public class Program {
 
             ContractDetails contractDetails = this.result.getRepository().getContractDetails(this.programAddress);
             StringBuilder storageData = new StringBuilder();
-            for (DataWord key : contractDetails.getStorage().keySet()){
-
+            for (DataWord key : contractDetails.getStorage().keySet()) {
                 storageData.append(" ").append(key).append(" -> ").
                         append(contractDetails.getStorage().get(key)).append("\n");
             }
@@ -515,13 +489,12 @@ public class Program {
 
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();
-            for (int i = 0; memory != null && i < memory.limit(); ++i){
+            for (int i = 0; memory != null && i < memory.limit(); ++i) {
 
                 byte value = memory.get(i);
                 oneLine.append(Utils.oneByteToHexString(value)).append(" ");
 
                 if ((i + 1) % 16 == 0) {
-
                     String tmp = String.format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
                             Integer.toString(i, 16)).replace(" ", "0");
                     memoryData.append("" ).append(tmp).append(" ");
@@ -533,7 +506,7 @@ public class Program {
             if (memoryData.length() > 0) memoryData.insert(0, "\n");
 
             StringBuilder opsString = new StringBuilder();
-            for (int i = 0; i < ops.length; ++i){
+            for (int i = 0; i < ops.length; ++i) {
 
                 String tmpString = Integer.toString(ops[i] & 0xFF, 16);
                 tmpString = tmpString.length() == 1? "0" + tmpString : tmpString;
@@ -551,9 +524,7 @@ public class Program {
             logger.debug(" -- STACK --   {}", stackData);
             logger.debug(" -- MEMORY --  {}", memoryData);
             logger.debug(" -- STORAGE -- {}\n", storageData);
-
             logger.debug("\n\n  Spent Gas: {}", result.getGasUsed());
-
 
             StringBuilder globalOutput = new StringBuilder("\n");
             if (stackData.length() > 0) stackData.append("\n");
@@ -566,34 +537,32 @@ public class Program {
             globalOutput.append(" -- MEMORY --  ").append(memoryData).append("\n");
             globalOutput.append(" -- STORAGE -- ").append(storageData).append("\n");
 
-            if (result.getHReturn() != null){
+            if (result.getHReturn() != null) {
                 globalOutput.append("\n  HReturn: ").append(Hex.toHexString(result.getHReturn().array()));
             }
 
             // soffisticated assumption that msg.data != codedata
             // means we are calling the contract not creating it
             byte[] txData = invokeData.getDataCopy(DataWord.ZERO, getDataSize());
-            if (!Arrays.equals(txData, ops)){
+            if (!Arrays.equals(txData, ops)) {
                 globalOutput.append("\n  msg.data: ").append(Hex.toHexString( txData ));
             }
             globalOutput.append("\n\n  Spent Gas: ").append(result.getGasUsed());
 
-            if (listener != null){
-                listener.output(globalOutput.toString());
-            }
+			if (listener != null) {
+				listener.output(globalOutput.toString());
+			}
         }
     }
 
-    public void addListener(ProgramListener listener){
-        this.listener = listener;
-    }
+	public void addListener(ProgramListener listener) {
+		this.listener = listener;
+	}
 
-    public interface ProgramListener{
-        public void output(String out);
-    }
+	public interface ProgramListener {
+		public void output(String out);
+	}
 
-
-    public class OutOfGasException extends RuntimeException{
-
+	public class OutOfGasException extends RuntimeException {
     }
 }

@@ -1,18 +1,14 @@
 package org.ethereum.vm;
 
 import org.ethereum.db.Repository;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.trie.TrackTrie;
 
 import java.nio.ByteBuffer;
-import java.util.Map;
 
 /**
  * www.ethereumJ.com
  * @author: Roman Mandeleil
  * Created on: 07/06/2014 17:45
  */
-
 public class ProgramResult {
 
     private int gasUsed = 0;
@@ -21,12 +17,11 @@ public class ProgramResult {
 
     Repository repository = null;
 
-    public void spendGas(int gas){
+    public void spendGas(int gas) {
         gasUsed += gas;
     }
 
-    public void setHReturn(byte[] hReturn){
-
+    public void setHReturn(byte[] hReturn) {
         this.hReturn = ByteBuffer.allocate(hReturn.length);
         this.hReturn.put(hReturn);
     }

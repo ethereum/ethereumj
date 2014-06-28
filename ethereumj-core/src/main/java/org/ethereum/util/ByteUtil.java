@@ -42,7 +42,7 @@ public class ByteUtil {
     	return ByteBuffer.allocate(8).putLong(l).array();
     }
     
-    public static String toHexString(byte[] data){
+    public static String toHexString(byte[] data) {
         if (data == null) return "null";
         else return Hex.toHexString(data);
     }
@@ -52,7 +52,7 @@ public class ByteUtil {
      * @param msg
      * @return byte-array with 4 elements
      */
-    public static byte[] calcPacketLength(byte[] msg){
+    public static byte[] calcPacketLength(byte[] msg) {
         int msgLen = msg.length;
         byte[] len = {
                 (byte)((msgLen >> 24) & 0xFF),

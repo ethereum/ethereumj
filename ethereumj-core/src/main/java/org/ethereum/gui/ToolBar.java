@@ -20,21 +20,19 @@ import java.awt.event.WindowEvent;
  */
 public class ToolBar extends JFrame {
 
-    Logger logger = LoggerFactory.getLogger(getClass());
-    Logger introLogger = LoggerFactory.getLogger("Intro");
+    private Logger introLogger = LoggerFactory.getLogger("Intro");
 
-    ConnectionConsoleWindow connectionConsoleWindow = null;
-    PeersTableWindow mainFrame	= null;
-    BlockChainTable blockChainWindow = null;
-    WalletWindow walletWindow = null;
-    SerpentEditor serpentEditor = null;
+    private ConnectionConsoleWindow connectionConsoleWindow = null;
+    private PeersTableWindow mainFrame	= null;
+    private BlockChainTable blockChainWindow = null;
+    private WalletWindow walletWindow = null;
+    private SerpentEditor serpentEditor = null;
 
     JToggleButton editorToggle;
     JToggleButton logToggle;
     JToggleButton peersToggle;
     JToggleButton chainToggle;
     JToggleButton walletToggle;
-
 
     public ToolBar() throws HeadlessException {
 
@@ -73,7 +71,6 @@ public class ToolBar extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-
                 WorldManager.instance.close();
             }
         });
@@ -95,7 +92,6 @@ public class ToolBar extends JFrame {
         java.net.URL imageURL_5 = ClassLoader.getSystemResource("buttons/wallet.png");
         ImageIcon image_5 = new ImageIcon(imageURL_5);
 
-
         editorToggle = new JToggleButton("");
         editorToggle.setIcon(image_1);
         editorToggle.setContentAreaFilled(true);
@@ -107,7 +103,7 @@ public class ToolBar extends JFrame {
         editorToggle.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED){
+                if (e.getStateChange() == ItemEvent.SELECTED) {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             if (serpentEditor == null)
@@ -132,8 +128,7 @@ public class ToolBar extends JFrame {
         logToggle.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-
-                if (e.getStateChange() == ItemEvent.SELECTED){
+                if (e.getStateChange() == ItemEvent.SELECTED) {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                         if (connectionConsoleWindow == null)
@@ -158,7 +153,7 @@ public class ToolBar extends JFrame {
         peersToggle.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED){
+                if (e.getStateChange() == ItemEvent.SELECTED) {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             if (mainFrame == null)
@@ -183,7 +178,7 @@ public class ToolBar extends JFrame {
         chainToggle.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-                if (e.getStateChange() == ItemEvent.SELECTED){
+                if (e.getStateChange() == ItemEvent.SELECTED) {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
 
@@ -210,7 +205,7 @@ public class ToolBar extends JFrame {
                 new ItemListener() {
                     @Override
                     public void itemStateChanged(ItemEvent e) {
-                        if (e.getStateChange() == ItemEvent.SELECTED){
+                        if (e.getStateChange() == ItemEvent.SELECTED) {
                             SwingUtilities.invokeLater(new Runnable() {
                                 public void run() {
                                     if (walletWindow == null)
@@ -221,7 +216,6 @@ public class ToolBar extends JFrame {
                         } else if (e.getStateChange() == ItemEvent.DESELECTED) {
                             walletWindow.setVisible(false);
                         }
-
                     }
                 }
         );
@@ -238,7 +232,7 @@ public class ToolBar extends JFrame {
         MainData.instance.toString();
     }
 
-    public static void main(String args[]){
+    public static void main(String args[]) {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new ToolBar().setVisible(true);

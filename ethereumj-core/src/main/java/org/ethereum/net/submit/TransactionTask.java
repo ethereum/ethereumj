@@ -18,11 +18,10 @@ import static java.lang.Thread.sleep;
  */
 public class TransactionTask implements Callable<Transaction> {
 
-    Logger logger = LoggerFactory.getLogger("TransactionTask");
+	private Logger logger = LoggerFactory.getLogger("TransactionTask");
 
-    Transaction tx;
-    boolean obsolete = false;
-
+	private Transaction tx;
+    
     public TransactionTask(Transaction tx) {
         this.tx = tx;
     }
@@ -39,17 +38,14 @@ public class TransactionTask implements Callable<Transaction> {
 					.getBlockChain().addWalletTransaction(tx);
             peer.sendTransaction(tx);
 
-            while(walletTransaction.getApproved() < 1 ){
+            while(walletTransaction.getApproved() < 1 ) {
                 sleep(10);
             }
-
             logger.info("return approved: {}", walletTransaction.getApproved());
         } catch (Throwable th) {
             logger.info("exception caugh: {}", th.getCause());
             WorldManager.instance.getBlockChain().removeWalletTransaction(tx);
         }
-
         return null;
     }
-
 }

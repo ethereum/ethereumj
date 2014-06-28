@@ -16,16 +16,15 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  *
- *
  ***********************************************************************************
-         MainRepository
+         Repository
          |
              --> AccountState      ---> Trie ---> leveldb (state) /key=address
                  --> nonce
@@ -47,63 +46,54 @@ public class Repository {
 
     private Logger logger = LoggerFactory.getLogger("repository");
 
-    Trie worldState;
+    private Trie 			worldState;
+    private TrackTrie     	accountStateDB;
+    private TrackDatabase 	contractDetailsDB;
 
-    TrackTrie     accountStateDB;
-    TrackDatabase contractDetailsDB;
+    // TODO: Listeners listeners
+    // TODO: cash impl
 
-    // todo: Listeners listeners
-    // todo: cash impl
-
-    DatabaseImpl detailsDB = null;
-    DatabaseImpl stateDB = null;
-
+    private DatabaseImpl detailsDB = null;
+    private DatabaseImpl stateDB = null;
 
     public Repository() {
-
         detailsDB     = new DatabaseImpl("details");
         contractDetailsDB = new TrackDatabase(detailsDB);
-
-
         stateDB = new DatabaseImpl("state");
         worldState = new Trie(stateDB.getDb());
-
         accountStateDB = new TrackTrie(worldState);
     }
 
-    private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB){
+    private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
         this.accountStateDB = accountStateDB;
         this.contractDetailsDB = contractDetailsDB;
     }
 
-    public Repository getTrack(){
-
+    public Repository getTrack() {
         TrackTrie     trackState   = new TrackTrie(accountStateDB);
         TrackDatabase trackDetails = new TrackDatabase(contractDetailsDB);
-
         return new Repository (trackState, trackDetails);
     }
 
-    public void startTracking(){
-
+    public void startTracking() {
         logger.info("start tracking");
         accountStateDB.startTrack();
         contractDetailsDB.startTrack();
     }
 
-    public void commit(){
+    public void commit() {
         logger.info("commit changes");
         accountStateDB.commitTrack();
         contractDetailsDB.commitTrack();
     }
 
-    public void rollback(){
+    public void rollback() {
         logger.info("rollback changes");
         accountStateDB.rollbackTrack();
         contractDetailsDB.rollbackTrack();
     }
 
-    public AccountState createAccount(byte[] addr){
+    public AccountState createAccount(byte[] addr) {
 
         // 1. Save AccountState
         AccountState state =  new AccountState();
@@ -116,78 +106,67 @@ public class Repository {
         if (logger.isInfoEnabled())
             logger.info("New account created: [ {} ]", Hex.toHexString(addr));
 
-
         return state;
     }
 
-
-    public AccountState getAccountState(byte[] addr){
+    public AccountState getAccountState(byte[] addr) {
 
         byte[] accountStateRLP = accountStateDB.get(addr);
-        if (accountStateRLP.length == 0){
 
+        if (accountStateRLP.length == 0) {
             if (logger.isInfoEnabled())
                 logger.info("No account: [ {} ]", Hex.toHexString(addr));
             return null;
         }
-
         AccountState state =  new AccountState(accountStateRLP);
         return state;
     }
 
-    public ContractDetails getContractDetails(byte[] addr){
+	public ContractDetails getContractDetails(byte[] addr) {
 
-        byte[] accountDetailsRLP = contractDetailsDB.get(addr);
+		byte[] accountDetailsRLP = contractDetailsDB.get(addr);
 
-        if (accountDetailsRLP == null){
+		if (accountDetailsRLP == null) {
+			if (logger.isInfoEnabled())
+				logger.info("No account: [ {} ]", Hex.toHexString(addr));
+			return null;
+		}
+		ContractDetails details = new ContractDetails(accountDetailsRLP);
+		return details;
+	}
 
-            if (logger.isInfoEnabled())
-                logger.info("No account: [ {} ]", Hex.toHexString(addr));
-            return null;
-        }
+	public BigInteger addBalance(byte[] address, BigInteger value) {
 
-        ContractDetails details = new ContractDetails(accountDetailsRLP);
-        return details;
-    }
+		AccountState state = getAccountState(address);
+		if (state == null)
+			return BigInteger.ZERO;
 
-    public BigInteger addBalance(byte[] address, BigInteger value){
+		BigInteger newBalance = state.addToBalance(value);
 
+		if (logger.isInfoEnabled())
+			logger.info("Changing balance: account: [ {} ] new balance: [ {} ]",
+					Hex.toHexString(address), newBalance.toString());
+
+		accountStateDB.update(address, state.getEncoded());
+		return newBalance;
+	}
+
+    public BigInteger getBalance(byte[] address) {
         AccountState state = getAccountState(address);
         if (state == null) return BigInteger.ZERO;
-
-        BigInteger newBalance = state.addToBalance(value);
-
-        if (logger.isInfoEnabled())
-            logger.info("Changing balance: account: [ {} ] new balance: [ {} ]",
-                    Hex.toHexString(address), newBalance.toString());
-
-        accountStateDB.update(address, state.getEncoded());
-
-        return newBalance;
-    }
-
-    public BigInteger getBalance(byte[] address){
-
-        AccountState state = getAccountState(address);
-        if (state == null) return BigInteger.ZERO;
-
         return state.getBalance();
     }
 
-    public BigInteger getNonce(byte[] address){
-
+    public BigInteger getNonce(byte[] address) {
         AccountState state = getAccountState(address);
         if (state == null) return BigInteger.ZERO;
-
         return state.getNonce();
     }
 
-
-    public BigInteger increaseNonce(byte[] address){
+    public BigInteger increaseNonce(byte[] address) {
 
         AccountState state = getAccountState(address);
         if (state == null) return BigInteger.ZERO;
-
         state.incrementNonce();
 
         if (logger.isInfoEnabled())
@@ -198,10 +177,10 @@ public class Repository {
         return state.getNonce();
     }
 
-    public void addStorageRow(byte[] address, DataWord key, DataWord value){
+    public void addStorageRow(byte[] address, DataWord key, DataWord value) {
 
         if (address == null || key == null) return;
-        AccountState       state = getAccountState(address);
+        AccountState      state = getAccountState(address);
         ContractDetails details = getContractDetails(address);
 
         if (state == null || details == null) return;
@@ -221,7 +200,7 @@ public class Repository {
         contractDetailsDB.put(address, details.getEncoded());
     }
 
-    public DataWord getStorageValue(byte[] address, DataWord key){
+    public DataWord getStorageValue(byte[] address, DataWord key) {
 
         if (key == null) return null;
         AccountState state = getAccountState(address);
@@ -233,15 +212,13 @@ public class Repository {
         return value;
     }
 
-    public byte[] getCode(byte[] address){
-
+    public byte[] getCode(byte[] address) {
         ContractDetails details = getContractDetails(address);
         if (details == null) return null;
-
         return details.getCode();
     }
 
-    public void saveCode(byte[] address, byte[] code){
+    public void saveCode(byte[] address, byte[] code) {
 
         if (code == null) return;
 
@@ -264,26 +241,23 @@ public class Repository {
         contractDetailsDB.put(address, details.getEncoded());
     }
 
-    public byte[] getRootHash(){
+    public byte[] getRootHash() {
         return this.worldState.getRootHash();
     }
 
-
-    public void close(){
-
+    public void close() {
         if (this.stateDB != null)
             stateDB.close();
-
         if (this.detailsDB != null)
             detailsDB.close();
     }
 
-    public void dumpState(long blockNumber, int txNumber, String txHash){
+    public void dumpState(long blockNumber, int txNumber, String txHash) {
 
         if (!CONFIG.dumpFull()) return;
 
         if (txHash == null)
-        if (CONFIG.dumpCleanOnRestart()){
+        if (CONFIG.dumpCleanOnRestart()) {
             try {FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
         }
 
@@ -291,9 +265,8 @@ public class Repository {
 
         String fileName = "0.dmp";
         if (txHash != null)
-             fileName =
-                String.format("%d_%d_%s.dmp",
-                        blockNumber, txNumber, txHash.substring(0, 8));
+             fileName = String.format("%d_%d_%s.dmp",
+                        	blockNumber, txNumber, txHash.substring(0, 8));
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         try {
@@ -304,10 +277,10 @@ public class Repository {
             FileWriter fw = new FileWriter(dumpFile.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
 
-            ArrayList<ByteArrayWrapper> keys =  this.detailsDB.dumpKeys();
+            List<ByteArrayWrapper> keys = this.detailsDB.dumpKeys();
 
             // dump json file
-            for (ByteArrayWrapper key : keys){
+            for (ByteArrayWrapper key : keys) {
 
                 byte[] keyBytes = key.getData();
                 AccountState    state    = getAccountState(keyBytes);
@@ -330,12 +303,9 @@ public class Repository {
 
     //            {address: x, nonce: n1, balance: b1, stateRoot: s1, codeHash: c1, code: c2, sotrage: [key: k1, value: v1, key:k2, value: v2 ] }
             }
-
             bw.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 }
