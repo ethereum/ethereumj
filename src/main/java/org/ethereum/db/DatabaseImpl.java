@@ -27,8 +27,8 @@ public class DatabaseImpl implements Database {
 	
 	private static Logger logger = LoggerFactory.getLogger(DatabaseImpl.class);
 	private DB db;
-    private String name;
-	
+	private String name;
+    
 	public DatabaseImpl(String name) {
     	// Initialize Database
         this.name = name;

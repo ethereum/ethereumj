@@ -27,6 +27,7 @@ public class SystemProperties {
     private static String  DEFAULT_SAMPLES_DIR = "samples";
     private static String  DEFAULT_COINBASE_SECRET = "monkey";
     private static int     DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
+    private static Boolean DEFAULT_DB_RESET = false;
     private static Boolean DEFAULT_DUMP_FULL = false;
     private static String  DEFAULT_DUMP_DIR = "dmp";
     private static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
@@ -38,14 +39,14 @@ public class SystemProperties {
     public SystemProperties() {
         
     	try {
-            File file = null;
-            String dir = System.getProperty("user.dir");
-            String fileName = dir + "/config/system.properties";
-            file = new File(fileName);
+            String userDir = System.getProperty("user.dir");
+            System.out.println(userDir);
+            String fileName = userDir + "/config/system.properties";
+            File file = new File(fileName);
 
             if (file.exists()) {
                 input = new FileInputStream(file);
-            }  else{
+			} else {
                 fileName = "system.properties";
                 input = SystemProperties.class.getClassLoader().getResourceAsStream(fileName);
                 if (input == null) {
@@ -101,9 +102,9 @@ public class SystemProperties {
         if(prop.isEmpty()) return DEFAULT_DISCOVERY_PORT;
         return Integer.parseInt(prop.getProperty("peer.discovery.port"));
     }
-    
+       
     public boolean databaseReset() {
-        if(prop.isEmpty()) return false;
+        if(prop.isEmpty()) return DEFAULT_DB_RESET;
         return Boolean.parseBoolean(prop.getProperty("database.reset"));
     }
 
