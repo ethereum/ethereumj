@@ -6,6 +6,7 @@ import org.ethereum.db.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.serpent.SerpentCompiler;
 import org.ethereum.vm.*;
+import org.spongycastle.util.encoders.Hex;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -180,8 +181,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         //creating and showing this application's GUI.
 
         String asmCode ="11 0 MSTORE 22 32 MSTORE 33 64 MSTORE 44 96 MSTORE 55 128 MSTORE 66 160 MSTORE 192 0 RETURN";
-        final byte[] code = SerpentCompiler.compileAssemblyToMachine(asmCode);
+//        final byte[] code = SerpentCompiler.compileAssemblyToMachine(asmCode);
 
+        final byte[] code = Hex.decode("7f4e616d65526567000000000000000000000000000000000000000000000000003057307f4e616d6552656700000000000000000000000000000000000000000000000000573360455760415160566000396000f20036602259604556330e0f600f5933ff33560f601e5960003356576000335700604158600035560f602b590033560f60365960003356573360003557600035335700");
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 createAndShowGUI(code, null, null);
