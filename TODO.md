@@ -6,7 +6,8 @@
 - [X] **State management** trie for storage hash calculation 
                            and update hash into AccountState
 - [ ] **GUI screen** a screen that will hold table with full state representation
-- [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))                                  
+- [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))   
+  https://github.com/ethereum/wiki/wiki/Serpent
 - [ ] **SerpentCompiler** compile return(array) correct
 - [ ] **VM execution:** SUICIDE op adjust
 - [ ] **ProgramPlayDialog** support internal calls
