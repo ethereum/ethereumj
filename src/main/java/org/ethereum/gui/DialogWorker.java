@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
@@ -22,7 +21,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 26/05/2014 12:27
  */
-public class DialogWorker extends SwingWorker {
+public class DialogWorker extends SwingWorker<Transaction, Object> {
 
 	private static Logger logger = LoggerFactory.getLogger(DialogWorker.class);
 	
@@ -35,7 +34,7 @@ public class DialogWorker extends SwingWorker {
     }
 
     @Override
-    protected Object doInBackground() throws Exception {
+    protected Transaction doInBackground() throws Exception {
         TransactionTask transactionTask = new TransactionTask(tx);
         Future<Transaction> future = TransactionExecutor.instance.submitTransaction(transactionTask);
         dialog.infoStatusMsg("Transaction sent to the network, waiting for approve");
