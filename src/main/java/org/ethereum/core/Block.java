@@ -35,7 +35,7 @@ public class Block {
 	private static Logger logger = LoggerFactory.getLogger(Block.class);
 	
 	/* A scalar value equal to the mininum limit of gas expenditure per block */
-	private static long MIN_GAS_LIMIT = BigInteger.valueOf(10).pow(4).longValue();
+	private static long MIN_GAS_LIMIT = 125000L;
     public  static BigInteger coinbaseReward = BigInteger.valueOf(1500000000000000000L);
 
 	private BlockHeader header;
