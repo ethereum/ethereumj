@@ -32,6 +32,7 @@ import com.google.common.primitives.UnsignedBytes;
  * This is borrowed and slightly modified from Guava's {@link UnsignedBytes}
  * class to be able to compare arrays that start at non-zero offsets.
  */
+@SuppressWarnings("restriction")
 public abstract class FastByteComparisons {
 
   /**
