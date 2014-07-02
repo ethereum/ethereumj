@@ -127,18 +127,5 @@ public class MockDB implements DB {
 	 */
 	public int getAddedItems() {
 		return addedItems;
-	}
-
-//	@Override
-//	public void forEach(Consumer<? super Entry<byte[], byte[]>> action) {
-//		TODO Auto-generated method stub
-//
-//	}
-
-//	@Override
-//	public Spliterator<Entry<byte[], byte[]>> spliterator() {
-//		TODO Auto-generated method stub
-//		return null;
-//	}
-	
+	}	
 }

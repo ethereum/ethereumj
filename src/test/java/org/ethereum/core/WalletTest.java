@@ -2,6 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
@@ -19,7 +20,7 @@ import java.math.BigInteger;
 public class WalletTest {
 
     @Test
-    public void SaveTest1() throws TransformerException, ParserConfigurationException {
+    public void testSave1() throws TransformerException, ParserConfigurationException {
 
         Wallet wallet = new Wallet();
 		ECKey cowKey = ECKey.fromPrivate(HashUtil.sha3("cow".getBytes()));
@@ -41,11 +42,11 @@ public class WalletTest {
     }
 
     @Test
-	public void LoadTest1() throws TransformerException,
+    @Ignore
+	public void testLoad1() throws TransformerException,
 			ParserConfigurationException, IOException, SAXException {
         Wallet wallet = new Wallet();
         wallet.load();
-        System.out.println();
     }
 
 }
