@@ -1,4 +1,4 @@
 language: java
 
 after_success:
-  - mvn clean antlr4:antlr4 cobertura:cobertura coveralls:cobertura
+  - mvn clean jacoco:report coveralls:jacoco
