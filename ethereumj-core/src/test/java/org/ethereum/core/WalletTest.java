@@ -2,6 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
@@ -41,11 +42,11 @@ public class WalletTest {
     }
 
     @Test
+    @Ignore
 	public void testLoad1() throws TransformerException,
 			ParserConfigurationException, IOException, SAXException {
         Wallet wallet = new Wallet();
         wallet.load();
-        System.out.println();
     }
 
 }
