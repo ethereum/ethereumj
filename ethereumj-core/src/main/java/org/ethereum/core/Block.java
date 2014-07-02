@@ -36,7 +36,7 @@ public class Block {
 	
 	/* A scalar value equal to the mininum limit of gas expenditure per block */
 	private static long MIN_GAS_LIMIT = 125000L;
-    public  static BigInteger coinbaseReward = BigInteger.valueOf(1500000000000000000L);
+    public  static BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
 
 	private BlockHeader header;
 	
