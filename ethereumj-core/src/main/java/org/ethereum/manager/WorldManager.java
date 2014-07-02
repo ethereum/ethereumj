@@ -42,14 +42,13 @@ public class WorldManager {
 	private Logger stateLogger = LoggerFactory.getLogger("state");
 
 	private Blockchain blockChain;
+	private Repository repository = new Repository();
 	private Wallet wallet = new Wallet();
 
 	private Map<String, Transaction> pendingTransactions = Collections
 			.synchronizedMap(new HashMap<String, Transaction>());
 
 	public DatabaseImpl chainDB = new DatabaseImpl("blockchain");
-
-	public Repository repository = new Repository();
 
 	public static WorldManager instance = new WorldManager();
 
@@ -320,6 +319,10 @@ public class WorldManager {
 		}
 	}
 
+	public Repository getRepository() {
+		return repository;
+	}
+	
 	public Blockchain getBlockChain() {
 		return blockChain;
 	}
