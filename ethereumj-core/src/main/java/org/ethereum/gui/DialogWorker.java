@@ -58,7 +58,7 @@ public class DialogWorker extends SwingWorker<Transaction, Object> {
         }
 
         dialog.infoStatusMsg("Transaction got approved");
-        WorldManager.instance.getWallet().applyTransaction(tx);
+        WorldManager.getInstance().getWallet().applyTransaction(tx);
         return null;
     }
 }

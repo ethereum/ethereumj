@@ -15,7 +15,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.DatabaseImpl;
 import org.ethereum.db.Repository;
 import org.ethereum.vm.Program;
 import org.ethereum.vm.ProgramInvoke;
@@ -41,22 +40,19 @@ public class WorldManager {
 	private Logger logger = LoggerFactory.getLogger("main");
 	private Logger stateLogger = LoggerFactory.getLogger("state");
 
-	private Blockchain blockChain;
-	private Repository repository = new Repository();
-	private Wallet wallet = new Wallet();
+	private Blockchain blockchain;
+	private Repository repository;
+	private Wallet wallet;
 
 	private Map<String, Transaction> pendingTransactions = Collections
 			.synchronizedMap(new HashMap<String, Transaction>());
 
-	public DatabaseImpl chainDB = new DatabaseImpl("blockchain");
-
-	public static WorldManager instance = new WorldManager();
+	private static WorldManager instance;
 
 	public WorldManager() {
-	}
-
-	public void loadChain() {
-
+		this.blockchain = new Blockchain();
+		this.repository = new Repository();
+		this.wallet = new Wallet();
 		// Initialize Wallet
 		byte[] cowAddr = HashUtil.sha3("cow".getBytes());
 		ECKey key = ECKey.fromPrivate(cowAddr);
@@ -70,15 +66,25 @@ public class WorldManager {
 		wallet.importKey(cbAddr);
 
 		// Initialize Blockchain
-		blockChain = new Blockchain(wallet);
-		blockChain.loadChain();
+		blockchain.setWallet(wallet);
+	}
+	
+	public void loadBlockChain() {
+		this.blockchain.load();
+	}
+	
+	public static WorldManager getInstance() {
+		if(instance == null) {
+			instance = new WorldManager();
+		}
+		return instance;
 	}
 
 	public void applyTransaction(Transaction tx, byte[] coinbase) {
 
 		// TODO: refactor the wallet pending transactions to the world manager
-		if (blockChain != null)
-			blockChain.addWalletTransaction(tx);
+		if (blockchain != null)
+			blockchain.addWalletTransaction(tx);
 
 		// TODO: what is going on with simple wallet transfer ?
 
@@ -195,7 +201,7 @@ public class WorldManager {
 
 				byte[] initCode = tx.getData();
 
-				Block lastBlock = blockChain.getLastBlock();
+				Block lastBlock = blockchain.getLastBlock();
 
 				ProgramInvoke programInvoke = ProgramInvokeFactory
 						.createProgramInvoke(tx, lastBlock, trackRepository);
@@ -217,7 +223,7 @@ public class WorldManager {
 						.getReceiveAddress());
 				if (programCode != null) {
 
-					Block lastBlock = blockChain.getLastBlock();
+					Block lastBlock = blockchain.getLastBlock();
 
 					if (logger.isInfoEnabled())
 						logger.info("calling for existing contract: addres={}",
@@ -270,7 +276,7 @@ public class WorldManager {
 			bodyCode = result.getHReturn().array();
 		}
 
-		BigInteger gasPrice = BigInteger.valueOf(blockChain.getGasPrice());
+		BigInteger gasPrice = BigInteger.valueOf(blockchain.getGasPrice());
 		BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
 				result.getGasUsed()).multiply(gasPrice));
 
@@ -324,7 +330,7 @@ public class WorldManager {
 	}
 	
 	public Blockchain getBlockChain() {
-		return blockChain;
+		return blockchain;
 	}
 
 	public Wallet getWallet() {
@@ -332,7 +338,7 @@ public class WorldManager {
 	}
 
 	public void close() {
-		chainDB.close();
+		blockchain.close();
 		repository.close();
 	}
 }

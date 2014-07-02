@@ -24,7 +24,7 @@ public class ToolBar extends JFrame {
 
     private ConnectionConsoleWindow connectionConsoleWindow = null;
     private PeersTableWindow mainFrame	= null;
-    private BlockChainTable blockChainWindow = null;
+    private BlockChainTable blockchainWindow = null;
     private WalletWindow walletWindow = null;
     private SerpentEditor serpentEditor = null;
 
@@ -71,7 +71,7 @@ public class ToolBar extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                WorldManager.instance.close();
+                WorldManager.getInstance().close();
             }
         });
 
@@ -182,13 +182,13 @@ public class ToolBar extends JFrame {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
 
-                            if (blockChainWindow == null)
-                                blockChainWindow = new BlockChainTable(ToolBar.this);
-                            blockChainWindow.setVisible(true);
+                            if (blockchainWindow == null)
+                                blockchainWindow = new BlockChainTable(ToolBar.this);
+                            blockchainWindow.setVisible(true);
                         }
                     });
                 } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                    blockChainWindow.setVisible(false);
+                    blockchainWindow.setVisible(false);
                 }
             }
         });
@@ -226,9 +226,9 @@ public class ToolBar extends JFrame {
         cp.add(chainToggle);
         cp.add(walletToggle);
 
-        WorldManager.instance.getWallet();
-        WorldManager.instance.loadChain();
-
+        WorldManager.getInstance().getWallet();
+        WorldManager.getInstance().loadBlockChain();
+        
         MainData.instance.toString();
     }
 

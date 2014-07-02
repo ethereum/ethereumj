@@ -67,15 +67,14 @@ public class Genesis extends Block {
         // The proof-of-concept series include a development premine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {
-            WorldManager.instance.getRepository().createAccount(Hex.decode(address));
-            WorldManager.instance.getRepository().addBalance   (Hex.decode(address), BigInteger.valueOf(2).pow(200) );
+            WorldManager.getInstance().getRepository().createAccount(Hex.decode(address));
+            WorldManager.getInstance().getRepository().addBalance   (Hex.decode(address), BigInteger.valueOf(2).pow(200) );
         }
-
-        this.setStateRoot( WorldManager.instance.getRepository().getRootHash() );
+		this.setStateRoot(WorldManager.getInstance().getRepository().getRootHash());
+        WorldManager.getInstance().getRepository().dumpState(0, 0, null);
+        
 		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
 		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
-
-        WorldManager.instance.getRepository().dumpState(0, 0, null);
     }
 	
 	public static Block getInstance() {

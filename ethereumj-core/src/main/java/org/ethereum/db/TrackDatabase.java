@@ -22,8 +22,8 @@ public class TrackDatabase implements Database {
     }
 
     public void startTrack() {
-        changes = new HashMap<>();
-        deletes = new HashMap<>();
+        changes = new HashMap<ByteArrayWrapper, byte[]>();
+        deletes = new HashMap<ByteArrayWrapper, byte[]>();
         trackingChanges = true;
     }
 
@@ -36,8 +36,8 @@ public class TrackDatabase implements Database {
     }
 
     public void rollbackTrack() {
-        changes = new HashMap<>();
-        deletes = new HashMap<>();
+        changes = new HashMap<ByteArrayWrapper, byte[]>();
+        deletes = new HashMap<ByteArrayWrapper, byte[]>();
         changes = null;
         trackingChanges = false;
     }
