@@ -19,7 +19,7 @@ import java.math.BigInteger;
 public class WalletTest {
 
     @Test
-    public void SaveTest1() throws TransformerException, ParserConfigurationException {
+    public void testSave1() throws TransformerException, ParserConfigurationException {
 
         Wallet wallet = new Wallet();
 		ECKey cowKey = ECKey.fromPrivate(HashUtil.sha3("cow".getBytes()));
@@ -41,7 +41,7 @@ public class WalletTest {
     }
 
     @Test
-	public void LoadTest1() throws TransformerException,
+	public void testLoad1() throws TransformerException,
 			ParserConfigurationException, IOException, SAXException {
         Wallet wallet = new Wallet();
         wallet.load();
