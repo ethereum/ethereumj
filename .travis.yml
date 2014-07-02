@@ -1,4 +1,4 @@
 language: java
 
 after_success:
-  - mvn clean jacoco:report coveralls:jacoco
+  - mvn clean test jacoco:report coveralls:jacoco
