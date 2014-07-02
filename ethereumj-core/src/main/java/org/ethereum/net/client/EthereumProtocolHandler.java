@@ -12,10 +12,10 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import org.ethereum.core.Block;
-import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.Command;
+import org.ethereum.net.PeerListener;
 import org.ethereum.net.message.BlocksMessage;
 import org.ethereum.net.message.DisconnectMessage;
 import org.ethereum.net.message.GetChainMessage;
