@@ -71,7 +71,7 @@ public class Block {
 				timestamp, extraData, nonce);
         this.txsState = new Trie(null);
 
-        byte[] stateRoot = WorldManager.instance.repository.getRootHash();
+        byte[] stateRoot = WorldManager.instance.getRepository().getRootHash();
         this.header.setStateRoot(stateRoot);
 
         this.header.setTxTrieRoot(txsState.getRootHash());

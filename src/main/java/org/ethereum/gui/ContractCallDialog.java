@@ -226,8 +226,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         }
 
         byte[] contractAddress = Hex.decode( contractAddr );
-        final byte[] programCode = WorldManager.instance.repository.getCode(contractAddress);
-        final Map storageMap = WorldManager.instance.repository.getContractDetails(contractAddress).getStorage();
+        final byte[] programCode = WorldManager.instance.getRepository().getCode(contractAddress);
+        final Map storageMap = WorldManager.instance.getRepository().getContractDetails(contractAddress).getStorage();
 
         contractDataInput.setBounds(70, 80, 350, 145);
         contractDataInput.setViewportView(msgDataTA);
@@ -301,13 +301,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     private void playContractCall() {
 
         byte[] contractAddress = Hex.decode(contractAddrInput.getText());
-        ContractDetails contractDetails =  WorldManager.instance.repository.getContractDetails(contractAddress);
+        ContractDetails contractDetails =  WorldManager.instance.getRepository().getContractDetails(contractAddress);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
         }
 
-        byte[] programCode = WorldManager.instance.repository.getCode(contractAddress);
+        byte[] programCode = WorldManager.instance.getRepository().getCode(contractAddress);
         if (programCode == null || programCode.length == 0) {
             alertStatusMsg("Such account exist but no code in the db");
             return;
