@@ -7,6 +7,7 @@ import java.awt.event.WindowEvent;
 import javax.swing.*;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.net.PeerListener;
 import org.ethereum.net.client.ClientPeer;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;

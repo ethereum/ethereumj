@@ -5,9 +5,10 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
-import org.ethereum.gui.PeerListener;
+
 import org.ethereum.manager.MainData;
 import org.ethereum.net.Command;
+import org.ethereum.net.PeerListener;
 import org.ethereum.net.message.*;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
