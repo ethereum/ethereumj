@@ -71,7 +71,7 @@ public class Block {
 				timestamp, extraData, nonce);
         this.txsState = new Trie(null);
 
-        byte[] stateRoot = WorldManager.instance.repository.getRootHash();
+        byte[] stateRoot = WorldManager.getInstance().getRepository().getRootHash();
         this.header.setStateRoot(stateRoot);
 
         this.header.setTxTrieRoot(txsState.getRootHash());
@@ -108,9 +108,7 @@ public class Block {
     }
 
     public Block getParent() {
-		byte[] rlpEncoded = WorldManager.instance.chainDB.get(ByteUtil
-				.longToBytes(this.getNumber() - 1));
-    	return new Block(rlpEncoded);
+		return WorldManager.getInstance().getBlockChain().getByNumber(this.getNumber() - 1);
     }
     
     public byte[] getParentHash() {
