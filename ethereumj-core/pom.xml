@@ -242,14 +242,22 @@
 				<version>2.2.0</version>
 			</plugin>
 			<plugin>
-			    <groupId>org.codehaus.mojo</groupId>
-			    <artifactId>cobertura-maven-plugin</artifactId>
-			    <version>2.6</version>
+			    <groupId>org.jacoco</groupId>
+			    <artifactId>jacoco-maven-plugin</artifactId>
+			    <version>0.7.1.201405082137</version>
+			    <executions>
+			        <execution>
+			            <id>prepare-agent</id>
+			            <goals>
+			                <goal>prepare-agent</goal>
+			            </goals>
+			        </execution>
+			    </executions>
 			    <configuration>
-			        <format>xml</format>
-			        <maxmem>256m</maxmem>
-			        <!-- aggregated reports for multi-module projects -->
-			        <aggregate>true</aggregate>
+				    <excludes>
+				    	<exclude>org/ethereum/gui/**/*.class</exclude>
+						<exclude>org/ethereum/**/*Test.class</exclude>
+				    </excludes>
 			    </configuration>
 			</plugin>
             <plugin>
@@ -295,6 +303,19 @@
                                     <action>
                                         <ignore></ignore>
                                     </action>
+                                </pluginExecution>
+                                <pluginExecution>
+                                	<pluginExecutionFilter>
+                                		<groupId>org.jacoco</groupId>
+                                		<artifactId>jacoco-maven-plugin</artifactId>
+                                		<versionRange>[0.7.1.201405082137,)</versionRange>
+                                		<goals>
+                                			<goal>prepare-agent</goal>
+                                		</goals>
+                                	</pluginExecutionFilter>
+                                	<action>
+                                		<ignore></ignore>
+                                	</action>
                                 </pluginExecution>
                             </pluginExecutions>
                         </lifecycleMappingMetadata>
