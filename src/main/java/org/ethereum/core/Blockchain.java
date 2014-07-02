@@ -54,7 +54,7 @@ public class Blockchain {
 	// to avoid using minGasPrice=0 from Genesis for the wallet
 	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 		
-	private DatabaseImpl db;
+	private DatabaseImpl chainDb;
 	private Wallet wallet;
 	
     private long gasPrice = 1000;
@@ -69,9 +69,8 @@ public class Blockchain {
     private Map<String, WalletTransaction> walletTransactions =
             Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
 
-	public Blockchain(Wallet wallet) {
-		this.db = WorldManager.instance.chainDB;
-		this.wallet = wallet;
+	public Blockchain() {
+		this.chainDb = new DatabaseImpl("blockchain");
 	}
 
 	public Block getLastBlock() {
@@ -86,8 +85,8 @@ public class Blockchain {
         return index.size();
     }
 
-    public Block getByNumber(long rowIndex) {
-        return new Block(db.get(ByteUtil.longToBytes(rowIndex)));
+    public Block getByNumber(long blockNr) {
+        return new Block(chainDb.get(ByteUtil.longToBytes(blockNr)));
     }
 
     public void addBlocks(List<Block> blocks) {
@@ -119,7 +118,7 @@ public class Blockchain {
 //            String blockState = Hex.toHexString(block.getStateRoot());
 //            logger.debug("New world stateRoot {} and block stateRoot {}", newState, blockState);
             
-            db.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
+            this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
             if (logger.isDebugEnabled())
                 logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
         }
@@ -128,23 +127,23 @@ public class Blockchain {
             for (Transaction tx : block.getTransactionsList()) {
                 if (logger.isDebugEnabled())
                     logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
-                removeWalletTransaction(tx);
+                this.removeWalletTransaction(tx);
             }
         }
         logger.info("*** Block chain size: [ {} ]", index.size());
     }
     
-    private void addBlock(Block block) {
+    public void addBlock(Block block) {
     	if(block.isValid()) {
 
             if (!block.isGenesis())
-                WorldManager.instance.applyBlock(block);
+                WorldManager.getInstance().applyBlock(block);
 
 			this.wallet.processBlock(block);
 	        // In case of the genesis block we don't want to rely on the min gas price 
 			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
-			setLastBlock(block);
-			index.put(block.getNumber(), block.getParentHash());
+			this.setLastBlock(block);
+			this.index.put(block.getNumber(), block.getParentHash());
     	} else {
     		logger.warn("Invalid block with nr: {}", block.getNumber());
     	}
@@ -180,6 +179,10 @@ public class Blockchain {
         logger.info("pending transaction removed with hash: {} ",  hash);
         walletTransactions.remove(hash);
     }
+    
+    public void setWallet(Wallet wallet)  {
+    	this.wallet = wallet;
+    }
 
     public byte[] getLatestBlockHash() {
             if (index.isEmpty())
@@ -188,21 +191,21 @@ public class Blockchain {
                 return getLastBlock().getHash();
     }
     
-	public void loadChain() {
-		DBIterator iterator = db.iterator();
+	public void load() {
+		DBIterator iterator = chainDb.iterator();
 		try {
 			if (!iterator.hasNext()) {
                 logger.info("DB is empty - adding Genesis");
                 this.lastBlock = Genesis.getInstance();
                 this.addBlock(lastBlock);
                 logger.debug("Block #{} -> {}", Genesis.NUMBER, lastBlock.toFlatString());
-                db.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
+                chainDb.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
             }
 
             logger.debug("Displaying blocks stored in DB sorted on blocknumber");
             long blockNr = Genesis.NUMBER;
             for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                this.lastBlock = new Block(db.get(ByteUtil.longToBytes(blockNr)));
+                this.lastBlock = new Block(chainDb.get(ByteUtil.longToBytes(blockNr)));
                 logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
                 this.addBlock(lastBlock);
                 blockNr = lastBlock.getNumber()+1;
@@ -216,4 +219,9 @@ public class Blockchain {
 			}
 		}
 	}
+	
+    public void close() {
+        if (this.chainDb != null)
+            chainDb.close();
+    }
 }
