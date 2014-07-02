@@ -1,4 +1,4 @@
-package org.ethereum.gui;
+package org.ethereum.net;
 
 /**
  * www.ethereumJ.com

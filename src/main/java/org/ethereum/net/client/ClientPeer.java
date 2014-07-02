@@ -8,8 +8,8 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.gui.PeerListener;
 import org.ethereum.manager.MainData;
+import org.ethereum.net.PeerListener;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
