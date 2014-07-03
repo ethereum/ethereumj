@@ -37,6 +37,27 @@ public class ByteUtil {
         System.arraycopy(biBytes, start, bytes, numBytes - length, length);
         return bytes;        
     }
+
+    /**
+     * emitting sign indication byte
+     *
+     * @param b - any big integer number
+     * @return
+     */
+    public static byte[] bigIntegerToBytes(BigInteger b) {
+        if (b == null)
+            return null;
+
+        byte[] data = b.toByteArray();
+
+        if (data.length != 1 && data[0] == 0) {
+            byte[] tmp = new byte[data.length - 1];
+            System.arraycopy(data, 1, tmp, 0, tmp.length);
+            data = tmp;
+        }
+        return data;
+    }
+
     
     public static byte[] longToBytes(long l) {
     	return ByteBuffer.allocate(8).putLong(l).array();

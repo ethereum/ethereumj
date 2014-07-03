@@ -35,6 +35,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
     private Repository repository;
     private boolean byTransaction = true;
+    private boolean byTestingSuite = false;
 
     public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
@@ -62,6 +63,17 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.repository = repository;
         this.byTransaction = false;
     }
+
+    public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
+                             byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
+                             byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
+                             long gaslimit,
+                             Repository repository, boolean byTestingSuite) {
+        this(address, origin, caller, balance, gasPrice, gas, callValue, msgData, lastHash, coinbase,
+                timestamp, number, difficulty, gaslimit, repository);
+        this.byTestingSuite = byTestingSuite;
+    }
+
 
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
@@ -215,12 +227,18 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     }
 
     @Override
+    public boolean byTestingSuite() {
+        return byTestingSuite;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
         ProgramInvokeImpl that = (ProgramInvokeImpl) o;
 
+        if (byTestingSuite != that.byTestingSuite) return false;
         if (byTransaction != that.byTransaction) return false;
         if (address != null ? !address.equals(that.address) : that.address != null) return false;
         if (balance != null ? !balance.equals(that.balance) : that.balance != null) return false;
@@ -259,8 +277,9 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         result = 31 * result + (difficulty != null ? difficulty.hashCode() : 0);
         result = 31 * result + (gaslimit != null ? gaslimit.hashCode() : 0);
         result = 31 * result + (storage != null ? storage.hashCode() : 0);
-        result = 31 * result + (repository!= null ? repository.hashCode() : 0);
+        result = 31 * result + (repository != null ? repository.hashCode() : 0);
         result = 31 * result + (byTransaction ? 1 : 0);
+        result = 31 * result + (byTestingSuite ? 1 : 0);
         return result;
     }
 }

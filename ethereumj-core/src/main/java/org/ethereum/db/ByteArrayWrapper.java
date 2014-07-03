@@ -3,6 +3,7 @@ package org.ethereum.db;
 import java.util.Arrays;
 
 import org.ethereum.util.FastByteComparisons;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
@@ -45,4 +46,9 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
 	public byte[] getData() {
 		return data;
 	}
+
+    @Override
+    public String toString() {
+        return Hex.toHexString(data);
+    }
 }

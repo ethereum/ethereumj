@@ -30,4 +30,5 @@ public interface ProgramInvoke {
     public Repository getRepository();
 
     public boolean byTransaction();
+    boolean byTestingSuite();
 }

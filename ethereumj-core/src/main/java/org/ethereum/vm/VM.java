@@ -556,6 +556,8 @@ public class VM {
             program.fullTrace();
         } catch (RuntimeException e) {
             program.stop();
+            logger.info("VM halted: ", e);
+
             throw e;
         }
     }

@@ -210,11 +210,14 @@ public class Program {
 
     public void createContract(DataWord gas, DataWord memStart, DataWord memSize) {
 
+        if (invokeData.byTestingSuite()){
+
+            logger.info("[testing suite] - omit real create");
+            return;
+        }
+
         // 1. FETCH THE CODE FROM THE MEMORY
         ByteBuffer programCode = memoryChunk(memStart, memSize);
-
-        Repository trackRepository = result.getRepository().getTrack();
-        trackRepository.startTracking();
 
         byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
         if (logger.isInfoEnabled())
@@ -229,14 +232,20 @@ public class Program {
             return;
         }
 
+        //  actual gas subtract
+        this.spendGas(gas.intValue(), "internal call");
+
         // 2.2 CREATE THE CONTRACT ADDRESS
-        byte[] nonce =  trackRepository.getNonce(senderAddress).toByteArray();
+        byte[] nonce =  result.getRepository().getNonce(senderAddress).toByteArray();
         byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getNoLeadZeroesData(), nonce);
-        trackRepository.createAccount(newAddress);
+        result.getRepository().createAccount(newAddress);
 
         // 2.3 UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        trackRepository.increaseNonce(senderAddress);
+        result.getRepository().increaseNonce(senderAddress);
+
+        Repository trackRepository = result.getRepository().getTrack();
+        trackRepository.startTracking();
 
         // 3. COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke =
@@ -264,6 +273,16 @@ public class Program {
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
         trackRepository.commit();
+
+        // 5. REFUND THE REMAIN GAS
+        BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
+        if (refundGas.compareTo(BigInteger.ZERO) == 1){
+
+            this.refundGas(refundGas.intValue(), "remain gas from the internal call");
+            logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
+                    refundGas.toString(), refundGas.toString());
+        }
+
     }
 
     /**
@@ -288,86 +307,118 @@ public class Program {
 
         // FETCH THE CODE
         byte[] programCode = this.result.getRepository().getCode(toAddress);
+
+        if (logger.isInfoEnabled())
+            logger.info("calling for existing contract: address={}",
+                    Hex.toHexString(toAddress));
+
+        byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
+
+        // 2.1 PERFORM THE GAS VALUE TX
+        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+        if (this.getGas().longValue() - gas.longValue() < 0 ) {
+            logger.info("No gas for the internal call, \n" +
+                    "fromAddress={}, toAddress={}",
+                    Hex.toHexString(senderAddress), Hex.toHexString(toAddress));
+            this.stackPushZero();
+            return;
+        }
+
+        //  actual gas subtract
+        this.spendGas(gas.intValue(), "internal call");
+
+        BigInteger endowment = endowmentValue.value();
+        BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
+        if (senderBalance.compareTo(endowment) < 0){
+            stackPushZero();
+            return;
+        }
+        result.getRepository().addBalance(senderAddress, endowment.negate());
+
+
+        if (invokeData.byTestingSuite()) {
+            logger.info("[testing suite] - omit real call");
+
+            stackPushOne();
+
+            this.getResult().addCallCreate(data.array(),
+                    toAddressDW.getNoLeadZeroesData(),
+                    gas.getNoLeadZeroesData(), endowmentValue.getNoLeadZeroesData());
+
+            return;
+        }
+
+
+        Repository trackRepository = result.getRepository().getTrack();
+        trackRepository.startTracking();
+        trackRepository.addBalance(toAddress, endowmentValue.value());
+
+        ProgramInvoke programInvoke =
+                ProgramInvokeFactory.createProgramInvoke(this, toAddressDW,
+                        endowmentValue,  gas, result.getRepository().getBalance(toAddress),
+                        data.array(),
+                        trackRepository);
+
+        ProgramResult result = null;
+
+
         if (programCode != null && programCode.length != 0) {
-
-			if (logger.isInfoEnabled())
-				logger.info("calling for existing contract: address={}",
-						Hex.toHexString(toAddress));
-
-            byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
-
-            // 2.1 PERFORM THE GAS VALUE TX
-            // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-            if (this.getGas().longValue() - gas.longValue() < 0 ) {
-                logger.info("No gas for the internal call, \n" +
-                        "fromAddress={}, toAddress={}",
-                        Hex.toHexString(senderAddress), Hex.toHexString(toAddress));
-                this.stackPushZero();
-                return;
-            }
-
-            // 2.2 UPDATE THE NONCE
-            // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-            this.result.repository.increaseNonce(senderAddress);
-
-            Repository trackRepository = result.getRepository().getTrack();
-            trackRepository.startTracking();
-
-            // todo: check if the endowment can really be done
-            trackRepository.addBalance(toAddress, endowmentValue.value());
-
-            ProgramInvoke programInvoke =
-                    ProgramInvokeFactory.createProgramInvoke(this, toAddressDW,
-                            endowmentValue,  gas, result.getRepository().getBalance(toAddress),
-                            data.array(),
-                            trackRepository);
 
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke);
             vm.play(program);
-            ProgramResult result = program.getResult();
-
-            if (result.getException() != null &&
-                    result.getException() instanceof Program.OutOfGasException) {
-                logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
-
-                trackRepository.rollback();
-                stackPushZero();
-                return;
-            }
-
-            // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
-			ByteBuffer buffer = result.getHReturn();
-			if (buffer != null) {
-				int retSize = buffer.array().length;
-				int allocSize = outDataSize.intValue();
-				if (retSize > allocSize) {
-					byte[] outArray = Arrays.copyOf(buffer.array(), allocSize);
-					this.memorySave(outArray, buffer.array());
-				} else {
-					this.memorySave(outDataOffs.getData(), buffer.array());
-				}
-			}
-
-            // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-            stackPushOne();
-            trackRepository.commit();
-            stackPush(new DataWord(1));
-
-            // the gas spent in any internal outcome
-            // even if execution was halted by an exception
-            spendGas(result.getGasUsed(), " 'Total for CALL run' ");
-            logger.info("The usage of the gas in external call updated", result.getGasUsed());
+            result = program.getResult();
         }
+
+        if (result.getException() != null &&
+                result.getException() instanceof Program.OutOfGasException) {
+            logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
+
+            trackRepository.rollback();
+            stackPushZero();
+            return;
+        }
+
+        // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
+        ByteBuffer buffer = result.getHReturn();
+        if (buffer != null) {
+            int retSize = buffer.array().length;
+            int allocSize = outDataSize.intValue();
+            if (retSize > allocSize) {
+                byte[] outArray = Arrays.copyOf(buffer.array(), allocSize);
+                this.memorySave(outArray, buffer.array());
+            } else {
+                this.memorySave(outDataOffs.getData(), buffer.array());
+            }
+        }
+
+        // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
+        trackRepository.commit();
+        stackPushOne();
+
+        // 5. REFUND THE REMAIN GAS
+        BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
+        if (refundGas.compareTo(BigInteger.ZERO) == 1){
+
+            this.refundGas(refundGas.intValue(), "remain gas from the internal call");
+            logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
+                    refundGas.toString(), refundGas.toString());
+        }
+
     }
 
     public void spendGas(int gasValue, String cause) {
-        gasLogger.info("Spent: for cause={} gas={}", cause, gasValue);
+        gasLogger.info("Spent for cause: [ {} ], gas: [ {} ]", cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
         if (afterSpend < 0)
             throw new OutOfGasException();
         result.spendGas(gasValue);
+    }
+
+    public void refundGas(int gasValue, String cause) {
+        gasLogger.info("Refund for cause: [ {} ], gas: [ {} ]", cause, gasValue);
+        result.refundGas(gasValue);
     }
 
     public void storageSave(DataWord word1, DataWord word2) {
