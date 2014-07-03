@@ -25,9 +25,10 @@ import java.util.Map;
 public class TestRunner {
 
     private Logger logger = LoggerFactory.getLogger("JSONTest");
-    private List<String> results = new ArrayList<>();
 
-    public void runTestCase(TestCase testCase){
+    public List<String> runTestCase(TestCase testCase){
+
+        List<String> results = new ArrayList<>();
 
         Repository repository = new Repository();
 
@@ -283,5 +284,6 @@ public class TestRunner {
         }
         program.getResult().getRepository().close();
 
+        return results;
     }
 }

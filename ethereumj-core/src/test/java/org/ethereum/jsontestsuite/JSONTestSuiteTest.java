@@ -9,6 +9,7 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.List;
 
 /**
  * www.ethereumJ.com
@@ -157,7 +158,7 @@ public class JSONTestSuiteTest {
 
         JSONParser parser = new JSONParser();
 //        String testCaseString = "{'callcreates':[{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':9792,'value':74}],'env':{'currentCoinbase':'2adc25665018aa1fe0e6bc666dac8fc2697ff9ba','currentDifficulty':'256','currentGasLimit':'1000000','currentNumber':'0','currentTimestamp':1,'previousHash':'5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6'},'exec':{'address':'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6','caller':'cd1722f3947def4cf144679da39c4c32bdc35681','code':[96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241],'data':[],'gas':10000,'gasPrice':100000000000000,'origin':'cd1722f3947def4cf144679da39c4c32bdc35681','value':1000000000000000000},'gas':9971,'out':[],'post':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':999999999999999926,'code':[96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241],'nonce':0,'storage':{}}},'pre':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':1000000000000000000,'code':[96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241],'nonce':0,'storage':{}}}}";
-        String testCaseString = "{'callcreates':[{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':9792,'value':74}],'env':{'currentCoinbase':'2adc25665018aa1fe0e6bc666dac8fc2697ff9ba','currentDifficulty':'256','currentGasLimit':'1000000','currentNumber':'0','currentTimestamp':1,'previousHash':'5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6'},'exec':{'address':'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6','caller':'cd1722f3947def4cf144679da39c4c32bdc35681','code':[96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241],'data':[],'gas':10000,'gasPrice':100000000000000,'origin':'cd1722f3947def4cf144679da39c4c32bdc35681','value':1000000000000000000},'gas':9971,'out':[],'post':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':999999999999999926,'code':[96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241],'nonce':0,'storage':{}}},'pre':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':1000000000000000000,'code':[96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241],'nonce':0,'storage':{}}}}";
+        String testCaseString = "{'callcreates':[{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':200,'value':74}],'env':{'currentCoinbase':'2adc25665018aa1fe0e6bc666dac8fc2697ff9ba','currentDifficulty':'256','currentGasLimit':'1000000','currentNumber':'0','currentTimestamp':1,'previousHash':'5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6'},'exec':{'address':'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6','caller':'cd1722f3947def4cf144679da39c4c32bdc35681','code':['0x6000600060006000604a3360c8f1'],'data':[],'gas':10000,'gasPrice':100000000000000,'origin':'cd1722f3947def4cf144679da39c4c32bdc35681','value':1000000000000000000},'gas':9773,'out':[],'post':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':999999999999999926,'code':[],'nonce':0,'storage':{}}},'pre':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':1000000000000000000,'code':[],'nonce':0,'storage':{}}}}";
         testCaseString = testCaseString.replace("'", "\"");
 
         JSONObject testCaseJSONObj = (JSONObject)parser.parse(testCaseString);
@@ -168,7 +169,10 @@ public class JSONTestSuiteTest {
         Assert.assertEquals(1, ccList);
 
         TestRunner runner = new TestRunner();
-        runner.runTestCase(testCase);
+        List<String> result = runner.runTestCase(testCase);
+
+        Assert.assertTrue(result.size() == 0);
+
     }
 
 
