@@ -26,14 +26,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * 
  * WorldManager is the main class to handle the processing of transactions and
  * managing the world state.
  * 
  * www.ethereumJ.com
- * 
- * @author: Roman Mandeleil Created on: 01/06/2014 10:44
- * 
+ * @author: Roman Mandeleil 
+ * Created on: 01/06/2014 10:44
  */
 public class WorldManager {
 
@@ -177,8 +175,7 @@ public class WorldManager {
 			if (tx.getValue() != null) {
 
 				BigInteger senderBalance = repository.getBalance(senderAddress);
-				BigInteger contractBalance = repository
-						.getBalance(contractAddress);
+				BigInteger contractBalance = repository.getBalance(contractAddress);
 
 				if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
 
@@ -307,7 +304,7 @@ public class WorldManager {
 		// miner reward
 		if (repository.getAccountState(block.getCoinbase()) == null)
 			repository.createAccount(block.getCoinbase());
-		repository.addBalance(block.getCoinbase(), Block.coinbaseReward);
+		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
 
 		int i = 0;
 		List<Transaction> txList = block.getTransactionsList();
