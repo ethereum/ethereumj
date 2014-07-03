@@ -24,8 +24,8 @@ public class TrackTrie implements TrieFacade {
 	}
 
 	public void startTrack() {
-		changes = new HashMap<ByteArrayWrapper, byte[]>();
-		deletes = new HashMap<ByteArrayWrapper, byte[]>();
+		changes = new HashMap<>();
+		deletes = new HashMap<>();
 		trackingChanges = true;
 	}
 
@@ -38,8 +38,8 @@ public class TrackTrie implements TrieFacade {
 	}
 
 	public void rollbackTrack() {
-		changes = new HashMap<ByteArrayWrapper, byte[]>();
-		deletes = new HashMap<ByteArrayWrapper, byte[]>();
+		changes = new HashMap<>();
+		deletes = new HashMap<>();
 		changes = null;
 		trackingChanges = false;
 	}

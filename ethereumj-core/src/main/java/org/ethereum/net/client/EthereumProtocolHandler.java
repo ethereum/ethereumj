@@ -254,7 +254,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 }, 3000, secToAskForChain * 1000);
             }
 
-            WorldManager.instance.getBlockChain().addBlocks(blockList);
+            WorldManager.getInstance().getBlockChain().addBlocks(blockList);
             if (peerListener != null) peerListener.console(blocksMessage.toString());
         }
 
@@ -354,7 +354,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private void sendGetChain(ChannelHandlerContext ctx) {
 
-        byte[] hash = WorldManager.instance.getBlockChain().getLatestBlockHash();
+        byte[] hash = WorldManager.getInstance().getBlockChain().getLatestBlockHash();
         GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
         chainMessage.toString();
 
