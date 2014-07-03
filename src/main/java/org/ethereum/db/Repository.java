@@ -138,8 +138,10 @@ public class Repository {
 	public BigInteger addBalance(byte[] address, BigInteger value) {
 
 		AccountState state = getAccountState(address);
-		if (state == null)
-			return BigInteger.ZERO;
+
+        if (state == null){
+            state = createAccount(address);
+        }
 
 		BigInteger newBalance = state.addToBalance(value);
 
@@ -295,7 +297,8 @@ public class Repository {
                 byte[] code = details.getCode();
                 Map<DataWord, DataWord> storage = details.getStorage();
 
-                String accountLine = JSONHelper.dumpLine(key.getData(), nonce.toByteArray(),
+                String accountLine = JSONHelper.dumpLine(key.getData(),
+                        nonce.toByteArray(),
                         balance.toByteArray(), stateRoot, codeHash, code, storage);
 
                 bw.write(accountLine);

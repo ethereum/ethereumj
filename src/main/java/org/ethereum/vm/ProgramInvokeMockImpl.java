@@ -14,6 +14,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     private byte[] msgData;
 
+
     private Repository repository = null;
     private String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
@@ -25,6 +26,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
         this.repository = new Repository();
         this.repository.createAccount(Hex.decode(ownerAddress));
+    }
+
+    public ProgramInvokeMockImpl(boolean defaults){
+
+
     }
 
     /*           ADDRESS op         */
@@ -168,6 +174,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     @Override
+    public boolean byTestingSuite() {
+        return false;
+    }
+
+    @Override
     public Repository getRepository() {
         return this.repository;
     }
@@ -175,4 +186,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public void setRepository(Repository repository) {
         this.repository = repository;
     }
+
+
+
 }
