@@ -37,7 +37,6 @@ public class DatabaseImpl implements Database {
 		try {
 			logger.debug("Opening database");
 			if(SystemProperties.CONFIG.databaseReset()) {
-				logger.debug("Destroying '" + name + "' DB on startup ENABLED");
 				destroyDB(name);
 			}
 			logger.debug("Initializing new or existing DB: '" + name + "'");
@@ -62,14 +61,14 @@ public class DatabaseImpl implements Database {
 		}
 	}
 	
-	/** Insert object(value) (key = sha3(value)) */
-	public void put(byte[] key, byte[] value) {
-		db.put(key, value);
-	}
-	
 	/** Get object (key) -> value */
 	public byte[] get(byte[] key) {
 		return db.get(key);
+	}
+	
+	/** Insert object(value) (key = sha3(value)) */
+	public void put(byte[] key, byte[] value) {
+		db.put(key, value);
 	}
 	
 	/** Delete object (key) from db **/

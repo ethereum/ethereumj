@@ -174,7 +174,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         editor.setForeground(Color.RED);
 
         Collection<Account> accounts =
-                WorldManager.instance.getWallet().getAccountCollection();
+                WorldManager.getInstance().getWallet().getAccountCollection();
 
         for (Account account : accounts) {
             creatorAddressCombo.addItem(new AccountWrapper(account));
@@ -226,8 +226,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         }
 
         byte[] contractAddress = Hex.decode( contractAddr );
-        final byte[] programCode = WorldManager.instance.repository.getCode(contractAddress);
-        final Map storageMap = WorldManager.instance.repository.getContractDetails(contractAddress).getStorage();
+        final byte[] programCode = WorldManager.getInstance().getRepository().getCode(contractAddress);
+        final Map storageMap = WorldManager.getInstance().getRepository().getContractDetails(contractAddress).getStorage();
 
         contractDataInput.setBounds(70, 80, 350, 145);
         contractDataInput.setViewportView(msgDataTA);
@@ -301,13 +301,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     private void playContractCall() {
 
         byte[] contractAddress = Hex.decode(contractAddrInput.getText());
-        ContractDetails contractDetails =  WorldManager.instance.repository.getContractDetails(contractAddress);
+        ContractDetails contractDetails =  WorldManager.getInstance().getRepository().getContractDetails(contractAddress);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
         }
 
-        byte[] programCode = WorldManager.instance.repository.getCode(contractAddress);
+        byte[] programCode = WorldManager.getInstance().getRepository().getCode(contractAddress);
         if (programCode == null || programCode.length == 0) {
             alertStatusMsg("Such account exist but no code in the db");
             return;
@@ -316,7 +316,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.instance.getBlockChain().getLastBlock());
+        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.getInstance().getBlockChain().getLastBlock());
     }
 
     protected JRootPane createRootPane() {
@@ -460,15 +460,15 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     }
 
     public static void main(String args[]) {
-        WorldManager.instance.getWallet();
-        WorldManager.instance.loadChain();
+        WorldManager.getInstance().getWallet();
+        WorldManager.getInstance().loadBlockChain();
         ContractCallDialog ccd = new ContractCallDialog(null);
         ccd.setVisible(true);
         ccd.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
         ccd.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                WorldManager.instance.close();
+                WorldManager.getInstance().close();
             }
         });
     }

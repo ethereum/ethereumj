@@ -44,7 +44,7 @@ public class TrackDatabase implements Database {
 
     public void put(byte[] key, byte[] value) {
         if (trackingChanges) {
-            changes.put(  new ByteArrayWrapper(key)  , value);
+			changes.put(new ByteArrayWrapper(key), value);
         } else {
             db.put(key, value);
         }

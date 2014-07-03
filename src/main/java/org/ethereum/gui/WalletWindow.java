@@ -41,7 +41,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         Container contentPane = this.getContentPane();
         contentPane.setBackground(new Color(255, 255, 255));
 
-        Wallet wallet = WorldManager.instance.getWallet();
+        Wallet wallet = WorldManager.getInstance().getWallet();
         wallet.addListener(this);
         loadWallet();
 
@@ -53,7 +53,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         contentPane.removeAll();
         contentPane.setLayout(new FlowLayout());
 
-        Wallet wallet = WorldManager.instance.getWallet();
+        Wallet wallet = WorldManager.getInstance().getWallet();
 
         for (Account account : wallet.getAccountCollection()) {
 			WalletAddressPanel rowPanel = new WalletAddressPanel(account);
@@ -73,7 +73,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             @Override
             public void mouseClicked(MouseEvent e) {
 
-                Wallet wallet = WorldManager.instance.getWallet();
+                Wallet wallet = WorldManager.getInstance().getWallet();
 				if (wallet.getAccountCollection().size() >= 5) {
                     JOptionPane.showMessageDialog(walletWindow,
                             "Hey do you really need more than 5 address for a demo wallet");

@@ -40,7 +40,6 @@ public class SystemProperties {
         
     	try {
             String userDir = System.getProperty("user.dir");
-            System.out.println(userDir);
             String fileName = userDir + "/config/system.properties";
             File file = new File(fileName);
 
