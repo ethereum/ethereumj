@@ -22,8 +22,8 @@ public class TrackDatabase implements Database {
     }
 
     public void startTrack() {
-        changes = new HashMap<ByteArrayWrapper, byte[]>();
-        deletes = new HashMap<ByteArrayWrapper, byte[]>();
+        changes = new HashMap<>();
+        deletes = new HashMap<>();
         trackingChanges = true;
     }
 
@@ -36,15 +36,15 @@ public class TrackDatabase implements Database {
     }
 
     public void rollbackTrack() {
-        changes = new HashMap<ByteArrayWrapper, byte[]>();
-        deletes = new HashMap<ByteArrayWrapper, byte[]>();
+        changes = new HashMap<>();
+        deletes = new HashMap<>();
         changes = null;
         trackingChanges = false;
     }
 
     public void put(byte[] key, byte[] value) {
         if (trackingChanges) {
-            changes.put(  new ByteArrayWrapper(key)  , value);
+			changes.put(new ByteArrayWrapper(key), value);
         } else {
             db.put(key, value);
         }
