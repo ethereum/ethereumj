@@ -113,7 +113,8 @@ public class WorldManager {
 		BigInteger gasDebit = tx.getTotalGasValueDebit();
 
 		// The coinbase get the gas cost
-		repository.addBalance(coinbase, gasDebit);
+        if (coinbase != null)
+		    repository.addBalance(coinbase, gasDebit);
 
 		byte[] contractAddress;
 
