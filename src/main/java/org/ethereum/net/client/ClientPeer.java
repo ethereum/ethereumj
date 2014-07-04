@@ -9,6 +9,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.MainData;
+import org.ethereum.net.EthereumMessageSizeEstimator;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.TransactionsMessage;
@@ -51,6 +52,8 @@ public class ClientPeer {
             b.channel(NioSocketChannel.class);
 
             b.option(ChannelOption.SO_KEEPALIVE, true);
+            b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, new EthereumMessageSizeEstimator());
+
 
             final EthereumProtocolHandler handler;
             if (peerListener != null) {
