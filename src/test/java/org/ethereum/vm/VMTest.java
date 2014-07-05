@@ -468,7 +468,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
-    @Test  // PUSHN OP mal data
+    @Test(expected=RuntimeException.class)  // PUSHN OP mal data
     public void testPUSHN_1() {
 
         VM vm = new VM();
@@ -477,16 +477,14 @@ public class VMTest {
         try {
             program.fullTrace();
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
-    @Test  // PUSHN OP mal data
+    @Test(expected=RuntimeException.class)  // PUSHN OP mal data
     public void testPUSHN_2() {
 
         VM vm = new VM();
@@ -495,13 +493,11 @@ public class VMTest {
         try {
             program.fullTrace();
             vm.step(program);
-        } catch (RuntimeException e) {
-            assertTrue(program.isStopped());
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test  // AND OP
@@ -534,7 +530,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
-    @Test  // AND OP mal data
+    @Test(expected=RuntimeException.class)  // AND OP mal data
     public void testAND_3() {
 
         VM vm = new VM();
@@ -543,13 +539,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test  // OR OP
@@ -582,7 +576,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
-    @Test  // OR OP mal data
+    @Test(expected=RuntimeException.class)  // OR OP mal data
     public void testOR_3() {
 
         VM vm = new VM();
@@ -591,13 +585,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test  // XOR OP
@@ -631,7 +623,7 @@ public class VMTest {
     }
 
 
-    @Test  // XOR OP mal data
+    @Test(expected=RuntimeException.class)  // XOR OP mal data
     public void testXOR_3() {
 
         VM vm = new VM();
@@ -640,15 +632,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test  // BYTE OP
     public void testBYTE_1() {
@@ -696,7 +685,7 @@ public class VMTest {
     }
 
 
-    @Test  // BYTE OP mal data
+    @Test(expected=RuntimeException.class)  // BYTE OP mal data
     public void testBYTE_4() {
 
         VM vm = new VM();
@@ -705,13 +694,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test  // NOT OP
@@ -742,7 +729,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
     }
 
-    @Test  // NOT OP mal data
+    @Test(expected=RuntimeException.class)  // NOT OP mal data
     public void testNOT_3() {
 
         VM vm = new VM();
@@ -751,13 +738,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test  // EQ OP
@@ -805,7 +790,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test  // EQ OP mal data
+    @Test(expected=RuntimeException.class)  // EQ OP mal data
     public void testEQ_4() {
 
         VM vm = new VM();
@@ -814,13 +799,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test  // GT OP
@@ -868,7 +851,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test  // GT OP mal data
+    @Test(expected=RuntimeException.class)  // GT OP mal data
     public void testGT_4() {
 
         VM vm = new VM();
@@ -877,15 +860,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test  // SGT OP
     public void testSGT_1() {
@@ -938,7 +918,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test  // SGT OP mal
+    @Test(expected=RuntimeException.class)  // SGT OP mal
     public void testSGT_4() {
 
         VM vm = new VM();
@@ -948,16 +928,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            assertTrue(program.isStopped());
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
-
 
     @Test  // LT OP
     public void testLT_1() {
@@ -1004,7 +980,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test  // LT OP mal data
+    @Test(expected=RuntimeException.class)  // LT OP mal data
     public void testLT_4() {
 
         VM vm = new VM();
@@ -1013,15 +989,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            assertTrue(program.isStopped());
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test  // SLT OP
     public void testSLT_1() {
@@ -1074,7 +1047,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test  // SLT OP mal
+    @Test(expected=RuntimeException.class)  // SLT OP mal
     public void testSLT_4() {
 
         VM vm = new VM();
@@ -1084,17 +1057,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
-
     }
-
-
 
     @Test  // NEG OP
     public void testNEG_1() {
@@ -1138,24 +1106,20 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test  // NEG OP
+    @Test(expected=RuntimeException.class)  // NEG OP
     public void testNEG_4() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("09"), new ProgramInvokeMockImpl());
         try {
-
             vm.step(program);
             vm.step(program);
-
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // POP OP
     public void testPOP_1() {
@@ -1190,7 +1154,7 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test  // POP OP mal data
+    @Test(expected=RuntimeException.class)  // POP OP mal data
     public void testPOP_3() {
 
         VM vm = new VM();
@@ -1203,13 +1167,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // DUP OP
@@ -1229,7 +1191,7 @@ public class VMTest {
     }
 
 
-    @Test  // DUP OP mal data
+    @Test(expected=RuntimeException.class)  // DUP OP mal data
     public void testDUP_2() {
 
         VM vm = new VM();
@@ -1238,15 +1200,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // SWAP OP
     public void testSWAP_1() {
@@ -1359,22 +1318,19 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.memory.array()));
     }
 
-
-    @Test // MSTORE OP
+    @Test(expected=RuntimeException.class) // MSTORE OP
     public void testMSTORE_5() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("61123454"), new ProgramInvokeMockImpl());
         try {
-
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // MLOAD OP
@@ -1469,23 +1425,19 @@ public class VMTest {
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-
-    @Test // MLOAD OP mal data
+    @Test(expected=RuntimeException.class) // MLOAD OP mal data
     public void testMLOAD_6() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("53"), new ProgramInvokeMockImpl());
         try {
             vm.step(program);
-        } catch (RuntimeException e) {
-            assertTrue(program.isStopped());
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // MSTORE8 OP
     public void testMSTORE8_1() {
@@ -1534,7 +1486,7 @@ public class VMTest {
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
     }
 
-    @Test // MSTORE8 OP mal
+    @Test(expected=RuntimeException.class) // MSTORE8 OP mal
     public void testMSTORE8_4() {
 
         VM vm = new VM();
@@ -1542,15 +1494,12 @@ public class VMTest {
         try {
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // SSTORE OP
     public void testSSTORE_1() {
@@ -1598,24 +1547,20 @@ public class VMTest {
         assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
     }
 
-
-    @Test // SSTORE OP
+    @Test(expected=RuntimeException.class) // SSTORE OP
     public void testSSTORE_3() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("602257"), new ProgramInvokeMockImpl());
         try {
-
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // SLOAD OP
     public void testSLOAD_1() {
@@ -1668,21 +1613,18 @@ public class VMTest {
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-
-    @Test // SLOAD OP
+    @Test(expected=RuntimeException.class) // SLOAD OP
     public void testSLOAD_4() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("56"), new ProgramInvokeMockImpl());
         try {
-
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
-            return;
+            assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // PC OP
@@ -1735,7 +1677,7 @@ public class VMTest {
         assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
     }
 
-    @Test // JUMP OP mal data
+    @Test(expected=RuntimeException.class) // JUMP OP mal data
     public void testJUMP_2() {
 
         VM vm = new VM();
@@ -1743,15 +1685,12 @@ public class VMTest {
         try {
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // JUMPI OP
     public void testJUMPI_1() {
@@ -1792,7 +1731,7 @@ public class VMTest {
         assertEquals(s_expected_2, Hex.toHexString(item2.data).toUpperCase());
     }
 
-    @Test // JUMPI OP mal
+    @Test(expected=RuntimeException.class) // JUMPI OP mal
     public void testJUMPI_3() {
 
         VM vm = new VM();
@@ -1800,16 +1739,14 @@ public class VMTest {
         try {
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            assertTrue(program.isStopped());
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
-    @Test // JUMPI OP mal
+    @Test(expected=RuntimeException.class) // JUMPI OP mal
     public void testJUMPI_4() {
 
         VM vm = new VM();
@@ -1818,12 +1755,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // ADD OP mal
@@ -1874,7 +1810,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // ADD OP mal
+    @Test(expected=RuntimeException.class) // ADD OP mal
     public void testADD_4() {
 
         VM vm = new VM();
@@ -1882,13 +1818,11 @@ public class VMTest {
         try {
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            assertTrue(program.isStopped());
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // MULL OP
@@ -1939,7 +1873,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // MULL OP mal
+    @Test(expected=RuntimeException.class) // MULL OP mal
     public void testMULL_4() {
 
         VM vm = new VM();
@@ -1947,15 +1881,12 @@ public class VMTest {
         try {
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            assertTrue(program.isStopped());
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // DIV OP
     public void testDIV_1() {
@@ -2039,23 +1970,20 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // DIV OP
+    @Test(expected=RuntimeException.class) // DIV OP
     public void testDIV_6() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("600704"), new ProgramInvokeMockImpl());
         try {
-
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // SDIV OP
     public void testSDIV_1() {
@@ -2105,8 +2033,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
-    @Test // SDIV OP mal
+    @Test(expected=RuntimeException.class) // SDIV OP mal
     public void testSDIV_4() {
 
         VM vm = new VM();
@@ -2115,15 +2042,12 @@ public class VMTest {
         try {
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            assertTrue(program.isStopped());
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // SUB OP
     public void testSUB_1() {
@@ -2173,7 +2097,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // SUB OP mal
+    @Test(expected=RuntimeException.class) // SUB OP mal
     public void testSUB_4() {
 
         VM vm = new VM();
@@ -2181,13 +2105,11 @@ public class VMTest {
         try {
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            assertTrue(program.isStopped());
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // MSIZE OP
@@ -2272,22 +2194,19 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // EXP OP mal
+    @Test(expected=RuntimeException.class) // EXP OP mal
     public void testEXP_3() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("6212345608"), new ProgramInvokeMockImpl());
         try {
-
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            assertTrue(program.isStopped());
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // RETURN OP
@@ -2442,8 +2361,7 @@ public class VMTest {
         assertTrue(program.isStopped());
     }
 
-
-    @Test // CODECOPY OP mal
+    @Test(expected=RuntimeException.class) // CODECOPY OP mal
     public void testCODECOPY_5() {
 
         VM vm = new VM();
@@ -2454,15 +2372,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
-            program.getResult().repository.close();
-            assertTrue(program.isStopped());
-            return;
+            fail();
+        } finally {
+        	program.getResult().repository.close();
+        	assertTrue(program.isStopped());
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // CODESIZE OP
     public void testCODESIZE_1() {
@@ -2479,7 +2394,6 @@ public class VMTest {
         program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
-
 
     @Test // CALLDATASIZE OP
     public void testCALLDATASIZE_1() {
@@ -2585,25 +2499,21 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // CALLDATALOAD OP mal
+    @Test(expected=RuntimeException.class) // CALLDATALOAD OP mal
     public void testCALLDATALOAD_6() {
 
         VM vm = new VM();
         Program program =
                 new Program(Hex.decode("35"),
                         createProgramInvoke_1());
-
         try {
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // CALLDATACOPY OP
     public void testCALLDATACOPY_1() {
@@ -2704,7 +2614,7 @@ public class VMTest {
     }
 
 
-    @Test // CALLDATACOPY OP mal
+    @Test(expected=RuntimeException.class) // CALLDATACOPY OP mal
     public void testCALLDATACOPY_6() {
 
         VM vm = new VM();
@@ -2716,15 +2626,12 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // ADDRESS OP
     public void testADDRESS_1() {
@@ -2742,7 +2649,6 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
     @Test // BALANCE OP
     public void testBALANCE_1() {
 
@@ -2759,7 +2665,6 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
     @Test // ORIGIN OP
     public void testORIGIN_1() {
 
@@ -2775,7 +2680,6 @@ public class VMTest {
         program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
-
 
     @Test // CALLER OP
     public void testCALLER_1() {
@@ -2809,7 +2713,6 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
     @Test // SHA3 OP
     public void testSHA3_1() {
 
@@ -2830,7 +2733,6 @@ public class VMTest {
         program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
-
 
     @Test // SHA3 OP
     public void testSHA3_2() {
@@ -2853,29 +2755,25 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-    @Test // SHA3 OP mal
+    @Test(expected=RuntimeException.class) // SHA3 OP mal
     public void testSHA3_3() {
 
         VM vm = new VM();
         Program program =
                 new Program(Hex.decode("610201600054600220"),
                         createProgramInvoke_1());
-
         try {
             vm.step(program);
             vm.step(program);
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
-
 
     @Test // MOD OP
     public void testMOD_1() {
@@ -2922,8 +2820,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
-    @Test // MOD OP mal
+    @Test(expected=RuntimeException.class) // MOD OP mal
     public void testMOD_4() {
 
         VM vm = new VM();
@@ -2933,13 +2830,11 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
             vm.step(program);
-        } catch (RuntimeException e) {
+            fail();
+        } finally {
             program.getResult().repository.close();
             assertTrue(program.isStopped());
-            return;
         }
-        program.getResult().repository.close();
-        fail();
     }
 
     @Test // SMOD OP
@@ -2974,7 +2869,6 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
     @Test // SMOD OP
     public void testSMOD_3() {
         VM vm = new VM();
@@ -2991,7 +2885,6 @@ public class VMTest {
         program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
-
 
     @Test // SMOD OP mal
     public void testSMOD_4() {
@@ -3026,7 +2919,6 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
     @Test // COINBASE OP
     public void testCOINBASE_1() {
 
@@ -3059,7 +2951,6 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
 
-
     @Test // NUMBER OP
     public void testNUMBER_1() {
 
@@ -3091,7 +2982,6 @@ public class VMTest {
         program.getResult().repository.close();
         assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
     }
-
 
     @Test // GASPRICE OP
     public void testGASPRICE_1() {
