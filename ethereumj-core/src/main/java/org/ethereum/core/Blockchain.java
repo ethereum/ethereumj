@@ -85,8 +85,8 @@ public class Blockchain {
     }
 
     public Block getByNumber(long blockNr) {
-        return new Block(chainDb.get(ByteUtil.longToBytes(blockNr)));
-    }
+   		return new Block(index.get(blockNr));
+	}
 
     public void addBlocks(List<Block> blocks) {
 
@@ -129,7 +129,7 @@ public class Blockchain {
                 WorldManager.getInstance().applyBlock(block);
 
 			this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
-			this.index.put(block.getNumber(), block.getParentHash());
+			this.index.put(block.getNumber(), block.getEncoded());
 			
 			this.wallet.processBlock(block);
 			this.updateGasPrice(block);
@@ -200,7 +200,7 @@ public class Blockchain {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
             	for (iterator.seekToFirst(); iterator.hasNext();) {
     	            this.lastBlock = new Block(iterator.next().getValue());
-    	            this.index.put(lastBlock.getNumber(), lastBlock.getParentHash());
+    	            this.index.put(lastBlock.getNumber(), lastBlock.getEncoded());
     	            logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
             	}
             }
