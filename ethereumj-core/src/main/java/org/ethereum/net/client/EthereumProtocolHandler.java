@@ -314,7 +314,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         this.tearDown = true;
         logger.info("Lost connection to the server");
-        cause.printStackTrace();
+        logger.error(cause.getMessage(), cause);
         ctx.close().sync();
         timer.cancel();
     }
@@ -359,7 +359,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private void sendGetChain(ChannelHandlerContext ctx) {
 
-        byte[] hash = WorldManager.getInstance().getBlockChain().getLatestBlockHash();
+        byte[] hash = WorldManager.getInstance().getBlockChain().getLastBlock().getHash();
         GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
         chainMessage.toString();
 

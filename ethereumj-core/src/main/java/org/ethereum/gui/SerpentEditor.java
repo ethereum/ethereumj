@@ -3,6 +3,8 @@ package org.ethereum.gui;
 import org.ethereum.serpent.SerpentCompiler;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
 
@@ -23,6 +25,8 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class SerpentEditor extends JFrame {
 
+	private Logger logger = LoggerFactory.getLogger("gui");
+	
     private String codeSample = "\n\n\n" +
                                 "" +
                                 "if !contract.storage[msg.data[0]]:\n" +
@@ -181,7 +185,7 @@ public class SerpentEditor extends JFrame {
                 asmResult = SerpentCompiler.compile(codeArea.getText());
             }
         } catch (Throwable th) {
-            th.printStackTrace();
+        	logger.error(th.getMessage(), th);
 
             splitPanel.setDividerLocation(0.8);
             result.setVisible(true);
@@ -218,7 +222,7 @@ public class SerpentEditor extends JFrame {
                 machineCode = SerpentCompiler.encodeMachineCodeForVMRun(machineCode, null);
             }
         } catch (Throwable th) {
-            th.printStackTrace();
+        	logger.error(th.getMessage(), th);
             splitPanel.setDividerLocation(0.7);
             result.setVisible(true);
             result.setText(th.getMessage());
@@ -266,7 +270,7 @@ public class SerpentEditor extends JFrame {
 						String content = new Scanner(file).useDelimiter("\\Z").next();
 						codeArea.setText(content);
 					} catch (FileNotFoundException e1) {
-						e1.printStackTrace();
+						logger.error(e1.getMessage(), e1);
 					} catch (java.util.NoSuchElementException e2) {
 						// don't worry it's just the file is empty
 						codeArea.setText("");
@@ -334,7 +338,7 @@ public class SerpentEditor extends JFrame {
 						out.write(codeArea.getText());
 						out.close();
 					} catch (IOException e1) {
-						e1.printStackTrace();
+						logger.error(e1.getMessage(), e1);
 					}
 				}
 			});

@@ -2,7 +2,6 @@ package org.ethereum.core;
 
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.submit.WalletTransaction;
 import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBIterator;
@@ -99,7 +98,7 @@ public class Blockchain {
         // if it is the first block to add
         // check that the parent is the genesis
 		if (index.isEmpty()
-				&& !Arrays.equals(StaticMessages.GENESIS_HASH,
+				&& !Arrays.equals(Genesis.getInstance().getHash(),
 						firstBlockToAdd.getParentHash())) {
 			return;
 		}
@@ -184,7 +183,7 @@ public class Blockchain {
 
     public byte[] getLatestBlockHash() {
             if (index.isEmpty())
-                return StaticMessages.GENESIS_HASH;
+                return Genesis.getInstance().getHash();
             else
                 return getLastBlock().getHash();
     }

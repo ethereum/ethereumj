@@ -7,6 +7,8 @@ import org.ethereum.net.Command;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,6 +21,8 @@ import java.util.List;
  * Created on: 06/04/14 14:56
  */
 public class TransactionsMessage extends Message {
+	
+	private Logger logger = LoggerFactory.getLogger("wire");
 
     private List<Transaction> transactions = new ArrayList<Transaction>();
 
@@ -36,7 +40,7 @@ public class TransactionsMessage extends Message {
             try {
                 baos.write(txPayload);
             } catch (IOException e) {
-                e.printStackTrace();
+            	logger.error(e.getMessage(), e);
             }
         }
 

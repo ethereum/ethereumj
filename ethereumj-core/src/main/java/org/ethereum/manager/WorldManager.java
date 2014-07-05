@@ -205,7 +205,7 @@ public class WorldManager {
 						.createProgramInvoke(tx, lastBlock, trackRepository);
 
 				if (logger.isInfoEnabled())
-					logger.info("running the init for contract: addres={}",
+					logger.info("running the init for contract: address={}",
 							Hex.toHexString(tx.getContractAddress()));
 
 				VM vm = new VM();
@@ -224,7 +224,7 @@ public class WorldManager {
 					Block lastBlock = blockchain.getLastBlock();
 
 					if (logger.isInfoEnabled())
-						logger.info("calling for existing contract: addres={}",
+						logger.info("calling for existing contract: address={}",
 								Hex.toHexString(tx.getReceiveAddress()));
 
 					ProgramInvoke programInvoke = ProgramInvokeFactory
