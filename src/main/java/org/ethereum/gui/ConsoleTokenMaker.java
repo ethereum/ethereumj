@@ -4,6 +4,8 @@ package org.ethereum.gui;
 import javax.swing.text.Segment;
 
 import org.fife.ui.rsyntaxtextarea.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -12,6 +14,8 @@ import org.fife.ui.rsyntaxtextarea.*;
  * Created on: 24/04/14 11:52
  */
 public class ConsoleTokenMaker extends AbstractTokenMaker {
+	
+	private Logger logger = LoggerFactory.getLogger("gui");
 
     protected final String operators = "+-*/%!=<>^&|?:";
 
@@ -75,8 +79,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                 break;
 
             default:
-                new Exception("Unknown tokenType: '" + tokenType + "'").
-                        printStackTrace();
+            	logger.error("Unknown tokenType: '" + tokenType + "'");
                 tokenType = Token.IDENTIFIER;
                 break;
 

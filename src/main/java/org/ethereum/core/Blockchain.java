@@ -2,7 +2,6 @@ package org.ethereum.core;
 
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.submit.WalletTransaction;
 import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBIterator;
@@ -86,8 +85,8 @@ public class Blockchain {
     }
 
     public Block getByNumber(long blockNr) {
-        return new Block(chainDb.get(ByteUtil.longToBytes(blockNr)));
-    }
+   		return new Block(index.get(blockNr));
+	}
 
     public void addBlocks(List<Block> blocks) {
 
@@ -99,7 +98,7 @@ public class Blockchain {
         // if it is the first block to add
         // check that the parent is the genesis
 		if (index.isEmpty()
-				&& !Arrays.equals(StaticMessages.GENESIS_HASH,
+				&& !Arrays.equals(Genesis.getInstance().getHash(),
 						firstBlockToAdd.getParentHash())) {
 			return;
 		}
@@ -130,7 +129,7 @@ public class Blockchain {
                 WorldManager.getInstance().applyBlock(block);
 
 			this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
-			this.index.put(block.getNumber(), block.getParentHash());
+			this.index.put(block.getNumber(), block.getEncoded());
 			
 			this.wallet.processBlock(block);
 			this.updateGasPrice(block);
@@ -184,7 +183,7 @@ public class Blockchain {
 
     public byte[] getLatestBlockHash() {
             if (index.isEmpty())
-                return StaticMessages.GENESIS_HASH;
+                return Genesis.getInstance().getHash();
             else
                 return getLastBlock().getHash();
     }
@@ -201,7 +200,7 @@ public class Blockchain {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
             	for (iterator.seekToFirst(); iterator.hasNext();) {
     	            this.lastBlock = new Block(iterator.next().getValue());
-    	            this.index.put(lastBlock.getNumber(), lastBlock.getParentHash());
+    	            this.index.put(lastBlock.getNumber(), lastBlock.getEncoded());
     	            logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
             	}
             }

@@ -161,7 +161,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         this.tearDown = true;
         logger.info("Lost connection to the server");
-        cause.printStackTrace();
+    	logger.error(cause.getMessage(), cause);
         timer.cancel();
         timer.purge();
         timer = null;
