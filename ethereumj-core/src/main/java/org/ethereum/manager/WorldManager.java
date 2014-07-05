@@ -50,8 +50,9 @@ public class WorldManager {
 	public WorldManager() {
 		this.blockchain = new Blockchain();
 		this.repository = new Repository();
+		
 		this.wallet = new Wallet();
-		// Initialize Wallet
+		
 		byte[] cowAddr = HashUtil.sha3("cow".getBytes());
 		ECKey key = ECKey.fromPrivate(cowAddr);
 		wallet.importKey(cowAddr);
@@ -63,7 +64,6 @@ public class WorldManager {
 		byte[] cbAddr = HashUtil.sha3(secret.getBytes());
 		wallet.importKey(cbAddr);
 
-		// Initialize Blockchain
 		blockchain.setWallet(wallet);
 	}
 	
