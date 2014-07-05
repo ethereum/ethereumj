@@ -21,7 +21,8 @@ import java.util.Stack;
 public class Program {
 
     private Logger logger = LoggerFactory.getLogger("VM");
-    private Logger gasLogger = null;
+    private Logger gasLogger = LoggerFactory.getLogger("gas");
+    private int invokeHash;
     private ProgramListener listener;
 
     Stack<DataWord> stack = new Stack<DataWord>();
@@ -39,8 +40,7 @@ public class Program {
 
     public Program(byte[] ops, ProgramInvoke invokeData) {
 
-        gasLogger = LoggerFactory.getLogger("gas - " + invokeData.hashCode());
-
+    	this.invokeHash = invokeData.hashCode();
         result.setRepository(invokeData.getRepository());
 
         if (ops == null) throw new RuntimeException("program can not run with ops: null");
@@ -408,7 +408,7 @@ public class Program {
     }
 
     public void spendGas(int gasValue, String cause) {
-        gasLogger.info("Spent for cause: [ {} ], gas: [ {} ]", cause, gasValue);
+        gasLogger.info("[{}] Spent for cause: [ {} ], gas: [ {} ]", invokeHash, cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
         if (afterSpend < 0)
@@ -417,7 +417,7 @@ public class Program {
     }
 
     public void refundGas(int gasValue, String cause) {
-        gasLogger.info("Refund for cause: [ {} ], gas: [ {} ]", cause, gasValue);
+        gasLogger.info("[{}] Refund for cause: [ {} ], gas: [ {} ]", invokeHash, cause, gasValue);
         result.refundGas(gasValue);
     }
 

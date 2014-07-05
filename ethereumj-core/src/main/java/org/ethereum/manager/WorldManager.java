@@ -67,13 +67,10 @@ public class WorldManager {
 		blockchain.setWallet(wallet);
 	}
 	
-	public void loadBlockChain() {
-		this.blockchain.load();
-	}
-	
 	public static WorldManager getInstance() {
 		if(instance == null) {
 			instance = new WorldManager();
+			instance.getBlockChain().load();
 		}
 		return instance;
 	}
@@ -199,15 +196,15 @@ public class WorldManager {
 
 				byte[] initCode = tx.getData();
 
+				if (logger.isInfoEnabled())
+					logger.info("running the init for contract: address={}",
+							Hex.toHexString(tx.getContractAddress()));
+
 				Block lastBlock = blockchain.getLastBlock();
 
 				ProgramInvoke programInvoke = ProgramInvokeFactory
 						.createProgramInvoke(tx, lastBlock, trackRepository);
-
-				if (logger.isInfoEnabled())
-					logger.info("running the init for contract: addres={}",
-							Hex.toHexString(tx.getContractAddress()));
-
+				
 				VM vm = new VM();
 				Program program = new Program(initCode, programInvoke);
 				vm.play(program);
@@ -217,23 +214,21 @@ public class WorldManager {
 
 			} else {
 
-				byte[] programCode = trackRepository.getCode(tx
-						.getReceiveAddress());
+				byte[] programCode = trackRepository.getCode(tx.getReceiveAddress());
 				if (programCode != null) {
+
+					if (logger.isInfoEnabled())
+						logger.info("calling for existing contract: address={}",
+								Hex.toHexString(tx.getReceiveAddress()));
 
 					Block lastBlock = blockchain.getLastBlock();
 
-					if (logger.isInfoEnabled())
-						logger.info("calling for existing contract: addres={}",
-								Hex.toHexString(tx.getReceiveAddress()));
-
 					ProgramInvoke programInvoke = ProgramInvokeFactory
 							.createProgramInvoke(tx, lastBlock, trackRepository);
-
+					
 					VM vm = new VM();
 					Program program = new Program(programCode, programInvoke);
 					vm.play(program);
-
 					ProgramResult result = program.getResult();
 					applyProgramResult(result, gasDebit, trackRepository,
 							senderAddress, tx.getReceiveAddress(), coinbase);
@@ -246,7 +241,7 @@ public class WorldManager {
 		trackRepository.commit();
 		pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
 	}
-
+	
 	/**
 	 * After any contract code finish the run the certain result should take
 	 * place, according the given circumstances

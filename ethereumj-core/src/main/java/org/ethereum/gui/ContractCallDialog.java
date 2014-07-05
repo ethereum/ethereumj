@@ -460,8 +460,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     }
 
     public static void main(String args[]) {
-        WorldManager.getInstance().getWallet();
-        WorldManager.getInstance().loadBlockChain();
         ContractCallDialog ccd = new ContractCallDialog(null);
         ccd.setVisible(true);
         ccd.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);

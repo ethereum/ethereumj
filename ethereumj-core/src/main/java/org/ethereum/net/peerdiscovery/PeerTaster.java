@@ -56,7 +56,7 @@ public class PeerTaster {
             try {
                 workerGroup.shutdownGracefully().sync();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+            	logger.error(e.getMessage(), e);
             }
         }
     }
