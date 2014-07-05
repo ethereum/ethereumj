@@ -197,7 +197,6 @@ public class Blockchain {
                 this.lastBlock = Genesis.getInstance();
                 this.addBlock(lastBlock);
                 logger.debug("Block #{} -> {}", Genesis.NUMBER, lastBlock.toFlatString());
-                chainDb.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
             } else {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
             	for (iterator.seekToFirst(); iterator.hasNext();) {
@@ -206,6 +205,7 @@ public class Blockchain {
     	            logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
             	}
             }
+			this.updateGasPrice(lastBlock);
 		} finally {
 			// Make sure you close the iterator to avoid resource leaks.
 			try {
