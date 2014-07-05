@@ -62,7 +62,7 @@ public class Blockchain {
 
     // keep the index of the chain for
     // convenient usage, <block_number, block_hash>
-    private HashMap<Long, byte[]> index = new HashMap<Long, byte[]>();
+    private Map<Long, byte[]> index = new HashMap<>();
 
     // This map of transaction designed
     // to approve the tx by external trusted peer
@@ -74,7 +74,7 @@ public class Blockchain {
 	}
 
 	public Block getLastBlock() {
-            return lastBlock;
+		return lastBlock;
 	}
 
     public void setLastBlock(Block block) {
@@ -110,17 +110,7 @@ public class Blockchain {
             if (!hashLast.equals(blockParentHash)) return;
         }
         for (int i = blocks.size() - 1; i >= 0 ; --i) {
-        	Block block = blocks.get(i);
-            this.addBlock(block);
-            
-            // Check stateRoot
-//            String newState = Hex.toHexString(WorldManager.instance.repository.worldState.getRootHash());
-//            String blockState = Hex.toHexString(block.getStateRoot());
-//            logger.debug("New world stateRoot {} and block stateRoot {}", newState, blockState);
-            
-            this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
-            if (logger.isDebugEnabled())
-                logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
+            this.addBlock(blocks.get(i));
         }
         // Remove all wallet transactions as they already approved by the net
         for (Block block : blocks) {
@@ -130,7 +120,7 @@ public class Blockchain {
                 this.removeWalletTransaction(tx);
             }
         }
-        logger.info("*** Block chain size: [ {} ]", index.size());
+        logger.info("*** Block chain size: [ {} ]", this.getSize());
     }
     
     public void addBlock(Block block) {
@@ -139,14 +129,22 @@ public class Blockchain {
             if (!block.isGenesis())
                 WorldManager.getInstance().applyBlock(block);
 
-			this.wallet.processBlock(block);
-	        // In case of the genesis block we don't want to rely on the min gas price 
-			this.gasPrice = block.isGenesis() ? INITIAL_MIN_GAS_PRICE : block.getMinGasPrice();
-			this.setLastBlock(block);
+			this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
 			this.index.put(block.getNumber(), block.getParentHash());
+			
+			this.wallet.processBlock(block);
+			this.updateGasPrice(block);
+			this.setLastBlock(block);
+            if (logger.isDebugEnabled())
+                logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
     	} else {
     		logger.warn("Invalid block with nr: {}", block.getNumber());
     	}
+    }
+    
+    public void updateGasPrice(Block block) {
+        // In case of the genesis block we don't want to rely on the min gas price 
+		this.gasPrice = block.isGenesis() ? block.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
     }
     
     public long getGasPrice() {
@@ -199,17 +197,15 @@ public class Blockchain {
                 this.lastBlock = Genesis.getInstance();
                 this.addBlock(lastBlock);
                 logger.debug("Block #{} -> {}", Genesis.NUMBER, lastBlock.toFlatString());
-                chainDb.put(ByteUtil.longToBytes(Genesis.NUMBER), lastBlock.getEncoded());
+            } else {
+            	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
+            	for (iterator.seekToFirst(); iterator.hasNext();) {
+    	            this.lastBlock = new Block(iterator.next().getValue());
+    	            this.index.put(lastBlock.getNumber(), lastBlock.getParentHash());
+    	            logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
+            	}
             }
-
-            logger.debug("Displaying blocks stored in DB sorted on blocknumber");
-            long blockNr = Genesis.NUMBER;
-            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
-                this.lastBlock = new Block(chainDb.get(ByteUtil.longToBytes(blockNr)));
-                logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
-                this.addBlock(lastBlock);
-                blockNr = lastBlock.getNumber()+1;
-			}
+			this.updateGasPrice(lastBlock);
 		} finally {
 			// Make sure you close the iterator to avoid resource leaks.
 			try {
