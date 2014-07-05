@@ -1,6 +1,7 @@
 package org.ethereum.vm;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.vm.Program.OutOfGasException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -556,8 +557,10 @@ public class VM {
             program.fullTrace();
         } catch (RuntimeException e) {
             program.stop();
-            logger.info("VM halted: ", e);
-
+            if(e instanceof OutOfGasException)
+            	logger.warn("OutOfGasException occurred", e);
+            else
+            	logger.error("VM halted", e);
             throw e;
         }
     }
