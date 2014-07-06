@@ -370,25 +370,28 @@ public class Program {
             result = program.getResult();
         }
 
-        if (result.getException() != null &&
-                result.getException() instanceof Program.OutOfGasException) {
-            logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
+        if (result != null &&
+            result.getException() != null &&
+            result.getException() instanceof Program.OutOfGasException) {
+                logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
 
-            trackRepository.rollback();
-            stackPushZero();
-            return;
+                trackRepository.rollback();
+                stackPushZero();
+                return;
         }
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
-        ByteBuffer buffer = result.getHReturn();
-        if (buffer != null) {
-            int retSize = buffer.array().length;
-            int allocSize = outDataSize.intValue();
-            if (retSize > allocSize) {
-                byte[] outArray = Arrays.copyOf(buffer.array(), allocSize);
-                this.memorySave(outArray, buffer.array());
-            } else {
-                this.memorySave(outDataOffs.getData(), buffer.array());
+        if (result != null) {
+            ByteBuffer buffer = result.getHReturn();
+            if (buffer != null) {
+                int retSize = buffer.array().length;
+                int allocSize = outDataSize.intValue();
+                if (retSize > allocSize) {
+                    byte[] outArray = Arrays.copyOf(buffer.array(), allocSize);
+                    this.memorySave(outArray, buffer.array());
+                } else {
+                    this.memorySave(outDataOffs.getData(), buffer.array());
+                }
             }
         }
 
@@ -397,14 +400,18 @@ public class Program {
         stackPushOne();
 
         // 5. REFUND THE REMAIN GAS
-        BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
-        if (refundGas.compareTo(BigInteger.ZERO) == 1){
+        if (result != null) {
+            BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
+            if (refundGas.compareTo(BigInteger.ZERO) == 1) {
 
-            this.refundGas(refundGas.intValue(), "remain gas from the internal call");
-            logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
-                    refundGas.toString(), refundGas.toString());
+                this.refundGas(refundGas.intValue(), "remain gas from the internal call");
+                logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
+                        refundGas.toString(), refundGas.toString());
+            }
+        } else {
+
+            this.refundGas(gas.intValue(), "remain gas from the internal call");
         }
-
     }
 
     public void spendGas(int gasValue, String cause) {
