@@ -108,6 +108,10 @@ public class Repository {
 
         return state;
     }
+    
+    public Trie getWorldState() {
+    	return worldState;
+    }
 
     public AccountState getAccountState(byte[] addr) {
 
