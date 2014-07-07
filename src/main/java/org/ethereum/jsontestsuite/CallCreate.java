@@ -36,12 +36,17 @@ public class CallCreate {
 
     public CallCreate(JSONObject callCreateJSON) {
 
-        JSONArray data        = (JSONArray)callCreateJSON.get("data");
+        String data        = (String)callCreateJSON.get("data");
         String    destination = (String)callCreateJSON.get("destination");
         Long      gasLimit    = (Long)callCreateJSON.get("gasLimit");
         Long      value       = (Long)callCreateJSON.get("value");
 
-        this.data        = Helper.parseDataArray(data);
+        if (data != null && data.length() > 2)
+            this.data    = Hex.decode(data.substring(2));
+        else
+            this.data = new byte[0];
+
+
         this.destination = Hex.decode(destination);
         this.gasLimit    = ByteUtil.bigIntegerToBytes( BigInteger.valueOf(gasLimit) );
         this.value       = ByteUtil.bigIntegerToBytes( BigInteger.valueOf(value) );

@@ -47,6 +47,9 @@ public class Exec {
         String address  = exec.get("address").toString();
         String caller   = exec.get("caller").toString();
 
+        String code  = exec.get("code").toString();
+        String data  = exec.get("data").toString();
+
         String gas      = exec.get("gas").toString();
         String gasPrice = exec.get("gasPrice").toString();
         String origin   = exec.get("origin").toString();
@@ -55,8 +58,16 @@ public class Exec {
 
         this.address = Hex.decode(address);
         this.caller  = Hex.decode(caller);
-        this.data    = Helper.parseDataArray((JSONArray) exec.get("data"));
-        this.code    = Helper.parseDataArray((JSONArray) exec.get("code"));
+
+        if (code != null && code.length() > 2)
+            this.code    = Hex.decode(code.substring(2));
+        else
+            this.code = new byte[0];
+
+        if (data != null && data.length() > 2)
+            this.data    = Hex.decode(data.substring(2));
+        else
+            this.data = new byte[0];
 
         this.gas      = ByteUtil.bigIntegerToBytes( new BigInteger(gas) );
         this.gasPrice = ByteUtil.bigIntegerToBytes( new BigInteger(gasPrice) );
