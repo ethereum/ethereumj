@@ -349,7 +349,6 @@ public class VM {
 
                     int length     = lengthData.value().intValue();
                     int codeOffset = codeOffsetData.value().intValue();
-                    int memOffset  = memOffsetData.value().intValue();
 
                     if (program.ops.length < length + codeOffset) {
                         program.stop();
@@ -357,7 +356,7 @@ public class VM {
                     }
 
                     byte[] code = new byte[length];
-                    System.arraycopy(program.ops, codeOffset, code, memOffset, length);
+                    System.arraycopy(program.ops, codeOffset, code, 0, length);
 
                     program.memorySave(memOffsetData.getData(), code);
                     program.step();

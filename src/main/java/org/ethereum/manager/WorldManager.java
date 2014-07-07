@@ -173,7 +173,6 @@ public class WorldManager {
 			if (tx.getValue() != null) {
 
 				BigInteger senderBalance = repository.getBalance(senderAddress);
-				BigInteger contractBalance = repository.getBalance(contractAddress);
 
 				if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
 
@@ -210,7 +209,7 @@ public class WorldManager {
 				vm.play(program);
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, trackRepository,
-						senderAddress, tx.getContractAddress(), coinbase);
+						senderAddress, tx.getContractAddress(), coinbase, true);
 
 			} else {
 
@@ -231,7 +230,7 @@ public class WorldManager {
 					vm.play(program);
 					ProgramResult result = program.getResult();
 					applyProgramResult(result, gasDebit, trackRepository,
-							senderAddress, tx.getReceiveAddress(), coinbase);
+							senderAddress, tx.getReceiveAddress(), coinbase,false);
 				}
 			}
 		} catch (RuntimeException e) {
@@ -253,7 +252,7 @@ public class WorldManager {
 	 */
 	private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
 			Repository repository, byte[] senderAddress,
-			byte[] contractAddress, byte[] coinbase) {
+			byte[] contractAddress, byte[] coinbase, boolean initResults) {
 
 		if (result.getException() != null
 				&& result.getException() instanceof Program.OutOfGasException) {
@@ -263,11 +262,6 @@ public class WorldManager {
 			throw result.getException();
 		}
 
-		// Save the code created by init
-		byte[] bodyCode = null;
-		if (result.getHReturn() != null) {
-			bodyCode = result.getHReturn().array();
-		}
 
 		BigInteger gasPrice = BigInteger.valueOf(blockchain.getGasPrice());
 		BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
@@ -285,14 +279,24 @@ public class WorldManager {
 			repository.addBalance(coinbase, refund.negate());
 		}
 
-		if (bodyCode != null) {
-			repository.saveCode(contractAddress, bodyCode);
-			if (stateLogger.isInfoEnabled())
-				stateLogger
-						.info("saving code of the contract to the db:\n contract={} code={}",
-								Hex.toHexString(contractAddress),
-								Hex.toHexString(bodyCode));
-		}
+
+        if (initResults){
+
+            // Save the code created by init
+            byte[] bodyCode = null;
+            if (result.getHReturn() != null) {
+                bodyCode = result.getHReturn().array();
+            }
+
+            if (bodyCode != null) {
+                repository.saveCode(contractAddress, bodyCode);
+                if (stateLogger.isInfoEnabled())
+                    stateLogger
+                            .info("saving code of the contract to the db:\n contract={} code={}",
+                                    Hex.toHexString(contractAddress),
+                                    Hex.toHexString(bodyCode));
+            }
+        }
 	}
 
 	public void applyBlock(Block block) {
