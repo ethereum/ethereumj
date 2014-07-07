@@ -26,7 +26,7 @@ public class StaticMessages {
     public static HelloMessage generateHelloMessage() {
         byte[] peerIdBytes = HashUtil.randomPeerId();
 
-        return new HelloMessage((byte) 0x16, (byte) 0x00,
+        return new HelloMessage((byte) 0x17, (byte) 0x00,
                 "EthereumJ [v0.5.1]  by RomanJ", Byte.parseByte("00000111", 2),
                 (short) 30303, peerIdBytes);
     }
