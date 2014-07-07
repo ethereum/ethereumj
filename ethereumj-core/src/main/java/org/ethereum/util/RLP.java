@@ -832,7 +832,7 @@ public class RLP {
 
             return srcData;
 
-        } else if (srcData.length <= 0x37) {
+        } else if (srcData.length < 0x37) {
             // length = 8X
             byte length = (byte) (OFFSET_SHORT_ITEM + srcData.length);
             byte[] data = Arrays.copyOf(srcData, srcData.length + 1);
@@ -872,7 +872,7 @@ public class RLP {
 
         byte[] data;
         int copyPos = 0;
-        if (totalLength <= 0x37) {
+        if (totalLength < 0x37) {
 
         	data = new byte[1 + totalLength];
             data[0] = (byte) (OFFSET_SHORT_LIST + totalLength);
