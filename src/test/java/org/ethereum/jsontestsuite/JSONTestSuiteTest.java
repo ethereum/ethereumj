@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.List;
 
@@ -43,7 +44,7 @@ public class JSONTestSuiteTest {
 
         JSONParser parser = new JSONParser();
         String accountString = "{'balance':999999999999999852,'nonce':1," +
-                "'code':[96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241]," +
+                "'code':'0x6000600060006000604a3360c85c03f1'," +
                 "'storage':{'0xffaa' : [200], '0xffab' : ['0xb2b2b2']}}";
         accountString = accountString.replace("'", "\"");
 
@@ -81,8 +82,8 @@ public class JSONTestSuiteTest {
         JSONParser parser = new JSONParser();
         String execString = "{'address' : '0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6'," +
                 "             'caller' : 'cd1722f3947def4cf144679da39c4c32bdc35681'," +
-                "             'data' : ['0xffaabb']," +
-                "             'code' : [96,0,96,0,96,0,96,0,96,74,51,96,200,92,3,241]," +
+                "             'data' : '0xffaabb'," +
+                "             'code' : '0x6000600060006000604a3360c85c03f1'," +
                 "             'gas' : 10000," +
                 "             'gasPrice' : 100000000000000," +
                 "             'origin' : 'cd1722f3947def4cf144679da39c4c32bdc35681'," +
@@ -146,7 +147,7 @@ public class JSONTestSuiteTest {
         String expectedValue       =   "74";
 
         JSONParser parser = new JSONParser();
-        String callCreateString = "{'data' : [],'destination' : 'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit' : 9792,'value' : 74}";
+        String callCreateString = "{'data' : '','destination' : 'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit' : 9792,'value' : 74}";
         callCreateString = callCreateString.replace("'", "\"");
 
         JSONObject callCreateJSONObj = (JSONObject)parser.parse(callCreateString);
@@ -164,7 +165,7 @@ public class JSONTestSuiteTest {
 
         JSONParser parser = new JSONParser();
 //        String testCaseString = "{'callcreates':[{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':9786,'value':2},{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':9732,'value':12},{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':9696,'value':13},{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':9660,'value':14}],'env':{'currentCoinbase':'2adc25665018aa1fe0e6bc666dac8fc2697ff9ba','currentDifficulty':'256','currentGasLimit':'1000000','currentNumber':'0','currentTimestamp':1,'previousHash':'5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6'},'exec':{'address':'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6','caller':'cd1722f3947def4cf144679da39c4c32bdc35681','code':['0x60006001100f603459600060006000600060033360c85c03f150', '0x60016000100f604e59600060006000600060043360c85c03f150','0x60006000100f606859600060006000600060053360c85c03f150', '0x60016001110f6082596000600060006000600c3360c85c03f150','0x60006001110f609c596000600060006000600d3360c85c03f150','0x60016000110f60b6596000600060006000600e3360c85c03f150','0x60006000110f60d0596000600060006000600f3360c85c03f150'],'data':[],'gas':10000,'gasPrice':100000000000000,'origin':'cd1722f3947def4cf144679da39c4c32bdc35681','value':1000000000000000000},'gas':9832,'out':[]}";
-        String testCaseString = "{'callcreates':[{'data':[],'destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':200,'value':74}],'env':{'currentCoinbase':'2adc25665018aa1fe0e6bc666dac8fc2697ff9ba','currentDifficulty':'256','currentGasLimit':'1000000','currentNumber':'0','currentTimestamp':1,'previousHash':'5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6'},'exec':{'address':'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6','caller':'cd1722f3947def4cf144679da39c4c32bdc35681','code':['0x6000600060006000604a3360c8f1'],'data':[],'gas':10000,'gasPrice':100000000000000,'origin':'cd1722f3947def4cf144679da39c4c32bdc35681','value':1000000000000000000},'gas':9773,'out':[],'post':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':999999999999999926,'code':[],'nonce':0,'storage':{}}},'pre':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':1000000000000000000,'code':[],'nonce':0,'storage':{}}}}";
+        String testCaseString = "{'callcreates':[{'data':'','destination':'cd1722f3947def4cf144679da39c4c32bdc35681','gasLimit':200,'value':74}],'env':{'currentCoinbase':'2adc25665018aa1fe0e6bc666dac8fc2697ff9ba','currentDifficulty':'256','currentGasLimit':'1000000','currentNumber':'0','currentTimestamp':1,'previousHash':'5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6'},'exec':{'address':'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6','caller':'cd1722f3947def4cf144679da39c4c32bdc35681','code':'0x6000600060006000604a3360c8f1','data':'','gas':10000,'gasPrice':100000000000000,'origin':'cd1722f3947def4cf144679da39c4c32bdc35681','value':1000000000000000000},'gas':9973,'out':[],'post':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':999999999999999926,'code':'','nonce':0,'storage':{}}},'pre':{'0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6':{'balance':1000000000000000000,'code':'','nonce':0,'storage':{}}}}";
         testCaseString = testCaseString.replace("'", "\"");
 
         JSONObject testCaseJSONObj = (JSONObject)parser.parse(testCaseString);
@@ -211,7 +212,6 @@ public class JSONTestSuiteTest {
     public void testDirectFromGitHub(){
 
         String json = Utils.getHTML("https://raw.githubusercontent.com/ethereum/tests/develop/vmtests.json");
-
 
 
     }
