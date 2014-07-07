@@ -110,6 +110,15 @@ public class Blockchain {
         }
         for (int i = blocks.size() - 1; i >= 0 ; --i) {
             this.addBlock(blocks.get(i));
+            
+            /* Debug check to see if the state is still as expected */
+            if(logger.isWarnEnabled()) {
+            	String blockStateRootHash = Hex.toHexString(blocks.get(i).getStateRoot());
+            	String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
+            	if(!blockStateRootHash.equals(worldStateRootHash))
+            		logger.warn("WARNING: STATE CONFLICT! worldstate {} mismatch", worldStateRootHash);
+            }
+            
         }
         // Remove all wallet transactions as they already approved by the net
         for (Block block : blocks) {
@@ -135,7 +144,7 @@ public class Blockchain {
 			this.updateGasPrice(block);
 			this.setLastBlock(block);
             if (logger.isDebugEnabled())
-                logger.debug("block added to the chain with hash: {}", Hex.toHexString(block.getHash()));
+				logger.debug("block added {}", block.toFlatString());
     	} else {
     		logger.warn("Invalid block with nr: {}", block.getNumber());
     	}
