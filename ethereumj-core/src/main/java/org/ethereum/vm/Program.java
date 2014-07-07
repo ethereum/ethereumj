@@ -324,9 +324,6 @@ public class Program {
             return;
         }
 
-        //  actual gas subtract
-        this.spendGas(gas.intValue(), "internal call");
-
         BigInteger endowment = endowmentValue.value();
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0){
@@ -334,7 +331,6 @@ public class Program {
             return;
         }
         result.getRepository().addBalance(senderAddress, endowment.negate());
-
 
         if (invokeData.byTestingSuite()) {
             logger.info("[testing suite] - omit real call");
@@ -347,6 +343,9 @@ public class Program {
 
             return;
         }
+
+        //  actual gas subtract
+        this.spendGas(gas.intValue(), "internal call");
 
 
         Repository trackRepository = result.getRepository().getTrack();

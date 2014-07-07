@@ -32,13 +32,18 @@ public class AccountState {
 
         this.address = address;
         String    balance  = accountState.get("balance").toString();
-        JSONArray code     = (JSONArray)accountState.get("code");
+        String    code     = (String)accountState.get("code");
         String    nonce    = accountState.get("nonce").toString();
 
         JSONObject store    = (JSONObject)accountState.get("storage");
 
         this.balance = new BigInteger(balance).toByteArray();
-        this.code    = Helper.parseDataArray(code);
+
+        if (code != null && code.length() > 2)
+            this.code    = Hex.decode(code.substring(2));
+        else
+            this.code = new byte[0];
+
         this.nonce   = new BigInteger(nonce).toByteArray();
 
         int size = store.keySet().size();
