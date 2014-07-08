@@ -85,7 +85,6 @@ public class WorldManager {
 
 		// 1. VALIDATE THE NONCE
 		byte[] senderAddress = tx.getSender();
-
 		AccountState senderAccount = repository.getAccountState(senderAddress);
 
 		if (senderAccount == null) {
@@ -95,11 +94,12 @@ public class WorldManager {
 			return;
 		}
 
-		BigInteger nonce = repository.getNonce(senderAddress);
-		if (nonce.compareTo(new BigInteger(tx.getNonce())) != 0) {
+		BigInteger nonce = senderAccount.getNonce();
+		BigInteger txNonce = new BigInteger(tx.getNonce());
+		if (nonce.compareTo(txNonce) != 0) {
 			if (stateLogger.isWarnEnabled())
 				stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
-						nonce.longValue(), new BigInteger(tx.getNonce()));
+						nonce, txNonce);
 			return;
 		}
 
@@ -113,41 +113,33 @@ public class WorldManager {
         if (coinbase != null)
 		    repository.addBalance(coinbase, gasDebit);
 
-		byte[] contractAddress;
+		byte[] receiverAddress;
 
 		// Contract creation or existing Contract call
 		if (tx.isContractCreation()) {
 
-			// credit the receiver
-			contractAddress = tx.getContractAddress();
-			repository.createAccount(contractAddress);
+			receiverAddress = tx.getContractAddress();
+			repository.createAccount(receiverAddress);
 			stateLogger.info("New contract created address={}",
-					Hex.toHexString(contractAddress));
+					Hex.toHexString(receiverAddress));
 		} else {
 
-			contractAddress = tx.getReceiveAddress();
-			AccountState receiverState = repository.getAccountState(tx
-					.getReceiveAddress());
+			receiverAddress = tx.getReceiveAddress();
+			AccountState receiverState = repository.getAccountState(receiverAddress);
 
 			if (receiverState == null) {
-				repository.createAccount(tx.getReceiveAddress());
+				repository.createAccount(receiverAddress);
 				if (stateLogger.isInfoEnabled())
-					stateLogger.info("New account created address={}",
-							Hex.toHexString(tx.getReceiveAddress()));
+					stateLogger.info("New receiver account created address={}",
+							Hex.toHexString(receiverAddress));
 			}
 		}
 
 		// 2.2 UPDATE THE NONCE
 		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-		BigInteger balance = repository.getBalance(senderAddress);
+		BigInteger balance = senderAccount.getBalance();
 		if (balance.compareTo(BigInteger.ZERO) == 1) {
 			repository.increaseNonce(senderAddress);
-
-			if (stateLogger.isInfoEnabled())
-				stateLogger.info(
-						"Before contract execution the sender address debit with gas total cost, "
-								+ "\n sender={} \n gas_debit= {}",
-						Hex.toHexString(tx.getSender()), gasDebit);
 		}
 
 		// actual gas value debit from the sender
@@ -157,10 +149,15 @@ public class WorldManager {
 		if (gasDebit.signum() == 1) {
 			if (balance.compareTo(gasDebit) == -1) {
 				logger.info("No gas to start the execution: sender={}",
-						Hex.toHexString(tx.getSender()));
+						Hex.toHexString(senderAddress));
 				return;
 			}
 			repository.addBalance(senderAddress, gasDebit.negate());
+			if (stateLogger.isInfoEnabled())
+				stateLogger.info(
+						"Before contract execution debit the sender address with gas total cost, "
+								+ "\n sender={} \n gas_debit= {}",
+						Hex.toHexString(senderAddress), gasDebit);
 		}
 
 		// 3. START TRACKING FOR REVERT CHANGES OPTION !!!
@@ -172,11 +169,11 @@ public class WorldManager {
 			// 4. THE SIMPLE VALUE/BALANCE CHANGE
 			if (tx.getValue() != null) {
 
-				BigInteger senderBalance = repository.getBalance(senderAddress);
+				BigInteger senderBalance = senderAccount.getBalance();
 
 				if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
 
-					repository.addBalance(contractAddress,
+					repository.addBalance(receiverAddress,
 							new BigInteger(1, tx.getValue()));
 					repository.addBalance(senderAddress,
 							new BigInteger(1, tx.getValue()).negate());
@@ -185,53 +182,39 @@ public class WorldManager {
 						stateLogger.info("Update value balance \n "
 								+ "sender={}, receiver={}, value={}",
 								Hex.toHexString(senderAddress),
-								Hex.toHexString(contractAddress),
+								Hex.toHexString(receiverAddress),
 								new BigInteger(tx.getValue()));
 				}
 			}
 
-			// 3. FIND OUT WHAT IS THE TRANSACTION TYPE
+			byte[] code;
+			// 3. FIND OUT THE TRANSACTION TYPE
 			if (tx.isContractCreation()) {
-
-				byte[] initCode = tx.getData();
-
+				code = tx.getData(); // init code
 				if (logger.isInfoEnabled())
 					logger.info("running the init for contract: address={}",
-							Hex.toHexString(tx.getContractAddress()));
+							Hex.toHexString(receiverAddress));
+			} else {
+				code = trackRepository.getCode(receiverAddress);
+				if (code != null) {
+					if (logger.isInfoEnabled())
+						logger.info("calling for existing contract: address={}",
+								Hex.toHexString(receiverAddress));
+				}
+			}
 
+			if (code != null) {
 				Block lastBlock = blockchain.getLastBlock();
 
 				ProgramInvoke programInvoke = ProgramInvokeFactory
 						.createProgramInvoke(tx, lastBlock, trackRepository);
 				
 				VM vm = new VM();
-				Program program = new Program(initCode, programInvoke);
+				Program program = new Program(code, programInvoke);
 				vm.play(program);
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, trackRepository,
-						senderAddress, tx.getContractAddress(), coinbase, true);
-
-			} else {
-
-				byte[] programCode = trackRepository.getCode(tx.getReceiveAddress());
-				if (programCode != null) {
-
-					if (logger.isInfoEnabled())
-						logger.info("calling for existing contract: address={}",
-								Hex.toHexString(tx.getReceiveAddress()));
-
-					Block lastBlock = blockchain.getLastBlock();
-
-					ProgramInvoke programInvoke = ProgramInvokeFactory
-							.createProgramInvoke(tx, lastBlock, trackRepository);
-					
-					VM vm = new VM();
-					Program program = new Program(programCode, programInvoke);
-					vm.play(program);
-					ProgramResult result = program.getResult();
-					applyProgramResult(result, gasDebit, trackRepository,
-							senderAddress, tx.getReceiveAddress(), coinbase,false);
-				}
+						senderAddress, receiverAddress, coinbase, true);
 			}
 		} catch (RuntimeException e) {
 			trackRepository.rollback();
