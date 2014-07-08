@@ -43,7 +43,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     private Logger logger = LoggerFactory.getLogger("wire");
 
     private Timer chainAskTimer = new Timer();
-    private int secToAskForChain = 1;
+    private int secToAskForChain = 7;
 
     private final Timer timer = new Timer();
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
@@ -76,6 +76,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(buffer);
 
         // sample for pinging in background
+/*
         timer.scheduleAtFixedRate(new TimerTask() {
 
             public void run() {
@@ -94,7 +95,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 sendPing(ctx);
             }
         }, 2000, 5000);
+*/
 
+/*
         timer.scheduleAtFixedRate(new TimerTask() {
 
             public void run() {
@@ -110,14 +113,18 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 sendGetTransactions(ctx);
             }
         }, 2000, 30000);
+*/
 
+/*
         chainAskTimer.schedule(new TimerTask() {
 
             public void run() {
-                logger.info("[Send: GET_CHAIN]");
                 sendGetChain(ctx);
             }
         }, 3000, secToAskForChain * 1000);
+*/
+
+        sendGetChain(ctx);
 
     }
 
@@ -128,6 +135,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         logger.info("[Recv msg: [{}] ]", Hex.toHexString(payload));
 
         byte command = RLP.getCommandCode(payload);
+
         // got HELLO
         if (Command.fromInt(command) == HELLO) {
             logger.info("[Recv: HELLO]" );
@@ -223,6 +231,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             // If we get one block from a peer
             // we ask less greedy
+/*
             if (blockList.size() <= 1 && secToAskForChain != 10) {
 
                 logger.info("Now we ask for a chain each 10 seconds");
@@ -239,9 +248,11 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                     }
                 }, 3000, secToAskForChain * 1000);
             }
+*/
 
             // If we get more blocks from a peer
             // we ask more greedy
+/*
             if (blockList.size() > 2 && secToAskForChain != 1) {
 
                 logger.info("Now we ask for a chain each 1 seconds");
@@ -258,9 +269,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                     }
                 }, 3000, secToAskForChain * 1000);
             }
+*/
 
             WorldManager.getInstance().getBlockChain().addBlocks(blockList);
             if (peerListener != null) peerListener.console(blocksMessage.toString());
+
+            if (blockList.size() > 1)
+                sendGetChain(ctx);
         }
 
         // got GETCHAIN
@@ -359,6 +374,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private void sendGetChain(ChannelHandlerContext ctx) {
 
+        logger.info("[Send: GET_CHAIN]");
         byte[] hash = WorldManager.getInstance().getBlockChain().getLastBlock().getHash();
         GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
         chainMessage.toString();
