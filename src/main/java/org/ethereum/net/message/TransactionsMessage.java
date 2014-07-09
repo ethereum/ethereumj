@@ -23,7 +23,6 @@ import java.util.List;
 public class TransactionsMessage extends Message {
 	
 	private Logger logger = LoggerFactory.getLogger("wire");
-
     private List<Transaction> transactions = new ArrayList<Transaction>();
 
     public TransactionsMessage() {
@@ -52,8 +51,15 @@ public class TransactionsMessage extends Message {
         payload = RLP.encodeList(elements);
     }
 
+
+    public TransactionsMessage(byte[] payload) {
+        super(RLP.decode2(payload));
+        this.payload = payload;
+    }
+
     public TransactionsMessage(RLPList rawData) {
-        super(rawData);
+        this.rawData = rawData;
+        parsed = false;
     }
 
     @Override
@@ -77,6 +83,16 @@ public class TransactionsMessage extends Message {
     public List<Transaction> getTransactions() {
         if (!parsed) parseRLP();
         return transactions;
+    }
+
+    @Override
+    public String getMessageName() {
+        return "Transactions";
+    }
+
+    @Override
+    public Class getAnswerMessage() {
+        return null;
     }
 
     @Override

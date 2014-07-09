@@ -117,6 +117,16 @@ public class HelloMessage extends Message {
         return peerId;
     }
 
+    @Override
+    public String getMessageName() {
+        return "HelloMessage";
+    }
+
+    @Override
+    public Class getAnswerMessage() {
+        return null;
+    }
+
     public String toString() {
         if (!parsed) parseRLP();
         return "Hello Message [ command=" + HELLO.asByte() + " " +

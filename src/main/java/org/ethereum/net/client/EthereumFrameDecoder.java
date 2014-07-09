@@ -32,6 +32,12 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
               (magicBytes >>  8   &  0xFF) == 0x08  &&
               (magicBytes         &  0xFF) == 0x91 )) {
 
+            // TODO: (!!!) the collision can happen,
+            // TODO: rare but can on the good roundtrips
+            // TODO: so I want to drop the frame and continue
+            // TODO: normally , if it's happens to often , than
+            // TODO: it's an attack and I should drop the peer.
+
             logger.error("abandon garbage, wrong magic bytes: [ {} ] msgSize: [ {} ]", magicBytes, msgSize);
             ctx.close();
         }

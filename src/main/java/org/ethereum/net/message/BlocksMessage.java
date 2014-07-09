@@ -7,6 +7,7 @@ import static org.ethereum.net.Command.BLOCKS;
 
 import org.ethereum.core.Block;
 import org.ethereum.net.Command;
+import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
@@ -22,6 +23,12 @@ public class BlocksMessage extends Message {
 	public BlocksMessage(RLPList rawData) {
 		super(rawData);
 	}
+
+    public BlocksMessage(byte[] payload) {
+        super(RLP.decode2(payload));
+        this.payload = payload;
+    }
+
 
 	public void parseRLP() {
 
@@ -41,7 +48,7 @@ public class BlocksMessage extends Message {
 
 	@Override
 	public byte[] getPayload() {
-		return null;
+		return payload;
 	}
 
 	public List<Block> getBlockDataList() {
@@ -49,7 +56,17 @@ public class BlocksMessage extends Message {
 		return blockDataList;
 	}
 
-	public String toString() {
+    @Override
+    public String getMessageName() {
+        return "Block";
+    }
+
+    @Override
+    public Class getAnswerMessage() {
+        return null;
+    }
+
+    public String toString() {
         if (!parsed) parseRLP();
 
 		StringBuffer sb = new StringBuffer();

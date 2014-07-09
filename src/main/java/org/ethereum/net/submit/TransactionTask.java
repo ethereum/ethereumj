@@ -43,7 +43,7 @@ public class TransactionTask implements Callable<Transaction> {
             }
             logger.info("return approved: {}", walletTransaction.getApproved());
         } catch (Throwable th) {
-            logger.info("exception caugh: {}", th.getCause());
+            logger.info("exception caugh: {}", th);
             WorldManager.getInstance().getBlockChain().removeWalletTransaction(tx);
         }
         return null;

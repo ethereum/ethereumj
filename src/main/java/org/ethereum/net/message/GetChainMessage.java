@@ -82,6 +82,16 @@ public class GetChainMessage extends Message {
         return blockNum;
     }
 
+    @Override
+    public String getMessageName() {
+        return "GetChain";
+    }
+
+    @Override
+    public Class getAnswerMessage() {
+        return BlocksMessage.class;
+    }
+
     public String toString() {
 
         if (!parsed) parseRLP();

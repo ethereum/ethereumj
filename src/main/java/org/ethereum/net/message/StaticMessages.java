@@ -10,6 +10,13 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class StaticMessages {
 
+    public final static GetTransactionsMessage
+            GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
+    public final static GetPeersMessage GET_PEERS_MESSAGE        = new GetPeersMessage();
+    public final static PingMessage     PING_MESSAGE             = new PingMessage();
+    public final static PongMessage     PONG_MESSAGE             = new PongMessage();
+
+
     public static final byte[] PING             = Hex.decode("2240089100000002C102");
     public static final byte[] PONG             = Hex.decode("2240089100000002C103");
     public static final byte[] GET_PEERS        = Hex.decode("2240089100000002C110");
