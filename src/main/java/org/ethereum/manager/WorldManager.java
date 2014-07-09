@@ -188,8 +188,9 @@ public class WorldManager {
 			}
 
 			byte[] code;
+			boolean isContractCreation = tx.isContractCreation();
 			// 3. FIND OUT THE TRANSACTION TYPE
-			if (tx.isContractCreation()) {
+			if (isContractCreation) {
 				code = tx.getData(); // init code
 				if (logger.isInfoEnabled())
 					logger.info("running the init for contract: address={}",
@@ -203,7 +204,7 @@ public class WorldManager {
 				}
 			}
 
-			if (code != null) {
+			if (isContractCreation || code != null) {
 				Block lastBlock = blockchain.getLastBlock();
 
 				ProgramInvoke programInvoke = ProgramInvokeFactory
@@ -214,7 +215,7 @@ public class WorldManager {
 				vm.play(program);
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, trackRepository,
-						senderAddress, receiverAddress, coinbase, true);
+						senderAddress, receiverAddress, coinbase, isContractCreation);
 			}
 		} catch (RuntimeException e) {
 			trackRepository.rollback();
