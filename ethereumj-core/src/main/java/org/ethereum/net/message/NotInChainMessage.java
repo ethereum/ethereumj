@@ -40,6 +40,16 @@ public class NotInChainMessage extends Message {
         return hash;
     }
 
+    @Override
+    public String getMessageName() {
+        return "NotInChain";
+    }
+
+    @Override
+    public Class getAnswerMessage() {
+        return null;
+    }
+
     public String toString() {
         if (!parsed) 
         	parseRLP();

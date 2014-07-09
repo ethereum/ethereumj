@@ -23,4 +23,9 @@ public abstract class Message {
     public abstract void parseRLP();
     public abstract byte[] getPayload();
 
+    public abstract String getMessageName();
+
+    public abstract Class getAnswerMessage();
+
+
 }

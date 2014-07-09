@@ -1,6 +1,7 @@
 package org.ethereum.net.message;
 
 import org.ethereum.net.Command;
+import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
@@ -15,6 +16,12 @@ import static org.ethereum.net.message.ReasonCode.DISCONNECT_REQUESTED;
 public class DisconnectMessage extends Message {
 
     private ReasonCode reason;
+
+    public DisconnectMessage(byte[] payload) {
+        super(RLP.decode2(payload));
+        this.payload = payload;
+    }
+
 
     public DisconnectMessage(RLPList rawData) {
         super(rawData);
@@ -47,6 +54,16 @@ public class DisconnectMessage extends Message {
     public ReasonCode getReason() {
         if (!parsed) parseRLP();
         return reason;
+    }
+
+    @Override
+    public String getMessageName() {
+        return "Disconnect";
+    }
+
+    @Override
+    public Class getAnswerMessage() {
+        return null;
     }
 
     public String toString() {

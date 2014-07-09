@@ -8,6 +8,7 @@ import static org.ethereum.net.Command.PEERS;
 
 import org.ethereum.net.Command;
 import org.ethereum.net.client.PeerData;
+import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
@@ -18,10 +19,14 @@ import org.ethereum.util.RLPList;
  */
 public class PeersMessage extends Message {
 
-	private RLPList rawData;
     private boolean parsed = false;
 
     private List<PeerData> peers = new ArrayList<PeerData>();
+
+    public PeersMessage(byte[] payload) {
+        super(RLP.decode2(payload));
+        this.payload = payload;
+    }
 
     public PeersMessage(RLPList rawData) {
         this.rawData = rawData;
@@ -59,13 +64,23 @@ public class PeersMessage extends Message {
 
     @Override
     public byte[] getPayload() {
-        return null;
+        return payload;
     }
 
     public List<PeerData> getPeers() {
         if (!parsed)
             parseRLP();
         return peers;
+    }
+
+    @Override
+    public String getMessageName() {
+        return "Peers";
+    }
+
+    @Override
+    public Class getAnswerMessage() {
+        return null;
     }
 
     public String toString() {

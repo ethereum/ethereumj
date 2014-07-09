@@ -33,7 +33,7 @@ public class ClientPeer {
     private Logger logger = LoggerFactory.getLogger("wire");
 
     private PeerListener peerListener;
-    private Channel channel;
+    private EthereumProtocolHandler handler;
 
     public ClientPeer() {
     }
@@ -54,8 +54,6 @@ public class ClientPeer {
             b.option(ChannelOption.SO_KEEPALIVE, true);
             b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, new EthereumMessageSizeEstimator());
 
-
-            final EthereumProtocolHandler handler;
             if (peerListener != null) {
                 handler = new EthereumProtocolHandler(peerListener);
                 peerListener.console("connecting to: " + host + ":" + port);
@@ -76,7 +74,6 @@ public class ClientPeer {
 
             // Start the client.
             ChannelFuture f = b.connect(host, port).sync(); // (5)
-            this.channel = f.channel();
             MainData.instance.setActivePeer(this);
 
             // Wait until the connection is closed.
@@ -92,7 +89,6 @@ public class ClientPeer {
     /*
      * The wire gets data for signed transactions and
      * sends it to the net.
-     * TODO: find a way to set all "send to wire methods" in one place.
      */
     public void sendTransaction(Transaction transaction) {
 
@@ -101,6 +97,7 @@ public class ClientPeer {
         txList.add(transaction);
         TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
 
+
         byte[] payload = transactionsMessage.getPayload();
 
         if (peerListener != null)
@@ -108,15 +105,6 @@ public class ClientPeer {
                  Hex.toHexString(payload) +
                  " ]");
 
-        ByteBuf buffer = channel.alloc().buffer(payload.length + 8);
-        buffer.writeBytes(StaticMessages.MAGIC_PACKET);
-        buffer.writeBytes(ByteUtil.calcPacketLength(payload));
-        buffer.writeBytes(payload);
-
-        logger.info("Send msg: [ " +
-                Hex.toHexString(payload) +
-                " ]");
-
-        channel.writeAndFlush(buffer);
+        handler.sendMsg(transactionsMessage);
     }
 }
