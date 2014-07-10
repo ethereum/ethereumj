@@ -10,10 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * www.ethereumJ.com
@@ -26,12 +23,30 @@ public class TestRunner {
 
     private Logger logger = LoggerFactory.getLogger("JSONTest");
 
+    public List<String> runTestSuite(TestSuite testSuite){
+
+        Iterator<TestCase> testIterator = testSuite.iterator();
+        List<String> resultCollector = new ArrayList<>();
+
+        while (testIterator.hasNext()){
+
+            TestCase testCase = testIterator.next();
+
+            logger.info("Running: [ {} ]", testCase.getName());
+            TestRunner runner = new TestRunner();
+            List<String> result = runner.runTestCase(testCase);
+            resultCollector.addAll(result);
+        }
+
+        return resultCollector;
+    }
+
+
     public List<String> runTestCase(TestCase testCase){
 
         List<String> results = new ArrayList<>();
 
         Repository repository = new Repository();
-
 
         /* 1. Store pre-exist accounts - Pre */
         for (ByteArrayWrapper key : testCase.getPre().keySet()){

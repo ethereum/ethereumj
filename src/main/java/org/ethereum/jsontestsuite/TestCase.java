@@ -19,6 +19,8 @@ import java.util.*;
 
 public class TestCase {
 
+    private String name = "";
+
     //            "env": { ... },
     private Env env;
 
@@ -39,6 +41,12 @@ public class TestCase {
 
     //            "callcreates": { ... }
     private List<CallCreate> callCreateList = new ArrayList<>();
+
+    public TestCase(String name, JSONObject testCaseJSONObj) throws ParseException{
+
+        this(testCaseJSONObj);
+        this.name = name;
+    }
 
 
     public TestCase(JSONObject testCaseJSONObj) throws ParseException{
@@ -114,6 +122,10 @@ public class TestCase {
 
     public List<CallCreate> getCallCreateList() {
         return callCreateList;
+    }
+
+    public String getName(){
+        return name;
     }
 
     @Override
