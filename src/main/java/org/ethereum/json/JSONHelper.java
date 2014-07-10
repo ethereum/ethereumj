@@ -5,6 +5,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONValue;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -26,8 +27,8 @@ public class JSONHelper {
         Map<String, String> outMap = new LinkedHashMap<String, String>();
 
         for (DataWord key : storageKeys) {
-            outMap.put(Hex.toHexString(key.getNoLeadZeroesData()),
-                       Hex.toHexString(storageMap.get(key).getNoLeadZeroesData()));
+            outMap.put(Hex.toHexString(key.getData()),
+                       Hex.toHexString(storageMap.get(key).getData()));
         }
 
         String mapString =  JSONValue.toJSONString(outMap);
@@ -36,7 +37,7 @@ public class JSONHelper {
         JSONArray orderFields  = new JSONArray();
         orderFields.add("address: "    + Hex.toHexString(address));
         orderFields.add(" nonce: "     + Hex.toHexString(nonce));
-        orderFields.add(" balance: "   + Hex.toHexString(balance));
+        orderFields.add(" balance: "   + new BigInteger(balance).toString());
         orderFields.add(" stateRoot: " + (stateRoot == null ? "" : Hex.toHexString(stateRoot)));
         orderFields.add(" codeHash: "  + (codeHash == null ? "" : Hex.toHexString(codeHash)));
         orderFields.add(" code: "      + (code == null ? "" : Hex.toHexString(code)));

@@ -47,7 +47,7 @@ public class JSONTestSuiteTest {
         JSONParser parser = new JSONParser();
         String accountString = "{'balance':999999999999999852,'nonce':1," +
                 "'code':'0x6000600060006000604a3360c85c03f1'," +
-                "'storage':{'0xffaa' : [200], '0xffab' : ['0xb2b2b2']}}";
+                "'storage':{'0xffaa' : '0xc8', '0xffab' : '0xb2b2b2'}}";
         accountString = accountString.replace("'", "\"");
 
         JSONObject accountJSONObj = (JSONObject)parser.parse(accountString);
@@ -269,6 +269,29 @@ public class JSONTestSuiteTest {
 
         Assert.assertTrue(result.size() == 0);
     }
+
+    @Ignore
+    @Test // TestCase file: vmtest-4.json  //
+    public void test10() throws ParseException, IOException, URISyntaxException {
+
+        URL vmtest = ClassLoader
+                .getSystemResource("jsontestsuite/vmtest-5.json");
+
+        File vmTestFile = new File(vmtest.toURI());
+        byte[] testData = Files.readAllBytes(vmTestFile.toPath());
+        String testSrc = new String(testData);
+
+        JSONParser parser = new JSONParser();
+        JSONObject testCaseJSONObj = (JSONObject)parser.parse(testSrc);
+
+        TestSuite testSuite = new TestSuite(testCaseJSONObj);
+
+        TestRunner runner = new TestRunner();
+        List<String> result = runner.runTestSuite(testSuite);
+
+        Assert.assertTrue(result.size() == 0);
+    }
+
 
     @Test // testing full suite
     public void testDirectFromGitHub() throws ParseException {

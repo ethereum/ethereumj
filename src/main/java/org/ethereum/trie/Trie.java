@@ -131,7 +131,7 @@ public class Trie implements TrieFacade{
      * @param key
      */
     public void delete(byte[] key) {
-        delete(Hex.encode(key));
+        delete(new String(key));
     }
 
 	/**

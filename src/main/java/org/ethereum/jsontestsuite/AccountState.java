@@ -51,8 +51,7 @@ public class AccountState {
         for (int i = 0; i < size; ++i){
 
             String keyS = keys[i].toString();
-            Object valObject = store.get(keys[i]);
-            byte[] valBytes =  Helper.parseDataArray((JSONArray)valObject);
+            String valS =  store.get(keys[i]).toString();
 
             ByteArrayWrapper key;
             boolean hexVal = Pattern.matches("0[xX][0-9a-fA-F]+", keyS);
@@ -64,8 +63,15 @@ public class AccountState {
                 key = new ByteArrayWrapper( data );
             }
 
-            ByteArrayWrapper value =
-                    new ByteArrayWrapper(valBytes);
+            ByteArrayWrapper value;
+            hexVal = Pattern.matches("0[xX][0-9a-fA-F]+", valS);
+            if (hexVal){
+                value = new ByteArrayWrapper(  Hex.decode(valS.substring(2)) );
+            } else {
+
+                byte[] data = ByteUtil.bigIntegerToBytes( new BigInteger(valS) );
+                value = new ByteArrayWrapper( data );
+            }
 
             storage.put(key, value);
         }
