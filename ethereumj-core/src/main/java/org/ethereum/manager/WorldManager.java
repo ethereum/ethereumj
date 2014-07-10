@@ -105,9 +105,6 @@ public class WorldManager {
 		// first of all debit the gas from the issuer
 		BigInteger gasDebit = tx.getTotalGasValueDebit();
 
-		// The coinbase get the gas cost
-        if (coinbase != null)
-		    repository.addBalance(coinbase, gasDebit);
 
 		byte[] receiverAddress;
 
@@ -148,7 +145,14 @@ public class WorldManager {
 						Hex.toHexString(senderAddress));
 				return;
 			}
-			repository.addBalance(senderAddress, gasDebit.negate());
+
+            repository.addBalance(senderAddress, gasDebit.negate());
+
+            // The coinbase get the gas cost
+            if (coinbase != null)
+                repository.addBalance(coinbase, gasDebit);
+
+
 			if (stateLogger.isInfoEnabled())
 				stateLogger.info(
 						"Before contract execution debit the sender address with gas total cost, "
@@ -277,6 +281,7 @@ public class WorldManager {
         }
 
         // delete the marked to die accounts
+        if (result.getDeleteAccounts() == null) return;
         for (DataWord address : result.getDeleteAccounts()){
 
             repository.delete(address.getNoLeadZeroesData());

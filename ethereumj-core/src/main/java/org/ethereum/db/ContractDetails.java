@@ -42,19 +42,35 @@ public class ContractDetails {
 
 	public void put(DataWord key, DataWord value) {
 
-		storageTrie.update(key.getData(), value.getData());
+        if (value.equals(DataWord.ZERO)){
 
-		int index = storageKeys.indexOf(key);
+            storageTrie.delete(key.getData());
 
-		if (index != -1) {
-			storageKeys.remove(index);
-			storageValues.remove(index);
-		}
+            int index = storageKeys.indexOf(key);
+            if (index != -1) {
+                storageKeys.remove(index);
+                storageValues.remove(index);
+            }
 
-		storageKeys.add(key);
-		storageValues.add(value);
+            this.rlpEncoded = null;
 
-		this.rlpEncoded = null;
+
+        } else{
+
+            storageTrie.update(key.getData(), value.getData());
+
+            int index = storageKeys.indexOf(key);
+
+            if (index != -1) {
+                storageKeys.remove(index);
+                storageValues.remove(index);
+            }
+
+            storageKeys.add(key);
+            storageValues.add(value);
+
+            this.rlpEncoded = null;
+        }
 	}
 
 	public DataWord get(DataWord key) {

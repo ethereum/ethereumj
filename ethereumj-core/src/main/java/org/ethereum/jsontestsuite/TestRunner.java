@@ -143,7 +143,7 @@ public class TestRunner {
             if (!Arrays.equals(expectedCode, actualCode)){
 
                 String output =
-                        String.format("The code result is different. key: [ %s ],  expectedCode: [ %s ] is actualCode: [ %s ] ",
+                        String.format("The code result is different. account: [ %s ],  expectedCode: [ %s ] is actualCode: [ %s ] ",
                                 Hex.toHexString(key.getData()),
                                 Hex.toHexString(expectedCode),
                                 Hex.toHexString(actualCode));
@@ -298,7 +298,7 @@ public class TestRunner {
         if (!expectedGas.equals(actualGas)){
 
             String output =
-                    String.format("HReturn is differnt expected hReturn: [ %s ], actual hReturn: [ %s ]",
+                    String.format("Gas usage is differnt expected gas usage: [ %s ], actual gas usage: [ %s ]",
                             expectedGas.toString() ,
                             actualGas.toString());
             logger.info(output);

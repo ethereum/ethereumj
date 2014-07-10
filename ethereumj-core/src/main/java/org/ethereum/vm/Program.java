@@ -596,7 +596,12 @@ public class Program {
             logger.debug(" -- STACK --   {}", stackData);
             logger.debug(" -- MEMORY --  {}", memoryData);
             logger.debug(" -- STORAGE -- {}\n", storageData);
-            logger.debug("\n\n  Spent Gas: {}", result.getGasUsed());
+            logger.debug("\n  Spent Gas: [ {} ]/[ {} ]\n  Left Gas:  [ {} ]\n",
+                    result.getGasUsed(),
+                    invokeData.getGas().longValue(),
+                    getGas().longValue());
+
+
 
             StringBuilder globalOutput = new StringBuilder("\n");
             if (stackData.length() > 0) stackData.append("\n");
