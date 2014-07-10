@@ -16,6 +16,7 @@ public class ProgramResult {
     private int gasUsed = 0;
     private ByteBuffer  hReturn = null;
     private RuntimeException exception;
+    private List<DataWord> deleteAccounts;
 
     Repository repository = null;
 
@@ -60,6 +61,29 @@ public class ProgramResult {
 
     public void setRepository(Repository repository) {
         this.repository = repository;
+    }
+
+    public void addDeleteAccount(DataWord address){
+
+        if (deleteAccounts == null){
+            deleteAccounts = new ArrayList<>();
+        }
+
+        deleteAccounts.add(address);
+    }
+
+    public void addDeleteAccounts(List<DataWord> accounts){
+
+        if (deleteAccounts == null){
+            deleteAccounts = new ArrayList<>();
+        }
+
+        deleteAccounts.addAll(accounts);
+    }
+
+
+    public List<DataWord> getDeleteAccounts() {
+        return deleteAccounts;
     }
 
     public List<CallCreate> getCallCreateList() {

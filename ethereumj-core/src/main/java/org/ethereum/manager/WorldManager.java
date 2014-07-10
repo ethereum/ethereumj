@@ -16,11 +16,7 @@ import org.ethereum.core.Wallet;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Repository;
-import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvoke;
-import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.ProgramResult;
-import org.ethereum.vm.VM;
+import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -246,7 +242,6 @@ public class WorldManager {
 			throw result.getException();
 		}
 
-
 		BigInteger gasPrice = BigInteger.valueOf(blockchain.getGasPrice());
 		BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
 				result.getGasUsed()).multiply(gasPrice));
@@ -262,7 +257,6 @@ public class WorldManager {
 			repository.addBalance(senderAddress, refund);
 			repository.addBalance(coinbase, refund.negate());
 		}
-
 
         if (initResults){
 
@@ -281,6 +275,13 @@ public class WorldManager {
                                     Hex.toHexString(bodyCode));
             }
         }
+
+        // delete the marked to die accounts
+        for (DataWord address : result.getDeleteAccounts()){
+
+            repository.delete(address.getNoLeadZeroesData());
+        }
+
 	}
 
 	public void applyBlock(Block block) {

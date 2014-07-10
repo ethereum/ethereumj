@@ -96,6 +96,7 @@ public class TestRunner {
             program.setRuntimeFailure(e);
         }
 
+
         /* 5. Assert Post values */
         for (ByteArrayWrapper key : testCase.getPost().keySet()){
 
@@ -109,7 +110,8 @@ public class TestRunner {
             if (!accountExist){
 
                 String output =
-                        String.format("The expected account does not exist. key: [ %s ]", Hex.toHexString(key.getData()));
+                        String.format("The expected account does not exist. key: [ %s ]",
+                                Hex.toHexString(key.getData()));
                 logger.info(output);
                 results.add(output);
                 continue;

@@ -79,7 +79,7 @@ public class VM {
                 case CALL:
                     program.spendGas(GasCost.CALL, OpCode.code(op).name());
                     break;
-                case SSTORE: case STOP:
+                case SSTORE: case STOP: case SUICIDE:
                     // The ops that doesn't charged by step, or
                     // charged in the following section
                     break;
@@ -538,8 +538,8 @@ public class VM {
                     program.stop();
                 }	break;
                 case SUICIDE:{
-                    DataWord address   =  program.stackPop();
-                    // TODO: transfer left balance to the address
+                    DataWord address =  program.stackPop();
+                    program.suicide(address);
                     program.stop();
                 }	break;
                 default:{
