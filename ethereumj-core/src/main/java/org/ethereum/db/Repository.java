@@ -128,13 +128,19 @@ public class Repository {
 
 	public ContractDetails getContractDetails(byte[] addr) {
 
-		byte[] accountDetailsRLP = contractDetailsDB.get(addr);
+        if (logger.isInfoEnabled())
+            logger.info("Account: [ {} ]", Hex.toHexString(addr));
 
-		if (accountDetailsRLP == null) {
-			if (logger.isInfoEnabled())
-				logger.info("No account: [ {} ]", Hex.toHexString(addr));
+        byte[] accountDetailsRLP = contractDetailsDB.get(addr);
+
+
+        if (accountDetailsRLP == null) {
 			return null;
 		}
+
+        if (logger.isInfoEnabled())
+            logger.info("Contract details RLP: [ {} ]", Hex.toHexString(accountDetailsRLP));
+
 		ContractDetails details = new ContractDetails(accountDetailsRLP);
 		return details;
 	}
@@ -226,6 +232,11 @@ public class Repository {
 
     public void saveCode(byte[] address, byte[] code) {
 
+        if (logger.isDebugEnabled())
+            logger.debug("saveCode: \n address: [ {} ], \n code: [ {} ]",
+                    Hex.toHexString(address),
+                    Hex.toHexString(code));
+
         if (code == null) return;
 
         AccountState state = getAccountState(address);
@@ -245,7 +256,12 @@ public class Repository {
 
         accountStateDB.update(address, state.getEncoded());
         contractDetailsDB.put(address, details.getEncoded());
-    }
+
+        if (logger.isDebugEnabled())
+            logger.debug("saveCode: \n accountState: [ {} ], \n contractDetails: [ {} ]",
+                    Hex.toHexString(state.getEncoded()),
+                    Hex.toHexString(details.getEncoded()));
+     }
 
     public byte[] getRootHash() {
         return this.worldState.getRootHash();

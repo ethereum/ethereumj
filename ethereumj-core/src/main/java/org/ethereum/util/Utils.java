@@ -101,7 +101,7 @@ public class Utils {
     }
 
 
-    public static String getHTML(String urlToRead) {
+    public static String getFromUrl(String urlToRead) {
         URL url;
         HttpURLConnection conn;
         BufferedReader rd;
@@ -111,6 +111,7 @@ public class Utils {
             url = new URL(urlToRead);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
+            conn.setConnectTimeout(3000);
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             while ((line = rd.readLine()) != null) {
                 result += line;
@@ -118,7 +119,7 @@ public class Utils {
             rd.close();
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
         return result;
