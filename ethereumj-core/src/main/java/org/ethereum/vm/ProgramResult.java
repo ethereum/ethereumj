@@ -74,6 +74,8 @@ public class ProgramResult {
 
     public void addDeleteAccounts(List<DataWord> accounts){
 
+        if (accounts == null) return;
+
         if (deleteAccounts == null){
             deleteAccounts = new ArrayList<>();
         }

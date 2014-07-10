@@ -232,12 +232,13 @@ public class Repository {
 
     public void saveCode(byte[] address, byte[] code) {
 
+        if (code == null) return;
+
         if (logger.isDebugEnabled())
             logger.debug("saveCode: \n address: [ {} ], \n code: [ {} ]",
                     Hex.toHexString(address),
                     Hex.toHexString(code));
 
-        if (code == null) return;
 
         AccountState state = getAccountState(address);
         if (state == null) return;
