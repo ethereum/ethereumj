@@ -190,6 +190,11 @@ public class TestRunner {
             }
         }
 
+        // TODO: assert that you have no extra accounts in the repository
+        // TODO:  -> basically the deleted by suicide should be deleted
+        // TODO:  -> and no unexpected created
+
+
         List<org.ethereum.vm.CallCreate> resultCallCreates  =
                 program.getResult().getCallCreateList();
 
