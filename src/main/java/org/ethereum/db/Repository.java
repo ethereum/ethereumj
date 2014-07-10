@@ -267,11 +267,13 @@ public class Repository {
         return this.worldState.getRootHash();
     }
 
-    public void close() {
-        if (this.stateDB != null)
-            stateDB.close();
-        if (this.detailsDB != null)
-            detailsDB.close();
+    public void delete(byte[] account){
+        accountStateDB.delete(account);
+        contractDetailsDB.delete(account);
+    }
+
+    public List<ByteArrayWrapper> dumpKeys(){
+        return stateDB.dumpKeys();
     }
 
     public void dumpState(long blockNumber, int txNumber, String txHash) {
@@ -331,4 +333,13 @@ public class Repository {
         	logger.error(e.getMessage(), e);
         }
     }
+
+    public void close() {
+        if (this.stateDB != null)
+            stateDB.close();
+        if (this.detailsDB != null)
+            detailsDB.close();
+    }
+
+
 }

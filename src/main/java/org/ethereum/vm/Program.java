@@ -208,6 +208,20 @@ public class Program {
         }
     }
 
+    public void suicide(DataWord obtainer){
+
+        // 1) pass full endowment to the obtainer
+        if (logger.isInfoEnabled())
+            logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getNoLeadZeroesData())
+                        , getBalance().longValue());
+
+        this.result.repository.addBalance(obtainer.getNoLeadZeroesData(),
+                getBalance().value());
+
+        // 2) mark the account as for delete
+        result.addDeleteAccount(getOwnerAddress());
+    }
+
     public void createContract(DataWord gas, DataWord memStart, DataWord memSize) {
 
         if (invokeData.byTestingSuite()){
@@ -256,6 +270,7 @@ public class Program {
         Program program = new Program(programCode.array(), programInvoke);
         vm.play(program);
         ProgramResult result = program.getResult();
+        this.result.addDeleteAccounts(result.getDeleteAccounts());
 
         if (result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException) {
@@ -360,13 +375,13 @@ public class Program {
 
         ProgramResult result = null;
 
-
         if (programCode != null && programCode.length != 0) {
 
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke);
             vm.play(program);
             result = program.getResult();
+            this.result.addDeleteAccounts(result.getDeleteAccounts());
         }
 
         if (result != null &&

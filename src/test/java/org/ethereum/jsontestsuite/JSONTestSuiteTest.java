@@ -248,7 +248,7 @@ public class JSONTestSuiteTest {
         Assert.assertTrue(result.size() == 0);
     }
 
-    @Ignore //TODO: suicide test should fixed
+
     @Test // TestCase file: vmtest-4.json  //
     public void test9() throws ParseException, IOException, URISyntaxException {
 
@@ -270,8 +270,6 @@ public class JSONTestSuiteTest {
         Assert.assertTrue(result.size() == 0);
     }
 
-
-    @Ignore //TODO: suicide test should fixed
     @Test // testing full suite
     public void testDirectFromGitHub() throws ParseException {
 
