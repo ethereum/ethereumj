@@ -117,8 +117,7 @@ public class Blockchain {
             	String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             	if(!blockStateRootHash.equals(worldStateRootHash))
             		logger.warn("WARNING: STATE CONFLICT! worldstate {} mismatch", worldStateRootHash);
-            }
-            
+            }           
         }
         // Remove all wallet transactions as they already approved by the net
         for (Block block : blocks) {

@@ -13,23 +13,14 @@ import java.util.Map;
 public class ProgramInvokeImpl implements ProgramInvoke {
 
     /*** TRANSACTION  env ***/
-    DataWord address;
-    DataWord origin;
-    DataWord caller;
-    DataWord balance;
-    DataWord gas;
-    DataWord gasPrice;
-    DataWord callValue;
+    private DataWord address, origin, caller, 
+    		balance, gas, gasPrice, callValue;
 
     byte[] msgData;
 
     /*** BLOCK  env ***/
-    DataWord prevHash;
-    DataWord coinbase;
-    DataWord timestamp;
-    DataWord number;
-    DataWord difficulty;
-    DataWord gaslimit;
+    private DataWord prevHash, coinbase, timestamp, 
+    		number, difficulty, gaslimit;
 
     Map<DataWord, DataWord> storage;
 
@@ -104,7 +95,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
     /*           ADDRESS op         */
     public DataWord getOwnerAddress() {
-
         return address;
     }
 
