@@ -126,11 +126,12 @@ public class Blockchain {
     public void addBlock(Block block) {
     	if(block.isValid()) {
 
-            if (!block.isGenesis())
+            if (!block.isGenesis()) {
         		for (Transaction tx : block.getTransactionsList())
         			// TODO: refactor the wallet pending transactions to the world manager
         			WorldManager.getInstance().addWalletTransaction(tx);
                 WorldManager.getInstance().applyBlock(block);
+            }
 
 			this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
 			this.index.put(block.getNumber(), block.getEncoded());
