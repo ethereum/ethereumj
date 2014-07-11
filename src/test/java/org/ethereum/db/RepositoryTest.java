@@ -231,7 +231,7 @@ public class RepositoryTest {
     public void test11() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        String expectedStorageHash = "365ed874ad42c2b4af335212465291e03dcd1f0c5b600f40f048ed238ad61fd3";
+        String expectedStorageHash = "a737c40a4aa895fb9eb464536c376ee7c2c08eb733c8fd2353fcc62dc734f075";
 
         Repository repository = new Repository();
 
