@@ -1,5 +1,6 @@
 package org.ethereum.json;
 
+import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONValue;
@@ -28,7 +29,9 @@ public class JSONHelper {
 
         for (DataWord key : storageKeys) {
             outMap.put(Hex.toHexString(key.getData()),
-                       Hex.toHexString(storageMap.get(key).getData()));
+                       Hex.toHexString(
+                               RLP.encodeElement( storageMap.get(key).getNoLeadZeroesData() )
+                       ));
         }
 
         String mapString =  JSONValue.toJSONString(outMap);

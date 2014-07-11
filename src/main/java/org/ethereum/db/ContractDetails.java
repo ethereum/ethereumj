@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -57,7 +58,7 @@ public class ContractDetails {
 
         } else{
 
-            storageTrie.update(key.getData(), value.getData());
+            storageTrie.update(key.getData(), RLP.encodeElement( value.getNoLeadZeroesData() ));
 
             int index = storageKeys.indexOf(key);
 
@@ -130,7 +131,7 @@ public class ContractDetails {
 		for (int i = 0; i < keys.size(); ++i) {
 			DataWord key = storageKeys.get(i);
 			DataWord value = storageValues.get(i);
-			storageTrie.update(key.getData(), value.getData());
+            storageTrie.update(key.getData(), RLP.encodeElement( value.getNoLeadZeroesData() ));
 		}
 
 		this.code = code.getRLPData();
@@ -152,7 +153,7 @@ public class ContractDetails {
 			}
 			for (int i = 0; i < size; ++i) {
 				DataWord value = storageValues.get(i);
-				values[i] = RLP.encodeElement(value.getData());
+				values[i] = RLP.encodeElement(value.getNoLeadZeroesData());
 			}
 			byte[] rlpKeysList = RLP.encodeList(keys);
 			byte[] rlpValuesList = RLP.encodeList(values);
