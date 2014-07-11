@@ -5,7 +5,6 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import java.math.BigInteger;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.ethereum.core.AccountState;
@@ -16,6 +15,7 @@ import org.ethereum.core.Wallet;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Repository;
+import org.ethereum.net.submit.WalletTransaction;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +40,11 @@ public class WorldManager {
 
 	private Map<String, Transaction> pendingTransactions = Collections
 			.synchronizedMap(new HashMap<String, Transaction>());
+	
+    // This map of transaction designed
+    // to approve the tx by external trusted peer
+    private Map<String, WalletTransaction> walletTransactions =
+            Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
 
 	private static WorldManager instance;
 
@@ -59,8 +64,6 @@ public class WorldManager {
 		String secret = CONFIG.coinbaseSecret();
 		byte[] cbAddr = HashUtil.sha3(secret.getBytes());
 		wallet.importKey(cbAddr);
-
-		blockchain.setWallet(wallet);
 	}
 	
 	public static WorldManager getInstance() {
@@ -72,10 +75,6 @@ public class WorldManager {
 	}
 
 	public void applyTransaction(Transaction tx, byte[] coinbase) {
-
-		// TODO: refactor the wallet pending transactions to the world manager
-		if (blockchain != null)
-			blockchain.addWalletTransaction(tx);
 
 		byte[] senderAddress = tx.getSender();
 		AccountState senderAccount = repository.getAccountState(senderAddress);
@@ -279,8 +278,7 @@ public class WorldManager {
 	public void applyBlock(Block block) {
 
 		int i = 0;
-		List<Transaction> txList = block.getTransactionsList();
-		for (Transaction tx : txList) {
+		for (Transaction tx : block.getTransactionsList()) {
 			applyTransaction(tx, block.getCoinbase());
 			repository.dumpState(block.getNumber(), i,
 					Hex.toHexString(tx.getHash()));
@@ -295,6 +293,37 @@ public class WorldManager {
 			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
 		}		
 	}
+	
+    /***********************************************************************
+     *	1) the dialog put a pending transaction on the list
+     *  2) the dialog send the transaction to a net
+     *  3) wherever the transaction got in from the wire it will change to approve state
+     *  4) only after the approve a) Wallet state changes
+     *  5) After the block is received with that tx the pending been clean up
+     */
+    public WalletTransaction addWalletTransaction(Transaction transaction) {
+        String hash = Hex.toHexString(transaction.getHash());
+        logger.info("pending transaction placed hash: {}", hash );
+
+        WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
+		if (walletTransaction != null)
+			walletTransaction.incApproved();
+		else {
+			walletTransaction = new WalletTransaction(transaction);
+			this.walletTransactions.put(hash, walletTransaction);
+		}
+        return walletTransaction;
+    }
+
+    public void removeWalletTransaction(Transaction transaction) {
+        String hash = Hex.toHexString(transaction.getHash());
+        logger.info("pending transaction removed with hash: {} ",  hash);
+        walletTransactions.remove(hash);
+    }
+    
+    public void setWallet(Wallet wallet)  {
+    	this.wallet = wallet;
+    }
 
 	public Repository getRepository() {
 		return repository;
