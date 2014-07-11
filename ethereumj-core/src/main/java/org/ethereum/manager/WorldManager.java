@@ -77,9 +77,6 @@ public class WorldManager {
 		if (blockchain != null)
 			blockchain.addWalletTransaction(tx);
 
-		// TODO: what is going on with simple wallet transfer ?
-
-		// 1. VALIDATE THE NONCE
 		byte[] senderAddress = tx.getSender();
 		AccountState senderAccount = repository.getAccountState(senderAddress);
 
@@ -90,6 +87,7 @@ public class WorldManager {
 			return;
 		}
 
+		// 1. VALIDATE THE NONCE
 		BigInteger nonce = senderAccount.getNonce();
 		BigInteger txNonce = new BigInteger(tx.getNonce());
 		if (nonce.compareTo(txNonce) != 0) {
@@ -105,18 +103,15 @@ public class WorldManager {
 		// first of all debit the gas from the issuer
 		BigInteger gasDebit = tx.getTotalGasValueDebit();
 
-
 		byte[] receiverAddress;
 
 		// Contract creation or existing Contract call
 		if (tx.isContractCreation()) {
-
 			receiverAddress = tx.getContractAddress();
 			repository.createAccount(receiverAddress);
 			stateLogger.info("New contract created address={}",
 					Hex.toHexString(receiverAddress));
 		} else {
-
 			receiverAddress = tx.getReceiveAddress();
 			AccountState receiverState = repository.getAccountState(receiverAddress);
 
@@ -130,22 +125,19 @@ public class WorldManager {
 
 		// 2.2 UPDATE THE NONCE
 		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-		BigInteger balance = senderAccount.getBalance();
-		if (balance.compareTo(BigInteger.ZERO) == 1) {
-			repository.increaseNonce(senderAddress);
-		}
+		repository.increaseNonce(senderAddress);
 
 		// actual gas value debit from the sender
 		// the purchase gas will be available for the
 		// contract in the execution state, and
 		// can be validate using GAS op
 		if (gasDebit.signum() == 1) {
+			BigInteger balance = senderAccount.getBalance();
 			if (balance.compareTo(gasDebit) == -1) {
 				logger.info("No gas to start the execution: sender={}",
 						Hex.toHexString(senderAddress));
 				return;
 			}
-
             repository.addBalance(senderAddress, gasDebit.negate());
 
             // The coinbase get the gas cost
@@ -172,7 +164,6 @@ public class WorldManager {
 				BigInteger senderBalance = senderAccount.getBalance();
 
 				if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
-
 					repository.addBalance(receiverAddress,
 							new BigInteger(1, tx.getValue()));
 					repository.addBalance(senderAddress,
@@ -242,7 +233,6 @@ public class WorldManager {
 				&& result.getException() instanceof Program.OutOfGasException) {
 			logger.info("contract run halted by OutOfGas: contract={}",
 					Hex.toHexString(contractAddress));
-
 			throw result.getException();
 		}
 
@@ -262,39 +252,32 @@ public class WorldManager {
 			repository.addBalance(coinbase, refund.negate());
 		}
 
-        if (initResults){
-
+		if (initResults) {
             // Save the code created by init
             byte[] bodyCode = null;
             if (result.getHReturn() != null) {
                 bodyCode = result.getHReturn().array();
             }
 
-            if (bodyCode != null) {
-                repository.saveCode(contractAddress, bodyCode);
-                if (stateLogger.isInfoEnabled())
-                    stateLogger
-                            .info("saving code of the contract to the db:\n contract={} code={}",
-                                    Hex.toHexString(contractAddress),
-                                    Hex.toHexString(bodyCode));
-            }
+			if (bodyCode != null) {
+				repository.saveCode(contractAddress, bodyCode);
+				if (stateLogger.isInfoEnabled())
+					stateLogger
+							.info("saving code of the contract to the db:\n contract={} code={}",
+									Hex.toHexString(contractAddress),
+									Hex.toHexString(bodyCode));
+			}
         }
 
         // delete the marked to die accounts
         if (result.getDeleteAccounts() == null) return;
         for (DataWord address : result.getDeleteAccounts()){
-
             repository.delete(address.getNoLeadZeroesData());
         }
-
 	}
-
+	
+	private static BigInteger UNCLE_RATIO = BigInteger.valueOf(7).divide(BigInteger.valueOf(8));
 	public void applyBlock(Block block) {
-
-		// miner reward
-		if (repository.getAccountState(block.getCoinbase()) == null)
-			repository.createAccount(block.getCoinbase());
-		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
 
 		int i = 0;
 		List<Transaction> txList = block.getTransactionsList();
@@ -304,12 +287,14 @@ public class WorldManager {
 					Hex.toHexString(tx.getHash()));
 			++i;
 		}
-	}
-
-	public void applyBlockList(List<Block> blocks) {
-		for (int i = blocks.size() - 1; i >= 0; --i) {
-			applyBlock(blocks.get(i));
-		}
+		
+		// miner reward
+		if (repository.getAccountState(block.getCoinbase()) == null)
+			repository.createAccount(block.getCoinbase());
+		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
+		for (Block uncle : block.getUncleList()) {
+			repository.addBalance(uncle.getCoinbase(), Block.BLOCK_REWARD.multiply(UNCLE_RATIO));
+		}		
 	}
 
 	public Repository getRepository() {
