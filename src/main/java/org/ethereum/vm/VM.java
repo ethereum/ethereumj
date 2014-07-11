@@ -59,7 +59,7 @@ public class VM {
 
             byte op = program.getCurrentOp();
             program.setLastOp(op);
-            logger.debug("Op: {}" ,OpCode.code(op).name());
+            logger.debug("[ {} ] Op: {}" ,program.getPC(), OpCode.code(op).name());
 
             int oldMemSize = program.getMemSize();
 
