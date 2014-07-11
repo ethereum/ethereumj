@@ -103,13 +103,15 @@ public class Blockchain {
         }
         for (int i = blocks.size() - 1; i >= 0 ; --i) {   			
             this.addBlock(blocks.get(i));
-            
+
+
+            long blockNum = blocks.get(i).getNumber();
             /* Debug check to see if the state is still as expected */
             if(logger.isWarnEnabled()) {
             	String blockStateRootHash = Hex.toHexString(blocks.get(i).getStateRoot());
             	String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             	if(!blockStateRootHash.equals(worldStateRootHash))
-            		logger.warn("WARNING: STATE CONFLICT! worldstate {} mismatch", worldStateRootHash);
+            		logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", blockNum, worldStateRootHash);
             }           
         }
         // Remove all wallet transactions as they already approved by the net
