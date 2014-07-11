@@ -188,12 +188,16 @@ public class Program {
         // check if you need to allocate
         if (memSize < (address + value.length)) {
 
+            long overlap = memSize - address;
+
             int sizeToAllocate = 0;
             if (memSize > address) {
                 sizeToAllocate = memSize + value.length;
             } else {
                 sizeToAllocate = memSize + (address - memSize) + value.length;
             }
+
+            if (overlap > 0) sizeToAllocate -= overlap;
 
             // complete to 32
             sizeToAllocate = (sizeToAllocate % 32)==0 ? sizeToAllocate :

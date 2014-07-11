@@ -6,9 +6,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * www.ethereumJ.com
@@ -2361,8 +2359,37 @@ public class VMTest {
         assertTrue(program.isStopped());
     }
 
-    @Test(expected=RuntimeException.class) // CODECOPY OP mal
+//    DataWord memOffsetData
+//    DataWord codeOffsetData
+//    DataWord lengthData
+
+
+    @Test // CODECOPY OP
     public void testCODECOPY_5() {
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("611234600054615566602054607060006020396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
+                        new ProgramInvokeMockImpl());
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        program.getResult().getRepository().close();
+        assertFalse(program.isStopped());
+    }
+
+
+    @Test(expected=RuntimeException.class) // CODECOPY OP mal
+    public void testCODECOPY_6() {
 
         VM vm = new VM();
         Program program =
