@@ -208,14 +208,14 @@ public class Program {
         }
     }
 
-    public void suicide(DataWord obtainer){
+    public void suicide(DataWord obtainer) {
 
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
             logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getNoLeadZeroesData())
                         , getBalance().longValue());
 
-        this.result.repository.addBalance(obtainer.getNoLeadZeroesData(),
+        this.result.getRepository().addBalance(obtainer.getNoLeadZeroesData(),
                 getBalance().value());
 
         // 2) mark the account as for delete
@@ -224,8 +224,7 @@ public class Program {
 
     public void createContract(DataWord gas, DataWord memStart, DataWord memSize) {
 
-        if (invokeData.byTestingSuite()){
-
+		if (invokeData.byTestingSuite()) {
             logger.info("[testing suite] - omit real create");
             return;
         }
@@ -291,7 +290,7 @@ public class Program {
 
         // 5. REFUND THE REMAIN GAS
         BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
-        if (refundGas.compareTo(BigInteger.ZERO) == 1){
+        if (refundGas.compareTo(BigInteger.ZERO) == 1) {
 
             this.refundGas(refundGas.intValue(), "remain gas from the internal call");
             logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
@@ -341,7 +340,7 @@ public class Program {
 
         BigInteger endowment = endowmentValue.value();
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
-        if (senderBalance.compareTo(endowment) < 0){
+        if (senderBalance.compareTo(endowment) < 0) {
             stackPushZero();
             return;
         }
@@ -449,7 +448,7 @@ public class Program {
     public void storageSave(byte[] key, byte[] val) {
         DataWord keyWord = new DataWord(key);
         DataWord valWord = new DataWord(val);
-        result.repository.addStorageRow(this.programAddress, keyWord, valWord);
+        result.getRepository().addStorageRow(this.programAddress, keyWord, valWord);
     }
 
     public DataWord getOwnerAddress() {
@@ -504,7 +503,7 @@ public class Program {
     }
 
     public DataWord storageLoad(DataWord key) {
-        return result.repository.getStorageValue(this.programAddress, key);
+        return result.getRepository().getStorageValue(this.programAddress, key);
     }
 
     public DataWord getPrevHash() {

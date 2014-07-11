@@ -18,14 +18,14 @@ public class ProgramResult {
     private RuntimeException exception;
     private List<DataWord> deleteAccounts;
 
-    Repository repository = null;
+    private Repository repository = null;
 
    /*
     * for testing runs ,
     * call/create is not executed
     * but dummy recorded
     */
-    List<CallCreate> callCreateList;
+    private List<CallCreate> callCreateList;
 
     public void spendGas(int gas) {
         gasUsed += gas;
@@ -92,11 +92,9 @@ public class ProgramResult {
         return callCreateList;
     }
 
-    public void addCallCreate(byte[] data, byte[] destination, byte[] gasLimit, byte[] value){
-
-        if (callCreateList == null)
-            callCreateList = new ArrayList<>();
-
-        callCreateList.add(new CallCreate(data, destination, gasLimit, value));
-    }
+	public void addCallCreate(byte[] data, byte[] destination, byte[] gasLimit, byte[] value) {
+		if (callCreateList == null)
+			callCreateList = new ArrayList<>();
+		callCreateList.add(new CallCreate(data, destination, gasLimit, value));
+	}
 }

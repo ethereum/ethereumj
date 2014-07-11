@@ -35,9 +35,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         VM vm = new VM();
 
         ProgramInvoke pi = new ProgramInvokeMockImpl();
-
-        Program program = new Program(code ,
-                pi);
+		Program program = new Program(code, pi);
 
         program.addListener(this);
         program.fullTrace();
