@@ -37,6 +37,8 @@ public class Block {
 	/* A scalar value equal to the mininum limit of gas expenditure per block */
 	private static long MIN_GAS_LIMIT = 125000L;
     public  static BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
+	public static BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
+			BigInteger.valueOf(7)).divide(BigInteger.valueOf(8));
 
 	private BlockHeader header;
 	
@@ -91,7 +93,7 @@ public class Block {
         
         // Parse Transactions
         RLPList txReceipts = (RLPList) block.get(1);
-        this.processTxs(txReceipts);
+        this.parseTxs(txReceipts);
 
         // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
@@ -259,7 +261,7 @@ public class Block {
         return toStringBuff.toString();
     }
     
-    private void processTxs(RLPList txReceipts) {
+    private void parseTxs(RLPList txReceipts) {
 
         this.txsState = new Trie(null);
         for (int i = 0; i < txReceipts.size(); i++) {

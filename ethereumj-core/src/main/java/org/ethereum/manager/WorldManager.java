@@ -276,7 +276,6 @@ public class WorldManager {
         }
 	}
 	
-	private static BigInteger UNCLE_RATIO = BigInteger.valueOf(7).divide(BigInteger.valueOf(8));
 	public void applyBlock(Block block) {
 
 		int i = 0;
@@ -293,7 +292,7 @@ public class WorldManager {
 			repository.createAccount(block.getCoinbase());
 		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
 		for (Block uncle : block.getUncleList()) {
-			repository.addBalance(uncle.getCoinbase(), Block.BLOCK_REWARD.multiply(UNCLE_RATIO));
+			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
 		}		
 	}
 
