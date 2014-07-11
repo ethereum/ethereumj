@@ -35,7 +35,7 @@ public class TransactionTask implements Callable<Transaction> {
             ClientPeer peer = MainData.instance.getActivePeer();
 
 			WalletTransaction walletTransaction = WorldManager.getInstance()
-					.getBlockChain().addWalletTransaction(tx);
+					.addWalletTransaction(tx);
             peer.sendTransaction(tx);
 
             while(walletTransaction.getApproved() < 1 ) {
@@ -44,7 +44,7 @@ public class TransactionTask implements Callable<Transaction> {
             logger.info("return approved: {}", walletTransaction.getApproved());
         } catch (Throwable th) {
             logger.info("exception caugh: {}", th);
-            WorldManager.getInstance().getBlockChain().removeWalletTransaction(tx);
+            WorldManager.getInstance().removeWalletTransaction(tx);
         }
         return null;
     }

@@ -2,7 +2,6 @@ package org.ethereum.core;
 
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.submit.WalletTransaction;
 import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
@@ -54,7 +53,6 @@ public class Blockchain {
 	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 		
 	private DatabaseImpl chainDb;
-	private Wallet wallet;
 	
     private long gasPrice = 1000;
     private Block lastBlock;
@@ -62,11 +60,6 @@ public class Blockchain {
     // keep the index of the chain for
     // convenient usage, <block_number, block_hash>
     private Map<Long, byte[]> index = new HashMap<>();
-
-    // This map of transaction designed
-    // to approve the tx by external trusted peer
-    private Map<String, WalletTransaction> walletTransactions =
-            Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
 
 	public Blockchain() {
 		this.chainDb = new DatabaseImpl("blockchain");
@@ -108,7 +101,7 @@ public class Blockchain {
             String blockParentHash = Hex.toHexString(firstBlockToAdd.getParentHash());
             if (!hashLast.equals(blockParentHash)) return;
         }
-        for (int i = blocks.size() - 1; i >= 0 ; --i) {
+        for (int i = blocks.size() - 1; i >= 0 ; --i) {   			
             this.addBlock(blocks.get(i));
             
             /* Debug check to see if the state is still as expected */
@@ -124,7 +117,7 @@ public class Blockchain {
             for (Transaction tx : block.getTransactionsList()) {
                 if (logger.isDebugEnabled())
                     logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
-                this.removeWalletTransaction(tx);
+                WorldManager.getInstance().removeWalletTransaction(tx);
             }
         }
         logger.info("*** Block chain size: [ {} ]", this.getSize());
@@ -133,13 +126,17 @@ public class Blockchain {
     public void addBlock(Block block) {
     	if(block.isValid()) {
 
-            if (!block.isGenesis())
+            if (!block.isGenesis()) {
+        		for (Transaction tx : block.getTransactionsList())
+        			// TODO: refactor the wallet pending transactions to the world manager
+        			WorldManager.getInstance().addWalletTransaction(tx);
                 WorldManager.getInstance().applyBlock(block);
+            }
 
 			this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
 			this.index.put(block.getNumber(), block.getEncoded());
 			
-			this.wallet.processBlock(block);
+			WorldManager.getInstance().getWallet().processBlock(block);
 			this.updateGasPrice(block);
 			this.setLastBlock(block);
             if (logger.isDebugEnabled())
@@ -156,37 +153,6 @@ public class Blockchain {
     
     public long getGasPrice() {
         return gasPrice;
-    }
-
-    /***********************************************************************
-     *	1) the dialog put a pending transaction on the list
-     *  2) the dialog send the transaction to a net
-     *  3) wherever the transaction got in from the wire it will change to approve state
-     *  4) only after the approve a) Wallet state changes
-     *  5) After the block is received with that tx the pending been clean up
-     */
-    public WalletTransaction addWalletTransaction(Transaction transaction) {
-        String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction placed hash: {}", hash );
-
-        WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
-		if (walletTransaction != null)
-			walletTransaction.incApproved();
-		else {
-			walletTransaction = new WalletTransaction(transaction);
-			this.walletTransactions.put(hash, walletTransaction);
-		}
-        return walletTransaction;
-    }
-
-    public void removeWalletTransaction(Transaction transaction) {
-        String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction removed with hash: {} ",  hash);
-        walletTransactions.remove(hash);
-    }
-    
-    public void setWallet(Wallet wallet)  {
-    	this.wallet = wallet;
     }
 
     public byte[] getLatestBlockHash() {
