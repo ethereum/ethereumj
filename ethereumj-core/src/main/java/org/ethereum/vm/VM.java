@@ -297,7 +297,8 @@ public class VM {
                     program.step();
                 }	break;
                 case BALANCE:{
-                    DataWord balance = program.getBalance();
+                    DataWord address = program.stackPop();
+                    DataWord balance = program.getBalance(address);
                     program.stackPush(balance);
                     program.step();
                 }	break;
@@ -504,6 +505,8 @@ public class VM {
                     program.stackPush(data);
                 }	break;
                 case CREATE:{
+
+                    //todo: value param for gas param, the gas is all gas
                     DataWord gas        =  program.stackPop();
                     DataWord inOffset   =  program.stackPop();
                     DataWord inSize     =  program.stackPop();
