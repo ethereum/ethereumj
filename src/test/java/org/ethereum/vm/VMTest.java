@@ -6,6 +6,8 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
+
 import static org.junit.Assert.*;
 
 /**
@@ -2681,10 +2683,11 @@ public class VMTest {
 
         VM vm = new VM();
         Program program =
-                new Program(Hex.decode("31"),
+                new Program(Hex.decode("3031"),
                         createProgramInvoke_1());
-        String s_expected_1 = "0000000000000000000000000000000000000000000000000DE0B6B3A7640000";
+        String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000003E8";
 
+        vm.step(program);
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
@@ -3070,6 +3073,7 @@ public class VMTest {
         pi.setOwnerAddress(ownerAddress);
 
         pi.getRepository().createAccount(address);
+        pi.getRepository().addBalance(address, BigInteger.valueOf(1000L));
 
         return pi;
     }

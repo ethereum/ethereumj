@@ -214,13 +214,14 @@ public class Program {
 
     public void suicide(DataWord obtainer) {
 
+        DataWord balance = getBalance(this.getOwnerAddress());
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
             logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getNoLeadZeroesData())
-                        , getBalance().longValue());
+                        , balance.longValue());
 
         this.result.getRepository().addBalance(obtainer.getNoLeadZeroesData(),
-                getBalance().value());
+                balance.value());
 
         // 2) mark the account as for delete
         result.addDeleteAccount(getOwnerAddress());
@@ -460,9 +461,13 @@ public class Program {
         return invokeData.getOwnerAddress();
     }
 
-    public DataWord getBalance() {
+    public DataWord getBalance(DataWord address) {
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getBalance();
+
+        BigInteger balance = result.getRepository().getBalance(address.getNoLeadZeroesData());
+        DataWord balanceData = new DataWord(balance.toByteArray());
+
+        return balanceData;
     }
 
     public DataWord getOriginAddress() {
