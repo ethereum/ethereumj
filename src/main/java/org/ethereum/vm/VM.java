@@ -505,13 +505,11 @@ public class VM {
                     program.stackPush(data);
                 }	break;
                 case CREATE:{
-
-                    //todo: value param for gas param, the gas is all gas
-                    DataWord gas        =  program.stackPop();
+                    DataWord value      =  program.stackPop();
                     DataWord inOffset   =  program.stackPop();
                     DataWord inSize     =  program.stackPop();
 
-                    program.createContract(gas, inOffset, inSize);
+                    program.createContract(value, inOffset, inSize);
 
                     program.step();
                 }	break;

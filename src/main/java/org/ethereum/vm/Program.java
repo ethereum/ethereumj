@@ -227,48 +227,51 @@ public class Program {
         result.addDeleteAccount(getOwnerAddress());
     }
 
-    public void createContract(DataWord gas, DataWord memStart, DataWord memSize) {
+    public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
 
 		if (invokeData.byTestingSuite()) {
             logger.info("[testing suite] - omit real create");
             return;
         }
 
-        // 1. FETCH THE CODE FROM THE MEMORY
+        // [1] FETCH THE CODE FROM THE MEMORY
         ByteBuffer programCode = memoryChunk(memStart, memSize);
 
         byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
-        // 2.1 PERFORM THE GAS VALUE TX
-        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        if (this.getGas().longValue() - gas.longValue() < 0 ) {
-			logger.info("No gas for the internal CREATE op, \n" + "contract={}",
-					Hex.toHexString(senderAddress));
-            this.stackPushZero();
-            return;
-        }
-
         //  actual gas subtract
-        this.spendGas(gas.intValue(), "internal call");
+        int gas = this.getGas().intValue();
+        this.spendGas(gas, "internal call");
 
-        // 2.2 CREATE THE CONTRACT ADDRESS
+        // [2] CREATE THE CONTRACT ADDRESS
         byte[] nonce =  result.getRepository().getNonce(senderAddress).toByteArray();
         byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getNoLeadZeroesData(), nonce);
         result.getRepository().createAccount(newAddress);
 
-        // 2.3 UPDATE THE NONCE
+        // [3] UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
         result.getRepository().increaseNonce(senderAddress);
+
+        // [4] TRANSFER THE BALANCE
+        BigInteger endowment = value.value();
+        BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
+        if (senderBalance.compareTo(endowment) < 0) {
+            stackPushZero();
+            return;
+        }
+        result.getRepository().addBalance(senderAddress, endowment.negate());
+        result.getRepository().addBalance(newAddress, endowment);
+
 
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
 
-        // 3. COOK THE INVOKE AND EXECUTE
+        // [5] COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke =
                 ProgramInvokeFactory.createProgramInvoke(this, new DataWord(newAddress), DataWord.ZERO,
-                        gas, BigInteger.ZERO, null, trackRepository);
+                        new DataWord(gas), BigInteger.ZERO, null, trackRepository);
 
         VM vm = new VM();
         Program program = new Program(programCode.array(), programInvoke);
@@ -294,14 +297,16 @@ public class Program {
         trackRepository.commit();
 
         // 5. REFUND THE REMAIN GAS
-        BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
-        if (refundGas.compareTo(BigInteger.ZERO) == 1) {
+        int refundGas = gas - result.getGasUsed();
+        if (refundGas > 0) {
+            this.refundGas(refundGas, "remain gas from the internal call");
+            if (logger.isInfoEnabled()){
 
-            this.refundGas(refundGas.intValue(), "remain gas from the internal call");
-            logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
-                    refundGas.toString(), refundGas.toString());
+                logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
+                        Hex.toHexString(this.getOwnerAddress().getNoLeadZeroesData()),
+                        refundGas);
+            }
         }
-
     }
 
     /**
