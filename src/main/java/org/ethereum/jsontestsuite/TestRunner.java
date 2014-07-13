@@ -65,7 +65,7 @@ public class TestRunner {
         Env  env  = testCase.getEnv();
         Exec exec = testCase.getExec();
 
-        byte[] address     = exec.getAddress();
+        byte[] address     = exec.getAddress(); //repository.createAccount(address);
         byte[] origin      = exec.getOrigin();
         byte[] caller      = exec.getCaller();
         byte[] balance     =  ByteUtil.bigIntegerToBytes(repository.getBalance(exec.getAddress()));
@@ -158,7 +158,7 @@ public class TestRunner {
                 byte[] expectedStValue = storage.get(storageKey).getData();
 
                 ContractDetails contractDetails =
-                        program.getResult().getRepository().getContractDetails(storageKey.getData());
+                        program.getResult().getRepository().getContractDetails(accountState.getAddress());
 
                 if (contractDetails == null){
 
