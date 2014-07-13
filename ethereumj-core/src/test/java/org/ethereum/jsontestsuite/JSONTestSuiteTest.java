@@ -339,4 +339,26 @@ public class JSONTestSuiteTest {
         }
     }
     
+    @Test // testing full suite
+    public void testRandomFromGitHub() throws ParseException {
+
+        String json = Utils.getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/random.json");
+        Assume.assumeFalse("Online test suite is no available", json.equals(""));
+
+        JSONParser parser = new JSONParser();
+        JSONObject testSuiteObj = (JSONObject)parser.parse(json);
+
+        TestSuite testSuite = new TestSuite(testSuiteObj);
+        Iterator<TestCase> testIterator = testSuite.iterator();
+
+        while (testIterator.hasNext()){
+
+            TestCase testCase = testIterator.next();
+
+            System.out.println("Running: " + testCase.getName());
+            TestRunner runner = new TestRunner();
+            List<String> result = runner.runTestCase(testCase);
+            Assert.assertTrue(result.isEmpty());
+        }
+    }
 }

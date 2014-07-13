@@ -95,6 +95,12 @@ public class Repository {
 
     public AccountState createAccount(byte[] addr) {
 
+		if (addr.length < 20) {
+			byte[] newAddr = new byte[20];
+			System.arraycopy(addr, 0, newAddr, newAddr.length - addr.length, addr.length);
+			addr = newAddr;
+		}
+    	
         // 1. Save AccountState
         AccountState state =  new AccountState();
         accountStateDB.update(addr, state.getEncoded());
