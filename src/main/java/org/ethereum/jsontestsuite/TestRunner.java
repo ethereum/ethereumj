@@ -65,7 +65,8 @@ public class TestRunner {
         Env  env  = testCase.getEnv();
         Exec exec = testCase.getExec();
 
-        byte[] address     = exec.getAddress(); //repository.createAccount(address);
+        byte[] address     = exec.getAddress(); 
+        if(repository.getAccountState(address) == null) { repository.createAccount(address); }
         byte[] origin      = exec.getOrigin();
         byte[] caller      = exec.getCaller();
         byte[] balance     =  ByteUtil.bigIntegerToBytes(repository.getBalance(exec.getAddress()));
@@ -95,7 +96,6 @@ public class TestRunner {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
-
 
         /* 5. Assert Post values */
         for (ByteArrayWrapper key : testCase.getPost().keySet()){
@@ -185,7 +185,6 @@ public class TestRunner {
                                     );
                     logger.info(output);
                     results.add(output);
-
                 }
             }
         }
@@ -193,7 +192,6 @@ public class TestRunner {
         // TODO: assert that you have no extra accounts in the repository
         // TODO:  -> basically the deleted by suicide should be deleted
         // TODO:  -> and no unexpected created
-
 
         List<org.ethereum.vm.CallCreate> resultCallCreates  =
                 program.getResult().getCallCreateList();
@@ -257,7 +255,6 @@ public class TestRunner {
                                 Hex.toHexString( resultCallCreate.getGasLimit()) );
                 logger.info(output);
                 results.add(output);
-
             }
 
             boolean assertValue = Arrays.equals(expectedCallCreate.getValue(),
@@ -271,7 +268,6 @@ public class TestRunner {
                 logger.info(output);
                 results.add(output);
             }
-
         }
 
         // assert out
