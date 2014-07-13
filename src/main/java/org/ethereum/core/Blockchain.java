@@ -53,8 +53,7 @@ public class Blockchain {
 	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 		
 	private DatabaseImpl chainDb;
-	
-    private long gasPrice = 1000;
+   
     private Block lastBlock;
 
     // keep the index of the chain for
@@ -139,7 +138,6 @@ public class Blockchain {
 			this.index.put(block.getNumber(), block.getEncoded());
 			
 			WorldManager.getInstance().getWallet().processBlock(block);
-			this.updateGasPrice(block);
 			this.setLastBlock(block);
             if (logger.isDebugEnabled())
 				logger.debug("block added {}", block.toFlatString());
@@ -148,13 +146,9 @@ public class Blockchain {
     	}
     }
     
-    public void updateGasPrice(Block block) {
-        // In case of the genesis block we don't want to rely on the min gas price 
-		this.gasPrice = block.isGenesis() ? block.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
-    }
-    
     public long getGasPrice() {
-        return gasPrice;
+        // In case of the genesis block we don't want to rely on the min gas price
+        return lastBlock.isGenesis() ? lastBlock.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
     }
 
     public byte[] getLatestBlockHash() {
@@ -180,7 +174,6 @@ public class Blockchain {
     	            logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
             	}
             }
-			this.updateGasPrice(lastBlock);
 		} finally {
 			// Make sure you close the iterator to avoid resource leaks.
 			try {
