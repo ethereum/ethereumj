@@ -157,7 +157,7 @@ public class Transaction {
 
     // TODO: performance improve multiply without BigInteger
     public BigInteger getTotalGasValueDebit() {
-        return new BigInteger(1, gasLimit).multiply(new BigInteger(1,gasPrice));
+		return new BigInteger(1, gasLimit).multiply(new BigInteger(1, gasPrice));
     }
 
     public byte[] getData() {
