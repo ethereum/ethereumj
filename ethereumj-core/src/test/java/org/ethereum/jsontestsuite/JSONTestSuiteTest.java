@@ -314,8 +314,29 @@ public class JSONTestSuiteTest {
             List<String> result = runner.runTestCase(testCase);
             Assert.assertTrue(result.isEmpty());
         }
-
     }
+    
+    @Test // testing full suite
+    public void testNameCoinFromGitHub() throws ParseException {
 
+        String json = Utils.getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/namecoin.json");
+        Assume.assumeFalse("Online test suite is no available", json.equals(""));
 
+        JSONParser parser = new JSONParser();
+        JSONObject testSuiteObj = (JSONObject)parser.parse(json);
+
+        TestSuite testSuite = new TestSuite(testSuiteObj);
+        Iterator<TestCase> testIterator = testSuite.iterator();
+
+        while (testIterator.hasNext()){
+
+            TestCase testCase = testIterator.next();
+
+            System.out.println("Running: " + testCase.getName());
+            TestRunner runner = new TestRunner();
+            List<String> result = runner.runTestCase(testCase);
+            Assert.assertTrue(result.isEmpty());
+        }
+    }
+    
 }
