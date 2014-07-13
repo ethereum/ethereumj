@@ -48,7 +48,6 @@ public class TestCase {
         this.name = name;
     }
 
-
     public TestCase(JSONObject testCaseJSONObj) throws ParseException{
 
         try {
@@ -59,10 +58,14 @@ public class TestCase {
             JSONObject postJSON = (JSONObject)testCaseJSONObj.get("post");
             JSONArray  callCreates = (JSONArray)testCaseJSONObj.get("callcreates");
 
-            Long  gasNum = (Long)testCaseJSONObj.get("gas");
-            this.gas      = ByteUtil.bigIntegerToBytes(BigInteger.valueOf(gasNum));
-
-            this.out    = Helper.parseDataArray((JSONArray) testCaseJSONObj.get("out"));
+            String  gasString = testCaseJSONObj.get("gas").toString();
+            this.gas    = ByteUtil.bigIntegerToBytes(new BigInteger(gasString));
+            
+            String outString = testCaseJSONObj.get("out").toString();
+            if (outString != null && outString.length() > 2)
+                this.out    = Hex.decode(outString.substring(2));
+            else
+                this.out = new byte[0];
 
             for (Object key : preJSON.keySet()){
 

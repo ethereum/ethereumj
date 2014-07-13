@@ -1,16 +1,10 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
@@ -36,10 +30,10 @@ public class CallCreate {
 
     public CallCreate(JSONObject callCreateJSON) {
 
-        String data        = (String)callCreateJSON.get("data");
-        String    destination = (String)callCreateJSON.get("destination");
-        Long      gasLimit    = (Long)callCreateJSON.get("gasLimit");
-        Long      value       = (Long)callCreateJSON.get("value");
+        String data        = callCreateJSON.get("data").toString();
+        String destination = callCreateJSON.get("destination").toString();
+        String gasLimit    = callCreateJSON.get("gasLimit").toString();
+        String value       = callCreateJSON.get("value").toString();
 
         if (data != null && data.length() > 2)
             this.data    = Hex.decode(data.substring(2));
@@ -48,8 +42,8 @@ public class CallCreate {
 
 
         this.destination = Hex.decode(destination);
-        this.gasLimit    = ByteUtil.bigIntegerToBytes( BigInteger.valueOf(gasLimit) );
-        this.value       = ByteUtil.bigIntegerToBytes( BigInteger.valueOf(value) );
+        this.gasLimit    = ByteUtil.bigIntegerToBytes(new BigInteger(gasLimit));
+        this.value       = ByteUtil.bigIntegerToBytes(new BigInteger(value));
     }
 
 
