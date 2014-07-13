@@ -96,40 +96,48 @@ public class WorldManager {
 			return;
 		}
 
-		// 2.1 PERFORM THE GAS VALUE TX
-		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-
-		// first of all debit the gas from the issuer
-		BigInteger gasDebit = tx.getTotalGasValueDebit();
-
-		byte[] receiverAddress;
-
-		// Contract creation or existing Contract call
-		if (tx.isContractCreation()) {
+		// 3. FIND OUT THE TRANSACTION TYPE
+		byte[] receiverAddress, code = null;
+		boolean isContractCreation = tx.isContractCreation();
+		if (isContractCreation) {
 			receiverAddress = tx.getContractAddress();
 			repository.createAccount(receiverAddress);
 			stateLogger.info("New contract created address={}",
 					Hex.toHexString(receiverAddress));
+			code = tx.getData(); // init code
+			if (logger.isInfoEnabled())
+				logger.info("running the init for contract: address={}",
+						Hex.toHexString(receiverAddress));
 		} else {
 			receiverAddress = tx.getReceiveAddress();
 			AccountState receiverState = repository.getAccountState(receiverAddress);
-
 			if (receiverState == null) {
 				repository.createAccount(receiverAddress);
 				if (stateLogger.isInfoEnabled())
 					stateLogger.info("New receiver account created address={}",
 							Hex.toHexString(receiverAddress));
+			} else {
+				code = repository.getCode(receiverAddress);
+				if (code != null) {
+					if (logger.isInfoEnabled())
+						logger.info("calling for existing contract: address={}",
+								Hex.toHexString(receiverAddress));
+				}
 			}
 		}
-
-		// 2.2 UPDATE THE NONCE
+		
+		// 2.1 UPDATE THE NONCE
 		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
 		repository.increaseNonce(senderAddress);
 
-		// actual gas value debit from the sender
-		// the purchase gas will be available for the
-		// contract in the execution state, and
-		// can be validate using GAS op
+		// 2.2 PERFORM THE GAS VALUE TX
+		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+		BigInteger gasDebit = tx.getTotalGasValueDebit();
+	
+		// Debit the actual total gas value from the sender
+		// the purchased gas will be available for 
+		// the contract in the execution state, 
+		// it can be retrieved using GAS op
 		if (gasDebit.signum() == 1) {
 			BigInteger balance = senderAccount.getBalance();
 			if (balance.compareTo(gasDebit) == -1) {
@@ -177,23 +185,7 @@ public class WorldManager {
 				}
 			}
 
-			byte[] code;
-			boolean isContractCreation = tx.isContractCreation();
-			// 3. FIND OUT THE TRANSACTION TYPE
-			if (isContractCreation) {
-				code = tx.getData(); // init code
-				if (logger.isInfoEnabled())
-					logger.info("running the init for contract: address={}",
-							Hex.toHexString(receiverAddress));
-			} else {
-				code = trackRepository.getCode(receiverAddress);
-				if (code != null) {
-					if (logger.isInfoEnabled())
-						logger.info("calling for existing contract: address={}",
-								Hex.toHexString(receiverAddress));
-				}
-			}
-
+			// 5. CREATE OR EXECUTE PROGRAM 
 			if (isContractCreation || code != null) {
 				Block lastBlock = blockchain.getLastBlock();
 
@@ -206,6 +198,18 @@ public class WorldManager {
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, trackRepository,
 						senderAddress, receiverAddress, coinbase, isContractCreation);
+			} else {
+				// refund everything except fee (500 + 5*txdata)
+				BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
+				long dataFee = tx.getData() == null ? 0: tx.getData().length * GasCost.TXDATA;
+				long minTxFee = GasCost.TRANSACTION + dataFee;
+				BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
+						minTxFee).multiply(gasPrice));
+				if (refund.signum() > 0) {
+					// gas refund
+					repository.addBalance(senderAddress, refund);
+					repository.addBalance(coinbase, refund.negate());
+				}
 			}
 		} catch (RuntimeException e) {
 			trackRepository.rollback();
@@ -276,7 +280,7 @@ public class WorldManager {
 	}
 	
 	public void applyBlock(Block block) {
-
+	
 		int i = 0;
 		for (Transaction tx : block.getTransactionsList()) {
 			applyTransaction(tx, block.getCoinbase());
