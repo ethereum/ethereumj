@@ -69,8 +69,8 @@ public class Exec {
         else
             this.data = new byte[0];
 
-        this.gas      = ByteUtil.bigIntegerToBytes( new BigInteger(gas) );
-        this.gasPrice = ByteUtil.bigIntegerToBytes( new BigInteger(gasPrice) );
+        this.gas      = ByteUtil.bigIntegerToBytes(new BigInteger(gas));
+        this.gasPrice = ByteUtil.bigIntegerToBytes(new BigInteger(gasPrice));
 
         this.origin  = Hex.decode(origin);
         this.value   = ByteUtil.bigIntegerToBytes(new BigInteger(value));
