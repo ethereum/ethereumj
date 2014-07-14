@@ -59,7 +59,7 @@ public class DataWord implements Comparable<DataWord> {
     public byte[] getNoLeadZeroesData() {
         return ByteUtil.stripLeadingZeroes(data);
     }
-    public byte[] getAddress() {
+    public byte[] getLast20Bytes() {
     	return Arrays.copyOfRange(data, 12, data.length);
     }
 
