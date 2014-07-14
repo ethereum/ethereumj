@@ -173,10 +173,7 @@ public class Transaction {
     public byte[] getContractAddress() {
 
         if (!isContractCreation()) return null;
-
-        byte[] encSender = RLP.encodeElement(getSender());
-        byte[] encNonce = RLP.encodeElement(nonce);
-        return HashUtil.sha3omit12(RLP.encodeList(encSender, encNonce));
+        return HashUtil.calcNewAddr(this.getSender(), this.getNonce());
     }
 
     public boolean isContractCreation() {

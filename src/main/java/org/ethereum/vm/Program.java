@@ -47,7 +47,7 @@ public class Program {
 
         this.invokeData = invokeData;
         this.ops = ops;
-        this.programAddress = invokeData.getOwnerAddress().getNoLeadZeroesData();
+        this.programAddress = invokeData.getOwnerAddress().getAddress();
     }
 
     public byte getCurrentOp() {
@@ -217,14 +217,14 @@ public class Program {
         DataWord balance = getBalance(this.getOwnerAddress());
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
-            logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getNoLeadZeroesData())
+            logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getAddress())
                         , balance.longValue());
 
-        this.result.getRepository().addBalance(obtainer.getNoLeadZeroesData(), balance.value());
-        this.result.getRepository().addBalance(getOwnerAddress().getNoLeadZeroesData(), balance.value().negate());
+        this.result.getRepository().addBalance(obtainer.getAddress(), balance.value());
+        this.result.getRepository().addBalance(this.getOwnerAddress().getAddress(), balance.value().negate());
 
         // 2) mark the account as for delete
-        result.addDeleteAccount(getOwnerAddress());
+        result.addDeleteAccount(this.getOwnerAddress());
     }
 
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
@@ -237,7 +237,7 @@ public class Program {
         // [1] FETCH THE CODE FROM THE MEMORY
         ByteBuffer programCode = memoryChunk(memStart, memSize);
 
-        byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
+        byte[] senderAddress = this.getOwnerAddress().getAddress();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
@@ -247,7 +247,7 @@ public class Program {
 
         // [2] CREATE THE CONTRACT ADDRESS
         byte[] nonce =  result.getRepository().getNonce(senderAddress).toByteArray();
-        byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getNoLeadZeroesData(), nonce);
+        byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getAddress(), nonce);
         result.getRepository().createAccount(newAddress);
 
         // [3] UPDATE THE NONCE
@@ -303,7 +303,7 @@ public class Program {
             if (logger.isInfoEnabled()){
 
                 logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
-                        Hex.toHexString(this.getOwnerAddress().getNoLeadZeroesData()),
+                        Hex.toHexString(this.getOwnerAddress().getAddress()),
                         refundGas);
             }
         }
@@ -327,7 +327,7 @@ public class Program {
         ByteBuffer data = memoryChunk(inDataOffs, inDataSize);
 
         // FETCH THE SAVED STORAGE
-        byte[] toAddress = toAddressDW.getNoLeadZeroesData();
+        byte[] toAddress = toAddressDW.getAddress();
 
         // FETCH THE CODE
         byte[] programCode = this.result.getRepository().getCode(toAddress);
@@ -336,7 +336,7 @@ public class Program {
             logger.info("calling for existing contract: address={}",
                     Hex.toHexString(toAddress));
 
-        byte[] senderAddress = this.getOwnerAddress().getNoLeadZeroesData();
+        byte[] senderAddress = this.getOwnerAddress().getAddress();
 
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
@@ -362,7 +362,7 @@ public class Program {
             stackPushOne();
 
             this.getResult().addCallCreate(data.array(),
-                    toAddressDW.getNoLeadZeroesData(),
+                    toAddressDW.getAddress(),
                     gas.getNoLeadZeroesData(), endowmentValue.getNoLeadZeroesData());
 
             return;
@@ -469,7 +469,7 @@ public class Program {
     public DataWord getBalance(DataWord address) {
         if (invokeData == null) return new DataWord( new byte[0]);
 
-        BigInteger balance = result.getRepository().getBalance(address.getNoLeadZeroesData());
+        BigInteger balance = result.getRepository().getBalance(address.getAddress());
         DataWord balanceData = new DataWord(balance.toByteArray());
 
         return balanceData;
