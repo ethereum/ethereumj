@@ -74,6 +74,7 @@ public class MessageQueue {
 
                 if (msg.getClass() == waitingMessage.getAnswerMessage()){
                     messageRoundtrip.answer();
+                    logger.debug("Message round trip covered: [ {} ] ", messageRoundtrip.getMsg().getMessageName());
                 }
         }
     }
