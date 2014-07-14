@@ -220,8 +220,7 @@ public class Program {
             logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getNoLeadZeroesData())
                         , balance.longValue());
 
-        this.result.getRepository().addBalance(obtainer.getNoLeadZeroesData(),
-                balance.value());
+        this.result.getRepository().addBalance(obtainer.getNoLeadZeroesData(), balance.value());
 
         // 2) mark the account as for delete
         result.addDeleteAccount(getOwnerAddress());
