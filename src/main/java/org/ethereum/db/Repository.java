@@ -316,13 +316,15 @@ public class Repository {
                         	blockNumber, txNumber, txHash.substring(0, 8));
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
+        FileWriter fw = null;
+        BufferedWriter bw = null;
         try {
 
             dumpFile.getParentFile().mkdirs();
             dumpFile.createNewFile();
 
-            FileWriter fw = new FileWriter(dumpFile.getAbsoluteFile());
-            BufferedWriter bw = new BufferedWriter(fw);
+            fw = new FileWriter(dumpFile.getAbsoluteFile());
+            bw = new BufferedWriter(fw);
 
             List<ByteArrayWrapper> keys = this.detailsDB.dumpKeys();
 
@@ -351,9 +353,13 @@ public class Repository {
 
     //            {address: x, nonce: n1, balance: b1, stateRoot: s1, codeHash: c1, code: c2, sotrage: [key: k1, value: v1, key:k2, value: v2 ] }
             }
-            bw.close();
         } catch (IOException e) {
         	logger.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (bw != null)bw.close();
+                if (fw != null)fw.close();
+            } catch (IOException e) {e.printStackTrace();}
         }
     }
 
