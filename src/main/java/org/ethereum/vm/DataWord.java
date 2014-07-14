@@ -60,6 +60,13 @@ public class DataWord implements Comparable<DataWord> {
         return ByteUtil.stripLeadingZeroes(data);
     }
 
+    public byte[] get20LastBytes(){
+        byte[] last20bytes = new byte[20];
+
+        System.arraycopy(this.data, 12, last20bytes, 0, 20);
+        return last20bytes;
+    }
+
     public BigInteger value() {
         return new BigInteger(1, data);
     }

@@ -6,6 +6,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -95,12 +96,8 @@ public class Repository {
 
     public AccountState createAccount(byte[] addr) {
 
-		if (addr.length < 20) {
-			byte[] newAddr = new byte[20];
-			System.arraycopy(addr, 0, newAddr, newAddr.length - addr.length, addr.length);
-			addr = newAddr;
-		}
-    	
+        addr = ByteUtil.padAddressWithZeroes(addr);
+
         // 1. Save AccountState
         AccountState state =  new AccountState();
         accountStateDB.update(addr, state.getEncoded());
@@ -121,6 +118,8 @@ public class Repository {
 
     public AccountState getAccountState(byte[] addr) {
 
+        addr = ByteUtil.padAddressWithZeroes(addr);
+
         byte[] accountStateRLP = accountStateDB.get(addr);
 
         if (accountStateRLP.length == 0) {
@@ -133,6 +132,8 @@ public class Repository {
     }
 
 	public ContractDetails getContractDetails(byte[] addr) {
+
+        addr = ByteUtil.padAddressWithZeroes(addr);
 
         if (logger.isInfoEnabled())
             logger.info("Account: [ {} ]", Hex.toHexString(addr));
@@ -153,6 +154,8 @@ public class Repository {
 
 	public BigInteger addBalance(byte[] address, BigInteger value) {
 
+        address = ByteUtil.padAddressWithZeroes(address);
+
 		AccountState state = getAccountState(address);
 
         if (state == null){
@@ -162,8 +165,8 @@ public class Repository {
 		BigInteger newBalance = state.addToBalance(value);
 
 		if (logger.isInfoEnabled())
-			logger.info("Changing balance: account: [ {} ] new balance: [ {} ]",
-					Hex.toHexString(address), newBalance.toString());
+			logger.info("Changing balance: account: [ {} ] new balance: [ {} ] delta: [ {} ]",
+					Hex.toHexString(address), newBalance.toString(), value);
 
 		accountStateDB.update(address, state.getEncoded());
 		return newBalance;
@@ -198,6 +201,8 @@ public class Repository {
     public void addStorageRow(byte[] address, DataWord key, DataWord value) {
 
         if (address == null || key == null) return;
+        address = ByteUtil.padAddressWithZeroes(address);
+
         AccountState      state = getAccountState(address);
         ContractDetails details = getContractDetails(address);
 
@@ -220,7 +225,9 @@ public class Repository {
 
     public DataWord getStorageValue(byte[] address, DataWord key) {
 
-        if (key == null) return null;
+        if (key == null || address == null) return null;
+        address = ByteUtil.padAddressWithZeroes(address);
+
         AccountState state = getAccountState(address);
         if (state == null) return null;
 
@@ -231,6 +238,8 @@ public class Repository {
     }
 
     public byte[] getCode(byte[] address) {
+
+        address = ByteUtil.padAddressWithZeroes(address);
         ContractDetails details = getContractDetails(address);
         if (details == null) return null;
         return details.getCode();
@@ -238,7 +247,8 @@ public class Repository {
 
     public void saveCode(byte[] address, byte[] code) {
 
-        if (code == null) return;
+        if (code == null || address == null) return;
+        address = ByteUtil.padAddressWithZeroes(address);
 
         if (logger.isDebugEnabled())
             logger.debug("saveCode: \n address: [ {} ], \n code: [ {} ]",
@@ -274,9 +284,12 @@ public class Repository {
         return this.worldState.getRootHash();
     }
 
-    public void delete(byte[] account){
-        accountStateDB.delete(account);
-        contractDetailsDB.delete(account);
+    public void delete(byte[] address){
+
+        if (address == null) return;
+        address = ByteUtil.padAddressWithZeroes(address);
+        accountStateDB.delete(address);
+        contractDetailsDB.delete(address);
     }
 
     public List<ByteArrayWrapper> dumpKeys(){
@@ -287,14 +300,14 @@ public class Repository {
 
         if (!CONFIG.dumpFull()) return;
 
-        if (txHash == null)
-        if (CONFIG.dumpCleanOnRestart()) {
-            try {FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
-        }
+        if (blockNumber == 0 && txNumber == 0)
+            if (CONFIG.dumpCleanOnRestart()) {
+                try {FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
+            }
 
         String dir = CONFIG.dumpDir() + "/";
 
-        String fileName = "0.dmp";
+        String fileName = blockNumber + ".dmp";
         if (txHash != null)
              fileName = String.format("%d_%d_%s.dmp",
                         	blockNumber, txNumber, txHash.substring(0, 8));

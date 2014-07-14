@@ -202,4 +202,17 @@ public class ByteUtil {
         // we return false when all bytes are 0 again
         return (i >= startIndex || bytes[startIndex] != 0);
     }
+
+
+    public static byte[] padAddressWithZeroes(byte[] address){
+
+        if (address.length < 20) {
+            byte[] newAddr = new byte[20];
+            System.arraycopy(address, 0, newAddr, newAddr.length - address.length, address.length);
+            address = newAddr;
+            return address;
+        }
+
+        return address;
+    }
 }
