@@ -96,7 +96,7 @@ public class Repository {
 
     public AccountState createAccount(byte[] addr) {
 
-        addr = ByteUtil.padAddressWithZeroes(addr);
+    	this.validateAddress(addr);
 
         // 1. Save AccountState
         AccountState state =  new AccountState();
@@ -118,8 +118,8 @@ public class Repository {
 
     public AccountState getAccountState(byte[] addr) {
 
-        addr = ByteUtil.padAddressWithZeroes(addr);
-
+    	this.validateAddress(addr);
+    	
         byte[] accountStateRLP = accountStateDB.get(addr);
 
         if (accountStateRLP.length == 0) {
@@ -133,7 +133,7 @@ public class Repository {
 
 	public ContractDetails getContractDetails(byte[] addr) {
 
-        addr = ByteUtil.padAddressWithZeroes(addr);
+		this.validateAddress(addr);
 
         if (logger.isInfoEnabled())
             logger.info("Account: [ {} ]", Hex.toHexString(addr));
@@ -152,59 +152,63 @@ public class Repository {
 		return details;
 	}
 
-	public BigInteger addBalance(byte[] address, BigInteger value) {
+	public BigInteger addBalance(byte[] addr, BigInteger value) {
 
-        address = ByteUtil.padAddressWithZeroes(address);
-
-		AccountState state = getAccountState(address);
+		this.validateAddress(addr);
+    	
+		AccountState state = getAccountState(addr);
 
         if (state == null){
-            state = createAccount(address);
+            state = createAccount(addr);
         }
 
 		BigInteger newBalance = state.addToBalance(value);
 
 		if (logger.isInfoEnabled())
 			logger.info("Changing balance: account: [ {} ] new balance: [ {} ] delta: [ {} ]",
-					Hex.toHexString(address), newBalance.toString(), value);
+					Hex.toHexString(addr), newBalance.toString(), value);
 
-		accountStateDB.update(address, state.getEncoded());
+		accountStateDB.update(addr, state.getEncoded());
 		return newBalance;
 	}
 
-    public BigInteger getBalance(byte[] address) {
-        AccountState state = getAccountState(address);
+    public BigInteger getBalance(byte[] addr) {
+    	this.validateAddress(addr);
+        AccountState state = getAccountState(addr);
         if (state == null) return BigInteger.ZERO;
         return state.getBalance();
     }
 
-    public BigInteger getNonce(byte[] address) {
-        AccountState state = getAccountState(address);
+    public BigInteger getNonce(byte[] addr) {
+    	this.validateAddress(addr);
+        AccountState state = getAccountState(addr);
         if (state == null) return BigInteger.ZERO;
         return state.getNonce();
     }
 
-    public BigInteger increaseNonce(byte[] address) {
-
-        AccountState state = getAccountState(address);
+    public BigInteger increaseNonce(byte[] addr) {
+		
+    	this.validateAddress(addr);
+    	
+        AccountState state = getAccountState(addr);
         if (state == null) return BigInteger.ZERO;
         state.incrementNonce();
 
         if (logger.isInfoEnabled())
             logger.info("Incerement nonce: account: [ {} ] new nonce: [ {} ]",
-                    Hex.toHexString(address), state.getNonce().longValue());
+                    Hex.toHexString(addr), state.getNonce().longValue());
 
-        accountStateDB.update(address, state.getEncoded());
+        accountStateDB.update(addr, state.getEncoded());
         return state.getNonce();
     }
 
-    public void addStorageRow(byte[] address, DataWord key, DataWord value) {
+	public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
 
-        if (address == null || key == null) return;
-        address = ByteUtil.padAddressWithZeroes(address);
+        if (key == null) return;
+        this.validateAddress(addr);
 
-        AccountState      state = getAccountState(address);
-        ContractDetails details = getContractDetails(address);
+        AccountState      state = getAccountState(addr);
+        ContractDetails details = getContractDetails(addr);
 
         if (state == null || details == null) return;
         details.put(key, value);
@@ -214,52 +218,52 @@ public class Repository {
 
         if (logger.isInfoEnabled())
             logger.info("Storage key/value saved: account: [ {} ]\n key: [ {} ]  value: [ {} ]\n new storageHash: [ {} ]",
-                    Hex.toHexString(address),
+                    Hex.toHexString(addr),
                     Hex.toHexString(key.getNoLeadZeroesData()),
                     Hex.toHexString(value.getNoLeadZeroesData()),
                     Hex.toHexString(storageHash));
 
-        accountStateDB.update(address, state.getEncoded());
-        contractDetailsDB.put(address, details.getEncoded());
+        accountStateDB.update(addr, state.getEncoded());
+        contractDetailsDB.put(addr, details.getEncoded());
     }
 
-    public DataWord getStorageValue(byte[] address, DataWord key) {
+    public DataWord getStorageValue(byte[] addr, DataWord key) {
 
-        if (key == null || address == null) return null;
-        address = ByteUtil.padAddressWithZeroes(address);
+        if (key == null) return null;
+        this.validateAddress(addr);
 
-        AccountState state = getAccountState(address);
+        AccountState state = getAccountState(addr);
         if (state == null) return null;
 
-        ContractDetails details = getContractDetails(address);
+        ContractDetails details = getContractDetails(addr);
         DataWord value = details.get(key);
 
         return value;
     }
 
-    public byte[] getCode(byte[] address) {
+    public byte[] getCode(byte[] addr) {
 
-        address = ByteUtil.padAddressWithZeroes(address);
-        ContractDetails details = getContractDetails(address);
+    	this.validateAddress(addr);
+        ContractDetails details = getContractDetails(addr);
         if (details == null) return null;
         return details.getCode();
     }
 
-    public void saveCode(byte[] address, byte[] code) {
-
-        if (code == null || address == null) return;
-        address = ByteUtil.padAddressWithZeroes(address);
-
+    public void saveCode(byte[] addr, byte[] code) {
+    	
+    	if (code == null) return;
+        this.validateAddress(addr);
+        
         if (logger.isDebugEnabled())
             logger.debug("saveCode: \n address: [ {} ], \n code: [ {} ]",
-                    Hex.toHexString(address),
+                    Hex.toHexString(addr),
                     Hex.toHexString(code));
 
 
-        AccountState state = getAccountState(address);
+        AccountState state = getAccountState(addr);
         if (state == null) return;
 
-        ContractDetails details = getContractDetails(address);
+        ContractDetails details = getContractDetails(addr);
         details.setCode(code);
 
         byte[] codeHash = HashUtil.sha3(code);
@@ -267,29 +271,28 @@ public class Repository {
 
         if (logger.isInfoEnabled())
             logger.info("Program code saved:\n account: [ {} ]\n codeHash: [ {} ] \n code: [ {} ]",
-                    Hex.toHexString(address),
+                    Hex.toHexString(addr),
                     Hex.toHexString(codeHash),
                     Hex.toHexString(code));
 
-        accountStateDB.update(address, state.getEncoded());
-        contractDetailsDB.put(address, details.getEncoded());
+        accountStateDB.update(addr, state.getEncoded());
+        contractDetailsDB.put(addr, details.getEncoded());
 
         if (logger.isDebugEnabled())
             logger.debug("saveCode: \n accountState: [ {} ], \n contractDetails: [ {} ]",
                     Hex.toHexString(state.getEncoded()),
                     Hex.toHexString(details.getEncoded()));
-     }
+    }
+
+    public void delete(byte[] addr) {
+
+    	this.validateAddress(addr);
+        accountStateDB.delete(addr);
+        contractDetailsDB.delete(addr);
+    }
 
     public byte[] getRootHash() {
         return this.worldState.getRootHash();
-    }
-
-    public void delete(byte[] address){
-
-        if (address == null) return;
-        address = ByteUtil.padAddressWithZeroes(address);
-        accountStateDB.delete(address);
-        contractDetailsDB.delete(address);
     }
 
     public List<ByteArrayWrapper> dumpKeys(){
@@ -361,5 +364,10 @@ public class Repository {
             detailsDB.close();
     }
 
-
+    private void validateAddress(byte[] addr) {
+		 if (addr == null || addr.length < 20) {
+			logger.error("Can't create address {} because is null or length != 20", ByteUtil.toHexString(addr));
+			throw new IllegalArgumentException("Address must be a byte-array of length 20");
+		}
+    }
 }
