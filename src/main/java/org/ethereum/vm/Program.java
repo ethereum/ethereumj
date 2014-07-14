@@ -47,7 +47,7 @@ public class Program {
 
         this.invokeData = invokeData;
         this.ops = ops;
-        this.programAddress = invokeData.getOwnerAddress().getAddress();
+        this.programAddress = invokeData.getOwnerAddress().getLast20Bytes();
     }
 
     public byte getCurrentOp() {
@@ -217,11 +217,11 @@ public class Program {
         DataWord balance = getBalance(this.getOwnerAddress());
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
-            logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getAddress())
+            logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getLast20Bytes())
                         , balance.longValue());
 
-        this.result.getRepository().addBalance(obtainer.getAddress(), balance.value());
-        this.result.getRepository().addBalance(this.getOwnerAddress().getAddress(), balance.value().negate());
+        this.result.getRepository().addBalance(obtainer.getLast20Bytes(), balance.value());
+        this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), balance.value().negate());
 
         // 2) mark the account as for delete
         result.addDeleteAccount(this.getOwnerAddress());
@@ -237,7 +237,7 @@ public class Program {
         // [1] FETCH THE CODE FROM THE MEMORY
         ByteBuffer programCode = memoryChunk(memStart, memSize);
 
-        byte[] senderAddress = this.getOwnerAddress().getAddress();
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
@@ -247,7 +247,7 @@ public class Program {
 
         // [2] CREATE THE CONTRACT ADDRESS
         byte[] nonce =  result.getRepository().getNonce(senderAddress).toByteArray();
-        byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getAddress(), nonce);
+        byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
         result.getRepository().createAccount(newAddress);
 
         // [3] UPDATE THE NONCE
@@ -303,7 +303,7 @@ public class Program {
             if (logger.isInfoEnabled()){
 
                 logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
-                        Hex.toHexString(this.getOwnerAddress().getAddress()),
+                        Hex.toHexString(this.getOwnerAddress().getLast20Bytes()),
                         refundGas);
             }
         }
@@ -327,7 +327,7 @@ public class Program {
         ByteBuffer data = memoryChunk(inDataOffs, inDataSize);
 
         // FETCH THE SAVED STORAGE
-        byte[] toAddress = toAddressDW.getAddress();
+        byte[] toAddress = toAddressDW.getLast20Bytes();
 
         // FETCH THE CODE
         byte[] programCode = this.result.getRepository().getCode(toAddress);
@@ -336,7 +336,7 @@ public class Program {
             logger.info("calling for existing contract: address={}",
                     Hex.toHexString(toAddress));
 
-        byte[] senderAddress = this.getOwnerAddress().getAddress();
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
 
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
@@ -362,7 +362,7 @@ public class Program {
             stackPushOne();
 
             this.getResult().addCallCreate(data.array(),
-                    toAddressDW.getAddress(),
+                    toAddressDW.getLast20Bytes(),
                     gas.getNoLeadZeroesData(), endowmentValue.getNoLeadZeroesData());
 
             return;
@@ -469,7 +469,7 @@ public class Program {
     public DataWord getBalance(DataWord address) {
         if (invokeData == null) return new DataWord( new byte[0]);
 
-        BigInteger balance = result.getRepository().getBalance(address.getAddress());
+        BigInteger balance = result.getRepository().getBalance(address.getLast20Bytes());
         DataWord balanceData = new DataWord(balance.toByteArray());
 
         return balanceData;
