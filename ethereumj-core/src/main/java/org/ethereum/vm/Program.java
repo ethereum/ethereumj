@@ -221,6 +221,7 @@ public class Program {
                         , balance.longValue());
 
         this.result.getRepository().addBalance(obtainer.getNoLeadZeroesData(), balance.value());
+        this.result.getRepository().addBalance(getOwnerAddress().getNoLeadZeroesData(), balance.value().negate());
 
         // 2) mark the account as for delete
         result.addDeleteAccount(getOwnerAddress());

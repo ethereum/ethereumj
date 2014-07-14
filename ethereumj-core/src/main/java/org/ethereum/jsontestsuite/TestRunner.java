@@ -65,8 +65,7 @@ public class TestRunner {
         Env  env  = testCase.getEnv();
         Exec exec = testCase.getExec();
 
-        byte[] address     = exec.getAddress(); 
-        if(repository.getAccountState(address) == null) { repository.createAccount(address); }
+        byte[] address     = exec.getAddress();
         byte[] origin      = exec.getOrigin();
         byte[] caller      = exec.getCaller();
         byte[] balance     =  ByteUtil.bigIntegerToBytes(repository.getBalance(exec.getAddress()));
@@ -93,6 +92,8 @@ public class TestRunner {
         try {
             while(!program.isStopped())
                 vm.step(program);
+
+            System.out.println();
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
