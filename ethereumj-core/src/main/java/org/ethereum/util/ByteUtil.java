@@ -171,7 +171,7 @@ public class ByteUtil {
 
 		int firstNonZero = 0;
 		int i = 0;
-		for (i = 0; i < data.length; ++i) {
+		for (; i < data.length; ++i) {
 			if (data[i] != 0) {
 				firstNonZero = i;
 				break;
@@ -203,16 +203,12 @@ public class ByteUtil {
         return (i >= startIndex || bytes[startIndex] != 0);
     }
 
-
     public static byte[] padAddressWithZeroes(byte[] address){
-
         if (address.length < 20) {
             byte[] newAddr = new byte[20];
             System.arraycopy(address, 0, newAddr, newAddr.length - address.length, address.length);
-            address = newAddr;
-            return address;
+            return newAddr;
         }
-
         return address;
     }
 }
