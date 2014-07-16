@@ -67,10 +67,6 @@ public class Trie implements TrieFacade{
 		return root;
 	}
 
-	public void setRoot(byte[] root) {
-		this.root = root;
-	}
-
 	public void setCache(Cache cache) {
 		this.cache = cache;
 	}
