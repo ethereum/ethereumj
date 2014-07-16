@@ -1,6 +1,8 @@
 package org.ethereum.trie;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
@@ -12,12 +14,12 @@ import org.iq80.leveldb.WriteBatch;
 import org.iq80.leveldb.WriteOptions;
 
 public class MockDB implements DB {
-
-	private int addedItems;
 	
+	Map<byte[], byte[]> storage = new HashMap<byte[], byte[]>();
+
 	@Override
 	public void close() throws IOException {
-		// TODO Auto-generated method stub
+		storage.clear();
 	}
 
 	@Override
@@ -33,7 +35,7 @@ public class MockDB implements DB {
 
 	@Override
 	public void delete(byte[] arg0) throws DBException {
-		// TODO Auto-generated method stub
+		storage.remove(arg0);
 	}
 
 	@Override
@@ -45,8 +47,7 @@ public class MockDB implements DB {
 
 	@Override
 	public byte[] get(byte[] arg0) throws DBException {
-		// TODO Auto-generated method stub
-		return null;
+		return storage.get(arg0);
 	}
 
 	@Override
@@ -86,9 +87,8 @@ public class MockDB implements DB {
 	}
 
 	@Override
-	public void put(byte[] arg0, byte[] arg1) throws DBException {
-		// TODO Auto-generated method stub
-		addedItems++;
+	public void put(byte[] key, byte[] value) throws DBException {
+		storage.put(key, value);
 	}
 
 	@Override
@@ -126,6 +126,6 @@ public class MockDB implements DB {
 	 * @return int
 	 */
 	public int getAddedItems() {
-		return addedItems;
+		return storage.size();
 	}	
 }
