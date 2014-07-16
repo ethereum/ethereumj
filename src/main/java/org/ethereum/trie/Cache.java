@@ -50,11 +50,9 @@ public class Cache {
 			return this.nodes.get(keyObj).getValue();
 		}
 
-        if (db != null) return new Value(null);
-
 		// Get the key of the database instead and cache it
 		byte[] data = this.db.get(key);
-		Value value = new Value(data);
+		Value value = Value.fromRlpEncoded(data);
 		// Create caching node
 		this.nodes.put(keyObj, new Node(value, false));
 
