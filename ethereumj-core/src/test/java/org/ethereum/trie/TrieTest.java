@@ -1,13 +1,13 @@
 package org.ethereum.trie;
 
-import static org.junit.Assert.*;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 
-import org.ethereum.trie.Trie;
-import org.junit.After;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.*;
 
 public class TrieTest {
 
@@ -496,7 +496,7 @@ public class TrieTest {
 		trie.update("te", "testy");
 		assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928", Hex.toHexString(trie.getRootHash()));
 	  }
-	  
+
 	  @Test
 	  public void testGetFromRootNode() {
 			Trie trie1 = new Trie(mockDb);
@@ -506,4 +506,64 @@ public class TrieTest {
 			trie2.setRoot(trie1.getRootHash());
 			assertEquals(LONG_STRING, new String(trie2.get(cat)));
 	  }
+
+
+/*
+        0x7645b9fbf1b51e6b980801fafe6bbc22d2ebe218 0x517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62 0x 0x1
+        0x0000000000000000000000000000000000000000000000000000000000000010 0x947e70f9460402290a3e487dae01f610a1a8218fda
+        0x0000000000000000000000000000000000000000000000000000000000000014 0x40
+        0x0000000000000000000000000000000000000000000000000000000000000016 0x94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d
+        0x0000000000000000000000000000000000000000000000000000000000000017 0x01
+*/
+
+    @Test
+    public void storageHashCalc_1(){
+
+        byte[] key1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
+        byte[] key2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
+        byte[] key3 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000016");
+        byte[] key4 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000017");
+
+        byte[] val1 = Hex.decode("947e70f9460402290a3e487dae01f610a1a8218fda");
+        byte[] val2 = Hex.decode("40");
+        byte[] val3 = Hex.decode("94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d");
+        byte[] val4 = Hex.decode("01");
+
+        Trie storage = new Trie(new org.ethereum.trie.MockDB());
+        storage.update(key1, val1);
+        storage.update(key2, val2);
+        storage.update(key3, val3);
+        storage.update(key4, val4);
+
+        String hash = Hex.toHexString(storage.getRootHash());
+
+        System.out.println(hash);
+        Assert.assertEquals("517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
+    }
+
+    @Test
+    public void storageHashCalc_2(){
+
+        byte[] key1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
+        byte[] key2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
+        byte[] key3 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000017");
+        byte[] key4 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000016");
+
+        byte[] val1 = Hex.decode("947e70f9460402290a3e487dae01f610a1a8218fda");
+        byte[] val2 = Hex.decode("40");
+        byte[] val3 = Hex.decode("01");
+        byte[] val4 = Hex.decode("94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d");
+
+        Trie storage = new Trie(new org.ethereum.trie.MockDB());
+        storage.update(key1, val1);
+        storage.update(key2, val2);
+        storage.update(key3, val3);
+        storage.update(key4, val4);
+
+        String hash = Hex.toHexString(storage.getRootHash());
+
+        System.out.println(hash);
+        Assert.assertEquals("255b5df6f1ba5963cb21535d59ee7b65532e6b071065587c5b52fcc4e55207a2", hash);
+    }
+
 }
