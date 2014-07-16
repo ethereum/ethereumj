@@ -2,7 +2,10 @@ package org.ethereum.trie;
 
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+
 import org.ethereum.trie.Trie;
+import org.junit.After;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -29,6 +32,11 @@ public class TrieTest {
 //		F: [ '', '', '', '', '', '', G, '', '', '', '', '', '', '', '', '', 'puppy' ]
 //		G: [ '\x35', 'coin' ]
 //		C: [ '\x20\x6f\x72\x73\x65', 'stallion' ]
+	
+	@After
+	public void closeMockDb() throws IOException {
+		mockDb.close();
+	}
 	
 	@Test
 	public void testEmptyKey() {
@@ -487,5 +495,15 @@ public class TrieTest {
 		
 		trie.update("te", "testy");
 		assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928", Hex.toHexString(trie.getRootHash()));
+	  }
+	  
+	  @Test
+	  public void testGetFromRootNode() {
+			Trie trie1 = new Trie(mockDb);
+			trie1.update(cat, LONG_STRING);
+			trie1.sync();
+			Trie trie2 = new Trie(mockDb);
+			trie2.setRoot(trie1.getRootHash());
+			assertEquals(LONG_STRING, new String(trie2.get(cat)));
 	  }
 }

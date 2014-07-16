@@ -10,7 +10,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure 
@@ -68,7 +67,7 @@ public class Trie implements TrieFacade{
 		return root;
 	}
 
-	public void setRoot(Node root) {
+	public void setRoot(byte[] root) {
 		this.root = root;
 	}
 
