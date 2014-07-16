@@ -541,29 +541,5 @@ public class TrieTest {
         Assert.assertEquals("517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
     }
 
-    @Test
-    public void storageHashCalc_2(){
-
-        byte[] key1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
-        byte[] key2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
-        byte[] key3 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000017");
-        byte[] key4 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000016");
-
-        byte[] val1 = Hex.decode("947e70f9460402290a3e487dae01f610a1a8218fda");
-        byte[] val2 = Hex.decode("40");
-        byte[] val3 = Hex.decode("01");
-        byte[] val4 = Hex.decode("94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d");
-
-        Trie storage = new Trie(new org.ethereum.trie.MockDB());
-        storage.update(key1, val1);
-        storage.update(key2, val2);
-        storage.update(key3, val3);
-        storage.update(key4, val4);
-
-        String hash = Hex.toHexString(storage.getRootHash());
-
-        System.out.println(hash);
-        Assert.assertEquals("255b5df6f1ba5963cb21535d59ee7b65532e6b071065587c5b52fcc4e55207a2", hash);
-    }
 
 }
