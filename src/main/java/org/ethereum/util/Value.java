@@ -13,10 +13,10 @@ public class Value {
 	
 	private Object value;
 
-	public void fromRlpEncoded(byte[] data) {
+	public static Value fromRlpEncoded(byte[] data) {
 		if (data.length != 0) {
-			this.value = RLP.decode(data, 0).getDecoded();
-		}
+			return new Value(RLP.decode(data, 0).getDecoded());
+		} return null;
 	}
 
 	public Value(Object obj) {
