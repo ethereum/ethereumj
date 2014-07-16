@@ -502,8 +502,7 @@ public class TrieTest {
 			Trie trie1 = new Trie(mockDb);
 			trie1.update(cat, LONG_STRING);
 			trie1.sync();
-			Trie trie2 = new Trie(mockDb);
-			trie2.setRoot(trie1.getRootHash());
+			Trie trie2 = new Trie(mockDb, trie1.getRootHash());
 			assertEquals(LONG_STRING, new String(trie2.get(cat)));
 	  }
 
