@@ -1,11 +1,22 @@
 package org.ethereum.trie;
 
+import org.ethereum.core.AccountState;
+import org.ethereum.db.Database;
+import org.ethereum.db.DatabaseImpl;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
 
 import static org.junit.Assert.*;
 
@@ -539,6 +550,51 @@ public class TrieTest {
 
         System.out.println(hash);
         Assert.assertEquals("517eaccda568f3fa24915fed8add49d3b743b3764c0bc495b19a47c54dbc3d62", hash);
+    }
+
+
+    @Test
+    public void testFromDump_1() throws URISyntaxException, IOException, ParseException {
+
+
+        // LOAD: real dump from real state run
+        URL dbDump = ClassLoader
+                .getSystemResource("dbdump/dbdump.json");
+
+        File dbDumpFile = new File(dbDump.toURI());
+        byte[] testData = Files.readAllBytes(dbDumpFile.toPath());
+        String testSrc = new String(testData);
+
+        JSONParser parser = new JSONParser();
+        JSONArray dbDumpJSONArray = (JSONArray)parser.parse(testSrc);
+
+        DatabaseImpl db = new DatabaseImpl("testState");
+
+        for (int i = 0; i < dbDumpJSONArray.size(); ++i){
+
+           JSONObject obj = (JSONObject)dbDumpJSONArray.get(i);
+           byte[] key = Hex.decode(obj.get("key").toString());
+           byte[] val = Hex.decode(obj.get("val").toString());
+
+           db.put(key, val);
+
+        }
+
+        // TEST: load trie out of this run:
+        Trie trie = new Trie(db.getDb());
+        trie.setRoot(Hex.decode("bb690805d24882bc7ccae6fc0f80ac146274d5b81c6a6e9c882cd9b0a649c9c7"));
+
+        byte[] val = trie.get(Hex.decode("61e202e8be7f1047131bc9574ea0001b4a9fa200d082076065c0f70105eec5b4"));
+        AccountState state = new AccountState(val);
+
+        System.out.println(state.getBalance());
+        System.out.println(Hex.toHexString(state.getCodeHash()));
+        System.out.println(state.getNonce());
+        System.out.println(Hex.toHexString(state.getStateRoot()));
+
+
+        db.close();
+
     }
 
 
