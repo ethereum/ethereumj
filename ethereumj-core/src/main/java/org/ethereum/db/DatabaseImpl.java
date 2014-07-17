@@ -84,6 +84,7 @@ public class DatabaseImpl implements Database {
 		return this.db;
 	}
 
+    @Override
     public void close() {
         try {
             logger.info("Release DB: {}", name);
