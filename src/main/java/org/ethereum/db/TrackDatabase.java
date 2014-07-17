@@ -11,7 +11,7 @@ import java.util.Map;
  */
 public class TrackDatabase implements Database {
 
-    private Database db;
+	private Database db;
 
     private boolean trackingChanges;
     private Map<ByteArrayWrapper, byte[]> changes;
@@ -68,5 +68,9 @@ public class TrackDatabase implements Database {
         } else {
             db.delete(key);
         }
+    }
+    
+    public void close() {
+		db.close();
     }
 }
