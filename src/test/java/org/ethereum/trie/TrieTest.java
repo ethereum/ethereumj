@@ -580,8 +580,8 @@ public class TrieTest {
         }
 
         // TEST: load trie out of this run:
-        Trie trie = new Trie(db.getDb());
-        trie.setRoot(Hex.decode("bb690805d24882bc7ccae6fc0f80ac146274d5b81c6a6e9c882cd9b0a649c9c7"));
+        byte[] rootNode = Hex.decode("bb690805d24882bc7ccae6fc0f80ac146274d5b81c6a6e9c882cd9b0a649c9c7");
+        Trie trie = new Trie(db.getDb(), rootNode);
 
         byte[] val = trie.get(Hex.decode("61e202e8be7f1047131bc9574ea0001b4a9fa200d082076065c0f70105eec5b4"));
         AccountState state = new AccountState(val);
