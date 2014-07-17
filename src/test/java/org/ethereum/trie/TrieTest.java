@@ -1,7 +1,18 @@
 package org.ethereum.trie;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertTrue;
+
+import java.io.File;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.Files;
+
 import org.ethereum.core.AccountState;
-import org.ethereum.db.Database;
 import org.ethereum.db.DatabaseImpl;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -11,14 +22,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-
-import static org.junit.Assert.*;
 
 public class TrieTest {
 
@@ -576,25 +579,31 @@ public class TrieTest {
            byte[] val = Hex.decode(obj.get("val").toString());
 
            db.put(key, val);
-
         }
 
-        // TEST: load trie out of this run:
+        // TEST: load trie out of this run up to block#33
         byte[] rootNode = Hex.decode("bb690805d24882bc7ccae6fc0f80ac146274d5b81c6a6e9c882cd9b0a649c9c7");
         Trie trie = new Trie(db.getDb(), rootNode);
 
-        byte[] val = trie.get(Hex.decode("61e202e8be7f1047131bc9574ea0001b4a9fa200d082076065c0f70105eec5b4"));
-        AccountState state = new AccountState(val);
+        // first key added in genesis
+        byte[] val1 = trie.get(Hex.decode("51ba59315b3a95761d0863b05ccc7a7f54703d99"));
+        AccountState accountState1 = new AccountState(val1);
 
-        System.out.println(state.getBalance());
-        System.out.println(Hex.toHexString(state.getCodeHash()));
-        System.out.println(state.getNonce());
-        System.out.println(Hex.toHexString(state.getStateRoot()));
+        assertEquals(BigInteger.valueOf(2).pow(200), accountState1.getBalance());
+        assertEquals("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", Hex.toHexString(accountState1.getCodeHash()));
+        assertEquals(BigInteger.ZERO, accountState1.getNonce());
+        assertEquals(null, accountState1.getStateRoot());
 
+        // last key added up to block#33
+        byte[] val2 = trie.get(Hex.decode("a39c2067eb45bc878818946d0f05a836b3da44fa"));
+        AccountState accountState2 = new AccountState(val2);
+        
+        assertEquals(new BigInteger("1500000000000000000"), accountState2.getBalance());
+        assertEquals("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470", Hex.toHexString(accountState2.getCodeHash()));
+        assertEquals(BigInteger.ZERO, accountState2.getNonce());
+        assertEquals(null, accountState2.getStateRoot());
 
         db.close();
 
     }
-
-
 }

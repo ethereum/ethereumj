@@ -10,6 +10,9 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure 
@@ -34,6 +37,8 @@ import org.iq80.leveldb.DB;
  */
 public class Trie implements TrieFacade{
 
+	private Logger logger = LoggerFactory.getLogger("trie");
+	
 	private static byte PAIR_SIZE = 2;
 	private static byte LIST_SIZE = 17;
 	
@@ -96,6 +101,10 @@ public class Trie implements TrieFacade{
 			throw new NullPointerException("Key should not be blank");
 		byte[] k = binToNibbles(key);
 		this.root = this.insertOrDelete(this.root, k, value);
+		if(logger.isDebugEnabled()) {
+			logger.debug("Added key {} and value {}", Hex.toHexString(key), Hex.toHexString(value));
+			logger.debug("New root-hash: {}", Hex.toHexString(this.getRootHash()));
+		}
 	}
 
 	/**
@@ -115,6 +124,9 @@ public class Trie implements TrieFacade{
      * @return value
      */
     public byte[] get(byte[] key) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("Retrieving key {}", Hex.toHexString(key));
+		}
         byte[] k = binToNibbles(key);
         Value c = new Value( this.get(this.root, k) );
         return c.asBytes();
@@ -127,6 +139,10 @@ public class Trie implements TrieFacade{
      */
     public void delete(byte[] key) {
         delete(new String(key));
+		if(logger.isDebugEnabled()) {
+			logger.debug("Deleted value for key {}", Hex.toHexString(key));
+			logger.debug("New root-hash: {}", Hex.toHexString(this.getRootHash()));
+		}
     }
 
 	/**
