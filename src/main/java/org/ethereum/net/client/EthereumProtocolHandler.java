@@ -74,11 +74,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 if (lastPongTime == 0) lastPongTime = System.currentTimeMillis();
                 if (tearDown) this.cancel();
 
+/*             todo: temporary cancel ping rate test
                 long currTime = System.currentTimeMillis();
                 if (currTime - lastPongTime > 30000) {
                     logger.info("No ping answer for [30 sec]");
                     throw new RuntimeException("No ping return for 30 [sec]");
                 }
+*/
 
                 sendPing();
             }
@@ -175,7 +177,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             List<Transaction> txList = transactionsMessage.getTransactions();
             for(Transaction tx : txList)
-               WorldManager.getInstance().applyTransaction(tx, null);
+               WorldManager.getInstance().applyTransaction(null, tx, null);
 
             logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());

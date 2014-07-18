@@ -94,7 +94,7 @@ public class MessageQueue {
         if (null != messageQueue.peek()){
 
             MessageRoundtrip messageRoundtrip = messageQueue.peek();
-            if (messageRoundtrip.getRetryTimes() == 0 || messageRoundtrip.hasToRetry()){
+            if (messageRoundtrip.getRetryTimes() == 0 ) {// todo: retry logic || messageRoundtrip.hasToRetry()){
 
                 Message msg = messageRoundtrip.getMsg();
                 sendToWire(msg);

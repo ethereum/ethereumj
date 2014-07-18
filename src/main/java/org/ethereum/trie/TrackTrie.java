@@ -15,7 +15,7 @@ public class TrackTrie implements TrieFacade {
 
 	private TrieFacade trie;
 
-	private boolean trackingChanges;
+	private boolean trackingChanges = false;
 	private Map<ByteArrayWrapper, byte[]> changes;
 	private Map<ByteArrayWrapper, byte[]> deletes;
 

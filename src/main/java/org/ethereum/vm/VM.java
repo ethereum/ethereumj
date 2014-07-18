@@ -4,10 +4,13 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.vm.Program.OutOfGasException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
+import static org.ethereum.vm.OpCode.CALL;
+import static org.ethereum.vm.OpCode.CREATE;
 import static org.ethereum.vm.OpCode.PUSH1;
 
 /**
@@ -59,8 +62,6 @@ public class VM {
 
             byte op = program.getCurrentOp();
             program.setLastOp(op);
-            logger.info("[ {} ] Op: [ {} ] Gas: [ {} ]" ,program.getPC(),
-                    OpCode.code(op).name(), program.getGas().longValue());
 
             int oldMemSize = program.getMemSize();
 
@@ -89,6 +90,7 @@ public class VM {
                     break;
             }
 
+            String hint = "";
             switch (OpCode.code(op)) {
                 /**
                  * Stop and Arithmetic Operations
@@ -100,13 +102,22 @@ public class VM {
                 case ADD:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " + " + word2.longValue();
+
                     word1.add(word2);
                     program.stackPush(word1);
                     program.step();
+
                 }	break;
                 case MUL:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " * " + word2.longValue();
+
                     word1.mul(word2);
                     program.stackPush(word1);
                     program.step();
@@ -114,6 +125,10 @@ public class VM {
                 case SUB:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " - " + word2.longValue();
+
                     word1.sub(word2);
                     program.stackPush(word1);
                     program.step();
@@ -121,6 +136,10 @@ public class VM {
                 case DIV:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " / " + word2.longValue();
+
                     word1.div(word2);
                     program.stackPush(word1);
                     program.step();
@@ -128,6 +147,10 @@ public class VM {
                 case SDIV:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.sValue() + " / " + word2.sValue();
+
                     word1.sDiv(word2);
                     program.stackPush(word1);
                     program.step();
@@ -135,6 +158,10 @@ public class VM {
                 case MOD:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " % " + word2.longValue();
+
                     word1.mod(word2);
                     program.stackPush(word1);
                     program.step();
@@ -142,6 +169,10 @@ public class VM {
                 case SMOD:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.sValue() + " #% " + word2.sValue();
+
                     word1.sMod(word2);
                     program.stackPush(word1);
                     program.step();
@@ -149,6 +180,10 @@ public class VM {
                 case EXP:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " ** " + word2.longValue();
+
                     word1.exp(word2);
                     program.stackPush(word1);
                     program.step();
@@ -156,6 +191,10 @@ public class VM {
                 case NEG:{
                     DataWord word1 = program.stackPop();
                     word1.negate();
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + word1.longValue();
+
                     program.stackPush(word1);
                     program.step();
                 }	break;
@@ -163,6 +202,10 @@ public class VM {
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " < " + word2.longValue();
+
                     if (word1.value().compareTo(word2.value()) == -1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
@@ -176,6 +219,10 @@ public class VM {
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.sValue() + " < " + word2.sValue();
+
                     if (word1.sValue().compareTo(word2.sValue()) == -1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
@@ -189,6 +236,10 @@ public class VM {
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.sValue() + " > " + word2.sValue();
+
                     if (word1.sValue().compareTo(word2.sValue()) == 1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
@@ -202,6 +253,10 @@ public class VM {
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " < " + word2.longValue();
+
                     if (word1.value().compareTo(word2.value()) == 1) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
@@ -214,6 +269,10 @@ public class VM {
                 case EQ:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " = " + word2.longValue();
+
                     if (word1.xor(word2).isZero()) {
                         word1.and(DataWord.ZERO);
                         word1.getData()[31] = 1;
@@ -230,6 +289,10 @@ public class VM {
                     } else {
                         word1.and(DataWord.ZERO);
                     }
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + word1.longValue();
+
                     program.stackPush(word1);
                     program.step();
                 }	break;
@@ -240,6 +303,10 @@ public class VM {
                 case AND:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " && " + word2.longValue();
+
                     word1.and(word2);
                     program.stackPush(word1);
                     program.step();
@@ -247,6 +314,10 @@ public class VM {
                 case OR: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " || " + word2.longValue();
+
                     word1.or(word2);
                     program.stackPush(word1);
                     program.step();
@@ -254,6 +325,10 @@ public class VM {
                 case XOR: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = word1.longValue() + " ^ " + word2.longValue();
+
                     word1.xor(word2);
                     program.stackPush(word1);
                     program.step();
@@ -270,6 +345,10 @@ public class VM {
                     } else {
                         result = new DataWord();
                     }
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + result.longValue();
+
                     program.stackPush(result);
                     program.step();
                 }	break;
@@ -285,6 +364,9 @@ public class VM {
                     byte[] encoded = HashUtil.sha3(buffer.array());
                     DataWord word = new DataWord(encoded);
 
+                    if (logger.isInfoEnabled())
+                        hint = word.toString();
+
                     program.stackPush(word);
                     program.step();
                 }	break;
@@ -294,27 +376,47 @@ public class VM {
                  */
                 case ADDRESS:{
                     DataWord address = program.getOwnerAddress();
+
+                    if (logger.isInfoEnabled())
+                        hint = address.toString();
+
                     program.stackPush(address);
                     program.step();
                 }	break;
                 case BALANCE:{
                     DataWord address = program.stackPop();
                     DataWord balance = program.getBalance(address);
+
+                    if (logger.isInfoEnabled())
+                        hint = "address: " + address.toString() + " balance: " + balance.longValue();
+
                     program.stackPush(balance);
                     program.step();
                 }	break;
                 case ORIGIN:{
                     DataWord originAddress = program.getOriginAddress();
+
+                    if (logger.isInfoEnabled())
+                        hint = "address: " + originAddress.toString();
+
                     program.stackPush(originAddress);
                     program.step();
                 }	break;
                 case CALLER:{
                     DataWord callerAddress = program.getCallerAddress();
+
+                    if (logger.isInfoEnabled())
+                        hint = "address: " + callerAddress.toString();
+
                     program.stackPush(callerAddress);
                     program.step();
                 }	break;
                 case CALLVALUE:{
                     DataWord callValue = program.getCallValue();
+
+                    if (logger.isInfoEnabled())
+                        hint = "value: " + callValue.toString();
+
                     program.stackPush(callValue);
                     program.step();
                 }	break;
@@ -322,11 +424,18 @@ public class VM {
                     DataWord dataOffs  = program.stackPop();
                     DataWord value = program.getDataValue(dataOffs);
 
+                    if (logger.isInfoEnabled())
+                        hint = "data: " + value.toString();
+
                     program.stackPush(value);
                     program.step();
                 }	break;
                 case CALLDATASIZE:{
                     DataWord dataSize = program.getDataSize();
+
+                    if (logger.isInfoEnabled())
+                        hint = "size: " + dataSize.longValue();
+
                     program.stackPush(dataSize);
                     program.step();
                 }	break;
@@ -336,11 +445,19 @@ public class VM {
                     DataWord lengthData     = program.stackPop();
 
                     byte[] msgData = program.getDataCopy(dataOffsetData, lengthData);
+
+                    if (logger.isInfoEnabled())
+                        hint = "data: " + Hex.toHexString(msgData);
+
                     program.memorySave(memOffsetData.data, msgData);
                     program.step();
                 }	break;
                 case CODESIZE:{
                     DataWord length = new DataWord(program.ops.length);
+
+                    if (logger.isInfoEnabled())
+                        hint = "size: " + length.longValue();
+
                     program.stackPush(length);
                     program.step();
                 }	break;
@@ -360,11 +477,18 @@ public class VM {
                     byte[] code = new byte[length];
                     System.arraycopy(program.ops, codeOffset, code, 0, length);
 
+                    if (logger.isInfoEnabled())
+                        hint = "code: " + Hex.toHexString(code);
+
                     program.memorySave(memOffsetData.getData(), code);
                     program.step();
                 }	break;
                 case GASPRICE:{
                     DataWord gasPrice = program.getGasPrice();
+
+                    if (logger.isInfoEnabled())
+                        hint = "price: " + gasPrice.toString();
+
                     program.stackPush(gasPrice);
                     program.step();
                 }   break;
@@ -374,31 +498,55 @@ public class VM {
                  */
                 case PREVHASH: {
                     DataWord prevHash = program.getPrevHash();
+
+                    if (logger.isInfoEnabled())
+                        hint = "prevHash: " + prevHash;
+
                     program.stackPush(prevHash);
                     program.step();
                 }   break;
                 case COINBASE: {
                     DataWord coinbase = program.getCoinbase();
+
+                    if (logger.isInfoEnabled())
+                        hint = "coinbase: " + coinbase;
+
                     program.stackPush(coinbase);
                     program.step();
                 }   break;
                 case TIMESTAMP:{
                     DataWord timestamp = program.getTimestamp();
+
+                    if (logger.isInfoEnabled())
+                        hint = "timestamp: " + timestamp.longValue();
+
                     program.stackPush(timestamp);
                     program.step();
                 }   break;
                 case NUMBER:{
                     DataWord number = program.getNumber();
+
+                    if (logger.isInfoEnabled())
+                        hint = "number: " + number.longValue();
+
                     program.stackPush(number);
                     program.step();
                 }   break;
                 case DIFFICULTY:{
                     DataWord difficulty = program.getDifficulty();
+
+                    if (logger.isInfoEnabled())
+                        hint = "difficulty: " + difficulty;
+
                     program.stackPush(difficulty);
                     program.step();
                 }   break;
                 case GASLIMIT:{
                     DataWord gaslimit = program.getGaslimit();
+
+                    if (logger.isInfoEnabled())
+                        hint = "gaslimit: " + gaslimit;
+
                     program.stackPush(gaslimit);
                     program.step();
                 }   break;
@@ -423,12 +571,20 @@ public class VM {
                 case MLOAD:{
                     DataWord addr =  program.stackPop();
                     DataWord data =  program.memoryLoad(addr);
+
+                    if (logger.isInfoEnabled())
+                        hint = "data: " + data;
+
                     program.stackPush(data);
                     program.step();
                 }	break;
                 case MSTORE:{
                     DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = "addr: " + addr + " value: " + value;
+
                     program.memorySave(addr, value);
                     program.step();
                 }	break;
@@ -442,6 +598,10 @@ public class VM {
                 case SLOAD:{
                     DataWord key =  program.stackPop();
                     DataWord val = program.storageLoad(key);
+
+                    if (logger.isInfoEnabled())
+                        hint = "key: " + key + " value: " + val;
+
                     if (val == null) {
                         val = key.and(DataWord.ZERO);
                     }
@@ -451,6 +611,9 @@ public class VM {
                 case SSTORE:{
                     DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = "addr: " + addr + " value: " + value;
 
                     // for gas calculations [YP 9.2]
                     DataWord oldValue =  program.storageLoad(addr);
@@ -465,6 +628,10 @@ public class VM {
                 }	break;
                 case JUMP:{
                     DataWord pos  =  program.stackPop();
+
+                    if (logger.isInfoEnabled())
+                        hint = "~> " + pos.longValue();
+
                     program.setPC(pos);
                 }	break;
                 case JUMPI:{
@@ -476,21 +643,37 @@ public class VM {
                     } else{
                         program.step();
                     }
+
+                    if (logger.isInfoEnabled())
+                        hint = "~> " + program.getPC();
+
                 }	break;
                 case PC:{
                     int pc = program.getPC();
                     DataWord pcWord = new DataWord(pc);
+
+                    if (logger.isInfoEnabled())
+                        hint = pcWord.toString();
+
                     program.stackPush(pcWord);
                     program.step();
                 }	break;
                 case MSIZE:{
                     int memSize = program.getMemSize();
                     DataWord wordMemSize = new DataWord(memSize);
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + memSize;
+
                     program.stackPush(wordMemSize);
                     program.step();
                 }	break;
                 case GAS:{
                     DataWord gas = program.getGas();
+
+                    if (logger.isInfoEnabled())
+                        hint = "" + gas;
+
                     program.stackPush(gas);
                     program.step();
                 }   break;
@@ -503,6 +686,8 @@ public class VM {
                     int nPush = op - PUSH1.val() + 1;
 
                     byte[] data = program.sweep(nPush);
+                    hint = "" + Hex.toHexString(data);
+
                     program.stackPush(data);
                 }	break;
                 case CREATE:{
@@ -510,6 +695,10 @@ public class VM {
                     DataWord inOffset   =  program.stackPop();
                     DataWord inSize     =  program.stackPop();
 
+                    if (logger.isInfoEnabled())
+                        logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]" ,program.getPC(),
+                                OpCode.code(op).name(), program.getGas().longValue(),
+                                program.invokeData.getCallDeep(), hint);
                     program.createContract(value, inOffset, inSize);
 
                     program.step();
@@ -525,6 +714,11 @@ public class VM {
                     DataWord outDataOffs =  program.stackPop();
                     DataWord outDataSize =  program.stackPop();
 
+                    if (logger.isInfoEnabled())
+                        logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]" ,program.getPC(),
+                                OpCode.code(op).name(), program.getGas().longValue(),
+                                program.invokeData.getCallDeep(), hint);
+
                     program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize,outDataOffs, outDataSize);
 
                     program.step();
@@ -535,6 +729,9 @@ public class VM {
 
                     ByteBuffer hReturn = program.memoryChunk(offset, size);
                     program.setHReturn(hReturn);
+
+                    if (logger.isInfoEnabled())
+                        hint = "data: " + Hex.toHexString(hReturn.array());
 
                     program.step();
                     program.stop();
@@ -547,6 +744,13 @@ public class VM {
                 default:{
                 }
             }
+
+            if (logger.isInfoEnabled())
+                if (!OpCode.code(op).equals(CALL) && !OpCode.code(op).equals(CREATE))
+                    logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]" ,program.getPC(),
+                            OpCode.code(op).name(), program.getGas().longValue(),
+                            program.invokeData.getCallDeep(), hint);
+
 
             // memory gas calc
             int newMemSize = program.getMemSize();
@@ -576,6 +780,7 @@ public class VM {
                 program.spendGas(GasCost.TRANSACTION, "TRANSACTION");
                 program.spendGas(GasCost.TXDATA * program.invokeData.getDataSize().intValue(), "DATA");
             }
+
             while(!program.isStopped())
                 this.step(program);
         } catch (RuntimeException e) {

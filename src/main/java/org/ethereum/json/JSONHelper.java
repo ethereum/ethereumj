@@ -39,8 +39,8 @@ public class JSONHelper {
 
         JSONArray orderFields  = new JSONArray();
         orderFields.add("address: "    + Hex.toHexString(address));
-        orderFields.add(" nonce: "     + Hex.toHexString(nonce));
-        orderFields.add(" balance: "   + new BigInteger(balance).toString());
+        orderFields.add(" nonce: "     + (nonce == null ? "00" : Hex.toHexString(nonce)));
+        orderFields.add(" balance: "   + (balance == null ? "00" : Hex.toHexString(balance).toString()));
         orderFields.add(" stateRoot: " + (stateRoot == null ? "" : Hex.toHexString(stateRoot)));
         orderFields.add(" codeHash: "  + (codeHash == null ? "" : Hex.toHexString(codeHash)));
         orderFields.add(" code: "      + (code == null ? "" : Hex.toHexString(code)));

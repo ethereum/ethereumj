@@ -13,7 +13,8 @@ import java.util.Map;
 public class ProgramInvokeImpl implements ProgramInvoke {
 
     /*** TRANSACTION  env ***/
-    private DataWord address, origin, caller, 
+    private DataWord address;
+    private DataWord  origin, caller,
     		balance, gas, gasPrice, callValue;
 
     byte[] msgData;
@@ -27,11 +28,12 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     private Repository repository;
     private boolean byTransaction = true;
     private boolean byTestingSuite = false;
+    private int callDeep = 0;
 
     public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
                              DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord difficulty,
-                             DataWord gaslimit, Repository repository) {
+                             DataWord gaslimit, Repository repository, int callDeep) {
 
         // Transaction env
         this.address   = address;
@@ -53,6 +55,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
         this.repository = repository;
         this.byTransaction = false;
+        this.callDeep = callDeep;
     }
 
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
@@ -222,6 +225,11 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     }
 
     @Override
+    public int getCallDeep() {
+        return this.callDeep;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -251,25 +259,27 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     }
 
     @Override
-    public int hashCode() {
-        int result = address != null ? address.hashCode() : 0;
-        result = 31 * result + (origin != null ? origin.hashCode() : 0);
-        result = 31 * result + (caller != null ? caller.hashCode() : 0);
-        result = 31 * result + (balance != null ? balance.hashCode() : 0);
-        result = 31 * result + (gas != null ? gas.hashCode() : 0);
-        result = 31 * result + (gasPrice != null ? gasPrice.hashCode() : 0);
-        result = 31 * result + (callValue != null ? callValue.hashCode() : 0);
-        result = 31 * result + (msgData != null ? Arrays.hashCode(msgData) : 0);
-        result = 31 * result + (prevHash != null ? prevHash.hashCode() : 0);
-        result = 31 * result + (coinbase != null ? coinbase.hashCode() : 0);
-        result = 31 * result + (timestamp != null ? timestamp.hashCode() : 0);
-        result = 31 * result + (number != null ? number.hashCode() : 0);
-        result = 31 * result + (difficulty != null ? difficulty.hashCode() : 0);
-        result = 31 * result + (gaslimit != null ? gaslimit.hashCode() : 0);
-        result = 31 * result + (storage != null ? storage.hashCode() : 0);
-        result = 31 * result + (repository != null ? repository.hashCode() : 0);
-        result = 31 * result + (byTransaction ? 1 : 0);
-        result = 31 * result + (byTestingSuite ? 1 : 0);
-        return result;
+    public String toString() {
+        return "ProgramInvokeImpl{" +
+                "address=" + address +
+                ", origin=" + origin +
+                ", caller=" + caller +
+                ", balance=" + balance +
+                ", gas=" + gas +
+                ", gasPrice=" + gasPrice +
+                ", callValue=" + callValue +
+                ", msgData=" + Arrays.toString(msgData) +
+                ", prevHash=" + prevHash +
+                ", coinbase=" + coinbase +
+                ", timestamp=" + timestamp +
+                ", number=" + number +
+                ", difficulty=" + difficulty +
+                ", gaslimit=" + gaslimit +
+                ", storage=" + storage +
+                ", repository=" + repository +
+                ", byTransaction=" + byTransaction +
+                ", byTestingSuite=" + byTestingSuite +
+                ", callDeep=" + callDeep +
+                '}';
     }
 }

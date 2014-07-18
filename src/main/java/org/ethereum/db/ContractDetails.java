@@ -45,32 +45,24 @@ public class ContractDetails {
         if (value.equals(DataWord.ZERO)){
 
             storageTrie.delete(key.getData());
-
             int index = storageKeys.indexOf(key);
             if (index != -1) {
                 storageKeys.remove(index);
                 storageValues.remove(index);
             }
-
-            this.rlpEncoded = null;
-
-
         } else{
 
             storageTrie.update(key.getData(), RLP.encodeElement( value.getNoLeadZeroesData() ));
-
             int index = storageKeys.indexOf(key);
-
             if (index != -1) {
                 storageKeys.remove(index);
                 storageValues.remove(index);
             }
-
             storageKeys.add(key);
             storageValues.add(value);
-
-            this.rlpEncoded = null;
         }
+
+        this.rlpEncoded = null;
 	}
 
 	public DataWord get(DataWord key) {
@@ -101,6 +93,8 @@ public class ContractDetails {
     }
 
     public byte[] getStorageHash() {
+
+        getEncoded();
         return storageTrie.getRootHash();
     }
 
@@ -154,6 +148,13 @@ public class ContractDetails {
 				DataWord value = storageValues.get(i);
 				values[i] = RLP.encodeElement(value.getNoLeadZeroesData());
 			}
+
+            storageTrie = new Trie(null);
+            // calc the trie for root hash
+            for (int i = 0; i < storageKeys.size(); ++i){
+                storageTrie.update(storageKeys.get(i).getData(), values[i]);
+            }
+
 			byte[] rlpKeysList = RLP.encodeList(keys);
 			byte[] rlpValuesList = RLP.encodeList(values);
 			byte[] rlpCode = RLP.encodeElement(code);

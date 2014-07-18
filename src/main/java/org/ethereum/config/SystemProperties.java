@@ -31,6 +31,7 @@ public class SystemProperties {
     private static Boolean DEFAULT_DUMP_FULL = false;
     private static String  DEFAULT_DUMP_DIR = "dmp";
     private static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
+    private static int     DEFAULT_TRACE_STARTBLOCK = -1;
 
 	public static SystemProperties CONFIG = new SystemProperties();
     private Properties prop = new Properties();
@@ -131,6 +132,12 @@ public class SystemProperties {
         if(prop.isEmpty()) return DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT;
         return Integer.parseInt(prop.getProperty("active.peer.channel.timeout"));
     }
+
+    public Integer traceStartBlock() {
+        if(prop.isEmpty()) return DEFAULT_TRACE_STARTBLOCK;
+        return Integer.parseInt(prop.getProperty("trace.startblock"));
+    }
+
 
     public Boolean dumpFull() {
         if(prop.isEmpty()) return DEFAULT_DUMP_FULL;
