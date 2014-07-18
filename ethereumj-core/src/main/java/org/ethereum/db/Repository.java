@@ -67,15 +67,6 @@ public class Repository {
         accountStateDB = new TrackTrie(worldState);
     }
 
-    public Repository(byte[] stateRoot) {
-        detailsDB     = new DatabaseImpl("details");
-        contractDetailsDB = new TrackDatabase(detailsDB);
-        stateDB = new DatabaseImpl("state");
-        worldState = new Trie(stateDB.getDb());
-        worldState.setRoot(stateRoot);
-        accountStateDB = new TrackTrie(worldState);
-    }
-
 
     private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
         this.accountStateDB = accountStateDB;
