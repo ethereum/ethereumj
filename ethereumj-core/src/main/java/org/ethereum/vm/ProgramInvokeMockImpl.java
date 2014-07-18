@@ -187,6 +187,8 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         this.repository = repository;
     }
 
-
-
+    @Override
+    public int getCallDeep() {
+        return 0;
+    }
 }

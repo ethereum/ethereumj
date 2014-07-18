@@ -69,12 +69,12 @@ public class WorldManager {
 	public static WorldManager getInstance() {
 		if(instance == null) {
 			instance = new WorldManager();
-			instance.getBlockChain().load();
+            instance.blockchain.load();
 		}
 		return instance;
 	}
 
-	public void applyTransaction(Transaction tx, byte[] coinbase) {
+	public void applyTransaction(Block block, Transaction tx, byte[] coinbase) {
 
 		byte[] senderAddress = tx.getSender();
 		AccountState senderAccount = repository.getAccountState(senderAddress);
@@ -88,7 +88,7 @@ public class WorldManager {
 
 		// 1. VALIDATE THE NONCE
 		BigInteger nonce = senderAccount.getNonce();
-		BigInteger txNonce = new BigInteger(tx.getNonce());
+		BigInteger txNonce = new BigInteger(1, tx.getNonce());
 		if (nonce.compareTo(txNonce) != 0) {
 			if (stateLogger.isWarnEnabled())
 				stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
@@ -187,10 +187,10 @@ public class WorldManager {
 
 			// 5. CREATE OR EXECUTE PROGRAM 
 			if (isContractCreation || code != null) {
-				Block lastBlock = blockchain.getLastBlock();
+				Block currBlock =  (block == null) ? blockchain.getLastBlock() : block;
 
 				ProgramInvoke programInvoke = ProgramInvokeFactory
-						.createProgramInvoke(tx, lastBlock, trackRepository);
+						.createProgramInvoke(tx, currBlock, trackRepository);
 				
 				VM vm = new VM();
 				Program program = new Program(code, programInvoke);
@@ -283,7 +283,8 @@ public class WorldManager {
 	
 		int i = 0;
 		for (Transaction tx : block.getTransactionsList()) {
-			applyTransaction(tx, block.getCoinbase());
+            logger.info("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
+			applyTransaction(block, tx, block.getCoinbase());
 			repository.dumpState(block.getNumber(), i,
 					Hex.toHexString(tx.getHash()));
 			++i;
@@ -295,7 +296,11 @@ public class WorldManager {
 		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
 		for (Block uncle : block.getUncleList()) {
 			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
-		}		
+		}
+
+        repository.dumpState(block.getNumber(), 0,
+                null);
+
 	}
 	
     /***********************************************************************

@@ -772,8 +772,15 @@ public class RLPTest {
         byte[] output = RLP.encodeList(rlpKeysList, rlpValuesList, rlpCode);
 
         assertEquals(expectedOutput, Hex.toHexString(output));
+   }
 
 
-    }
+   @Test
+   public void encodeBigIntegerEdge_1(){
+
+       BigInteger integer = new BigInteger("80", 10);
+       byte[] encodedData = RLP.encodeBigInteger(integer);
+       System.out.println(Hex.toHexString(encodedData));
+   }
 
 }

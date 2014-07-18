@@ -4,12 +4,14 @@ import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.json.JSONHelper;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.BufferedWriter;
@@ -64,6 +66,16 @@ public class Repository {
         worldState = new Trie(stateDB.getDb());
         accountStateDB = new TrackTrie(worldState);
     }
+
+    public Repository(byte[] stateRoot) {
+        detailsDB     = new DatabaseImpl("details");
+        contractDetailsDB = new TrackDatabase(detailsDB);
+        stateDB = new DatabaseImpl("state");
+        worldState = new Trie(stateDB.getDb());
+        worldState.setRoot(stateRoot);
+        accountStateDB = new TrackTrie(worldState);
+    }
+
 
     private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
         this.accountStateDB = accountStateDB;
@@ -208,7 +220,7 @@ public class Repository {
         this.validateAddress(addr);
 
         AccountState      state = getAccountState(addr);
-        ContractDetails details = getContractDetails(addr);
+        ContractDetails   details = getContractDetails(addr);
 
         if (state == null || details == null) return;
         details.put(key, value);
@@ -310,10 +322,13 @@ public class Repository {
 
         String dir = CONFIG.dumpDir() + "/";
 
-        String fileName = blockNumber + ".dmp";
+        String fileName = "";
         if (txHash != null)
              fileName = String.format("%d_%d_%s.dmp",
                         	blockNumber, txNumber, txHash.substring(0, 8));
+        else
+            fileName = String.format("%d_c.dmp", blockNumber);
+
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
@@ -335,24 +350,29 @@ public class Repository {
                 AccountState    state    = getAccountState(keyBytes);
                 ContractDetails details  = getContractDetails(keyBytes);
 
-                BigInteger nonce   = state.getNonce();
-                BigInteger balance = state.getBalance();
+                BigInteger nonce   = (state != null)? state.getNonce():null;
+                BigInteger balance = (state != null)? state.getBalance():null;
 
-                byte[] stateRoot = state.getStateRoot();
-                byte[] codeHash = state.getCodeHash();
+                byte[] stateRoot = (state != null)? state.getStateRoot():null;
+                byte[] codeHash = (state != null)? state.getCodeHash():null;
 
                 byte[] code = details.getCode();
                 Map<DataWord, DataWord> storage = details.getStorage();
 
                 String accountLine = JSONHelper.dumpLine(key.getData(),
-                        nonce.toByteArray(),
-                        balance.toByteArray(), stateRoot, codeHash, code, storage);
+                        (nonce != null)? BigIntegers.asUnsignedByteArray(nonce) : null,
+                        (nonce != null)? BigIntegers.asUnsignedByteArray(balance): null,
+                        stateRoot, codeHash, code, storage);
 
                 bw.write(accountLine);
                 bw.write("\n");
-
-    //            {address: x, nonce: n1, balance: b1, stateRoot: s1, codeHash: c1, code: c2, sotrage: [key: k1, value: v1, key:k2, value: v2 ] }
             }
+
+            String rootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getRootHash());
+            bw.write(
+                    String.format(" => Global State Root: [ %s ]", rootHash)
+            );
+
         } catch (IOException e) {
         	logger.error(e.getMessage(), e);
         } finally {
@@ -364,6 +384,11 @@ public class Repository {
     }
 
     public void close() {
+
+        if (worldState != null){
+            worldState.sync();
+        }
+
         if (this.stateDB != null)
             stateDB.close();
         if (this.detailsDB != null)

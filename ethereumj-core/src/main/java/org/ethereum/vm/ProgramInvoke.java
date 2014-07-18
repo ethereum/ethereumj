@@ -31,4 +31,6 @@ public interface ProgramInvoke {
 
     public boolean byTransaction();
     boolean byTestingSuite();
+
+    public int getCallDeep();
 }

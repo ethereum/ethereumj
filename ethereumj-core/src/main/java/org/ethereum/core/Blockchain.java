@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+import org.apache.log4j.PropertyConfigurator;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.ByteUtil;
@@ -9,9 +11,13 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
-import java.util.*;
+import java.net.URL;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.ethereum.core.Denomination.*;
+import static org.ethereum.core.Denomination.SZABO;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain, 
@@ -103,16 +109,28 @@ public class Blockchain {
         for (int i = blocks.size() - 1; i >= 0 ; --i) {   			
             this.addBlock(blocks.get(i));
 
+            // here we can turn on the detail tracing in the middle of the chain
+            if (lastBlock.getNumber() >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
+
+                URL configFile = ClassLoader
+                        .getSystemResource("log4j-detailed.properties");
+
+                PropertyConfigurator.configure(configFile);
+            }
 
             long blockNum = blocks.get(i).getNumber();
             /* Debug check to see if the state is still as expected */
             if(logger.isWarnEnabled()) {
             	String blockStateRootHash = Hex.toHexString(blocks.get(i).getStateRoot());
             	String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
-            	if(!blockStateRootHash.equals(worldStateRootHash))
-            		logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", blockNum, worldStateRootHash);
-            }           
+            	if(!blockStateRootHash.equals(worldStateRootHash)){
+                    logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", blockNum, worldStateRootHash);
+
+                    System.exit(-1);
+                }
+            }
         }
+
         // Remove all wallet transactions as they already approved by the net
         for (Block block : blocks) {
             for (Transaction tx : block.getTransactionsList()) {
@@ -122,6 +140,16 @@ public class Blockchain {
             }
         }
         logger.info("*** Block chain size: [ {} ]", this.getSize());
+
+/*
+        if (lastBlock.getNumber() >= 30) {
+            System.out.println("** checkpoint **");
+
+            this.close();
+            WorldManager.getInstance().getRepository().close();
+            System.exit(1);
+        }
+*/
     }
     
     public void addBlock(Block block) {

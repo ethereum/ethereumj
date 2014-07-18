@@ -27,7 +27,7 @@ public class Program {
 
     Stack<DataWord> stack = new Stack<DataWord>();
     ByteBuffer memory = null;
-    byte[] programAddress;
+    DataWord programAddress;
 
     ProgramResult result = new ProgramResult();
 
@@ -47,7 +47,8 @@ public class Program {
 
         this.invokeData = invokeData;
         this.ops = ops;
-        this.programAddress = invokeData.getOwnerAddress().getLast20Bytes();
+        this.programAddress = invokeData.getOwnerAddress();
+
     }
 
     public byte getCurrentOp() {
@@ -82,6 +83,7 @@ public class Program {
     }
 
     public void setPC(DataWord pc) {
+
         this.pc = pc.value().intValue();
 
         if (this.pc == ops.length) {
@@ -111,6 +113,7 @@ public class Program {
     }
 
     public void step() {
+
         ++pc;
         if (pc >= ops.length) stop();
     }
@@ -271,7 +274,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke =
                 ProgramInvokeFactory.createProgramInvoke(this, new DataWord(newAddress), DataWord.ZERO,
-                        new DataWord(gas), BigInteger.ZERO, null, trackRepository);
+                        new DataWord(gas), BigInteger.ZERO, null, trackRepository, this.invokeData.getCallDeep() + 1);
 
         VM vm = new VM();
         Program program = new Program(programCode.array(), programInvoke);
@@ -333,8 +336,8 @@ public class Program {
         byte[] programCode = this.result.getRepository().getCode(toAddress);
 
         if (logger.isInfoEnabled())
-            logger.info("calling for existing contract: address={}",
-                    Hex.toHexString(toAddress));
+            logger.info("calling for existing contract: address: [ {} ], outDataOffs: [ {} ], outDataSize: [ {} ]  ",
+                    Hex.toHexString(toAddress), outDataOffs.longValue(), outDataSize.longValue());
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
 
@@ -380,7 +383,7 @@ public class Program {
                 ProgramInvokeFactory.createProgramInvoke(this, toAddressDW,
                         endowmentValue,  gas, result.getRepository().getBalance(toAddress),
                         data.array(),
-                        trackRepository);
+                        trackRepository, this.invokeData.getCallDeep() + 1);
 
         ProgramResult result = null;
 
@@ -458,12 +461,12 @@ public class Program {
     public void storageSave(byte[] key, byte[] val) {
         DataWord keyWord = new DataWord(key);
         DataWord valWord = new DataWord(val);
-        result.getRepository().addStorageRow(this.programAddress, keyWord, valWord);
+        result.getRepository().addStorageRow(this.programAddress.getLast20Bytes(), keyWord, valWord);
     }
 
     public DataWord getOwnerAddress() {
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getOwnerAddress();
+        return this.programAddress.clone();
     }
 
     public DataWord getBalance(DataWord address) {
@@ -477,17 +480,17 @@ public class Program {
 
     public DataWord getOriginAddress() {
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getOriginAddress();
+        return invokeData.getOriginAddress().clone();
     }
 
     public DataWord getCallerAddress() {
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getCallerAddress();
+        return invokeData.getCallerAddress().clone();
     }
 
     public DataWord getGasPrice() {
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getMinGasPrice();
+        return invokeData.getMinGasPrice().clone();
     }
 
     public DataWord getGas() {
@@ -498,12 +501,12 @@ public class Program {
 
     public DataWord getCallValue() {
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getCallValue();
+        return invokeData.getCallValue().clone();
     }
 
     public DataWord getDataSize() {
         if (invokeData == null) return new DataWord( new byte[0]);
-        return invokeData.getDataSize();
+        return invokeData.getDataSize().clone();
     }
 
     public DataWord getDataValue(DataWord index) {
@@ -517,31 +520,31 @@ public class Program {
     }
 
     public DataWord storageLoad(DataWord key) {
-        return result.getRepository().getStorageValue(this.programAddress, key);
+        return result.getRepository().getStorageValue(this.programAddress.getLast20Bytes(), key);
     }
 
     public DataWord getPrevHash() {
-       return invokeData.getPrevHash();
+       return invokeData.getPrevHash().clone();
     }
 
     public DataWord getCoinbase() {
-        return invokeData.getCoinbase();
+        return invokeData.getCoinbase().clone();
     }
 
     public DataWord getTimestamp() {
-        return  invokeData.getTimestamp();
+        return  invokeData.getTimestamp().clone();
     }
 
     public DataWord getNumber() {
-        return invokeData.getNumber();
+        return invokeData.getNumber().clone();
     }
 
     public DataWord getDifficulty() {
-        return  invokeData.getDifficulty();
+        return  invokeData.getDifficulty().clone();
     }
 
     public DataWord getGaslimit() {
-        return invokeData.getGaslimit();
+        return invokeData.getGaslimit().clone();
     }
 
 
@@ -564,7 +567,8 @@ public class Program {
             }
             if (stackData.length() > 0) stackData.insert(0, "\n");
 
-            ContractDetails contractDetails = this.result.getRepository().getContractDetails(this.programAddress);
+            ContractDetails contractDetails = this.result.getRepository().
+                    getContractDetails(this.programAddress.getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
             for (DataWord key : contractDetails.getStorage().keySet()) {
                 storageData.append(" ").append(key).append(" -> ").

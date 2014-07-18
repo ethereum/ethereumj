@@ -69,4 +69,9 @@ public class TrackDatabase implements Database {
             db.delete(key);
         }
     }
+
+    @Override
+    public void close(){
+        db.close();
+    }
 }
