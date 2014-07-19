@@ -3,19 +3,17 @@
 ##### TODO list:
 ----------------
 
-- [x] **State management** trie for storage hash calculation 
-                           and update hash into AccountState
 - [ ] **GUI screen** a screen that will hold table with full state representation
+- [ ] ** Block Queue ** separate net layer and block processing layer, net layer should continue get
+                        blocks in time the vm layer process them (not stuck for it)
 - [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))   
   https://github.com/ethereum/wiki/wiki/Serpent
 - [ ] **SerpentCompiler** compile return(array) correct
-- [x] **VM execution:** SUICIDE op adjust
 - [ ] **ProgramPlayDialog** support internal calls
 - [ ] **Build:** extract core module and studio application
 - [ ] **Performance:** BigInteger math change for constant arrays implementation   
 economy for memory allocation
 - [ ] **Command Line:** add the headless run option   
-- [x] **Testing by JSON files:** follow cpp client performs test case by getting json file contains the test describe
 - [ ] **SerpentCompiler** Serpent new syntax:   
 (@> @< @/ @%) - unsigned operations   
  > < / % - default are all signed operations   
@@ -45,3 +43,7 @@ share - code section
 
 - [x] **VM complex:** CALL testing for in arrays
 - [x] **VM complex:** CALL testing for out result
+- [x] **State management** trie for storage hash calculation 
+                           and update hash into AccountState
+- [x] **VM execution:** SUICIDE op adjust
+- [x] **Testing by JSON files:** follow cpp client performs test case by getting json file contains the test describe
