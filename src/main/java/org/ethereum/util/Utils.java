@@ -87,6 +87,10 @@ public class Utils {
     public static double JAVA_VERSION = getJavaVersion();
     static double getJavaVersion() {
         String version = System.getProperty("java.version");
+
+        // on android this property equals to 0
+        if (version.equals("0")) return 0;
+
         int pos = 0, count = 0;
         for ( ; pos<version.length() && count < 2; pos ++) {
             if (version.charAt(pos) == '.') count ++;

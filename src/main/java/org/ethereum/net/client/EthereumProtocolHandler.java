@@ -5,9 +5,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.Command;
 import org.ethereum.net.MessageQueue;
@@ -162,7 +162,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             PeersMessage peersMessage = new PeersMessage(payload);
             msgQueue.receivedMessage(peersMessage);
 
-            MainData.instance.addPeers(peersMessage.getPeers());
+            WorldManager.getInstance().addPeers(peersMessage.getPeers());
 
             logger.info(peersMessage.toString());
             if (peerListener != null) peerListener.console(peersMessage.toString());
@@ -228,7 +228,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 }, 3000, secToAskForChain * 1000);
             }
 
-            WorldManager.getInstance().getBlockChain().addBlocks(blockList);
+            WorldManager.getInstance().getBlockQueue().addBlocks(blockList);
             if (peerListener != null) peerListener.console(blocksMessage.toString());
 
         }
@@ -311,8 +311,14 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private void sendGetChain() {
 
-        byte[] hash = WorldManager.getInstance().getBlockChain().getLastBlock().getHash();
-        GetChainMessage chainMessage = new GetChainMessage((byte)100, hash);
+        if (WorldManager.getInstance().getBlockQueue().size() >
+                SystemProperties.CONFIG.maxBlocksQueued()) return;
+
+        Block lastBlock = WorldManager.getInstance().getBlockQueue().getLast();
+
+        byte[] hash = lastBlock.getHash();
+        GetChainMessage chainMessage =
+                new GetChainMessage( SystemProperties.CONFIG.maxBlocksAsk(), hash);
         msgQueue.sendMessage(chainMessage);
     }
 }

@@ -6,7 +6,7 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 
-import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.Command;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.message.*;
@@ -38,6 +38,8 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     private boolean tearDown = false;
 
     private PeerListener peerListener;
+
+    private byte capabilities = 0;
 
     public EthereumPeerTasterHandler() {    }
 
@@ -99,6 +101,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
             RLPList rlpList = RLP.decode2(payload);
             
             HelloMessage helloMessage = new HelloMessage(rlpList);
+            capabilities = helloMessage.getCapabilities();
             logger.info(helloMessage.toString());
 
             sendGetPeers(ctx);
@@ -136,7 +139,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
             RLPList rlpList = RLP.decode2(payload);
             PeersMessage peersMessage = new PeersMessage(rlpList);
 
-            MainData.instance.addPeers(peersMessage.getPeers());
+            WorldManager.getInstance().addPeers(peersMessage.getPeers());
             logger.info(peersMessage.toString());
 
             sendDisconnectNice(ctx);
@@ -196,5 +199,9 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_PEERS.length);
         buffer.writeBytes(StaticMessages.GET_PEERS);
         ctx.writeAndFlush(buffer);
+    }
+
+    public byte getCapabilities() {
+        return capabilities;
     }
 }

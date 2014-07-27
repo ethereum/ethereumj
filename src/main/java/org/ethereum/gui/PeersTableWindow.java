@@ -1,6 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -94,7 +94,7 @@ public class PeersTableWindow extends JFrame {
         }, 1000, 1000);
 
         if (CONFIG.peerDiscovery())
-            MainData.instance.startPeerDiscovery();
+            WorldManager.getInstance().startPeerDiscovery();
     }
 
 	public void addCloseAction() {

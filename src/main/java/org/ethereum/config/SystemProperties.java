@@ -30,8 +30,13 @@ public class SystemProperties {
     private static Boolean DEFAULT_DB_RESET = false;
     private static Boolean DEFAULT_DUMP_FULL = false;
     private static String  DEFAULT_DUMP_DIR = "dmp";
+    private static String  DEFAULT_DATABASE_DIR = System.getProperty("user.dir");
     private static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
+    private static Boolean DEFAULT_PLAY_VM = true;
     private static int     DEFAULT_TRACE_STARTBLOCK = -1;
+    private static byte    DEFAULT_MAX_BLOCKS_ASK = 10;
+    private static int     DEFAULT_MAX_BLOCKS_QUEUED = 300;
+
 
 	public static SystemProperties CONFIG = new SystemProperties();
     private Properties prop = new Properties();
@@ -149,6 +154,11 @@ public class SystemProperties {
         return prop.getProperty("dump.dir");
     }
 
+    public String databaseDir() {
+        if(prop.isEmpty()) return DEFAULT_DATABASE_DIR;
+        return prop.getProperty("database.dir");
+    }
+
     public Boolean dumpCleanOnRestart() {
         if(prop.isEmpty()) return DEFAULT_DUMP_CLEAN_ON_RESTART;
 		return Boolean.parseBoolean(prop.getProperty("dump.clean.on.restart"));
@@ -163,6 +173,22 @@ public class SystemProperties {
 				logger.info("Key: " + key + ", Value: " + value);
 		}
 	}
+
+    public Boolean playVM() {
+        if(prop.isEmpty()) return DEFAULT_PLAY_VM;
+        return Boolean.parseBoolean(prop.getProperty("play.vm"));
+    }
+
+    public Byte maxBlocksAsk() {
+        if(prop.isEmpty()) return DEFAULT_MAX_BLOCKS_ASK;
+        return Byte.parseByte(prop.getProperty("max.blocks.ask"));
+    }
+
+    public Integer maxBlocksQueued() {
+        if(prop.isEmpty()) return DEFAULT_MAX_BLOCKS_QUEUED;
+        return Integer.parseInt(prop.getProperty("max.blocks.queued"));
+    }
+
 
     public static void main(String args[]) {
         SystemProperties systemProperties = new SystemProperties();

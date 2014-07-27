@@ -2,19 +2,13 @@ package org.ethereum.net;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import org.ethereum.net.message.Message;
-import org.ethereum.net.message.PingMessage;
-import org.ethereum.net.message.PongMessage;
-import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.message.*;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -54,7 +48,11 @@ public class MessageQueue {
     }
 
     public void sendMessage(Message msg){
-            messageQueue.add(new MessageRoundtrip(msg));
+
+        if (msg instanceof  GetChainMessage && containsGetChain())
+            return;
+
+        messageQueue.add(new MessageRoundtrip(msg));
     }
 
     public void receivedMessage(Message msg){
@@ -123,5 +121,17 @@ public class MessageQueue {
         buffer.writeBytes(ByteUtil.calcPacketLength(msg.getPayload()));
         buffer.writeBytes(msg.getPayload());
         ctx.writeAndFlush(buffer);
+    }
+
+
+    private boolean containsGetChain(){
+        Iterator<MessageRoundtrip> iterator = messageQueue.iterator();
+        while(iterator.hasNext()){
+
+            MessageRoundtrip msgRoundTrip = iterator.next();
+            if (msgRoundTrip.getMsg() instanceof GetChainMessage)
+                return true;
+        }
+        return false;
     }
 }

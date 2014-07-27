@@ -1,9 +1,8 @@
 package org.ethereum.core;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-import org.apache.log4j.PropertyConfigurator;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
@@ -11,12 +10,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 
 /**
@@ -86,60 +85,51 @@ public class Blockchain {
    		return new Block(index.get(blockNr));
 	}
 
-    public void addBlocks(List<Block> blocks) {
+    public void applyBlock(Block block) {
 
-		if (blocks.isEmpty())
+		if (block == null)
 			return;
 
-        Block firstBlockToAdd = blocks.get(blocks.size() - 1);
 
         // if it is the first block to add
         // check that the parent is the genesis
 		if (index.isEmpty()
 				&& !Arrays.equals(Genesis.getInstance().getHash(),
-						firstBlockToAdd.getParentHash())) {
+						block.getParentHash())) {
 			return;
 		}
         // if there is some blocks already keep chain continuity
         if (!index.isEmpty()) {
             String hashLast = Hex.toHexString(getLastBlock().getHash());
-            String blockParentHash = Hex.toHexString(firstBlockToAdd.getParentHash());
+            String blockParentHash = Hex.toHexString(block.getParentHash());
             if (!hashLast.equals(blockParentHash)) return;
         }
-        for (int i = blocks.size() - 1; i >= 0 ; --i) {   			
-            this.addBlock(blocks.get(i));
 
-            // here we can turn on the detail tracing in the middle of the chain
-            if (lastBlock.getNumber() >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
+        this.addBlock(block);
+        if (block.getNumber() >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
+            AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
+        }
 
-                URL configFile = ClassLoader
-                        .getSystemResource("log4j-detailed.properties");
-
-                PropertyConfigurator.configure(configFile);
-            }
-
-            long blockNum = blocks.get(i).getNumber();
-            /* Debug check to see if the state is still as expected */
-            if(logger.isWarnEnabled()) {
-            	String blockStateRootHash = Hex.toHexString(blocks.get(i).getStateRoot());
-            	String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
-            	if(!blockStateRootHash.equals(worldStateRootHash)){
-                    logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", blockNum, worldStateRootHash);
-                    // Last fail on WARNING: STATE CONFLICT! block: 1157 worldstate b1d9a978451ef04c1639011d9516473d51c608dbd25906c89be791707008d2de mismatch
-                    System.exit(-1);
-                }
+        /* Debug check to see if the state is still as expected */
+        if(logger.isWarnEnabled()) {
+            String blockStateRootHash = Hex.toHexString(block.getStateRoot());
+            String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
+            if(!blockStateRootHash.equals(worldStateRootHash)){
+//                    logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", blockNum, worldStateRootHash);
+                // Last fail on WARNING: STATE CONFLICT! block: 1157 worldstate b1d9a978451ef04c1639011d9516473d51c608dbd25906c89be791707008d2de mismatch
+//                    System.exit(-1);
             }
         }
 
         // Remove all wallet transactions as they already approved by the net
-        for (Block block : blocks) {
-            for (Transaction tx : block.getTransactionsList()) {
-                if (logger.isDebugEnabled())
-                    logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
-                WorldManager.getInstance().removeWalletTransaction(tx);
-            }
+        for (Transaction tx : block.getTransactionsList()) {
+            if (logger.isDebugEnabled())
+                logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
+            WorldManager.getInstance().removeWalletTransaction(tx);
         }
         logger.info("*** Block chain size: [ {} ]", this.getSize());
+
+
 
 /*
         if (lastBlock.getNumber() >= 30) {

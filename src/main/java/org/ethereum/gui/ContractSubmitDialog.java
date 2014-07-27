@@ -3,7 +3,6 @@ package org.ethereum.gui;
 import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.Utils;
@@ -266,7 +265,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         }
         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
-        ClientPeer peer = MainData.instance.getActivePeer();
+        ClientPeer peer = WorldManager.getInstance().getActivePeer();
         if (peer == null) {
             dialog.alertStatusMsg("Not connected to any peer");
             return;
