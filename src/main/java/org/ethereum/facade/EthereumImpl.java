@@ -1,6 +1,6 @@
 package org.ethereum.facade;
 
-import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
@@ -31,6 +31,11 @@ public class EthereumImpl implements Ethereum {
     public PeerData findPeer(PeerData peerData){
 
         logger.info("Looking for online peer");
+        EthereumListener listener = WorldManager.getInstance().getListener();
+        if (listener != null)
+            listener.trace("Looking for online peer");
+
+
         WorldManager.getInstance().startPeerDiscovery();
         List<PeerData> peers = WorldManager.getInstance().getPeers();
         boolean found = false;
@@ -44,6 +49,10 @@ public class EthereumImpl implements Ethereum {
             if (peer.isOnline() && !peer.equals(peerData)){
 
                 logger.info("Found peer: {}", peer.toString());
+
+                if (listener != null)
+                    listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
+
                 return peer;
             }
             ++i;
@@ -57,6 +66,11 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
+    public void stopPeerDiscover(){
+        WorldManager.getInstance().stopPeerDiscover();
+    }
+
+    @Override
     public void connect(InetAddress addr, int port){
         connect(addr.getHostName(), port);
     }
@@ -67,6 +81,17 @@ public class EthereumImpl implements Ethereum {
         logger.info("Connecting to: {}:{}", ip, port);
         new ClientPeer().connect(ip,
                 port);
+    }
+
+    @Override
+    public Block getBlockByIndex(long index){
+        Block block = WorldManager.getInstance().getBlockChain().getByNumber(index);
+        return block;
+    }
+
+    @Override
+    public long getBlockChainSize(){
+        return WorldManager.getInstance().getBlockChain().getSize();
     }
 
     @Override

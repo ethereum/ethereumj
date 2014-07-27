@@ -8,6 +8,7 @@ import io.netty.channel.FixedRecvByteBufAllocator;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.Command;
 import org.ethereum.net.MessageQueue;
@@ -119,6 +120,11 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             HelloMessage helloMessage = new HelloMessage(rlpList);
             logger.info(helloMessage.toString());
             if (peerListener != null) peerListener.console(helloMessage.toString());
+
+            EthereumListener listener = WorldManager.getInstance().getListener();
+            if (listener != null)
+                listener.trace(String.format("Got handshake: [ %s ]", helloMessage.toString()));
+
         }
         // got DISCONNECT
         if (Command.fromInt(command) == DISCONNECT) {
@@ -228,6 +234,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 }, 3000, secToAskForChain * 1000);
             }
 
+            if (blockList.isEmpty()) return;
             WorldManager.getInstance().getBlockQueue().addBlocks(blockList);
             if (peerListener != null) peerListener.console(blocksMessage.toString());
 
