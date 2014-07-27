@@ -1,6 +1,3 @@
-.   
-.   
-.   
 [![ScreenShot](http://i.imgur.com/kkPE388.png)](skype:roman.mandeleil)   
 .   
 .   
