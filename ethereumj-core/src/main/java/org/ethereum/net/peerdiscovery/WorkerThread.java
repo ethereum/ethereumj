@@ -38,7 +38,10 @@ public class WorkerThread implements Runnable {
         try {
             PeerTaster peerTaster = new PeerTaster();
             peerTaster.connect(peerData.getInetAddress().getHostName(), peerData.getPort());
+            byte capabilities = peerTaster.getCapabilities();
+
             peerData.setOnline(true);
+            peerData.setCapabilities(capabilities);
             logger.info("Peer: " + peerData.toString() + " isOnline: true");
         }
         catch (Throwable e) {

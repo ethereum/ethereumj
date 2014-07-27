@@ -1,19 +1,16 @@
 package org.ethereum.net.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.EthereumMessageSizeEstimator;
 import org.ethereum.net.PeerListener;
-import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.TransactionsMessage;
-import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -74,7 +71,7 @@ public class ClientPeer {
 
             // Start the client.
             ChannelFuture f = b.connect(host, port).sync(); // (5)
-            MainData.instance.setActivePeer(this);
+            WorldManager.getInstance().setActivePeer(this);
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();

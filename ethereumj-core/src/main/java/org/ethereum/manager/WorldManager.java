@@ -3,9 +3,9 @@ package org.ethereum.manager;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.*;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
@@ -15,6 +15,11 @@ import org.ethereum.core.Wallet;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Repository;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.BlockQueue;
+import org.ethereum.net.client.ClientPeer;
+import org.ethereum.net.client.PeerData;
+import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.submit.WalletTransaction;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
@@ -38,6 +43,10 @@ public class WorldManager {
 	private Repository repository;
 	private Wallet wallet;
 
+    private PeerDiscovery peerDiscovery;
+    private List<PeerData> peers = Collections.synchronizedList(new ArrayList<PeerData>());
+    private ClientPeer activePeer;
+
 	private Map<String, Transaction> pendingTransactions = Collections
 			.synchronizedMap(new HashMap<String, Transaction>());
 	
@@ -46,12 +55,28 @@ public class WorldManager {
     private Map<String, WalletTransaction> walletTransactions =
             Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
 
+    private EthereumListener listener;
+
 	private static WorldManager instance;
+
+    private BlockQueue blockQueue = new BlockQueue();
 
 	public WorldManager() {
 		this.blockchain = new Blockchain();
 		this.repository = new Repository();
-		
+
+        // Initialize PeerData
+        try {
+            InetAddress ip = InetAddress.getByName(CONFIG.peerDiscoveryIP());
+            int port = CONFIG.peerDiscoveryPort();
+            PeerData peer = new PeerData(ip.getAddress(), port, new byte[]{00});
+            peers.add(peer);
+            peerDiscovery = new PeerDiscovery(peers);
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+            System.exit(-1);
+        }
+
 		this.wallet = new Wallet();
 		
 		byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -194,7 +219,9 @@ public class WorldManager {
 				
 				VM vm = new VM();
 				Program program = new Program(code, programInvoke);
-				vm.play(program);
+
+                if (CONFIG.playVM())
+				    vm.play(program);
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, trackRepository,
 						senderAddress, receiverAddress, coinbase, isContractCreation);
@@ -288,6 +315,7 @@ public class WorldManager {
 			repository.dumpState(block.getNumber(), i,
 					Hex.toHexString(tx.getHash()));
 			++i;
+
 		}
 		
 		// miner reward
@@ -346,7 +374,44 @@ public class WorldManager {
 		return wallet;
 	}
 
-	public void close() {
+    public void setActivePeer(ClientPeer peer) {
+        this.activePeer = peer;
+    }
+
+    public ClientPeer getActivePeer() {
+        return activePeer;
+    }
+
+    public List<PeerData> getPeers() {
+        return peers;
+    }
+
+    public void addListener(EthereumListener listener){
+        this.listener = listener;
+    }
+
+
+    public void addPeers(List<PeerData> newPeers) {
+        for (PeerData peer : newPeers) {
+            if (this.peers.indexOf(peer) == -1) {
+
+                this.peers.add(peer);
+                if (peerDiscovery.isStarted())
+                    peerDiscovery.addNewPeerData(peer);
+            }
+        }
+    }
+
+    public void startPeerDiscovery() {
+        if (!peerDiscovery.isStarted())
+            peerDiscovery.start();
+    };
+
+    public BlockQueue getBlockQueue() {
+        return blockQueue;
+    }
+
+    public void close() {
 		blockchain.close();
 		repository.close();
 	}

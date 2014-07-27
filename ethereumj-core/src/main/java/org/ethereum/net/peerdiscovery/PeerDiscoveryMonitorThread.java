@@ -1,6 +1,6 @@
 package org.ethereum.net.peerdiscovery;
 
-import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class PeerDiscoveryMonitorThread implements Runnable {
                             this.executor.getTaskCount(),
                             this.executor.isShutdown(),
                             this.executor.isTerminated(),
-                            MainData.instance.getPeers().size()));
+                            WorldManager.getInstance().getPeers().size()));
             try {
                 Thread.sleep(seconds*1000);
             } catch (InterruptedException e) {

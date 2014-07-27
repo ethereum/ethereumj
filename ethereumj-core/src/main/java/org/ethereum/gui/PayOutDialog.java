@@ -3,7 +3,6 @@ package org.ethereum.gui;
 import org.ethereum.core.Account;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.spongycastle.util.BigIntegers;
@@ -109,7 +108,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
                 byte[] address = Hex.decode(receiverInput.getText());
 
                 // Client
-				ClientPeer peer = MainData.instance.getActivePeer();
+				ClientPeer peer = WorldManager.getInstance().getActivePeer();
 
 				if (peer == null) {
 					dialog.alertStatusMsg("Not connected to any peer");

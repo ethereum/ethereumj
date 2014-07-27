@@ -1,7 +1,6 @@
 package org.ethereum.net.submit;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.slf4j.Logger;
@@ -32,7 +31,7 @@ public class TransactionTask implements Callable<Transaction> {
         try {
             logger.info("call() tx: {}", tx.toString());
 
-            ClientPeer peer = MainData.instance.getActivePeer();
+            ClientPeer peer = WorldManager.getInstance().getActivePeer();
 
 			WalletTransaction walletTransaction = WorldManager.getInstance()
 					.addWalletTransaction(tx);

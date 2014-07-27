@@ -1,6 +1,5 @@
 package org.ethereum.gui;
 
-import org.ethereum.manager.MainData;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ public class ToolBar extends JFrame {
         introLogger.info("java.vendor:  " + System.getProperty("java.vendor"));
         introLogger.info("");
 
-        if (Utils.JAVA_VERSION < 1.7) {
+        if (Utils.JAVA_VERSION < 1.7 && Utils.JAVA_VERSION != 0) {
             introLogger.info("EthereumJ support version 1.7 and higher of Java Runtime please update");
             System.exit(0);
         }
@@ -227,7 +226,6 @@ public class ToolBar extends JFrame {
         cp.add(walletToggle);
 
         WorldManager.getInstance();
-        MainData.instance.toString();
     }
 
     public static void main(String args[]) {

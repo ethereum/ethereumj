@@ -306,6 +306,8 @@ public class Repository {
 
         if (!CONFIG.dumpFull()) return;
 
+        // todo: dump block header and the relevant tx
+
         if (blockNumber == 0 && txNumber == 0)
             if (CONFIG.dumpCleanOnRestart()) {
                 try {FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
@@ -319,7 +321,6 @@ public class Repository {
                         	blockNumber, txNumber, txHash.substring(0, 8));
         else
             fileName = String.format("%d_c.dmp", blockNumber);
-
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;

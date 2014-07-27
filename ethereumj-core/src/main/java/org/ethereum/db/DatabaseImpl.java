@@ -36,12 +36,17 @@ public class DatabaseImpl implements Database {
 		options.createIfMissing(true);
 		try {
 			logger.debug("Opening database");
+            File dbLocation = new File(System.getProperty("user.dir") + "/" +
+                                       SystemProperties.CONFIG.databaseDir() + "/");
+            File fileLocation = new File(dbLocation, name);
+
 			if(SystemProperties.CONFIG.databaseReset()) {
-				destroyDB(name);
+				destroyDB(fileLocation);
 			}
+
 			logger.debug("Initializing new or existing DB: '" + name + "'");
 			options.createIfMissing(true);
-			db = factory.open(new File(name), options);
+			db = factory.open(fileLocation, options);
 //			logger.debug("Showing database stats");
 //			String stats = DATABASE.getProperty("leveldb.stats");
 //			logger.debug(stats);
@@ -51,11 +56,11 @@ public class DatabaseImpl implements Database {
 		}		
 	}
 	
-	public void destroyDB(String name) {
+	public void destroyDB(File fileLocation) {
 		logger.debug("Destroying existing DB");
 		Options options = new Options();
 		try {
-			factory.destroy(new File(name), options);
+			factory.destroy(fileLocation, options);
 		} catch (IOException e) {
 			logger.error(e.getMessage(), e);
 		}

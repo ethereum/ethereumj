@@ -19,6 +19,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class PeerTaster {
 
     private Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    final EthereumPeerTasterHandler handler = new EthereumPeerTasterHandler();
 
     public PeerTaster() {
     }
@@ -31,8 +32,6 @@ public class PeerTaster {
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
-
-            final EthereumPeerTasterHandler handler = new EthereumPeerTasterHandler();
 
             b.handler(new ChannelInitializer<NioSocketChannel>() {
                 @Override
@@ -59,6 +58,10 @@ public class PeerTaster {
             	logger.error(e.getMessage(), e);
             }
         }
+    }
+
+    public byte getCapabilities() {
+        return handler.getCapabilities();
     }
 
 }

@@ -15,6 +15,7 @@ public class PeerData {
 	private byte[] ip;
 	private int    port;
 	private byte[] peerId;
+    private byte   capabilities;
 
 	private transient boolean isOnline = false;
 	private transient long    lastCheckTime = 0;
@@ -49,6 +50,7 @@ public class PeerData {
     }
 
     public boolean isOnline() {
+        if (capabilities < 7) return false;
         return isOnline;
     }
 
@@ -64,6 +66,14 @@ public class PeerData {
         this.lastCheckTime = lastCheckTime;
     }
 
+    public byte getCapabilities() {
+        return capabilities;
+    }
+
+    public void setCapabilities(byte capabilities) {
+        this.capabilities = capabilities;
+    }
+
     @Override
     public String toString() {
         return "Peer: [ip=" + getInetAddress().getHostAddress() + ", port=" + getPort() +
@@ -72,6 +82,7 @@ public class PeerData {
 
     @Override
     public boolean equals(Object obj) {
+        if (obj == null) return false;
         PeerData peerData = (PeerData) obj;
         return this.getInetAddress().equals(peerData.getInetAddress());
     }

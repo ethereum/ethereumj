@@ -8,7 +8,7 @@ import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
 
 import org.ethereum.db.IpGeoDB;
-import org.ethereum.manager.MainData;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.util.Utils;
 
@@ -56,8 +56,12 @@ public class PeersTableModel extends AbstractTableModel {
 
         if (column == 0) {
             String countryCode = peerInfo.getLocation().countryCode;
-            URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode.toLowerCase() + ".png");
-            ImageIcon flagIcon = new ImageIcon(flagURL);
+
+            ImageIcon flagIcon = null;
+            if (countryCode != null){
+                URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode.toLowerCase() + ".png");
+                flagIcon = new ImageIcon(flagURL);
+            }
             return flagIcon;
         }
         if (column == 1) 
@@ -86,7 +90,7 @@ public class PeersTableModel extends AbstractTableModel {
     public void updateModel() {
         synchronized (peerInfoList) {
             peerInfoList.clear();
-            for (PeerData peer : MainData.instance.getPeers()) {
+            for (PeerData peer : WorldManager.getInstance().getPeers()) {
                 InetAddress addr = peer.getInetAddress();
                 Location cr = IpGeoDB.getLocationForIp(addr);
                 peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline()));
@@ -101,7 +105,12 @@ public class PeersTableModel extends AbstractTableModel {
         boolean          connected;
 
 		private PeerInfo(Location location, InetAddress ip, boolean isConnected) {
-            this.location = location;
+
+            if (location == null)
+                this.location = new Location();
+            else
+                this.location = location;
+
             this.ip = ip;
             this.connected = isConnected;
         }

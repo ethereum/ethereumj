@@ -45,12 +45,12 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
         // Don't have the full packet yet
         if (msgSize > in.readableBytes()) {
 
-            logger.debug("msg decode: magicBytes: [ {} ], readBytes: [ {} ] / msgSize: [ {} ] ", magicBytes, in.readableBytes(), msgSize);
+            logger.trace("msg decode: magicBytes: [ {} ], readBytes: [ {} ] / msgSize: [ {} ] ", magicBytes, in.readableBytes(), msgSize);
             in.resetReaderIndex();
             return;
         }
 
-        logger.debug("message fully constructed go handle it: readBytes: [ {} ] / msgSize: [ {} ]", in.readableBytes(), msgSize);
+        logger.trace("message fully constructed go handle it: readBytes: [ {} ] / msgSize: [ {} ]", in.readableBytes(), msgSize);
 
         byte[] decoded = new byte[(int)msgSize];
         in.readBytes(decoded);
