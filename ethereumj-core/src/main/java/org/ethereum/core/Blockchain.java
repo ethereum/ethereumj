@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.db.DatabaseImpl;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.ByteUtil;
@@ -82,7 +83,7 @@ public class Blockchain {
     }
 
     public Block getByNumber(long blockNr) {
-   		return new Block(index.get(blockNr));
+   		return new Block(chainDb.get(ByteUtil.longToBytes(blockNr)));
 	}
 
     public void applyBlock(Block block) {
@@ -115,7 +116,7 @@ public class Blockchain {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
             String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
-//                    logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", blockNum, worldStateRootHash);
+                    logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
                 // Last fail on WARNING: STATE CONFLICT! block: 1157 worldstate b1d9a978451ef04c1639011d9516473d51c608dbd25906c89be791707008d2de mismatch
 //                    System.exit(-1);
             }
@@ -128,6 +129,11 @@ public class Blockchain {
             WorldManager.getInstance().removeWalletTransaction(tx);
         }
         logger.info("*** Block chain size: [ {} ]", this.getSize());
+
+
+        EthereumListener listener = WorldManager.getInstance().getListener();
+        if (listener != null)
+            listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
 
 
@@ -153,7 +159,7 @@ public class Blockchain {
             }
 
 			this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
-			this.index.put(block.getNumber(), block.getEncoded());
+			this.index.put(block.getNumber(), block.getHash());
 			
 			WorldManager.getInstance().getWallet().processBlock(block);
 			this.setLastBlock(block);
@@ -188,7 +194,7 @@ public class Blockchain {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
             	for (iterator.seekToFirst(); iterator.hasNext();) {
     	            this.lastBlock = new Block(iterator.next().getValue());
-    	            this.index.put(lastBlock.getNumber(), lastBlock.getEncoded());
+    	            this.index.put(lastBlock.getNumber(), lastBlock.getHash());
     	            logger.debug("Block #{} -> {}", lastBlock.getNumber(), lastBlock.toFlatString());
             	}
             }

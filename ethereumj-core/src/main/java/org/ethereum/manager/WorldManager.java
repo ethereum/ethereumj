@@ -407,6 +407,15 @@ public class WorldManager {
             peerDiscovery.start();
     };
 
+    public void stopPeerDiscover(){
+
+        if (listener != null)
+            listener.trace("Stopping peer discovery");
+
+        if (peerDiscovery.isStarted())
+            peerDiscovery.stop();
+    }
+
     public BlockQueue getBlockQueue() {
         return blockQueue;
     }
@@ -415,4 +424,8 @@ public class WorldManager {
 		blockchain.close();
 		repository.close();
 	}
+
+    public EthereumListener getListener() {
+        return listener;
+    }
 }
