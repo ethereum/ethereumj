@@ -40,7 +40,7 @@
 		<junit.version>4.11</junit.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<leveldb.version>0.7</leveldb.version>
-		<spongycastle.version>1.50.0.0</spongycastle.version>
+		<spongycastle.version>1.51.0.0</spongycastle.version>
 		<generated.sourceDirectory>gen</generated.sourceDirectory>
 	</properties>
 
