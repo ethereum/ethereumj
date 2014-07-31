@@ -115,7 +115,7 @@ public class BlockTest {
             assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
 
             // Storing genesis because the parent needs to be in the DB for calculation.
-            WorldManager.getInstance().getBlockChain().addBlock(genesis);
+            WorldManager.getInstance().getBlockChain().add(genesis);
 
             Block block1 = new Block(Hex.decode(block_1));
             BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
@@ -137,7 +137,7 @@ public class BlockTest {
     	assertEquals(Genesis.GAS_LIMIT, gasLimit);
     	
     	// Storing genesis because the parent needs to be in the DB for calculation.
-		WorldManager.getInstance().getBlockChain().addBlock(genesis);
+		WorldManager.getInstance().getBlockChain().add(genesis);
     	
     	// Test with block
     	Block block1 = new Block(Hex.decode(block_1));
