@@ -40,10 +40,10 @@ public class BlockQueue {
 
         Block block = blockQueue.poll();
 
-        WorldManager.getInstance().getBlockChain().applyBlock(block);
+        WorldManager.getInstance().getBlockChain().add(block);
     }
 
-    public void addBlocks(List<Block> blockList){
+    public void addBlocks(List<Block> blockList) {
 
         Block lastReceivedBlock = blockList.get(blockList.size() - 1);
         if (lastReceivedBlock.getNumber() != getLast().getNumber() + 1) return;
@@ -61,7 +61,7 @@ public class BlockQueue {
         logger.trace("Blocks waiting to be proceed in the queue: [ {} ]", blockQueue.size());
     }
 
-    public Block getLast(){
+    public Block getLast() {
 
         if (blockQueue.isEmpty())
             return WorldManager.getInstance().getBlockChain().getLastBlock();
@@ -69,7 +69,7 @@ public class BlockQueue {
         return lastBlock;
     }
 
-    private class BlockByIndexComparator implements Comparator<Block>{
+    private class BlockByIndexComparator implements Comparator<Block> {
 
         @Override
         public int compare(Block o1, Block o2) {
@@ -83,7 +83,7 @@ public class BlockQueue {
         }
     }
 
-    public int size(){
+    public int size() {
         return blockQueue.size();
     }
 

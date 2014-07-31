@@ -13,7 +13,6 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -86,14 +85,13 @@ public class Blockchain {
    		return new Block(chainDb.get(ByteUtil.longToBytes(blockNr)));
 	}
 
-    public void applyBlock(Block block) {
+    public void add(Block block) {
 
 		if (block == null)
 			return;
 
-
         // if it is the first block to add
-        // check that the parent is the genesis
+        // make sure the parent is genesis
 		if (index.isEmpty()
 				&& !Arrays.equals(Genesis.getInstance().getHash(),
 						block.getParentHash())) {
@@ -105,38 +103,24 @@ public class Blockchain {
             String blockParentHash = Hex.toHexString(block.getParentHash());
             if (!hashLast.equals(blockParentHash)) return;
         }
-
-        this.addBlock(block);
+        
         if (block.getNumber() >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
             AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
         }
 
-        /* Debug check to see if the state is still as expected */
-        if(logger.isWarnEnabled()) {
-            String blockStateRootHash = Hex.toHexString(block.getStateRoot());
-            String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
-            if(!blockStateRootHash.equals(worldStateRootHash)){
-                    logger.warn("WARNING: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-                // Last fail on WARNING: STATE CONFLICT! block: 1157 worldstate b1d9a978451ef04c1639011d9516473d51c608dbd25906c89be791707008d2de mismatch
-//                    System.exit(-1);
-            }
-        }
-
+        this.processBlock(block);
+        
         // Remove all wallet transactions as they already approved by the net
         for (Transaction tx : block.getTransactionsList()) {
             if (logger.isDebugEnabled())
                 logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
             WorldManager.getInstance().removeWalletTransaction(tx);
         }
-        logger.info("*** Block chain size: [ {} ]", this.getSize());
-
 
         EthereumListener listener = WorldManager.getInstance().getListener();
         if (listener != null)
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
-
-
-
+        
 /*
         if (lastBlock.getNumber() >= 30) {
             System.out.println("** checkpoint **");
@@ -148,26 +132,40 @@ public class Blockchain {
 */
     }
     
-    public void addBlock(Block block) {
+    public void processBlock(Block block) {
     	if(block.isValid()) {
-
             if (!block.isGenesis()) {
         		for (Transaction tx : block.getTransactionsList())
         			// TODO: refactor the wallet pending transactions to the world manager
         			WorldManager.getInstance().addWalletTransaction(tx);
-                WorldManager.getInstance().applyBlock(block);
+                	WorldManager.getInstance().applyBlock(block);
+                	WorldManager.getInstance().getWallet().processBlock(block);
             }
-
-			this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
-			this.index.put(block.getNumber(), block.getHash());
-			
-			WorldManager.getInstance().getWallet().processBlock(block);
-			this.setLastBlock(block);
-            if (logger.isDebugEnabled())
-				logger.debug("block added {}", block.toFlatString());
+            this.storeBlock(block);		
     	} else {
     		logger.warn("Invalid block with nr: {}", block.getNumber());
     	}
+    }
+    
+    private void storeBlock(Block block) {
+        /* Debug check to see if the state is still as expected */
+        if(logger.isWarnEnabled()) {
+            String blockStateRootHash = Hex.toHexString(block.getStateRoot());
+            String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
+            if(!blockStateRootHash.equals(worldStateRootHash)){
+                    logger.error("ERROR: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+                    // Last conflict on block 1157 -> worldstate b1d9a978451ef04c1639011d9516473d51c608dbd25906c89be791707008d2de
+                    System.exit(-1); // Don't add block
+            }
+        }
+    	
+		this.chainDb.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
+		this.index.put(block.getNumber(), block.getHash());
+		this.setLastBlock(block);
+		
+        if (logger.isDebugEnabled())
+			logger.debug("block added {}", block.toFlatString());
+		logger.info("*** Block chain size: [ {} ]", this.getSize());
     }
     
     public long getGasPrice() {
@@ -188,7 +186,7 @@ public class Blockchain {
 			if (!iterator.hasNext()) {
                 logger.info("DB is empty - adding Genesis");
                 this.lastBlock = Genesis.getInstance();
-                this.addBlock(lastBlock);
+                this.storeBlock(lastBlock);
                 logger.debug("Block #{} -> {}", Genesis.NUMBER, lastBlock.toFlatString());
             } else {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");

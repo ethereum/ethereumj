@@ -308,6 +308,10 @@ public class WorldManager {
 	
 	public void applyBlock(Block block) {
 	
+		if(block.getNumber() == 1157) {
+			logger.debug("Block 1157");
+		}
+		
 		int i = 0;
 		for (Transaction tx : block.getTransactionsList()) {
             logger.info("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
