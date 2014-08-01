@@ -5,7 +5,10 @@ import static java.util.Arrays.copyOfRange;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.Map;
 
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
@@ -13,7 +16,8 @@ import org.spongycastle.util.encoders.Hex;
 
 public class HashUtil {
 
-    public static byte[] EMPTY_DATA_HASH = HashUtil.sha3(new byte[0]);
+	public static Map<ByteArrayWrapper, byte[]> hashes = new HashMap<>();
+    public static final byte[] EMPTY_DATA_HASH = HashUtil.sha3(new byte[0]);
 
     private static final MessageDigest sha256digest;
     
@@ -30,13 +34,14 @@ public class HashUtil {
     }
 
 	public static byte[] sha3(byte[] input) {
-		return SHA3Helper.sha3(input);
+		ByteArrayWrapper byteArray = new ByteArrayWrapper(input);
+		if(hashes.keySet().contains(byteArray))
+			return hashes.get(byteArray);
+		byte[] result = SHA3Helper.sha3(input);
+		hashes.put(byteArray, result);
+		return result; 
 	}
 	
-	public static String sha3String(String input) {
-		return SHA3Helper.sha3String(input);
-	}
-		
     /**
      * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations.
      */
