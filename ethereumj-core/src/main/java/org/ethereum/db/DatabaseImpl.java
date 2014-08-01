@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.ethereum.config.SystemProperties;
+import org.iq80.leveldb.CompressionType;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
@@ -34,6 +35,7 @@ public class DatabaseImpl implements Database {
         this.name = name;
 		Options options = new Options();
 		options.createIfMissing(true);
+		options.compressionType(CompressionType.NONE);
 		try {
 			logger.debug("Opening database");
             File dbLocation = new File(System.getProperty("user.dir") + "/" +
@@ -45,7 +47,6 @@ public class DatabaseImpl implements Database {
 			}
 
 			logger.debug("Initializing new or existing DB: '" + name + "'");
-			options.createIfMissing(true);
 			db = factory.open(fileLocation, options);
 //			logger.debug("Showing database stats");
 //			String stats = DATABASE.getProperty("leveldb.stats");
