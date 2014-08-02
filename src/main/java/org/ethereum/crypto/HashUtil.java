@@ -5,8 +5,6 @@ import static java.util.Arrays.copyOfRange;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.ByteUtil;
@@ -14,9 +12,12 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 
+import org.ethereum.util.LRUMap;
+
 public class HashUtil {
 
-	public static Map<ByteArrayWrapper, byte[]> hashes = new HashMap<>();
+	private static final int MAX_ENTRIES = 1000; // Should contain most commonly hashed values 
+	private static LRUMap<ByteArrayWrapper, byte[]> sha3Cache = new LRUMap<>(0, MAX_ENTRIES);
     public static final byte[] EMPTY_DATA_HASH = HashUtil.sha3(new byte[0]);
 
     private static final MessageDigest sha256digest;
@@ -34,11 +35,11 @@ public class HashUtil {
     }
 
 	public static byte[] sha3(byte[] input) {
-		ByteArrayWrapper byteArray = new ByteArrayWrapper(input);
-		if(hashes.keySet().contains(byteArray))
-			return hashes.get(byteArray);
+		ByteArrayWrapper inputByteArray = new ByteArrayWrapper(input);
+		if(sha3Cache.keySet().contains(inputByteArray))
+			return sha3Cache.get(inputByteArray);
 		byte[] result = SHA3Helper.sha3(input);
-		hashes.put(byteArray, result);
+		sha3Cache.put(inputByteArray, result);
 		return result; 
 	}
 	
