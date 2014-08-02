@@ -18,12 +18,12 @@ import java.nio.ByteBuffer;
  */
 public class DataWord implements Comparable<DataWord> {
 
-    public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
+    public static final DataWord ZERO 				= new DataWord(new byte[32]);      // don't push it in to the stack
+    public static final DataWord ZERO_EMPTY_ARRAY	= new DataWord(new byte[0]);      // don't push it in to the stack
 
-    byte[] data = new byte[32];
+    private byte[] data = new byte[32];
 
 	public DataWord() {
-		this.data = new byte[32];
 	}
 
 	public DataWord(int num) {
