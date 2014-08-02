@@ -110,7 +110,7 @@ public class Block {
     }
 
     public Block getParent() {
-		return WorldManager.getInstance().getBlockChain().getByNumber(this.getNumber() - 1);
+		return WorldManager.getInstance().getBlockchain().getByNumber(this.getNumber() - 1);
     }
     
     public byte[] getParentHash() {
