@@ -74,9 +74,9 @@ public class BlockChainTable extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                if (WorldManager.getInstance().getBlockChain().getSize() - 1 < lastFindIndex) return;
+                if (WorldManager.getInstance().getBlockchain().getSize() - 1 < lastFindIndex) return;
 
-                Block block = WorldManager.getInstance().getBlockChain().getByNumber(lastFindIndex);
+                Block block = WorldManager.getInstance().getBlockchain().getByNumber(lastFindIndex);
                 StringSelection stsel = new StringSelection(block.toString());
                 Clipboard system = Toolkit.getDefaultToolkit().getSystemClipboard();
                 system.setContents(stsel,stsel);
@@ -96,10 +96,10 @@ public class BlockChainTable extends JFrame {
                     return;
                 }
 
-                for (int i = lastFindIndex + 1; i < WorldManager.getInstance().getBlockChain().getSize(); ++i) {
+                for (int i = lastFindIndex + 1; i < WorldManager.getInstance().getBlockchain().getSize(); ++i) {
 
-                    if (WorldManager.getInstance().getBlockChain().getSize() - 1 < i) return;
-                    Block block = WorldManager.getInstance().getBlockChain().getByNumber(i);
+                    if (WorldManager.getInstance().getBlockchain().getSize() - 1 < i) return;
+                    Block block = WorldManager.getInstance().getBlockchain().getByNumber(i);
                     boolean found = block.toString().toLowerCase().contains(toFind.toLowerCase());
                     if (found) {
                         // TODO: now we find the first occur

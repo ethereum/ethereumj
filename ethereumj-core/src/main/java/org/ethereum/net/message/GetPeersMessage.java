@@ -27,7 +27,7 @@ public class GetPeersMessage extends Message {
     }
 
     @Override
-    public Class getAnswerMessage() {
+    public Class<PeersMessage> getAnswerMessage() {
         return PeersMessage.class;
     }
 }

@@ -85,13 +85,13 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public Block getBlockByIndex(long index){
-        Block block = WorldManager.getInstance().getBlockChain().getByNumber(index);
+        Block block = WorldManager.getInstance().getBlockchain().getByNumber(index);
         return block;
     }
 
     @Override
     public long getBlockChainSize(){
-        return WorldManager.getInstance().getBlockChain().getSize();
+        return WorldManager.getInstance().getBlockchain().getSize();
     }
 
     @Override

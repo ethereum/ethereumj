@@ -24,7 +24,7 @@ public class ProgramInvokeFactory {
     public static ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
 
         // https://ethereum.etherpad.mozilla.org/26
-        Block lastBlock = WorldManager.getInstance().getBlockChain().getLastBlock();
+        Block lastBlock = WorldManager.getInstance().getBlockchain().getLastBlock();
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.

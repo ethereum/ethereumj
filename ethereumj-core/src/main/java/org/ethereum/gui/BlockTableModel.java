@@ -16,7 +16,7 @@ public class BlockTableModel extends AbstractTableModel {
     public int getRowCount() {
 
         fireTableDataChanged();
-        int rowCount = WorldManager.getInstance().getBlockChain().getSize();
+        int rowCount = WorldManager.getInstance().getBlockchain().getSize();
         return rowCount;
     }
 
@@ -31,7 +31,7 @@ public class BlockTableModel extends AbstractTableModel {
 //        byte[] hash = MainData.instance.getAllBlocks().get(rowIndex).getHash();
 //        return Hex.toHexString(hash);
 
-        Block block = WorldManager.getInstance().getBlockChain().getByNumber(rowIndex);
+        Block block = WorldManager.getInstance().getBlockchain().getByNumber(rowIndex);
         if (block == null) return "";
 
         return block.toString();

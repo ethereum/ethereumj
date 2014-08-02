@@ -315,7 +315,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.getInstance().getBlockChain().getLastBlock());
+        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.getInstance().getBlockchain().getLastBlock());
     }
 
     protected JRootPane createRootPane() {
