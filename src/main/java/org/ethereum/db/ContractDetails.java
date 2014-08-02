@@ -23,15 +23,15 @@ public class ContractDetails {
 
     private byte[] rlpEncoded;
 
-    private List<DataWord> storageKeys   = new ArrayList<DataWord>();
-    private List<DataWord> storageValues = new ArrayList<DataWord>();
+    private List<DataWord> storageKeys   = new ArrayList<>();
+    private List<DataWord> storageValues = new ArrayList<>();
 
     private byte[] code;
 
     private Trie storageTrie = new Trie(null);
 
-	public ContractDetails() {
-	}
+    public ContractDetails() {
+    }
 	
     public ContractDetails(byte[] rlpCode) {
         decode(rlpCode);
@@ -165,7 +165,7 @@ public class ContractDetails {
 	}
 
     public Map<DataWord, DataWord> getStorage() {
-        Map<DataWord, DataWord> storage = new HashMap<DataWord, DataWord>();
+        Map<DataWord, DataWord> storage = new HashMap<>();
 		for (int i = 0; storageKeys != null && i < storageKeys.size(); ++i) {
 			storage.put(storageKeys.get(i), storageValues.get(i));
 		}

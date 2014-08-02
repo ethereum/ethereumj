@@ -30,7 +30,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH2 OP
@@ -44,7 +44,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH3 OP
@@ -58,7 +58,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH4 OP
@@ -72,7 +72,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH5 OP
@@ -86,7 +86,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH6 OP
@@ -100,7 +100,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH7 OP
@@ -114,7 +114,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH8 OP
@@ -128,7 +128,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH9 OP
@@ -142,7 +142,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
 
@@ -157,7 +157,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH11 OP
@@ -171,7 +171,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH12 OP
@@ -185,7 +185,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH13 OP
@@ -199,7 +199,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH14 OP
@@ -213,7 +213,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH15 OP
@@ -227,7 +227,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH16 OP
@@ -241,7 +241,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH17 OP
@@ -255,7 +255,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH18 OP
@@ -269,7 +269,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH19 OP
@@ -283,7 +283,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH20 OP
@@ -297,7 +297,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH21 OP
@@ -311,7 +311,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH22 OP
@@ -325,7 +325,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH23 OP
@@ -339,7 +339,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH24 OP
@@ -353,7 +353,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH25 OP
@@ -367,7 +367,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH26 OP
@@ -381,7 +381,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH27 OP
@@ -395,7 +395,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH28 OP
@@ -409,7 +409,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH29 OP
@@ -423,7 +423,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH30 OP
@@ -437,7 +437,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH31 OP
@@ -451,7 +451,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // PUSH32 OP
@@ -465,7 +465,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test(expected=RuntimeException.class)  // PUSHN OP mal data
@@ -512,7 +512,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // AND OP
@@ -527,7 +527,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test(expected=RuntimeException.class)  // AND OP mal data
@@ -558,7 +558,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // OR OP
@@ -573,7 +573,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test(expected=RuntimeException.class)  // OR OP mal data
@@ -604,7 +604,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // XOR OP
@@ -619,7 +619,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
 
@@ -651,7 +651,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // BYTE OP
@@ -666,7 +666,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // BYTE OP
@@ -681,7 +681,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
 
@@ -712,7 +712,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // NOT OP
@@ -726,7 +726,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test(expected=RuntimeException.class)  // NOT OP mal data
@@ -757,7 +757,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // EQ OP
@@ -772,7 +772,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase()  );
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
     @Test  // EQ OP
@@ -787,7 +787,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class)  // EQ OP mal data
@@ -818,7 +818,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // GT OP
@@ -833,7 +833,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // GT OP
@@ -848,7 +848,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class)  // GT OP mal data
@@ -879,7 +879,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // SGT OP
@@ -897,7 +897,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // SGT OP
@@ -915,7 +915,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class)  // SGT OP mal
@@ -947,7 +947,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // LT OP
@@ -962,7 +962,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // LT OP
@@ -977,7 +977,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class)  // LT OP mal data
@@ -1008,7 +1008,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // SLT OP
@@ -1026,7 +1026,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // SLT OP
@@ -1044,7 +1044,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class)  // SLT OP mal
@@ -1075,7 +1075,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // NEG OP
@@ -1089,7 +1089,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // NEG OP
@@ -1103,7 +1103,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class)  // NEG OP
@@ -1134,7 +1134,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test // POP OP
@@ -1151,7 +1151,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class)  // POP OP mal data
@@ -1186,7 +1186,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
         assertEquals(expectedLen, program.stack.toArray().length);
     }
 
@@ -1219,7 +1219,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test // SWAP OP
@@ -1237,7 +1237,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
         assertEquals(expectedLen, program.stack.toArray().length);
     }
 
@@ -1346,7 +1346,7 @@ public class VMTest {
 
         program.getResult().getRepository().close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test // MLOAD OP
@@ -1364,7 +1364,7 @@ public class VMTest {
 
         program.getResult().getRepository().close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()).toUpperCase());
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
 
@@ -1382,7 +1382,7 @@ public class VMTest {
 
         program.getResult().getRepository().close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test // MLOAD OP
@@ -1402,7 +1402,7 @@ public class VMTest {
 
         program.getResult().getRepository().close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test // MLOAD OP
@@ -1422,7 +1422,7 @@ public class VMTest {
 
         program.getResult().getRepository().close();
         assertEquals(m_expected, Hex.toHexString(program.memory.array()));
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // MLOAD OP mal data
@@ -1573,7 +1573,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test // SLOAD OP
@@ -1590,7 +1590,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test // SLOAD OP
@@ -1610,7 +1610,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // SLOAD OP
@@ -1637,7 +1637,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
 
@@ -1656,7 +1656,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
 
@@ -1674,7 +1674,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // JUMP OP mal data
@@ -1705,7 +1705,7 @@ public class VMTest {
         vm.step(program);
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected, Hex.toHexString(program.stack.peek().data).toUpperCase());
+        assertEquals(s_expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
 
@@ -1727,8 +1727,8 @@ public class VMTest {
         DataWord item2 = program.stack.pop();
 
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
-        assertEquals(s_expected_2, Hex.toHexString(item2.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+        assertEquals(s_expected_2, Hex.toHexString(item2.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // JUMPI OP mal
@@ -1775,7 +1775,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // ADD OP
@@ -1791,7 +1791,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // ADD OP
@@ -1807,7 +1807,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // ADD OP mal
@@ -1838,7 +1838,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // MULL OP
@@ -1854,7 +1854,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // MULL OP
@@ -1870,7 +1870,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // MULL OP mal
@@ -1901,7 +1901,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // DIV OP
@@ -1917,7 +1917,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
 
@@ -1934,7 +1934,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // DIV OP
@@ -1950,7 +1950,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
 
@@ -1967,7 +1967,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // DIV OP
@@ -1998,7 +1998,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // SDIV OP
@@ -2014,7 +2014,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // SDIV OP
@@ -2030,7 +2030,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // SDIV OP mal
@@ -2061,7 +2061,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stack.pop();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
         program.getResult().getRepository().close();
     }
 
@@ -2078,7 +2078,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // SUB OP
@@ -2094,7 +2094,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // SUB OP mal
@@ -2123,7 +2123,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // MSIZE OP
@@ -2140,7 +2140,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
 
@@ -2175,7 +2175,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // EXP OP
@@ -2191,7 +2191,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // EXP OP mal
@@ -2421,7 +2421,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // CALLDATASIZE OP
@@ -2437,7 +2437,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
 
@@ -2455,7 +2455,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // CALLDATALOAD OP
@@ -2472,7 +2472,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
 
@@ -2490,7 +2490,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
 
@@ -2508,7 +2508,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // CALLDATALOAD OP
@@ -2525,7 +2525,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // CALLDATALOAD OP mal
@@ -2675,7 +2675,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // BALANCE OP
@@ -2692,7 +2692,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // ORIGIN OP
@@ -2708,7 +2708,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // CALLER OP
@@ -2724,7 +2724,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // CALLVALUE OP
@@ -2740,7 +2740,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // SHA3 OP
@@ -2761,7 +2761,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // SHA3 OP
@@ -2782,7 +2782,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // SHA3 OP mal
@@ -2817,7 +2817,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // MOD OP
@@ -2832,7 +2832,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // MOD OP
@@ -2847,7 +2847,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // MOD OP mal
@@ -2879,7 +2879,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // SMOD OP
@@ -2896,7 +2896,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // SMOD OP
@@ -2913,7 +2913,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test(expected=RuntimeException.class) // SMOD OP mal
@@ -2944,7 +2944,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // COINBASE OP
@@ -2960,7 +2960,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // TIMESTAMP OP
@@ -2976,7 +2976,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // NUMBER OP
@@ -2992,7 +2992,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // DIFFICULTY OP
@@ -3008,7 +3008,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // GASPRICE OP
@@ -3024,7 +3024,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // GAS OP
@@ -3040,7 +3040,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // GASLIMIT OP
@@ -3056,7 +3056,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
-        assertEquals(s_expected_1, Hex.toHexString(item1.data).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     /* TEST CASE LIST END */

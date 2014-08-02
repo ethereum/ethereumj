@@ -1,10 +1,7 @@
 package org.ethereum.util;
 
-import com.maxmind.geoip.Location;
 import org.apache.log4j.PropertyConfigurator;
-import org.ethereum.db.IpGeoDB;
 
-import java.net.InetAddress;
 import java.net.URL;
 
 import static org.ethereum.config.SystemProperties.CONFIG;

@@ -2,6 +2,9 @@ package org.ethereum.db;
 
 import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.manager.WorldManager;
@@ -9,6 +12,7 @@ import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
+import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -56,17 +60,24 @@ public class Repository {
     // TODO: Listeners listeners
     // TODO: cash impl
 
-    private DatabaseImpl detailsDB = null;
-    private DatabaseImpl stateDB = null;
-
+    private DatabaseImpl chainDB 	= null;
+    private DatabaseImpl detailsDB 	= null;
+    private DatabaseImpl stateDB 	= null;
+    
+    /**
+     * Create a new Repository DAO 
+     * 		assuming empty db and thus no stateRoot
+     * 
+     * @See loadBlockchain() to update the stateRoot
+     */
     public Repository() {
-        detailsDB     = new DatabaseImpl("details");
-        contractDetailsDB = new TrackDatabase(detailsDB);
-        stateDB = new DatabaseImpl("state");
-        worldState = new Trie(stateDB.getDb());
-        accountStateDB = new TrackTrie(worldState);
+    	chainDB 			= new DatabaseImpl("blockchain");
+        detailsDB     		= new DatabaseImpl("details");
+        contractDetailsDB 	= new TrackDatabase(detailsDB);
+        stateDB 			= new DatabaseImpl("state");
+        worldState 			= new Trie(stateDB.getDb());
+        accountStateDB 		= new TrackTrie(worldState);
     }
-
 
     private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
         this.accountStateDB = accountStateDB;
@@ -80,27 +91,72 @@ public class Repository {
     }
 
     public void startTracking() {
-        logger.info("start tracking");
+        logger.debug("start tracking");
         accountStateDB.startTrack();
         contractDetailsDB.startTrack();
     }
 
     public void commit() {
-        logger.info("commit changes");
+        logger.debug("commit changes");
         accountStateDB.commitTrack();
         contractDetailsDB.commitTrack();
     }
 
     public void rollback() {
-        logger.info("rollback changes");
+        logger.debug("rollback changes");
         accountStateDB.rollbackTrack();
         contractDetailsDB.rollbackTrack();
     }
+    
+    public Block getBlock(long blockNr) {
+    	return new Block(chainDB.get(ByteUtil.longToBytes(blockNr)));
+    }
+    
+    public void saveBlock(Block block) {
+    	this.chainDB.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
+    }
+	
+	public Blockchain loadBlockchain() {
+		Blockchain blockchain = new Blockchain(this);
+		DBIterator iterator = chainDB.iterator();
+		try {
+			if (!iterator.hasNext()) {
+                logger.info("DB is empty - adding Genesis");
+                blockchain.storeBlock(Genesis.getInstance());
+               	logger.debug("Block #{} -> {}", Genesis.NUMBER, blockchain.getLastBlock().toFlatString());
+            } else {
+            	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
+
+            	for (iterator.seekToFirst(); iterator.hasNext();) {
+            		Block block = new Block(iterator.next().getValue());
+            		blockchain.getBlockCache().put(block.getNumber(), block.getHash());
+            		blockchain.setLastBlock(block);
+    	            logger.debug("Block #{} -> {}", block.getNumber(), block.toFlatString());
+            	}
+				logger.info(
+						"*** Loaded up to block [ {} ] with stateRoot [ {} ]",
+						blockchain.getLastBlock().getNumber(), Hex
+								.toHexString(blockchain.getLastBlock()
+										.getStateRoot()));
+            }
+		} finally {
+			// Make sure you close the iterator to avoid resource leaks.
+			try {
+				iterator.close();
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+			}
+		}
+		// Update world state to latest loaded block from db
+		this.worldState.setRoot(blockchain.getLastBlock().getStateRoot());
+		return blockchain;
+	}
+	
 
     public AccountState createAccount(byte[] addr) {
 
     	this.validateAddress(addr);
-
+    	    	
         // 1. Save AccountState
         AccountState state =  new AccountState();
         accountStateDB.update(addr, state.getEncoded());
@@ -109,8 +165,8 @@ public class Repository {
         ContractDetails details = new ContractDetails();
         contractDetailsDB.put(addr, details.getEncoded());
 
-        if (logger.isInfoEnabled())
-            logger.info("New account created: [ {} ]", Hex.toHexString(addr));
+        if (logger.isDebugEnabled())
+            logger.debug("New account created: [ {} ]", Hex.toHexString(addr));
 
         return state;
     }
@@ -122,12 +178,10 @@ public class Repository {
     public AccountState getAccountState(byte[] addr) {
 
     	this.validateAddress(addr);
-    	
+
         byte[] accountStateRLP = accountStateDB.get(addr);
 
         if (accountStateRLP.length == 0) {
-            if (logger.isInfoEnabled())
-                logger.info("No account: [ {} ]", Hex.toHexString(addr));
             return null;
         }
         AccountState state =  new AccountState(accountStateRLP);
@@ -138,18 +192,17 @@ public class Repository {
 
 		this.validateAddress(addr);
 
-        if (logger.isInfoEnabled())
-            logger.info("Account: [ {} ]", Hex.toHexString(addr));
+        if (logger.isDebugEnabled())
+            logger.debug("Get contract details for: [ {} ]", Hex.toHexString(addr));
 
         byte[] accountDetailsRLP = contractDetailsDB.get(addr);
-
 
         if (accountDetailsRLP == null) {
 			return null;
 		}
 
-        if (logger.isInfoEnabled())
-            logger.info("Contract details RLP: [ {} ]", Hex.toHexString(accountDetailsRLP));
+        if (logger.isDebugEnabled())
+            logger.debug("Contract details RLP: [ {} ]", Hex.toHexString(accountDetailsRLP));
 
 		ContractDetails details = new ContractDetails(accountDetailsRLP);
 		return details;
@@ -167,8 +220,8 @@ public class Repository {
 
 		BigInteger newBalance = state.addToBalance(value);
 
-		if (logger.isInfoEnabled())
-			logger.info("Changing balance: account: [ {} ] new balance: [ {} ] delta: [ {} ]",
+		if (logger.isDebugEnabled())
+			logger.debug("Changing balance: account: [ {} ] new balance: [ {} ] delta: [ {} ]",
 					Hex.toHexString(addr), newBalance.toString(), value);
 
 		accountStateDB.update(addr, state.getEncoded());
@@ -197,8 +250,8 @@ public class Repository {
         if (state == null) return BigInteger.ZERO;
         state.incrementNonce();
 
-        if (logger.isInfoEnabled())
-            logger.info("Incerement nonce: account: [ {} ] new nonce: [ {} ]",
+        if (logger.isDebugEnabled())
+            logger.debug("Incerement nonce: account: [ {} ] new nonce: [ {} ]",
                     Hex.toHexString(addr), state.getNonce().longValue());
 
         accountStateDB.update(addr, state.getEncoded());
@@ -219,8 +272,8 @@ public class Repository {
         byte[] storageHash = details.getStorageHash();
         state.setStateRoot(storageHash);
 
-        if (logger.isInfoEnabled())
-            logger.info("Storage key/value saved: account: [ {} ]\n key: [ {} ]  value: [ {} ]\n new storageHash: [ {} ]",
+        if (logger.isDebugEnabled())
+            logger.debug("Storage key/value saved: account: [ {} ]\n key: [ {} ]  value: [ {} ]\n new storageHash: [ {} ]",
                     Hex.toHexString(addr),
                     Hex.toHexString(key.getNoLeadZeroesData()),
                     Hex.toHexString(value.getNoLeadZeroesData()),
@@ -272,8 +325,8 @@ public class Repository {
         byte[] codeHash = HashUtil.sha3(code);
         state.setCodeHash(codeHash);
 
-        if (logger.isInfoEnabled())
-            logger.info("Program code saved:\n account: [ {} ]\n codeHash: [ {} ] \n code: [ {} ]",
+        if (logger.isDebugEnabled())
+            logger.debug("Program code saved:\n account: [ {} ]\n codeHash: [ {} ] \n code: [ {} ]",
                     Hex.toHexString(addr),
                     Hex.toHexString(codeHash),
                     Hex.toHexString(code));
@@ -302,7 +355,7 @@ public class Repository {
         return stateDB.dumpKeys();
     }
 
-    public void dumpState(long blockNumber, int txNumber, String txHash) {
+    public void dumpState(long blockNumber, int txNumber, byte[] txHash) {
 
         if (!CONFIG.dumpFull()) return;
 
@@ -318,7 +371,7 @@ public class Repository {
         String fileName = "";
         if (txHash != null)
              fileName = String.format("%d_%d_%s.dmp",
-                        	blockNumber, txNumber, txHash.substring(0, 8));
+                        	blockNumber, txNumber, Hex.toHexString(txHash).substring(0, 8));
         else
             fileName = String.format("%d_c.dmp", blockNumber);
 
@@ -381,6 +434,8 @@ public class Repository {
             worldState.sync();
         }
 
+        if (this.chainDB != null)
+        	chainDB.close();
         if (this.stateDB != null)
             stateDB.close();
         if (this.detailsDB != null)

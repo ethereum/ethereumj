@@ -35,7 +35,7 @@ import org.spongycastle.util.encoders.Hex;
  * @author: Nick Savers
  * Created on: 20/05/2014 10:44
  */
-public class Trie implements TrieFacade{
+public class Trie implements TrieFacade {
 
     private Logger logger = LoggerFactory.getLogger("trie");
 
@@ -72,6 +72,10 @@ public class Trie implements TrieFacade{
         return root;
     }
 
+    public void setRoot(Object root) {
+    	this.root = root;
+    }
+    
     public void setCache(Cache cache) {
         this.cache = cache;
     }

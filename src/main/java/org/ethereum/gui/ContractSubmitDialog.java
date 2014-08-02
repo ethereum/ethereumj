@@ -107,7 +107,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
                         ProgramPlayDialog.createAndShowGUI(tx.getData(), tx,
-                                WorldManager.getInstance().getBlockChain().getLastBlock());
+                                WorldManager.getInstance().getBlockchain().getLastBlock());
                     }}
         );
 
@@ -301,7 +301,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
         BigInteger currentBalance = account.getBalance();
-        BigInteger gasPrice = BigInteger.valueOf(WorldManager.getInstance().getBlockChain().getGasPrice());
+        BigInteger gasPrice = BigInteger.valueOf(WorldManager.getInstance().getBlockchain().getGasPrice());
         BigInteger gasInput = new BigInteger( this.gasInput.getText());
 
         boolean canAfford = currentBalance.compareTo(gasPrice.multiply(gasInput)) >= 0;

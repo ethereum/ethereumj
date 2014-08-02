@@ -20,10 +20,10 @@ public class BlockQueue {
 
     private static Logger logger = LoggerFactory.getLogger("blockchain");
 
-    ConcurrentLinkedQueue<Block> blockQueue = new ConcurrentLinkedQueue<Block>();
-    Block lastBlock;
+    private Queue<Block> blockQueue = new ConcurrentLinkedQueue<>();
+    private Block lastBlock;
 
-    Timer timer = new Timer();
+    private Timer timer = new Timer();
 
     public BlockQueue() {
 
@@ -40,10 +40,10 @@ public class BlockQueue {
 
         Block block = blockQueue.poll();
 
-        WorldManager.getInstance().getBlockChain().applyBlock(block);
+        WorldManager.getInstance().getBlockchain().add(block);
     }
 
-    public void addBlocks(List<Block> blockList){
+    public void addBlocks(List<Block> blockList) {
 
         Block lastReceivedBlock = blockList.get(blockList.size() - 1);
         if (lastReceivedBlock.getNumber() != getLast().getNumber() + 1) return;
@@ -61,15 +61,15 @@ public class BlockQueue {
         logger.trace("Blocks waiting to be proceed in the queue: [ {} ]", blockQueue.size());
     }
 
-    public Block getLast(){
+    public Block getLast() {
 
         if (blockQueue.isEmpty())
-            return WorldManager.getInstance().getBlockChain().getLastBlock();
+            return WorldManager.getInstance().getBlockchain().getLastBlock();
 
         return lastBlock;
     }
 
-    private class BlockByIndexComparator implements Comparator<Block>{
+    private class BlockByIndexComparator implements Comparator<Block> {
 
         @Override
         public int compare(Block o1, Block o2) {
@@ -83,7 +83,7 @@ public class BlockQueue {
         }
     }
 
-    public int size(){
+    public int size() {
         return blockQueue.size();
     }
 
