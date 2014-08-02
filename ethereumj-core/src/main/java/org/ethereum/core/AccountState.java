@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
-import org.ethereum.crypto.HashUtil;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -28,7 +29,7 @@ public class AccountState {
      * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s . 
      * It shall be understood that σ[a] s is not a ‘physical’ member 
      * of the account and does not contribute to its later serialisation */
-    private byte[] stateRoot = new byte[0];
+    private byte[] stateRoot = EMPTY_BYTE_ARRAY;
     
     /* The hash of the EVM code of this contract—this is the code 
      * that gets executed should this address receive a message call; 
@@ -36,7 +37,7 @@ public class AccountState {
      * after construction. All such code fragments are contained in 
      * the state database under their corresponding hashes for later 
      * retrieval */
-    private byte[] codeHash = HashUtil.sha3(new byte[0]);
+    private byte[] codeHash = EMPTY_DATA_HASH;
 
     public AccountState() {
         this(BigInteger.ZERO, BigInteger.ZERO);

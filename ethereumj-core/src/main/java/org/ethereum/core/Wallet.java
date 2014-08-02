@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The Wallet handles the management of accounts with addresses and private keys.
@@ -33,12 +34,12 @@ public class Wallet {
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
 	
     // <address, info> table for a wallet
-    private HashMap<String, Account> rows = new HashMap<String, Account>();
+    private Map<String, Account> rows = new HashMap<>();
     private long high;
 
-    private List<WalletListener> listeners = new ArrayList<WalletListener>();
+    private List<WalletListener> listeners = new ArrayList<>();
 
-    private HashMap<BigInteger, Transaction> transactionMap = new HashMap<BigInteger, Transaction>();
+    private Map<BigInteger, Transaction> transactionMap = new HashMap<>();
 
     public void addNewAccount() {
         Account account = new Account();

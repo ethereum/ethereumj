@@ -88,7 +88,7 @@ public class GetChainMessage extends Message {
     }
 
     @Override
-    public Class getAnswerMessage() {
+    public Class<BlocksMessage> getAnswerMessage() {
         return BlocksMessage.class;
     }
 

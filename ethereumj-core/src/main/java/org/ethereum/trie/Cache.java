@@ -16,13 +16,12 @@ import org.iq80.leveldb.DB;
  */
 public class Cache {
 	
-	private Map<ByteArrayWrapper, Node> nodes;
+	private Map<ByteArrayWrapper, Node> nodes = new HashMap<>();
 	private DB db;
 	private boolean isDirty;
 
 	public Cache(DB db) {
 		this.db = db;
-		nodes = new HashMap<ByteArrayWrapper, Node>();
 	}
 
 	/**
@@ -88,7 +87,7 @@ public class Cache {
 		// If the nodes grows beyond the 200 entries we simple empty it
 		// FIXME come up with something better
 		if (this.nodes.size() > 200) {
-			this.nodes = new HashMap<ByteArrayWrapper, Node>();
+			this.nodes = new HashMap<>();
 		}
 	}
 

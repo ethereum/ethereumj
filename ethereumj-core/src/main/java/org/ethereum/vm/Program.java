@@ -3,6 +3,7 @@ package org.ethereum.vm;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.Repository;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +26,7 @@ public class Program {
     private int invokeHash;
     private ProgramListener listener;
 
-    Stack<DataWord> stack = new Stack<DataWord>();
+    Stack<DataWord> stack = new Stack<>();
     ByteBuffer memory = null;
     DataWord programAddress;
 
@@ -147,7 +148,7 @@ public class Program {
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
-        memorySave(addrB.data, value.data);
+        memorySave(addrB.getData(), value.getData());
     }
 
     public void memorySave(byte[] addr, byte[] value) {
@@ -160,7 +161,7 @@ public class Program {
     public DataWord memoryLoad(DataWord addr) {
 
         int address = new BigInteger(1, addr.getData()).intValue();
-        allocateMemory(address, DataWord.ZERO.data);
+        allocateMemory(address, DataWord.ZERO.getData());
 
         byte[] data = new byte[32];
         System.arraycopy(memory.array(), address,  data , 0  ,32);
@@ -465,12 +466,12 @@ public class Program {
     }
 
     public DataWord getOwnerAddress() {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return this.programAddress.clone();
     }
 
     public DataWord getBalance(DataWord address) {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
 
         BigInteger balance = result.getRepository().getBalance(address.getLast20Bytes());
         DataWord balanceData = new DataWord(balance.toByteArray());
@@ -479,43 +480,43 @@ public class Program {
     }
 
     public DataWord getOriginAddress() {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return invokeData.getOriginAddress().clone();
     }
 
     public DataWord getCallerAddress() {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return invokeData.getCallerAddress().clone();
     }
 
     public DataWord getGasPrice() {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return invokeData.getMinGasPrice().clone();
     }
 
     public DataWord getGas() {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         long afterSpend = invokeData.getGas().longValue() - result.getGasUsed();
         return new DataWord(afterSpend);
     }
 
     public DataWord getCallValue() {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return invokeData.getCallValue().clone();
     }
 
     public DataWord getDataSize() {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return invokeData.getDataSize().clone();
     }
 
     public DataWord getDataValue(DataWord index) {
-        if (invokeData == null) return new DataWord( new byte[0]);
+        if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return invokeData.getDataValue(index);
     }
 
     public byte[] getDataCopy(DataWord offset, DataWord length) {
-        if (invokeData == null) return new byte[0];
+        if (invokeData == null) return ByteUtil.EMPTY_BYTE_ARRAY;
         return invokeData.getDataCopy(offset, length);
     }
 

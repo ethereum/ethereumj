@@ -44,11 +44,11 @@ public class DataWordTest {
 		
 		DataWord x = new DataWord(two);
 		x.add(new DataWord(two));
-		System.out.println(Hex.toHexString(x.data));
+		System.out.println(Hex.toHexString(x.getData()));
 		
 		DataWord y = new DataWord(two);
 		y.add2(new DataWord(two));
-		System.out.println(Hex.toHexString(y.data));
+		System.out.println(Hex.toHexString(y.getData()));
 	}
 	
 	@Test
@@ -60,13 +60,13 @@ public class DataWordTest {
 		
 		DataWord x = new DataWord(three);
 		x.add(new DataWord(three));
-		assertEquals(32, x.data.length);
-		System.out.println(Hex.toHexString(x.data));
+		assertEquals(32, x.getData().length);
+		System.out.println(Hex.toHexString(x.getData()));
 
 		// FAIL
 //		DataWord y = new DataWord(three);
 //		y.add2(new DataWord(three));
-//		System.out.println(Hex.toHexString(y.data));
+//		System.out.println(Hex.toHexString(y.getData()));
 	}
 	
 	@Test
@@ -85,7 +85,7 @@ public class DataWordTest {
 		DataWord x = new DataWord(one);// System.out.println(x.value());
 		DataWord y = new DataWord(two);// System.out.println(y.value());
 		y.mod(x);
-		assertEquals(32, y.data.length);
-		assertEquals(expected, Hex.toHexString(y.data));
+		assertEquals(32, y.getData().length);
+		assertEquals(expected, Hex.toHexString(y.getData()));
 	}
 }

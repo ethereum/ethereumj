@@ -449,7 +449,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = "data: " + Hex.toHexString(msgData);
 
-                    program.memorySave(memOffsetData.data, msgData);
+                    program.memorySave(memOffsetData.getData(), msgData);
                     program.step();
                 }	break;
                 case CODESIZE:{
@@ -759,7 +759,7 @@ public class VM {
             if (memoryUsage > 0)
                 program.spendGas(GasCost.MEMORY * memoryUsage, OpCode.code(op).name() + " (memory usage)");
 
-            program.fullTrace();
+//            program.fullTrace();
         } catch (RuntimeException e) {
             program.stop();
             if(e instanceof OutOfGasException)

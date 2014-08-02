@@ -1,14 +1,6 @@
 package org.ethereum.net.message;
 
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-
-import static org.ethereum.net.Command.HELLO;
 
 /**
  * www.ethereumJ.com
@@ -35,7 +27,7 @@ public class PingMessage extends Message {
     }
 
     @Override
-    public Class getAnswerMessage() {
+    public Class<PongMessage> getAnswerMessage() {
         return PongMessage.class;
     }
 }
