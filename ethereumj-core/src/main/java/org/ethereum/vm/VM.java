@@ -55,6 +55,7 @@ public class VM {
 
 	private Logger logger = LoggerFactory.getLogger("VM");
 	private static BigInteger _32_ = BigInteger.valueOf(32);
+	private static String logString = "[ {} ]\t Op: [ {} ]\t Gas: [ {} ]\t Deep: [ {} ] Hint: [ {} ]";
 
     public void step(Program program) {
 
@@ -699,10 +700,10 @@ public class VM {
                     DataWord inSize     =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-					logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]",
-							program.getPC(), OpCode.code(op).name(), program
-									.getGas().longValue(), program.invokeData
-									.getCallDeep(), hint);
+					logger.info(logString, program.getPC(), OpCode.code(op)
+							.name(), program.getGas().longValue(),
+							program.invokeData.getCallDeep(), hint);
+                    
                     program.createContract(value, inOffset, inSize);
 
                     program.step();
@@ -719,9 +720,9 @@ public class VM {
                     DataWord outDataSize =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]" ,program.getPC(),
-                                OpCode.code(op).name(), program.getGas().longValue(),
-                                program.invokeData.getCallDeep(), hint);
+						logger.info(logString, program.getPC(), OpCode.code(op)
+								.name(), program.getGas().longValue(),
+								program.invokeData.getCallDeep(), hint);
 
                     program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
 
@@ -751,9 +752,8 @@ public class VM {
             
 			if (logger.isInfoEnabled())
 				if (!OpCode.code(op).equals(CALL) && !OpCode.code(op).equals(CREATE))
-					logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]",
-							stepBefore, OpCode.code(op).name(), gasBefore, program.invokeData
-									.getCallDeep(), hint);
+					logger.info(logString, stepBefore, OpCode.code(op).name(),
+							gasBefore, program.invokeData.getCallDeep(), hint);
             
             // memory gas calc
             int newMemSize = program.getMemSize();
