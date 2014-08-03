@@ -7,7 +7,6 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.json.JSONHelper;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
@@ -181,9 +180,9 @@ public class Repository {
 
         byte[] accountStateRLP = accountStateDB.get(addr);
 
-        if (accountStateRLP.length == 0) {
+        if (accountStateRLP.length == 0)
             return null;
-        }
+
         AccountState state =  new AccountState(accountStateRLP);
         return state;
     }
@@ -196,11 +195,10 @@ public class Repository {
             logger.debug("Get contract details for: [ {} ]", Hex.toHexString(addr));
 
         byte[] accountDetailsRLP = contractDetailsDB.get(addr);
-
-        if (accountDetailsRLP == null) {
-			return null;
-		}
-
+        
+        if (accountDetailsRLP == null)
+        	return null;
+        	        			
         if (logger.isDebugEnabled())
             logger.debug("Contract details RLP: [ {} ]", Hex.toHexString(accountDetailsRLP));
 
@@ -214,10 +212,9 @@ public class Repository {
     	
 		AccountState state = getAccountState(addr);
 
-        if (state == null){
+        if (state == null)
             state = createAccount(addr);
-        }
-
+        
 		BigInteger newBalance = state.addToBalance(value);
 
 		if (logger.isDebugEnabled())
@@ -347,10 +344,6 @@ public class Repository {
         contractDetailsDB.delete(addr);
     }
 
-    public byte[] getRootHash() {
-        return this.worldState.getRootHash();
-    }
-
     public List<ByteArrayWrapper> dumpKeys(){
         return stateDB.dumpKeys();
     }
@@ -413,7 +406,7 @@ public class Repository {
                 bw.write("\n");
             }
 
-            String rootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getRootHash());
+			String rootHash = Hex.toHexString(this.getWorldState().getRootHash());
             bw.write(
                     String.format(" => Global State Root: [ %s ]", rootHash)
             );
