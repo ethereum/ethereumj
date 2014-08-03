@@ -3,6 +3,7 @@ package org.ethereum.trie;
 import static java.util.Arrays.copyOfRange;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.ethereum.util.CompactEncoder.*;
+import static org.ethereum.util.ByteUtil.matchingNibbleLength;
 
 import java.util.Arrays;
 
@@ -398,19 +399,6 @@ public class Trie implements TrieFacade {
     /********************************
      *  	Utility functions		*
      *******************************/
-
-    // Returns the amount of nibbles that match each other from 0 ...
-    public static int matchingNibbleLength(byte[] a, byte[] b) {
-        int i = 0;
-        int length = a.length < b.length ? a.length : b.length;
-        while (i < length) {
-        	if (a[i] != b[i])
-        		break;
-            i++;
-        }
-        return i;
-    }
-
 
     // Created an array of empty elements of requred length
     private Object[] emptyStringSlice(int l) {
