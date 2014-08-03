@@ -65,10 +65,14 @@ public class VM {
 
             int oldMemSize = program.getMemSize();
 
+            String hint = "";
+            long gasBefore = program.getGas().longValue();
+            int stepBefore = program.getPC();
+
             switch (OpCode.code(op)) {
                 case SHA3:
-                   program.spendGas(GasCost.SHA3, OpCode.code(op).name());
-                   break;
+                    program.spendGas(GasCost.SHA3, OpCode.code(op).name());
+                    break;
                 case SLOAD:
                     program.spendGas(GasCost.SLOAD, OpCode.code(op).name());
                     break;
@@ -89,8 +93,7 @@ public class VM {
                     program.spendGas(GasCost.STEP, OpCode.code(op).name());
                     break;
             }
-
-            String hint = "";
+            
             switch (OpCode.code(op)) {
                 /**
                  * Stop and Arithmetic Operations
@@ -271,7 +274,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " = " + word2.longValue();
+                        hint = word1.longValue() + " == " + word2.longValue();
 
                     if (word1.xor(word2).isZero()) {
                         word1.and(DataWord.ZERO);
@@ -696,9 +699,10 @@ public class VM {
                     DataWord inSize     =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]" ,program.getPC(),
-                                OpCode.code(op).name(), program.getGas().longValue(),
-                                program.invokeData.getCallDeep(), hint);
+					logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]",
+							program.getPC(), OpCode.code(op).name(), program
+									.getGas().longValue(), program.invokeData
+									.getCallDeep(), hint);
                     program.createContract(value, inOffset, inSize);
 
                     program.step();
@@ -719,7 +723,7 @@ public class VM {
                                 OpCode.code(op).name(), program.getGas().longValue(),
                                 program.invokeData.getCallDeep(), hint);
 
-                    program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize,outDataOffs, outDataSize);
+                    program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
 
                     program.step();
                 }	break;
@@ -744,14 +748,13 @@ public class VM {
                 default:{
                 }
             }
-
-            if (logger.isInfoEnabled())
-                if (!OpCode.code(op).equals(CALL) && !OpCode.code(op).equals(CREATE))
-                    logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]" ,program.getPC(),
-                            OpCode.code(op).name(), program.getGas().longValue(),
-                            program.invokeData.getCallDeep(), hint);
-
-
+            
+			if (logger.isInfoEnabled())
+				if (!OpCode.code(op).equals(CALL) && !OpCode.code(op).equals(CREATE))
+					logger.info("[ {} ] Op: [ {} ] Gas: [ {} ] Deep: [ {} ] Hint: [ {} ]",
+							stepBefore, OpCode.code(op).name(), gasBefore, program.invokeData
+									.getCallDeep(), hint);
+            
             // memory gas calc
             int newMemSize = program.getMemSize();
             int memoryUsage = (newMemSize - oldMemSize) /32;
