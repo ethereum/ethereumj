@@ -60,6 +60,24 @@ public class ByteUtil {
         return data;
     }
 
+    /** 
+     * Returns the amount of nibbles that match each other from 0 ...
+     * 	amount will never be larger than smallest input
+     * 
+     * @param a - first input
+     * @param b second input
+     * @return number of bytes that match
+     */
+    public static int matchingNibbleLength(byte[] a, byte[] b) {
+        int i = 0;
+        int length = a.length < b.length ? a.length : b.length;
+        while (i < length) {
+        	if (a[i] != b[i])
+        		break;
+            i++;
+        }
+        return i;
+    }
     
     public static byte[] longToBytes(long l) {
     	return ByteBuffer.allocate(8).putLong(l).array();

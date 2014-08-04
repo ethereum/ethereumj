@@ -62,6 +62,66 @@ public class ByteUtilTest {
 		assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test1));
 		assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test2));
 	}
+		
+	@Test
+	public void testMatchingNibbleLength1() {
+		// a larger than b
+		byte[] a = new byte[] { 0x00, 0x01 };
+		byte[] b = new byte[] { 0x00 };
+		int result = ByteUtil.matchingNibbleLength(a, b);
+		assertEquals(1, result);
+	}
+	@Test
+	public void testMatchingNibbleLength2() {
+		// b larger than a
+		byte[] a  = new byte[] { 0x00 };
+		byte[] b  = new byte[] { 0x00, 0x01 };
+		int result = ByteUtil.matchingNibbleLength(a, b);
+		assertEquals(1, result);
+	}
+	
+	@Test
+	public void testMatchingNibbleLength3() {
+		// a and b the same length equal
+		byte[] a = new byte[] { 0x00 };
+		byte[] b = new byte[] { 0x00 };
+		int result = ByteUtil.matchingNibbleLength(a, b);
+		assertEquals(1, result);
+	}
+	
+	@Test
+	public void testMatchingNibbleLength4() {
+		// a and b the same length not equal
+		byte[] a = new byte[] { 0x01 };
+		byte[] b = new byte[] { 0x00 };
+		int result = ByteUtil.matchingNibbleLength(a, b);
+		assertEquals(0, result);
+	}
+	
+	@Test(expected=NullPointerException.class)
+	public void testMatchingNibbleLength5() {
+		// a == null
+		byte[] a = null;
+		byte[] b = new byte[] { 0x00 };
+		ByteUtil.matchingNibbleLength(a, b);
+	}
+	
+	@Test(expected=NullPointerException.class)
+	public void testMatchingNibbleLength6() {
+		// b == null
+		byte[] a = new byte[] { 0x00 };
+		byte[] b = null;
+		ByteUtil.matchingNibbleLength(a, b);
+	}
+	
+	@Test
+	public void testMatchingNibbleLength7() {
+		// a or b is empty
+		byte[] a = new byte[0];
+		byte[] b = new byte[] { 0x00 };
+		int result = ByteUtil.matchingNibbleLength(a, b);
+		assertEquals(0, result);
+	}
 	
 	/**
 	 * This test shows the difference between iterating over, 

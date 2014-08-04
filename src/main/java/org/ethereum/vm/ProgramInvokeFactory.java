@@ -75,7 +75,7 @@ public class ProgramInvokeFactory {
         long gaslimit = block.getGasLimit();
 
         if (logger.isInfoEnabled()) {
-            logger.info("Program invocation: \n" +
+            logger.info("Top level call: \n" +
                     "address={}\n" +
                     "origin={}\n"  +
                     "caller={}\n"  +
@@ -144,7 +144,7 @@ public class ProgramInvokeFactory {
 
         if (logger.isInfoEnabled()) {
 
-            logger.info("Program invocation: \n" +
+            logger.info("Internal call: \n" +
                             "address={}\n" +
                             "origin={}\n"  +
                             "caller={}\n"  +
@@ -152,27 +152,15 @@ public class ProgramInvokeFactory {
                             "gasPrice={}\n" +
                             "gas={}\n" +
                             "callValue={}\n" +
-                            "data={}\n" +
-                            "lastHash={}\n" +
-                            "coinbase={}\n" +
-                            "timestamp={}\n" +
-                            "blockNumber={}\n" +
-                            "difficulty={}\n" +
-                            "gaslimit={}\n",
-                    Hex.toHexString(address.getData()),
-                    Hex.toHexString(origin.getData()),
-                    Hex.toHexString(caller.getData()),
-                    new BigInteger(balance.getData()).longValue(),
-                    new BigInteger(gasPrice.getData()).longValue(),
-                    new BigInteger(gas.getData()).longValue(),
-                    Hex.toHexString(callValue.getData()),
-                    data == null ? "null": Hex.toHexString(data),
-                    Hex.toHexString(lastHash.getData()),
-                    Hex.toHexString(coinbase.getData()),
-                    Hex.toHexString(timestamp.getData()),
-                    new BigInteger(number.getData()).longValue(),
-                    Hex.toHexString(difficulty.getData()),
-                    new BigInteger(gasLimit.getData()).longValue());
+                            "data={}\n",
+                    Hex.toHexString(address.getLast20Bytes()),
+                    Hex.toHexString(origin.getLast20Bytes()),
+                    Hex.toHexString(caller.getLast20Bytes()),
+                    balance.longValue(),
+                    gasPrice.longValue(),
+                    gas.longValue(),
+                    callValue.longValue(),
+                    data == null ? "null": Hex.toHexString(data));
         }
         
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
