@@ -33,6 +33,7 @@ public class TrackTrie implements TrieFacade {
 		for (ByteArrayWrapper key : changes.keySet()) {
 			trie.update(key.getData(), changes.get(key));
 		}
+//		trie.sync();
 		changes = null;
 		trackingChanges = false;
 	}
@@ -74,5 +75,11 @@ public class TrackTrie implements TrieFacade {
 		} else {
 			trie.delete(key);
 		}
+	}
+
+	@Override
+	public void sync() {
+		// TODO Auto-generated method stub
+		
 	}
 }
