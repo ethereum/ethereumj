@@ -3,6 +3,8 @@ package org.ethereum.db;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.ethereum.util.LRUMap;
+
 /**
  * www.ethereumJ.com
  *
@@ -11,6 +13,9 @@ import java.util.Map;
  */
 public class TrackDatabase implements Database {
 
+//	private static final int MAX_ENTRIES = 1000; // Should contain most commonly hashed values 
+//	private static LRUMap<ByteArrayWrapper, byte[]> valueCache = new LRUMap<>(0, MAX_ENTRIES);
+	
     private Database db;
 
     private boolean trackingChanges;
@@ -43,21 +48,25 @@ public class TrackDatabase implements Database {
     }
 
     public void put(byte[] key, byte[] value) {
+//    	valueCache.put(wKey, value);
         if (trackingChanges) {
-			changes.put(new ByteArrayWrapper(key), value);
+        	ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+			changes.put(wKey, value);
         } else {
             db.put(key, value);
         }
     }
 
     public byte[] get(byte[] key) {
-        if(trackingChanges) {
-            ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+    	if(trackingChanges) {
+    		ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             if (deletes.get(wKey) != null) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
-            return db.get(key);
         }
-        return db.get(key);
+//    	byte[] result = valueCache.get(wKey);
+//        if(result != null)
+//        	return result;
+       	return db.get(key);
     }
 
     /** Delete object (key) from db **/

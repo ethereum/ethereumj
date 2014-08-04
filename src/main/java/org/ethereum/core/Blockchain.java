@@ -188,6 +188,9 @@ public class Blockchain {
     
 	public void applyBlock(Block block) {
 		
+		if(block.getNumber() == 1157)
+			logger.debug("block 1157");
+		
 		int i = 0;
 		for (Transaction tx : block.getTransactionsList()) {
 			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
