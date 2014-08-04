@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
@@ -64,17 +65,18 @@ public class Genesis extends Block {
 				NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED, TIMESTAMP,
 				EXTRA_DATA, NONCE, null, null);
 
+		Repository repository = WorldManager.getInstance().getRepository();
         // The proof-of-concept series include a development premine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {
-            WorldManager.getInstance().getRepository().createAccount(Hex.decode(address));
-            WorldManager.getInstance().getRepository().addBalance   (Hex.decode(address), BigInteger.valueOf(2).pow(200) );
+			repository.createAccount(Hex.decode(address));
+			repository.addBalance   (Hex.decode(address), BigInteger.valueOf(2).pow(200) );
         }
-		this.setStateRoot(WorldManager.getInstance().getRepository().getRootHash());
-        WorldManager.getInstance().getRepository().dumpState(0, 0, null);
+		setStateRoot(repository.getWorldState().getRootHash());
+		repository.dumpState(0, 0, null);
         
-		logger.info("Genesis-hash: " + Hex.toHexString(this.getHash()));
-		logger.info("Genesis-stateRoot: " + Hex.toHexString(this.getStateRoot()));
+		logger.info("Genesis-hash: {}", Hex.toHexString(this.getHash()));
+		logger.info("Genesis-stateRoot: {}", Hex.toHexString(this.getStateRoot()));
     }
 	
 	public static Block getInstance() {

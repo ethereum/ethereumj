@@ -306,7 +306,7 @@ public class Program {
             this.refundGas(refundGas, "remain gas from the internal call");
             if (logger.isInfoEnabled()){
 
-                logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
+                logger.info("The remaining gas is refunded, account: [ {} ], gas: [ {} ] ",
                         Hex.toHexString(this.getOwnerAddress().getLast20Bytes()),
                         refundGas);
             }
@@ -317,7 +317,7 @@ public class Program {
      * That method implement internal calls
      * and code invocations
      *
-     * @param gas - gas to pay for the call, remain gas will be refunded to the caller
+     * @param gas - gas to pay for the call, remaining gas will be refunded to the caller
      * @param toAddressDW - address to call
      * @param endowmentValue - the value that can be transfer along with the code execution
      * @param inDataOffs - start of memory to be input data to the call
@@ -431,13 +431,13 @@ public class Program {
             BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
             if (refundGas.compareTo(BigInteger.ZERO) == 1) {
 
-                this.refundGas(refundGas.intValue(), "remain gas from the internal call");
-                logger.info("The remain gas refunded, account: [ {} ], gas: [ {} ] ",
-                        refundGas.toString(), refundGas.toString());
+                this.refundGas(refundGas.intValue(), "remaining gas from the internal call");
+                logger.info("The remaining gas refunded, account: [ {} ], gas: [ {} ] ",
+                		Hex.toHexString(senderAddress), refundGas.toString());
             }
         } else {
 
-            this.refundGas(gas.intValue(), "remain gas from the internal call");
+            this.refundGas(gas.intValue(), "remaining gas from the internal call");
         }
     }
 

@@ -1,13 +1,14 @@
 package org.ethereum.util;
 
-import java.io.ByteArrayOutputStream;
-
-import static java.util.Arrays.copyOfRange;
 import static java.util.Arrays.copyOf;
+import static java.util.Arrays.copyOfRange;
 
 import static org.ethereum.util.ByteUtil.appendByte;
 import static org.spongycastle.util.Arrays.concatenate;
-import static org.spongycastle.util.encoders.Hex.toHexString;
+import static org.spongycastle.util.encoders.Hex.encode;
+
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
 
 /** 
  * Compact encoding of hex sequence with optional terminator
@@ -85,11 +86,11 @@ public class CompactEncoder {
 	 */
 	public static byte[] unpackToNibbles(byte[] str) {
 		byte[] base = binToNibbles(str);
-		base = copyOf(base, base.length-1);
+		base = copyOf(base, base.length - 1);
 		if (base[0] >= 2) {
 			base = appendByte(base, TERMINATOR);
 		}
-		if (base[0]%2 == 1) {
+		if (base[0] % 2 == 1) {
 			base = copyOfRange(base, 1, base.length);
 		} else {
 			base = copyOfRange(base, 2, base.length);
@@ -101,15 +102,14 @@ public class CompactEncoder {
 	 * Transforms a binary array to hexadecimal format + terminator
 	 *
 	 * @return array with each individual nibble adding a terminator at the end 
-	 */	
+	 */
 	public static byte[] binToNibbles(byte[] str) {
-		byte[] hexSlice = new byte[0];
-		String hexEncoded = toHexString(str);
-		for (char value : hexEncoded.toCharArray()) {
-			hexSlice = appendByte(hexSlice, (byte) hexBase.indexOf(value));
+		byte[] hexEncoded = encode(str);
+		ByteBuffer slice = ByteBuffer.allocate(hexEncoded.length + 1);
+		for (byte b : hexEncoded) {
+			slice.put((byte)hexBase.indexOf(b));
 		}
-		hexSlice = appendByte(hexSlice, TERMINATOR);
-
-		return hexSlice;
+		slice.put(TERMINATOR);
+		return slice.array();
 	}
 }
