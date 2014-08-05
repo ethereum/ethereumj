@@ -26,6 +26,7 @@ public class PeerTaster {
 
     public void connect(String host, int port) {
 
+        logger.debug("connecting: {}:{}", host, port);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
         try {
@@ -48,6 +49,7 @@ public class PeerTaster {
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
+            logger.debug("connection is closed");
 
         } catch (InterruptedException ie) {
            logger.info("-- ClientPeer: catch (InterruptedException ie) --");

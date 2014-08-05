@@ -17,6 +17,7 @@ public class WorkerThread implements Runnable {
 
     ThreadPoolExecutor poolExecutor;
     private PeerData peerData;
+    private PeerTaster peerTaster = new PeerTaster();
 
     public WorkerThread(PeerData peerData, ThreadPoolExecutor poolExecutor) {
         this.poolExecutor = poolExecutor;
@@ -36,8 +37,7 @@ public class WorkerThread implements Runnable {
     private void processCommand() {
 
         try {
-            PeerTaster peerTaster = new PeerTaster();
-            peerTaster.connect(peerData.getInetAddress().getHostName(), peerData.getPort());
+            peerTaster.connect(peerData.getInetAddress().getHostAddress(), peerData.getPort());
             byte capabilities = peerTaster.getCapabilities();
 
             peerData.setOnline(true);
