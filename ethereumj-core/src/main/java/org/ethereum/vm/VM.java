@@ -744,6 +744,10 @@ public class VM {
                 case SUICIDE:{
                     DataWord address =  program.stackPop();
                     program.suicide(address);
+                    
+                    if (logger.isInfoEnabled())
+                        hint = "address: " + Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
+                    
                     program.stop();
                 }	break;
                 default:{
