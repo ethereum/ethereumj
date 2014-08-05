@@ -25,7 +25,7 @@ public class PeerDiscoveryMonitorThread implements Runnable {
     @Override
     public void run() {
         while(run) {
-            logger.info(
+            logger.trace(
                     String.format("[monitor] [%d/%d] Active: %d, Completed: %d, Task: %d, isShutdown: %s, isTerminated: %s, peersDiscovered: %d ",
                             this.executor.getPoolSize(),
                             this.executor.getCorePoolSize(),

@@ -29,7 +29,7 @@ public class PeersTableModel extends AbstractTableModel {
 			public void run() {
 				updateModel();
 			}
-		}, 0, 1000);
+		}, 0, 100);
 	}
 
     public String getColumnName(int column) {

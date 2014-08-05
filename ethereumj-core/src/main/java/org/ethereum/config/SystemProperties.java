@@ -20,8 +20,7 @@ public class SystemProperties {
 	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 	
 	private static int     DEFAULT_TX_APPROVE_TIMEOUT = 10;
-	private static String  DEFAULT_DISCOVERY_PEER = "54.201.28.117";
-	private static int     DEFAULT_DISCOVERY_PORT = 30303;
+	private static String  DEFAULT_DISCOVERY_PEER_LIST = "54.201.28.117:30303";
 	private static String  DEFAULT_ACTIVE_PEER_IP = "54.201.28.117";
 	private static int     DEFAULT_ACTIVE_PORT = 30303;
     private static String  DEFAULT_SAMPLES_DIR = "samples";
@@ -98,16 +97,11 @@ public class SystemProperties {
         return Integer.parseInt(prop.getProperty("transaction.approve.timeout"));
     }
 
-    public String peerDiscoveryIP() {
-        if(prop.isEmpty()) return DEFAULT_DISCOVERY_PEER;
-        return prop.getProperty("peer.discovery.ip");
+    public String peerDiscoveryIPList() {
+        if(prop.isEmpty()) return DEFAULT_DISCOVERY_PEER_LIST;
+        return prop.getProperty("peer.discovery.ip.list");
     }
 
-    public int peerDiscoveryPort() {
-        if(prop.isEmpty()) return DEFAULT_DISCOVERY_PORT;
-        return Integer.parseInt(prop.getProperty("peer.discovery.port"));
-    }
-       
     public boolean databaseReset() {
         if(prop.isEmpty()) return DEFAULT_DB_RESET;
         return Boolean.parseBoolean(prop.getProperty("database.reset"));
