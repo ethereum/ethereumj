@@ -171,7 +171,7 @@ public class ProgramInvokeFactory {
                     Hex.toHexString(coinbase.getLast20Bytes()),
                     timestamp.longValue(),
                     number.longValue(),
-                    difficulty.longValue(),
+                    Hex.toHexString(difficulty.getNoLeadZeroesData()),
                     gasLimit.longValue());
         }
 
