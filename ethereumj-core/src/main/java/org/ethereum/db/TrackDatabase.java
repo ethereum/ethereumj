@@ -1,9 +1,9 @@
 package org.ethereum.db;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
-
-import org.ethereum.util.LRUMap;
 
 /**
  * www.ethereumJ.com
@@ -13,14 +13,11 @@ import org.ethereum.util.LRUMap;
  */
 public class TrackDatabase implements Database {
 
-//	private static final int MAX_ENTRIES = 1000; // Should contain most commonly hashed values 
-//	private static LRUMap<ByteArrayWrapper, byte[]> valueCache = new LRUMap<>(0, MAX_ENTRIES);
-	
     private Database db;
 
     private boolean trackingChanges;
     private Map<ByteArrayWrapper, byte[]> changes;
-    private Map<ByteArrayWrapper, byte[]> deletes;
+    private List<ByteArrayWrapper> deletes;
 
     public TrackDatabase(Database db) {
         this.db = db;
@@ -28,7 +25,7 @@ public class TrackDatabase implements Database {
 
     public void startTrack() {
         changes = new HashMap<>();
-        deletes = new HashMap<>();
+        deletes = new ArrayList<>();
         trackingChanges = true;
     }
 
@@ -36,19 +33,21 @@ public class TrackDatabase implements Database {
         for(ByteArrayWrapper key : changes.keySet()) {
             db.put(key.getData(), changes.get(key));
         }
+        for(ByteArrayWrapper key : deletes) {
+            db.delete(key.getData());
+        }
         changes = null;
         trackingChanges = false;
     }
 
     public void rollbackTrack() {
         changes = new HashMap<>();
-        deletes = new HashMap<>();
+        deletes = new ArrayList<>();
         changes = null;
         trackingChanges = false;
     }
 
     public void put(byte[] key, byte[] value) {
-//    	valueCache.put(wKey, value);
         if (trackingChanges) {
         	ByteArrayWrapper wKey = new ByteArrayWrapper(key);
 			changes.put(wKey, value);
@@ -60,12 +59,9 @@ public class TrackDatabase implements Database {
     public byte[] get(byte[] key) {
     	if(trackingChanges) {
     		ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-            if (deletes.get(wKey) != null) return null;
+            if (deletes.contains(wKey)) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
         }
-//    	byte[] result = valueCache.get(wKey);
-//        if(result != null)
-//        	return result;
        	return db.get(key);
     }
 
@@ -73,7 +69,7 @@ public class TrackDatabase implements Database {
     public void delete(byte[] key) {
         if (trackingChanges) {
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-            deletes.put(wKey, null);
+            deletes.add(wKey);
         } else {
             db.delete(key);
         }
