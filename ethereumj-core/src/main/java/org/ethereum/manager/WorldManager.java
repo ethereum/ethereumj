@@ -57,16 +57,10 @@ public class WorldManager {
 		this.blockchain = new Blockchain(repository);
 		
         // Initialize PeerData
-        try {
-            InetAddress ip = InetAddress.getByName(CONFIG.peerDiscoveryIP());
-            int port = CONFIG.peerDiscoveryPort();
-            PeerData peer = new PeerData(ip.getAddress(), port, new byte[]{00});
-            peers.add(peer);
-            peerDiscovery = new PeerDiscovery(peers);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            System.exit(-1);
-        }
+        List<PeerData> peerDataList =  parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
+        peers.addAll(peerDataList);
+
+        peerDiscovery = new PeerDiscovery(peers);
 
 		this.wallet = new Wallet();
 		
@@ -88,7 +82,7 @@ public class WorldManager {
 		}
 		return instance;
 	}
-	
+
     /***********************************************************************
      *	1) the dialog put a pending transaction on the list
      *  2) the dialog send the transaction to a net
@@ -191,5 +185,29 @@ public class WorldManager {
 
     public EthereumListener getListener() {
         return listener;
+    }
+
+    public List<PeerData> parsePeerDiscoveryIpList(String peerDiscoveryIpList){
+
+        List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
+        List<PeerData> peers = new ArrayList<>();
+
+        for (String ip : ipList){
+            String[] addr = ip.trim().split(":");
+            String ip_trim = addr[0];
+            String port_trim = addr[1];
+
+            try {
+                InetAddress iAddr = InetAddress.getByName(ip_trim);
+                int port = Integer.parseInt(port_trim);
+
+                PeerData peerData = new PeerData(iAddr.getAddress(), port, new byte[]{00});
+                peers.add(peerData);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return peers;
     }
 }
