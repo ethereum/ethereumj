@@ -113,6 +113,7 @@ public class Repository {
     
     public void saveBlock(Block block) {
     	this.chainDB.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
+    	this.worldState.sync();
     }
 	
 	public Blockchain loadBlockchain() {
@@ -148,6 +149,7 @@ public class Repository {
 		}
 		// Update world state to latest loaded block from db
 		this.worldState.setRoot(blockchain.getLastBlock().getStateRoot());
+		
 		return blockchain;
 	}
 	
@@ -422,11 +424,6 @@ public class Repository {
     }
 
     public void close() {
-
-        if (worldState != null){
-            worldState.sync();
-        }
-
         if (this.chainDB != null)
         	chainDB.close();
         if (this.stateDB != null)
