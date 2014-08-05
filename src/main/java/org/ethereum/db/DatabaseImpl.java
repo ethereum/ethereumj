@@ -79,7 +79,7 @@ public class DatabaseImpl implements Database {
 	
 	/** Delete object (key) from db **/
 	public void delete(byte[] key) {
-		delete(key);
+		db.delete(key);
 	}
 	
 	public DBIterator iterator() {
