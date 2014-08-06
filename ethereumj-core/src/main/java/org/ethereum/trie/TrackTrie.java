@@ -1,8 +1,11 @@
 package org.ethereum.trie;
 
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -17,7 +20,7 @@ public class TrackTrie implements TrieFacade {
 
 	private boolean trackingChanges = false;
 	private Map<ByteArrayWrapper, byte[]> changes;
-	private Map<ByteArrayWrapper, byte[]> deletes;
+	private List<ByteArrayWrapper> deletes;
 
 	public TrackTrie(TrieFacade trie) {
 		this.trie = trie;
@@ -25,7 +28,7 @@ public class TrackTrie implements TrieFacade {
 
 	public void startTrack() {
 		changes = new HashMap<>();
-		deletes = new HashMap<>();
+		deletes = new ArrayList<>();
 		trackingChanges = true;
 	}
 
@@ -33,13 +36,16 @@ public class TrackTrie implements TrieFacade {
 		for (ByteArrayWrapper key : changes.keySet()) {
 			trie.update(key.getData(), changes.get(key));
 		}
+		for (ByteArrayWrapper key : deletes) {
+			trie.update(key.getData(), ByteUtil.EMPTY_BYTE_ARRAY);
+		}
 		changes = null;
 		trackingChanges = false;
 	}
 
 	public void rollbackTrack() {
 		changes = new HashMap<>();
-		deletes = new HashMap<>();
+		deletes = new ArrayList<>();
 		changes = null;
 		trackingChanges = false;
 	}
@@ -57,7 +63,7 @@ public class TrackTrie implements TrieFacade {
 	public byte[] get(byte[] key) {
 		if (trackingChanges) {
 			ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-			if (deletes.get(wKey) != null)
+			if (deletes.contains(wKey))
 				return null;
 			if (changes.get(wKey) != null)
 				return changes.get(wKey);
@@ -70,7 +76,7 @@ public class TrackTrie implements TrieFacade {
 	public void delete(byte[] key) {
 		if (trackingChanges) {
 			ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-			deletes.put(wKey, null);
+			deletes.add(wKey);
 		} else {
 			trie.delete(key);
 		}
