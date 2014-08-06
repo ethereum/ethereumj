@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
  */
 public class SystemProperties {
 
-	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
+    private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 	
 	private static int     DEFAULT_TX_APPROVE_TIMEOUT = 10;
 	private static String  DEFAULT_DISCOVERY_PEER_LIST = "54.201.28.117:30303";
@@ -35,6 +35,8 @@ public class SystemProperties {
     private static int     DEFAULT_TRACE_STARTBLOCK = -1;
     private static byte    DEFAULT_MAX_BLOCKS_ASK = 10;
     private static int     DEFAULT_MAX_BLOCKS_QUEUED = 300;
+    private static String  DEFAULT_PROJECT_VERSION = "";
+    private static String  DEFAULT_HELLO_PHRASE = "RJ";
 
 
 	public static SystemProperties CONFIG = new SystemProperties();
@@ -181,6 +183,16 @@ public class SystemProperties {
     public Integer maxBlocksQueued() {
         if(prop.isEmpty()) return DEFAULT_MAX_BLOCKS_QUEUED;
         return Integer.parseInt(prop.getProperty("max.blocks.queued"));
+    }
+
+    public String projectVersion() {
+        if(prop.isEmpty()) return DEFAULT_PROJECT_VERSION;
+        return prop.getProperty("project.version");
+    }
+
+    public String helloPhrase() {
+        if(prop.isEmpty()) return DEFAULT_HELLO_PHRASE;
+        return prop.getProperty("hello.phrase");
     }
 
 

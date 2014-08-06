@@ -1,5 +1,6 @@
 package org.ethereum.gui;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -36,8 +37,10 @@ public class ToolBar extends JFrame {
 
     public ToolBar() throws HeadlessException {
 
+        String version = SystemProperties.CONFIG.projectVersion();
+
         introLogger.info("");
-        introLogger.info("|Ξ|  EthereumJ [v0.5.1]  by RomanJ");
+        introLogger.info("|Ξ|  EthereumJ [v" + version + "]  by RomanJ");
         introLogger.info("|Ξ|  Code by Roman Mandeleil, (c) 2014.");
         introLogger.info("|Ξ|  Contribution: Nick Savers ");
         introLogger.info("|Ξ|  Based on a design by Vitalik Buterin.");

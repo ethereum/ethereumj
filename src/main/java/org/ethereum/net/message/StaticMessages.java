@@ -1,5 +1,6 @@
 package org.ethereum.net.message;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
@@ -33,8 +34,16 @@ public class StaticMessages {
     public static HelloMessage generateHelloMessage() {
         byte[] peerIdBytes = HashUtil.randomPeerId();
 
+        String version = SystemProperties.CONFIG.projectVersion();
+        String system = System.getProperty("os.name");
+        if (System.getProperty("java.vm.vendor").contains("Android")) system = "Android";
+
+        String phrase = SystemProperties.CONFIG.helloPhrase();
+
+        String helloAnnouncement = String.format("Ethereum(J)/v%s/Release/%s/%s ", version, system, phrase);
+
         return new HelloMessage((byte) 0x17, (byte) 0x00,
-                "EthereumJ [v0.5.1] by RomanJ", Byte.parseByte("00000111", 2),
+                helloAnnouncement, Byte.parseByte("00000111", 2),
                 (short) 30303, peerIdBytes);
     }
 }

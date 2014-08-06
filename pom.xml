@@ -4,7 +4,7 @@
 	<groupId>org.ethereum</groupId>
 	<artifactId>ethereumj</artifactId>
 	<packaging>jar</packaging>
-	<version>0.5.1</version>
+	<version>0.5.3</version>
 	<name>EthereumJ</name>
 	<url>http://www.ethereumj.org</url>
 
@@ -193,6 +193,29 @@
 
 
 		<plugins>
+
+            <plugin>
+                <groupId>com.google.code.maven-replacer-plugin</groupId>
+                <artifactId>replacer</artifactId>
+                <version>1.5.3</version>
+                <executions>
+                    <execution>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>replace</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <file>target/classes/system.properties</file>
+                    <replacements>
+                        <replacement>
+                            <token>PROJECT.VERSION</token>
+                            <value>${project.version}</value>
+                        </replacement>
+                    </replacements>
+                </configuration>
+            </plugin>
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
