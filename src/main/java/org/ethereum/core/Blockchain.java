@@ -147,6 +147,20 @@ public class Blockchain {
         if (listener != null)
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
+        EthereumListener ethereumListener =  WorldManager.getInstance().getListener();
+        if (ethereumListener != null)
+            ethereumListener.onBlock(block);
+
+/*
+        if (lastBlock.getNumber() >= 30) {
+            System.out.println("** checkpoint **");
+
+            this.close();
+            WorldManager.getInstance().getRepository().close();
+            System.exit(1);
+        }
+*/
+
     }
     
     public void processBlock(Block block) {

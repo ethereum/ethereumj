@@ -66,6 +66,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
         logger.info("Send: " + StaticMessages.HELLO_MESSAGE.toString());
         msgQueue.sendMessage(StaticMessages.HELLO_MESSAGE);
+        sendPing();
 
         // sample for pinging in background
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -249,6 +250,8 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             RLPList rlpList = RLP.decode2(payload);
             GetChainMessage getChainMessage = new GetChainMessage(rlpList);
 
+
+
             logger.info(getChainMessage.toString());
             if (peerListener != null) peerListener.console(getChainMessage.toString());
         }
@@ -323,6 +326,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 SystemProperties.CONFIG.maxBlocksQueued()) return;
 
         Block lastBlock = WorldManager.getInstance().getBlockchain().getBlockQueue().getLast();
+        if (lastBlock == null) return;
 
         byte[] hash = lastBlock.getHash();
         GetChainMessage chainMessage =
