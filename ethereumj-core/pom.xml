@@ -17,6 +17,9 @@
 
  * Install jar with sources to the maven repository
  mvn source:jar install -Dmaven.test.skip=true
+
+ * Release to mvn repository in github (settings.xml should be updated with user/pass):
+ mvn clean deploy -Dmaven.test.skip=true
 -->
 
 	<developers>
@@ -30,9 +33,18 @@
 
 	<scm>
 		<connection>scm:git:git://github.com/ethereum/ethereumj.git</connection>
-		<developerConnection>scm:git:git://github.com/ethereum/ethereumj.git</developerConnection>
+		<developerConnection>scm:git:ssh://git@github.com/ethereum/ethereumj.git</developerConnection>
 		<url>https://github.com/ethereum/ethereumj</url>
 	</scm>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Temporary Staging Repository</name>
+            <url>file://${project.build.directory}/mvn-repo</url>
+        </repository>
+    </distributionManagement>
+
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -42,6 +54,8 @@
 		<leveldb.version>0.7</leveldb.version>
 		<spongycastle.version>1.51.0.0</spongycastle.version>
 		<generated.sourceDirectory>gen</generated.sourceDirectory>
+
+        <github.global.server>github</github.global.server>
 	</properties>
 
 	<dependencies>
@@ -168,6 +182,7 @@
 
     </dependencies>
 
+
 	<build>
 
         <!--<resources>-->
@@ -175,6 +190,7 @@
                 <!--<directory>src/main/antlr4</directory>-->
             <!--</resource>-->
         <!--</resources>-->
+
 
 		<plugins>
 
@@ -193,15 +209,7 @@
                 </executions>
             </plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.1</version>
-				<configuration>
-					<source>1.7</source>
-					<target>1.7</target>
-				</configuration>
-			</plugin>
+
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -238,23 +246,8 @@
                     </archive>
                 </configuration>
             </plugin>
-			<plugin>
-				<groupId>org.antlr</groupId>
-				<artifactId>antlr4-maven-plugin</artifactId>
-				<version>4.3</version>
-				<configuration>
-					<listener>true</listener>
-  					<visitor>true</visitor>
-  				</configuration>
-				<executions>
-					<execution>
-						<id>antlr</id>
-						<goals>
-							<goal>antlr4</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
+
+
 			<plugin>
 				<groupId>org.eluder.coveralls</groupId>
 				<artifactId>coveralls-maven-plugin</artifactId>
@@ -279,6 +272,7 @@
 				    </excludes>
 			    </configuration>
 			</plugin>
+
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.3</version>
@@ -298,6 +292,73 @@
                     </execution>
                 </executions>
             </plugin>
+
+
+            <plugin>
+                <groupId>org.antlr</groupId>
+                <artifactId>antlr4-maven-plugin</artifactId>
+                <version>4.3</version>
+                <configuration>
+                    <listener>true</listener>
+                    <visitor>true</visitor>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>antlr</id>
+                        <goals>
+                            <goal>antlr4</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
+                <configuration>
+                    <source>1.7</source>
+                    <target>1.7</target>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+                </configuration>
+            </plugin>
+
+
+            <plugin>
+                <groupId>com.github.github</groupId>
+                <artifactId>site-maven-plugin</artifactId>
+                <version>0.9</version>
+                <configuration>
+                    <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
+                    <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
+                    <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
+                    <branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
+                    <includes><include>**/*</include></includes>
+                    <!--<excludes><exclude>**/*sources*</exclude></excludes>-->
+                    <force>true</force>
+                    <repositoryName>ethereumj</repositoryName>      <!-- github repo name -->
+                    <repositoryOwner>ethereum</repositoryOwner>    <!-- github repo owner  -->
+                </configuration>
+                <executions>
+                    <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+                    <execution>
+                        <goals>
+                            <goal>site</goal>
+                        </goals>
+                        <phase>deploy</phase>
+                    </execution>
+                </executions>
+            </plugin>
+
 		</plugins>
 		 <pluginManagement>
             <plugins>
