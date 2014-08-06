@@ -42,7 +42,7 @@ public class ContractDetails {
 
 	public void put(DataWord key, DataWord value) {
 
-        if (value.equals(DataWord.ZERO)){
+        if (value.equals(DataWord.ZERO)) {
 
             storageTrie.delete(key.getData());
             int index = storageKeys.indexOf(key);
@@ -50,7 +50,7 @@ public class ContractDetails {
                 storageKeys.remove(index);
                 storageValues.remove(index);
             }
-        } else{
+        } else {
 
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
             int index = storageKeys.indexOf(key);
