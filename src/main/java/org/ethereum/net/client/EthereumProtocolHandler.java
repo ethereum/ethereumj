@@ -344,19 +344,19 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendPing() {
-        msgQueue.sendMessage(PING_MESSAGE);
+        sendMsg(PING_MESSAGE);
     }
 
     private void sendPong() {
-        msgQueue.sendMessage(PONG_MESSAGE);
+        sendMsg(PONG_MESSAGE);
     }
 
     private void sendGetPeers() {
-        msgQueue.sendMessage(GET_PEERS_MESSAGE);
+        sendMsg(GET_PEERS_MESSAGE);
     }
 
     private void sendGetTransactions() {
-        msgQueue.sendMessage(GET_TRANSACTIONS_MESSAGE);
+        sendMsg(GET_TRANSACTIONS_MESSAGE);
     }
 
     private void sendGetChain() {
@@ -370,6 +370,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         byte[] hash = lastBlock.getHash();
         GetChainMessage chainMessage =
                 new GetChainMessage( SystemProperties.CONFIG.maxBlocksAsk(), hash);
-        msgQueue.sendMessage(chainMessage);
+        sendMsg(chainMessage);
     }
 }
