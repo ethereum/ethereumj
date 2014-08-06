@@ -221,8 +221,9 @@ public class Program {
         DataWord balance = getBalance(this.getOwnerAddress());
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
-            logger.info("Transfer to: [ {} ] heritage: [ {} ]", Hex.toHexString(obtainer.getLast20Bytes())
-                        , balance.longValue());
+			logger.info("Transfer to: [ {} ] heritage: [ {} ]",
+					Hex.toHexString(obtainer.getLast20Bytes()),
+					balance.longValue());
 
         this.result.getRepository().addBalance(obtainer.getLast20Bytes(), balance.value());
         this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), balance.value().negate());

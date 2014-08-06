@@ -382,7 +382,7 @@ public class VM {
                     DataWord address = program.getOwnerAddress();
 
                     if (logger.isInfoEnabled())
-                        hint = address.toString();
+                        hint = "address: " + Hex.toHexString(address.getLast20Bytes());
 
                     program.stackPush(address);
                     program.step();
@@ -392,7 +392,9 @@ public class VM {
                     DataWord balance = program.getBalance(address);
 
                     if (logger.isInfoEnabled())
-                        hint = "address: " + address.toString() + " balance: " + balance.longValue();
+						hint = "address: "
+								+ Hex.toHexString(address.getLast20Bytes())
+								+ " balance: " + balance.longValue();
 
                     program.stackPush(balance);
                     program.step();
@@ -401,7 +403,7 @@ public class VM {
                     DataWord originAddress = program.getOriginAddress();
 
                     if (logger.isInfoEnabled())
-                        hint = "address: " + originAddress.toString();
+                        hint = "address: " + Hex.toHexString(originAddress.getLast20Bytes());
 
                     program.stackPush(originAddress);
                     program.step();
@@ -410,7 +412,7 @@ public class VM {
                     DataWord callerAddress = program.getCallerAddress();
 
                     if (logger.isInfoEnabled())
-                        hint = "address: " + callerAddress.toString();
+                        hint = "address: " + Hex.toHexString(callerAddress.getLast20Bytes());
 
                     program.stackPush(callerAddress);
                     program.step();
@@ -513,7 +515,7 @@ public class VM {
                     DataWord coinbase = program.getCoinbase();
 
                     if (logger.isInfoEnabled())
-                        hint = "coinbase: " + coinbase;
+                        hint = "coinbase: " + Hex.toHexString(coinbase.getLast20Bytes());
 
                     program.stackPush(coinbase);
                     program.step();
@@ -744,6 +746,10 @@ public class VM {
                 case SUICIDE:{
                     DataWord address =  program.stackPop();
                     program.suicide(address);
+                    
+                    if (logger.isInfoEnabled())
+                        hint = "address: " + Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
+                    
                     program.stop();
                 }	break;
                 default:{
