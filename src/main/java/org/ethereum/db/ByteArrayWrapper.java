@@ -16,7 +16,7 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
 
 	public ByteArrayWrapper(byte[] data) {
 		if (data == null) {
-			throw new NullPointerException();
+			throw new NullPointerException("Can't create a wrapper around null");
 		}
 		this.data = data;
 	}

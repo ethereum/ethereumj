@@ -1,7 +1,11 @@
 package org.ethereum.db;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import org.ethereum.util.LRUMap;
 
 /**
  * www.ethereumJ.com
@@ -15,7 +19,7 @@ public class TrackDatabase implements Database {
 
     private boolean trackingChanges;
     private Map<ByteArrayWrapper, byte[]> changes;
-    private Map<ByteArrayWrapper, byte[]> deletes;
+    private List<ByteArrayWrapper> deletes;
 
     public TrackDatabase(Database db) {
         this.db = db;
@@ -23,7 +27,7 @@ public class TrackDatabase implements Database {
 
     public void startTrack() {
         changes = new HashMap<>();
-        deletes = new HashMap<>();
+        deletes = new ArrayList<>();
         trackingChanges = true;
     }
 
@@ -31,40 +35,43 @@ public class TrackDatabase implements Database {
         for(ByteArrayWrapper key : changes.keySet()) {
             db.put(key.getData(), changes.get(key));
         }
+        for(ByteArrayWrapper key : deletes) {
+            db.delete(key.getData());
+        }
         changes = null;
         trackingChanges = false;
     }
 
     public void rollbackTrack() {
         changes = new HashMap<>();
-        deletes = new HashMap<>();
+        deletes = new ArrayList<>();
         changes = null;
         trackingChanges = false;
     }
 
     public void put(byte[] key, byte[] value) {
         if (trackingChanges) {
-			changes.put(new ByteArrayWrapper(key), value);
+        	ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+			changes.put(wKey, value);
         } else {
             db.put(key, value);
         }
     }
 
     public byte[] get(byte[] key) {
-        if(trackingChanges) {
-            ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-            if (deletes.get(wKey) != null) return null;
+    	if(trackingChanges) {
+    		ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+            if (deletes.contains(wKey)) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
-            return db.get(key);
         }
-        return db.get(key);
+       	return db.get(key);
     }
 
     /** Delete object (key) from db **/
     public void delete(byte[] key) {
         if (trackingChanges) {
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-            deletes.put(wKey, null);
+            deletes.add(wKey);
         } else {
             db.delete(key);
         }

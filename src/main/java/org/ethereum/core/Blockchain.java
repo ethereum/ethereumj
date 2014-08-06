@@ -155,8 +155,8 @@ public class Blockchain {
         		for (Transaction tx : block.getTransactionsList())
         			// TODO: refactor the wallet pending transactions to the world manager
         			WorldManager.getInstance().addWalletTransaction(tx);
-                	this.applyBlock(block);
-                	WorldManager.getInstance().getWallet().processBlock(block);
+                this.applyBlock(block);
+                WorldManager.getInstance().getWallet().processBlock(block);
             }
             this.storeBlock(block);		
     	} else {
@@ -164,16 +164,39 @@ public class Blockchain {
     	}
     }
     
-    public void storeBlock(Block block) {
+	public void applyBlock(Block block) {
+
+		int i = 0;
+		for (Transaction tx : block.getTransactionsList()) {
+			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
+			applyTransaction(block, tx, block.getCoinbase());
+			repository.dumpState(block.getNumber(), i, tx.getHash());
+			++i;
+		}
+		
+		// miner reward
+		if (repository.getAccountState(block.getCoinbase()) == null)
+			repository.createAccount(block.getCoinbase());
+		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
+		
+		for (Block uncle : block.getUncleList()) {
+			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
+		}
+
+        repository.dumpState(block.getNumber(), 0,
+                null);
+	}
+    
+    public void storeBlock(Block block) {   	
         /* Debug check to see if the state is still as expected */
         if(logger.isWarnEnabled()) {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
             String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
-                    logger.error("ERROR: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-                    // Last conflict on block 1157 -> worldstate b1d9a978451ef04c1639011d9516473d51c608dbd25906c89be791707008d2de
-                    repository.close();
-                    System.exit(-1); // Don't add block
+                logger.error("ERROR: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+                // Last conflict on block 1501 -> worldstate 27920c6c7acd42c8a7ac8a835d4c0e0a45590deb094d6b72a8493fac5d7a3654            		
+                repository.close();
+                System.exit(-1); // Don't add block
             }
         }
     	
@@ -183,31 +206,8 @@ public class Blockchain {
 		
         if (logger.isDebugEnabled())
 			logger.debug("block added {}", block.toFlatString());
-		logger.info("*** Block chain size: [ {} ]", this.getSize());
+		logger.info("*** Last block added [ #{} ]", block.getNumber());
     }
-    
-	public void applyBlock(Block block) {
-		
-		int i = 0;
-		for (Transaction tx : block.getTransactionsList()) {
-			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
-			applyTransaction(block, tx, block.getCoinbase());
-			repository.dumpState(block.getNumber(), i, tx.getHash());
-			++i;
-
-		}
-		
-		// miner reward
-		if (repository.getAccountState(block.getCoinbase()) == null)
-			repository.createAccount(block.getCoinbase());
-		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
-		for (Block uncle : block.getUncleList()) {
-			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
-		}
-
-        repository.dumpState(block.getNumber(), 0,
-                null);
-	}
     
 	public void applyTransaction(Block block, Transaction tx, byte[] coinbase) {
 
@@ -281,8 +281,9 @@ public class Blockchain {
 						Hex.toHexString(senderAddress));
 				return;
 			}
-            repository.addBalance(senderAddress, gasDebit.negate());
-
+			repository.addBalance(senderAddress, gasDebit.negate());
+            senderAccount.subFromBalance(gasDebit); // balance will be read again below
+            
             // The coinbase get the gas cost
             if (coinbase != null)
                 repository.addBalance(coinbase, gasDebit);
