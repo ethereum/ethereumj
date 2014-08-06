@@ -1,5 +1,7 @@
 package org.ethereum.listener;
 
+import org.ethereum.core.Block;
+
 /**
  * www.ethereumJ.com
  *
@@ -10,4 +12,5 @@ package org.ethereum.listener;
 public interface EthereumListener {
 
     public void trace(String output);
+    public void onBlock(Block block);
 }
