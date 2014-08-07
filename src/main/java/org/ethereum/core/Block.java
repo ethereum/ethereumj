@@ -257,6 +257,28 @@ public class Block {
         toStringBuff.append("]");
         return toStringBuff.toString();
     }
+
+    public String toStylishString(){
+
+        if (!parsed) parseRLP();
+
+        toStringBuff.setLength(0);
+        toStringBuff.append("<font color=\"${header_color}\"> BlockData </font> [");
+        toStringBuff.append(" <font color=\"${attribute_color}\"> hash</font>=" +
+                ByteUtil.toHexString(this.getHash())).append("<br/>");
+        toStringBuff.append(header.toStylishString());
+
+        for (TransactionReceipt tx : getTxReceiptList()) {
+
+            toStringBuff.append("<br/>");
+            toStringBuff.append( tx.toStylishString() );
+            toStringBuff.append("<br/>");
+        }
+
+        toStringBuff.append("]");
+        return toStringBuff.toString();
+
+    }
     
     private void parseTxs(RLPList txReceipts) {
 

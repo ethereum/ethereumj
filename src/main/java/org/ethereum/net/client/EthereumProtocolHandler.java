@@ -42,7 +42,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     private Logger logger = LoggerFactory.getLogger("wire");
 
     private Timer chainAskTimer = new Timer();
-    private int secToAskForChain = 7;
+    private int secToAskForChain = 1;
 
     private final Timer timer = new Timer();
 
@@ -102,7 +102,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
         }, 2000, 30000);
 
-        sendGetChain();
+        chainAskTimer.scheduleAtFixedRate(new TimerTask() {
+
+            public void run() {
+                sendGetChain();
+            }
+        }, 1000, secToAskForChain * 1000);
+
     }
 
     @Override
@@ -233,7 +239,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 chainAskTimer.cancel();
                 chainAskTimer.purge();
                 chainAskTimer = new Timer();
-                chainAskTimer.schedule(new TimerTask() {
+                chainAskTimer.scheduleAtFixedRate(new TimerTask() {
 
                     public void run() {
                         sendGetChain();
@@ -251,7 +257,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 chainAskTimer.cancel();
                 chainAskTimer.purge();
                 chainAskTimer = new Timer();
-                chainAskTimer.schedule(new TimerTask() {
+                chainAskTimer.scheduleAtFixedRate(new TimerTask() {
 
                     public void run() {
                         sendGetChain();

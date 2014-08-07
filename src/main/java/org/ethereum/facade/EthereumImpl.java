@@ -22,6 +22,10 @@ public class EthereumImpl implements Ethereum {
 
     private Logger logger = LoggerFactory.getLogger("facade");
 
+    public EthereumImpl() {
+        WorldManager.getInstance().loadBlockchain();
+    }
+
     /**
      * Find a peer but not this one
      * @param peerData - peer to exclude
