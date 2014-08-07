@@ -210,7 +210,7 @@ public class Blockchain {
                 logger.error("ERROR: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
                 // Last conflict on block 1501 -> worldstate 27920c6c7acd42c8a7ac8a835d4c0e0a45590deb094d6b72a8493fac5d7a3654            		
                 repository.close();
-                System.exit(-1); // Don't add block
+                // System.exit(-1); // Don't add block
             }
         }
     	
