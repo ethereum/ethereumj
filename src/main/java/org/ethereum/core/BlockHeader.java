@@ -251,19 +251,19 @@ public class BlockHeader {
     public String toStylishString() {
 
         toStringBuff.setLength(0);
-        toStringBuff.append(", <font color=\"${attribute_color}\"> parentHash</font>=" + ByteUtil.toHexString(parentHash)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> unclesHash</font>=" + ByteUtil.toHexString(unclesHash)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> coinbase</font>=" + ByteUtil.toHexString(coinbase)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> stateRoot</font>=" 		+ ByteUtil.toHexString(stateRoot)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> txTrieHash</font>=" 	+ ByteUtil.toHexString(txTrieRoot)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> difficulty</font>=" 	+ ByteUtil.toHexString(difficulty)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> parentHash</font>=" + toHexString(parentHash)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> unclesHash</font>=" + toHexString(unclesHash)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> coinbase</font>=" + toHexString(coinbase)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> stateRoot</font>=" 		+ toHexString(stateRoot)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> txTrieHash</font>=" 	+ toHexString(txTrieRoot)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> difficulty</font>=" 	+ toHexString(difficulty)).append("<br/>");
         toStringBuff.append(", <font color=\"${attribute_color}\"> number</font>=" 		+ number).append("<br/>");
         toStringBuff.append(", <font color=\"${attribute_color}\"> minGasPrice</font>=" 	+ minGasPrice).append("<br/>");
         toStringBuff.append(", <font color=\"${attribute_color}\"> gasLimit</font>=" 		+ gasLimit).append("<br/>");
         toStringBuff.append(", <font color=\"${attribute_color}\"> gasUsed</font>=" 		+ gasUsed).append("<br/>");
         toStringBuff.append(", <font color=\"${attribute_color}\"> timestamp</font>=" 		+ timestamp + " (" + Utils.longToDateTime(timestamp) + ")").append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> extraData</font>=" 		+ ByteUtil.toHexString(extraData)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> nonce</font>=" 			+ ByteUtil.toHexString(nonce)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> extraData</font>=" 		+ toHexString(extraData)).append("<br/>");
+        toStringBuff.append(", <font color=\"${attribute_color}\"> nonce</font>=" 			+ toHexString(nonce)).append("<br/>");
         return toStringBuff.toString();
     }
 
