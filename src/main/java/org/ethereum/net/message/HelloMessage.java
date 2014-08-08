@@ -46,7 +46,7 @@ public class HelloMessage extends Message {
 
         // the message does no distinguish between the 0 and null so here I check command code for null
         // TODO: find out if it can be 00
-        if (((RLPItem)(paramsList).get(0)).getRLPData() != null) {
+        if (((RLPItem)paramsList.get(0)).getRLPData() != null) {
             throw new Error("HelloMessage: parsing for mal data");
         }
 

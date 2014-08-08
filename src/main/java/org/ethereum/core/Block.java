@@ -59,7 +59,7 @@ public class Block {
     /* Constructors */
     
     public Block(byte[] rawData) {
-    	logger.debug("RLP encoded [ " + Hex.toHexString(rawData) + " ]");
+    	logger.debug("new Block from RLP encoded [ " + Hex.toHexString(rawData) + " ]");
         this.rlpEncoded = rawData;
         this.parsed = false;
     }
@@ -71,10 +71,7 @@ public class Block {
 		this.header = new BlockHeader(parentHash, unclesHash, coinbase,
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
-        this.txsState = new Trie(null);
-
-        this.header.setTxTrieRoot(txsState.getRootHash());
-        this.transactionsList = transactionsList;
+		this.transactionsList = transactionsList;
         this.uncleList = uncleList;
         this.parsed = true;
     }
@@ -90,7 +87,7 @@ public class Block {
         
         // Parse Transactions
         RLPList txReceipts = (RLPList) block.get(1);
-        this.parseTxs(txReceipts);
+        this.parseTxs(this.header.getTxTrieRoot(), txReceipts);
 
         // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
@@ -188,32 +185,25 @@ public class Block {
         this.header.setNonce(nonce);
         rlpEncoded = null;
     }
-    
-    public Trie getTxsState() {
-    	return this.txsState;
-    }
 
     public List<Transaction> getTransactionsList() {
         if (!parsed) parseRLP();
-        if (transactionsList == null) {
-        	this.transactionsList = new ArrayList<>();
-        }
+        if (transactionsList == null)
+        	transactionsList = new ArrayList<>();
         return transactionsList;
     }
 
     public List<TransactionReceipt> getTxReceiptList() {
         if (!parsed) parseRLP();
-        if (transactionsList == null) {
-            this.txReceiptList = new ArrayList<>();
-        }
+        if (txReceiptList == null)
+            txReceiptList = new ArrayList<>();
         return txReceiptList;
     }
 
     public List<Block> getUncleList() {
         if (!parsed) parseRLP();
-        if (uncleList == null) {
-        	this.uncleList = new ArrayList<>();
-        }
+        if (uncleList == null)
+        	uncleList = new ArrayList<>();
         return uncleList;
     }
 
@@ -280,30 +270,31 @@ public class Block {
 
     }
     
-    private void parseTxs(RLPList txReceipts) {
+    private void parseTxs(byte[] expectedRoot, RLPList txReceipts) {
 
         this.txsState = new Trie(null);
         for (int i = 0; i < txReceipts.size(); i++) {
         	RLPElement rlpTxReceipt = txReceipts.get(i);
             RLPElement txData = ((RLPList)rlpTxReceipt).get(0);
-
-            Transaction tx = new Transaction(txData.getRLPData());
-            this.addAndProcessTransaction(i, tx);
             
             // YP 4.3.1
-            RLPElement cummGas    = ((RLPList)rlpTxReceipt).get(1);
-            RLPElement pstTxState = ((RLPList)rlpTxReceipt).get(2);
+            RLPElement pstTxState = ((RLPList)rlpTxReceipt).get(1);
+            RLPElement cummGas    = ((RLPList)rlpTxReceipt).get(2);
 
+            Transaction tx = new Transaction(txData.getRLPData());
+            this.transactionsList.add(tx);
             TransactionReceipt txReceipt =
-                new TransactionReceipt(tx, cummGas.getRLPData(), pstTxState.getRLPData());
-            txReceiptList.add(txReceipt);
+                new TransactionReceipt(tx, pstTxState.getRLPData(), cummGas.getRLPData());
+            this.addTxReceipt(i, txReceipt);
         }
-        this.header.setTxTrieRoot(txsState.getRootHash());
+        String calculatedRoot = Hex.toHexString(txsState.getRootHash());
+        if(!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
+			logger.error("Added tx receipts don't match the given txsStateRoot");
     }
     
-    private void addAndProcessTransaction(int counter, Transaction tx) {
-        this.transactionsList.add(tx);
-        this.txsState.update(RLP.encodeInt(counter), tx.getEncoded());
+    private void addTxReceipt(int counter, TransactionReceipt txReceipt) {
+        this.txReceiptList.add(txReceipt);
+        this.txsState.update(RLP.encodeInt(counter), txReceipt.getEncoded());
         
         /* Figure out type of tx
          * 1. Contract creation
@@ -316,8 +307,6 @@ public class Block {
          * 3. Account to account	- 
          * 		- update state object
          */
-        
-//        this.allAccountsState.update();
     }
     
 	/**

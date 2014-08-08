@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class Trie implements TrieFacade {
     private Object prevRoot;
     private Object root;
     private Cache cache;
-
+    
     public Trie(DB db) {
         this(db, "");
     }
@@ -413,7 +414,7 @@ public class Trie implements TrieFacade {
         if (root == null
                 || (root instanceof byte[] && ((byte[]) root).length == 0)
                 || (root instanceof String && "".equals((String) root))) {
-            return new byte[0];
+            return ByteUtil.EMPTY_BYTE_ARRAY;
         } else if (root instanceof byte[]) {
             return (byte[]) this.getRoot();
         } else {
