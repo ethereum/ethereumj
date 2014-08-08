@@ -2,7 +2,7 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
-import org.ethereum.util.ByteUtil;
+import static org.ethereum.util.ByteUtil.*;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
@@ -59,9 +59,13 @@ public class BlockHeader {
         this.unclesHash     = ((RLPItem) rlpHeader.get(1)).getRLPData();
         this.coinbase       = ((RLPItem) rlpHeader.get(2)).getRLPData();
         this.stateRoot      = ((RLPItem) rlpHeader.get(3)).getRLPData();
+        
         this.txTrieRoot     = ((RLPItem) rlpHeader.get(4)).getRLPData();
+        if(this.txTrieRoot == null)
+        	this.txTrieRoot = EMPTY_BYTE_ARRAY;
+        
         this.difficulty     = ((RLPItem) rlpHeader.get(5)).getRLPData();
-
+ 
         byte[] nrBytes      = ((RLPItem) rlpHeader.get(6)).getRLPData();
         byte[] gpBytes      = ((RLPItem) rlpHeader.get(7)).getRLPData();
         byte[] glBytes      = ((RLPItem) rlpHeader.get(8)).getRLPData();
@@ -211,36 +215,36 @@ public class BlockHeader {
 	public String toString() {
 
         toStringBuff.setLength(0);
-        toStringBuff.append("  parentHash=" + ByteUtil.toHexString(parentHash)).append("\n");
-        toStringBuff.append("  unclesHash=" + ByteUtil.toHexString(unclesHash)).append("\n");
-        toStringBuff.append("  coinbase=" + ByteUtil.toHexString(coinbase)).append("\n");
-        toStringBuff.append("  stateRoot=" 		+ ByteUtil.toHexString(stateRoot)).append("\n");
-        toStringBuff.append("  txTrieHash=" 	+ ByteUtil.toHexString(txTrieRoot)).append("\n");
-        toStringBuff.append("  difficulty=" 	+ ByteUtil.toHexString(difficulty)).append("\n");
+        toStringBuff.append("  parentHash=" + toHexString(parentHash)).append("\n");
+        toStringBuff.append("  unclesHash=" + toHexString(unclesHash)).append("\n");
+        toStringBuff.append("  coinbase=" + toHexString(coinbase)).append("\n");
+        toStringBuff.append("  stateRoot=" 		+ toHexString(stateRoot)).append("\n");
+        toStringBuff.append("  txTrieHash=" 	+ toHexString(txTrieRoot)).append("\n");
+        toStringBuff.append("  difficulty=" 	+ toHexString(difficulty)).append("\n");
         toStringBuff.append("  number=" 		+ number).append("\n");
         toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("\n");
         toStringBuff.append("  gasLimit=" 		+ gasLimit).append("\n");
         toStringBuff.append("  gasUsed=" 		+ gasUsed).append("\n");
         toStringBuff.append("  timestamp=" 		+ timestamp + " (" + Utils.longToDateTime(timestamp) + ")").append("\n");
-        toStringBuff.append("  extraData=" 		+ ByteUtil.toHexString(extraData)).append("\n");
-        toStringBuff.append("  nonce=" 			+ ByteUtil.toHexString(nonce)).append("\n");
+        toStringBuff.append("  extraData=" 		+ toHexString(extraData)).append("\n");
+        toStringBuff.append("  nonce=" 			+ toHexString(nonce)).append("\n");
         return toStringBuff.toString();
 	}
 	
 	public String toFlatString() {
-        toStringBuff.append("  parentHash=" + ByteUtil.toHexString(parentHash)).append("");
-        toStringBuff.append("  unclesHash=" + ByteUtil.toHexString(unclesHash)).append("");
-        toStringBuff.append("  coinbase=" + ByteUtil.toHexString(coinbase)).append("");
-        toStringBuff.append("  stateRoot=" 		+ ByteUtil.toHexString(stateRoot)).append("");
-        toStringBuff.append("  txTrieHash=" 	+ ByteUtil.toHexString(txTrieRoot)).append("");
-        toStringBuff.append("  difficulty=" 	+ ByteUtil.toHexString(difficulty)).append("");
+        toStringBuff.append("  parentHash=" + toHexString(parentHash)).append("");
+        toStringBuff.append("  unclesHash=" + toHexString(unclesHash)).append("");
+        toStringBuff.append("  coinbase=" + toHexString(coinbase)).append("");
+        toStringBuff.append("  stateRoot=" 		+ toHexString(stateRoot)).append("");
+        toStringBuff.append("  txTrieHash=" 	+ toHexString(txTrieRoot)).append("");
+        toStringBuff.append("  difficulty=" 	+ toHexString(difficulty)).append("");
         toStringBuff.append("  number=" 		+ number).append("");
         toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("");
         toStringBuff.append("  gasLimit=" 		+ gasLimit).append("");
         toStringBuff.append("  gasUsed=" 		+ gasUsed).append("");
         toStringBuff.append("  timestamp=" 		+ timestamp).append("");
-        toStringBuff.append("  extraData=" 		+ ByteUtil.toHexString(extraData)).append("");
-        toStringBuff.append("  nonce=" 			+ ByteUtil.toHexString(nonce)).append("");
+        toStringBuff.append("  extraData=" 		+ toHexString(extraData)).append("");
+        toStringBuff.append("  nonce=" 			+ toHexString(nonce)).append("");
         return toStringBuff.toString();
 	}
 	
