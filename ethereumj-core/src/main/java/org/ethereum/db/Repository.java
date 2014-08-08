@@ -122,8 +122,13 @@ public class Repository {
 		try {
 			if (!iterator.hasNext()) {
                 logger.info("DB is empty - adding Genesis");
+                for (String address : Genesis.getPremine()) {
+            		this.createAccount(Hex.decode(address));
+            		this.addBalance   (Hex.decode(address), Genesis.getPremineAmount());
+				}
                 blockchain.storeBlock(Genesis.getInstance());
                	logger.debug("Block #{} -> {}", Genesis.NUMBER, blockchain.getLastBlock().toFlatString());
+               	dumpState(0, 0, null);
             } else {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
 

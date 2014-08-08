@@ -1,8 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Repository;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.trie.Trie;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,7 +28,7 @@ import java.math.BigInteger;
  */
 public class Genesis extends Block {
 
-    private String[] premine = new String[] {
+    private static String[] premine = new String[] {
             "51ba59315b3a95761d0863b05ccc7a7f54703d99",
             "e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
             "b9c015918bdaba24b4ff057a92a3873d6eb201be",		// # (V)
@@ -64,16 +63,16 @@ public class Genesis extends Block {
 		super(PARENT_HASH, UNCLES_HASH, COINBASE, DIFFICULTY,
 				NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED, TIMESTAMP,
 				EXTRA_DATA, NONCE, null, null);
-
-		Repository repository = WorldManager.getInstance().getRepository();
+		
+		Trie state = new Trie(null);
         // The proof-of-concept series include a development premine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {
-			repository.createAccount(Hex.decode(address));
-			repository.addBalance   (Hex.decode(address), BigInteger.valueOf(2).pow(200) );
+			AccountState acctState = new AccountState();
+			acctState.addToBalance(getPremineAmount());
+			state.update(Hex.decode(address), acctState.getEncoded());
         }
-		setStateRoot(repository.getWorldState().getRootHash());
-		repository.dumpState(0, 0, null);
+		setStateRoot(state.getRootHash());
         
 		logger.info("Genesis-hash: {}", Hex.toHexString(this.getHash()));
 		logger.info("Genesis-stateRoot: {}", Hex.toHexString(this.getStateRoot()));
@@ -84,5 +83,13 @@ public class Genesis extends Block {
 			instance = new Genesis();
 		}
 		return instance;
+	}
+	
+	public final static String[] getPremine() {
+		return premine;
+	}
+	
+	public final static BigInteger getPremineAmount() {
+		return BigInteger.valueOf(2).pow(200);
 	}
 }
