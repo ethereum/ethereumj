@@ -45,4 +45,14 @@ public class TransactionReceipt {
                 "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +
                 ']';
     }
+
+
+    public String toStylishString() {
+        return "<font color=\"${sub_header_color}\"> TransactionReceipt</font>[" +
+                "<br/>   " + transaction.toStylishString() +
+                "<br/>  , <font color=\"${attribute_color}\">postTxState</font>=" + Hex.toHexString(postTxState) +
+                "<br/>  , <font color=\"${attribute_color}\">cumulativeGas</font>=" + Hex.toHexString(cumulativeGas) +
+                ']';
+    }
+
 }

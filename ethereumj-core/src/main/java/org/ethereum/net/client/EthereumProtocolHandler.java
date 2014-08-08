@@ -42,7 +42,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
     private Logger logger = LoggerFactory.getLogger("wire");
 
     private Timer chainAskTimer = new Timer();
-    private int secToAskForChain = 7;
+    private int secToAskForChain = 1;
 
     private final Timer timer = new Timer();
 
@@ -102,7 +102,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
         }, 2000, 30000);
 
-        sendGetChain();
+        chainAskTimer.scheduleAtFixedRate(new TimerTask() {
+
+            public void run() {
+                sendGetChain();
+            }
+        }, 1000, secToAskForChain * 1000);
+
     }
 
     @Override
@@ -110,6 +116,8 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         byte[] payload = (byte[]) msg;
 
         logger.info("[Recv msg: [{}] ]", Hex.toHexString(payload));
+
+        EthereumListener listener = WorldManager.getInstance().getListener();
 
         byte command = RLP.getCommandCode(payload);
 
@@ -122,9 +130,10 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             logger.info(helloMessage.toString());
             if (peerListener != null) peerListener.console(helloMessage.toString());
 
-            EthereumListener listener = WorldManager.getInstance().getListener();
-            if (listener != null)
+            if (listener != null){
                 listener.trace(String.format("Got handshake: [ %s ]", helloMessage.toString()));
+                listener.onRecvMessage(helloMessage);
+            }
 
         }
         // got DISCONNECT
@@ -137,6 +146,11 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             logger.info(disconnectMessage.toString());
             if (peerListener != null) peerListener.console(disconnectMessage.toString());
+
+            if (listener != null)
+                listener.onRecvMessage(disconnectMessage);
+
+
         }
 
         // got PING send pong
@@ -144,6 +158,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             if (peerListener != null) peerListener.console("[Recv: PING]");
             msgQueue.receivedMessage(PING_MESSAGE);
             sendPong();
+
+            if (listener != null)
+                listener.onRecvMessage(PING_MESSAGE);
         }
 
         // got PONG mark it
@@ -151,6 +168,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             if (peerListener != null) peerListener.console("[Recv: PONG]");
             this.lastPongTime = System.currentTimeMillis();
             msgQueue.receivedMessage(PONG_MESSAGE);
+
+            if (listener != null)
+                listener.onRecvMessage(PONG_MESSAGE);
         }
 
         // got GETPEERS send peers
@@ -160,6 +180,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             msgQueue.receivedMessage(GET_PEERS_MESSAGE);
 
             // TODO: send peer list
+
+            if (listener != null)
+                listener.onRecvMessage(GET_PEERS_MESSAGE);
         }
 
         // got PEERS
@@ -173,6 +196,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             logger.info(peersMessage.toString());
             if (peerListener != null) peerListener.console(peersMessage.toString());
+
+            if (listener != null)
+                listener.onRecvMessage(peersMessage);
         }
 
         // got TRANSACTIONS
@@ -189,6 +215,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());
+
+            if (listener != null)
+                listener.onRecvMessage(transactionsMessage);
         }
 
         // got BLOCKS
@@ -210,7 +239,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 chainAskTimer.cancel();
                 chainAskTimer.purge();
                 chainAskTimer = new Timer();
-                chainAskTimer.schedule(new TimerTask() {
+                chainAskTimer.scheduleAtFixedRate(new TimerTask() {
 
                     public void run() {
                         sendGetChain();
@@ -228,7 +257,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 chainAskTimer.cancel();
                 chainAskTimer.purge();
                 chainAskTimer = new Timer();
-                chainAskTimer.schedule(new TimerTask() {
+                chainAskTimer.scheduleAtFixedRate(new TimerTask() {
 
                     public void run() {
                         sendGetChain();
@@ -240,6 +269,8 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             WorldManager.getInstance().getBlockchain().getBlockQueue().addBlocks(blockList);
             if (peerListener != null) peerListener.console(blocksMessage.toString());
 
+            if (listener != null)
+                listener.onRecvMessage(blocksMessage);
         }
 
         // got GETCHAIN
@@ -250,10 +281,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             RLPList rlpList = RLP.decode2(payload);
             GetChainMessage getChainMessage = new GetChainMessage(rlpList);
 
-
+            // todo: send blocks
 
             logger.info(getChainMessage.toString());
             if (peerListener != null) peerListener.console(getChainMessage.toString());
+
+            if (listener != null)
+                listener.onRecvMessage(getChainMessage);
         }
 
         // got NOTINCHAIN
@@ -266,6 +300,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             logger.info(notInChainMessage.toString());
             if (peerListener != null) peerListener.console(notInChainMessage.toString());
+
+            if (listener != null)
+                listener.onRecvMessage(notInChainMessage);
         }
 
         // got GETTRANSACTIONS
@@ -281,6 +318,10 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 //                    new TransactionsMessage(new ArrayList(pendingTxList));
 
 //            sendMsg(txMsg, ctx);
+
+            if (listener != null)
+                listener.onRecvMessage(GET_TRANSACTIONS_MESSAGE);
+
         }
     }
 
@@ -302,22 +343,26 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     public void sendMsg(Message msg) {
         msgQueue.sendMessage(msg);
+
+        EthereumListener listener = WorldManager.getInstance().getListener();
+        if (listener != null)
+            listener.onSendMessage(msg);
     }
 
     private void sendPing() {
-        msgQueue.sendMessage(PING_MESSAGE);
+        sendMsg(PING_MESSAGE);
     }
 
     private void sendPong() {
-        msgQueue.sendMessage(PONG_MESSAGE);
+        sendMsg(PONG_MESSAGE);
     }
 
     private void sendGetPeers() {
-        msgQueue.sendMessage(GET_PEERS_MESSAGE);
+        sendMsg(GET_PEERS_MESSAGE);
     }
 
     private void sendGetTransactions() {
-        msgQueue.sendMessage(GET_TRANSACTIONS_MESSAGE);
+        sendMsg(GET_TRANSACTIONS_MESSAGE);
     }
 
     private void sendGetChain() {
@@ -331,6 +376,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         byte[] hash = lastBlock.getHash();
         GetChainMessage chainMessage =
                 new GetChainMessage( SystemProperties.CONFIG.maxBlocksAsk(), hash);
-        msgQueue.sendMessage(chainMessage);
+        sendMsg(chainMessage);
     }
 }
