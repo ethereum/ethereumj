@@ -378,4 +378,12 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 new GetChainMessage( SystemProperties.CONFIG.maxBlocksAsk(), hash);
         sendMsg(chainMessage);
     }
+
+    public void killTimers(){
+        chainAskTimer.cancel();
+        chainAskTimer.purge();
+
+        timer.cancel();
+        timer.purge();
+   }
 }

@@ -7,6 +7,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.EthereumMessageSizeEstimator;
 import org.ethereum.net.PeerListener;
@@ -16,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -76,10 +78,28 @@ public class ClientPeer {
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
 
+
         } catch (InterruptedException ie) {
            logger.error("-- ClientPeer: catch (InterruptedException ie) --", ie);
         } finally {
             workerGroup.shutdownGracefully();
+
+            handler.killTimers();
+
+            List<PeerData> peers =  WorldManager.getInstance().getPeers();
+
+            for (PeerData peer : peers){
+                if (host.equals(peer.getInetAddress().getHostAddress()) &&
+                        port == peer.getPort()){
+                    peer.setOnline(false);
+                }
+            }
+
+            EthereumListener listener = WorldManager.getInstance().getListener();
+            if (listener != null){
+                listener.onPeerDisconnect(host, port);
+            }
+
         }
     }
 

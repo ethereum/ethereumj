@@ -15,6 +15,7 @@ import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  *  Generic interface for Ethereum database
@@ -26,7 +27,7 @@ import org.slf4j.LoggerFactory;
  */
 public class DatabaseImpl implements Database {
 	
-	private static Logger logger = LoggerFactory.getLogger(DatabaseImpl.class);
+	private static Logger logger = LoggerFactory.getLogger("db");
 	private DB db;
 	private String name;
     
@@ -51,6 +52,23 @@ public class DatabaseImpl implements Database {
 //			logger.debug("Showing database stats");
 //			String stats = DATABASE.getProperty("leveldb.stats");
 //			logger.debug(stats);
+
+            if (logger.isTraceEnabled()){
+
+                logger.trace("dump for: {}", fileLocation.toString());
+                DBIterator iter =  db.iterator();
+
+                while(iter.hasNext()){
+                    byte[] key   = iter.peekNext().getKey();
+                    byte[] value = iter.peekNext().getValue();
+
+                    logger.trace("key={}, value={}", Hex.toHexString(key), Hex.toHexString(value));
+                    iter.next();
+                }
+
+
+            }
+
 		} catch (IOException ioe) {
 			logger.error(ioe.getMessage(), ioe);
 			throw new RuntimeException("Can't initialize database");

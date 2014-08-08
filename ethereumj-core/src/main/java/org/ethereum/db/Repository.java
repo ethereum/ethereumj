@@ -187,7 +187,7 @@ public class Repository {
 
         byte[] accountStateRLP = accountStateDB.get(addr);
 
-        if (accountStateRLP.length == 0)
+        if (accountStateRLP == null || accountStateRLP.length == 0)
             return null;
 
         AccountState state =  new AccountState(accountStateRLP);

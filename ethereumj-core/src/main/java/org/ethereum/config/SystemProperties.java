@@ -32,6 +32,7 @@ public class SystemProperties {
     private static String  DEFAULT_DATABASE_DIR = System.getProperty("user.dir");
     private static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
     private static Boolean DEFAULT_PLAY_VM = true;
+    private static Boolean DEFAULT_BLOCKCHAIN_ONLY = false;
     private static int     DEFAULT_TRACE_STARTBLOCK = -1;
     private static byte    DEFAULT_MAX_BLOCKS_ASK = 10;
     private static int     DEFAULT_MAX_BLOCKS_QUEUED = 300;
@@ -174,6 +175,12 @@ public class SystemProperties {
         if(prop.isEmpty()) return DEFAULT_PLAY_VM;
         return Boolean.parseBoolean(prop.getProperty("play.vm"));
     }
+
+    public Boolean blockChainOnly() {
+        if(prop.isEmpty()) return DEFAULT_BLOCKCHAIN_ONLY;
+        return Boolean.parseBoolean(prop.getProperty("blockchain.only"));
+    }
+
 
     public Byte maxBlocksAsk() {
         if(prop.isEmpty()) return DEFAULT_MAX_BLOCKS_ASK;
