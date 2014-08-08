@@ -14,12 +14,15 @@ public class Value {
 	private Object value;
 
 	public static Value fromRlpEncoded(byte[] data) {
-		if (data.length != 0) {
+		if (data != null && data.length != 0) {
 			return new Value(RLP.decode(data, 0).getDecoded());
 		} return null;
 	}
 
 	public Value(Object obj) {
+
+        if (obj == null) return;
+
 		if (obj instanceof Value) {
 			this.value = ((Value) obj).asObj();
 		} else {

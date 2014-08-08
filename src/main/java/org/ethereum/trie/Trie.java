@@ -135,7 +135,8 @@ public class Trie implements TrieFacade {
         }
         byte[] k = binToNibbles(key);
         Value c = new Value( this.get(this.root, k) );
-        return c.asBytes();
+
+        return (c == null)? null : c.asBytes();
     }
 
     /**
@@ -172,6 +173,7 @@ public class Trie implements TrieFacade {
         }
 
         Value currentNode = this.getNode(node);
+        if (currentNode == null) return null;
 
         if (currentNode.length() == PAIR_SIZE) {
             // Decode the key

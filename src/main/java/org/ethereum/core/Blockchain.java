@@ -166,13 +166,22 @@ public class Blockchain {
     public void processBlock(Block block) {
     	if(block.isValid()) {
             if (!block.isGenesis()) {
-        		for (Transaction tx : block.getTransactionsList())
-        			// TODO: refactor the wallet pending transactions to the world manager
-        			WorldManager.getInstance().addWalletTransaction(tx);
-                this.applyBlock(block);
-                WorldManager.getInstance().getWallet().processBlock(block);
+
+                if (!CONFIG.blockChainOnly()) {
+
+                    for (Transaction tx : block.getTransactionsList())
+                        // TODO: refactor the wallet pending transactions to the world manager
+                        WorldManager.getInstance().addWalletTransaction(tx);
+
+                    this.applyBlock(block);
+
+                    WorldManager.getInstance().getWallet().processBlock(block);
+
+                    repository.dumpState(block.getNumber(), 0,
+                            null);
+                }
             }
-            this.storeBlock(block);		
+            this.storeBlock(block);
     	} else {
     		logger.warn("Invalid block with nr: {}", block.getNumber());
     	}
@@ -196,12 +205,10 @@ public class Blockchain {
 		for (Block uncle : block.getUncleList()) {
 			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
 		}
-
-        repository.dumpState(block.getNumber(), 0,
-                null);
 	}
     
-    public void storeBlock(Block block) {   	
+    public void storeBlock(Block block) {
+
         /* Debug check to see if the state is still as expected */
         if(logger.isWarnEnabled()) {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
