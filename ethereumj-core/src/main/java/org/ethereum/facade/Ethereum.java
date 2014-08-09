@@ -24,9 +24,10 @@ public interface Ethereum {
     public void connect(String ip, int port);
 
     public Block getBlockByIndex(long index);
-
     public long getBlockChainSize();
 
     public void addListener(EthereumListener listener);
+
+    public void loadBlockChain();
 
 }

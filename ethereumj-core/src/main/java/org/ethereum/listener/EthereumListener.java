@@ -14,6 +14,7 @@ public interface EthereumListener {
 
     public void trace(String output);
     public void onBlock(Block block);
+    public void onPreloadedBlock(Block block);
     public void onRecvMessage(Message message);
     public void onSendMessage(Message message);
     public void onPeerDisconnect(String host, long port);
