@@ -7,6 +7,8 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.json.JSONHelper;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
@@ -127,6 +129,12 @@ public class Repository {
             		this.addBalance   (Hex.decode(address), Genesis.getPremineAmount());
 				}
                 blockchain.storeBlock(Genesis.getInstance());
+
+                EthereumListener listener =  WorldManager.getInstance().getListener();
+                if (listener != null){
+                    listener.onPreloadedBlock(Genesis.getInstance());
+                }
+
                	logger.debug("Block #{} -> {}", Genesis.NUMBER, blockchain.getLastBlock().toFlatString());
                	dumpState(0, 0, null);
             } else {
@@ -136,6 +144,11 @@ public class Repository {
             		Block block = new Block(iterator.next().getValue());
             		blockchain.getBlockCache().put(block.getNumber(), block.getHash());
             		blockchain.setLastBlock(block);
+
+                    EthereumListener listener =  WorldManager.getInstance().getListener();
+                    if (listener != null){
+                        listener.onPreloadedBlock(block);
+                    }
     	            logger.debug("Block #{} -> {}", block.getNumber(), block.toFlatString());
             	}
 				logger.info(

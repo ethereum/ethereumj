@@ -23,6 +23,11 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
+    public void onPreloadedBlock(Block block) {
+
+    }
+
+    @Override
     public void onRecvMessage(Message message) {
 
     }

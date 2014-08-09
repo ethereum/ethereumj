@@ -23,7 +23,7 @@ public class EthereumImpl implements Ethereum {
     private Logger logger = LoggerFactory.getLogger("facade");
 
     public EthereumImpl() {
-        WorldManager.getInstance().loadBlockchain();
+
     }
 
     /**
@@ -112,4 +112,9 @@ public class EthereumImpl implements Ethereum {
         }
     }
 
+
+    @Override
+    public void loadBlockChain() {
+        WorldManager.getInstance().loadBlockchain();
+    }
 }
