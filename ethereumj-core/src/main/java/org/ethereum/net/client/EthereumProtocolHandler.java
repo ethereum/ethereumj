@@ -46,7 +46,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private final Timer timer = new Timer();
 
-    private long lastPongTime = 0;
     private boolean tearDown = false;
 
     private PeerListener peerListener;
@@ -73,17 +72,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             public void run() {
 
-                if (lastPongTime == 0) lastPongTime = System.currentTimeMillis();
                 if (tearDown) this.cancel();
-
-/*             todo: temporary cancel ping rate test
-                long currTime = System.currentTimeMillis();
-                if (currTime - lastPongTime > 30000) {
-                    logger.info("No ping answer for [30 sec]");
-                    throw new RuntimeException("No ping return for 30 [sec]");
-                }
-*/
-
                 sendPing();
             }
         }, 2000, 5000);
@@ -166,7 +155,6 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         // got PONG mark it
         if (Command.fromInt(command) == PONG) {
             if (peerListener != null) peerListener.console("[Recv: PONG]");
-            this.lastPongTime = System.currentTimeMillis();
             msgQueue.receivedMessage(PONG_MESSAGE);
 
             if (listener != null)
