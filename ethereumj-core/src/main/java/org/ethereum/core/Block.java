@@ -16,7 +16,9 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * The block in Ethereum is the collection of relevant pieces of information 
@@ -42,12 +44,12 @@ public class Block {
 
 	private BlockHeader header;
 	
-    /* Transactions */     
-	private List<TransactionReceipt> txReceiptList = new ArrayList<TransactionReceipt>();
-	private List<Transaction> transactionsList = new ArrayList<Transaction>();
+    /* Transactions */
+    private List<TransactionReceipt> txReceiptList = new CopyOnWriteArrayList <TransactionReceipt>() ;
+	private List<Transaction> transactionsList = new CopyOnWriteArrayList<Transaction>();
 	
 	/* Uncles */
-    private List<Block> uncleList = new ArrayList<Block>();
+    private List<Block> uncleList = new CopyOnWriteArrayList<Block>();
 
     /* Private */ 	
 	
@@ -72,7 +74,16 @@ public class Block {
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
 		this.transactionsList = transactionsList;
+        if (this.transactionsList == null){
+            this.transactionsList = new CopyOnWriteArrayList<Transaction>();
+        }
+
         this.uncleList = uncleList;
+        if (this.uncleList == null){
+
+            this.uncleList = new CopyOnWriteArrayList<Block>();
+        }
+
         this.parsed = true;
     }
 
@@ -188,22 +199,16 @@ public class Block {
 
     public List<Transaction> getTransactionsList() {
         if (!parsed) parseRLP();
-        if (transactionsList == null)
-        	transactionsList = new ArrayList<>();
         return transactionsList;
     }
 
     public List<TransactionReceipt> getTxReceiptList() {
         if (!parsed) parseRLP();
-        if (txReceiptList == null)
-            txReceiptList = new ArrayList<>();
         return txReceiptList;
     }
 
     public List<Block> getUncleList() {
         if (!parsed) parseRLP();
-        if (uncleList == null)
-        	uncleList = new ArrayList<>();
         return uncleList;
     }
 

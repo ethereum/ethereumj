@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Blockchain;
@@ -40,7 +41,7 @@ public class WorldManager {
 	private Wallet wallet;
 
     private PeerDiscovery peerDiscovery;
-    private List<PeerData> peers = Collections.synchronizedList(new ArrayList<PeerData>());
+    private List<PeerData> peers = new CopyOnWriteArrayList<PeerData>();
     private ClientPeer activePeer;
 
     // This map of transaction designed
