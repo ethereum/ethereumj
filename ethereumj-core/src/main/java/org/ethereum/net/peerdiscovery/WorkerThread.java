@@ -17,7 +17,7 @@ public class WorkerThread implements Runnable {
 
     ThreadPoolExecutor poolExecutor;
     private PeerData peerData;
-    private PeerTaster peerTaster = new PeerTaster();
+    private PeerTaster peerTaster;
 
     public WorkerThread(PeerData peerData, ThreadPoolExecutor poolExecutor) {
         this.poolExecutor = poolExecutor;
@@ -37,6 +37,8 @@ public class WorkerThread implements Runnable {
     private void processCommand() {
 
         try {
+
+            peerTaster = new PeerTaster();
             peerTaster.connect(peerData.getInetAddress().getHostAddress(), peerData.getPort());
             byte capabilities = peerTaster.getCapabilities();
 
@@ -45,6 +47,10 @@ public class WorkerThread implements Runnable {
             logger.info("Peer: " + peerData.toString() + " isOnline: true");
         }
         catch (Throwable e) {
+            if (peerData.isOnline() == true)
+                logger.info("Peer: [ {} ] got offline, due: [ {} ]",
+                        peerData.getInetAddress().getHostAddress(),
+                        e);
             logger.info("Peer: " + peerData.toString() + " isOnline: false");
             peerData.setOnline(false);
         }
