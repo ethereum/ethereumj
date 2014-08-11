@@ -5,20 +5,19 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
-
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.Command;
 import org.ethereum.net.PeerListener;
-import org.ethereum.net.message.*;
+import org.ethereum.net.message.DisconnectMessage;
+import org.ethereum.net.message.HelloMessage;
+import org.ethereum.net.message.PeersMessage;
+import org.ethereum.net.message.StaticMessages;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Timer;
-import java.util.TimerTask;
 
 import static org.ethereum.net.Command.*;
 
