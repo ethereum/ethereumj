@@ -31,7 +31,6 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
     private Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-    private Timer timer = null;
     private final static byte[] MAGIC_PREFIX = {(byte)0x22, (byte)0x40, (byte)0x08, (byte)0x91};
 
     private long lastPongTime = 0;
@@ -58,7 +57,6 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         byte[] helloLength =ByteUtil.calcPacketLength(helloMessage.getPayload());
 
         final ByteBuf buffer = ctx.alloc().buffer(helloMessage.getPayload().length + 8);
-        timer = new Timer();
 
         buffer.writeBytes(MAGIC_PREFIX);
         buffer.writeBytes(helloLength);
@@ -66,25 +64,6 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         logger.info("Send: " + helloMessage.toString());
         ctx.writeAndFlush(buffer);
 
-        // sample for pinging in background
-        timer.scheduleAtFixedRate(new TimerTask() {
-
-            public void run() {
-
-                if (lastPongTime == 0) lastPongTime = System.currentTimeMillis();
-                if (tearDown) this.cancel();
-
-                long currTime = System.currentTimeMillis();
-                if (currTime - lastPongTime > 30000) {
-                    logger.info("No ping answer for [30 sec]");
-                    throw new Error("No ping return for 30 [sec]");
-                    // TODO: shutdown the handler
-                }
-                logger.info("[Send: PING]");
-                if (peerListener != null) peerListener.console("[Send: PING]");
-                sendPing(ctx);
-            }
-        }, 2000, 5000);
     }
 
     @Override
@@ -144,10 +123,6 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
             sendDisconnectNice(ctx);
 
-            timer.cancel();
-            timer.purge();
-            timer = null;
-
             ctx.close().sync();
             ctx.disconnect().sync();
         }
@@ -165,14 +140,9 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         this.tearDown = true;
         logger.info("Lost connection to the server");
     	logger.error(cause.getMessage(), cause);
-        timer.cancel();
-        timer.purge();
-        timer = null;
 
         ctx.close().sync();
         ctx.disconnect().sync();
-
-        throw new Error("Peer is dead");
     }
 
     private void sendPing(ChannelHandlerContext ctx) {

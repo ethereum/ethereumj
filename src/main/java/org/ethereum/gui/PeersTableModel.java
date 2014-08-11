@@ -3,8 +3,9 @@ package org.ethereum.gui;
 import java.net.InetAddress;
 import java.net.URL;
 import java.util.*;
+import java.util.Timer;
 
-import javax.swing.ImageIcon;
+import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 
 import org.ethereum.db.IpGeoDB;
@@ -27,7 +28,14 @@ public class PeersTableModel extends AbstractTableModel {
 	public PeersTableModel() {
 		updater.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
-				updateModel();
+                SwingUtilities.invokeLater(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                updateModel();
+                            }
+                        }
+                );
 			}
 		}, 0, 100);
 	}
@@ -90,7 +98,11 @@ public class PeersTableModel extends AbstractTableModel {
     public void updateModel() {
         synchronized (peerInfoList) {
             peerInfoList.clear();
-            for (PeerData peer : WorldManager.getInstance().getPeers()) {
+
+            List<PeerData> peers = WorldManager.getInstance().getPeers();
+            for (int i = 0; i < peers.size(); ++i) {
+
+                PeerData peer = peers.get(i);
                 InetAddress addr = peer.getInetAddress();
                 Location cr = IpGeoDB.getLocationForIp(addr);
                 peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline()));

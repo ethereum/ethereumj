@@ -1,6 +1,8 @@
 package org.ethereum.net.peerdiscovery;
 
 import org.ethereum.net.client.PeerData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.*;
@@ -19,6 +21,8 @@ public class PeerDiscovery {
     private ThreadPoolExecutor executorPool;
     private PeerDiscoveryMonitorThread monitor;
     private List<PeerData> peers;
+
+    Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     private boolean started = false;
 
@@ -50,6 +54,8 @@ public class PeerDiscovery {
     }
 
     public void addNewPeerData(PeerData peerData) {
+
+        logger.debug("add new peer for discovery: {}", peerData);
         executorPool.execute(new WorkerThread(peerData, executorPool));
     }
 
