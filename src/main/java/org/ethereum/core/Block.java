@@ -49,7 +49,7 @@ public class Block {
 	private List<Transaction> transactionsList = new CopyOnWriteArrayList<Transaction>();
 	
 	/* Uncles */
-    private List<Block> uncleList = new CopyOnWriteArrayList<Block>();
+    private List<BlockHeader> uncleList = new CopyOnWriteArrayList<BlockHeader>();
 
     /* Private */ 	
 	
@@ -69,7 +69,7 @@ public class Block {
 	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
 			byte[] difficulty, long number, long minGasPrice, long gasLimit,
 			long gasUsed, long timestamp, byte[] extraData, byte[] nonce,
-			List<Transaction> transactionsList, List<Block> uncleList) {
+			List<Transaction> transactionsList, List<BlockHeader> uncleList) {
 		this.header = new BlockHeader(parentHash, unclesHash, coinbase,
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
@@ -81,7 +81,7 @@ public class Block {
         this.uncleList = uncleList;
         if (this.uncleList == null){
 
-            this.uncleList = new CopyOnWriteArrayList<Block>();
+            this.uncleList = new CopyOnWriteArrayList<BlockHeader>();
         }
 
         this.parsed = true;
@@ -103,7 +103,9 @@ public class Block {
         // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
         for (RLPElement rawUncle : uncleBlocks) {
-            Block blockData = new Block(rawUncle.getRLPData());
+
+            RLPList uncleHeader = (RLPList) rawUncle;
+            BlockHeader blockData = new BlockHeader(uncleHeader);
             this.uncleList.add(blockData);
         }
         this.parsed = true;
@@ -207,7 +209,7 @@ public class Block {
         return txReceiptList;
     }
 
-    public List<Block> getUncleList() {
+    public List<BlockHeader> getUncleList() {
         if (!parsed) parseRLP();
         return uncleList;
     }
@@ -219,9 +221,11 @@ public class Block {
 
     @Override
     public String toString() {
+
         if (!parsed) parseRLP();
 
         toStringBuff.setLength(0);
+        toStringBuff.append(Hex.toHexString(this.rlpEncoded)).append("\n");
         toStringBuff.append("BlockData [\n");
         toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
