@@ -456,6 +456,8 @@ public class MessagesTest {
     @Test /* Block msg decode - found bug tool */
     public void test17() throws URISyntaxException, IOException {
 
+        // f8b3a014d130c317eb9440123b1db01bfb1f2e081d83200216bc032d7de2fc9ff3b46ba01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794e559de5527492bcb42ec68d07df0742a98ec3f1ea063bb3d8f8428483b2dfd838bef3e7fba6df53fd088f176a4831065f36b93346a808372c7b0821e448609184e72a0008301e848808453c9b36980a078cc350ffafd409d918e0a015dcfa0bddeec4637fe266da36298577aa13173ad
+
         URL rlpMsg_1 = ClassLoader
                 .getSystemResource("rlp/rlp-msg-1.dmp");
 
@@ -463,16 +465,22 @@ public class MessagesTest {
         byte[] strData = Files.readAllBytes(file.toPath());
         byte[] data = Hex.decode(new String(strData));
 
-        RLPList rlpList = RLP.decode2(data);
+        BlocksMessage msg = new BlocksMessage(data);
 
+        int size = msg.getBlockDataList().size();
+        for (int i = 0; i < size; ++i){
 
-        BlocksMessage msg = new BlocksMessage(rlpList);
-        msg.getBlockDataList().get(0);
+            Block block = msg.getBlockDataList().get(i);
 
+            int unclesSize = block.getUncleList().size();
+            for (int j = 0; j < unclesSize; ++j){
 
-        System.out.println(msg);
+                System.out.println("*** uncle: " + Hex.toHexString( block.getUncleList().get(j).getCoinbase() ));
+            }
 
-
+            System.out.println(block);
+            System.out.println("===============================");
+        }
     }
 }
 
