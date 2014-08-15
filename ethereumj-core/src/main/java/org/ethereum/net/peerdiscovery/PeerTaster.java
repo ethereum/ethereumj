@@ -6,6 +6,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.net.client.EthereumFrameDecoder;
+import org.ethereum.net.message.HelloMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -62,8 +63,8 @@ public class PeerTaster {
         }
     }
 
-    public byte getCapabilities() {
-        return handler.getCapabilities();
+    public HelloMessage getHandshake() {
+        return handler.getHandshake();
     }
 
 }

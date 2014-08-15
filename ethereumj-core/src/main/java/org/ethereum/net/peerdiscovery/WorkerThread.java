@@ -40,10 +40,9 @@ public class WorkerThread implements Runnable {
 
             peerTaster = new PeerTaster();
             peerTaster.connect(peerData.getInetAddress().getHostAddress(), peerData.getPort());
-            byte capabilities = peerTaster.getCapabilities();
 
             peerData.setOnline(true);
-            peerData.setCapabilities(capabilities);
+            peerData.setHandshake(peerTaster.getHandshake());
             logger.info("Peer: " + peerData.toString() + " isOnline: true");
         }
         catch (Throwable e) {
@@ -53,6 +52,8 @@ public class WorkerThread implements Runnable {
                         e);
             logger.info("Peer: " + peerData.toString() + " isOnline: false");
             peerData.setOnline(false);
+        } finally {
+            peerData.setLastCheckTime(System.currentTimeMillis());
         }
     }
 

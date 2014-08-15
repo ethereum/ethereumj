@@ -37,7 +37,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
 
     private PeerListener peerListener;
 
-    private byte capabilities = 0;
+    private HelloMessage handshake = null;
 
     public EthereumPeerTasterHandler() {    }
 
@@ -79,7 +79,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
             RLPList rlpList = RLP.decode2(payload);
             
             HelloMessage helloMessage = new HelloMessage(rlpList);
-            capabilities = helloMessage.getCapabilities();
+            handshake = helloMessage;
             logger.info(helloMessage.toString());
 
             sendGetPeers(ctx);
@@ -170,7 +170,9 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         ctx.writeAndFlush(buffer);
     }
 
-    public byte getCapabilities() {
-        return capabilities;
+    public HelloMessage getHandshake(){
+        return this.handshake;
     }
+
+
 }
