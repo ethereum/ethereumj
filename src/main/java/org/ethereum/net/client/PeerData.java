@@ -1,5 +1,6 @@
 package org.ethereum.net.client;
 
+import org.ethereum.net.message.HelloMessage;
 import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetAddress;
@@ -16,6 +17,7 @@ public class PeerData {
 	private int    port;
 	private byte[] peerId;
     private byte   capabilities;
+    private HelloMessage handshake;
 
 	private transient boolean isOnline = false;
 	private transient long    lastCheckTime = 0;
@@ -50,7 +52,7 @@ public class PeerData {
     }
 
     public boolean isOnline() {
-        if (capabilities < 7) return false;
+        if (getCapabilities() < 7) return false;
         return isOnline;
     }
 
@@ -67,11 +69,19 @@ public class PeerData {
     }
 
     public byte getCapabilities() {
-        return capabilities;
+
+        if (handshake != null)
+            return handshake.getCapabilities();
+        else
+            return 0;
     }
 
-    public void setCapabilities(byte capabilities) {
-        this.capabilities = capabilities;
+    public HelloMessage getHandshake() {
+        return handshake;
+    }
+
+    public void setHandshake(HelloMessage handshake) {
+        this.handshake = handshake;
     }
 
     @Override

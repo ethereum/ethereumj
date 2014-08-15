@@ -37,8 +37,8 @@ public class PeersTableWindow extends JFrame {
 
 		// Set the frame characteristics
 		setTitle("Ethereum Peers");
-		setSize(355, 400);
-		setLocation(815, 30);
+		setSize(515, 400);
+		setLocation(615, 30);
 
 		java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
 		Toolkit kit = Toolkit.getDefaultToolkit();
@@ -57,7 +57,7 @@ public class PeersTableWindow extends JFrame {
 		table = new JTable();
 		table.setModel(new PeersTableModel());
 
-		table.setFont(new Font("Courier New", Font.PLAIN, 18));
+		table.setFont(new Font("Courier New", Font.PLAIN, 15));
 		table.setForeground(Color.GRAY);
 		table.setTableHeader(null);
 
@@ -71,7 +71,8 @@ public class PeersTableWindow extends JFrame {
 		table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
 		table.getColumnModel().getColumn(0).setPreferredWidth(60);
 		table.getColumnModel().getColumn(1).setPreferredWidth(200);
-		table.getColumnModel().getColumn(2).setPreferredWidth(60);
+        table.getColumnModel().getColumn(2).setPreferredWidth(160);
+        table.getColumnModel().getColumn(3).setPreferredWidth(60);
 
 		table.setRowMargin(3);
 		table.setRowHeight(50);

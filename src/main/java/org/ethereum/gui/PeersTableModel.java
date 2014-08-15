@@ -11,6 +11,7 @@ import javax.swing.table.AbstractTableModel;
 import org.ethereum.db.IpGeoDB;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerData;
+import org.ethereum.net.message.HelloMessage;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;
@@ -43,7 +44,8 @@ public class PeersTableModel extends AbstractTableModel {
     public String getColumnName(int column) {
         if (column == 0) return "Location";
         if (column == 1) return "IP";
-        if (column == 2) return "Live";
+        if (column == 2) return "Environment";
+        if (column == 3) return "Live";
         else return "";
     }
 
@@ -54,7 +56,8 @@ public class PeersTableModel extends AbstractTableModel {
     public Class<?> getColumnClass(int column) {
         if (column == 0) return ImageIcon.class;
         if (column == 1) return String.class;
-        if (column == 2) return ImageIcon.class;
+        if (column == 2) return String.class;
+        if (column == 3) return ImageIcon.class;
         else return String.class;
     }
 
@@ -74,10 +77,19 @@ public class PeersTableModel extends AbstractTableModel {
         }
         if (column == 1) 
         	return peerInfo.getIp().getHostAddress();
+
         if (column == 2) {
 
+            if (peerInfo.getLastAccessed() == 0)
+                return "?";
+            else
+                return (System.currentTimeMillis() - peerInfo.getLastAccessed()) / 1000 + " seconds ago";
+        }
+
+        if (column == 3) {
+
             ImageIcon flagIcon = null;
-            if (peerInfo.connected) {
+            if (peerInfo.isConnected()) {
                 flagIcon = Utils.getImageIcon("connected.png");
             } else {
                 flagIcon = Utils.getImageIcon("disconnected.png");
@@ -92,7 +104,7 @@ public class PeersTableModel extends AbstractTableModel {
     }
 
     public int getColumnCount() {
-        return 3;
+        return 4;
     }
 
     public void updateModel() {
@@ -105,7 +117,7 @@ public class PeersTableModel extends AbstractTableModel {
                 PeerData peer = peers.get(i);
                 InetAddress addr = peer.getInetAddress();
                 Location cr = IpGeoDB.getLocationForIp(addr);
-                peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline()));
+                peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getHandshake(), peer.getLastCheckTime()));
             }
         }
     }
@@ -115,8 +127,12 @@ public class PeersTableModel extends AbstractTableModel {
         Location         location;
         InetAddress      ip;
         boolean          connected;
+        HelloMessage     handshake;
+        long lastAccessed = 0;
 
-		private PeerInfo(Location location, InetAddress ip, boolean isConnected) {
+
+		private PeerInfo(Location location, InetAddress ip, boolean isConnected,
+                         HelloMessage handshake, long lastAccessed) {
 
             if (location == null)
                 this.location = new Location();
@@ -125,6 +141,8 @@ public class PeersTableModel extends AbstractTableModel {
 
             this.ip = ip;
             this.connected = isConnected;
+            this.handshake = handshake;
+            this.lastAccessed = lastAccessed;
         }
 
         private Location getLocation() {
@@ -137,6 +155,14 @@ public class PeersTableModel extends AbstractTableModel {
 
         private boolean isConnected() {
             return connected;
+        }
+
+        public HelloMessage getHandshake() {
+            return handshake;
+        }
+
+        public long getLastAccessed() {
+            return lastAccessed;
         }
     }
 }
