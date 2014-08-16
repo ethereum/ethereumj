@@ -15,12 +15,10 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 public class AdvancedDeviceUtils {
 
-    public static void adjustDetailedTracing(long blockNum){
+    public static void adjustDetailedTracing(long blockNum) {
         // here we can turn on the detail tracing in the middle of the chain
         if (blockNum >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
-            URL configFile = ClassLoader
-                    .getSystemResource("log4j-detailed.properties");
-
+            URL configFile = ClassLoader.getSystemResource("log4j-detailed.properties");
             PropertyConfigurator.configure(configFile);
         }
     }
