@@ -199,7 +199,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             List<Transaction> txList = transactionsMessage.getTransactions();
             for(Transaction tx : txList)
 				WorldManager.getInstance().getBlockchain()
-						.applyTransaction(null, tx, null);
+						.applyTransaction(null, tx);
 
             logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());

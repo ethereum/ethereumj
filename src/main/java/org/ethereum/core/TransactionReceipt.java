@@ -23,6 +23,14 @@ public class TransactionReceipt {
         this.postTxState = postTxState;
         this.cumulativeGas = cumulativeGas;
     }
+    
+    public Transaction getTransaction() {
+    	return transaction;
+    }
+    
+    public byte[] getPostTxState() {
+    	return postTxState;
+    }
 
     public byte[] getEncoded() {
 

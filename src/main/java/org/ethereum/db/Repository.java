@@ -16,8 +16,10 @@ import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -25,7 +27,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Map;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -136,7 +137,7 @@ public class Repository {
                 }
 
                	logger.debug("Block #{} -> {}", Genesis.NUMBER, blockchain.getLastBlock().toFlatString());
-               	dumpState(0, 0, null);
+               	dumpState(Genesis.getInstance(), 0, 0, null);
             } else {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
 
@@ -368,13 +369,14 @@ public class Repository {
         return stateDB.dumpKeys();
     }
 
-    public void dumpState(long blockNumber, int txNumber, byte[] txHash) {
+    public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
 
-        if (!CONFIG.dumpFull()) return;
+		if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
+			return;
 
         // todo: dump block header and the relevant tx
 
-        if (blockNumber == 0 && txNumber == 0)
+        if (block.getNumber() == 0 && txNumber == 0)
             if (CONFIG.dumpCleanOnRestart()) {
                 try {FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
             }
@@ -383,10 +385,10 @@ public class Repository {
 
         String fileName = "";
         if (txHash != null)
-             fileName = String.format("%d_%d_%s.dmp",
-                        	blockNumber, txNumber, Hex.toHexString(txHash).substring(0, 8));
+			fileName = String.format("%d_%d_%s.dmp", block.getNumber(), txNumber, 
+					Hex.toHexString(txHash).substring(0, 8));
         else
-            fileName = String.format("%d_c.dmp", blockNumber);
+            fileName = String.format("%d_c.dmp", block.getNumber());
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
@@ -400,35 +402,16 @@ public class Repository {
             bw = new BufferedWriter(fw);
 
             List<ByteArrayWrapper> keys = this.detailsDB.dumpKeys();
-
-            // dump json file
-            for (ByteArrayWrapper key : keys) {
-
-                byte[] keyBytes = key.getData();
-                AccountState    state    = getAccountState(keyBytes);
-                ContractDetails details  = getContractDetails(keyBytes);
-
-                BigInteger nonce   = (state != null)? state.getNonce():null;
-                BigInteger balance = (state != null)? state.getBalance():null;
-
-                byte[] stateRoot = (state != null)? state.getStateRoot():null;
-                byte[] codeHash = (state != null)? state.getCodeHash():null;
-
-                byte[] code = details.getCode();
-                Map<DataWord, DataWord> storage = details.getStorage();
-
-                String accountLine = JSONHelper.dumpLine(key.getData(),
-                        (nonce != null)? BigIntegers.asUnsignedByteArray(nonce) : null,
-                        (nonce != null)? BigIntegers.asUnsignedByteArray(balance): null,
-                        stateRoot, codeHash, code, storage);
-
-                bw.write(accountLine);
-                bw.write("\n");
-            }
+            
+            JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
+            ObjectNode blockNode = jsonFactory.objectNode();
+            JSONHelper.dumpBlock(blockNode, block, gasUsed, this.getWorldState().getRootHash(), keys, this);
+            
+            bw.write(blockNode.toString());
+            bw.write("\n");
 
 			String rootHash = Hex.toHexString(this.getWorldState().getRootHash());
-            bw.write(
-                    String.format(" => Global State Root: [ %s ]", rootHash)
+            bw.write(String.format(" => Global State Root: [ %s ]", rootHash)
             );
 
         } catch (IOException e) {

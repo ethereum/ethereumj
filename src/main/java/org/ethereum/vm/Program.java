@@ -20,7 +20,7 @@ import java.util.Stack;
  * Created on: 01/06/2014 10:45
  */
 public class Program {
-
+	
     private Logger logger = LoggerFactory.getLogger("VM");
     private Logger gasLogger = LoggerFactory.getLogger("gas");
     private int invokeHash;
@@ -302,7 +302,7 @@ public class Program {
         trackRepository.commit();
 
         // 5. REFUND THE REMAIN GAS
-        int refundGas = gas - result.getGasUsed();
+        long refundGas = gas - result.getGasUsed();
         if (refundGas > 0) {
             this.refundGas(refundGas, "remain gas from the internal call");
             if (logger.isInfoEnabled()){
@@ -376,7 +376,6 @@ public class Program {
         //  actual gas subtract
         this.spendGas(gas.intValue(), "internal call");
 
-
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
         trackRepository.addBalance(toAddress, endowmentValue.value());
@@ -390,7 +389,6 @@ public class Program {
         ProgramResult result = null;
 
         if (programCode != null && programCode.length != 0) {
-
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke);
             vm.play(program);
@@ -451,7 +449,7 @@ public class Program {
         result.spendGas(gasValue);
     }
 
-    public void refundGas(int gasValue, String cause) {
+    public void refundGas(long gasValue, String cause) {
         gasLogger.info("[{}] Refund for cause: [ {} ], gas: [ {} ]", invokeHash, cause, gasValue);
         result.refundGas(gasValue);
     }
@@ -659,6 +657,7 @@ public class Program {
 		public void output(String out);
 	}
 
+	@SuppressWarnings("serial")
 	public class OutOfGasException extends RuntimeException {
     }
 }
