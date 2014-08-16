@@ -36,11 +36,14 @@ public class StaticMessages {
 
         String version = SystemProperties.CONFIG.projectVersion();
         String system = System.getProperty("os.name");
-        if (System.getProperty("java.vm.vendor").contains("Android")) system = "Android";
+		if (system.contains(" "))
+			system = system.substring(0, system.indexOf(" "));
+        if (System.getProperty("java.vm.vendor").contains("Android")) 
+        	system = "Android";
 
         String phrase = SystemProperties.CONFIG.helloPhrase();
 
-        String helloAnnouncement = String.format("Ethereum(J)/v%s/Release/%s/%s ", version, system, phrase);
+        String helloAnnouncement = String.format("EthereumJ/v%s/%s/%s/Java", version, phrase, system);
 
         return new HelloMessage((byte) 0x17, (byte) 0x00,
                 helloAnnouncement, Byte.parseByte("00000111", 2),

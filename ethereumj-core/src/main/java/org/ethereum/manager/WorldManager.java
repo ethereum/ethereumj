@@ -10,7 +10,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Blockchain;
-import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
@@ -19,10 +18,6 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
-import org.ethereum.net.submit.WalletTransaction;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * WorldManager is the main class to handle the processing of transactions and
@@ -34,8 +29,6 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class WorldManager {
 
-	private Logger logger = LoggerFactory.getLogger("main");
-
 	private Blockchain blockchain;
 	private Repository repository;
 	private Wallet wallet;
@@ -43,11 +36,6 @@ public class WorldManager {
     private PeerDiscovery peerDiscovery;
     private List<PeerData> peers = new CopyOnWriteArrayList<PeerData>();
     private ClientPeer activePeer;
-
-    // This map of transaction designed
-    // to approve the tx by external trusted peer
-    private Map<String, WalletTransaction> walletTransactions =
-            Collections.synchronizedMap(new HashMap<String, WalletTransaction>());
 
     private EthereumListener listener;
 
@@ -83,34 +71,7 @@ public class WorldManager {
 		}
 		return instance;
 	}
-
-    /***********************************************************************
-     *	1) the dialog put a pending transaction on the list
-     *  2) the dialog send the transaction to a net
-     *  3) wherever the transaction got in from the wire it will change to approve state
-     *  4) only after the approve a) Wallet state changes
-     *  5) After the block is received with that tx the pending been clean up
-     */
-    public WalletTransaction addWalletTransaction(Transaction transaction) {
-        String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction placed hash: {}", hash );
-
-        WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
-		if (walletTransaction != null)
-			walletTransaction.incApproved();
-		else {
-			walletTransaction = new WalletTransaction(transaction);
-			this.walletTransactions.put(hash, walletTransaction);
-		}
-        return walletTransaction;
-    }
-
-    public void removeWalletTransaction(Transaction transaction) {
-        String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction removed with hash: {} ",  hash);
-        walletTransactions.remove(hash);
-    }
-        
+      
     public void setRepository(Repository repository)  {
     	this.repository = repository;
     }

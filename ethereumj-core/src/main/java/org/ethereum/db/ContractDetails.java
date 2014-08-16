@@ -70,13 +70,7 @@ public class ContractDetails {
 		if (storageKeys.size() == 0)
 			return null;
 
-		int foundIndex = -1;
-		for (int i = 0; i < storageKeys.size(); ++i) {
-			if (storageKeys.get(i).equals(key)) {
-				foundIndex = i;
-				break;
-			}
-		}
+		int foundIndex = storageKeys.indexOf(key);
 		if (foundIndex != -1)
 			return storageValues.get(foundIndex);
 		else
@@ -97,7 +91,8 @@ public class ContractDetails {
     	storageTrie = new Trie(null);
         // calc the trie for root hash
         for (int i = 0; i < storageKeys.size(); ++i){
-            storageTrie.update(storageKeys.get(i).getData(), RLP.encodeElement( storageValues.get(i).getNoLeadZeroesData() ));
+			storageTrie.update(storageKeys.get(i).getData(), RLP
+					.encodeElement(storageValues.get(i).getNoLeadZeroesData()));
         }
         return storageTrie.getRootHash();
     }
