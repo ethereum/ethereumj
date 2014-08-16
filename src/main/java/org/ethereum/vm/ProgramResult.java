@@ -13,7 +13,7 @@ import java.util.List;
  */
 public class ProgramResult {
 
-    private int gasUsed = 0;
+    private long gasUsed = 0;
     private ByteBuffer  hReturn = null;
     private RuntimeException exception;
     private List<DataWord> deleteAccounts;
@@ -30,7 +30,7 @@ public class ProgramResult {
     public void spendGas(int gas) {
         gasUsed += gas;
     }
-    public void refundGas(int gas) {
+    public void refundGas(long gas) {
         gasUsed -= gas;
     }
 
@@ -47,7 +47,7 @@ public class ProgramResult {
         return exception;
     }
 
-    public int getGasUsed() {
+    public long getGasUsed() {
         return gasUsed;
     }
 

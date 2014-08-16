@@ -17,7 +17,7 @@ import static java.lang.Thread.sleep;
  */
 public class TransactionTask implements Callable<Transaction> {
 
-	private Logger logger = LoggerFactory.getLogger("TransactionTask");
+	private Logger logger = LoggerFactory.getLogger(TransactionTask.class);
 
 	private Transaction tx;
     
@@ -33,17 +33,16 @@ public class TransactionTask implements Callable<Transaction> {
 
             ClientPeer peer = WorldManager.getInstance().getActivePeer();
 
-			WalletTransaction walletTransaction = WorldManager.getInstance()
-					.addWalletTransaction(tx);
+			WalletTransaction walletTransaction = WorldManager.getInstance().getWallet().addTransaction(tx);
             peer.sendTransaction(tx);
 
-            while(walletTransaction.getApproved() < 1 ) {
+            while(walletTransaction.getApproved() < 1) {
                 sleep(10);
             }
             logger.info("return approved: {}", walletTransaction.getApproved());
         } catch (Throwable th) {
             logger.info("exception caugh: {}", th);
-            WorldManager.getInstance().removeWalletTransaction(tx);
+            WorldManager.getInstance().getWallet().removeTransaction(tx);
         }
         return null;
     }
