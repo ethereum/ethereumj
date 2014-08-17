@@ -198,8 +198,8 @@ public class Blockchain {
             String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
                 logger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);           		
-                repository.close();
-                System.exit(-1); // Don't add block
+//                repository.close();
+//                System.exit(-1); // Don't add block
             }
         }
     	
