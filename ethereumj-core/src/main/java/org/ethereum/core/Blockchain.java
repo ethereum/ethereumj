@@ -171,7 +171,7 @@ public class Blockchain {
 			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
 			totalGasUsed += applyTransaction(block, txr.getTransaction());
 			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState()))
-				logger.warn("STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8), 
+				logger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8), 
 						Hex.toHexString(this.repository.getWorldState().getRootHash()));
 			if(block.getNumber() >= CONFIG.traceStartBlock())
 				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
@@ -197,8 +197,7 @@ public class Blockchain {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
             String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
-                logger.error("ERROR: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-                // Last conflict on block 1501 -> worldstate 27920c6c7acd42c8a7ac8a835d4c0e0a45590deb094d6b72a8493fac5d7a3654            		
+                logger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);           		
                 repository.close();
                 System.exit(-1); // Don't add block
             }
@@ -309,30 +308,30 @@ public class Blockchain {
 		}
 
 		
-			// 4. THE SIMPLE VALUE/BALANCE CHANGE
-			if (tx.getValue() != null) {
-	
-				BigInteger senderBalance = senderAccount.getBalance();
-	
-				if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
-					repository.addBalance(receiverAddress,
-							new BigInteger(1, tx.getValue()));
-					repository.addBalance(senderAddress,
-							new BigInteger(1, tx.getValue()).negate());
-	
-					if (stateLogger.isDebugEnabled())
-						stateLogger.debug("Update value balance \n "
-								+ "sender={}, receiver={}, value={}",
-								Hex.toHexString(senderAddress),
-								Hex.toHexString(receiverAddress),
-								new BigInteger(tx.getValue()));
-				}
-			}
+		// 3. THE SIMPLE VALUE/BALANCE CHANGE
+		if (tx.getValue() != null) {
 
-			// 3. START TRACKING FOR REVERT CHANGES OPTION !!!
-			Repository trackRepository = repository.getTrack();
-			trackRepository.startTracking();
-			long gasUsed = 0;
+			BigInteger senderBalance = senderAccount.getBalance();
+
+			if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
+				repository.addBalance(receiverAddress,
+						new BigInteger(1, tx.getValue()));
+				repository.addBalance(senderAddress,
+						new BigInteger(1, tx.getValue()).negate());
+
+				if (stateLogger.isDebugEnabled())
+					stateLogger.debug("Update value balance \n "
+							+ "sender={}, receiver={}, value={}",
+							Hex.toHexString(senderAddress),
+							Hex.toHexString(receiverAddress),
+							new BigInteger(tx.getValue()));
+			}
+		}
+
+		// 4. START TRACKING FOR REVERT CHANGES OPTION !!!
+		Repository trackRepository = repository.getTrack();
+		trackRepository.startTracking();
+		long gasUsed = 0;
 		try {
 			
 			// 5. CREATE OR EXECUTE PROGRAM
