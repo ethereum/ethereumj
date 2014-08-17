@@ -43,7 +43,7 @@ public class StaticMessages {
 
         String phrase = SystemProperties.CONFIG.helloPhrase();
 
-        String helloAnnouncement = String.format("EthereumJ/v%s/%s/%s/Java", version, phrase, system);
+        String helloAnnouncement = String.format("Ethereum(J)/v%s/%s/%s/Java", version, phrase, system);
 
         return new HelloMessage((byte) 0x17, (byte) 0x00,
                 helloAnnouncement, Byte.parseByte("00000111", 2),
