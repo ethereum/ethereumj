@@ -83,12 +83,9 @@ public class Cache {
 			}
 		}
 		this.isDirty = false;
-
-		// If the nodes grows beyond the 200 entries we simple empty it
-		// FIXME come up with something better
-		if (this.nodes.size() > 200) {
-			this.nodes = new HashMap<>();
-		}
+		
+		// TODO come up with a way to clean up this.nodes 
+		// from memory without breaking consensus
 	}
 
 	public void undo() {
