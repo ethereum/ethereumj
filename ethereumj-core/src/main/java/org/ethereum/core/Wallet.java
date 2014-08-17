@@ -1,6 +1,10 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.net.submit.WalletTransaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
@@ -22,6 +26,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Wallet handles the management of accounts with addresses and private keys.
@@ -29,17 +34,23 @@ import java.util.Map;
  */
 public class Wallet {
 
+	private Logger logger = LoggerFactory.getLogger("wallet");
+	
     // TODO: a) the values I need to keep for address state is balance & nonce & ECKey
     // TODO: b) keep it to be easy accessed by the toAddress()
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
 	
+    // This map of transaction designed
+    // to approve the tx by external trusted peer
+    private Map<String, WalletTransaction> walletTransactions = new ConcurrentHashMap<>();
+
     // <address, info> table for a wallet
     private Map<String, Account> rows = new HashMap<>();
     private long high;
 
     private List<WalletListener> listeners = new ArrayList<>();
 
-    private Map<BigInteger, Transaction> transactionMap = new HashMap<>();
+    private Map<ByteArrayWrapper, Transaction> transactionMap = new HashMap<>();
 
     public void addNewAccount() {
         Account account = new Account();
@@ -80,10 +91,51 @@ public class Wallet {
         }
         return sum;
     }
+    
+    /***********************************************************************
+     *	1) the dialog put a pending transaction on the list
+     *  2) the dialog send the transaction to a net
+     *  3) wherever the transaction got in from the wire it will change to approve state
+     *  4) only after the approve a) Wallet state changes
+     *  5) After the block is received with that tx the pending been clean up
+     */
+    public WalletTransaction addTransaction(Transaction transaction) {
+        String hash = Hex.toHexString(transaction.getHash());
+        logger.info("pending transaction placed hash: {}", hash );
+
+        WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
+		if (walletTransaction != null)
+			walletTransaction.incApproved();
+		else {
+			walletTransaction = new WalletTransaction(transaction);
+			this.walletTransactions.put(hash, walletTransaction);
+		}
+        return walletTransaction;
+    }
+    
+    public void addTransactions(List<Transaction> transactions) {
+    	for (Transaction transaction : transactions) {
+			this.addTransaction(transaction);
+		}
+    }
+    
+    public void removeTransactions(List<Transaction> transactions) {
+	    for (Transaction tx : transactions) {
+	        if (logger.isDebugEnabled())
+	            logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString(tx.getHash()));
+	        this.removeTransaction(tx);
+	    }
+    }
+
+    public void removeTransaction(Transaction transaction) {
+        String hash = Hex.toHexString(transaction.getHash());
+        logger.info("pending transaction removed with hash: {} ",  hash);
+        walletTransactions.remove(hash);
+    }
 
     public void applyTransaction(Transaction transaction) {
 
-        transactionMap.put(new BigInteger(transaction.getHash()), transaction );
+        transactionMap.put(new ByteArrayWrapper(transaction.getHash()), transaction );
 
         byte[] senderAddress = transaction.getSender();
         Account sender =  rows.get(Hex.toHexString(senderAddress));
@@ -113,7 +165,7 @@ public class Wallet {
         List<Transaction> transactions = block.getTransactionsList();
 
         for (Transaction tx : transactions) {
-            boolean txExist = transactionMap.get(new BigInteger(tx.getHash())) != null;
+            boolean txExist = transactionMap.get(new ByteArrayWrapper(tx.getHash())) != null;
             if (txExist) break;
             else {
                 this.applyTransaction(tx);

@@ -1,13 +1,18 @@
 package org.ethereum.vm;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.Program.OutOfGasException;
+import static org.ethereum.config.SystemProperties.CONFIG;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.ethereum.vm.OpCode.CALL;
 import static org.ethereum.vm.OpCode.CREATE;
@@ -54,9 +59,10 @@ import static org.ethereum.vm.OpCode.PUSH1;
 public class VM {
 
 	private Logger logger = LoggerFactory.getLogger("VM");
+	private Logger dumpLogger = LoggerFactory.getLogger("dump");
 	private static BigInteger _32_ = BigInteger.valueOf(32);
 	private static String logString = "[ {} ]\t Op: [ {} ]\t Gas: [ {} ]\t Deep: [ {} ] Hint: [ {} ]";
-
+	
     public void step(Program program) {
 
         try {
@@ -70,6 +76,34 @@ public class VM {
             long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
 
+            
+    		if(program.getNumber().intValue() == CONFIG.dumpBlock()) {
+
+    			switch (OpCode.code(op)) {
+    				case STOP: case RETURN: case SUICIDE:
+    					
+    					ContractDetails details = program.getResult().getRepository()
+							.getContractDetails(program.getOwnerAddress().getLast20Bytes());
+    			        List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
+    					Collections.sort((List<DataWord>) storageKeys);
+    					
+    					for (DataWord key : storageKeys) {
+    						dumpLogger.info("{} {}",
+								Hex.toHexString(key.getNoLeadZeroesData()),
+								Hex.toHexString(details.getStorage().get(key).getNoLeadZeroesData()));
+						}
+					default:
+						break;
+    			}
+    			String addressString = Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
+    			String pcString = Hex.toHexString(new DataWord(program.getPC()).getNoLeadZeroesData());
+    			String opString = Hex.toHexString(new byte[]{op});
+    			String gasString = Hex.toHexString(program.getGas().getNoLeadZeroesData());
+    			
+    			dumpLogger.info("{} {} {} {}", addressString, pcString, opString, gasString);
+    		}
+            
+            
             switch (OpCode.code(op)) {
                 case SHA3:
                     program.spendGas(GasCost.SHA3, OpCode.code(op).name());
@@ -108,7 +142,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " + " + word2.longValue();
+                        hint = word1.value() + " + " + word2.value();
 
                     word1.add(word2);
                     program.stackPush(word1);
@@ -120,7 +154,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " * " + word2.longValue();
+                        hint = word1.value() + " * " + word2.value();
 
                     word1.mul(word2);
                     program.stackPush(word1);
@@ -131,7 +165,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " - " + word2.longValue();
+                        hint = word1.value() + " - " + word2.value();
 
                     word1.sub(word2);
                     program.stackPush(word1);
@@ -142,7 +176,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " / " + word2.longValue();
+                        hint = word1.value() + " / " + word2.value();
 
                     word1.div(word2);
                     program.stackPush(word1);
@@ -164,7 +198,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " % " + word2.longValue();
+                        hint = word1.value() + " % " + word2.value();
 
                     word1.mod(word2);
                     program.stackPush(word1);
@@ -186,7 +220,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " ** " + word2.longValue();
+                        hint = word1.value() + " ** " + word2.value();
 
                     word1.exp(word2);
                     program.stackPush(word1);
@@ -197,7 +231,7 @@ public class VM {
                     word1.negate();
 
                     if (logger.isInfoEnabled())
-                        hint = "" + word1.longValue();
+                        hint = "" + word1.value();
 
                     program.stackPush(word1);
                     program.step();
@@ -208,7 +242,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " < " + word2.longValue();
+                        hint = word1.value() + " < " + word2.value();
 
                     if (word1.value().compareTo(word2.value()) == -1) {
                         word1.and(DataWord.ZERO);
@@ -259,7 +293,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " < " + word2.longValue();
+                        hint = word1.value() + " < " + word2.value();
 
                     if (word1.value().compareTo(word2.value()) == 1) {
                         word1.and(DataWord.ZERO);
@@ -275,7 +309,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " == " + word2.longValue();
+                        hint = word1.value() + " == " + word2.value();
 
                     if (word1.xor(word2).isZero()) {
                         word1.and(DataWord.ZERO);
@@ -295,7 +329,7 @@ public class VM {
                     }
 
                     if (logger.isInfoEnabled())
-                        hint = "" + word1.longValue();
+                        hint = "" + word1.value();
 
                     program.stackPush(word1);
                     program.step();
@@ -309,7 +343,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " && " + word2.longValue();
+                        hint = word1.value() + " && " + word2.value();
 
                     word1.and(word2);
                     program.stackPush(word1);
@@ -320,7 +354,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " || " + word2.longValue();
+                        hint = word1.value() + " || " + word2.value();
 
                     word1.or(word2);
                     program.stackPush(word1);
@@ -331,7 +365,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.longValue() + " ^ " + word2.longValue();
+                        hint = word1.value() + " ^ " + word2.value();
 
                     word1.xor(word2);
                     program.stackPush(word1);
@@ -351,7 +385,7 @@ public class VM {
                     }
 
                     if (logger.isInfoEnabled())
-                        hint = "" + result.longValue();
+                        hint = "" + result.value();
 
                     program.stackPush(result);
                     program.step();
@@ -440,7 +474,7 @@ public class VM {
                     DataWord dataSize = program.getDataSize();
 
                     if (logger.isInfoEnabled())
-                        hint = "size: " + dataSize.longValue();
+                        hint = "size: " + dataSize.value();
 
                     program.stackPush(dataSize);
                     program.step();
@@ -462,7 +496,7 @@ public class VM {
                     DataWord length = new DataWord(program.ops.length);
 
                     if (logger.isInfoEnabled())
-                        hint = "size: " + length.longValue();
+                        hint = "size: " + length.value();
 
                     program.stackPush(length);
                     program.step();
@@ -524,7 +558,7 @@ public class VM {
                     DataWord timestamp = program.getTimestamp();
 
                     if (logger.isInfoEnabled())
-                        hint = "timestamp: " + timestamp.longValue();
+                        hint = "timestamp: " + timestamp.value();
 
                     program.stackPush(timestamp);
                     program.step();
@@ -533,7 +567,7 @@ public class VM {
                     DataWord number = program.getNumber();
 
                     if (logger.isInfoEnabled())
-                        hint = "number: " + number.longValue();
+                        hint = "number: " + number.value();
 
                     program.stackPush(number);
                     program.step();
@@ -636,7 +670,7 @@ public class VM {
                     DataWord pos  =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = "~> " + pos.longValue();
+                        hint = "~> " + pos.value();
 
                     program.setPC(pos);
                 }	break;
@@ -703,7 +737,7 @@ public class VM {
 
                     if (logger.isInfoEnabled())
 					logger.info(logString, program.getPC(), OpCode.code(op)
-							.name(), program.getGas().longValue(),
+							.name(), program.getGas().value(),
 							program.invokeData.getCallDeep(), hint);
                     
                     program.createContract(value, inOffset, inSize);
@@ -723,7 +757,7 @@ public class VM {
 
                     if (logger.isInfoEnabled())
 						logger.info(logString, program.getPC(), OpCode.code(op)
-								.name(), program.getGas().longValue(),
+								.name(), program.getGas().value(),
 								program.invokeData.getCallDeep(), hint);
 
                     program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
@@ -756,8 +790,8 @@ public class VM {
                 }
             }
             
-			if (logger.isInfoEnabled())
-				if (!OpCode.code(op).equals(CALL) && !OpCode.code(op).equals(CREATE))
+			if (logger.isInfoEnabled() && !OpCode.code(op).equals(CALL)
+					&& !OpCode.code(op).equals(CREATE))
 					logger.info(logString, stepBefore, OpCode.code(op).name(),
 							gasBefore, program.invokeData.getCallDeep(), hint);
             
