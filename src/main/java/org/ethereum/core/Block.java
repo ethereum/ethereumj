@@ -15,8 +15,6 @@ import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -45,7 +43,7 @@ public class Block {
 	private BlockHeader header;
 	
     /* Transactions */
-    private List<TransactionReceipt> txReceiptList = new CopyOnWriteArrayList <TransactionReceipt>() ;
+    private List<TransactionReceipt> txReceiptList = new CopyOnWriteArrayList<TransactionReceipt>() ;
 	private List<Transaction> transactionsList = new CopyOnWriteArrayList<Transaction>();
 	
 	/* Uncles */
@@ -73,14 +71,14 @@ public class Block {
 		this.header = new BlockHeader(parentHash, unclesHash, coinbase,
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
+
 		this.transactionsList = transactionsList;
         if (this.transactionsList == null){
             this.transactionsList = new CopyOnWriteArrayList<Transaction>();
         }
 
         this.uncleList = uncleList;
-        if (this.uncleList == null){
-
+        if (this.uncleList == null) {
             this.uncleList = new CopyOnWriteArrayList<BlockHeader>();
         }
 
@@ -268,7 +266,6 @@ public class Block {
         toStringBuff.append(header.toStylishString());
 
         for (TransactionReceipt tx : getTxReceiptList()) {
-
             toStringBuff.append("<br/>");
             toStringBuff.append( tx.toStylishString() );
             toStringBuff.append("<br/>");

@@ -137,11 +137,7 @@ public class Blockchain {
         this.processBlock(block);
         
         // Remove all wallet transactions as they already approved by the net
-        for (Transaction tx : block.getTransactionsList()) {
-            if (logger.isDebugEnabled())
-                logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString( tx.getHash()));
-            WorldManager.getInstance().removeWalletTransaction(tx);
-        }
+        WorldManager.getInstance().getWallet().removeTransactions(block.getTransactionsList());
 
         EthereumListener listener = WorldManager.getInstance().getListener();
         if (listener != null)
@@ -150,35 +146,15 @@ public class Blockchain {
         EthereumListener ethereumListener =  WorldManager.getInstance().getListener();
         if (ethereumListener != null)
             ethereumListener.onBlock(block);
-
-/*
-        if (lastBlock.getNumber() >= 30) {
-            System.out.println("** checkpoint **");
-
-            this.close();
-            WorldManager.getInstance().getRepository().close();
-            System.exit(1);
-        }
-*/
-
     }
     
     public void processBlock(Block block) {
     	if(block.isValid()) {
             if (!block.isGenesis()) {
-
                 if (!CONFIG.blockChainOnly()) {
-
-                    for (Transaction tx : block.getTransactionsList())
-                        // TODO: refactor the wallet pending transactions to the world manager
-                        WorldManager.getInstance().addWalletTransaction(tx);
-
-                    this.applyBlock(block);
-
+                	WorldManager.getInstance().getWallet().addTransactions(block.getTransactionsList());
+                	this.applyBlock(block);
                     WorldManager.getInstance().getWallet().processBlock(block);
-
-                    repository.dumpState(block.getNumber(), 0,
-                            null);
                 }
             }
             this.storeBlock(block);
@@ -190,11 +166,15 @@ public class Blockchain {
 	public void applyBlock(Block block) {
 
 		int i = 0;
-		for (Transaction tx : block.getTransactionsList()) {
+		long totalGasUsed = 0;
+		for (TransactionReceipt txr : block.getTxReceiptList()) {
 			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
-			applyTransaction(block, tx, block.getCoinbase());
-			repository.dumpState(block.getNumber(), i, tx.getHash());
-			++i;
+			totalGasUsed += applyTransaction(block, txr.getTransaction());
+			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState()))
+				logger.warn("STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8), 
+						Hex.toHexString(this.repository.getWorldState().getRootHash()));
+			if(block.getNumber() >= CONFIG.traceStartBlock())
+				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
 		}
 		
 		// miner reward
@@ -205,6 +185,9 @@ public class Blockchain {
 		for (BlockHeader uncle : block.getUncleList()) {
 			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
 		}
+		
+        if(block.getNumber() >= CONFIG.traceStartBlock())
+        	repository.dumpState(block, totalGasUsed, 0, null);
 	}
     
     public void storeBlock(Block block) {
@@ -216,8 +199,8 @@ public class Blockchain {
             if(!blockStateRootHash.equals(worldStateRootHash)){
                 logger.error("ERROR: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
                 // Last conflict on block 1501 -> worldstate 27920c6c7acd42c8a7ac8a835d4c0e0a45590deb094d6b72a8493fac5d7a3654            		
-//                repository.close();
-//                System.exit(-1); // Don't add block
+                repository.close();
+                System.exit(-1); // Don't add block
             }
         }
     	
@@ -230,8 +213,17 @@ public class Blockchain {
 		logger.info("*** Last block added [ #{} ]", block.getNumber());
     }
     
-	public void applyTransaction(Block block, Transaction tx, byte[] coinbase) {
+    
+    /**
+     * Apply the transaction to the world state
+     *  
+     * @param block - the block which contains the transactions
+     * @param tx - the transaction to be applied
+     * @return gasUsed
+     */
+	public long applyTransaction(Block block, Transaction tx) {
 
+		byte[] coinbase = block.getCoinbase();
 		byte[] senderAddress = tx.getSender();
 		AccountState senderAccount = repository.getAccountState(senderAddress);
 
@@ -239,7 +231,7 @@ public class Blockchain {
 			if (stateLogger.isWarnEnabled())
 				stateLogger.warn("No such address: {}",
 						Hex.toHexString(senderAddress));
-			return;
+			return 0;
 		}
 
 		// 1. VALIDATE THE NONCE
@@ -249,7 +241,7 @@ public class Blockchain {
 			if (stateLogger.isWarnEnabled())
 				stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
 						nonce, txNonce);
-			return;
+			return 0;
 		}
 
 		// 3. FIND OUT THE TRANSACTION TYPE
@@ -300,7 +292,7 @@ public class Blockchain {
 			if (balance.compareTo(gasDebit) == -1) {
 				logger.debug("No gas to start the execution: sender={}",
 						Hex.toHexString(senderAddress));
-				return;
+				return 0;
 			}
 			repository.addBalance(senderAddress, gasDebit.negate());
             senderAccount.subFromBalance(gasDebit); // balance will be read again below
@@ -316,23 +308,18 @@ public class Blockchain {
 						Hex.toHexString(senderAddress), gasDebit);
 		}
 
-		// 3. START TRACKING FOR REVERT CHANGES OPTION !!!
-		Repository trackRepository = repository.getTrack();
-		trackRepository.startTracking();
-
-		try {
-
+		
 			// 4. THE SIMPLE VALUE/BALANCE CHANGE
 			if (tx.getValue() != null) {
-
+	
 				BigInteger senderBalance = senderAccount.getBalance();
-
+	
 				if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
 					repository.addBalance(receiverAddress,
 							new BigInteger(1, tx.getValue()));
 					repository.addBalance(senderAddress,
 							new BigInteger(1, tx.getValue()).negate());
-
+	
 					if (stateLogger.isDebugEnabled())
 						stateLogger.debug("Update value balance \n "
 								+ "sender={}, receiver={}, value={}",
@@ -342,7 +329,14 @@ public class Blockchain {
 				}
 			}
 
-			// 5. CREATE OR EXECUTE PROGRAM 
+			// 3. START TRACKING FOR REVERT CHANGES OPTION !!!
+			Repository trackRepository = repository.getTrack();
+			trackRepository.startTracking();
+			long gasUsed = 0;
+		try {
+			
+			// 5. CREATE OR EXECUTE PROGRAM
+
 			if (isContractCreation || code != null) {
 				Block currBlock =  (block == null) ? this.getLastBlock() : block;
 
@@ -357,13 +351,13 @@ public class Blockchain {
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, trackRepository,
 						senderAddress, receiverAddress, coinbase, isContractCreation);
+				gasUsed = result.getGasUsed();
 			} else {
 				// refund everything except fee (500 + 5*txdata)
 				BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
 				long dataFee = tx.getData() == null ? 0: tx.getData().length * GasCost.TXDATA;
 				long minTxFee = GasCost.TRANSACTION + dataFee;
-				BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
-						minTxFee).multiply(gasPrice));
+				BigInteger refund = gasDebit.subtract(BigInteger.valueOf(minTxFee).multiply(gasPrice));
 				if (refund.signum() > 0) {
 					// gas refund
 					repository.addBalance(senderAddress, refund);
@@ -372,10 +366,11 @@ public class Blockchain {
 			}
 		} catch (RuntimeException e) {
 			trackRepository.rollback();
-			return;
+			return 0;
 		}
 		trackRepository.commit();
 		pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
+		return gasUsed;
 	}
 	
 	/**
