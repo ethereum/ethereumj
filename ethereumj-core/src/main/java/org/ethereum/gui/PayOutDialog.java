@@ -226,8 +226,13 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         inputMap.put(stroke, "ESCAPE");
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
-        this.setSize(500, 255);
-        this.setVisible(true);
+        SwingUtilities.invokeLater(new Runnable() {
+        	  public void run() {
+        		  setSize(500, 255);
+        	      setVisible(true);
+        	  }
+        });
+       
 
         return rootPane;
     }
