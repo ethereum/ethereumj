@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -407,12 +409,9 @@ public class Repository {
             ObjectNode blockNode = jsonFactory.objectNode();
             JSONHelper.dumpBlock(blockNode, block, gasUsed, this.getWorldState().getRootHash(), keys, this);
             
-            bw.write(blockNode.toString());
-            bw.write("\n");
-
-			String rootHash = Hex.toHexString(this.getWorldState().getRootHash());
-            bw.write(String.format(" => Global State Root: [ %s ]", rootHash)
-            );
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            bw.write(mapper.writeValueAsString(blockNode));
 
         } catch (IOException e) {
         	logger.error(e.getMessage(), e);
