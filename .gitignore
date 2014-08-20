@@ -1,31 +1,32 @@
-
-.idea
-*.iml
+# Java
 *.class
 
-*.xlsx
+# Intellij
+.idea/
+*.iml
+*.iws
 
 # Eclipse
 .project
 .classpath
-.settings
+.settings/
 /bin
+
+# Maven
+log/
+target/
 
 # Package Files #
 *.zip
 *.jar
 *.war
 *.ear
-/target
-/src/main/java/samples
 
 # Output #
-/blockchain
-/state
-/details
 /logs
 /dmp
 /database
-*.db
-*.xlsx
-/gen
+/null
+
+# Mac
+.DS_Store
