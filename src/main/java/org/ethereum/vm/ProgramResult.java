@@ -27,7 +27,7 @@ public class ProgramResult {
     */
     private List<CallCreate> callCreateList;
 
-    public void spendGas(int gas) {
+    public void spendGas(long gas) {
         gasUsed += gas;
     }
     public void refundGas(long gas) {

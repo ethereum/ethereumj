@@ -49,7 +49,6 @@ public class Program {
         this.invokeData = invokeData;
         this.ops = ops;
         this.programAddress = invokeData.getOwnerAddress();
-
     }
 
     public byte getCurrentOp() {
@@ -77,6 +76,10 @@ public class Program {
 
     public void stackPush(DataWord stackWord) {
         stack.push(stackWord);
+    }
+    
+    public Stack<DataWord> getStack() {
+    	return this.stack;
     }
 
     public int getPC() {
@@ -114,7 +117,6 @@ public class Program {
     }
 
     public void step() {
-
         ++pc;
         if (pc >= ops.length) stop();
     }
@@ -139,6 +141,13 @@ public class Program {
             throw new RuntimeException("attempted pull action for empty stack");
         }
         return stack.pop();
+    }
+    
+    public void require(int stackSize) {
+    	if(stack.size() != stackSize) {
+            stop();
+            throw new RuntimeException("stack too small");
+    	}
     }
 
     public int getMemSize() {
@@ -268,7 +277,6 @@ public class Program {
         }
         result.getRepository().addBalance(senderAddress, endowment.negate());
         result.getRepository().addBalance(newAddress, endowment);
-
 
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
@@ -435,12 +443,11 @@ public class Program {
                 		Hex.toHexString(senderAddress), refundGas.toString());
             }
         } else {
-
             this.refundGas(gas.intValue(), "remaining gas from the internal call");
         }
     }
 
-    public void spendGas(int gasValue, String cause) {
+    public void spendGas(long gasValue, String cause) {
         gasLogger.info("[{}] Spent for cause: [ {} ], gas: [ {} ]", invokeHash, cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
@@ -546,7 +553,6 @@ public class Program {
     public DataWord getGaslimit() {
         return invokeData.getGaslimit().clone();
     }
-
 
     public ProgramResult getResult() {
         return result;
