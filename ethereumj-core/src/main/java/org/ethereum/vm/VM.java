@@ -60,7 +60,7 @@ import static org.ethereum.vm.OpCode.PUSH1;
  * Created on: 01/06/2014 10:44
  */
 public class VM {
-
+	
 	private Logger logger = LoggerFactory.getLogger("VM");
 	private Logger dumpLogger = LoggerFactory.getLogger("dump");
 	private static BigInteger _32_ = BigInteger.valueOf(32);
@@ -93,8 +93,7 @@ public class VM {
                     // charged in the following section
                     break;
         		case SSTORE:
-        			assert(stack.size() == 2);
-                    // for gas calculations [YP 9.2]
+        			// for gas calculations [YP 9.2]
         			DataWord newValue = stack.get(stack.size()-2);
                     DataWord oldValue =  program.storageLoad(stack.peek());
                     if (oldValue == null && !newValue.isZero()) {
@@ -113,49 +112,40 @@ public class VM {
                     
         		// These all operate on memory and therefore potentially expand it:
         		case MSTORE:
-        			assert(stack.size() == 2);
         			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case MSTORE8:
-        			assert(stack.size() == 2);
         			newMemSize = stack.peek().value().add(BigInteger.ONE);
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case MLOAD:
-        			assert(stack.size() == 1);
         			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case RETURN:
-        			assert(stack.size() == 2);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case SHA3:
-        			assert(stack.size() == 2);
         			program.spendGas(GasCost.SHA3, op.name());
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
         			break;
         		case CALLDATACOPY:
-        			assert(stack.size() == 3);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case CODECOPY:
-        			assert(stack.size() == 3);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case CALL:
-        			assert(stack.size() == 7);
         			program.spendGas(GasCost.CALL, op.name());
         			BigInteger x = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value());
         			BigInteger y = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value());
         			newMemSize = x.max(y);
         			break;
         		case CREATE:
-        			assert(stack.size() == 3);
         			program.spendGas(GasCost.CREATE, op.name());
         			newMemSize = stack.get(stack.size()-2).value().add(stack.get(stack.size()-3).value());
         			break;
@@ -168,9 +158,8 @@ public class VM {
             }
 	        // memory gas calc
             long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;
-//	        long memoryUsage = (newMemSize - oldMemSize) / 32;
 	        if (memoryUsage > oldMemSize)
-	            program.spendGas(GasCost.MEMORY * ((memoryUsage-oldMemSize)/32), op.name() + " (memory usage)");
+				program.spendGas(GasCost.MEMORY * ((memoryUsage - oldMemSize) / 32), op.name() + " (memory usage)");
             
             // Execute operation
             switch (op) {
@@ -182,8 +171,7 @@ public class VM {
                     program.stop();
                 }	break;
                 case ADD:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -195,8 +183,7 @@ public class VM {
 
                 }	break;
                 case MUL:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -207,8 +194,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SUB:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -219,8 +205,7 @@ public class VM {
                     program.step();
                 }	break;
                 case DIV:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -231,8 +216,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SDIV:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -243,8 +227,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MOD:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -255,8 +238,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SMOD:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -267,8 +249,7 @@ public class VM {
                     program.step();
                 }	break;
                 case EXP:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -279,8 +260,7 @@ public class VM {
                     program.step();
                 }	break;
                 case NEG:{
-                	assert(stack.size() == 1);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     word1.negate();
 
                     if (logger.isInfoEnabled())
@@ -290,8 +270,7 @@ public class VM {
                     program.step();
                 }	break;
                 case LT:{
-                	assert(stack.size() == 2);
-                    // TODO: can be improved by not using BigInteger
+                	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -308,8 +287,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SLT:{
-                	assert(stack.size() == 2);
-                    // TODO: can be improved by not using BigInteger
+                	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -326,8 +304,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SGT:{
-                	assert(stack.size() == 2);
-                    // TODO: can be improved by not using BigInteger
+                	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -344,8 +321,7 @@ public class VM {
                     program.step();
                 }	break;
                 case GT:{
-                	assert(stack.size() == 2);
-                    // TODO: can be improved by not using BigInteger
+                	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -362,8 +338,7 @@ public class VM {
                     program.step();
                 }	break;
                 case EQ:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -379,8 +354,7 @@ public class VM {
                     program.step();
                 }	break;
                 case NOT: {
-                	assert(stack.size() == 1);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     if (word1.isZero()) {
                         word1.getData()[31] = 1;
                     } else {
@@ -398,8 +372,7 @@ public class VM {
                  * Bitwise Logic Operations
                  */
                 case AND:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -410,8 +383,7 @@ public class VM {
                     program.step();
                 }	break;
                 case OR: {
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -422,8 +394,7 @@ public class VM {
                     program.step();
                 }	break;
                 case XOR: {
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -434,8 +405,7 @@ public class VM {
                     program.step();
                 }	break;
                 case BYTE:{
-                	assert(stack.size() == 2);
-                    DataWord word1 = program.stackPop();
+                	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     DataWord result = null;
                     if (word1.value().compareTo(_32_) == -1) {
@@ -458,8 +428,7 @@ public class VM {
                  * SHA3
                  */
                 case SHA3:{
-                	assert(stack.size() == 2);
-                    DataWord memOffsetData  = program.stackPop();
+                	DataWord memOffsetData  = program.stackPop();
                     DataWord lengthData     = program.stackPop();
                     ByteBuffer buffer = program.memoryChunk(memOffsetData, lengthData);
 
@@ -486,8 +455,7 @@ public class VM {
                     program.step();
                 }	break;
                 case BALANCE:{
-                	assert(stack.size() == 1);
-                    DataWord address = program.stackPop();
+                	DataWord address = program.stackPop();
                     DataWord balance = program.getBalance(address);
 
                     if (logger.isInfoEnabled())
@@ -526,8 +494,7 @@ public class VM {
                     program.step();
                 }	break;
                 case CALLDATALOAD:{
-                	assert(stack.size() == 1);
-                    DataWord dataOffs  = program.stackPop();
+                	DataWord dataOffs  = program.stackPop();
                     DataWord value = program.getDataValue(dataOffs);
 
                     if (logger.isInfoEnabled())
@@ -546,7 +513,6 @@ public class VM {
                     program.step();
                 }	break;
                 case CALLDATACOPY:{
-                	assert(stack.size() == 3);
                     DataWord memOffsetData  = program.stackPop();
                     DataWord dataOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
@@ -569,7 +535,6 @@ public class VM {
                     program.step();
                 }	break;
                 case CODECOPY:{
-                	assert(stack.size() == 3);
                     DataWord memOffsetData  = program.stackPop();
                     DataWord codeOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
@@ -659,29 +624,25 @@ public class VM {
                     program.step();
                 }   break;
                 case POP:{
-                	assert(stack.size() == 1);
-                    program.stackPop();
+                	program.stackPop();
                     program.step();
                 }	break;
                 case DUP:{
-                	assert(stack.size() == 1);
-                    DataWord word_1 =  program.stackPop();
+                	DataWord word_1 =  program.stackPop();
                     DataWord word_2 = word_1.clone();
                     program.stackPush(word_1);
                     program.stackPush(word_2);
                     program.step();
                 }	break;
                 case SWAP:{
-                	assert(stack.size() == 2);
-                    DataWord word_1 =  program.stackPop();
+                	DataWord word_1 =  program.stackPop();
                     DataWord word_2 =  program.stackPop();
                     program.stackPush(word_1);
                     program.stackPush(word_2);
                     program.step();
                 }	break;
                 case MLOAD:{
-                	assert(stack.size() == 1);
-                    DataWord addr =  program.stackPop();
+                	DataWord addr =  program.stackPop();
                     DataWord data =  program.memoryLoad(addr);
 
                     if (logger.isInfoEnabled())
@@ -691,8 +652,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MSTORE:{
-                	assert(stack.size() == 2);
-                    DataWord addr  =  program.stackPop();
+                	DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -702,16 +662,14 @@ public class VM {
                     program.step();
                 }	break;
                 case MSTORE8:{
-                	assert(stack.size() == 2);
-                    DataWord addr  =  program.stackPop();
+                	DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
                     byte[] byteVal = {value.getData()[31]};
                     program.memorySave(addr.getData(), byteVal);
                     program.step();
                 }	break;
                 case SLOAD:{
-                	assert(stack.size() == 1);
-                    DataWord key =  program.stackPop();
+                	DataWord key =  program.stackPop();
                     DataWord val = program.storageLoad(key);
 
                     if (logger.isInfoEnabled())
@@ -724,8 +682,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SSTORE:{
-                	assert(stack.size() == 2);
-                    DataWord addr  =  program.stackPop();
+                	DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -735,8 +692,7 @@ public class VM {
                     program.step();
                 }	break;
                 case JUMP:{
-                	assert(stack.size() == 1);
-                    DataWord pos  =  program.stackPop();
+                	DataWord pos  =  program.stackPop();
 
                     if (logger.isInfoEnabled())
                         hint = "~> " + pos.value();
@@ -744,8 +700,7 @@ public class VM {
                     program.setPC(pos);
                 }	break;
                 case JUMPI:{
-                	assert(stack.size() == 2);
-                    DataWord pos   =  program.stackPop();
+                	DataWord pos   =  program.stackPop();
                     DataWord cond  =  program.stackPop();
 
                     if (!cond.isZero()) {
@@ -801,8 +756,7 @@ public class VM {
                     program.stackPush(data);
                 }	break;
                 case CREATE:{
-                	assert(stack.size() == 3);
-                    DataWord value      =  program.stackPop();
+                	DataWord value      =  program.stackPop();
                     DataWord inOffset   =  program.stackPop();
                     DataWord inSize     =  program.stackPop();
 
@@ -816,8 +770,7 @@ public class VM {
                     program.step();
                 }	break;
                 case CALL:{
-                	assert(stack.size() == 7);
-                    DataWord gas        =  program.stackPop();
+                	DataWord gas        =  program.stackPop();
                     DataWord toAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
 
@@ -837,8 +790,7 @@ public class VM {
                     program.step();
                 }	break;
                 case RETURN:{
-                	assert(stack.size() == 2);
-                    DataWord offset   =  program.stackPop();
+                	DataWord offset   =  program.stackPop();
                     DataWord size     =  program.stackPop();
 
                     ByteBuffer hReturn = program.memoryChunk(offset, size);
@@ -851,8 +803,7 @@ public class VM {
                     program.stop();
                 }	break;
                 case SUICIDE:{
-                	assert(stack.size() == 1);
-                    DataWord address =  program.stackPop();
+                	DataWord address =  program.stackPop();
                     program.suicide(address);
                     
                     if (logger.isInfoEnabled())
