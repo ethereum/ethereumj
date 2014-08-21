@@ -3,7 +3,9 @@ package org.ethereum.vm;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.Program.OutOfGasException;
+
 import static org.ethereum.config.SystemProperties.CONFIG;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -13,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Stack;
 
 import static org.ethereum.vm.OpCode.CALL;
 import static org.ethereum.vm.OpCode.CREATE;
@@ -70,65 +73,85 @@ public class VM {
             byte op = program.getCurrentOp();
             program.setLastOp(op);
 
-            int oldMemSize = program.getMemSize();
+            long oldMemSize = program.getMemSize();
+            long newMemSize = oldMemSize;
+            Stack<DataWord> stack = program.getStack();
 
             String hint = "";
             long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
-
             
-    		if(program.getNumber().intValue() == CONFIG.dumpBlock()) {
-
-    			switch (OpCode.code(op)) {
-    				case STOP: case RETURN: case SUICIDE:
-    					
-    					ContractDetails details = program.getResult().getRepository()
-							.getContractDetails(program.getOwnerAddress().getLast20Bytes());
-    			        List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
-    					Collections.sort((List<DataWord>) storageKeys);
-    					
-    					for (DataWord key : storageKeys) {
-    						dumpLogger.info("{} {}",
-								Hex.toHexString(key.getNoLeadZeroesData()),
-								Hex.toHexString(details.getStorage().get(key).getNoLeadZeroesData()));
-						}
-					default:
-						break;
-    			}
-    			String addressString = Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
-    			String pcString = Hex.toHexString(new DataWord(program.getPC()).getNoLeadZeroesData());
-    			String opString = Hex.toHexString(new byte[]{op});
-    			String gasString = Hex.toHexString(program.getGas().getNoLeadZeroesData());
-    			
-    			dumpLogger.info("{} {} {} {}", addressString, pcString, opString, gasString);
-    		}
-            
-            
+            // Log debugging line for VM
+    		if(program.getNumber().intValue() == CONFIG.dumpBlock())
+    			this.dumpLine(op, program);
+                       
+    		// Calculate fees and memory
             switch (OpCode.code(op)) {
-                case SHA3:
-                    program.spendGas(GasCost.SHA3, OpCode.code(op).name());
-                    break;
                 case SLOAD:
                     program.spendGas(GasCost.SLOAD, OpCode.code(op).name());
                     break;
                 case BALANCE:
                     program.spendGas(GasCost.BALANCE, OpCode.code(op).name());
                     break;
-                case CREATE:
-                    program.spendGas(GasCost.CREATE, OpCode.code(op).name());
-                    break;
-                case CALL:
-                    program.spendGas(GasCost.CALL, OpCode.code(op).name());
-                    break;
-                case SSTORE: case STOP: case SUICIDE:
+                case STOP: case SUICIDE:
                     // The ops that doesn't charged by step, or
                     // charged in the following section
                     break;
+        		case SSTORE:
+                    // for gas calculations [YP 9.2]
+        			DataWord newValue = stack.get(stack.size()-2);
+                    DataWord oldValue =  program.storageLoad(stack.peek());
+                    if (oldValue == null && !newValue.isZero()) {
+                        program.spendGas(GasCost.SSTORE * 2, OpCode.code(op).name());
+                    } else if (oldValue != null && newValue.isZero()) {
+                        program.spendGas(GasCost.SSTORE * 0, OpCode.code(op).name());
+                    } else
+                        program.spendGas(GasCost.SSTORE, OpCode.code(op).name());
+        			break;
+        		case MSTORE:
+        			newMemSize = stack.peek().longValue() + 32;
+        			break;
+        		case MLOAD:
+        			newMemSize = stack.peek().longValue() + 32;
+        			break;
+        		case MSTORE8:
+        			newMemSize = stack.peek().longValue() + 1;
+        			break;
+        		case RETURN:
+        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-2).longValue();
+        			break;
+        		case SHA3:
+        			program.spendGas(GasCost.SHA3, OpCode.code(op).name());
+        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-2).longValue();
+        			break;
+        		case CALLDATACOPY:
+        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-3).longValue();
+        			break;
+        		case CODECOPY:
+        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-3).longValue();
+        			break;
+        		case CALL:
+        			program.spendGas(GasCost.CALL + stack.get(stack.size()-1).longValue(), OpCode.code(op).name());
+        			long x = stack.get(stack.size()-6).longValue() + stack.get(stack.size()-7).longValue();
+        			long y = stack.get(stack.size()-4).longValue() + stack.get(stack.size()-5).longValue();
+        			newMemSize = Math.max(x, y);
+        			break;
+        		case CREATE:
+        			program.spendGas(GasCost.CREATE, OpCode.code(op).name());
+        			newMemSize = stack.get(stack.size()-2).longValue() + stack.get(stack.size()-3).longValue();
+        			break;
                 default:
-                    program.spendGas(GasCost.STEP, OpCode.code(op).name());
+//                    program.spendGas(GasCost.STEP, OpCode.code(op).name());
                     break;
             }
+        
+	        // memory gas calc
+            long memoryUsage = (newMemSize + 31) / 32 * 32;
+//	        long memoryUsage = (newMemSize - oldMemSize) / 32;
+	        if (memoryUsage > oldMemSize)
+	            program.spendGas(GasCost.MEMORY * ((memoryUsage-oldMemSize)/32), OpCode.code(op).name() + " (memory usage)");
             
+            // Execute operation
             switch (OpCode.code(op)) {
                 /**
                  * Stop and Arithmetic Operations
@@ -655,15 +678,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = "addr: " + addr + " value: " + value;
 
-                    // for gas calculations [YP 9.2]
-                    DataWord oldValue =  program.storageLoad(addr);
                     program.storageSave(addr, value);
-                    if (oldValue == null && !value.isZero()) {
-                        program.spendGas(GasCost.SSTORE * 2, OpCode.code(op).name());
-                    } else if (oldValue != null && value.isZero()) {
-                        program.spendGas(GasCost.SSTORE * 0, OpCode.code(op).name());
-                    } else
-                        program.spendGas(GasCost.SSTORE, OpCode.code(op).name());
                     program.step();
                 }	break;
                 case JUMP:{
@@ -794,21 +809,14 @@ public class VM {
 					&& !OpCode.code(op).equals(CREATE))
 					logger.info(logString, stepBefore, OpCode.code(op).name(),
 							gasBefore, program.invokeData.getCallDeep(), hint);
-            
-            // memory gas calc
-            int newMemSize = program.getMemSize();
-            int memoryUsage = (newMemSize - oldMemSize) /32;
-
-            if (memoryUsage > 0)
-                program.spendGas(GasCost.MEMORY * memoryUsage, OpCode.code(op).name() + " (memory usage)");
 
 //            program.fullTrace();
         } catch (RuntimeException e) {
-            program.stop();
             if(e instanceof OutOfGasException)
             	logger.warn("OutOfGasException occurred", e);
             else
             	logger.error("VM halted", e);
+            program.stop();
             throw e;
         }
     }
@@ -829,5 +837,30 @@ public class VM {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
+    }
+    
+    private void dumpLine(byte op, Program program) {
+		switch (OpCode.code(op)) {
+			case STOP: case RETURN: case SUICIDE:
+				
+				ContractDetails details = program.getResult().getRepository()
+					.getContractDetails(program.getOwnerAddress().getLast20Bytes());
+		        List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
+				Collections.sort((List<DataWord>) storageKeys);
+				
+				for (DataWord key : storageKeys) {
+					dumpLogger.info("{} {}",
+						Hex.toHexString(key.getNoLeadZeroesData()),
+						Hex.toHexString(details.getStorage().get(key).getNoLeadZeroesData()));
+				}
+			default:
+				break;
+		}
+		String addressString = Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
+		String pcString = Hex.toHexString(new DataWord(program.getPC()).getNoLeadZeroesData());
+		String opString = Hex.toHexString(new byte[]{op});
+		String gasString = Hex.toHexString(program.getGas().getNoLeadZeroesData());
+		
+		dumpLogger.info("{} {} {} {}", addressString, pcString, opString, gasString);
     }
 }

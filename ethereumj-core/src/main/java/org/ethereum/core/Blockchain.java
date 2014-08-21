@@ -6,6 +6,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.vm.*;
+import org.ethereum.vm.Program.OutOfGasException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -115,6 +116,9 @@ public class Blockchain {
 
 		if (block == null)
 			return;
+		
+		if (block.getNumber() == 1984)
+			logger.debug("Block #1984");
 
         // if it is the first block to add
         // make sure the parent is genesis
@@ -365,6 +369,8 @@ public class Blockchain {
 			}
 		} catch (RuntimeException e) {
 			trackRepository.rollback();
+			if(e instanceof OutOfGasException)
+				return gasDebit.longValue();
 			return 0;
 		}
 		trackRepository.commit();
