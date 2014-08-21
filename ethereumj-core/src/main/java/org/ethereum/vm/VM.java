@@ -147,7 +147,7 @@ public class VM {
         			break;
         		case CALL:
         			assert(stack.size() == 7);
-        			program.spendGas(GasCost.CALL + stack.get(stack.size()-1).longValue(), op.name());
+        			program.spendGas(GasCost.CALL, op.name());
         			long x = stack.get(stack.size()-6).longValue() + stack.get(stack.size()-7).longValue();
         			long y = stack.get(stack.size()-4).longValue() + stack.get(stack.size()-5).longValue();
         			newMemSize = Math.max(x, y);
@@ -546,13 +546,6 @@ public class VM {
                     DataWord memOffsetData  = program.stackPop();
                     DataWord dataOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
-
-                    // gas calculation
-                    long price = GasCost.MEMORY * lengthData.value().intValue();
-                    System.out.println("Spneding "+price+" gas " );
-                    if( price < 0 ) // special case because of BigInteger to int conversion
-                     price = Long.MAX_VALUE;
-                    program.spendGas(price, op.name());
                     
                     byte[] msgData = program.getDataCopy(dataOffsetData, lengthData);
 
