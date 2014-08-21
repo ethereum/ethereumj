@@ -69,12 +69,11 @@ public class VM {
     public void step(Program program) {
 
         try {
-
-            byte op = program.getCurrentOp();
-            program.setLastOp(op);
+            OpCode op = OpCode.code(program.getCurrentOp());
+            program.setLastOp(op.val());
 
             long oldMemSize = program.getMemSize();
-            long newMemSize = oldMemSize;
+            long newMemSize = 0;
             Stack<DataWord> stack = program.getStack();
 
             String hint = "";
@@ -83,65 +82,83 @@ public class VM {
             
             // Log debugging line for VM
     		if(program.getNumber().intValue() == CONFIG.dumpBlock())
-    			this.dumpLine(op, program);
+    			this.dumpLine(op.val(), program);
                        
-    		// Calculate fees and memory
-            switch (OpCode.code(op)) {
-                case SLOAD:
-                    program.spendGas(GasCost.SLOAD, OpCode.code(op).name());
-                    break;
-                case BALANCE:
-                    program.spendGas(GasCost.BALANCE, OpCode.code(op).name());
-                    break;
+    		// Calculate fees and spend gas
+            switch (op) {
                 case STOP: case SUICIDE:
                     // The ops that doesn't charged by step, or
                     // charged in the following section
                     break;
         		case SSTORE:
+        			assert(stack.size() == 2);
                     // for gas calculations [YP 9.2]
         			DataWord newValue = stack.get(stack.size()-2);
                     DataWord oldValue =  program.storageLoad(stack.peek());
                     if (oldValue == null && !newValue.isZero()) {
-                        program.spendGas(GasCost.SSTORE * 2, OpCode.code(op).name());
+                        program.spendGas(GasCost.SSTORE * 2, op.name());
                     } else if (oldValue != null && newValue.isZero()) {
-                        program.spendGas(GasCost.SSTORE * 0, OpCode.code(op).name());
+                        program.spendGas(GasCost.SSTORE * 0, op.name());
                     } else
-                        program.spendGas(GasCost.SSTORE, OpCode.code(op).name());
+                        program.spendGas(GasCost.SSTORE, op.name());
         			break;
+                case SLOAD:
+                    program.spendGas(GasCost.SLOAD, op.name());
+                    break;
+                case BALANCE:
+                    program.spendGas(GasCost.BALANCE, op.name());
+                    break;
+                    
+        		// These all operate on memory and therefore potentially expand it:
         		case MSTORE:
+        			assert(stack.size() == 2);
         			newMemSize = stack.peek().longValue() + 32;
-        			break;
-        		case MLOAD:
-        			newMemSize = stack.peek().longValue() + 32;
+        			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case MSTORE8:
+        			assert(stack.size() == 2);
         			newMemSize = stack.peek().longValue() + 1;
+        			program.spendGas(GasCost.STEP, op.name());
+        			break;
+        		case MLOAD:
+        			assert(stack.size() == 1);
+        			newMemSize = stack.peek().longValue() + 32;
+        			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case RETURN:
+        			assert(stack.size() == 2);
         			newMemSize = stack.peek().longValue() + stack.get(stack.size()-2).longValue();
+        			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case SHA3:
-        			program.spendGas(GasCost.SHA3, OpCode.code(op).name());
+        			assert(stack.size() == 2);
+        			program.spendGas(GasCost.SHA3, op.name());
         			newMemSize = stack.peek().longValue() + stack.get(stack.size()-2).longValue();
         			break;
         		case CALLDATACOPY:
+        			assert(stack.size() == 3);
         			newMemSize = stack.peek().longValue() + stack.get(stack.size()-3).longValue();
+        			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case CODECOPY:
+        			assert(stack.size() == 3);
         			newMemSize = stack.peek().longValue() + stack.get(stack.size()-3).longValue();
+        			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case CALL:
-        			program.spendGas(GasCost.CALL + stack.get(stack.size()-1).longValue(), OpCode.code(op).name());
+        			assert(stack.size() == 7);
+        			program.spendGas(GasCost.CALL + stack.get(stack.size()-1).longValue(), op.name());
         			long x = stack.get(stack.size()-6).longValue() + stack.get(stack.size()-7).longValue();
         			long y = stack.get(stack.size()-4).longValue() + stack.get(stack.size()-5).longValue();
         			newMemSize = Math.max(x, y);
         			break;
         		case CREATE:
-        			program.spendGas(GasCost.CREATE, OpCode.code(op).name());
+        			assert(stack.size() == 3);
+        			program.spendGas(GasCost.CREATE, op.name());
         			newMemSize = stack.get(stack.size()-2).longValue() + stack.get(stack.size()-3).longValue();
         			break;
                 default:
-//                    program.spendGas(GasCost.STEP, OpCode.code(op).name());
+                    program.spendGas(GasCost.STEP, op.name());
                     break;
             }
         
@@ -149,10 +166,10 @@ public class VM {
             long memoryUsage = (newMemSize + 31) / 32 * 32;
 //	        long memoryUsage = (newMemSize - oldMemSize) / 32;
 	        if (memoryUsage > oldMemSize)
-	            program.spendGas(GasCost.MEMORY * ((memoryUsage-oldMemSize)/32), OpCode.code(op).name() + " (memory usage)");
+	            program.spendGas(GasCost.MEMORY * ((memoryUsage-oldMemSize)/32), op.name() + " (memory usage)");
             
             // Execute operation
-            switch (OpCode.code(op)) {
+            switch (op) {
                 /**
                  * Stop and Arithmetic Operations
                  */
@@ -161,6 +178,7 @@ public class VM {
                     program.stop();
                 }	break;
                 case ADD:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -173,6 +191,7 @@ public class VM {
 
                 }	break;
                 case MUL:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -184,6 +203,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SUB:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -195,6 +215,7 @@ public class VM {
                     program.step();
                 }	break;
                 case DIV:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -206,6 +227,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SDIV:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -217,6 +239,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MOD:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -228,6 +251,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SMOD:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -239,6 +263,7 @@ public class VM {
                     program.step();
                 }	break;
                 case EXP:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -250,6 +275,7 @@ public class VM {
                     program.step();
                 }	break;
                 case NEG:{
+                	assert(stack.size() == 1);
                     DataWord word1 = program.stackPop();
                     word1.negate();
 
@@ -260,6 +286,7 @@ public class VM {
                     program.step();
                 }	break;
                 case LT:{
+                	assert(stack.size() == 2);
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -277,6 +304,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SLT:{
+                	assert(stack.size() == 2);
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -294,6 +322,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SGT:{
+                	assert(stack.size() == 2);
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -311,6 +340,7 @@ public class VM {
                     program.step();
                 }	break;
                 case GT:{
+                	assert(stack.size() == 2);
                     // TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -328,6 +358,7 @@ public class VM {
                     program.step();
                 }	break;
                 case EQ:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -344,6 +375,7 @@ public class VM {
                     program.step();
                 }	break;
                 case NOT: {
+                	assert(stack.size() == 1);
                     DataWord word1 = program.stackPop();
                     if (word1.isZero()) {
                         word1.getData()[31] = 1;
@@ -362,6 +394,7 @@ public class VM {
                  * Bitwise Logic Operations
                  */
                 case AND:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -373,6 +406,7 @@ public class VM {
                     program.step();
                 }	break;
                 case OR: {
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -384,6 +418,7 @@ public class VM {
                     program.step();
                 }	break;
                 case XOR: {
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -395,6 +430,7 @@ public class VM {
                     program.step();
                 }	break;
                 case BYTE:{
+                	assert(stack.size() == 2);
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     DataWord result = null;
@@ -418,6 +454,7 @@ public class VM {
                  * SHA3
                  */
                 case SHA3:{
+                	assert(stack.size() == 2);
                     DataWord memOffsetData  = program.stackPop();
                     DataWord lengthData     = program.stackPop();
                     ByteBuffer buffer = program.memoryChunk(memOffsetData, lengthData);
@@ -445,6 +482,7 @@ public class VM {
                     program.step();
                 }	break;
                 case BALANCE:{
+                	assert(stack.size() == 1);
                     DataWord address = program.stackPop();
                     DataWord balance = program.getBalance(address);
 
@@ -484,6 +522,7 @@ public class VM {
                     program.step();
                 }	break;
                 case CALLDATALOAD:{
+                	assert(stack.size() == 1);
                     DataWord dataOffs  = program.stackPop();
                     DataWord value = program.getDataValue(dataOffs);
 
@@ -503,10 +542,18 @@ public class VM {
                     program.step();
                 }	break;
                 case CALLDATACOPY:{
+                	assert(stack.size() == 3);
                     DataWord memOffsetData  = program.stackPop();
                     DataWord dataOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
 
+                    // gas calculation
+                    long price = GasCost.MEMORY * lengthData.value().intValue();
+                    System.out.println("Spneding "+price+" gas " );
+                    if( price < 0 ) // special case because of BigInteger to int conversion
+                     price = Long.MAX_VALUE;
+                    program.spendGas(price, op.name());
+                    
                     byte[] msgData = program.getDataCopy(dataOffsetData, lengthData);
 
                     if (logger.isInfoEnabled())
@@ -525,6 +572,7 @@ public class VM {
                     program.step();
                 }	break;
                 case CODECOPY:{
+                	assert(stack.size() == 3);
                     DataWord memOffsetData  = program.stackPop();
                     DataWord codeOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
@@ -614,10 +662,12 @@ public class VM {
                     program.step();
                 }   break;
                 case POP:{
+                	assert(stack.size() == 1);
                     program.stackPop();
                     program.step();
                 }	break;
                 case DUP:{
+                	assert(stack.size() == 1);
                     DataWord word_1 =  program.stackPop();
                     DataWord word_2 = word_1.clone();
                     program.stackPush(word_1);
@@ -625,6 +675,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SWAP:{
+                	assert(stack.size() == 2);
                     DataWord word_1 =  program.stackPop();
                     DataWord word_2 =  program.stackPop();
                     program.stackPush(word_1);
@@ -632,6 +683,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MLOAD:{
+                	assert(stack.size() == 1);
                     DataWord addr =  program.stackPop();
                     DataWord data =  program.memoryLoad(addr);
 
@@ -642,6 +694,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MSTORE:{
+                	assert(stack.size() == 2);
                     DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
 
@@ -652,6 +705,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MSTORE8:{
+                	assert(stack.size() == 2);
                     DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
                     byte[] byteVal = {value.getData()[31]};
@@ -659,6 +713,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SLOAD:{
+                	assert(stack.size() == 1);
                     DataWord key =  program.stackPop();
                     DataWord val = program.storageLoad(key);
 
@@ -672,6 +727,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SSTORE:{
+                	assert(stack.size() == 2);
                     DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
 
@@ -682,6 +738,7 @@ public class VM {
                     program.step();
                 }	break;
                 case JUMP:{
+                	assert(stack.size() == 1);
                     DataWord pos  =  program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -690,6 +747,7 @@ public class VM {
                     program.setPC(pos);
                 }	break;
                 case JUMPI:{
+                	assert(stack.size() == 2);
                     DataWord pos   =  program.stackPop();
                     DataWord cond  =  program.stackPop();
 
@@ -738,7 +796,7 @@ public class VM {
                 case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
                 case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:{
                     program.step();
-                    int nPush = op - PUSH1.val() + 1;
+                    int nPush = op.val() - PUSH1.val() + 1;
 
                     byte[] data = program.sweep(nPush);
                     hint = "" + Hex.toHexString(data);
@@ -746,20 +804,22 @@ public class VM {
                     program.stackPush(data);
                 }	break;
                 case CREATE:{
+                	assert(stack.size() == 3);
                     DataWord value      =  program.stackPop();
                     DataWord inOffset   =  program.stackPop();
                     DataWord inSize     =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-					logger.info(logString, program.getPC(), OpCode.code(op)
-							.name(), program.getGas().value(),
-							program.invokeData.getCallDeep(), hint);
+						logger.info(logString, program.getPC(), op.name(),
+								program.getGas().value(),
+								program.invokeData.getCallDeep(), hint);
                     
                     program.createContract(value, inOffset, inSize);
 
                     program.step();
                 }	break;
                 case CALL:{
+                	assert(stack.size() == 7);
                     DataWord gas        =  program.stackPop();
                     DataWord toAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
@@ -771,8 +831,8 @@ public class VM {
                     DataWord outDataSize =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-						logger.info(logString, program.getPC(), OpCode.code(op)
-								.name(), program.getGas().value(),
+						logger.info(logString, program.getPC(), op.name(),
+								program.getGas().value(),
 								program.invokeData.getCallDeep(), hint);
 
                     program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
@@ -780,6 +840,7 @@ public class VM {
                     program.step();
                 }	break;
                 case RETURN:{
+                	assert(stack.size() == 2);
                     DataWord offset   =  program.stackPop();
                     DataWord size     =  program.stackPop();
 
@@ -793,6 +854,7 @@ public class VM {
                     program.stop();
                 }	break;
                 case SUICIDE:{
+                	assert(stack.size() == 1);
                     DataWord address =  program.stackPop();
                     program.suicide(address);
                     
@@ -805,10 +867,10 @@ public class VM {
                 }
             }
             
-			if (logger.isInfoEnabled() && !OpCode.code(op).equals(CALL)
-					&& !OpCode.code(op).equals(CREATE))
-					logger.info(logString, stepBefore, OpCode.code(op).name(),
-							gasBefore, program.invokeData.getCallDeep(), hint);
+			if (logger.isInfoEnabled() && !op.equals(CALL)
+					&& !op.equals(CREATE))
+				logger.info(logString, stepBefore, op.name(), gasBefore,
+						program.invokeData.getCallDeep(), hint);
 
 //            program.fullTrace();
         } catch (RuntimeException e) {
