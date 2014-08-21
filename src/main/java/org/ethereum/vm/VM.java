@@ -66,6 +66,8 @@ public class VM {
 	private static BigInteger _32_ = BigInteger.valueOf(32);
 	private static String logString = "[ {} ]\t Op: [ {} ]\t Gas: [ {} ]\t Deep: [ {} ] Hint: [ {} ]";
 	
+	private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
+	
     public void step(Program program) {
 
         try {
@@ -73,7 +75,7 @@ public class VM {
             program.setLastOp(op.val());
 
             long oldMemSize = program.getMemSize();
-            long newMemSize = 0;
+            BigInteger newMemSize = BigInteger.ZERO;
             Stack<DataWord> stack = program.getStack();
 
             String hint = "";
@@ -112,58 +114,60 @@ public class VM {
         		// These all operate on memory and therefore potentially expand it:
         		case MSTORE:
         			assert(stack.size() == 2);
-        			newMemSize = stack.peek().longValue() + 32;
+        			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case MSTORE8:
         			assert(stack.size() == 2);
-        			newMemSize = stack.peek().longValue() + 1;
+        			newMemSize = stack.peek().value().add(BigInteger.ONE);
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case MLOAD:
         			assert(stack.size() == 1);
-        			newMemSize = stack.peek().longValue() + 32;
+        			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case RETURN:
         			assert(stack.size() == 2);
-        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-2).longValue();
+        			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case SHA3:
         			assert(stack.size() == 2);
         			program.spendGas(GasCost.SHA3, op.name());
-        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-2).longValue();
+        			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
         			break;
         		case CALLDATACOPY:
         			assert(stack.size() == 3);
-        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-3).longValue();
+        			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case CODECOPY:
         			assert(stack.size() == 3);
-        			newMemSize = stack.peek().longValue() + stack.get(stack.size()-3).longValue();
+        			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			program.spendGas(GasCost.STEP, op.name());
         			break;
         		case CALL:
         			assert(stack.size() == 7);
         			program.spendGas(GasCost.CALL, op.name());
-        			long x = stack.get(stack.size()-6).longValue() + stack.get(stack.size()-7).longValue();
-        			long y = stack.get(stack.size()-4).longValue() + stack.get(stack.size()-5).longValue();
-        			newMemSize = Math.max(x, y);
+        			BigInteger x = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value());
+        			BigInteger y = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value());
+        			newMemSize = x.max(y);
         			break;
         		case CREATE:
         			assert(stack.size() == 3);
         			program.spendGas(GasCost.CREATE, op.name());
-        			newMemSize = stack.get(stack.size()-2).longValue() + stack.get(stack.size()-3).longValue();
+        			newMemSize = stack.get(stack.size()-2).value().add(stack.get(stack.size()-3).value());
         			break;
                 default:
                     program.spendGas(GasCost.STEP, op.name());
                     break;
             }
-        
+            if(newMemSize.compareTo(MAX_GAS) == 1) {
+            	throw program.new OutOfGasException();
+            }
 	        // memory gas calc
-            long memoryUsage = (newMemSize + 31) / 32 * 32;
+            long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;
 //	        long memoryUsage = (newMemSize - oldMemSize) / 32;
 	        if (memoryUsage > oldMemSize)
 	            program.spendGas(GasCost.MEMORY * ((memoryUsage-oldMemSize)/32), op.name() + " (memory usage)");
