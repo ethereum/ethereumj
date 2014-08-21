@@ -370,7 +370,7 @@ public class Blockchain {
 		} catch (RuntimeException e) {
 			trackRepository.rollback();
 			if(e instanceof OutOfGasException)
-				return gasDebit.longValue();
+				return new BigInteger(1, tx.getGasLimit()).longValue();
 			return 0;
 		}
 		trackRepository.commit();
