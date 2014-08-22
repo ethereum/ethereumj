@@ -64,7 +64,7 @@ public class VM {
 	private Logger logger = LoggerFactory.getLogger("VM");
 	private Logger dumpLogger = LoggerFactory.getLogger("dump");
 	private static BigInteger _32_ = BigInteger.valueOf(32);
-	private static String logString = "[ {} ]\t Op: [ {} ]\t Gas: [ {} ]\t Deep: [ {} ] Hint: [ {} ]";
+	private static String logString = "[{}]\t Op: [{}]  Gas: [{}]\t Deep: [{}]  Hint: [{}]";
 	
 	private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
 	
@@ -817,7 +817,7 @@ public class VM {
             
 			if (logger.isInfoEnabled() && !op.equals(CALL)
 					&& !op.equals(CREATE))
-				logger.info(logString, stepBefore, op.name(), gasBefore,
+				logger.info(logString, stepBefore, String.format("%-12s", op.name()), gasBefore,
 						program.invokeData.getCallDeep(), hint);
 
 //            program.fullTrace();
