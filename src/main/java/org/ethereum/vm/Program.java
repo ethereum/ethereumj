@@ -44,7 +44,7 @@ public class Program {
     	this.invokeHash = invokeData.hashCode();
         result.setRepository(invokeData.getRepository());
 
-        if (ops == null) throw new RuntimeException("program can not run with ops: null");
+        if (ops == null) ops = new byte[0]; //throw new RuntimeException("program can not run with ops: null");
 
         this.invokeData = invokeData;
         this.ops = ops;
@@ -52,6 +52,8 @@ public class Program {
     }
 
     public byte getCurrentOp() {
+    	if(ops.length == 0)
+    		return 0;
         return ops[pc];
     }
 
@@ -180,11 +182,10 @@ public class Program {
 
     public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData) {
 
-        int offset = offsetData.value().intValue();
-        int size   = sizeData.value().intValue();
-        allocateMemory(offset, new byte[sizeData.intValue()]);
-
+        int offset = offsetData.intValue();
+        int size   = sizeData.intValue();
         byte[] chunk = new byte[size];
+        allocateMemory(offset, chunk);
 
         if (memory != null) {
             if (memory.limit() < offset + size) size = memory.limit() - offset;

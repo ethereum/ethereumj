@@ -140,7 +140,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
         byte[] data = new byte[32];
 
-        int index = indexData.value().intValue();
+        int index = indexData.intValue();
         int size = 32;
 
         if (msgData == null) return new DataWord(data);
@@ -155,7 +155,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*  CALLDATASIZE */
     public DataWord getDataSize() {
 
-        if (msgData == null || msgData.length == 0) return new DataWord(new byte[32]);
+        if (msgData == null || msgData.length == 0) return DataWord.ZERO;
         int size = msgData.length;
         return new DataWord(size);
     }
@@ -163,8 +163,8 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*  CALLDATACOPY */
     public byte[] getDataCopy(DataWord offsetData, DataWord lengthData) {
 
-        int offset = offsetData.value().intValue();
-        int length = lengthData.value().intValue();
+        int offset = offsetData.intValue();
+        int length = lengthData.intValue();
 
         byte[] data = new byte[length];
 
