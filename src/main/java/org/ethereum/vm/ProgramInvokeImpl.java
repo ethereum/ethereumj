@@ -2,6 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.db.Repository;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -134,21 +135,25 @@ public class ProgramInvokeImpl implements ProgramInvoke {
       /*****************/
      /***  msg data ***/
     /*****************/
-
+    /* NOTE: In the protocol there is no restriction on the maximum message data,
+     * However msgData here is a byte[] and this can't hold more than 2^32-1
+     */
+    private static BigInteger MAX_MSG_DATA = BigInteger.valueOf(Integer.MAX_VALUE);
     /*     CALLDATALOAD  op   */
     public DataWord getDataValue(DataWord indexData) {
 
-        byte[] data = new byte[32];
+        BigInteger tempIndex = indexData.value();
+        int index = tempIndex.intValue(); // possible overflow is caught below
+        int size = 32; // maximum datavalue size
 
-        int index = indexData.intValue();
-        int size = 32;
-
-        if (msgData == null) return new DataWord(data);
-        if (index > msgData.length) return new DataWord(data);
-        if (index + 32 > msgData.length) size = msgData.length - index ;
-
+		if (msgData == null || index >= msgData.length
+				|| tempIndex.compareTo(MAX_MSG_DATA) == 1)
+        	return new DataWord();
+        if (index + size > msgData.length)
+        	size = msgData.length - index;
+        
+        byte[] data = new byte[size];
         System.arraycopy(msgData, index, data, 0, size);
-
         return new DataWord(data);
     }
 
