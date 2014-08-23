@@ -152,7 +152,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         if (index + size > msgData.length)
         	size = msgData.length - index;
         
-        byte[] data = new byte[size];
+        byte[] data = new byte[32];
         System.arraycopy(msgData, index, data, 0, size);
         return new DataWord(data);
     }
