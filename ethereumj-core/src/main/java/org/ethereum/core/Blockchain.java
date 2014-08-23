@@ -112,8 +112,8 @@ public class Blockchain {
 		if (block == null)
 			return;
 		
-		if (block.getNumber() == 2111)
-			logger.debug("Block #2111");
+		if (block.getNumber() == 3211)
+			logger.debug("Block #3211");
 
         // if it is the first block to add
         // make sure the parent is genesis
@@ -170,7 +170,7 @@ public class Blockchain {
 			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
 			totalGasUsed += applyTransaction(block, txr.getTransaction());
 			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState()))
-				logger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8), 
+				stateLogger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8),
 						Hex.toHexString(this.repository.getWorldState().getRootHash()));
 			if(block.getNumber() >= CONFIG.traceStartBlock())
 				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
@@ -196,7 +196,7 @@ public class Blockchain {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
             String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
-                logger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);           		
+            	stateLogger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
 //                repository.close();
 //                System.exit(-1); // Don't add block
             }
