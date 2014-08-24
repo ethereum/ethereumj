@@ -2,6 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.db.Repository;
 
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -134,28 +135,32 @@ public class ProgramInvokeImpl implements ProgramInvoke {
       /*****************/
      /***  msg data ***/
     /*****************/
-
+    /* NOTE: In the protocol there is no restriction on the maximum message data,
+     * However msgData here is a byte[] and this can't hold more than 2^32-1
+     */
+    private static BigInteger MAX_MSG_DATA = BigInteger.valueOf(Integer.MAX_VALUE);
     /*     CALLDATALOAD  op   */
     public DataWord getDataValue(DataWord indexData) {
 
+        BigInteger tempIndex = indexData.value();
+        int index = tempIndex.intValue(); // possible overflow is caught below
+        int size = 32; // maximum datavalue size
+
+		if (msgData == null || index >= msgData.length
+				|| tempIndex.compareTo(MAX_MSG_DATA) == 1)
+        	return new DataWord();
+        if (index + size > msgData.length)
+        	size = msgData.length - index;
+        
         byte[] data = new byte[32];
-
-        int index = indexData.value().intValue();
-        int size = 32;
-
-        if (msgData == null) return new DataWord(data);
-        if (index > msgData.length) return new DataWord(data);
-        if (index + 32 > msgData.length) size = msgData.length - index ;
-
         System.arraycopy(msgData, index, data, 0, size);
-
         return new DataWord(data);
     }
 
     /*  CALLDATASIZE */
     public DataWord getDataSize() {
 
-        if (msgData == null || msgData.length == 0) return new DataWord(new byte[32]);
+        if (msgData == null || msgData.length == 0) return DataWord.ZERO;
         int size = msgData.length;
         return new DataWord(size);
     }
@@ -163,8 +168,8 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*  CALLDATACOPY */
     public byte[] getDataCopy(DataWord offsetData, DataWord lengthData) {
 
-        int offset = offsetData.value().intValue();
-        int length = lengthData.value().intValue();
+        int offset = offsetData.intValue();
+        int length = lengthData.intValue();
 
         byte[] data = new byte[length];
 

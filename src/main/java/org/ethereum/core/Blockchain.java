@@ -12,7 +12,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,9 +64,6 @@ public class Blockchain {
     // keep the index of the chain for
     // convenient usage, <block_number, block_hash>
     private Map<Long, byte[]> blockCache = new HashMap<>();
-    
-	private Map<String, Transaction> pendingTransactions = Collections
-			.synchronizedMap(new HashMap<String, Transaction>());
 	
     private BlockQueue blockQueue = new BlockQueue();
 
@@ -115,6 +111,9 @@ public class Blockchain {
 
 		if (block == null)
 			return;
+		
+		if (block.getNumber() == 3211)
+			logger.debug("Block #3211");
 
         // if it is the first block to add
         // make sure the parent is genesis
@@ -171,7 +170,7 @@ public class Blockchain {
 			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
 			totalGasUsed += applyTransaction(block, txr.getTransaction());
 			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState()))
-				logger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8), 
+				stateLogger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8),
 						Hex.toHexString(this.repository.getWorldState().getRootHash()));
 			if(block.getNumber() >= CONFIG.traceStartBlock())
 				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
@@ -197,7 +196,7 @@ public class Blockchain {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
             String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
-                logger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);           		
+            	stateLogger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
 //                repository.close();
 //                System.exit(-1); // Don't add block
             }
@@ -214,18 +213,21 @@ public class Blockchain {
     
     
     /**
-     * Apply the transaction to the world state
+     * Apply the transaction to the world state.
+     *
+     * During this method changes to the repository are either permanent or possibly reverted by a VM exception.
      *  
      * @param block - the block which contains the transactions
      * @param tx - the transaction to be applied
-     * @return gasUsed
+     * @return gasUsed - the total amount of gas used for this transaction.
      */
 	public long applyTransaction(Block block, Transaction tx) {
 
 		byte[] coinbase = block.getCoinbase();
+
+		// VALIDATE THE SENDER
 		byte[] senderAddress = tx.getSender();
 		AccountState senderAccount = repository.getAccountState(senderAddress);
-
 		if (senderAccount == null) {
 			if (stateLogger.isWarnEnabled())
 				stateLogger.warn("No such address: {}",
@@ -233,7 +235,7 @@ public class Blockchain {
 			return 0;
 		}
 
-		// 1. VALIDATE THE NONCE
+		// VALIDATE THE NONCE
 		BigInteger nonce = senderAccount.getNonce();
 		BigInteger txNonce = new BigInteger(1, tx.getNonce());
 		if (nonce.compareTo(txNonce) != 0) {
@@ -242,24 +244,19 @@ public class Blockchain {
 						nonce, txNonce);
 			return 0;
 		}
+		
+		// UPDATE THE NONCE
+		repository.increaseNonce(senderAddress);
 
-		// 3. FIND OUT THE TRANSACTION TYPE
+		// FIND OUT THE TRANSACTION TYPE
 		byte[] receiverAddress, code = null;
 		boolean isContractCreation = tx.isContractCreation();
 		if (isContractCreation) {
 			receiverAddress = tx.getContractAddress();
-			repository.createAccount(receiverAddress);
-			if(stateLogger.isDebugEnabled())
-				stateLogger.debug("new contract created address={}",
-						Hex.toHexString(receiverAddress));
 			code = tx.getData(); // init code
-			if (stateLogger.isDebugEnabled())
-				stateLogger.debug("running the init for contract: address={}",
-						Hex.toHexString(receiverAddress));
 		} else {
 			receiverAddress = tx.getReceiveAddress();
-			AccountState receiverState = repository.getAccountState(receiverAddress);
-			if (receiverState == null) {
+			if (repository.getAccountState(receiverAddress) == null) {
 				repository.createAccount(receiverAddress);
 				if (stateLogger.isDebugEnabled())
 					stateLogger.debug("new receiver account created address={}",
@@ -274,12 +271,27 @@ public class Blockchain {
 			}
 		}
 		
-		// 2.1 UPDATE THE NONCE
-		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-		repository.increaseNonce(senderAddress);
+		// THE SIMPLE VALUE/BALANCE CHANGE
+		boolean isValueTx = tx.getValue() != null;
+		if (isValueTx) {
+			BigInteger txValue = new BigInteger(1, tx.getValue());
+			if (senderAccount.getBalance().compareTo(txValue) >= 0) {
+				senderAccount.subFromBalance(txValue); // balance will be read again below
+				repository.addBalance(senderAddress, txValue.negate());
+				
+				if(!isContractCreation) // adding to new contract could be reverted
+					repository.addBalance(receiverAddress, txValue);
+				
+				if (stateLogger.isDebugEnabled())
+					stateLogger.debug("Update value balance \n "
+							+ "sender={}, receiver={}, value={}",
+							Hex.toHexString(senderAddress),
+							Hex.toHexString(receiverAddress),
+							new BigInteger(tx.getValue()));
+			}
+		}
 
-		// 2.2 PERFORM THE GAS VALUE TX
-		// (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+		// GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
 		BigInteger gasDebit = tx.getTotalGasValueDebit();
 	
 		// Debit the actual total gas value from the sender
@@ -287,14 +299,12 @@ public class Blockchain {
 		// the contract in the execution state, 
 		// it can be retrieved using GAS op
 		if (gasDebit.signum() == 1) {
-			BigInteger balance = senderAccount.getBalance();
-			if (balance.compareTo(gasDebit) == -1) {
+			if (senderAccount.getBalance().compareTo(gasDebit) == -1) {
 				logger.debug("No gas to start the execution: sender={}",
 						Hex.toHexString(senderAddress));
 				return 0;
 			}
 			repository.addBalance(senderAddress, gasDebit.negate());
-            senderAccount.subFromBalance(gasDebit); // balance will be read again below
             
             // The coinbase get the gas cost
             if (coinbase != null)
@@ -306,37 +316,28 @@ public class Blockchain {
 								+ "\n sender={} \n gas_debit= {}",
 						Hex.toHexString(senderAddress), gasDebit);
 		}
-
-		
-		// 3. THE SIMPLE VALUE/BALANCE CHANGE
-		if (tx.getValue() != null) {
-
-			BigInteger senderBalance = senderAccount.getBalance();
-
-			if (senderBalance.compareTo(new BigInteger(1, tx.getValue())) >= 0) {
-				repository.addBalance(receiverAddress,
-						new BigInteger(1, tx.getValue()));
-				repository.addBalance(senderAddress,
-						new BigInteger(1, tx.getValue()).negate());
-
-				if (stateLogger.isDebugEnabled())
-					stateLogger.debug("Update value balance \n "
-							+ "sender={}, receiver={}, value={}",
-							Hex.toHexString(senderAddress),
-							Hex.toHexString(receiverAddress),
-							new BigInteger(tx.getValue()));
-			}
-		}
-
-		// 4. START TRACKING FOR REVERT CHANGES OPTION !!!
-		Repository trackRepository = repository.getTrack();
-		trackRepository.startTracking();
+				
+		// CREATE AND/OR EXECUTE CONTRACT
 		long gasUsed = 0;
-		try {
-			
-			// 5. CREATE OR EXECUTE PROGRAM
-
-			if (isContractCreation || code != null) {
+		if (isContractCreation || code != null) {
+	
+			// START TRACKING FOR REVERT CHANGES OPTION
+			Repository trackRepository = repository.getTrack();
+			trackRepository.startTracking();
+			try {
+				
+				// CREATE NEW CONTRACT ADDRESS AND ADD TX VALUE
+				if(isContractCreation) {
+					if (isValueTx) // adding to balance also creates the account
+						trackRepository.addBalance(receiverAddress, new BigInteger(1, tx.getValue()));
+					else
+						trackRepository.createAccount(receiverAddress);
+					
+					if(stateLogger.isDebugEnabled())
+						stateLogger.debug("new contract created address={}",
+								Hex.toHexString(receiverAddress));
+				}
+				
 				Block currBlock =  (block == null) ? this.getLastBlock() : block;
 
 				ProgramInvoke programInvoke = ProgramInvokeFactory
@@ -351,24 +352,24 @@ public class Blockchain {
 				applyProgramResult(result, gasDebit, trackRepository,
 						senderAddress, receiverAddress, coinbase, isContractCreation);
 				gasUsed = result.getGasUsed();
-			} else {
-				// refund everything except fee (500 + 5*txdata)
-				BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
-				long dataFee = tx.getData() == null ? 0: tx.getData().length * GasCost.TXDATA;
-				long minTxFee = GasCost.TRANSACTION + dataFee;
-				BigInteger refund = gasDebit.subtract(BigInteger.valueOf(minTxFee).multiply(gasPrice));
-				if (refund.signum() > 0) {
-					// gas refund
-					repository.addBalance(senderAddress, refund);
-					repository.addBalance(coinbase, refund.negate());
-				}
+
+			} catch (RuntimeException e) {
+				trackRepository.rollback();
+				return new BigInteger(1, tx.getGasLimit()).longValue();
 			}
-		} catch (RuntimeException e) {
-			trackRepository.rollback();
-			return 0;
+			trackRepository.commit();
+		} else {
+			// REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TXDATA)
+			long dataCost = tx.getData() == null ? 0: tx.getData().length * GasCost.TXDATA;
+			gasUsed = GasCost.TRANSACTION + dataCost;
+			
+			BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
+			BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));
+			if (refund.signum() > 0) {
+				repository.addBalance(senderAddress, refund);
+				repository.addBalance(coinbase, refund.negate());
+			}
 		}
-		trackRepository.commit();
-		pendingTransactions.put(Hex.toHexString(tx.getHash()), tx);
 		return gasUsed;
 	}
 	

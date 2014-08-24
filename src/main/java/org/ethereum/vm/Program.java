@@ -44,15 +44,16 @@ public class Program {
     	this.invokeHash = invokeData.hashCode();
         result.setRepository(invokeData.getRepository());
 
-        if (ops == null) throw new RuntimeException("program can not run with ops: null");
+        if (ops == null) ops = new byte[0]; //throw new RuntimeException("program can not run with ops: null");
 
         this.invokeData = invokeData;
         this.ops = ops;
         this.programAddress = invokeData.getOwnerAddress();
-
     }
 
     public byte getCurrentOp() {
+    	if(ops.length == 0)
+    		return 0;
         return ops[pc];
     }
 
@@ -77,6 +78,10 @@ public class Program {
 
     public void stackPush(DataWord stackWord) {
         stack.push(stackWord);
+    }
+    
+    public Stack<DataWord> getStack() {
+    	return this.stack;
     }
 
     public int getPC() {
@@ -114,7 +119,6 @@ public class Program {
     }
 
     public void step() {
-
         ++pc;
         if (pc >= ops.length) stop();
     }
@@ -139,6 +143,13 @@ public class Program {
             throw new RuntimeException("attempted pull action for empty stack");
         }
         return stack.pop();
+    }
+    
+    public void require(int stackSize) {
+    	if(stack.size() != stackSize) {
+            stop();
+            throw new RuntimeException("stack too small");
+    	}
     }
 
     public int getMemSize() {
@@ -171,11 +182,10 @@ public class Program {
 
     public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData) {
 
-        int offset = offsetData.value().intValue();
-        int size   = sizeData.value().intValue();
-        allocateMemory(offset, new byte[sizeData.intValue()]);
-
+        int offset = offsetData.intValue();
+        int size   = sizeData.intValue();
         byte[] chunk = new byte[size];
+        allocateMemory(offset, chunk);
 
         if (memory != null) {
             if (memory.limit() < offset + size) size = memory.limit() - offset;
@@ -268,7 +278,6 @@ public class Program {
         }
         result.getRepository().addBalance(senderAddress, endowment.negate());
         result.getRepository().addBalance(newAddress, endowment);
-
 
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
@@ -435,12 +444,11 @@ public class Program {
                 		Hex.toHexString(senderAddress), refundGas.toString());
             }
         } else {
-
             this.refundGas(gas.intValue(), "remaining gas from the internal call");
         }
     }
 
-    public void spendGas(int gasValue, String cause) {
+    public void spendGas(long gasValue, String cause) {
         gasLogger.info("[{}] Spent for cause: [ {} ], gas: [ {} ]", invokeHash, cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
@@ -546,7 +554,6 @@ public class Program {
     public DataWord getGaslimit() {
         return invokeData.getGaslimit().clone();
     }
-
 
     public ProgramResult getResult() {
         return result;
