@@ -6,6 +6,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
@@ -17,9 +18,6 @@ import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -409,8 +407,7 @@ public class Repository {
             ObjectNode blockNode = jsonFactory.objectNode();
             JSONHelper.dumpBlock(blockNode, block, gasUsed, this.getWorldState().getRootHash(), keys, this);
             
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.enable(SerializationFeature.INDENT_OUTPUT);
+            EtherObjectMapper mapper = new EtherObjectMapper();
             bw.write(mapper.writeValueAsString(blockNode));
 
         } catch (IOException e) {
