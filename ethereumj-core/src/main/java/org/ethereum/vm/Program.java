@@ -565,7 +565,7 @@ public class Program {
 
     public void fullTrace() {
 
-        if (logger.isDebugEnabled() || listener != null) {
+        if (logger.isTraceEnabled() || listener != null) {
 
             StringBuilder stackData = new StringBuilder();
             for (int i = 0; i < stack.size(); ++i) {
@@ -616,11 +616,11 @@ public class Program {
             if (pc >= ops.length) opsString.append(" >>");
             if (opsString.length() > 0) opsString.insert(0, "\n ");
 
-            logger.debug(" -- OPS --     {}", opsString);
-            logger.debug(" -- STACK --   {}", stackData);
-            logger.debug(" -- MEMORY --  {}", memoryData);
-            logger.debug(" -- STORAGE -- {}\n", storageData);
-            logger.debug("\n  Spent Gas: [ {} ]/[ {} ]\n  Left Gas:  [ {} ]\n",
+            logger.trace(" -- OPS --     {}", opsString);
+            logger.trace(" -- STACK --   {}", stackData);
+            logger.trace(" -- MEMORY --  {}", memoryData);
+            logger.trace(" -- STORAGE -- {}\n", storageData);
+            logger.trace("\n  Spent Gas: [ {} ]/[ {} ]\n  Left Gas:  [ {} ]\n",
                     result.getGasUsed(),
                     invokeData.getGas().longValue(),
                     getGas().longValue());
