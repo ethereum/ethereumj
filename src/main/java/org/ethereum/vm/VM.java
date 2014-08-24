@@ -826,6 +826,9 @@ public class VM {
 				logger.info(logString, stepBefore, String.format("%-12s", op.name()), program.getGas().longValue(),
 						program.invokeData.getCallDeep(), hint);
 
+            program.fullTrace();
+
+
 //            program.fullTrace();
         } catch (RuntimeException e) {
             if(e instanceof OutOfGasException)
