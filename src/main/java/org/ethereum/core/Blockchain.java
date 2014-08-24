@@ -112,8 +112,8 @@ public class Blockchain {
 		if (block == null)
 			return;
 		
-		if (block.getNumber() == 3211)
-			logger.debug("Block #3211");
+		if (block.getNumber() == 12301)
+			logger.debug("Block #12301");
 
         // if it is the first block to add
         // make sure the parent is genesis
@@ -176,17 +176,35 @@ public class Blockchain {
 				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
 		}
 		
-		// miner reward
-		if (repository.getAccountState(block.getCoinbase()) == null)
-			repository.createAccount(block.getCoinbase());
-		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
-		
-		for (BlockHeader uncle : block.getUncleList()) {
-			repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
-		}
+		this.addReward(block);
 		
         if(block.getNumber() >= CONFIG.traceStartBlock())
         	repository.dumpState(block, totalGasUsed, 0, null);
+	}
+
+	/**
+	 * 
+	 * @param block
+	 */
+	private void addReward(Block block) {
+		// Create coinbase if doesn't exist yet
+		if (repository.getAccountState(block.getCoinbase()) == null)
+			repository.createAccount(block.getCoinbase());
+		
+		// Add standard block reward
+		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
+		
+		// Add extra rewards based on number of uncles		
+		if(block.getUncleList().size() > 0) {
+			BigInteger partialReward = Block.BLOCK_REWARD
+					.multiply(BigInteger.valueOf(1 * block.getUncleList().size()))
+					.divide(BigInteger.valueOf(8));
+			repository.addBalance(block.getCoinbase(), partialReward);
+			
+			for (BlockHeader uncle : block.getUncleList()) {
+				repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
+			}
+		}
 	}
     
     public void storeBlock(Block block) {
