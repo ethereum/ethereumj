@@ -140,8 +140,9 @@ public class VM {
         			break;
         		case CALL:
         			program.spendGas(GasCost.CALL, op.name());
-        			if(stack.get(stack.size()-1).value().compareTo(MAX_GAS) == 1) {
-        				throw program.new OutOfGasException(); // protect against overflow (needs refactoring)
+        			BigInteger callGas = stack.get(stack.size()-1).value();
+        			if(callGas.compareTo(program.getGas().value()) == 1) {
+        				throw program.new OutOfGasException();
                     }
         			BigInteger x = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value());
         			BigInteger y = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value());
