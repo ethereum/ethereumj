@@ -1,6 +1,7 @@
 package org.ethereum.vm;
 
 import org.ethereum.db.Repository;
+import org.ethereum.vm.Program.OutOfGasException;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -2662,6 +2663,26 @@ public class VMTest {
         }
     }
 
+    @Test(expected=OutOfGasException.class) // CALLDATACOPY OP mal
+    public void testCALLDATACOPY_7() {
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("6020600073CC0929EB16730E7C14FEFC63006AC2D794C5795637"),
+                        createProgramInvoke_1());
+
+        try {
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            fail();
+        } finally {
+            program.getResult().getRepository().close();
+            assertTrue(program.isStopped());
+        }
+    }
+    
     @Test // ADDRESS OP
     public void testADDRESS_1() {
 
