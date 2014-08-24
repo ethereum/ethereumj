@@ -79,7 +79,6 @@ public class VM {
             Stack<DataWord> stack = program.getStack();
 
             String hint = "";
-            long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
             
             // Log debugging line for VM
@@ -141,6 +140,10 @@ public class VM {
         			break;
         		case CALL:
         			program.spendGas(GasCost.CALL, op.name());
+        			BigInteger callGas = stack.get(stack.size()-1).value();
+        			if(callGas.compareTo(program.getGas().value()) == 1) {
+        				throw program.new OutOfGasException();
+                    }
         			BigInteger x = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value());
         			BigInteger y = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value());
         			newMemSize = x.max(y);
@@ -326,7 +329,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = word1.value() + " < " + word2.value();
+                        hint = word1.value() + " > " + word2.value();
 
                     if (word1.value().compareTo(word2.value()) == 1) {
                         word1.and(DataWord.ZERO);
@@ -761,7 +764,8 @@ public class VM {
                     DataWord inSize     =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-						logger.info(logString, program.getPC(), op.name(),
+						logger.info(logString, program.getPC(),
+								String.format("%-12s", op.name()),
 								program.getGas().value(),
 								program.invokeData.getCallDeep(), hint);
                     
@@ -781,7 +785,8 @@ public class VM {
                     DataWord outDataSize =  program.stackPop();
 
                     if (logger.isInfoEnabled())
-						logger.info(logString, program.getPC(), op.name(),
+						logger.info(logString, program.getPC(),
+								String.format("%-12s", op.name()),
 								program.getGas().value(),
 								program.invokeData.getCallDeep(), hint);
 
@@ -817,7 +822,7 @@ public class VM {
             
 			if (logger.isInfoEnabled() && !op.equals(CALL)
 					&& !op.equals(CREATE))
-				logger.info(logString, stepBefore, String.format("%-12s", op.name()), gasBefore,
+				logger.info(logString, stepBefore, String.format("%-12s", op.name()), program.getGas().longValue(),
 						program.invokeData.getCallDeep(), hint);
 
 //            program.fullTrace();

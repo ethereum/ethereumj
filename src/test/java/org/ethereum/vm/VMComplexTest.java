@@ -4,6 +4,7 @@ import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.Repository;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
@@ -346,4 +347,11 @@ public class VMComplexTest {
         // TODO: check that the value pushed after exec is the new address
         repository.close();
     }
+    
+    @Test // CALL contract with too much gas
+    @Ignore
+    public void test5() {
+    	// TODO: CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
+    }
+
 }
