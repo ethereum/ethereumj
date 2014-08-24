@@ -144,9 +144,10 @@ public class VM {
         			if(callGas.compareTo(program.getGas().value()) == 1) {
         				throw program.new OutOfGasException();
                     }
-        			BigInteger x = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value());
-        			BigInteger y = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value());
-        			newMemSize = x.max(y);
+        			// Casting to long (causing overflow) as workaround for PoC5 - should be removed for PoC6
+        			long x = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()).longValue();
+        			long y = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value()).longValue();
+        			newMemSize = BigInteger.valueOf(Math.max(x, y));
         			break;
         		case CREATE:
         			program.spendGas(GasCost.CREATE, op.name());

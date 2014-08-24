@@ -38,7 +38,7 @@ public class Block {
 	private static long MIN_GAS_LIMIT = 125000L;
     public  static BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
 	public static BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
-			BigInteger.valueOf(7)).divide(BigInteger.valueOf(8));
+			BigInteger.valueOf(3)).divide(BigInteger.valueOf(4));
 
 	private BlockHeader header;
 	
