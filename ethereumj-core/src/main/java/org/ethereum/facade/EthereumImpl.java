@@ -100,16 +100,6 @@ public class EthereumImpl implements Ethereum {
         WorldManager.getInstance().addListener(listener);
     }
 
-
-    private void sleep10Milli(){
-        try {
-            Thread.sleep(10);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-
     @Override
     public void loadBlockChain() {
         WorldManager.getInstance().loadBlockchain();
