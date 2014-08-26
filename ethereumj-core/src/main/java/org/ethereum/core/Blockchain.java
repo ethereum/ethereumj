@@ -52,44 +52,28 @@ import static org.ethereum.core.Denomination.SZABO;
  */
 public class Blockchain {
 
-	private static Logger logger = LoggerFactory.getLogger("blockchain");
-	private static Logger stateLogger = LoggerFactory.getLogger("state");
+	private static final Logger logger = LoggerFactory.getLogger(Blockchain.class);
+	private static final Logger stateLogger = LoggerFactory.getLogger("state");
 	
 	// to avoid using minGasPrice=0 from Genesis for the wallet
-	private static long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+	private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
 	private Repository repository;
     private Block lastBlock;
 
     // keep the index of the chain for
     // convenient usage, <block_number, block_hash>
-    private Map<Long, byte[]> blockCache = new HashMap<>();
+    private final Map<Long, byte[]> blockCache = new HashMap<>();
 	
-    private BlockQueue blockQueue = new BlockQueue();
+    private final BlockQueue blockQueue = new BlockQueue();
 
 	public Blockchain(Repository repository) {
 		this.repository = repository;
 	}
 	
-    public BlockQueue getBlockQueue() {
-        return blockQueue;
-    }
-    
-    public Map<Long, byte[]> getBlockCache() {
-    	return this.blockCache;
-    }
-    
     public long getGasPrice() {
         // In case of the genesis block we don't want to rely on the min gas price
         return lastBlock.isGenesis() ? lastBlock.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
-    }
-
-	public Block getLastBlock() {
-		return lastBlock;
-	}
-
-    public void setLastBlock(Block block) {
-    	this.lastBlock = block;
     }
 
     public byte[] getLatestBlockHash() {
@@ -450,4 +434,21 @@ public class Blockchain {
             repository.delete(address.getNoLeadZeroesData());
         }
 	}
+	
+	public BlockQueue getBlockQueue() {
+        return blockQueue;
+    }
+    
+    public Map<Long, byte[]> getBlockCache() {
+    	return this.blockCache;
+    }
+    
+	public Block getLastBlock() {
+		return lastBlock;
+	}
+
+    public void setLastBlock(Block block) {
+    	this.lastBlock = block;
+    }
+
 }

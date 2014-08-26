@@ -5,8 +5,12 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Blockchain;
@@ -30,23 +34,27 @@ import org.ethereum.net.peerdiscovery.PeerDiscovery;
 public class WorldManager {
 
 	private Blockchain blockchain;
-	private Repository repository;
+	private final Repository repository;
 	private Wallet wallet;
 
     private PeerDiscovery peerDiscovery;
-    private List<PeerData> peers = new CopyOnWriteArrayList<PeerData>();
+    
+    private final BlockingQueue<PeerData> peers = new LinkedBlockingQueue<>();
+    
     private ClientPeer activePeer;
 
     private EthereumListener listener;
-
-	private static WorldManager instance;
-
+    
+    private static final class WorldManagerHolder {
+    	private static final WorldManager instance = new WorldManager();
+    }
+    
 	private WorldManager() {
 		this.repository = new Repository();
 		this.blockchain = new Blockchain(repository);
 		
         // Initialize PeerData
-        List<PeerData> peerDataList =  parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
+        List<PeerData> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
         peers.addAll(peerDataList);
 
         peerDiscovery = new PeerDiscovery(peers);
@@ -66,18 +74,66 @@ public class WorldManager {
 	}
 	
 	public static WorldManager getInstance() {
-		if(instance == null) {
-			instance = new WorldManager();
-		}
-		return instance;
+		return WorldManagerHolder.instance;
 	}
-      
-    public void setRepository(Repository repository)  {
-    	this.repository = repository;
-    }
     
-    public void setBlockchain(Blockchain blockchain)  {
-    	this.blockchain = blockchain;
+    public void addListener(EthereumListener listener){
+        this.listener = listener;
+    }
+
+    public void addPeers(final Set<PeerData> newPeers) {
+        for (final PeerData peer : newPeers) {
+        	peers.add(peer);
+        	if (peerDiscovery.isStarted()) {
+        		peerDiscovery.addNewPeerData(peer);
+        	}
+        }
+    }
+
+    public void startPeerDiscovery() {
+        if (!peerDiscovery.isStarted())
+            peerDiscovery.start();
+    };
+
+    public void stopPeerDiscover(){
+
+        if (listener != null)
+            listener.trace("Stopping peer discovery");
+
+        if (peerDiscovery.isStarted())
+            peerDiscovery.stop();
+    }
+
+    public void close() {
+		repository.close();
+	}
+
+    public EthereumListener getListener() {
+        return listener;
+    }
+
+    public List<PeerData> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
+
+        final List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
+        final List<PeerData> peers = new ArrayList<>();
+
+        for (String ip : ipList){
+            String[] addr = ip.trim().split(":");
+            String ip_trim = addr[0];
+            String port_trim = addr[1];
+
+            try {
+                InetAddress iAddr = InetAddress.getByName(ip_trim);
+                int port = Integer.parseInt(port_trim);
+
+                PeerData peerData = new PeerData(iAddr.getAddress(), port, new byte[]{00});
+                peers.add(peerData);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return peers;
     }
     
     public void setWallet(Wallet wallet)  {
@@ -108,68 +164,8 @@ public class WorldManager {
         return activePeer;
     }
 
-    public List<PeerData> getPeers() {
-        return peers;
-    }
-
-    public void addListener(EthereumListener listener){
-        this.listener = listener;
-    }
-
-    public void addPeers(List<PeerData> newPeers) {
-        for (PeerData peer : newPeers) {
-            if (this.peers.indexOf(peer) == -1) {
-
-                this.peers.add(peer);
-                if (peerDiscovery.isStarted())
-                    peerDiscovery.addNewPeerData(peer);
-            }
-        }
-    }
-
-    public void startPeerDiscovery() {
-        if (!peerDiscovery.isStarted())
-            peerDiscovery.start();
-    };
-
-    public void stopPeerDiscover(){
-
-        if (listener != null)
-            listener.trace("Stopping peer discovery");
-
-        if (peerDiscovery.isStarted())
-            peerDiscovery.stop();
-    }
-
-    public void close() {
-		repository.close();
+    public BlockingQueue<PeerData> getPeers() {
+		return peers;
 	}
 
-    public EthereumListener getListener() {
-        return listener;
-    }
-
-    public List<PeerData> parsePeerDiscoveryIpList(String peerDiscoveryIpList){
-
-        List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
-        List<PeerData> peers = new ArrayList<>();
-
-        for (String ip : ipList){
-            String[] addr = ip.trim().split(":");
-            String ip_trim = addr[0];
-            String port_trim = addr[1];
-
-            try {
-                InetAddress iAddr = InetAddress.getByName(ip_trim);
-                int port = Integer.parseInt(port_trim);
-
-                PeerData peerData = new PeerData(iAddr.getAddress(), port, new byte[]{00});
-                peers.add(peerData);
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
-        }
-
-        return peers;
-    }
 }

@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -86,7 +87,7 @@ public class ClientPeer {
 
             handler.killTimers();
 
-            List<PeerData> peers =  WorldManager.getInstance().getPeers();
+            final Collection<PeerData> peers =  WorldManager.getInstance().getPeers();
 
             for (PeerData peer : peers){
                 if (host.equals(peer.getInetAddress().getHostAddress()) &&

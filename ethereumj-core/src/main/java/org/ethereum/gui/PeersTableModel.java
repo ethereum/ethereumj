@@ -111,10 +111,8 @@ public class PeersTableModel extends AbstractTableModel {
         synchronized (peerInfoList) {
             peerInfoList.clear();
 
-            List<PeerData> peers = WorldManager.getInstance().getPeers();
-            for (int i = 0; i < peers.size(); ++i) {
-
-                PeerData peer = peers.get(i);
+            final Collection<PeerData> peers = WorldManager.getInstance().getPeers();
+            for (PeerData peer : peers) {
                 InetAddress addr = peer.getInetAddress();
                 Location cr = IpGeoDB.getLocationForIp(addr);
                 peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getHandshake(), peer.getLastCheckTime()));

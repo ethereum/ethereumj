@@ -19,7 +19,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class PeerTaster {
 
-    private Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
     final EthereumPeerTasterHandler handler = new EthereumPeerTasterHandler();
 
     public PeerTaster() {

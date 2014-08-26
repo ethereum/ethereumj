@@ -4,8 +4,10 @@ import org.ethereum.net.client.PeerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -15,18 +17,19 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * Created on: 22/05/2014 09:10
  */
 public class PeerDiscovery {
+	
+	private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     private RejectedExecutionHandlerImpl rejectionHandler;
     private ThreadFactory threadFactory;
     private ThreadPoolExecutor executorPool;
     private PeerDiscoveryMonitorThread monitor;
-    private List<PeerData> peers;
+    
+    private final Collection<PeerData> peers;
 
-    Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
-    private boolean started = false;
-
-    public PeerDiscovery(List<PeerData> peers) {
+    public PeerDiscovery(Collection<PeerData> peers) {
         this.peers = peers;
     }
 
@@ -50,11 +53,11 @@ public class PeerDiscovery {
         for (PeerData peerData : this.peers) {
             executorPool.execute(new WorkerThread(peerData, executorPool));
         }
-        started = true;
+        
+        started.set(true);
     }
 
     public void addNewPeerData(PeerData peerData) {
-
         logger.debug("add new peer for discovery: {}", peerData);
         executorPool.execute(new WorkerThread(peerData, executorPool));
     }
@@ -65,7 +68,7 @@ public class PeerDiscovery {
     }
 
     public boolean isStarted() {
-        return started;
+        return started.get();
     }
 
 }
