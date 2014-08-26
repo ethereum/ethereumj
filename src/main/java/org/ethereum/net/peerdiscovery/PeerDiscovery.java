@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Queue;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -25,11 +26,11 @@ public class PeerDiscovery {
     private ThreadPoolExecutor executorPool;
     private PeerDiscoveryMonitorThread monitor;
     
-    private final Collection<PeerData> peers;
+    private final Queue<PeerData> peers;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
-    public PeerDiscovery(Collection<PeerData> peers) {
+    public PeerDiscovery(Queue<PeerData> peers) {
         this.peers = peers;
     }
 

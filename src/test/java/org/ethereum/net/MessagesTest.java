@@ -122,7 +122,8 @@ public class MessagesTest {
 
         assertEquals(2, peersMessage.getPeers().size());
 
-        PeerData peerData = peersMessage.getPeers().iterator().next();
+        Iterator<PeerData> it = peersMessage.getPeers().iterator(); it.next();
+        PeerData peerData = it.next();
 
         assertEquals("/81.99.225.18", peerData.getInetAddress().toString());
         assertEquals(30303, peerData.getPort());
