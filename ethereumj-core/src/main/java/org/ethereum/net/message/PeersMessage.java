@@ -1,12 +1,10 @@
 package org.ethereum.net.message;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import static org.ethereum.net.Command.PEERS;
+
+import java.nio.ByteBuffer;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.ethereum.net.Command;
 import org.ethereum.net.client.PeerData;
@@ -23,7 +21,7 @@ public class PeersMessage extends Message {
 
     private boolean parsed = false;
 
-    private final Set<PeerData> peers = new HashSet<PeerData>();
+    private final Set<PeerData> peers = new LinkedHashSet<PeerData>();
 
     public PeersMessage(byte[] payload) {
         super(RLP.decode2(payload));
