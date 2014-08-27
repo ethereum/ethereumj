@@ -32,7 +32,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class Block {
 
-	private static Logger logger = LoggerFactory.getLogger(Block.class);
+	private static Logger logger = LoggerFactory.getLogger("block");
 	
 	/* A scalar value equal to the mininum limit of gas expenditure per block */
 	private static long MIN_GAS_LIMIT = 125000L;

@@ -15,8 +15,8 @@ import java.net.InetAddress;
 
 public interface Ethereum {
 
-    public PeerData findPeer(PeerData peerData);
-    public PeerData findPeer();
+    public PeerData findPeer(PeerData peerData) throws InterruptedException;
+    public PeerData findPeer() throws InterruptedException;
 
     public void stopPeerDiscover();
 
