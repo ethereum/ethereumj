@@ -52,7 +52,7 @@ import static org.ethereum.core.Denomination.SZABO;
  */
 public class Blockchain {
 
-	private static final Logger logger = LoggerFactory.getLogger(Blockchain.class);
+	private static final Logger logger = LoggerFactory.getLogger("blockchain");
 	private static final Logger stateLogger = LoggerFactory.getLogger("state");
 	
 	// to avoid using minGasPrice=0 from Genesis for the wallet

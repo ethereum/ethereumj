@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 public class EthereumImpl implements Ethereum {
 
-    private static final Logger logger = LoggerFactory.getLogger(EthereumImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger("facade");
 
     public EthereumImpl() {}
 
