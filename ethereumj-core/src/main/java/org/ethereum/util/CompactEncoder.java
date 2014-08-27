@@ -9,6 +9,8 @@ import static org.spongycastle.util.encoders.Hex.encode;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
+import java.util.HashMap;
+import java.util.Map;
 
 /** 
  * Compact encoding of hex sequence with optional terminator
@@ -47,8 +49,27 @@ import java.nio.ByteBuffer;
 public class CompactEncoder {
 
 	private final static byte TERMINATOR = 16;
-	private final static String hexBase = "0123456789abcdef";
-	
+    private final static Map<Character, Byte> hexMap = new HashMap();
+    static {
+        hexMap.put('0', (byte)0);
+        hexMap.put('1', (byte)1);
+        hexMap.put('2', (byte)2);
+        hexMap.put('3', (byte)3);
+        hexMap.put('4', (byte)4);
+        hexMap.put('5', (byte)5);
+        hexMap.put('6', (byte)6);
+        hexMap.put('7', (byte)7);
+        hexMap.put('8', (byte)8);
+        hexMap.put('9', (byte)9);
+        hexMap.put('a', (byte)10);
+        hexMap.put('b', (byte)11);
+        hexMap.put('c', (byte)12);
+        hexMap.put('d', (byte)13);
+        hexMap.put('e', (byte)14);
+        hexMap.put('f', (byte)15);
+    }
+
+
 	/**
 	 * Pack nibbles to binary
 	 *
@@ -107,9 +128,30 @@ public class CompactEncoder {
 		byte[] hexEncoded = encode(str);
 		ByteBuffer slice = ByteBuffer.allocate(hexEncoded.length + 1);
 		for (byte b : hexEncoded) {
-			slice.put((byte)hexBase.indexOf(b));
+			slice.put(hexMap.get((char)b));
 		}
 		slice.put(TERMINATOR);
 		return slice.array();
 	}
+
+
+    /**
+     * turn nibbles to a nice good looking output string
+     *
+     * @param nibbles - getting byte of data [ 04 ] and turning
+     *                  it to a '\x04' representation
+     * @return
+     */
+    public static String nibblesToPrettyString(byte[] nibbles){
+
+        StringBuffer buffer = new StringBuffer();
+        for (byte nibble : nibbles){
+
+            String nibleString = Utils.oneByteToHexString(nibble);
+
+            buffer.append("\\x" + nibleString);
+        }
+
+        return buffer.toString();
+    }
 }

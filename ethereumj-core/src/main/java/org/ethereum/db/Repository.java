@@ -385,10 +385,10 @@ public class Repository {
 
         String fileName = "";
         if (txHash != null)
-			fileName = String.format("%d_%d_%s.dmp", block.getNumber(), txNumber, 
+			fileName = String.format("%05d_%d_%s.dmp", block.getNumber(), txNumber, 
 					Hex.toHexString(txHash).substring(0, 8));
         else
-            fileName = String.format("%d_c.dmp", block.getNumber());
+            fileName = String.format("%05d_c.dmp", block.getNumber());
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
