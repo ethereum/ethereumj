@@ -7,11 +7,11 @@ import org.slf4j.LoggerFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class PeerDiscoveryMonitorThread implements Runnable {
-    private Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     private ThreadPoolExecutor executor;
     private int seconds;
-    private boolean run=true;
+    private volatile boolean run = true;
 
 	public PeerDiscoveryMonitorThread(ThreadPoolExecutor executor, int delay) {
 		this.executor = executor;

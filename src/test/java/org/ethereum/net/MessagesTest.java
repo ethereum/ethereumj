@@ -21,6 +21,7 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -121,7 +122,8 @@ public class MessagesTest {
 
         assertEquals(2, peersMessage.getPeers().size());
 
-        PeerData peerData = peersMessage.getPeers().get(1);
+        Iterator<PeerData> it = peersMessage.getPeers().iterator(); it.next();
+        PeerData peerData = it.next();
 
         assertEquals("/81.99.225.18", peerData.getInetAddress().toString());
         assertEquals(30303, peerData.getPort());
