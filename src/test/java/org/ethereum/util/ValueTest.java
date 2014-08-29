@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.util.Arrays;
 
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 public class ValueTest {
 
@@ -42,4 +43,19 @@ public class ValueTest {
 		BigInteger bigExp = BigInteger.valueOf(10);
 		assertEquals(bigInt.asBigInt(), bigExp);
 	}
+
+
+    @Test
+    public void longListRLPBug_1(){
+
+        String testRlp = "f7808080d387206f72726563748a626574656c676575736580d387207870726573738a70726564696361626c658080808080808080808080";
+
+        Value val =
+              Value.fromRlpEncoded(Hex.decode(testRlp));
+
+        assertEquals( testRlp, Hex.toHexString( val.encode() ));
+    }
+
+
+
 }

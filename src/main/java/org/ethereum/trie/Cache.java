@@ -3,6 +3,7 @@ package org.ethereum.trie;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
@@ -16,7 +17,7 @@ import org.iq80.leveldb.DB;
  */
 public class Cache {
 	
-	private Map<ByteArrayWrapper, Node> nodes = new HashMap<>();
+	private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
 	private DB db;
 	private boolean isDirty;
 

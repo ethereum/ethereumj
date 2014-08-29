@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.ethereum.db.ByteArrayWrapper;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
 import org.iq80.leveldb.DBIterator;
@@ -14,118 +15,120 @@ import org.iq80.leveldb.WriteBatch;
 import org.iq80.leveldb.WriteOptions;
 
 public class MockDB implements DB {
-	
-	Map<byte[], byte[]> storage = new HashMap<byte[], byte[]>();
 
-	@Override
-	public void close() throws IOException {
-		storage.clear();
-	}
+    Map<ByteArrayWrapper, byte[]> storage = new HashMap<ByteArrayWrapper, byte[]>();
 
-	@Override
-	public void compactRange(byte[] arg0, byte[] arg1) throws DBException {
-		// TODO Auto-generated method stub	
-	}
+    @Override
+    public void close() throws IOException {
+        storage.clear();
+    }
 
-	@Override
-	public WriteBatch createWriteBatch() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public void compactRange(byte[] arg0, byte[] arg1) throws DBException {
+        // TODO Auto-generated method stub
+    }
 
-	@Override
-	public void delete(byte[] arg0) throws DBException {
-		storage.remove(arg0);
-	}
+    @Override
+    public WriteBatch createWriteBatch() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Snapshot delete(byte[] arg0, WriteOptions arg1)
-			throws DBException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public void delete(byte[] arg0) throws DBException {
+        storage.remove(arg0);
+    }
 
-	@Override
-	public byte[] get(byte[] arg0) throws DBException {
-		return storage.get(arg0);
-	}
+    @Override
+    public Snapshot delete(byte[] arg0, WriteOptions arg1)
+            throws DBException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public byte[] get(byte[] arg0, ReadOptions arg1) throws DBException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public byte[] get(byte[] arg0) throws DBException {
 
-	@Override
-	public long[] getApproximateSizes(Range... arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        return storage.get(new ByteArrayWrapper(arg0));
+    }
 
-	@Override
-	public String getProperty(String arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public byte[] get(byte[] arg0, ReadOptions arg1) throws DBException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Snapshot getSnapshot() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public long[] getApproximateSizes(Range... arg0) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public DBIterator iterator() {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public String getProperty(String arg0) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public DBIterator iterator(ReadOptions arg0) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public Snapshot getSnapshot() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public void put(byte[] key, byte[] value) throws DBException {
-		storage.put(key, value);
-	}
+    @Override
+    public DBIterator iterator() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Snapshot put(byte[] arg0, byte[] arg1, WriteOptions arg2)
-			throws DBException {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    @Override
+    public DBIterator iterator(ReadOptions arg0) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public void resumeCompactions() {
-		// TODO Auto-generated method stub		
-	}
+    @Override
+    public void put(byte[] key, byte[] value) throws DBException {
 
-	@Override
-	public void suspendCompactions() throws InterruptedException {
-		// TODO Auto-generated method stub		
-	}
+        storage.put(new ByteArrayWrapper(key), value);
+    }
 
-	@Override
-	public void write(WriteBatch arg0) throws DBException {
-		// TODO Auto-generated method stub		
-	}
+    @Override
+    public Snapshot put(byte[] arg0, byte[] arg1, WriteOptions arg2)
+            throws DBException {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
-	@Override
-	public Snapshot write(WriteBatch arg0, WriteOptions arg1)
-			throws DBException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-	
-	/**
-	 * Returns the number of items added to this Mock DB
-	 * 
-	 * @return int
-	 */
-	public int getAddedItems() {
-		return storage.size();
-	}	
+    @Override
+    public void resumeCompactions() {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void suspendCompactions() throws InterruptedException {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void write(WriteBatch arg0) throws DBException {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public Snapshot write(WriteBatch arg0, WriteOptions arg1)
+            throws DBException {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    /**
+     * Returns the number of items added to this Mock DB
+     *
+     * @return int
+     */
+    public int getAddedItems() {
+        return storage.size();
+    }
 }

@@ -442,16 +442,6 @@ public class MessagesTest {
     }
 
 
-    @Ignore
-    @Test
-    public void test16() {
-        String blocksRaw = "f8b7f8b3a03f1d6b037f0b9cf0e0b638f4f82574acce17b36ea257017e36b3183252bc50e2a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794e0f38e78d62c92f8f26b1f6af5cb57877e2240089100001ca5f91ca213";
-
-
-        byte[] payload = Hex.decode(blocksRaw);
-        RLPList rlpList = RLP.decode2(payload);
-
-    }
 
 
     @Ignore

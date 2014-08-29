@@ -764,7 +764,7 @@ public class RLPTest {
     @Test // found this with a bug - nice to keep
     public void encodeEdgeShortList(){
 
-        String expectedOutput = "f837c0c0b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557";
+        String expectedOutput = "f7c0c0b4600160003556601359506301000000600035040f6018590060005660805460016080530160005760003560805760203560003557";
 
         byte[] rlpKeysList = Hex.decode("c0");
         byte[] rlpValuesList = Hex.decode("c0");
