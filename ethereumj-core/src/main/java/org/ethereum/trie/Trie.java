@@ -5,7 +5,8 @@ import static org.spongycastle.util.Arrays.concatenate;
 import static org.ethereum.util.CompactEncoder.*;
 import static org.ethereum.util.ByteUtil.matchingNibbleLength;
 
-import java.util.Arrays;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
@@ -46,8 +47,8 @@ public class Trie implements TrieFacade {
 
     private Object prevRoot;
     private Object root;
-    private Cache cache;
-    
+    private Cache  cache;
+
     public Trie(DB db) {
         this(db, "");
     }
@@ -106,6 +107,7 @@ public class Trie implements TrieFacade {
         if (key == null)
             throw new NullPointerException("Key should not be blank");
         byte[] k = binToNibbles(key);
+
         this.root = this.insertOrDelete(this.root, k, value);
         if(logger.isDebugEnabled()) {
             logger.debug("Added key {} and value {}", Hex.toHexString(key), Hex.toHexString(value));
@@ -210,7 +212,7 @@ public class Trie implements TrieFacade {
 
         if (isEmptyNode(node)) {
             Object[] newNode = new Object[] { packNibbles(key), value };
-            return this.put(newNode);
+            return this.putToCache(newNode);
         }
 
         Value currentNode = this.getNode(node);
@@ -224,7 +226,7 @@ public class Trie implements TrieFacade {
             // Matching key pair (ie. there's already an object with this key)
             if (Arrays.equals(k, key)) {
                 Object[] newNode = new Object[] {packNibbles(key), value};
-                return this.put(newNode);
+                return this.putToCache(newNode);
             }
 
             Object newHash;
@@ -233,32 +235,40 @@ public class Trie implements TrieFacade {
                 // Insert the hash, creating a new node
                 byte[] remainingKeypart = copyOfRange(key, matchingLength, key.length);
                 newHash = this.insert(v, remainingKeypart, value);
-            } else { // Expand the 2 length slice to a 17 length slice
-                // Create two nodes to put into the new 17 length node
+
+            } else {
+
+                // Expand the 2 length slice to a 17 length slice
+                // Create two nodes to putToCache into the new 17 length node
                 Object oldNode = this.insert("", copyOfRange(k, matchingLength+1, k.length), v);
                 Object newNode = this.insert("", copyOfRange(key, matchingLength+1, key.length), value);
+
                 // Create an expanded slice
                 Object[] scaledSlice = emptyStringSlice(17);
+
                 // Set the copied and new node
                 scaledSlice[k[matchingLength]] = oldNode;
                 scaledSlice[key[matchingLength]] = newNode;
-                newHash = this.put(scaledSlice);
+                newHash = this.putToCache(scaledSlice);
             }
 
             if (matchingLength == 0) {
+
                 // End of the chain, return
                 return newHash;
             } else {
+
                 Object[] newNode = new Object[] { packNibbles(copyOfRange(key, 0, matchingLength)), newHash};
-                return this.put(newNode);
+                return this.putToCache(newNode);
             }
         } else {
+
             // Copy the current node over to the new node
             Object[] newNode = copyNode(currentNode);
+
             // Replace the first nibble in the key
             newNode[key[0]] = this.insert(currentNode.get(key[0]).asObj(), copyOfRange(key, 1, key.length), value);
-
-            return this.put(newNode);
+            return this.putToCache(newNode);
         }
     }
 
@@ -290,7 +300,8 @@ public class Trie implements TrieFacade {
                 } else {
                     newNode = new Object[] {currentNode.get(0).asString(), hash};
                 }
-                return this.put(newNode);
+
+                return this.putToCache(newNode);
             } else {
                 return node;
             }
@@ -326,34 +337,39 @@ public class Trie implements TrieFacade {
             } else {
                 newNode = itemList;
             }
-            return this.put(newNode);
+
+            return this.putToCache(newNode);
         }
     }
 
     /**
      * Helper method to retrieve the actual node
-     * If the node is not a list and length is > 32 bytes get the actual node from the db
+     * If the node is not a list and length is > 32
+     * bytes get the actual node from the db
      *
-     * @param node
+     * @param node -
      * @return
      */
     private Value getNode(Object node) {
-        Value n = new Value(node);
 
-        if (!n.get(0).isNull()) {
-            return n;
+        Value val = new Value(node);
+
+        // in that case we got a node
+        // so no need to encode it
+        if (!val.isBytes()) {
+            return val;
         }
 
-        byte[] str = n.asBytes();
-        if (str.length == 0) {
-            return n;
-        } else if (str.length < 32) {
-            return new Value(str);
+        byte[] keyBytes = val.asBytes();
+        if (keyBytes.length == 0) {
+            return val;
+        } else if (keyBytes.length < 32) {
+            return new Value(keyBytes);
         }
-        return this.cache.get(str);
+        return this.cache.get(keyBytes);
     }
 
-    private Object put(Object node) {
+    private Object putToCache(Object node) {
         return this.cache.put(node);
     }
 
@@ -403,7 +419,7 @@ public class Trie implements TrieFacade {
      *  	Utility functions		*
      *******************************/
 
-    // Created an array of empty elements of requred length
+    // Created an array of empty elements of required length
     private Object[] emptyStringSlice(int l) {
         Object[] slice = new Object[l];
         for (int i = 0; i < l; i++) {
@@ -424,5 +440,104 @@ public class Trie implements TrieFacade {
             byte[] val = rootValue.encode();
             return HashUtil.sha3(val);
         }
+    }
+
+    /*
+     * insert/delete operations  on a Trie structure
+     * leaves unnecessary nodes, this method scans the
+     * cache and removes them. The method is not thread
+     * safe, the tree should not be modified during the
+     * cleaning process.
+     */
+    public void cleanCacheGarbage(){
+
+        CollectFullSetOfNodes collectAction = new CollectFullSetOfNodes();
+        long startTime = System.currentTimeMillis();
+
+        this.scanTree(this.getRootHash(), collectAction);
+
+        Set<byte[]> hashSet = collectAction.getCollectedHashes();
+        Map<ByteArrayWrapper, Node> nodes =  this.getCache().getNodes();
+        Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
+
+        for (ByteArrayWrapper key : nodes.keySet()){
+
+            if (!hashSet.contains(key.getData())){
+
+                toRemoveSet.add(key);
+            }
+        }
+
+        for (ByteArrayWrapper key : toRemoveSet){
+
+            this.getCache().delete(key.getData());
+
+            if (logger.isTraceEnabled())
+                logger.trace("Garbage collected node: [ {} ]",
+                        Hex.toHexString( key.getData() ));
+        }
+
+        logger.info("Garbage collected node list, size: [ {} ]", toRemoveSet.size());
+        logger.info("Garbage collection time: [ {}ms ]", System.currentTimeMillis() - startTime);
+    }
+
+
+    public void scanTree(byte[] hash , ScanAction scanAction){
+
+        Value node = this.getCache().get(hash);
+        if (node == null) return ;
+
+        if (node.isList()){
+
+            List<Object> siblings =  node.asList();
+            if (siblings.size() == 2){
+                Value val = new Value(siblings.get(1));
+                if (val.isHashCode())
+                    scanTree(val.asBytes(), scanAction);
+
+            } else {
+
+                for (int j = 0; j < 17; ++j){
+
+                    Value val = new Value(siblings.get(j));
+                    if (val.isHashCode())
+                        scanTree(val.asBytes(), scanAction);
+                }
+            }
+
+            scanAction.doOnNode(hash);
+        }
+    }
+
+    public String getTrieDump(){
+
+        Set<ByteArrayWrapper> keys =  getCache().getNodes().keySet();
+        StringBuilder output = new StringBuilder();
+
+        Value rootVal = new Value(root);
+        if ( ! Arrays.equals(rootVal.asBytes() , this.getRootHash())){
+
+            output.append("root: ").append(Hex.toHexString( this.getRootHash() )).append(" => ").
+                    append( rootVal.toString()).append("\n");
+        } else {
+
+            output.append("root: ").append(Hex.toHexString( this.getRootHash() )).append("\n");
+        }
+
+        for (ByteArrayWrapper key : keys){
+
+            Node value = getCache().getNodes().get(key);
+
+            byte[] hash = HashUtil.sha3( value.getValue().encode() );
+            output.append(Hex.toHexString(hash)).append(" ==> ").append(value.getValue().toString()).append("\n");
+        }
+
+        return output.toString();
+    }
+
+
+    public interface ScanAction{
+
+        public void doOnNode(byte[] hash);
     }
 }

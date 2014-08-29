@@ -49,7 +49,7 @@ import java.util.Map;
 public class CompactEncoder {
 
 	private final static byte TERMINATOR = 16;
-    private final static Map<Character, Byte> hexMap = new HashMap();
+    private final static Map<Character, Byte> hexMap = new HashMap<>();
     static {
         hexMap.put('0', (byte)0);
         hexMap.put('1', (byte)1);
@@ -134,6 +134,15 @@ public class CompactEncoder {
 		return slice.array();
 	}
 
+    public static byte[] binToNibblesNoTerminator(byte[] str) {
+        byte[] hexEncoded = encode(str);
+        ByteBuffer slice = ByteBuffer.allocate(hexEncoded.length);
+        for (byte b : hexEncoded) {
+            slice.put(hexMap.get((char)b));
+        }
+
+        return slice.array();
+    }
 
     /**
      * turn nibbles to a nice good looking output string

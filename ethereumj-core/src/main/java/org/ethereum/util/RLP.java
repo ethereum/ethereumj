@@ -294,7 +294,7 @@ public class RLP {
 			byte length = (byte) ((data[index] & 0xFF) - OFFSET_SHORT_LIST);
 			return length;
 		}
-		if ((data[index] & 0xFF) >= OFFSET_LONG_ITEM
+		if ((data[index] & 0xFF) > OFFSET_LONG_ITEM
 				&& (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
 
 			byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
@@ -302,7 +302,7 @@ public class RLP {
 			return length;
 		}
 		if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
-				&& (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
+				&& (data[index] & 0xFF) <= OFFSET_LONG_ITEM) {
 
 			byte length = (byte) ((data[index] & 0xFF) - OFFSET_SHORT_ITEM);
 			return length;
@@ -498,7 +498,7 @@ public class RLP {
 				}
 			}
 		} catch (Throwable th) {
-			throw new RuntimeException("wire packet not parsed correctly",
+			throw new RuntimeException("RLP wrong encoding",
 					th.fillInStackTrace());
 		}
 	}
@@ -560,7 +560,7 @@ public class RLP {
 				// It's a list with a payload more than 55 bytes
 				// data[0] - 0xF7 = how many next bytes allocated
 				// for the length of the list
-				if ((msgData[pos] & 0xFF) >= OFFSET_LONG_LIST) {
+				if ((msgData[pos] & 0xFF) > OFFSET_LONG_LIST) {
 
 					byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_LIST);
 					int length = calcLength(lengthOfLength, msgData, pos);
@@ -582,7 +582,7 @@ public class RLP {
 				}
 				// It's a list with a payload less than 55 bytes
 				if ((msgData[pos] & 0xFF) >= OFFSET_SHORT_LIST
-						&& (msgData[pos] & 0xFF) < OFFSET_LONG_LIST) {
+						&& (msgData[pos] & 0xFF) <= OFFSET_LONG_LIST) {
 
 					byte length = (byte) ((msgData[pos] & 0xFF) - OFFSET_SHORT_LIST);
 
@@ -603,7 +603,7 @@ public class RLP {
 				// It's an item with a payload more than 55 bytes
 				// data[0] - 0xB7 = how much next bytes allocated for
 				// the length of the string
-				if ((msgData[pos] & 0xFF) >= OFFSET_LONG_ITEM
+				if ((msgData[pos] & 0xFF) > OFFSET_LONG_ITEM
 						&& (msgData[pos] & 0xFF) < OFFSET_SHORT_LIST) {
 
 					byte lengthOfLength = (byte) (msgData[pos] - OFFSET_LONG_ITEM);
@@ -663,7 +663,7 @@ public class RLP {
 				}
 			}
 		} catch (Exception e) {
-			throw new RuntimeException("wire packet not parsed correctly", e);
+			throw new RuntimeException("RLP wrong encoding", e);
 		}
 	}
 	
@@ -678,7 +678,6 @@ public class RLP {
 		if (data == null || data.length < 1) {
 			return null;
 		}
-
 		int prefix = data[pos] & 0xFF;
 		if (prefix == OFFSET_SHORT_ITEM) {
 			return new DecodeResult(pos+1, new byte[0]); // means no length or 0
@@ -691,7 +690,7 @@ public class RLP {
 			int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the encoded bytes
 			int lenbytes = byteArrayToInt(copyOfRange(data, pos+1, pos+1+lenlen)); // length of encoded bytes
 			return new DecodeResult(pos+1+lenlen+lenbytes, copyOfRange(data, pos+1+lenlen, pos+1+lenlen+lenbytes));
-		} else if (prefix < OFFSET_LONG_LIST) {
+		} else if (prefix <= OFFSET_LONG_LIST) {
 			int len = prefix - OFFSET_SHORT_LIST; // length of the encoded list
 			int prevPos = pos; pos++;
 			return decodeList(data, pos, prevPos, len);
@@ -743,7 +742,7 @@ public class RLP {
 				output = concatenate(output, encode(object));
 			}
 			byte[] prefix = encodeLength(output.length, OFFSET_SHORT_LIST);
-			return concatenate(prefix, output);
+            return concatenate(prefix, output);
 		} else {
 			byte[] inputAsBytes = toBytes(input); 
 			if (inputAsBytes.length == 1) {
@@ -772,7 +771,7 @@ public class RLP {
 			throw new RuntimeException("Input too long");
 		}
 	}
-	
+
     public static byte[] encodeByte(byte singleByte) {
         if ((singleByte & 0xFF) == 0) {
             return new byte[] { (byte) OFFSET_SHORT_ITEM };
@@ -832,7 +831,7 @@ public class RLP {
 
             return srcData;
 
-        } else if (srcData.length < 0x37) {
+        } else if (srcData.length < SIZE_THRESHOLD) {
             // length = 8X
             byte length = (byte) (OFFSET_SHORT_ITEM + srcData.length);
             byte[] data = Arrays.copyOf(srcData, srcData.length + 1);
@@ -872,7 +871,7 @@ public class RLP {
 
         byte[] data;
         int copyPos = 0;
-        if (totalLength < 0x37) {
+        if (totalLength < SIZE_THRESHOLD) {
 
         	data = new byte[1 + totalLength];
             data[0] = (byte) (OFFSET_SHORT_LIST + totalLength);
