@@ -116,6 +116,8 @@ public class Repository {
     
     public void saveBlock(Block block) {
     	this.chainDB.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
+
+//        this.worldState.cleanCacheGarbage();
     	this.worldState.sync();
     }
 	
@@ -175,6 +177,7 @@ public class Repository {
 
     public AccountState createAccount(byte[] addr) {
 
+        logger.trace("createAccount: [ {} ]", Hex.toHexString(addr)) ;
     	this.validateAddress(addr);
     	    	
         // 1. Save AccountState
@@ -197,9 +200,15 @@ public class Repository {
 
     public AccountState getAccountState(byte[] addr) {
 
+        if (logger.isTraceEnabled())
+            logger.trace("getAccountState: {}", Hex.toHexString(addr));
+
     	this.validateAddress(addr);
 
         byte[] accountStateRLP = accountStateDB.get(addr);
+
+        if (logger.isTraceEnabled())
+            logger.trace("getAccountState: RLP: {}", Hex.toHexString(accountStateRLP));
 
         if (accountStateRLP == null || accountStateRLP.length == 0)
             return null;
@@ -385,10 +394,12 @@ public class Repository {
 
         String fileName = "";
         if (txHash != null)
-			fileName = String.format("%05d_%d_%s.dmp", block.getNumber(), txNumber, 
+			fileName = String.format("%07d_%d_%s.dmp", block.getNumber(), txNumber,
 					Hex.toHexString(txHash).substring(0, 8));
-        else
-            fileName = String.format("%05d_c.dmp", block.getNumber());
+        else{
+
+            fileName = String.format("%07d_c.dmp", block.getNumber());
+        }
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
@@ -405,7 +416,9 @@ public class Repository {
             
             JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
             ObjectNode blockNode = jsonFactory.objectNode();
-            JSONHelper.dumpBlock(blockNode, block, gasUsed, this.getWorldState().getRootHash(), keys, this);
+            JSONHelper.dumpBlock(blockNode, block, gasUsed,
+                    this.getWorldState().getRootHash(),
+                    keys, this);
             
             EtherObjectMapper mapper = new EtherObjectMapper();
             bw.write(mapper.writeValueAsString(blockNode));
@@ -419,6 +432,43 @@ public class Repository {
             } catch (IOException e) {e.printStackTrace();}
         }
     }
+
+
+    public void dumpTrie(Block block){
+
+        if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
+            return;
+
+        String fileName = String.format("%07d_trie.dmp", block.getNumber());
+        String dir = CONFIG.dumpDir() + "/";
+        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+
+        String dump = this.getWorldState().getTrieDump();
+
+        try {
+
+            dumpFile.getParentFile().mkdirs();
+            dumpFile.createNewFile();
+
+            fw = new FileWriter(dumpFile.getAbsoluteFile());
+            bw = new BufferedWriter(fw);
+
+            bw.write(dump);
+
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (bw != null)bw.close();
+                if (fw != null)fw.close();
+            } catch (IOException e) {e.printStackTrace();}
+        }
+    }
+
+
+
 
     public void close() {
         if (this.chainDB != null)
