@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
@@ -44,6 +45,7 @@ public class TrieTest {
     private static String dude = "dude";
 
     private MockDB mockDb = new MockDB();
+    private MockDB mockDb_2 = new MockDB();
 
 //		ROOT: [ '\x16', A ]
 //		A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
@@ -57,6 +59,7 @@ public class TrieTest {
     @After
     public void closeMockDb() throws IOException {
         mockDb.close();
+        mockDb_2.close();
     }
 
     @Test
@@ -564,6 +567,74 @@ public class TrieTest {
 
             Assert.assertEquals(mapWord2, treeWord2);
         }
+    }
+
+
+    @Test
+    public void testMasiveDetermenisticUpdate() throws IOException, URISyntaxException {
+
+        // should be root: 89bb4c4051774dd9039305bdad93b7fb61fcf2e6c0905d1acf2658b9c00b35c6
+
+        URL massiveUpload_1 = ClassLoader
+                .getSystemResource("trie/massive-upload.dmp");
+
+        File file = new File(massiveUpload_1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        // *** Part - 1 ***
+        // 1. load the data from massive-upload.dmp
+        //    which includes deletes/upadtes (100000 operations)
+        Trie trieSingle = new Trie(mockDb_2);
+        for (int i = 0; i < strData.size() ; ++i){
+
+            String[] keyVal= strData.get(i).split("=");
+
+            if (keyVal[0].equals("*"))
+                trieSingle.delete(keyVal[1].trim());
+            else
+                trieSingle.update(keyVal[0].trim(), keyVal[1].trim());
+        }
+
+
+        System.out.println( "root_1:  => " + Hex.toHexString( trieSingle.getRootHash() ));
+
+        // *** Part - 2 ***
+        // pre. we use the same data from massive-upload.dmp
+        //      which includes deletes/upadtes (100000 operations)
+        // 1. part of the data loaded
+        // 2. the trie cache sync to the db
+        // 3. the rest of the data loaded with part of the trie not in the cache
+        Trie trie = new Trie(mockDb);
+
+        for (int i = 0; i < 10000; ++i){
+
+            String[] keyVal= strData.get(i).split("=");
+
+            if (keyVal[0].equals("*"))
+                trie.delete(keyVal[1].trim());
+            else
+                trie.update(keyVal[0].trim(), keyVal[1].trim());
+        }
+
+        trie.cleanCacheGarbage();
+        trie.sync();
+
+        Trie trie2 = new Trie(mockDb, trie.getRootHash());
+
+        for (int i = 10000; i < strData.size(); ++i){
+
+            String[] keyVal= strData.get(i).split("=");
+
+            if (keyVal[0].equals("*"))
+                trie2.delete(keyVal[1].trim());
+            else
+                trie2.update(keyVal[0].trim(), keyVal[1].trim());
+        }
+
+        System.out.println( "root_2:  => " + Hex.toHexString( trie2.getRootHash() ));
+
+        assertEquals(trieSingle.getRootHash(), trie2.getRootHash());
+
     }
 
     @Test  //  tests saving keys to the file  //

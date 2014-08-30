@@ -1,5 +1,7 @@
 package org.ethereum.trie;
 
+import org.ethereum.util.Value;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,7 +16,7 @@ public class CollectFullSetOfNodes implements Trie.ScanAction {
     Set<byte[]> nodes = new HashSet<>();
 
     @Override
-    public void doOnNode(byte[] hash) {
+    public void doOnNode(byte[] hash, Value node) {
         nodes.add(hash);
     }
 
