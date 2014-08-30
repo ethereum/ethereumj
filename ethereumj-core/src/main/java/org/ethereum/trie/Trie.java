@@ -504,40 +504,23 @@ public class Trie implements TrieFacade {
                         scanTree(val.asBytes(), scanAction);
                 }
             }
-
-            scanAction.doOnNode(hash);
+            scanAction.doOnNode(hash, node);
         }
     }
 
     public String getTrieDump(){
 
-        Set<ByteArrayWrapper> keys =  getCache().getNodes().keySet();
-        StringBuilder output = new StringBuilder();
+        TraceAllNodes traceAction = new TraceAllNodes();
+        this.scanTree(this.getRootHash(), traceAction);
 
-        Value rootVal = new Value(root);
-        if ( ! Arrays.equals(rootVal.asBytes() , this.getRootHash())){
+        String root = "root: " + Hex.toHexString(getRootHash()) + "\n";
 
-            output.append("root: ").append(Hex.toHexString( this.getRootHash() )).append(" => ").
-                    append( rootVal.toString()).append("\n");
-        } else {
-
-            output.append("root: ").append(Hex.toHexString( this.getRootHash() )).append("\n");
-        }
-
-        for (ByteArrayWrapper key : keys){
-
-            Node value = getCache().getNodes().get(key);
-
-            byte[] hash = HashUtil.sha3( value.getValue().encode() );
-            output.append(Hex.toHexString(hash)).append(" ==> ").append(value.getValue().toString()).append("\n");
-        }
-
-        return output.toString();
+        return root + traceAction.getOutput();
     }
 
 
     public interface ScanAction{
 
-        public void doOnNode(byte[] hash);
+        public void doOnNode(byte[] hash, Value node);
     }
 }

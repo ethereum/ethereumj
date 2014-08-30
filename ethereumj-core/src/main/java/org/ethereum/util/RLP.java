@@ -680,7 +680,7 @@ public class RLP {
 		}
 		int prefix = data[pos] & 0xFF;
 		if (prefix == OFFSET_SHORT_ITEM) {
-			return new DecodeResult(pos+1, new byte[0]); // means no length or 0
+			return new DecodeResult(pos+1, ""); // means no length or 0
 		} else if (prefix < OFFSET_SHORT_ITEM) {
 			return new DecodeResult(pos+1, new byte[] { data[pos] }); // byte is its own RLP encoding
 		} else if (prefix < OFFSET_LONG_ITEM) {

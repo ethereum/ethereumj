@@ -1,5 +1,7 @@
 package org.ethereum.trie;
 
+import org.ethereum.util.Value;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,7 +17,7 @@ public class CountAllNodes implements Trie.ScanAction {
     int counted = 0;
 
     @Override
-    public void doOnNode(byte[] hash) {
+    public void doOnNode(byte[] hash, Value node) {
         ++counted;
     }
 
