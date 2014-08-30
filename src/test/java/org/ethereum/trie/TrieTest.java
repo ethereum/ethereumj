@@ -786,7 +786,8 @@ public class TrieTest {
 
 
 
-    @Test // update the trie with blog key/val each time dump the entire trie
+    @Test // update the trie with blog key/val
+          // each time dump the entire trie
     public void testSample_1(){
 
         Trie trie = new Trie(mockDb);
