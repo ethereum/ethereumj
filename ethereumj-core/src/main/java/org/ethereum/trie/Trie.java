@@ -510,10 +510,17 @@ public class Trie implements TrieFacade {
 
     public String getTrieDump(){
 
+        String root = "";
         TraceAllNodes traceAction = new TraceAllNodes();
         this.scanTree(this.getRootHash(), traceAction);
 
-        String root = "root: " + Hex.toHexString(getRootHash()) + "\n";
+        if (this.getRoot() instanceof Value){
+
+            root = "root: " + Hex.toHexString(getRootHash()) +  " => " + this.getRoot() +  "\n";
+        } else{
+
+            root = "root: " + Hex.toHexString(getRootHash()) + "\n";
+        }
 
         return root + traceAction.getOutput();
     }
