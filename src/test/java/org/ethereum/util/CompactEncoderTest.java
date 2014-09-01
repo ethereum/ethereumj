@@ -85,22 +85,4 @@ public class CompactEncoderTest {
         byte[] result = new byte[] {  7, 0, 7, 5, 7, 0, 7, 0, 7, 9, T };
         assertArrayEquals(result, CompactEncoder.binToNibbles(test));
     }
-
-
-    @Test
-    public void testNiceNiblesOutput_1(){
-        byte[] test = {7, 0, 7, 5, 7, 0, 7, 0, 7, 9};
-        String result = "\\x07\\x00\\x07\\x05\\x07\\x00\\x07\\x00\\x07\\x09";
-
-        assertEquals(result, CompactEncoder.nibblesToPrettyString(test));
-    }
-
-    @Test
-    public void testNiceNiblesOutput_2(){
-        byte[] test = {7, 0, 7, 0xf, 7, 0, 0xa, 0, 7, 9};
-        String result = "\\x07\\x00\\x07\\x0f\\x07\\x00\\x0a\\x00\\x07\\x09";
-
-        assertEquals(result, CompactEncoder.nibblesToPrettyString(test));
-    }
-
 }
