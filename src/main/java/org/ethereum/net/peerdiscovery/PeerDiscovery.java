@@ -33,8 +33,9 @@ public class PeerDiscovery {
     public PeerDiscovery(Queue<PeerData> peers) {
         this.peers = peers;
     }
-
+    
     public void start() {
+    	
 
         //RejectedExecutionHandler implementation
         rejectionHandler = new RejectedExecutionHandlerImpl();

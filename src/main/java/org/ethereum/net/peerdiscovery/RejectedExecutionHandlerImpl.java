@@ -19,5 +19,6 @@ public class RejectedExecutionHandlerImpl implements RejectedExecutionHandler {
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
         logger.warn(r.toString() + " is rejected");
+        executor.remove(r);
     }
 }

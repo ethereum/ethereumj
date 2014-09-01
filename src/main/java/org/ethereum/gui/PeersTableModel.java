@@ -23,8 +23,8 @@ import com.maxmind.geoip.Location;
  */
 public class PeersTableModel extends AbstractTableModel {
 
-	private List<PeerInfo> peerInfoList = new ArrayList<PeerInfo>();
-    Timer updater = new Timer();
+	private volatile List<PeerInfo> peerInfoList = new ArrayList<PeerInfo>();
+    private final Timer updater = new Timer();
 
 	public PeersTableModel() {
 		updater.scheduleAtFixedRate(new TimerTask() {
@@ -38,7 +38,7 @@ public class PeersTableModel extends AbstractTableModel {
                         }
                 );
 			}
-		}, 0, 100);
+		}, 100, 900);
 	}
 
     public String getColumnName(int column) {
@@ -108,7 +108,6 @@ public class PeersTableModel extends AbstractTableModel {
     }
 
     public void updateModel() {
-        synchronized (peerInfoList) {
             peerInfoList.clear();
 
             final Queue<PeerData> peers = WorldManager.getInstance().getPeers();
@@ -117,7 +116,6 @@ public class PeersTableModel extends AbstractTableModel {
                 Location cr = IpGeoDB.getLocationForIp(addr);
                 peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getHandshake(), peer.getLastCheckTime()));
             }
-        }
     }
 
     private class PeerInfo {

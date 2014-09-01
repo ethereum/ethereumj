@@ -21,7 +21,7 @@ import java.awt.event.WindowEvent;
  */
 public class ToolBar extends JFrame {
 
-    private Logger introLogger = LoggerFactory.getLogger("Intro");
+    private static Logger introLogger = LoggerFactory.getLogger("Intro");
 
     private ConnectionConsoleWindow connectionConsoleWindow = null;
     private PeersTableWindow mainFrame	= null;
