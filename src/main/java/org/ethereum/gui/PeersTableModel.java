@@ -108,14 +108,14 @@ public class PeersTableModel extends AbstractTableModel {
     }
 
     public void updateModel() {
-            peerInfoList.clear();
+        peerInfoList.clear();
 
-            final Queue<PeerData> peers = WorldManager.getInstance().getPeers();
-            for (PeerData peer : peers) {
-                InetAddress addr = peer.getInetAddress();
-                Location cr = IpGeoDB.getLocationForIp(addr);
-                peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getHandshake(), peer.getLastCheckTime()));
-            }
+        final Set<PeerData> peers = new HashSet<>(WorldManager.getInstance().getPeers());
+        for (final PeerData peer : peers) {
+            InetAddress addr = peer.getInetAddress();
+            Location cr = IpGeoDB.getLocationForIp(addr);
+            peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getHandshake(), peer.getLastCheckTime()));
+        }
     }
 
     private class PeerInfo {

@@ -7,6 +7,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -54,7 +55,7 @@ public class WorldManager {
 		this.blockchain = new Blockchain(repository);
 		
         // Initialize PeerData
-        List<PeerData> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
+        final Set<PeerData> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
         peers.addAll(peerDataList);
 
         peerDiscovery = new PeerDiscovery(peers);
@@ -112,10 +113,10 @@ public class WorldManager {
         return listener;
     }
 
-    public List<PeerData> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
+    public Set<PeerData> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
 
         final List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
-        final List<PeerData> peers = new ArrayList<>();
+        final Set<PeerData> peers = new HashSet<>();
 
         for (String ip : ipList){
             String[] addr = ip.trim().split(":");
