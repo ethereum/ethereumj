@@ -1,12 +1,13 @@
 package org.ethereum.trie;
 
 import static java.util.Arrays.copyOfRange;
-import static org.spongycastle.util.Arrays.concatenate;
-import static org.ethereum.util.CompactEncoder.*;
 import static org.ethereum.util.ByteUtil.matchingNibbleLength;
+import static org.ethereum.util.CompactEncoder.binToNibbles;
+import static org.ethereum.util.CompactEncoder.packNibbles;
+import static org.ethereum.util.CompactEncoder.unpackToNibbles;
+import static org.spongycastle.util.Arrays.concatenate;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
@@ -253,11 +254,9 @@ public class Trie implements TrieFacade {
             }
 
             if (matchingLength == 0) {
-
                 // End of the chain, return
                 return newHash;
             } else {
-
                 Object[] newNode = new Object[] { packNibbles(copyOfRange(key, 0, matchingLength)), newHash};
                 return this.putToCache(newNode);
             }
@@ -300,7 +299,6 @@ public class Trie implements TrieFacade {
                 } else {
                     newNode = new Object[] {currentNode.get(0).asString(), hash};
                 }
-
                 return this.putToCache(newNode);
             } else {
                 return node;
@@ -337,7 +335,6 @@ public class Trie implements TrieFacade {
             } else {
                 newNode = itemList;
             }
-
             return this.putToCache(newNode);
         }
     }
@@ -449,7 +446,7 @@ public class Trie implements TrieFacade {
      * safe, the tree should not be modified during the
      * cleaning process.
      */
-    public void cleanCacheGarbage(){
+    public void cleanCacheGarbage() {
 
         CollectFullSetOfNodes collectAction = new CollectFullSetOfNodes();
         long startTime = System.currentTimeMillis();
@@ -460,15 +457,13 @@ public class Trie implements TrieFacade {
         Map<ByteArrayWrapper, Node> nodes =  this.getCache().getNodes();
         Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
 
-        for (ByteArrayWrapper key : nodes.keySet()){
-
-            if (!hashSet.contains(key.getData())){
-
+        for (ByteArrayWrapper key : nodes.keySet()) {
+            if (!hashSet.contains(key.getData())) {
                 toRemoveSet.add(key);
             }
         }
 
-        for (ByteArrayWrapper key : toRemoveSet){
+        for (ByteArrayWrapper key : toRemoveSet) {
 
             this.getCache().delete(key.getData());
 
@@ -476,29 +471,23 @@ public class Trie implements TrieFacade {
                 logger.trace("Garbage collected node: [ {} ]",
                         Hex.toHexString( key.getData() ));
         }
-
         logger.info("Garbage collected node list, size: [ {} ]", toRemoveSet.size());
         logger.info("Garbage collection time: [ {}ms ]", System.currentTimeMillis() - startTime);
     }
 
-
-    public void scanTree(byte[] hash , ScanAction scanAction){
+    public void scanTree(byte[] hash, ScanAction scanAction) {
 
         Value node = this.getCache().get(hash);
-        if (node == null) return ;
+        if (node == null) return;
 
-        if (node.isList()){
-
+        if (node.isList()) {
             List<Object> siblings =  node.asList();
-            if (siblings.size() == 2){
+            if (siblings.size() == PAIR_SIZE) {
                 Value val = new Value(siblings.get(1));
                 if (val.isHashCode())
                     scanTree(val.asBytes(), scanAction);
-
             } else {
-
-                for (int j = 0; j < 17; ++j){
-
+                for (int j = 0; j < LIST_SIZE; ++j) {
                     Value val = new Value(siblings.get(j));
                     if (val.isHashCode())
                         scanTree(val.asBytes(), scanAction);
@@ -508,26 +497,21 @@ public class Trie implements TrieFacade {
         }
     }
 
-    public String getTrieDump(){
+    public String getTrieDump() {
 
         String root = "";
         TraceAllNodes traceAction = new TraceAllNodes();
         this.scanTree(this.getRootHash(), traceAction);
 
-        if (this.getRoot() instanceof Value){
-
+        if (this.getRoot() instanceof Value) {
             root = "root: " + Hex.toHexString(getRootHash()) +  " => " + this.getRoot() +  "\n";
-        } else{
-
+        } else {
             root = "root: " + Hex.toHexString(getRootHash()) + "\n";
         }
-
         return root + traceAction.getOutput();
     }
 
-
-    public interface ScanAction{
-
+    public interface ScanAction {
         public void doOnNode(byte[] hash, Value node);
     }
 }
