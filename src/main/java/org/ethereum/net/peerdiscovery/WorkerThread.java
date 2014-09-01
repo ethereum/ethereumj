@@ -15,12 +15,10 @@ public class WorkerThread implements Runnable {
 
     private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-    ThreadPoolExecutor poolExecutor;
     private PeerData peerData;
     private PeerTaster peerTaster;
 
-    public WorkerThread(PeerData peerData, ThreadPoolExecutor poolExecutor) {
-        this.poolExecutor = poolExecutor;
+    public WorkerThread(PeerData peerData) {
         this.peerData = peerData;
     }
 
@@ -29,9 +27,6 @@ public class WorkerThread implements Runnable {
         logger.info(Thread.currentThread().getName()+" Start. Command = "+ peerData.toString());
         processCommand();
         logger.info(Thread.currentThread().getName()+" End.");
-
-        try {Thread.sleep(10000); } catch (InterruptedException e) {logger.error("sleep interrupted");}
-        poolExecutor.execute(this);
     }
 
     private void processCommand() {
