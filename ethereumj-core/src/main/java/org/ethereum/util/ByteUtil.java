@@ -116,6 +116,24 @@ public class ByteUtil {
 			return 0;
 		return new BigInteger(1, b).intValue();
 	}
+	
+    /**
+     * Turn nibbles to a pretty looking output string
+     * 		
+     * 	Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
+     *
+     * @param nibbles - getting byte of data [ 04 ] and turning
+     *                  it to a '\x04' representation
+     * @return pretty string of nibbles
+     */
+    public static String nibblesToPrettyString(byte[] nibbles){
+        StringBuffer buffer = new StringBuffer();
+        for (byte nibble : nibbles) {
+            String nibleString = Utils.oneByteToHexString(nibble);
+            buffer.append("\\x" + nibleString);
+        }
+        return buffer.toString();
+    }
 
     /**
      * Calculate the number of bytes need

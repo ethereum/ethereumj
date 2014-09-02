@@ -1,6 +1,5 @@
 package org.ethereum.util;
 
-import java.lang.reflect.Array;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
@@ -155,7 +154,6 @@ public class Value {
         }
 
         for (int i = 0; i < data.length; ++i){
-
             if (data[i] > 32 && data[i] < 126) ++readableChars;
         }
 
@@ -171,14 +169,14 @@ public class Value {
         int hexChars = 0;
         byte[] data = (byte[])value;
 
-        for (int i = 0; i < data.length; ++i){
+		for (int i = 0; i < data.length; ++i) {
 
-            if ((data[i] >= 48 && data[i] <= 57) ||
-                    (data[i] >= 97 && data[i] <= 102)
-                    ) ++hexChars;
-        }
+			if ((data[i] >= 48 && data[i] <= 57)
+					|| (data[i] >= 97 && data[i] <= 102))
+				++hexChars;
+		}
 
-        if ((double)hexChars / (double)data.length > 0.9)
+        if ((double) hexChars / (double) data.length > 0.9)
             return true;
         else
             return false;
@@ -212,23 +210,23 @@ public class Value {
         return 0;
     }
 
-    public String toString(){
+    public String toString() {
 
         StringBuffer buffer = new StringBuffer();
 
-        if (isList()){
+        if (isList()) {
 
-            Object[] list = (Object[])value;
+            Object[] list = (Object[]) value;
 
             // special case - key/value node
-            if (list.length == 2){
+            if (list.length == 2) {
 
                 buffer.append("[ ");
 
                 Value key = new Value(list[0]);
 
                 byte[] keyNibbles = CompactEncoder.binToNibblesNoTerminator(key.asBytes());
-                String keyString = CompactEncoder.nibblesToPrettyString(keyNibbles);
+                String keyString = ByteUtil.nibblesToPrettyString(keyNibbles);
                 buffer.append(keyString);
 
                 buffer.append(",");
@@ -239,83 +237,60 @@ public class Value {
                 buffer.append(" ]");
                 return buffer.toString();
             }
-
             buffer.append(" [");
 
             for (int i = 0; i < list.length; ++i){
-
                 Value val = new Value(list[i]);
-
                 if (val.isString() || val.isEmpty()){
-
-                    buffer.append("'").
-                            append(val.toString())
-                            .append("'");
+					buffer.append("'").append(val.toString()).append("'");
                 } else {
-
                     buffer.append(val.toString());
                 }
-
                 if (i < list.length - 1)
                     buffer.append(", ");
             }
             buffer.append("] ");
 
             return buffer.toString();
-        } else if (isEmpty()){
+        } else if (isEmpty()) {
             return "";
-        } else if (isBytes()){
+        } else if (isBytes()) {
 
             StringBuffer output = new StringBuffer();
             if (isHashCode()) {
                 output.append(Hex.toHexString(asBytes()));
-            }else if (isReadbleString()){
-
+            } else if (isReadbleString()) {
                 output.append("'");
-                for (byte oneByte : asBytes()){
-                    if (oneByte < 16){
+                for (byte oneByte : asBytes()) {
+                    if (oneByte < 16) {
                         output.append("\\x").append(Utils.oneByteToHexString(oneByte));
                     } else {
-
                         output.append( Character.valueOf((char)oneByte) );
                     }
                 }
-
                 output.append("'");
                 return output.toString();
             }
-
             return Hex.toHexString(this.asBytes());
         } else if (isString()){
-
             return asString();
         }
-
-        return "what the fuck";
+        return "Unexpected type";
     }
-
-
 
     public int countYourBranchNodes(){
 
         if (this.isList()){
 
             List<Object> objList = this.asList();
-
             int i = 0;
             for (Object obj : objList){
-
                 i += (new Value(obj)).countYourBranchNodes();
             }
-
             return i;
         } else if (this.isBytes()){
-
             this.asBytes();
-
         }
-
-
         return 0;
     }
 }

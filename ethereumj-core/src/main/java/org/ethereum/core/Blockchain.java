@@ -96,8 +96,8 @@ public class Blockchain {
 		if (block == null)
 			return;
 		
-		if (block.getNumber() == 12301)
-			logger.debug("Block #12301");
+		if (block.getNumber() == 12390)
+			logger.debug("Block #12390");
 
         // if it is the first block to add
         // make sure the parent is genesis
@@ -153,11 +153,14 @@ public class Blockchain {
 		for (TransactionReceipt txr : block.getTxReceiptList()) {
 			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
 			totalGasUsed += applyTransaction(block, txr.getTransaction());
-			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState()))
-				stateLogger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8),
-						Hex.toHexString(this.repository.getWorldState().getRootHash()));
 			if(block.getNumber() >= CONFIG.traceStartBlock())
 				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
+			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState())) {
+				stateLogger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8),
+						Hex.toHexString(this.repository.getWorldState().getRootHash()));
+//            	repository.close();
+//            	System.exit(-1); // Don't continue
+            }
 		}
 		
 		this.addReward(block);

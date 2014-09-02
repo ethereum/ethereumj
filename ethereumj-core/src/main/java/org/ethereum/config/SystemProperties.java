@@ -29,6 +29,7 @@ public class SystemProperties {
     private static Boolean DEFAULT_DB_RESET = false;
     private static Boolean DEFAULT_DUMP_FULL = false;
     private static String  DEFAULT_DUMP_DIR = "dmp";
+    private static String  DEFAULT_DUMP_STYLE = "standard+";
     private static Integer DEFAULT_VMTRACE_BLOCK = 0;    
     private static String  DEFAULT_DATABASE_DIR = System.getProperty("user.dir");
     private static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
@@ -152,10 +153,16 @@ public class SystemProperties {
         return prop.getProperty("dump.dir");
     }
 
+    public String dumpStyle() {
+        if(prop.isEmpty()) return DEFAULT_DUMP_STYLE;
+        return prop.getProperty("dump.style");
+    }
+    
     public Integer dumpBlock() {
         if(prop.isEmpty()) return DEFAULT_VMTRACE_BLOCK;
         return Integer.parseInt(prop.getProperty("dump.block"));
     }
+    
     
     public String databaseDir() {
         if(prop.isEmpty()) return DEFAULT_DATABASE_DIR;
