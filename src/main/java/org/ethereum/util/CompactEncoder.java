@@ -51,24 +51,23 @@ public class CompactEncoder {
 	private final static byte TERMINATOR = 16;
     private final static Map<Character, Byte> hexMap = new HashMap<>();
     static {
-        hexMap.put('0', (byte)0);
-        hexMap.put('1', (byte)1);
-        hexMap.put('2', (byte)2);
-        hexMap.put('3', (byte)3);
-        hexMap.put('4', (byte)4);
-        hexMap.put('5', (byte)5);
-        hexMap.put('6', (byte)6);
-        hexMap.put('7', (byte)7);
-        hexMap.put('8', (byte)8);
-        hexMap.put('9', (byte)9);
-        hexMap.put('a', (byte)10);
-        hexMap.put('b', (byte)11);
-        hexMap.put('c', (byte)12);
-        hexMap.put('d', (byte)13);
-        hexMap.put('e', (byte)14);
-        hexMap.put('f', (byte)15);
+        hexMap.put('0', (byte)0x0);
+        hexMap.put('1', (byte)0x1);
+        hexMap.put('2', (byte)0x2);
+        hexMap.put('3', (byte)0x3);
+        hexMap.put('4', (byte)0x4);
+        hexMap.put('5', (byte)0x5);
+        hexMap.put('6', (byte)0x6);
+        hexMap.put('7', (byte)0x7);
+        hexMap.put('8', (byte)0x8);
+        hexMap.put('9', (byte)0x9);
+        hexMap.put('a', (byte)0xa);
+        hexMap.put('b', (byte)0xb);
+        hexMap.put('c', (byte)0xc);
+        hexMap.put('d', (byte)0xd);
+        hexMap.put('e', (byte)0xe);
+        hexMap.put('f', (byte)0xf);
     }
-
 
 	/**
 	 * Pack nibbles to binary
@@ -94,7 +93,7 @@ public class CompactEncoder {
 		}
 		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 		for (int i = 0; i < nibbles.length; i += 2) {
-			buffer.write( 16*nibbles[i] + nibbles[i+1] );
+			buffer.write(16*nibbles[i] + nibbles[i+1]);
 		}
 		return buffer.toByteArray();
 	}
@@ -140,27 +139,6 @@ public class CompactEncoder {
         for (byte b : hexEncoded) {
             slice.put(hexMap.get((char)b));
         }
-
         return slice.array();
-    }
-
-    /**
-     * turn nibbles to a nice good looking output string
-     *
-     * @param nibbles - getting byte of data [ 04 ] and turning
-     *                  it to a '\x04' representation
-     * @return
-     */
-    public static String nibblesToPrettyString(byte[] nibbles){
-
-        StringBuffer buffer = new StringBuffer();
-        for (byte nibble : nibbles){
-
-            String nibleString = Utils.oneByteToHexString(nibble);
-
-            buffer.append("\\x" + nibleString);
-        }
-
-        return buffer.toString();
     }
 }

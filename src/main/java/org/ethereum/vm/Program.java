@@ -11,7 +11,10 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -185,7 +188,7 @@ public class Program {
         int offset = offsetData.intValue();
         int size   = sizeData.intValue();
         byte[] chunk = new byte[size];
-        allocateMemory(offset, chunk);
+        allocateMemory(offset, new byte[size]);
 
         if (memory != null) {
             if (memory.limit() < offset + size) size = memory.limit() - offset;
@@ -424,8 +427,12 @@ public class Program {
                 if (retSize > allocSize) {
                     byte[] outArray = Arrays.copyOf(buffer.array(), allocSize);
                     this.memorySave(outArray, buffer.array());
-                } else {
+                } else if (retSize == 0 || retSize == allocSize){
                     this.memorySave(outDataOffs.getData(), buffer.array());
+                } else {
+                	byte[] outArray = new byte[allocSize];
+                	System.arraycopy(buffer.array(), 0, outArray, 0, retSize);
+                	this.memorySave(outDataOffs.getData(), outArray);
                 }
             }
         }
@@ -562,6 +569,34 @@ public class Program {
     public void setRuntimeFailure(RuntimeException e) {
         result.setException(e);
     }
+    
+    public String memoryToString() {
+        StringBuilder memoryData = new StringBuilder();
+        StringBuilder firstLine = new StringBuilder();
+        StringBuilder secondLine = new StringBuilder();
+        for (int i = 0; memory != null && i < memory.limit(); ++i) {
+
+            byte value = memory.get(i);
+            // Check if value is ASCII 
+            // (should be until 0x7e - but using 0x7f 
+            // to be compatible with cpp-ethereum)
+            // See: https://github.com/ethereum/cpp-ethereum/issues/299
+            String character = 	((byte)0x20 <= value && value <= (byte)0x7f) ? new String(new byte[]{value}) : "?";
+            firstLine.append(character).append("");
+            secondLine.append(Utils.oneByteToHexString(value)).append(" ");
+
+            if ((i + 1) % 8 == 0) {
+                String tmp = String.format("%4s", Integer.toString(i - 7, 16)).replace(" ", "0");
+                memoryData.append("").append(tmp).append(" ");
+                memoryData.append(firstLine).append(" ");
+                memoryData.append(secondLine);
+                if (i+1 < memory.limit()) memoryData.append("\n");
+                firstLine.setLength(0);
+                secondLine.setLength(0);
+            }
+        }
+        return memoryData.toString();
+    }
 
     public void fullTrace() {
 
@@ -577,7 +612,9 @@ public class Program {
             ContractDetails contractDetails = this.result.getRepository().
                     getContractDetails(this.programAddress.getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
-            for (DataWord key : contractDetails.getStorage().keySet()) {
+            List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
+    		Collections.sort((List<DataWord>) storageKeys);
+            for (DataWord key : storageKeys) {
                 storageData.append(" ").append(key).append(" -> ").
                         append(contractDetails.getStorage().get(key)).append("\n");
             }
@@ -624,8 +661,6 @@ public class Program {
                     result.getGasUsed(),
                     invokeData.getGas().longValue(),
                     getGas().longValue());
-
-
 
             StringBuilder globalOutput = new StringBuilder("\n");
             if (stackData.length() > 0) stackData.append("\n");
