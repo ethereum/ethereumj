@@ -19,11 +19,13 @@
 
 <project  name="ethereumj-bintray" default="publish" basedir="." >
 
+    <tstamp/>
 
     <property name="artifact.groupId" value="org.ethereum"/>
     <property name="artifact.id" value="ethereumj"/>
-    <property name="artifact.version" value="0.5.4"/>
+    <property name="artifact.version" value="0.5.5"/>
     <property name="artifact.path" value="" />
+    <!--<property name="artifact.snapshot" value="snapshot" />-->
 
     <property name="repo.location" value="${user.home}/.m2/repository"/>
     <property name="artifact.group.path" value="${artifact.groupId}"/>
@@ -38,10 +40,18 @@
     <property name="bintray.subject" value="roman-mandeleil"/>
     <property name="bintray.repo" value="maven"/>
     <property name="bintray.package" value="${artifact.groupId}"/>
-    <property name="bintray.version" value="${artifact.version}"/>
+
+    <condition property="bintray.version" value="${artifact.version}.${DSTAMP}.${TSTAMP}"
+                                          else="${artifact.version}">
+
+
+        <isset property="artifact.snapshot" />
+    </condition>
+
+
     <property name="bintray.publish" value="1"/>
 
-    <property name="bintray.file.path" value="${artifact.groupId}/${artifact.id}/${artifact.version}" />
+    <property name="bintray.file.path" value="${artifact.groupId}/${artifact.id}/${bintray.version}" />
 
     <property name="encoded.bintray.file.path" value=""/>
 
@@ -78,7 +88,7 @@
 
         <var name="bintray.file.path" unset="true"/>
         <property name="bintray.file.path"
-                  value="${artifact.group.path}/${artifact.id}/${artifact.version}/${artifact.id}-${artifact.version}" />
+                  value="${artifact.group.path}/${artifact.id}/${bintray.version}/${artifact.id}-${bintray.version}" />
 
         <echo message="${bintray.file.path}"/>
 
@@ -113,9 +123,11 @@
                 <param name="artifact.suffix" value="-sources.jar"/>
             </antcall>
 
+<!--
            <antcall target="upload">
                <param name="artifact.suffix" value="-javadoc.jar"/>
            </antcall>
+-->
        </parallel>
 
 
