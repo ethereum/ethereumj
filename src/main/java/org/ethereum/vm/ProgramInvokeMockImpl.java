@@ -91,7 +91,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
         byte[] data = new byte[32];
 
-        int index = indexData.value().intValue();
+        int index = indexData.intValue();
         int size = 32;
 
         if (msgData == null) return new DataWord(data);
@@ -114,8 +114,8 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     /*  CALLDATACOPY */
     public byte[] getDataCopy(DataWord offsetData, DataWord lengthData) {
 
-        int offset = offsetData.value().intValue();
-        int length = lengthData.value().intValue();
+        int offset = offsetData.intValue();
+        int length = lengthData.intValue();
 
         byte[] data = new byte[length];
 

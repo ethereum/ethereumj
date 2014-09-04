@@ -43,16 +43,17 @@ public class Program {
     ProgramInvoke invokeData;
 
     public Program(byte[] ops, ProgramInvoke invokeData) {
-
-    	this.invokeHash = invokeData.hashCode();
-        result.setRepository(invokeData.getRepository());
-
-        if (ops == null) ops = new byte[0]; //throw new RuntimeException("program can not run with ops: null");
-
-        this.invokeData = invokeData;
+    	
+        if (ops == null) ops = ByteUtil.EMPTY_BYTE_ARRAY;
         this.ops = ops;
-        this.programAddress = invokeData.getOwnerAddress();
-    }
+        
+        if (invokeData != null) {
+	        this.invokeData = invokeData;
+	        this.programAddress = invokeData.getOwnerAddress();
+	    	this.invokeHash = invokeData.hashCode();
+	        this.result.setRepository(invokeData.getRepository());
+        }
+     }
 
     public byte getCurrentOp() {
     	if(ops.length == 0)
@@ -93,7 +94,7 @@ public class Program {
 
     public void setPC(DataWord pc) {
 
-        this.pc = pc.value().intValue();
+        this.pc = pc.intValue();
 
         if (this.pc == ops.length) {
             stop();
@@ -162,71 +163,79 @@ public class Program {
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
-        memorySave(addrB.getData(), value.getData());
+        memorySave(addrB.intValue(), value.getData());
     }
 
-    public void memorySave(byte[] addr, byte[] value) {
-
-        int address = new BigInteger(1, addr).intValue();
-        allocateMemory(address, value);
-        System.arraycopy(value, 0, memory.array(), address, value.length);
+    public void memorySave(int addr, byte[] value) {
+    	memorySave(addr, value.length, value);
     }
 
+    /**
+     * Allocates a piece of memory and stores value at given offset address
+     * 
+     * @param addr is the offset address
+     * @param allocSize size of memory needed to write
+     * @param value the data to write to memory
+     */
+    public void memorySave(int addr, int allocSize, byte[] value) {
+
+        allocateMemory(addr, allocSize);
+        System.arraycopy(value, 0, memory.array(), addr, value.length);
+    }
+    
     public DataWord memoryLoad(DataWord addr) {
+    	return memoryLoad(addr.intValue());
+    }
+    
+    public DataWord memoryLoad(int address) {
 
-        int address = new BigInteger(1, addr.getData()).intValue();
-        allocateMemory(address, DataWord.ZERO.getData());
+        allocateMemory(address, DataWord.ZERO.getData().length);
 
-        byte[] data = new byte[32];
-        System.arraycopy(memory.array(), address,  data , 0  ,32);
+        DataWord newMem = new DataWord();
+        System.arraycopy(memory.array(), address, newMem.getData(), 0, newMem.getData().length);
 
-        return new DataWord(data);
+        return newMem;
     }
 
     public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData) {
+    	return memoryChunk(offsetData.intValue(), sizeData.intValue());
+    }
 
-        int offset = offsetData.intValue();
-        int size   = sizeData.intValue();
-        byte[] chunk = new byte[size];
-        allocateMemory(offset, new byte[size]);
+    /**
+     * Returns a piece of memory from a given offset and specified size
+     * If the offset + size exceed the current memory-size,
+     * the remainder will be filled with empty bytes.
+     *
+     * @param offset byte address in memory
+     * @param size the amount of bytes to return
+     * @return ByteBuffer containing the chunk of memory data
+     */
+    public ByteBuffer memoryChunk(int offset, int size) {
 
-        if (memory != null) {
-            if (memory.limit() < offset + size) size = memory.limit() - offset;
-            System.arraycopy(memory.array(), offset, chunk, 0, size);
-        }
+        allocateMemory(offset, size);
+        byte[] chunk;
+        if (memory != null)
+        	chunk = Arrays.copyOfRange(memory.array(), offset, offset+size);
+        else
+        	chunk = new byte[size];
         return ByteBuffer.wrap(chunk);
     }
 
-    private void allocateMemory(int address, byte[] value) {
+    /**
+     * Allocates extra memory in the program for
+     *  a specified size, calculated from a given offset
+     * 
+     * @param offset the memory address offset
+     * @param size the number of bytes to allocate
+     */
+    protected void allocateMemory(int offset, int size) {
 
-        int memSize = 0;
-        if (memory != null) memSize = memory.limit();
-
-        // check if you need to allocate
-        if (memSize < (address + value.length)) {
-
-            long overlap = memSize - address;
-
-            int sizeToAllocate = 0;
-            if (memSize > address) {
-                sizeToAllocate = memSize + value.length;
-            } else {
-                sizeToAllocate = memSize + (address - memSize) + value.length;
-            }
-
-            if (overlap > 0) sizeToAllocate -= overlap;
-
-            // complete to 32
-            sizeToAllocate = (sizeToAllocate % 32)==0 ? sizeToAllocate :
-                                                        sizeToAllocate + (32 - sizeToAllocate % 32);
-            sizeToAllocate = (sizeToAllocate == 0)? 32: sizeToAllocate;
-
-            ByteBuffer tmpMem = ByteBuffer.allocate(sizeToAllocate);
-            if (memory != null)
-                System.arraycopy(memory.array(), 0, tmpMem.array(), 0, memory.limit());
-
-            memory = tmpMem;
-        }
+        int memSize = memory != null ? memory.limit(): 0;
+        double newMemSize = Math.max(memSize, Math.ceil((double)(offset + size) / 32) * 32);
+        ByteBuffer tmpMem = ByteBuffer.allocate((int)newMemSize);
+        if (memory != null)
+        	tmpMem.put(memory.array(), 0, memory.limit());
+        memory = tmpMem;
     }
 
     public void suicide(DataWord obtainer) {
@@ -421,18 +430,14 @@ public class Program {
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
         if (result != null) {
             ByteBuffer buffer = result.getHReturn();
-            if (buffer != null) {
-                int retSize = buffer.array().length;
-                int allocSize = outDataSize.intValue();
+            int allocSize = outDataSize.intValue();
+            if (buffer != null && allocSize > 0) {
+                int retSize = buffer.limit();
+                int offset = outDataOffs.intValue();
                 if (retSize > allocSize) {
-                    byte[] outArray = Arrays.copyOf(buffer.array(), allocSize);
-                    this.memorySave(outArray, buffer.array());
-                } else if (retSize == 0 || retSize == allocSize){
-                    this.memorySave(outDataOffs.getData(), buffer.array());
+                    this.memorySave(offset, buffer.array());
                 } else {
-                	byte[] outArray = new byte[allocSize];
-                	System.arraycopy(buffer.array(), 0, outArray, 0, retSize);
-                	this.memorySave(outDataOffs.getData(), outArray);
+                    this.memorySave(offset, allocSize, buffer.array());
                 }
             }
         }

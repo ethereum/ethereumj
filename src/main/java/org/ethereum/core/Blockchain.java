@@ -96,8 +96,8 @@ public class Blockchain {
 		if (block == null)
 			return;
 		
-		if (block.getNumber() == 12390)
-			logger.debug("Block #12390");
+		if (block.getNumber() == 26074)
+			logger.debug("Block #26074");
 
         // if it is the first block to add
         // make sure the parent is genesis
@@ -158,8 +158,8 @@ public class Blockchain {
 			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState())) {
 				stateLogger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8),
 						Hex.toHexString(this.repository.getWorldState().getRootHash()));
-//            	repository.close();
-//            	System.exit(-1); // Don't continue
+            	repository.close();
+            	System.exit(-1); // Don't continue
             }
 		}
 		
@@ -202,8 +202,8 @@ public class Blockchain {
             String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
             	stateLogger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-//                repository.close();
-//                System.exit(-1); // Don't add block
+                repository.close();
+                System.exit(-1); // Don't add block
             }
         }
     	

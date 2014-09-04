@@ -6,6 +6,7 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.nio.ByteBuffer;
 
 /**
@@ -41,15 +42,12 @@ public class DataWord implements Comparable<DataWord> {
     }
 
 	public DataWord(byte[] data) {
-
-        if (data == null) {
-			this.data = new byte[] {};
-            return;
-        }
-
-        if (data.length > 32)
-			throw new RuntimeException("Data word can't exit 32 bytes: " + data);
-		System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
+		if (data == null)
+			this.data = ByteUtil.EMPTY_BYTE_ARRAY;
+		else if (data.length <= 32)
+			System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
+		else
+			throw new RuntimeException("Data word can't exit 32 bytes: " + data);        	
 	}
 
     public byte[] getData() {
@@ -67,12 +65,32 @@ public class DataWord implements Comparable<DataWord> {
         return new BigInteger(1, data);
     }
     
+    /**
+     * Converts this DataWord to an int, checking for lost information. 
+     * If this DataWord is out of the possible range for an int result 
+     * then an ArithmeticException is thrown.
+     * 
+     * @return this DataWord converted to an int.
+     * @throws ArithmeticException - if this will not fit in an int.
+     */
     public int intValue() {
-        return new BigInteger(1, data).intValue();
+//		FIXME: Disabled for POC5
+//    	BigDecimal tmpValue = new BigDecimal(this.value());
+//      return tmpValue.intValueExact();
+    	return this.value().intValue();
     }
     
+    /**
+     * Converts this DataWord to a long, checking for lost information. 
+     * If this DataWord is out of the possible range for a long result 
+     * then an ArithmeticException is thrown.
+     * 
+     * @return this DataWord converted to a long.
+     * @throws ArithmeticException - if this will not fit in a long.
+     */
     public long longValue() {
-        return new BigInteger(1, data).longValue();
+    	BigDecimal tmpValue = new BigDecimal(this.value());
+        return tmpValue.longValueExact();
     }
 
     public BigInteger sValue() {
@@ -219,7 +237,7 @@ public class DataWord implements Comparable<DataWord> {
     // TODO: improve with no BigInteger
     public void exp(DataWord word) {
 
-		BigInteger result = value().pow(word.value().intValue());
+		BigInteger result = value().pow(word.intValue());
         byte[] bytes = result.toByteArray();
 
         ByteBuffer data    =  ByteBuffer.allocate(32);
