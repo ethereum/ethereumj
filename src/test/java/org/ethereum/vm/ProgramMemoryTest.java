@@ -3,8 +3,10 @@ package org.ethereum.vm;
 import static org.junit.Assert.*;
 
 import java.nio.ByteBuffer;
+
 import org.ethereum.util.ByteUtil;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class ProgramMemoryTest {
@@ -26,16 +28,19 @@ public class ProgramMemoryTest {
 	}
 
 	@Test
+	@Ignore
 	public void testMemorySave() {
-
+		fail("Not yet implemented");
 	}
 
 	@Test
+	@Ignore
 	public void testMemoryLoad() {
 		fail("Not yet implemented");
 	}
 
 	@Test
+	@Ignore
 	public void testMemoryChunk() {
 		fail("Not yet implemented");
 	}
