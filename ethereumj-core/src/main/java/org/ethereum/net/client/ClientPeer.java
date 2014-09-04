@@ -106,6 +106,11 @@ public class ClientPeer {
         }
     }
 
+    public void setPeerListener(PeerListener peerListener) {
+        this.peerListener = peerListener;
+    }
+
+
     /*
      * The wire gets data for signed transactions and
      * sends it to the net.

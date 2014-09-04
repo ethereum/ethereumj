@@ -18,8 +18,6 @@
  * Install jar with sources to the maven repository
  mvn install -Dmaven.test.skip=true
 
- * Release to mvn repository in github (settings.xml should be updated with user/pass):
- mvn clean deploy -Dmaven.test.skip=true
 -->
 
 	<developers>

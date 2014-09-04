@@ -2,6 +2,7 @@ package org.ethereum.facade;
 
 import org.ethereum.core.Block;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 
 import java.net.InetAddress;
@@ -24,10 +25,16 @@ public interface Ethereum {
     public void connect(String ip, int port);
 
     public Block getBlockByIndex(long index);
+
     public long getBlockChainSize();
 
     public void addListener(EthereumListener listener);
 
     public void loadBlockChain();
+
+
+    public ClientPeer getDefaultPeer();
+
+    public void close();
 
 }

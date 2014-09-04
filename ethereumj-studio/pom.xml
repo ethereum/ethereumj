@@ -51,6 +51,12 @@
             <name>bintray</name>
             <url>http://dl.bintray.com/ethereum/maven/</url>
         </repository>
+
+        <repository>
+            <id>mvn-central</id>
+            <name>maven</name>
+            <url> http://repo1.maven.org/maven2</url>
+        </repository>
     </repositories>
 
 
@@ -68,14 +74,12 @@
 
 	<dependencies>
 
-
         <dependency>
             <groupId>org.ethereum</groupId>
             <artifactId>ethereumj</artifactId>
-            <version>0.5.6.20140904.1950</version>
+            <version>0.5.6</version>
             <type>jar</type>
         </dependency>
-
 
 		<dependency>
 			<groupId>com.maxmind.geoip2</groupId>

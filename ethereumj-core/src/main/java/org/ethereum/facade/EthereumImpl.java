@@ -106,4 +106,24 @@ public class EthereumImpl implements Ethereum {
     public void loadBlockChain() {
         WorldManager.getInstance().loadBlockchain();
     }
+
+
+    @Override
+    public void close() {
+        WorldManager.getInstance().close();
+    }
+
+    @Override
+    public ClientPeer getDefaultPeer(){
+
+        ClientPeer peer = WorldManager.getInstance().getActivePeer();
+        if (peer == null){
+
+            peer = new ClientPeer();
+            WorldManager.getInstance().setActivePeer(peer);
+        }
+
+        return peer;
+    }
+
 }
