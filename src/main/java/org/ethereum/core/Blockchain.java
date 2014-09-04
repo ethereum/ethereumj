@@ -96,8 +96,8 @@ public class Blockchain {
 		if (block == null)
 			return;
 		
-		if (block.getNumber() == 12390)
-			logger.debug("Block #12390");
+		if (block.getNumber() == 26074)
+			logger.debug("Block #26074");
 
         // if it is the first block to add
         // make sure the parent is genesis
