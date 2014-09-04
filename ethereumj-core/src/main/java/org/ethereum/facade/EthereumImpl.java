@@ -22,7 +22,9 @@ public class EthereumImpl implements Ethereum {
 
     private static final Logger logger = LoggerFactory.getLogger("facade");
 
-    public EthereumImpl() {}
+    public EthereumImpl() {
+        WorldManager.getInstance().loadBlockchain();
+    }
 
     /**
      * Find a peer but not this one
