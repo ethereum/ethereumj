@@ -2,7 +2,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.ethereum</groupId>
-	<artifactId>ethereumj</artifactId>
+	<artifactId>ethereumj-studio</artifactId>
 	<packaging>jar</packaging>
 	<version>0.5.5</version>
 	<name>EthereumJ</name>
@@ -45,6 +45,14 @@
         </repository>
     </distributionManagement>
 
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>bintray</name>
+            <url>http://dl.bintray.com/ethereum/maven/</url>
+        </repository>
+    </repositories>
+
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -59,39 +67,16 @@
 	</properties>
 
 	<dependencies>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-all</artifactId>
-			<version>4.0.17.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- Spongy Castle for SHA3 and SECP256K1 -->
-		<dependency>
-			<groupId>com.madgag.spongycastle</groupId>
-			<artifactId>core</artifactId>
-			<version>${spongycastle.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.iq80.leveldb</groupId>
-		    <artifactId>leveldb</artifactId>
-		    <version>${leveldb.version}</version>
-		</dependency>
-		<!-- Added Cedarsoft for DeepEqual function  -->
-		<dependency>
-		  <groupId>com.cedarsoftware</groupId>
-		  <artifactId>java-util</artifactId>
-		  <version>1.8.0</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fifesoft</groupId>
-			<artifactId>rsyntaxtextarea</artifactId>
-			<version>2.5.0</version>
-		</dependency>
+
+
+        <dependency>
+            <groupId>org.ethereum</groupId>
+            <artifactId>ethereumj</artifactId>
+            <version>0.5.6.20140904.1950</version>
+            <type>jar</type>
+        </dependency>
+
+
 		<dependency>
 			<groupId>com.maxmind.geoip2</groupId>
 			<artifactId>geoip2</artifactId>
@@ -102,83 +87,6 @@
 			<artifactId>geoip-api</artifactId>
 			<version>1.2.11</version>
 		</dependency>
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-runtime</artifactId>
-            <version>4.3</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4-maven-plugin</artifactId>
-            <version>4.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.javassist</groupId>
-            <artifactId>javassist</artifactId>
-            <version>3.15.0-GA</version>
-        </dependency>
-
-        <!-- remove the real commons-logging from classpath -->
-        <!-- declare as provided or exclude from spring jars -->
-        <dependency>
-            <artifactId>commons-logging</artifactId>
-            <groupId>commons-logging</groupId>
-            <version>1.0</version>
-            <scope>provided</scope>
-        </dependency>
-
-        <!-- add slf4j interfaces to classpath -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>compile</scope>
-        </dependency>
-
-        <!-- add commons logging to slf4j bridge to classpath -->
-        <!-- acts as jcl but routes commons-logging calls to slf4j -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- add log4j binding to classpath -->
-        <!-- routes slf4j calls to log4j -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-            <scope>runtime</scope>
-        </dependency>
-
-        <!-- add log4j to classpath -->
-        <!-- does the logging -->
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>apache-log4j-extras</artifactId>
-            <version>1.2.17</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.yuvalshavit</groupId>
-            <artifactId>antlr-denter</artifactId>
-            <version>1.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.googlecode.json-simple</groupId>
-            <artifactId>json-simple</artifactId>
-            <version>1.1.1</version>
-        </dependency>
 
     </dependencies>
 
