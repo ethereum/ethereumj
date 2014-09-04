@@ -1,7 +1,6 @@
 package org.ethereum.serpent;
 
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.ethereum.gui.GUIUtils;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
@@ -1162,10 +1161,6 @@ public class SerpentCompileTest {
         String asmResult = SerpentCompiler.compile(code);
         byte[] machineCode = SerpentCompiler.compileAssemblyToMachine(asmResult);
 
-        String text = GUIUtils.getHexStyledText(machineCode);
-        System.out.println(text);
-
-//        assertEquals(expected, text);
     }
 
     @Test // test init/code blocks 1

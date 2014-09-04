@@ -13,6 +13,9 @@
             [groupId('.'->'/')]\[artifactId]\[version]
               [artifactId]-[version][suffix]
 
+
+      (*) if [artifact.snapshot] is set the deploy will add timestamp to the package
+
 -->
 
 
@@ -23,9 +26,9 @@
 
     <property name="artifact.groupId" value="org.ethereum"/>
     <property name="artifact.id" value="ethereumj"/>
-    <property name="artifact.version" value="0.5.5"/>
+    <property name="artifact.version" value="0.5.6"/>
     <property name="artifact.path" value="" />
-    <!--<property name="artifact.snapshot" value="snapshot" />-->
+    <property name="artifact.snapshot" value="snapshot" />
 
     <property name="repo.location" value="${user.home}/.m2/repository"/>
     <property name="artifact.group.path" value="${artifact.groupId}"/>
@@ -123,11 +126,10 @@
                 <param name="artifact.suffix" value="-sources.jar"/>
             </antcall>
 
-<!--
            <antcall target="upload">
                <param name="artifact.suffix" value="-javadoc.jar"/>
            </antcall>
--->
+
        </parallel>
 
 

@@ -1,6 +1,5 @@
 package org.ethereum.serpent;
 
-import org.ethereum.gui.GUIUtils;
 import static org.junit.Assert.*;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -21,9 +20,7 @@ public class MachineCompileTest {
         byte[] machineCode = SerpentCompiler.compileAssemblyToMachine(asm);
         byte[] vmReadyCode = SerpentCompiler.encodeMachineCodeForVMRun(machineCode, null);
 
-        System.out.println(GUIUtils.getHexStyledText(vmReadyCode));
         String result = Hex.toHexString(vmReadyCode);
-
         assertEquals(expected, result);
     }
 
@@ -36,7 +33,6 @@ public class MachineCompileTest {
         byte[] machineCode = SerpentCompiler.compileAssemblyToMachine(asm);
         byte[] vmReadyCode = SerpentCompiler.encodeMachineCodeForVMRun(machineCode, null);
 
-        System.out.println(GUIUtils.getHexStyledText(vmReadyCode));
         String result = Hex.toHexString(vmReadyCode);
 
         assertEquals(expected, result);
@@ -56,9 +52,5 @@ public class MachineCompileTest {
         byte[] vmReadyCode = SerpentCompiler.encodeMachineCodeForVMRun(machineCode, null);
 
         System.out.println(asm);
-        System.out.println(GUIUtils.getHexStyledText(vmReadyCode));
-        String result = Hex.toHexString(vmReadyCode);
-
-//        assertEquals(expected, result);
     }
 }
