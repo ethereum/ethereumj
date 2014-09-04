@@ -1,3 +1,6 @@
+# local credentials
+credentials.properties
+
 # Java
 *.class
 

@@ -1,0 +1,152 @@
+
+<!--
+
+        Publish from local ${user.home}/.m2/repository
+        to Bintray public repository:
+        e.g:
+
+            ethereumj-0.5.4.jar
+            ethereumj-0.5.4.pom
+            ethereumj-0.5.4-javadoc.jar
+            ethereumj-0.5.4-sources.jar
+
+            [groupId('.'->'/')]\[artifactId]\[version]
+              [artifactId]-[version][suffix]
+
+-->
+
+
+
+<project  name="ethereumj-bintray" default="publish" basedir="." >
+
+
+    <property name="artifact.groupId" value="org.ethereum"/>
+    <property name="artifact.id" value="ethereumj"/>
+    <property name="artifact.version" value="0.5.4"/>
+    <property name="artifact.path" value="" />
+
+    <property name="repo.location" value="${user.home}/.m2/repository"/>
+    <property name="artifact.group.path" value="${artifact.groupId}"/>
+    <property name="artifact.full.path" value=""/>
+
+
+    <property file="credentials.properties"/>
+
+    <property  name="ant.contrib.lib" value="${user.home}/.ant/lib/ant-contrib-1.0b3.jar"/>
+    <property  name="ant.missinglink.lib" value="${user.home}/.ant/lib/ml-ant-http-1.1.3.jar"/>
+
+    <property name="bintray.subject" value="roman-mandeleil"/>
+    <property name="bintray.repo" value="maven"/>
+    <property name="bintray.package" value="${artifact.groupId}"/>
+    <property name="bintray.version" value="${artifact.version}"/>
+    <property name="bintray.publish" value="1"/>
+
+    <property name="bintray.file.path" value="${artifact.groupId}/${artifact.id}/${artifact.version}" />
+
+    <property name="encoded.bintray.file.path" value=""/>
+
+
+    <taskdef name="http" classname="org.missinglink.ant.task.http.HttpClientTask">
+        <classpath>
+            <pathelement location="${ant.missinglink.lib}"/>
+        </classpath>
+    </taskdef>
+
+    <taskdef resource="net/sf/antcontrib/antcontrib.properties">
+        <classpath>
+            <pathelement location="${ant.contrib.lib}"/>
+        </classpath>
+    </taskdef>
+
+
+
+
+    <target name="definePath">
+        <!--[groupId('.'->'/')]\[artifactId]\[version]-->
+        <!--[artifactId]-[version][suffix]-->
+
+        <propertyregex property="artifact.group.path"
+                       input="${artifact.groupId}"
+                       regexp="\."
+                       replace="/"
+                       global="true"
+                       override="true"/>
+
+        <var name="artifact.full.path" unset="true"/>
+        <property name="artifact.full.path"
+                  value="${repo.location}/${artifact.group.path}/${artifact.id}/${artifact.version}/" />
+
+        <var name="bintray.file.path" unset="true"/>
+        <property name="bintray.file.path"
+                  value="${artifact.group.path}/${artifact.id}/${artifact.version}/${artifact.id}-${artifact.version}" />
+
+        <echo message="${bintray.file.path}"/>
+
+    </target>
+
+
+    <target name="dependency" description="install dependency">
+        <mkdir dir="${user.home}/.ant/lib"/>
+
+        <get src="https://github.com/romanman/libs/raw/master/ant-contrib-1.0b3.jar"
+             dest="${ant.contrib.lib}"/>
+
+        <get src="https://github.com/romanman/libs/raw/master/ml-ant-http-1.1.3.jar"
+             dest="${ant.missinglink.lib}"/>
+
+    </target>
+
+
+
+    <target name="publish" depends="dependency, definePath">
+
+       <parallel>
+            <antcall target="upload">
+                <param name="artifact.suffix" value=".pom"/>
+            </antcall>
+
+            <antcall target="upload">
+                <param name="artifact.suffix" value=".jar"/>
+            </antcall>
+
+            <antcall target="upload">
+                <param name="artifact.suffix" value="-sources.jar"/>
+            </antcall>
+
+           <antcall target="upload">
+               <param name="artifact.suffix" value="-javadoc.jar"/>
+           </antcall>
+       </parallel>
+
+
+    </target>
+
+
+    <target name="upload">
+
+        <urlencode property="encoded.bintray.file.path"
+                   value="${bintray.file.path}"
+                   override="true"/>
+
+        <http url="https://api.bintray.com/content/${bintray.subject}/${bintray.repo}/${bintray.package}/${bintray.version}/${encoded.bintray.file.path}${artifact.suffix};publish=1"
+              method="PUT"
+              printrequest="false"
+              printrequestheaders="true"
+              printresponse="true"
+              expected="201">
+
+            <credentials username="${username}"
+                         password="${password}"
+                         show="true"/>
+
+            <entity file="${artifact.full.path}/${artifact.id}-${artifact.version}${artifact.suffix}" binary="true"/>
+
+        </http>
+
+
+    </target>
+
+
+
+
+</project>
