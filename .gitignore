@@ -26,10 +26,12 @@ target/
 *.ear
 
 # Output #
-/logs
-/dmp
-/database
-/null
+*/logs
+*/dmp
+*/database
+*/null
+*/gen
+*/src/main/java/sample
 
 # Mac
 .DS_Store
