@@ -76,7 +76,8 @@ public class Wallet {
 
     public AccountState getAccountState(byte[] addressBytes) {
         String address = Hex.toHexString(addressBytes);
-        return rows.get(address);
+
+        return rows.get(address).getAccountState();
     }
 
     public BigInteger getBalance(byte[] addressBytes) {
@@ -142,14 +143,14 @@ public class Wallet {
         if (sender != null) {
 
             BigInteger value = new BigInteger(-1, transaction.getValue());
-            sender.addToBalance(value);
-            sender.incrementNonce();
+//            sender.addToBalance(value);
+//            sender.incrementNonce();
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
         Account receiver =  rows.get(Hex.toHexString(receiveAddress));
         if (receiver != null) {
-            receiver.addToBalance(new BigInteger(1, transaction.getValue()));
+//            receiver.addToBalance(new BigInteger(1, transaction.getValue()));
         }
         this.notifyListeners();
     }

@@ -156,9 +156,8 @@ public class Repository {
             	}
 				logger.info(
 						"*** Loaded up to block [ {} ] with stateRoot [ {} ]",
-						blockchain.getLastBlock().getNumber(), Hex
-								.toHexString(blockchain.getLastBlock()
-										.getStateRoot()));
+                                    blockchain.getLastBlock().getNumber(),
+                                        Hex.toHexString(blockchain.getLastBlock().getStateRoot()));
             }
 		} finally {
 			// Make sure you close the iterator to avoid resource leaks.
@@ -168,9 +167,20 @@ public class Repository {
 				logger.error(e.getMessage(), e);
 			}
 		}
-		// Update world state to latest loaded block from db
-		this.worldState.setRoot(blockchain.getLastBlock().getStateRoot());
-		
+
+        if (CONFIG.rootHashStart() != null){
+
+            // update world state by dummy hash
+            byte[] rootHash = Hex.decode( CONFIG.rootHashStart() );
+            logger.info("Loading root hash from property file: [ {} ]", CONFIG.rootHashStart());
+            this.worldState.setRoot(rootHash);
+
+        } else{
+
+            // Update world state to latest loaded block from db
+            this.worldState.setRoot(blockchain.getLastBlock().getStateRoot());
+        }
+
 		return blockchain;
 	}
 	

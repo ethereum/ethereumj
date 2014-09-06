@@ -42,6 +42,9 @@ public class WorldManager {
     
     private static final class WorldManagerHolder {
     	private static final WorldManager instance = new WorldManager();
+        static{
+            instance.init();
+        }
     }
     
 	private WorldManager() {
@@ -54,19 +57,23 @@ public class WorldManager {
 
         peerDiscovery = new PeerDiscovery(peers);
 
-		this.wallet = new Wallet();
-		
-		byte[] cowAddr = HashUtil.sha3("cow".getBytes());
-		ECKey key = ECKey.fromPrivate(cowAddr);
-		wallet.importKey(cowAddr);
-
-		AccountState state = wallet.getAccountState(key.getAddress());
-		state.addToBalance(BigInteger.valueOf(2).pow(200));
-
-		String secret = CONFIG.coinbaseSecret();
-		byte[] cbAddr = HashUtil.sha3(secret.getBytes());
-		wallet.importKey(cbAddr);
 	}
+
+    public void init(){
+        this.wallet = new Wallet();
+
+        byte[] cowAddr = HashUtil.sha3("cow".getBytes());
+        ECKey key = ECKey.fromPrivate(cowAddr);
+        wallet.importKey(cowAddr);
+
+//        AccountState state = wallet.getAccountState(key.getAddress());
+//        state.addToBalance(BigInteger.valueOf(2).pow(200));
+
+        String secret = CONFIG.coinbaseSecret();
+        byte[] cbAddr = HashUtil.sha3(secret.getBytes());
+        wallet.importKey(cbAddr);
+
+    }
 	
 	public static WorldManager getInstance() {
 		return WorldManagerHolder.instance;

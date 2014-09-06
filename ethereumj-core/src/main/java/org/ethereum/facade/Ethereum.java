@@ -71,8 +71,9 @@ public interface Ethereum {
 
     public void addListener(EthereumListener listener);
 
-
     public ClientPeer getDefaultPeer();
+
+    public boolean isConnected();
 
     public void close();
 

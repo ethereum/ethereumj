@@ -215,6 +215,13 @@ public class SystemProperties {
         return prop.getProperty("hello.phrase");
     }
 
+    public String rootHashStart() {
+        if(prop.isEmpty()) return null;
+        String hash = prop.getProperty("root.hash.start");
+        if (hash == null || hash.equals("-1")) return null;
+
+        return prop.getProperty("root.hash.start");
+    }
 
     public static void main(String args[]) {
         SystemProperties systemProperties = new SystemProperties();

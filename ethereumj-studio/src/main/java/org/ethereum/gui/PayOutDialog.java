@@ -1,10 +1,7 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Account;
-import org.ethereum.core.AccountState;
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.ClientPeer;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -29,7 +26,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
 	private PayOutDialog dialog;
 
-    private AccountState accountState = null;
+    private Account account = null;
     private JLabel statusMsg = null;
 
     private final JTextField receiverInput;
@@ -40,7 +37,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 		super(parent, "Payout details: ", false);
 		dialog = this;
 
-		this.accountState = account;
+		this.account = account;
 
         receiverInput = new JTextField(18);
         GUIUtils.addStyle(receiverInput, "Pay to:");
@@ -107,18 +104,16 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
                 BigInteger value = new BigInteger(amountInput.getText());
                 byte[] address = Hex.decode(receiverInput.getText());
 
-                // Client
-				ClientPeer peer = WorldManager.getInstance().getActivePeer();
 
-				if (peer == null) {
+				if (!UIEthereumManager.ethereum.isConnected()) {
 					dialog.alertStatusMsg("Not connected to any peer");
 					return;
 				}
 
 				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-				byte[] nonce = accountState.getNonce() == BigInteger.ZERO ? null : accountState.getNonce().toByteArray();
+				byte[] nonce = PayOutDialog.this.account.getNonce() == BigInteger.ZERO ? null : PayOutDialog.this.account.getNonce().toByteArray();
 
-                byte[] gasPrice = BigInteger.valueOf( WorldManager.getInstance().getBlockchain().getGasPrice()).toByteArray();
+                byte[] gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockChain().getGasPrice()).toByteArray();
 
 				Transaction tx = new Transaction(nonce, gasPrice, BigIntegers
 						.asUnsignedByteArray(fee), address, BigIntegers
@@ -199,8 +194,8 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         // check if the tx is affordable
         BigInteger ammountValue = new BigInteger(amountText);
         BigInteger feeValue = new BigInteger(feeText);
-        BigInteger gasPrice = BigInteger.valueOf(WorldManager.getInstance().getBlockchain().getGasPrice());
-        BigInteger currentBalance = accountState.getBalance();
+        BigInteger gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockChain().getGasPrice());
+        BigInteger currentBalance = account.getBalance();
 
         boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;
 
