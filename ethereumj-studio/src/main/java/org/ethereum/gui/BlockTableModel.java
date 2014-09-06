@@ -16,7 +16,7 @@ public class BlockTableModel extends AbstractTableModel {
     public int getRowCount() {
 
         fireTableDataChanged();
-        int rowCount = (int) UIEthereumManager.ethereum.getBlockChainSize();
+        int rowCount = (int) UIEthereumManager.ethereum.getBlockChain().getSize();
         return rowCount;
     }
 
@@ -28,7 +28,7 @@ public class BlockTableModel extends AbstractTableModel {
     @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
 
-        Block block = UIEthereumManager.ethereum.getBlockByIndex(rowIndex);
+        Block block = UIEthereumManager.ethereum.getBlockChain().getBlockByNumber(rowIndex);
 
         if (block == null) return "";
 

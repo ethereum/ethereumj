@@ -5,12 +5,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.*;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Blockchain;
@@ -39,7 +34,7 @@ public class WorldManager {
 
     private PeerDiscovery peerDiscovery;
     
-    private final BlockingQueue<PeerData> peers = new LinkedBlockingQueue<>();
+    private final Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
     
     private ClientPeer activePeer;
 
@@ -82,20 +77,24 @@ public class WorldManager {
     }
 
     public void addPeers(final Set<PeerData> newPeers) {
-        for (final PeerData peer : newPeers) {
-        	peers.add(peer);
-        	if (peerDiscovery.isStarted()) {
-        		peerDiscovery.addNewPeerData(peer);
-        	}
+
+        synchronized (peers){
+            for (final PeerData peer : newPeers) {
+                if (peerDiscovery.isStarted() && !peers.contains(peer)) {
+                    peerDiscovery.addNewPeerData(peer);
+                }
+                peers.add(peer);
+            }
         }
+
     }
 
     public void startPeerDiscovery() {
         if (!peerDiscovery.isStarted())
             peerDiscovery.start();
-    };
+    }
 
-    public void stopPeerDiscover(){
+    public void stopPeerDiscovery(){
 
         if (listener != null)
             listener.trace("Stopping peer discovery");
@@ -103,10 +102,6 @@ public class WorldManager {
         if (peerDiscovery.isStarted())
             peerDiscovery.stop();
     }
-
-    public void close() {
-		repository.close();
-	}
 
     public EthereumListener getListener() {
         return listener;
@@ -164,8 +159,15 @@ public class WorldManager {
         return activePeer;
     }
 
-    public BlockingQueue<PeerData> getPeers() {
+    public Set<PeerData> getPeers() {
 		return peers;
 	}
+
+
+    public void close() {
+        stopPeerDiscovery();
+        repository.close();
+        blockchain.close();
+    }
 
 }

@@ -4,9 +4,7 @@ import org.ethereum.net.client.PeerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,11 +24,11 @@ public class PeerDiscovery {
     private ThreadPoolExecutor executorPool;
     private PeerDiscoveryMonitorThread monitor;
     
-    private final Queue<PeerData> peers;
+    private final Set<PeerData> peers;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
-    public PeerDiscovery(Queue<PeerData> peers) {
+    public PeerDiscovery(Set<PeerData> peers) {
         this.peers = peers;
     }
 
@@ -66,6 +64,7 @@ public class PeerDiscovery {
     public void stop() {
         executorPool.shutdown();
         monitor.shutdown();
+        started.set(false);
     }
 
     public boolean isStarted() {

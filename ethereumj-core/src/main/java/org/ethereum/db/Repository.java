@@ -122,7 +122,7 @@ public class Repository {
     }
 	
 	public Blockchain loadBlockchain() {
-		Blockchain blockchain = new Blockchain(this);
+		Blockchain blockchain = WorldManager.getInstance().getBlockchain();
 		DBIterator iterator = chainDB.iterator();
 		try {
 			if (!iterator.hasNext()) {

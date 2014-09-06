@@ -23,7 +23,7 @@ public class BlockQueue {
     private Queue<Block> blockQueue = new ConcurrentLinkedQueue<>();
     private Block lastBlock;
 
-    private Timer timer = new Timer();
+    private Timer timer = new Timer("BlockQueueTimer");
 
     public BlockQueue() {
 
@@ -85,6 +85,11 @@ public class BlockQueue {
 
     public int size() {
         return blockQueue.size();
+    }
+
+    public void close(){
+        timer.cancel();
+        timer.purge();
     }
 
 }

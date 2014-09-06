@@ -1,9 +1,9 @@
 package org.ethereum.facade;
 
 import java.net.InetAddress;
-import java.util.concurrent.BlockingQueue;
+import java.util.HashSet;
+import java.util.Set;
 
-import org.ethereum.core.Block;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
@@ -30,47 +30,83 @@ public class EthereumImpl implements Ethereum {
      * Find a peer but not this one
      * @param peerData - peer to exclude
      * @return online peer
-     * @throws InterruptedException 
      */
     @Override
-    public PeerData findPeer(PeerData peerData) throws InterruptedException {
+    public PeerData findOnlinePeer(PeerData peerData) {
 
+        Set<PeerData> excludePeers = new HashSet<>();
+        excludePeers.add(peerData);
+
+        return findOnlinePeer(excludePeers);
+    }
+
+    @Override
+    public PeerData findOnlinePeer() {
+
+        Set<PeerData> excludePeers = new HashSet<>();
+        return findOnlinePeer(excludePeers);
+    }
+
+
+    @Override
+    public PeerData findOnlinePeer(Set<PeerData> excludePeers)  {
         logger.info("Looking for online peers...");
-        
+
         final EthereumListener listener = WorldManager.getInstance().getListener();
         if (listener != null) {
             listener.trace("Looking for online peer");
         }
 
         WorldManager.getInstance().startPeerDiscovery();
-        
-        final BlockingQueue<PeerData> peers = WorldManager.getInstance().getPeers();
-        
-        PeerData peer = null;
-        
-        while ((peer = peers.take()) != null) { // it blocks until a peer is available.
-            
-            if (peer.isOnline() && !peer.equals(peerData)){
 
-                logger.info("Found peer: {}", peer.toString());
+        final Set<PeerData> peers = WorldManager.getInstance().getPeers();
+        synchronized (peers) {
 
-                if (listener != null)
-                    listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
+            for (PeerData peer : peers) { // it blocks until a peer is available.
 
-                return peer;
+                if (peer.isOnline() &&   !excludePeers.contains(peer)) {
+
+                    logger.info("Found peer: {}", peer.toString());
+
+                    if (listener != null)
+                        listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
+
+                    return peer;
+                }
             }
         }
         return null;
     }
 
+
     @Override
-    public PeerData findPeer() throws InterruptedException {
-        return findPeer(null);
+    public PeerData waitForOnlinePeer(){
+
+        PeerData peer = null;
+        while(peer == null){
+
+            try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
+            peer = this.findOnlinePeer();
+        }
+
+        return peer;
+    }
+
+
+    @Override
+    public Set<PeerData> getPeers() {
+        return WorldManager.getInstance().getPeers();
     }
 
     @Override
-    public void stopPeerDiscover(){
-        WorldManager.getInstance().stopPeerDiscover();
+    public void startPeerDiscovery(){
+        WorldManager.getInstance().startPeerDiscovery();
+    }
+
+
+    @Override
+    public void stopPeerDiscovery(){
+        WorldManager.getInstance().stopPeerDiscovery();
     }
 
     @Override
@@ -87,14 +123,8 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public Block getBlockByIndex(long index){
-        Block block = WorldManager.getInstance().getBlockchain().getByNumber(index);
-        return block;
-    }
-
-    @Override
-    public long getBlockChainSize(){
-        return WorldManager.getInstance().getBlockchain().getSize();
+    public Blockchain getBlockChain() {
+        return WorldManager.getInstance().getBlockchain();
     }
 
     @Override

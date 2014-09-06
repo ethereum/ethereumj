@@ -41,10 +41,10 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private Logger logger = LoggerFactory.getLogger("wire");
 
-    private Timer chainAskTimer = new Timer();
+    private Timer chainAskTimer = new Timer("ChainAskTimer");
     private int secToAskForChain = 1;
 
-    private final Timer timer = new Timer();
+    private final Timer timer = new Timer("MiscMessageTimer");
 
     private boolean tearDown = false;
 

@@ -16,11 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.AbstractQueue;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -89,12 +85,14 @@ public class ClientPeer {
 
             handler.killTimers();
 
-            final Queue<PeerData> peers =  WorldManager.getInstance().getPeers();
+            final Set<PeerData> peers =  WorldManager.getInstance().getPeers();
 
-            for (PeerData peer : peers){
-                if (host.equals(peer.getInetAddress().getHostAddress()) &&
-                        port == peer.getPort()){
-                    peer.setOnline(false);
+            synchronized (peers){
+                for (PeerData peer : peers){
+                    if (host.equals(peer.getInetAddress().getHostAddress()) &&
+                            port == peer.getPort()){
+                        peer.setOnline(false);
+                    }
                 }
             }
 

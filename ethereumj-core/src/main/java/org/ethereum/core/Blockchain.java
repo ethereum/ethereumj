@@ -50,7 +50,7 @@ import static org.ethereum.core.Denomination.SZABO;
  * Created on: 20/05/2014 10:44
  *
  */
-public class Blockchain {
+public class Blockchain implements org.ethereum.facade.Blockchain{
 
 	private static final Logger logger = LoggerFactory.getLogger("blockchain");
 	private static final Logger stateLogger = LoggerFactory.getLogger("state");
@@ -87,7 +87,7 @@ public class Blockchain {
         return blockCache.size();
     }
 
-    public Block getByNumber(long blockNr) {
+    public Block getBlockByNumber(long blockNr) {
     	return repository.getBlock(blockNr);
 	}
 
@@ -454,4 +454,7 @@ public class Blockchain {
     	this.lastBlock = block;
     }
 
+    public void close(){
+        blockQueue.close();
+    }
 }

@@ -4,7 +4,7 @@
 	<groupId>org.ethereum</groupId>
 	<artifactId>ethereumj-studio</artifactId>
 	<packaging>jar</packaging>
-	<version>0.5.5</version>
+	<version>0.5.6</version>
 	<name>EthereumJ</name>
 	<url>http://www.ethereumj.org</url>
 
@@ -18,8 +18,7 @@
  * Install jar with sources to the maven repository
  mvn source:jar install -Dmaven.test.skip=true
 
- * Release to mvn repository in github (settings.xml should be updated with user/pass):
- mvn clean deploy -Dmaven.test.skip=true
+
 -->
 
 	<developers>
@@ -31,11 +30,6 @@
 		</developer>
 	</developers>
 
-	<scm>
-		<connection>scm:git:git://github.com/ethereum/ethereumj.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/ethereum/ethereumj.git</developerConnection>
-		<url>https://github.com/ethereum/ethereumj</url>
-	</scm>
 
     <distributionManagement>
         <repository>
@@ -69,7 +63,7 @@
 		<spongycastle.version>1.51.0.0</spongycastle.version>
 		<generated.sourceDirectory>gen</generated.sourceDirectory>
 
-        <github.global.server>github</github.global.server>
+
 	</properties>
 
 	<dependencies>
@@ -208,7 +202,6 @@
 			    </configuration>
 			</plugin>
 
-<!--
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.3</version>
@@ -228,7 +221,6 @@
                     </execution>
                 </executions>
             </plugin>
--->
 
 
             <plugin>
@@ -270,31 +262,6 @@
             </plugin>
 
 
-            <plugin>
-                <groupId>com.github.github</groupId>
-                <artifactId>site-maven-plugin</artifactId>
-                <version>0.9</version>
-                <configuration>
-                    <message>Maven artifacts for ${project.version}</message>  <!-- git commit message -->
-                    <noJekyll>true</noJekyll>                                  <!-- disable webpage processing -->
-                    <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory> <!-- matches distribution management repository url above -->
-                    <branch>refs/heads/mvn-repo</branch>                       <!-- remote branch name -->
-                    <includes><include>**/*</include></includes>
-                    <!--<excludes><exclude>**/*sources*</exclude></excludes>-->
-                    <force>true</force>
-                    <repositoryName>ethereumj</repositoryName>      <!-- github repo name -->
-                    <repositoryOwner>ethereum</repositoryOwner>    <!-- github repo owner  -->
-                </configuration>
-                <executions>
-                    <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
-                    <execution>
-                        <goals>
-                            <goal>site</goal>
-                        </goals>
-                        <phase>deploy</phase>
-                    </execution>
-                </executions>
-            </plugin>
 
 		</plugins>
 		 <pluginManagement>

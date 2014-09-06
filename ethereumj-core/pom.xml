@@ -9,14 +9,11 @@
 	<url>http://www.ethereumj.org</url>
 
 <!--
- * To deploy the classes in one jar and dependencies to another dir
- mvn clean package -Dmaven.test.skip=true
+ * Install jar with sources to the local maven repository
+ mvn install -Dmaven.test.skip=true
 
  * To generate source for ANTLR parser/lexer
  mvn antlr4:antlr4
-
- * Install jar with sources to the maven repository
- mvn install -Dmaven.test.skip=true
 
 -->
 
