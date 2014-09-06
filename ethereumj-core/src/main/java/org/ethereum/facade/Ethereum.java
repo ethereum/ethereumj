@@ -67,6 +67,8 @@ public interface Ethereum {
 
     public Blockchain getBlockChain();
 
+    public boolean isBlockChainLoading();
+
     public void addListener(EthereumListener listener);
 
     public void loadBlockChain();

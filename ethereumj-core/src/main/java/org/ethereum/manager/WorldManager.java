@@ -164,6 +164,14 @@ public class WorldManager {
 	}
 
 
+    public boolean isBlockChainLoading(){
+
+        if (blockchain.getBlockQueue().size() > 2)
+            return true;
+        else
+            return false;
+    }
+
     public void close() {
         stopPeerDiscovery();
         repository.close();

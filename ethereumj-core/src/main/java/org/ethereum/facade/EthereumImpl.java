@@ -137,6 +137,10 @@ public class EthereumImpl implements Ethereum {
         WorldManager.getInstance().loadBlockchain();
     }
 
+    @Override
+    public boolean isBlockChainLoading() {
+        return WorldManager.getInstance().isBlockChainLoading();
+    }
 
     @Override
     public void close() {
