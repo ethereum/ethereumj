@@ -1,6 +1,7 @@
 package org.ethereum.gui;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.facade.Ethereum;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -228,7 +229,7 @@ public class ToolBar extends JFrame {
         cp.add(chainToggle);
         cp.add(walletToggle);
 
-        UIEthereumManager.ethereum.loadBlockChain();
+        Ethereum ethereum = UIEthereumManager.ethereum;
 
     }
 
