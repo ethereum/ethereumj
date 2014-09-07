@@ -92,7 +92,24 @@ public class Wallet {
         }
         return sum;
     }
-    
+
+
+    /**
+     * The wallet will call this method once transaction been send to the network,
+     * once the the GET_TRANSACTION will be answered with that particular transaction
+     * it will be considered as received by the net
+     *
+     * @param transaction
+     * @return
+     */
+    public WalletTransaction addByWalletTransaction(Transaction transaction){
+        String hash = Hex.toHexString(transaction.getHash());
+        WalletTransaction walletTransaction = new WalletTransaction(transaction);
+        this.walletTransactions.put(hash, walletTransaction);
+
+        return walletTransaction;
+    }
+
     /***********************************************************************
      *	1) the dialog put a pending transaction on the list
      *  2) the dialog send the transaction to a net
@@ -111,6 +128,9 @@ public class Wallet {
 			walletTransaction = new WalletTransaction(transaction);
 			this.walletTransactions.put(hash, walletTransaction);
 		}
+
+        this.applyTransaction(transaction);
+
         return walletTransaction;
     }
     
@@ -141,16 +161,23 @@ public class Wallet {
         byte[] senderAddress = transaction.getSender();
         Account sender =  rows.get(Hex.toHexString(senderAddress));
         if (sender != null) {
+            sender.addPendingTransaction(transaction);
 
-            BigInteger value = new BigInteger(-1, transaction.getValue());
-//            sender.addToBalance(value);
-//            sender.incrementNonce();
+            logger.info("Pending transaction added to " +
+                            "\n account: [ {} ], " +
+                            "\n tx: [ {} ]",
+                    Hex.toHexString(sender.getAddress()), Hex.toHexString(transaction.getHash()));
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
         Account receiver =  rows.get(Hex.toHexString(receiveAddress));
         if (receiver != null) {
-//            receiver.addToBalance(new BigInteger(1, transaction.getValue()));
+            receiver.addPendingTransaction(transaction);
+
+            logger.info("Pending transaction added to " +
+                            "\n account: [ {} ], " +
+                            "\n tx: [ {} ]",
+                    Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
         }
         this.notifyListeners();
     }
@@ -158,24 +185,11 @@ public class Wallet {
 
     public void processBlock(Block block) {
 
-        if (block == null) return;
-
-        // TODO: proceed coinbase when you are the miner that gets an award
-        boolean walletUpdated = false;
-
-        List<Transaction> transactions = block.getTransactionsList();
-
-        for (Transaction tx : transactions) {
-            boolean txExist = transactionMap.get(new ByteArrayWrapper(tx.getHash())) != null;
-            if (txExist) break;
-            else {
-                this.applyTransaction(tx);
-                walletUpdated = true;
-            }
+        for (Account account : getAccountCollection()){
+            account.clearAllPendingTransactions();
         }
 
-        this.high = block.getNumber();
-        if (walletUpdated) notifyListeners();
+        notifyListeners();
     }
 
     /**

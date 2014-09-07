@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import java.math.BigInteger;
+import java.util.*;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.manager.WorldManager;
@@ -13,7 +14,10 @@ public class Account  {
 
 	private ECKey ecKey;
 	private byte[] address;
-	
+
+    private Set<Transaction> pendingTransactions =
+            Collections.synchronizedSet(new HashSet<Transaction>());
+
 	public Account() {
 		this.ecKey = new ECKey(Utils.getRandom());
         address = this.ecKey.getAddress();
@@ -23,7 +27,6 @@ public class Account  {
 		this.ecKey = ecKey;
         address = this.ecKey.getAddress();
 	}
-
 
     public ECKey getEcKey() {
         return ecKey;
@@ -49,10 +52,29 @@ public class Account  {
         AccountState accountState =
                 WorldManager.getInstance().getRepository().getAccountState(this.address);
 
-        if (accountState != null)
-            return accountState.getBalance();
+        BigInteger balance = BigInteger.ZERO;
 
-        return null;
+        if (accountState != null)
+            balance = accountState.getBalance();
+
+        synchronized (pendingTransactions){
+            if (!pendingTransactions.isEmpty()){
+
+                for (Transaction tx : pendingTransactions){
+                    if (Arrays.equals(this.address, tx.getSender())){
+                        balance = balance.subtract(new BigInteger(1, tx.getValue()));
+                    }
+
+                    if (Arrays.equals(this.address, tx.getReceiveAddress())){
+                        balance = balance.add(new BigInteger(1, tx.getValue()));
+                    }
+                }
+
+                // todo: calculate the fee for pending
+            }
+        }
+
+        return balance;
     }
 
 
@@ -61,9 +83,37 @@ public class Account  {
         AccountState accountState =
             WorldManager.getInstance().getRepository().getAccountState(this.address);
 
-        if (accountState != null)
-            return accountState.getNonce();
+        BigInteger nonce = BigInteger.ZERO;
 
-        return null;
+        if (accountState != null)
+            nonce =  accountState.getNonce();
+
+        synchronized (pendingTransactions){
+            if (!pendingTransactions.isEmpty()){
+
+                for (Transaction tx : pendingTransactions){
+                    if (Arrays.equals(this.address, tx.getSender())){
+                        nonce = nonce.add(BigInteger.ONE);
+                    }
+                }
+            }
+        }
+
+        return nonce;
+    }
+
+
+    public void addPendingTransaction(Transaction transaction){
+        synchronized (pendingTransactions){
+            pendingTransactions.add(transaction);
+        }
+
+
+    }
+
+    public void clearAllPendingTransactions(){
+        synchronized (pendingTransactions){
+            pendingTransactions.clear();
+        }
     }
 }

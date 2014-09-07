@@ -3,15 +3,25 @@ package org.ethereum.core;
 import java.math.BigInteger;
 
 import org.ethereum.manager.WorldManager;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.spongycastle.util.encoders.Hex;
-import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class BlockTest {
 
+    @BeforeClass
+    public static void setUp() {
+        if (WorldManager.getInstance().getRepository().isClosed())
+            WorldManager.getInstance().reset();
+    }
+
+    @AfterClass
+    public static void tearDown() {
+        WorldManager.getInstance().close();
+    }
 
 	// https://ethereum.etherpad.mozilla.org/12
 	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a08dbd704eb38d1c2b73ee4788715ea5828a030650829703f077729b2b613dd20680834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
@@ -108,24 +118,21 @@ public class BlockTest {
     
     @Test
     public void testCalcDifficulty() {
-        try {
-            Block genesis = Genesis.getInstance();
-            BigInteger difficulty = new BigInteger(1, genesis.calcDifficulty());
-            System.out.println("Genesis difficulty = " + difficulty.toString());
-            assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
 
-            // Storing genesis because the parent needs to be in the DB for calculation.
-            WorldManager.getInstance().getBlockchain().add(genesis);
+        Block genesis = Genesis.getInstance();
+        BigInteger difficulty = new BigInteger(1, genesis.calcDifficulty());
+        System.out.println("Genesis difficulty = " + difficulty.toString());
+        assertEquals(new BigInteger(1, Genesis.DIFFICULTY), difficulty);
 
-            Block block1 = new Block(Hex.decode(block_1));
-            BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
-            BigInteger actualDifficulty = new BigInteger(1, block1.getDifficulty());
-            System.out.println("Block#1 actual difficulty = " + actualDifficulty.toString());
-            System.out.println("Block#1 calculated difficulty = " + calcDifficulty.toString());
-            assertEquals(actualDifficulty, calcDifficulty);
-        } finally {
-            WorldManager.getInstance().close();
-        }
+        // Storing genesis because the parent needs to be in the DB for calculation.
+        WorldManager.getInstance().getBlockchain().add(genesis);
+
+        Block block1 = new Block(Hex.decode(block_1));
+        BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
+        BigInteger actualDifficulty = new BigInteger(1, block1.getDifficulty());
+        System.out.println("Block#1 actual difficulty = " + actualDifficulty.toString());
+        System.out.println("Block#1 calculated difficulty = " + calcDifficulty.toString());
+        assertEquals(actualDifficulty, calcDifficulty);
     }
     
     @Test

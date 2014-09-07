@@ -29,7 +29,7 @@ import org.ethereum.net.peerdiscovery.PeerDiscovery;
 public class WorldManager {
 
 	private Blockchain blockchain;
-	private final Repository repository;
+	private Repository repository;
 	private Wallet wallet;
 
     private PeerDiscovery peerDiscovery;
@@ -58,6 +58,13 @@ public class WorldManager {
         peerDiscovery = new PeerDiscovery(peers);
 
 	}
+
+    // used for testing
+    public void reset(){
+
+        this.repository = new Repository();
+        this.blockchain = new Blockchain(repository);
+    }
 
     public void init(){
         this.wallet = new Wallet();

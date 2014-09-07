@@ -95,9 +95,6 @@ public class Blockchain implements org.ethereum.facade.Blockchain{
 
 		if (block == null)
 			return;
-		
-		if (block.getNumber() == 12390)
-			logger.debug("Block #12390");
 
         // if it is the first block to add
         // make sure the parent is genesis

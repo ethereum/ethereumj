@@ -89,7 +89,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             public void run() {
                 sendGetTransactions();
             }
-        }, 2000, 30000);
+        }, 2000, 10000);
 
         chainAskTimer.scheduleAtFixedRate(new TimerTask() {
 
@@ -198,8 +198,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             List<Transaction> txList = transactionsMessage.getTransactions();
             for(Transaction tx : txList)
-				WorldManager.getInstance().getBlockchain()
-						.applyTransaction(null, tx);
+//				WorldManager.getInstance().getBlockchain()
+//						.applyTransaction(null, tx);
+                WorldManager.getInstance().getWallet().addTransaction(tx);
 
             logger.info(transactionsMessage.toString());
             if (peerListener != null) peerListener.console(transactionsMessage.toString());

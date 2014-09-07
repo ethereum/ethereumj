@@ -478,15 +478,28 @@ public class Repository {
     }
 
 
-
+    public boolean isClosed(){
+        return chainDB == null;
+    }
 
     public void close() {
-        if (this.chainDB != null)
-        	chainDB.close();
-        if (this.stateDB != null)
+
+        if (this.chainDB != null){
+            chainDB.close();
+            chainDB = null;
+        }
+
+        if (this.stateDB != null){
+
             stateDB.close();
-        if (this.detailsDB != null)
+            stateDB = null;
+        }
+
+        if (this.detailsDB != null){
+
             detailsDB.close();
+            detailsDB = null;
+        }
     }
 
     private void validateAddress(byte[] addr) {
@@ -496,3 +509,4 @@ public class Repository {
 		}
     }
 }
+

@@ -159,4 +159,8 @@ public class EthereumImpl implements Ethereum {
     public boolean isConnected() {
         return WorldManager.getInstance().getActivePeer() != null;
     }
+
+
+    // public Future<Transaction> submitTransaction() -- wait for approve (like in wallet dialog)
+
 }

@@ -286,4 +286,26 @@ public class Transaction {
 				receiveAddress, value, data, v, r, s);
         return rlpEncoded;
     }
+
+    @Override
+    public int hashCode() {
+
+        byte[] hash = this.getHash();
+        int hashCode = 0;
+
+        for (int i = 0; i < hash.length; ++i){
+            hashCode += hash[i] * i;
+        }
+
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (!(obj instanceof Transaction)) return false;
+        Transaction tx = (Transaction)obj;
+
+        return tx.hashCode() == this.hashCode();
+    }
 }
