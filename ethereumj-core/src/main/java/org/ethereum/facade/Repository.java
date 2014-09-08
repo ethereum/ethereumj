@@ -3,8 +3,6 @@ package org.ethereum.facade;
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetails;
 
-import java.math.BigInteger;
-
 /**
  * www.ethereumJ.com
  *
@@ -16,5 +14,4 @@ public interface Repository {
 
     public AccountState getAccountState(byte[] addr);
     public ContractDetails getContractDetails(byte[] addr);
-
 }

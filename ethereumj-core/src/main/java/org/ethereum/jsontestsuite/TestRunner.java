@@ -2,7 +2,7 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
@@ -46,7 +46,7 @@ public class TestRunner {
 
         List<String> results = new ArrayList<>();
 
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         /* 1. Store pre-exist accounts - Pre */
         for (ByteArrayWrapper key : testCase.getPre().keySet()){

@@ -23,7 +23,7 @@ public class RepositoryTest {
 	public void test1() {
 
 		String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-		Repository repository = new Repository();
+		RepositoryImpl repository = new RepositoryImpl();
 
 		try {
 			AccountState createdState = repository.createAccount(Hex.decode(addr));
@@ -38,7 +38,7 @@ public class RepositoryTest {
     public void test2() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         try {
             BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
@@ -61,7 +61,7 @@ public class RepositoryTest {
     public void test3() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
         try {
             BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
 
@@ -85,7 +85,7 @@ public class RepositoryTest {
     public void test4() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
         try {
             BigInteger balance0 = repository.getBalance(Hex.decode(addr));
 
@@ -107,7 +107,7 @@ public class RepositoryTest {
     public void test5() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
         try {
             BigInteger balance0 = repository.getBalance(Hex.decode(addr));
 
@@ -133,7 +133,7 @@ public class RepositoryTest {
     public void test6() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         byte[] code;
         try {
@@ -151,7 +151,7 @@ public class RepositoryTest {
         String codeString = "7f60c860005461012c602054000000000000000000000000000000000000000000600060206000f200";
         String codeHash = "8f0d7fc8cc6fdd688fa58ae9256310069f5659ed2a8a3af994d80350fbf1e798";
 
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         try {
             byte[] code0 = repository.getCode(Hex.decode(addr));
@@ -174,7 +174,7 @@ public class RepositoryTest {
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         String codeHash = "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
 
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         try {
             byte[] code0 = repository.getCode(Hex.decode(addr));
@@ -197,7 +197,7 @@ public class RepositoryTest {
         byte[] keyBytes = Hex.decode("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
         DataWord key = new DataWord(keyBytes);
 
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         try {
             DataWord value = repository.getStorageValue(Hex.decode(addr), key);
@@ -211,7 +211,7 @@ public class RepositoryTest {
     public void test10() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         try {
             repository.createAccount(Hex.decode(addr));
@@ -233,7 +233,7 @@ public class RepositoryTest {
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         String expectedStorageHash = "a737c40a4aa895fb9eb464536c376ee7c2c08eb733c8fd2353fcc62dc734f075";
 
-        Repository repository = new Repository();
+        RepositoryImpl repository = new RepositoryImpl();
 
         try {
             repository.createAccount(Hex.decode(addr));
@@ -283,10 +283,10 @@ public class RepositoryTest {
         String expectedStorageHash = "365ed874ad42c2b4af335212465291e03dcd1f0c5b600f40f048ed238ad61fd3";
         long expectedBalance = 333;
 
-        Repository origRepository = new Repository();
+        RepositoryImpl origRepository = new RepositoryImpl();
 
         try {
-            Repository repository = origRepository.getTrack();
+            RepositoryImpl repository = origRepository.getTrack();
             repository.startTracking();
 
             repository.createAccount(Hex.decode(addr));
@@ -310,8 +310,8 @@ public class RepositoryTest {
         long expectedBalance_1 = 55500;
         long expectedBalance_2 = 0;
 
-        Repository origRepository = new Repository();
-        Repository repository = origRepository.getTrack();
+        RepositoryImpl origRepository = new RepositoryImpl();
+        RepositoryImpl repository = origRepository.getTrack();
         repository.startTracking();
 
         repository.createAccount(Hex.decode(addr));
@@ -336,8 +336,8 @@ public class RepositoryTest {
 
         long expectedBalance = 55500;
 
-        Repository origRepository = new Repository();
-        Repository repository = origRepository.getTrack();
+        RepositoryImpl origRepository = new RepositoryImpl();
+        RepositoryImpl repository = origRepository.getTrack();
 
         try {
             repository.createAccount(Hex.decode(addr_1));

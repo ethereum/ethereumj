@@ -2,7 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -59,7 +59,7 @@ public class VMComplexTest {
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress("77045e71a7a2c50903d88e564cd72fab11e82051");
-        Repository repository = pi.getRepository();
+        RepositoryImpl repository = pi.getRepository();
 
         repository.createAccount(callerAddrB);
         repository.addBalance(callerAddrB, new BigInteger("100000000000000000000"));
@@ -134,7 +134,7 @@ public class VMComplexTest {
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr);
-        Repository repository = pi.getRepository();
+        RepositoryImpl repository = pi.getRepository();
 
         byte[] contractB_addr_bytes = Hex.decode(contractB_addr);
         byte[] codeB = Hex.decode(code_b);
@@ -234,7 +234,7 @@ public class VMComplexTest {
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr);
-        Repository repository  = pi.getRepository();
+        RepositoryImpl repository  = pi.getRepository();
         repository.createAccount(contractA_addr_bytes);
         repository.saveCode(contractA_addr_bytes, codeA);
 
@@ -315,7 +315,7 @@ public class VMComplexTest {
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractA_addr);
 
-        Repository repository = pi.getRepository();
+        RepositoryImpl repository = pi.getRepository();
 
         byte[] caller_addr_bytes = Hex.decode(callerAddr);
 

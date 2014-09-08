@@ -2,7 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -15,7 +15,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     private byte[] msgData;
 
 
-    private Repository repository = null;
+    private RepositoryImpl repository = null;
     private String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
     public ProgramInvokeMockImpl(byte[] msgDataRaw) {
@@ -24,7 +24,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     public ProgramInvokeMockImpl() {
-        this.repository = new Repository();
+        this.repository = new RepositoryImpl();
         this.repository.createAccount(Hex.decode(ownerAddress));
     }
 
@@ -179,11 +179,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     @Override
-    public Repository getRepository() {
+    public RepositoryImpl getRepository() {
         return this.repository;
     }
 
-    public void setRepository(Repository repository) {
+    public void setRepository(RepositoryImpl repository) {
         this.repository = repository;
     }
 

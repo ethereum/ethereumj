@@ -144,8 +144,8 @@ public class VM {
                     }
         			callGas = callGasWord.longValue();
         			// Casting to long (causing overflow) as workaround for PoC5 - should be removed for PoC6
-        			long x = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()).longValue();
-        			long y = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value()).longValue();
+        			long x = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value()).longValue(); // in offset+size
+    				long y = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()).longValue(); // out offset+size
         			newMemSize = BigInteger.valueOf(Math.max(x, y));
         			break;
         		case CREATE:
@@ -157,6 +157,7 @@ public class VM {
             }
             program.spendGas(gasCost, op.name());
             
+            // Avoid overflows
             if(newMemSize.compareTo(MAX_GAS) == 1) {
             	throw program.new OutOfGasException();
             }
@@ -422,7 +423,7 @@ public class VM {
                     DataWord word2 = program.stackPop();
                     DataWord result = null;
                     if (word1.value().compareTo(_32_) == -1) {
-                        byte tmp = word2.getData()[word1.value().intValue()];
+                        byte tmp = word2.getData()[word1.intValue()];
                         word2.and(DataWord.ZERO);
                         word2.getData()[31] = tmp;
                         result = word2;
@@ -535,7 +536,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = "data: " + Hex.toHexString(msgData);
 
-                    program.memorySave(memOffsetData.getData(), msgData);
+                    program.memorySave(memOffsetData.intValue(), msgData);
                     program.step();
                 }	break;
                 case CODESIZE:{
@@ -552,8 +553,8 @@ public class VM {
                     DataWord codeOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
 
-                    int length     = lengthData.value().intValue();
-                    int codeOffset = codeOffsetData.value().intValue();
+                    int length     = lengthData.intValue();
+                    int codeOffset = codeOffsetData.intValue();
 
                     if (program.ops.length < length + codeOffset) {
                         program.stop();
@@ -566,7 +567,7 @@ public class VM {
                     if (logger.isInfoEnabled())
                         hint = "code: " + Hex.toHexString(code);
 
-                    program.memorySave(memOffsetData.getData(), code);
+                    program.memorySave(memOffsetData.intValue(), code);
                     program.step();
                 }	break;
                 case GASPRICE:{
@@ -678,7 +679,7 @@ public class VM {
                 	DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
                     byte[] byteVal = {value.getData()[31]};
-                    program.memorySave(addr.getData(), byteVal);
+                    program.memorySave(addr.intValue(), byteVal);
                     program.step();
                 }	break;
                 case SLOAD:{

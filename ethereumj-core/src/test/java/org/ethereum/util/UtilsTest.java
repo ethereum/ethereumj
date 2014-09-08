@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 public class UtilsTest {
 
     @Test
-    public void getValueShortString1() {
+    public void testGetValueShortString1() {
 
         String expected = "123·(10^24)";
         String result = Utils.getValueShortString(new BigInteger("123456789123445654363653463"));
@@ -24,7 +24,7 @@ public class UtilsTest {
     }
 
     @Test
-    public void getValueShortString2() {
+    public void testGetValueShortString2() {
 
         String expected = "123·(10^3)";
         String result = Utils.getValueShortString(new BigInteger("123456"));
@@ -33,7 +33,7 @@ public class UtilsTest {
     }
 
     @Test
-    public void getValueShortString3() {
+    public void testGetValueShortString3() {
 
         String expected = "1·(10^3)";
         String result = Utils.getValueShortString(new BigInteger("1234"));
@@ -42,7 +42,7 @@ public class UtilsTest {
     }
 
     @Test
-    public void getValueShortString4() {
+    public void testGetValueShortString4() {
 
         String expected = "123·(10^0)";
         String result = Utils.getValueShortString(new BigInteger("123"));
@@ -51,7 +51,7 @@ public class UtilsTest {
     }
 
     @Test
-    public void getValueShortString5() {
+    public void testGetValueShortString5() {
 
         byte[] decimal = Hex.decode("3913517ebd3c0c65000000");
         String expected = "69·(10^24)";

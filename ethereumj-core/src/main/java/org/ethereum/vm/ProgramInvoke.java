@@ -1,6 +1,6 @@
 package org.ethereum.vm;
 
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
 
 /**
  * www.ethereumJ.com
@@ -27,7 +27,7 @@ public interface ProgramInvoke {
     public DataWord getDifficulty();
     public DataWord getGaslimit();
 
-    public Repository getRepository();
+    public RepositoryImpl getRepository();
 
     public boolean byTransaction();
     boolean byTestingSuite();

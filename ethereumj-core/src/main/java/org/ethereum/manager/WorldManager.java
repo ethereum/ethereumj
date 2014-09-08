@@ -2,17 +2,14 @@ package org.ethereum.manager;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.*;
 
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Blockchain;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Wallet;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
@@ -28,8 +25,8 @@ import org.ethereum.net.peerdiscovery.PeerDiscovery;
  */
 public class WorldManager {
 
-	private Blockchain blockchain;
-	private Repository repository;
+	private BlockchainImpl blockchain;
+	private RepositoryImpl repository;
 	private Wallet wallet;
 
     private PeerDiscovery peerDiscovery;
@@ -48,8 +45,8 @@ public class WorldManager {
     }
     
 	private WorldManager() {
-		this.repository = new Repository();
-		this.blockchain = new Blockchain(repository);
+		this.repository = new RepositoryImpl();
+		this.blockchain = new BlockchainImpl(repository);
 		
         // Initialize PeerData
         List<PeerData> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
@@ -60,17 +57,15 @@ public class WorldManager {
 	}
 
     // used for testing
-    public void reset(){
-
-        this.repository = new Repository();
-        this.blockchain = new Blockchain(repository);
+    public void reset() {
+        this.repository = new RepositoryImpl();
+        this.blockchain = new BlockchainImpl(repository);
     }
 
-    public void init(){
-        this.wallet = new Wallet();
+    public void init() {
 
+    	this.wallet = new Wallet();
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
-        ECKey key = ECKey.fromPrivate(cowAddr);
         wallet.importKey(cowAddr);
 
 //        AccountState state = wallet.getAccountState(key.getAddress());
@@ -79,20 +74,19 @@ public class WorldManager {
         String secret = CONFIG.coinbaseSecret();
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());
         wallet.importKey(cbAddr);
-
     }
 	
 	public static WorldManager getInstance() {
 		return WorldManagerHolder.instance;
 	}
     
-    public void addListener(EthereumListener listener){
+    public void addListener(EthereumListener listener) {
         this.listener = listener;
     }
 
     public void addPeers(final Set<PeerData> newPeers) {
 
-        synchronized (peers){
+        synchronized (peers) {
             for (final PeerData peer : newPeers) {
                 if (peerDiscovery.isStarted() && !peers.contains(peer)) {
                     peerDiscovery.addNewPeerData(peer);
@@ -149,11 +143,11 @@ public class WorldManager {
     	this.wallet = wallet;
     }
 
-	public Repository getRepository() {
+	public RepositoryImpl getRepository() {
 		return repository;
 	}
 	
-	public Blockchain getBlockchain() {
+	public BlockchainImpl getBlockchain() {
 		return blockchain;
 	}
 	

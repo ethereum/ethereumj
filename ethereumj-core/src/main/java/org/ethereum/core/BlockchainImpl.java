@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Blockchain;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
@@ -50,7 +51,7 @@ import static org.ethereum.core.Denomination.SZABO;
  * Created on: 20/05/2014 10:44
  *
  */
-public class Blockchain implements org.ethereum.facade.Blockchain{
+public class BlockchainImpl implements Blockchain {
 
 	private static final Logger logger = LoggerFactory.getLogger("blockchain");
 	private static final Logger stateLogger = LoggerFactory.getLogger("state");
@@ -58,7 +59,7 @@ public class Blockchain implements org.ethereum.facade.Blockchain{
 	// to avoid using minGasPrice=0 from Genesis for the wallet
 	private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
-	private Repository repository;
+	private RepositoryImpl repository;
     private Block lastBlock;
 
     // keep the index of the chain for
@@ -67,7 +68,7 @@ public class Blockchain implements org.ethereum.facade.Blockchain{
 	
     private final BlockQueue blockQueue = new BlockQueue();
 
-	public Blockchain(Repository repository) {
+	public BlockchainImpl(RepositoryImpl repository) {
 		this.repository = repository;
 	}
 	
@@ -324,7 +325,7 @@ public class Blockchain implements org.ethereum.facade.Blockchain{
 		if (isContractCreation || code != null) {
 	
 			// START TRACKING FOR REVERT CHANGES OPTION
-			Repository trackRepository = repository.getTrack();
+			RepositoryImpl trackRepository = repository.getTrack();
 			trackRepository.startTracking();
 			try {
 				
@@ -385,7 +386,7 @@ public class Blockchain implements org.ethereum.facade.Blockchain{
 	 * @param contractAddress
 	 */
 	private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
-			Repository repository, byte[] senderAddress,
+			RepositoryImpl repository, byte[] senderAddress,
 			byte[] contractAddress, byte[] coinbase, boolean initResults) {
 
 		if (result.getException() != null

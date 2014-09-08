@@ -2,7 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ public class ProgramInvokeFactory {
     private static Logger logger = LoggerFactory.getLogger("VM");
 
         // Invocation by the wire tx
-    public static ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
+    public static ProgramInvoke createProgramInvoke(Transaction tx, Block block, RepositoryImpl repository) {
 
         // https://ethereum.etherpad.mozilla.org/26
         Block lastBlock = WorldManager.getInstance().getBlockchain().getLastBlock();
@@ -122,7 +122,7 @@ public class ProgramInvokeFactory {
     public static ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
                                                     DataWord inValue, DataWord inGas,
                                                     BigInteger balanceInt,  byte[] dataIn,
-                                                    Repository repository, int callDeep) {
+                                                    RepositoryImpl repository, int callDeep) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();

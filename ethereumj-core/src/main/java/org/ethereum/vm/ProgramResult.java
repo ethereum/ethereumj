@@ -1,6 +1,6 @@
 package org.ethereum.vm;
 
-import org.ethereum.db.Repository;
+import org.ethereum.db.RepositoryImpl;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class ProgramResult {
     private RuntimeException exception;
     private List<DataWord> deleteAccounts;
 
-    private Repository repository = null;
+    private RepositoryImpl repository = null;
 
    /*
     * for testing runs ,
@@ -55,11 +55,11 @@ public class ProgramResult {
         this.exception = exception;
     }
 
-    public Repository getRepository() {
+    public RepositoryImpl getRepository() {
         return repository;
     }
 
-    public void setRepository(Repository repository) {
+    public void setRepository(RepositoryImpl repository) {
         this.repository = repository;
     }
 

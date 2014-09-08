@@ -3,9 +3,10 @@ package org.ethereum.db;
 import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.core.Blockchain;
+import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.facade.Repository;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.listener.EthereumListener;
@@ -18,6 +19,7 @@ import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
@@ -51,7 +53,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 23/06/2014 23:01
  */
-public class Repository implements org.ethereum.facade.Repository{
+public class RepositoryImpl implements Repository {
 
     private Logger logger = LoggerFactory.getLogger("repository");
 
@@ -72,7 +74,7 @@ public class Repository implements org.ethereum.facade.Repository{
      * 
      * @See loadBlockchain() to update the stateRoot
      */
-    public Repository() {
+    public RepositoryImpl() {
     	chainDB 			= new DatabaseImpl("blockchain");
         detailsDB     		= new DatabaseImpl("details");
         contractDetailsDB 	= new TrackDatabase(detailsDB);
@@ -81,15 +83,15 @@ public class Repository implements org.ethereum.facade.Repository{
         accountStateDB 		= new TrackTrie(worldState);
     }
 
-    private Repository(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
+    private RepositoryImpl(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
         this.accountStateDB = accountStateDB;
         this.contractDetailsDB = contractDetailsDB;
     }
 
-    public Repository getTrack() {
+    public RepositoryImpl getTrack() {
         TrackTrie     trackState   = new TrackTrie(accountStateDB);
         TrackDatabase trackDetails = new TrackDatabase(contractDetailsDB);
-        return new Repository (trackState, trackDetails);
+        return new RepositoryImpl (trackState, trackDetails);
     }
 
     public void startTracking() {
@@ -121,8 +123,8 @@ public class Repository implements org.ethereum.facade.Repository{
     	this.worldState.sync();
     }
 	
-	public Blockchain loadBlockchain() {
-		Blockchain blockchain = WorldManager.getInstance().getBlockchain();
+	public BlockchainImpl loadBlockchain() {
+		BlockchainImpl blockchain = WorldManager.getInstance().getBlockchain();
 		DBIterator iterator = chainDB.iterator();
 		try {
 			if (!iterator.hasNext()) {
