@@ -51,7 +51,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 23/06/2014 23:01
  */
-public class Repository {
+public class Repository implements org.ethereum.facade.Repository{
 
     private Logger logger = LoggerFactory.getLogger("repository");
 

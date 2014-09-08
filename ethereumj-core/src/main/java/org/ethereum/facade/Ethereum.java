@@ -1,7 +1,8 @@
 package org.ethereum.facade;
 
-import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.Wallet;
+import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
@@ -109,8 +110,18 @@ public interface Ethereum {
     public Future<Transaction> submitTransaction(Transaction transaction);
 
 
+    /**
+     * @return wallet object which is the manager
+     *         of internal accounts
+     */
+    public Wallet getWallet();
 
-//  1.   WorldManager.getInstance().getWallet();
+
+    /**
+     * @return - repository for all state data.
+     */
+    public Repository getRepository();
+
 //  2.   // is blockchain still loading - if buffer is not empty
 
 

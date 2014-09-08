@@ -1,14 +1,10 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.submit.TransactionExecutor;
-import org.ethereum.net.submit.TransactionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
-
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -18,13 +14,14 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 26/05/2014 12:27
  */
 public class DialogWorker extends SwingWorker<Transaction, Object> {
 
-	private static Logger logger = LoggerFactory.getLogger(DialogWorker.class);
-	
+    private static Logger logger = LoggerFactory.getLogger(DialogWorker.class);
+
     private Transaction tx;
     private MessageAwareDialog dialog;
 
@@ -36,7 +33,7 @@ public class DialogWorker extends SwingWorker<Transaction, Object> {
     @Override
     protected Transaction doInBackground() throws Exception {
 
-        Future<Transaction> future  = UIEthereumManager.ethereum.submitTransaction(tx);
+        Future<Transaction> future = UIEthereumManager.ethereum.submitTransaction(tx);
         dialog.infoStatusMsg("Transaction sent to the network, waiting for approve");
 
         try {
@@ -46,11 +43,11 @@ public class DialogWorker extends SwingWorker<Transaction, Object> {
             dialog.alertStatusMsg("Transaction wasn't approved, network timeout");
             return null;
         } catch (InterruptedException ie) {
-        	logger.error(ie.getMessage(), ie);
+            logger.error(ie.getMessage(), ie);
             dialog.alertStatusMsg("Transaction wasn't approved");
             return null;
         } catch (ExecutionException ee) {
-        	logger.error(ee.getMessage(), ee);
+            logger.error(ee.getMessage(), ee);
             dialog.alertStatusMsg("Transaction wasn't approved");
             return null;
         } finally {

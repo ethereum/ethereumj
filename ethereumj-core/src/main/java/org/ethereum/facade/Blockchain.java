@@ -14,4 +14,5 @@ public interface Blockchain  {
     public int getSize();
     public Block getBlockByNumber(long blockNr);
     public long getGasPrice();
+    public Block getLastBlock();
 }

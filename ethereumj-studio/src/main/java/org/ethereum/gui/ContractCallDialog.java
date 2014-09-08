@@ -1,10 +1,10 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Account;
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.Wallet;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.ClientPeer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -18,7 +18,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.table.DefaultTableModel;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigInteger;
@@ -172,8 +171,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         JComponent editor = (JComponent)(creatorAddressCombo.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
-        Collection<Account> accounts =
-                WorldManager.getInstance().getWallet().getAccountCollection();
+        Wallet wallet = UIEthereumManager.ethereum.getWallet();
+        Collection<Account> accounts = wallet.getAccountCollection();
 
         for (Account account : accounts) {
             creatorAddressCombo.addItem(new AccountWrapper(account));
@@ -225,8 +224,12 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         }
 
         byte[] contractAddress = Hex.decode( contractAddr );
-        final byte[] programCode = WorldManager.getInstance().getRepository().getCode(contractAddress);
-        final Map storageMap = WorldManager.getInstance().getRepository().getContractDetails(contractAddress).getStorage();
+
+        ContractDetails contractDetails =
+                UIEthereumManager.ethereum.getRepository().getContractDetails(contractAddress);
+
+        final byte[] programCode = contractDetails.getCode();
+        final Map storageMap = contractDetails.getStorage();
 
         contractDataInput.setBounds(70, 80, 350, 145);
         contractDataInput.setViewportView(msgDataTA);
@@ -300,13 +303,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     private void playContractCall() {
 
         byte[] contractAddress = Hex.decode(contractAddrInput.getText());
-        ContractDetails contractDetails =  WorldManager.getInstance().getRepository().getContractDetails(contractAddress);
+        ContractDetails contractDetails =  UIEthereumManager.ethereum.getRepository().getContractDetails(contractAddress);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
         }
 
-        byte[] programCode = WorldManager.getInstance().getRepository().getCode(contractAddress);
+        byte[] programCode = contractDetails.getCode();
         if (programCode == null || programCode.length == 0) {
             alertStatusMsg("Such account exist but no code in the db");
             return;
@@ -315,7 +318,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        ProgramPlayDialog.createAndShowGUI(programCode, tx, WorldManager.getInstance().getBlockchain().getLastBlock());
+        Block lastBlock = UIEthereumManager.ethereum.getBlockChain().getLastBlock();
+        ProgramPlayDialog.createAndShowGUI(programCode, tx, lastBlock);
     }
 
     protected JRootPane createRootPane() {
@@ -357,8 +361,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
     public void submitContractCall() {
 
-        ClientPeer peer = WorldManager.getInstance().getActivePeer();
-        if (peer == null) {
+        if (!UIEthereumManager.ethereum.isConnected()) {
             dialog.alertStatusMsg("Not connected to any peer");
             return;
         }
@@ -406,7 +409,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             logger.info("tx.data: {}", Hex.toHexString(data));
         }
 
-        Transaction tx = new Transaction(nonce, gasPrice, gasValue,
+
+        Transaction tx = UIEthereumManager.ethereum.createTransaction(nonce, gasPrice, gasValue,
                 contractAddress, endowment, data);
 
         try {
@@ -465,7 +469,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         ccd.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosed(WindowEvent e) {
-                WorldManager.getInstance().close();
+                UIEthereumManager.ethereum.close();
             }
         });
     }

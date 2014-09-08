@@ -1,10 +1,6 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.Account;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Transaction;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.ClientPeer;
+import org.ethereum.core.*;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -13,7 +9,6 @@ import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
-
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
@@ -106,8 +101,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                         }
                         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
-                        ProgramPlayDialog.createAndShowGUI(tx.getData(), tx,
-                                WorldManager.getInstance().getBlockchain().getLastBlock());
+                        Block lastBlock = UIEthereumManager.ethereum.getBlockChain().getLastBlock();
+                        ProgramPlayDialog.createAndShowGUI(tx.getData(), tx, lastBlock);
                     }}
         );
 
@@ -168,8 +163,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         JComponent editor = (JComponent)(creatorAddressCombo.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
-        Collection<Account> accounts =
-                WorldManager.getInstance().getWallet().getAccountCollection();
+        Wallet wallet = UIEthereumManager.ethereum.getWallet();
+        Collection<Account> accounts = wallet.getAccountCollection();
 
         for (Account account : accounts) {
             creatorAddressCombo.addItem(new AccountWrapper(account));
@@ -265,11 +260,11 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         }
         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
-        ClientPeer peer = WorldManager.getInstance().getActivePeer();
-        if (peer == null) {
+        if (!UIEthereumManager.ethereum.isConnected()) {
             dialog.alertStatusMsg("Not connected to any peer");
             return;
         }
+
         // SwingWorker
         DialogWorker worker = new DialogWorker(tx, this);
         worker.execute();
@@ -301,7 +296,9 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
         BigInteger currentBalance = account.getBalance();
-        BigInteger gasPrice = BigInteger.valueOf(WorldManager.getInstance().getBlockchain().getGasPrice());
+
+        long currGasPrice = UIEthereumManager.ethereum.getBlockChain().getGasPrice();
+        BigInteger gasPrice = BigInteger.valueOf(currGasPrice);
         BigInteger gasInput = new BigInteger( this.gasInput.getText());
 
         boolean canAfford = currentBalance.compareTo(gasPrice.multiply(gasInput)) >= 0;
