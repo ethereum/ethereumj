@@ -35,8 +35,8 @@ public class DialogWorker extends SwingWorker<Transaction, Object> {
 
     @Override
     protected Transaction doInBackground() throws Exception {
-        TransactionTask transactionTask = new TransactionTask(tx);
-        Future<Transaction> future = TransactionExecutor.instance.submitTransaction(transactionTask);
+
+        Future<Transaction> future  = UIEthereumManager.ethereum.submitTransaction(tx);
         dialog.infoStatusMsg("Transaction sent to the network, waiting for approve");
 
         try {

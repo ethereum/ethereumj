@@ -3,11 +3,15 @@ package org.ethereum.facade;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Future;
 
+import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
+import org.ethereum.net.submit.TransactionExecutor;
+import org.ethereum.net.submit.TransactionTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,6 +162,27 @@ public class EthereumImpl implements Ethereum {
     @Override
     public boolean isConnected() {
         return WorldManager.getInstance().getActivePeer() != null;
+    }
+
+
+    @Override
+    public Transaction createTransaction(byte[] nonce, byte[] gasPrice, byte[] gas,
+                                      byte[] recieveAddress, byte[] value, byte[] data ){
+
+        Transaction tx = new Transaction(nonce, gasPrice, gas,
+                recieveAddress, value, data);
+
+        return tx;
+    }
+
+
+    @Override
+    public Future<Transaction> submitTransaction(Transaction transaction){
+
+        TransactionTask transactionTask = new TransactionTask(transaction);
+        Future<Transaction> future = TransactionExecutor.instance.submitTransaction(transactionTask);
+
+        return future;
     }
 
 

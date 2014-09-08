@@ -1,12 +1,14 @@
 package org.ethereum.facade;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.Transaction;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
 
 import java.net.InetAddress;
 import java.util.Set;
+import java.util.concurrent.Future;
 
 /**
  * www.ethereumJ.com
@@ -76,6 +78,36 @@ public interface Ethereum {
     public boolean isConnected();
 
     public void close();
+
+    /**
+     * Factory for general transaction
+     *
+     *
+     * @param nonce - account nonce, based on number of transaction submited by
+     *                this account
+     * @param gasPrice - gas price bid by miner , the user ask can be based on
+     *                   lastr submited block
+     * @param gas - the quantity of gas requested for the transaction
+     * @param recieveAddress - the target address of the transaction
+     * @param value - the ether value of the transaction
+     * @param data - can be init procedure for creational transaction,
+     *               also msg data for invoke transaction for only value
+     *               transactions this one is empty.
+     * @return newly created transaction
+     */
+    public Transaction createTransaction(byte[] nonce, byte[] gasPrice, byte[] gas,
+                                         byte[] recieveAddress, byte[] value, byte[] data );
+
+
+    /**
+     *
+     * @param transaction - submit transaction to the net, return
+     *                      option to wait for net return this transaction
+     *                      as approved
+     * @return
+     */
+    public Future<Transaction> submitTransaction(Transaction transaction);
+
 
 
 //  1.   WorldManager.getInstance().getWallet();
