@@ -75,10 +75,14 @@ public class RepositoryImpl implements Repository {
      * @See loadBlockchain() to update the stateRoot
      */
     public RepositoryImpl() {
-    	chainDB 			= new DatabaseImpl("blockchain");
-        detailsDB     		= new DatabaseImpl("details");
+    	this("blockchain", "details", "state");
+    }
+    
+    public RepositoryImpl(String blockChainDbName, String detailsDbName, String stateDbName) {
+    	chainDB 			= new DatabaseImpl(blockChainDbName);
+        detailsDB     		= new DatabaseImpl(detailsDbName);
         contractDetailsDB 	= new TrackDatabase(detailsDB);
-        stateDB 			= new DatabaseImpl("state");
+        stateDB 			= new DatabaseImpl(stateDbName);
         worldState 			= new Trie(stateDB.getDb());
         accountStateDB 		= new TrackTrie(worldState);
     }
@@ -479,6 +483,9 @@ public class RepositoryImpl implements Repository {
         }
     }
 
+    public DBIterator getContractDetailsDBIterator() {
+    	return detailsDB.iterator();
+    }
 
     public boolean isClosed(){
         return chainDB == null;

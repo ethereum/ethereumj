@@ -3,6 +3,7 @@ package org.ethereum.gui;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.vm.*;
 import org.spongycastle.util.encoders.Hex;
@@ -10,6 +11,7 @@ import org.spongycastle.util.encoders.Hex;
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -28,42 +30,40 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     private List<String> outputList;
     private JTextArea console;
     private JSlider stepSlider;
-
+    
+    private ProgramInvoke pi;
+    
     public ProgramPlayDialog(byte[] code) {
-
-        outputList = new ArrayList<String>();
-        VM vm = new VM();
-
-        ProgramInvoke pi = new ProgramInvokeMockImpl();
-		Program program = new Program(code, pi);
-
-        program.addListener(this);
-        program.fullTrace();
-        vm.play(program);
-
-        doGUI();
+    	this(code, new ProgramInvokeMockImpl(), null);
     }
-
+    
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
-
-        outputList = new ArrayList<String>();
+    	this(code, 
+    			ProgramInvokeFactory.createProgramInvoke(tx, 
+    													lastBlock, 
+    													WorldManager.getInstance().getRepository()),
+    			WorldManager.getInstance().getRepository());
+    }
+    
+    public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke, RepositoryImpl tractRepository) {
+    	pi = programInvoke;
+    	
+    	outputList = new ArrayList<String>();
         VM vm = new VM();
 
-        RepositoryImpl tractRepository = WorldManager.getInstance().getRepository().getTrack();
-
-        Program program = new Program(code ,
-                ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, tractRepository));
-
+        Program program = new Program(code, programInvoke);
         program.addListener(this);
         program.fullTrace();
         vm.play(program);
 
-        tractRepository.rollback();
+        if(tractRepository != null)
+        	tractRepository.rollback();
 
         doGUI();
     }
-
+    
     public void doGUI() {
+    	
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         //Create the slider.
@@ -136,7 +136,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
      */
     public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock) {
 
-        ProgramPlayDialog ppd;
+        final ProgramPlayDialog ppd;
         if (tx != null)
             ppd = new ProgramPlayDialog(runCode, tx, lastBlock);
         else{
@@ -157,12 +157,21 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
         //Add content to the window.
         frame.add(ppd, BorderLayout.CENTER);
+        
+        // close event
+        frame.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent windowEvent) {
+            	ppd.pi.getRepository().close();
+            }
+        });
 
         //Display the window.
         frame.pack();
         frame.setVisible(true);
         ppd.setFocus();
     }
+  
 
     @Override
     public void output(String out) {
