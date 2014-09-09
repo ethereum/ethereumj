@@ -40,7 +40,7 @@ public class AccountState {
      * after construction. All such code fragments are contained in 
      * the state database under their corresponding hashes for later 
      * retrieval */
-    private byte[] codeHash = EMPTY_DATA_HASH;
+    private byte[] codeHash = EMPTY_BYTE_ARRAY;
 
     public AccountState() {
         this(BigInteger.ZERO, BigInteger.ZERO);

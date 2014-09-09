@@ -201,10 +201,6 @@ public class RepositoryImpl implements Repository {
         AccountState state =  new AccountState();
         accountStateDB.update(addr, state.getEncoded());
 
-        // 2. Save ContractDetails
-        ContractDetails details = new ContractDetails();
-        contractDetailsDB.put(addr, details.getEncoded());
-
         if (logger.isDebugEnabled())
             logger.debug("New account created: [ {} ]", Hex.toHexString(addr));
 

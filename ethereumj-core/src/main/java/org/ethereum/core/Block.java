@@ -388,11 +388,7 @@ public class Block {
 
 	public byte[] getEncoded() {
 		if(rlpEncoded == null) {
-			byte[] header = this.header.getEncoded();
-	        byte[] transactions = RLP.encodeList();
-	        byte[] uncles = RLP.encodeList();       
-	        
-	        this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
+			this.rlpEncoded = this.header.getEncoded();
 		}
 		return rlpEncoded;
 	}

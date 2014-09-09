@@ -34,6 +34,8 @@ public enum OpCode {
 	OR(0x11),
 	XOR(0x12),
 	BYTE(0x13),
+	ADDMOD(0x14),
+	MULMOD(0x15),
 	
 	/**
 	 * SHA3
@@ -54,6 +56,8 @@ public enum OpCode {
 	CODESIZE(0x38),
 	CODECOPY(0x39), // [len code_start mem_start CODECOPY]
 	GASPRICE(0x3a),
+	EXTCODECOPY(0x3b),
+	EXTCODESIZE(0x3c),
 	
 	/**
 	 * Block Information
@@ -69,8 +73,6 @@ public enum OpCode {
 	 * Memory, Storage and Flow Operations
 	 */
 	POP(0x50),
-	DUP(0x51),
-	SWAP(0x52),
 	MLOAD(0x53),
 	MSTORE(0x54),
 	MSTORE8(0x55),
@@ -119,11 +121,50 @@ public enum OpCode {
 	PUSH32(0x7f),
 	
 	/**
+	 * Dup and Swap
+	 */
+	DUP1(0x80),
+	DUP2(0x81),
+	DUP3(0x82),
+	DUP4(0x83),
+	DUP5(0x84),
+	DUP6(0x85),
+	DUP7(0x86),
+	DUP8(0x87),
+	DUP9(0x88),
+	DUP10(0x89),
+	DUP11(0x8a),
+	DUP12(0x8b),
+	DUP13(0x8c),
+	DUP14(0x8d),
+	DUP15(0x8e),
+	DUP16(0x8f),
+	
+	SWAP1(0x90),
+	SWAP2(0x91),
+	SWAP3(0x92),
+	SWAP4(0x93),
+	SWAP5(0x94),
+	SWAP6(0x95),
+	SWAP7(0x96),
+	SWAP8(0x97),
+	SWAP9(0x98),
+	SWAP10(0x99),
+	SWAP11(0x9a),
+	SWAP12(0x9b),
+	SWAP13(0x9c),
+	SWAP14(0x9d),
+	SWAP15(0x9e),
+	SWAP16(0x9f),
+	
+	/**
 	 * System operations
 	 */
 	CREATE(0xf0),   //       [in_size] [in_offs] [gas_val] CREATE
 	CALL(0xf1),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr] [gas] CALL
 	RETURN(0xf2),
+	POST(0xf3),
+	CALLSTATELESS(0xf4),
 	SUICIDE(0xff);
 	
 	private byte opcode;

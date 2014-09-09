@@ -74,10 +74,8 @@ public class DataWord implements Comparable<DataWord> {
      * @throws ArithmeticException - if this will not fit in an int.
      */
     public int intValue() {
-//		FIXME: Disabled for POC5
-//    	BigDecimal tmpValue = new BigDecimal(this.value());
-//      return tmpValue.intValueExact();
-    	return this.value().intValue();
+    	BigDecimal tmpValue = new BigDecimal(this.value());
+    	return tmpValue.intValueExact();
     }
     
     /**

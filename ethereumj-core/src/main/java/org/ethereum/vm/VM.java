@@ -143,10 +143,9 @@ public class VM {
         				throw program.new OutOfGasException();
                     }
         			callGas = callGasWord.longValue();
-        			// Casting to long (causing overflow) as workaround for PoC5 - should be removed for PoC6
-        			long x = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value()).longValue(); // in offset+size
-    				long y = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()).longValue(); // out offset+size
-        			newMemSize = BigInteger.valueOf(Math.max(x, y));
+        			BigInteger x = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value()); // in offset+size
+    				BigInteger y = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()); // out offset+size
+        			newMemSize = x.max(y);
         			break;
         		case CREATE:
         			gasCost = GasCost.CREATE;
@@ -437,6 +436,12 @@ public class VM {
                     program.stackPush(result);
                     program.step();
                 }	break;
+				case ADDMOD:{
+					// TODO: Implement new opcodes
+				}	break;
+				case MULMOD:{
+					// TODO: Implement new opcodes
+				}	break;
 
                 /**
                  * SHA3
@@ -579,6 +584,12 @@ public class VM {
                     program.stackPush(gasPrice);
                     program.step();
                 }   break;
+				case EXTCODESIZE:{
+					// TODO: Implement new opcodes
+				}	break;
+				case EXTCODECOPY:{
+					// TODO: Implement new opcodes
+				}	break;
 
                 /**
                  * Block Information
@@ -641,19 +652,21 @@ public class VM {
                 	program.stackPop();
                     program.step();
                 }	break;
-                case DUP:{
-                	DataWord word_1 =  program.stackPop();
-                    DataWord word_2 = word_1.clone();
-                    program.stackPush(word_1);
-                    program.stackPush(word_2);
-                    program.step();
+                case DUP1: case DUP2: case DUP3: case DUP4:
+                case DUP5: case DUP6: case DUP7: case DUP8: 
+                case DUP9: case DUP10: case DUP11: case DUP12: 
+                case DUP13: case DUP14: case DUP15: case DUP16: {
+                	
+					// TODO: Implement new opcodes
+					
                 }	break;
-                case SWAP:{
-                	DataWord word_1 =  program.stackPop();
-                    DataWord word_2 =  program.stackPop();
-                    program.stackPush(word_1);
-                    program.stackPush(word_2);
-                    program.step();
+                case SWAP1: case SWAP2: case SWAP3: case SWAP4:
+                case SWAP5: case SWAP6: case SWAP7: case SWAP8: 
+                case SWAP9: case SWAP10: case SWAP11: case SWAP12: 
+                case SWAP13: case SWAP14: case SWAP15: case SWAP16: {
+
+					// TODO: Implement new opcodes         	
+
                 }	break;
                 case MLOAD:{
                 	DataWord addr =  program.stackPop();
@@ -809,6 +822,12 @@ public class VM {
                     program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
 
                     program.step();
+                }	break;
+                case POST:{
+					// TODO: Implement new opcodes
+                }	break;
+                case CALLSTATELESS:{
+					// TODO: Implement new opcodes
                 }	break;
                 case RETURN:{
                 	DataWord offset   =  program.stackPop();

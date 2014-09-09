@@ -28,7 +28,7 @@ public class Transaction {
 
 	private static Logger logger = LoggerFactory.getLogger(Transaction.class);
 	
-    public static final byte[] ZERO_ADDRESS = new byte[20];
+    public static final byte[] ZERO_ADDRESS = new byte[0];
 	
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
