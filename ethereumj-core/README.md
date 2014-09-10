@@ -1,6 +1,6 @@
 
 The core library API for Ethereum project can be included
-into into any othere Java/Scala project by simple maven 
+into any othere Java/Scala project by simple maven 
 script include: 
 
 ```
