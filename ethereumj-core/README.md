@@ -15,3 +15,7 @@ script include:
 
 EthereumJ release repository can be found here: 
  * https://bintray.com/ethereum/maven/org.ethereum/view
+
+
+The showcase for ethereumj-core usage can be found in [ethereumj-studio](../ethereumj-studio)
+ 
