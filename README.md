@@ -10,8 +10,8 @@
 
 
 EthereumJ is currently two project: 
- * the core lib - which can be included into any other Java/Scala project: [ethereumj-core](ethereumj-core)
- * the studio which is a simple graphic interface for Ethereum functionality and set of showcases for core lib usage: [ethereumj-studio](ethereumj-studio)
+ * [ethereumj-core](ethereumj-core): the core lib - which can be included into any other Java/Scala project.
+ * [ethereumj-studio](ethereumj-studio): the studio which is a simple graphic interface for Ethereum functionality and set of showcases for core lib usage. 
 
 :small_orange_diamond: Developed by **Roman Mandeleil** @romanman 2014.   
  * Based on a design by **Vitalik Buterin** @vbuterin. 
