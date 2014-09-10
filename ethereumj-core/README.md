@@ -5,9 +5,13 @@ script include:
 
 ```
 <dependency>
-<groupId>org.ethereum</groupId>
-<artifactId>ethereumj</artifactId>
-<version>0.5.7</version>
-<type>jar</type>
+   <groupId>org.ethereum</groupId>
+   <artifactId>ethereumj</artifactId>
+   <version>0.5.7</version>
+   <type>jar</type>
 </dependency>
 ```
+
+
+EthereumJ release repository can be found here: 
+ * https://bintray.com/ethereum/maven/org.ethereum/view
