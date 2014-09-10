@@ -1,3 +1,8 @@
+
+######  :small_blue_diamond: Build instructions (maven)
+  1. build_1: [a full application package] : ~> ` mvn clean package
+
+
 .   
 .   
 .   
