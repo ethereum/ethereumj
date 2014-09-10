@@ -6,6 +6,9 @@
 [![Build Status](https://travis-ci.org/ethereum/ethereumj.svg?branch=master)](https://travis-ci.org/ethereum/ethereumj) [![Coverage Status](https://coveralls.io/repos/ethereum/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereum/ethereumj?branch=master)
 [![Stories in Progress](https://badge.waffle.io/ethereum/ethereumj.png?title=In%20Progress&label=in_progress)](https://waffle.io/ethereum/ethereumj)
 
+.   
+
+
 EthereumJ is currently two project: 
  * the core lib - which can be included into any other Java/Scala project: [ethereumj-core](ethereumj-core)
  * the studio which is a simple graphic interface for Ethereum functionality and set of showcases for core lib usage: [ethereumj-studio](ethereumj-studio)
