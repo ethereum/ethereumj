@@ -33,10 +33,7 @@ any crazy idea, be in touch... cheers!!!*
 ###### :small_blue_diamond: If you want to find out what we are cooking now   
 TODO list is right [here](TODO.md)
  
-######  :small_blue_diamond: Build instructions (maven)
-  1. build_1:  [no test run] , [one zip] : ~> ` mvn clean package -Dmaven.test.skip=true `   
-
-######  :small_blue_diamond: Latest stable binaries can be found [here](https://app.box.com/s/eotjb06lzdh5bmwheror)
+######  :small_blue_diamond: ethereumj-core maven release can be found [here](https://bintray.com/ethereum/maven/org.ethereum/view)
  
 ######  :small_blue_diamond: Community website  http://www.ethereum.org
 
