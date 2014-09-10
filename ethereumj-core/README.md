@@ -21,7 +21,7 @@ The showcase for ethereumj-core usage can be found in [ethereumj-studio](../ethe
  
 ######  :small_blue_diamond: Build instructions (maven)
   1. build_1:  [no test run] , [released to local repositor] : ~> ` mvn clean install -Dmaven.test.skip=true `   
-  2. build_2:  [include test run] , [released to local repositor] : ~> ` mvn clean install -Dmaven.test.skip=true `   
+  2. build_2:  [include test run] , [released to local repositor] : ~> ` mvn clean install  `   
  
 ######  :small_blue_diamond: release instructions (ant) (!) credential needed
   1. ` mvn install ` - which release the lib to a local repositroy
