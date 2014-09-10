@@ -28,12 +28,14 @@ public class ToolBar extends JFrame {
     private BlockChainTable blockchainWindow = null;
     private WalletWindow walletWindow = null;
     private SerpentEditor serpentEditor = null;
+    private StateExplorerWindow stateExplorerWindow = null;
 
     JToggleButton editorToggle;
     JToggleButton logToggle;
     JToggleButton peersToggle;
     JToggleButton chainToggle;
     JToggleButton walletToggle;
+    JToggleButton stateExplorer;
 
     public ToolBar() throws HeadlessException {
 
@@ -94,6 +96,9 @@ public class ToolBar extends JFrame {
 
         java.net.URL imageURL_5 = ClassLoader.getSystemResource("buttons/wallet.png");
         ImageIcon image_5 = new ImageIcon(imageURL_5);
+        
+        java.net.URL imageURL_6 = ClassLoader.getSystemResource("buttons/stateExplorer.png");
+        ImageIcon image_6 = new ImageIcon(imageURL_6);
 
         editorToggle = new JToggleButton("");
         editorToggle.setIcon(image_1);
@@ -222,12 +227,41 @@ public class ToolBar extends JFrame {
                     }
                 }
         );
+        
+        stateExplorer = new JToggleButton();
+        stateExplorer.setIcon(image_6);
+        stateExplorer.setToolTipText("State Explorer");
+        stateExplorer.setContentAreaFilled(true);
+        stateExplorer.setBackground(Color.WHITE);
+        stateExplorer.setBorderPainted(false);
+        stateExplorer.setFocusPainted(false);
+        stateExplorer.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        stateExplorer.addItemListener(
+                new ItemListener() {
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == ItemEvent.SELECTED) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    if (stateExplorerWindow == null)
+                                    	stateExplorerWindow = new StateExplorerWindow(ToolBar.this);
+                                    stateExplorerWindow.setVisible(true);
+                                }
+                            });
+                        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                        	stateExplorerWindow.setVisible(false);
+                        }
+                    }
+                }
+        );
+
 
         cp.add(editorToggle);
         cp.add(logToggle);
         cp.add(peersToggle);
         cp.add(chainToggle);
         cp.add(walletToggle);
+        cp.add(stateExplorer);
 
         Ethereum ethereum = UIEthereumManager.ethereum;
 

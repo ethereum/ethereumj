@@ -695,6 +695,37 @@ public class Program {
 			}
         }
     }
+    
+    public static String stringify(byte[] code, int index, String result) {    	
+    	if(code == null || code.length == 0)
+    		return result;
+    	
+    	OpCode op = OpCode.code(code[index]);
+    	byte[] continuedCode = null;
+    			
+    	switch(op){
+    	case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
+        case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
+        case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
+        case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:
+        	result += ' ' + op.name() + ' ';
+        	
+        	int nPush = op.val() - OpCode.PUSH1.val() + 1;
+        	byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
+        	result += new BigInteger(data).toString() + ' ';
+        	
+    		continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
+        	break;
+    		
+    	default:
+    		result += ' ' + op.name();
+    		continuedCode = Arrays.copyOfRange(code, index + 1, code.length);
+    		break;
+    		
+    	}    	
+
+    	return stringify(continuedCode, 0, result);
+    }
 
 	public void addListener(ProgramListener listener) {
 		this.listener = listener;
