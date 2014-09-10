@@ -1,6 +1,4 @@
-[![ScreenShot](http://i.imgur.com/kkPE388.png)](skype:roman.mandeleil)   
-.   
-.   
+
 .   
 
 
@@ -12,9 +10,13 @@
  * Based on a design by **Vitalik Buterin** @vbuterin. 
 
  
- Major contribution by:   
+ Contribution by:   
+  * **Alon Muroch** @negedzuregal (Ethereum state digging screen)
+ 
   * **Nick Savers** @nicksavers (Trie & Level DB support & Mining implementation,   
      key cryptography, Testing and in-code documentation)
+   
+  * **Adrian Benko** @benadrasni (Blockchain explorer screen)
  
  
  Many thanks for help to:   
