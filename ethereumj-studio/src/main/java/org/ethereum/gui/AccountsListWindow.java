@@ -58,7 +58,7 @@ public class AccountsListWindow  extends JFrame {
 			
 			@Override
 			public void run(){
-				DBIterator i = WorldManager.getInstance().getRepository().getContractDetailsDBIterator();
+				DBIterator i = WorldManager.getInstance().getRepository().getAccountsIterator();
 				while(i.hasNext()) {
 					DataClass dc = new DataClass();
 					dc.address = i.next().getKey();
