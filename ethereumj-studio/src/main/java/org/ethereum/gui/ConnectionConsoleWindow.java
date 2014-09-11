@@ -11,8 +11,6 @@ import org.ethereum.net.PeerListener;
 import org.ethereum.net.client.ClientPeer;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * A simple example showing how to modify the fonts and colors used in an
@@ -27,7 +25,6 @@ import org.slf4j.LoggerFactory;
  */
 public class ConnectionConsoleWindow extends JFrame implements PeerListener {
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
     private static final long serialVersionUID = 1L;
 
     private boolean autoScroll = false;

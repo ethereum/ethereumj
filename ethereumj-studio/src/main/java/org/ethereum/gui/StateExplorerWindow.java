@@ -10,19 +10,14 @@ import java.awt.Toolkit;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.math.BigInteger;
+import java.net.URL;
 import java.util.Map;
 
 import javax.swing.Box;
@@ -38,24 +33,18 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 
 import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
-import org.ethereum.vm.OpCode;
 import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvoke;
-import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.Program.ProgramListener;
 import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
 import java.awt.Component;
 import java.awt.FlowLayout;
 
-public class StateExplorerWindow extends JFrame{
+public class StateExplorerWindow extends JFrame {
 	
 	private ToolBar toolBar = null;
 	private JTextField txfAccountAddress;
@@ -71,7 +60,7 @@ public class StateExplorerWindow extends JFrame{
 	public StateExplorerWindow(ToolBar toolBar) {
 		this.toolBar = toolBar;
 		
-        java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
+        URL url = ClassLoader.getSystemResource("ethereum-icon.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
         this.setIconImage(img);

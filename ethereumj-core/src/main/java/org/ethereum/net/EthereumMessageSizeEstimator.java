@@ -1,11 +1,7 @@
 package org.ethereum.net;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.ByteBufHolder;
-import io.netty.buffer.UnpooledUnsafeDirectByteBuf;
-import io.netty.channel.FileRegion;
 import io.netty.channel.MessageSizeEstimator;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com

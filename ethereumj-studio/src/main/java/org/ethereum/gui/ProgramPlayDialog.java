@@ -3,7 +3,6 @@ package org.ethereum.gui;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.RepositoryImpl;
-import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.vm.*;
 import org.spongycastle.util.encoders.Hex;

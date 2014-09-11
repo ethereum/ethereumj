@@ -1,9 +1,6 @@
 package org.ethereum.util;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * Simple LRU map used for reusing lookup values.

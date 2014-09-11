@@ -2,9 +2,6 @@ package org.ethereum.trie;
 
 import org.ethereum.util.Value;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * www.ethereumJ.com
  *
