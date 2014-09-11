@@ -483,7 +483,7 @@ public class RepositoryImpl implements Repository {
         }
     }
 
-    public DBIterator getContractDetailsDBIterator() {
+    public DBIterator getAccountsIterator() {
     	return detailsDB.iterator();
     }
 
