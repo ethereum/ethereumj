@@ -10,7 +10,6 @@
   https://github.com/ethereum/wiki/wiki/Serpent
 - [ ] **SerpentCompiler** compile return(array) correct
 - [ ] **ProgramPlayDialog** support internal calls
-- [ ] **Build:** extract core module and studio application
 - [ ] **Performance:** BigInteger math change for constant arrays implementation   
 economy for memory allocation
 - [ ] **Command Line:** add the headless run option   
@@ -36,6 +35,7 @@ share - code section
 ##### DONE:
 -----------
 
+- [X] **Build:** extract core module and studio application
 - [x] **VM execution:** support CALL op   
 - [x] **VM execution:** support CALL op with in/out data   
 - [x] **VM execution:** support CREATE op
