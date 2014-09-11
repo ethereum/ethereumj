@@ -127,7 +127,9 @@ public class BlockChainTable extends JFrame implements ActionListener {
         createBlockPanel();
 
         transactionsPanel = new JPanel(new GridBagLayout());
-        transactionsPanel.setMaximumSize(new Dimension(Short.MAX_VALUE, 160));
+        scrollPane = new JScrollPane(transactionsPanel);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
+        scrollPane.setAlignmentX(0);
         fillBlock(this);
 
         titlePanel.setAlignmentX(0);
@@ -140,10 +142,6 @@ public class BlockChainTable extends JFrame implements ActionListener {
         transactionsLabel.setAlignmentX(0);
         transactionsLabel.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
         topPanel.add(transactionsLabel);
-
-        scrollPane = new JScrollPane(transactionsPanel);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setAlignmentX(0);
         topPanel.add(scrollPane);
 
         topPanel.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_C, KeyEvent.CTRL_DOWN_MASK), "Copy");
@@ -684,6 +682,7 @@ public class BlockChainTable extends JFrame implements ActionListener {
             row++;
         }
         transactionsPanel.repaint();
+        scrollPane.revalidate();
     }
 
     private JPanel createTransactionPanel(final BlockChainTable blockchainTable, final Transaction transaction) {
