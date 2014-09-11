@@ -4,8 +4,6 @@
 ----------------
 
 - [ ] **GUI screen** a screen that will hold table with full state representation
-- [ ] ** Block Queue ** separate net layer and block processing layer, net layer should continue get
-                        blocks in time the vm layer process them (not stuck for it)
 - [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))   
   https://github.com/ethereum/wiki/wiki/Serpent
 - [ ] **SerpentCompiler** compile return(array) correct
@@ -35,6 +33,8 @@ share - code section
 ##### DONE:
 -----------
 
+- [X] ** Block Queue ** separate net layer and block processing layer, net layer should continue get
+                        blocks in time the vm layer process them (not stuck for it)
 - [X] **Build:** extract core module and studio application
 - [x] **VM execution:** support CALL op   
 - [x] **VM execution:** support CALL op with in/out data   
