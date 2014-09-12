@@ -121,7 +121,7 @@ public enum OpCode {
 	PUSH32(0x7f),
 	
 	/**
-	 * Dup and Swap
+	 * Duplicate Nth item from the stack
 	 */
 	DUP1(0x80),
 	DUP2(0x81),
@@ -140,6 +140,9 @@ public enum OpCode {
 	DUP15(0x8e),
 	DUP16(0x8f),
 	
+	/**
+	 * Swap the Nth item from the stack with the top
+	 */
 	SWAP1(0x90),
 	SWAP2(0x91),
 	SWAP3(0x92),

@@ -655,17 +655,23 @@ public class VM {
                 case DUP1: case DUP2: case DUP3: case DUP4:
                 case DUP5: case DUP6: case DUP7: case DUP8: 
                 case DUP9: case DUP10: case DUP11: case DUP12: 
-                case DUP13: case DUP14: case DUP15: case DUP16: {
+                case DUP13: case DUP14: case DUP15: case DUP16:{
                 	
-					// TODO: Implement new opcodes
+					int n = op.val() - OpCode.DUP1.val() + 1;
+					DataWord word_1 = stack.get(stack.size() - n);
+					program.stackPush(word_1.clone());
+					program.step();
 					
                 }	break;
                 case SWAP1: case SWAP2: case SWAP3: case SWAP4:
                 case SWAP5: case SWAP6: case SWAP7: case SWAP8: 
                 case SWAP9: case SWAP10: case SWAP11: case SWAP12: 
-                case SWAP13: case SWAP14: case SWAP15: case SWAP16: {
+                case SWAP13: case SWAP14: case SWAP15: case SWAP16:{
 
-					// TODO: Implement new opcodes         	
+        			int n = op.val() - OpCode.SWAP1.val() + 2;
+        			DataWord word_1 = stack.peek();
+        			stack.set(stack.size() - 1, stack.get(stack.size() - n));
+        			stack.set(stack.size() - n, word_1);         	
 
                 }	break;
                 case MLOAD:{
