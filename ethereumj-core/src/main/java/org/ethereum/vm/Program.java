@@ -14,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EmptyStackException;
 import java.util.List;
 import java.util.Stack;
 
@@ -102,7 +103,7 @@ public class Program {
         
         if (this.pc > ops.length) {
             stop();
-            throw new RuntimeException("pc overflow pc=" + pc);
+            throw new PcOverflowException("pc overflow pc=" + pc);
         }
     }
 
@@ -143,17 +144,22 @@ public class Program {
 
     public DataWord stackPop() {
         if (stack.size() == 0) {
-            stop();
-            throw new RuntimeException("attempted pull action for empty stack");
+            throw new EmptyStackException();
         }
         return stack.pop();
     }
     
-    public void require(int stackSize) {
-    	if(stack.size() != stackSize) {
-            stop();
-            throw new RuntimeException("stack too small");
-    	}
+    /**
+     * Verifies that the stack is at least <code>stackSize</code>
+     * @param stackSize
+     * @throws StackTooSmallException If the stack is 
+     * 		smaller than <code>stackSize</code>
+     */
+    public void stackRequire(int stackSize) {
+		if (stack.size() < stackSize) {
+			throw new StackTooSmallException("Expected: " + stackSize
+					+ ", found" + stack.size());
+		}
     }
 
     public int getMemSize() {
@@ -739,5 +745,19 @@ public class Program {
 
 	@SuppressWarnings("serial")
 	public class OutOfGasException extends RuntimeException {
-    }
+	}
+	
+	@SuppressWarnings("serial")
+	public class StackTooSmallException extends RuntimeException {
+		public StackTooSmallException(String message) {
+			super(message);
+		}
+	}
+	
+	@SuppressWarnings("serial")
+	public class PcOverflowException extends RuntimeException {
+		public PcOverflowException(String message) {
+			super(message);
+		}
+	}
 }

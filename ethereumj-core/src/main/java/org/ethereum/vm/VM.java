@@ -96,6 +96,7 @@ public class VM {
                 	gasCost = GasCost.STOP;
                     break;
         		case SSTORE:
+        			program.stackRequire(2);
         			// for gas calculations [YP 9.2]
         			DataWord newValue = stack.get(stack.size()-2);
                     DataWord oldValue =  program.storageLoad(stack.peek());
@@ -115,28 +116,36 @@ public class VM {
                     
         		// These all operate on memory and therefore potentially expand it:
         		case MSTORE:
+        			program.stackRequire(2);
         			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
         			break;
         		case MSTORE8:
+        			program.stackRequire(2);
         			newMemSize = stack.peek().value().add(BigInteger.ONE);
         			break;
         		case MLOAD:
+        			program.stackRequire(1);
         			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
         			break;
         		case RETURN:
+        			program.stackRequire(2);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
         			break;
         		case SHA3:
+        			program.stackRequire(2);
         			gasCost = GasCost.SHA3;
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
         			break;
         		case CALLDATACOPY:
+        			program.stackRequire(3);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			break;
         		case CODECOPY:
+        			program.stackRequire(3);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			break;
         		case CALL:
+        			program.stackRequire(7);
         			gasCost = GasCost.CALL;
         			BigInteger callGasWord = stack.get(stack.size()-1).value();
         			if(callGasWord.compareTo(program.getGas().value()) == 1) {
@@ -147,7 +156,20 @@ public class VM {
     				BigInteger y = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()); // out offset+size
         			newMemSize = x.max(y);
         			break;
+        		case CALLSTATELESS:
+        			program.stackRequire(7);
+//					TODO
+//        			runGas = c_callGas + m_stack[m_stack.size() - 1];
+//        			newTempSize = std::max(memNeed(m_stack[m_stack.size() - 6], m_stack[m_stack.size() - 7]), memNeed(m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5]));
+        			break;
+        		case POST:
+        			program.stackRequire(5);
+//					TODO
+//        			runGas = c_callGas + m_stack[m_stack.size() - 1];
+//        			newTempSize = memNeed(m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5]);
+        			break;
         		case CREATE:
+        			program.stackRequire(3);
         			gasCost = GasCost.CREATE;
         			newMemSize = stack.get(stack.size()-2).value().add(stack.get(stack.size()-3).value());
         			break;
@@ -184,6 +206,7 @@ public class VM {
                     program.stop();
                 }	break;
                 case ADD:{
+                	program.stackRequire(2);
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -196,6 +219,7 @@ public class VM {
 
                 }	break;
                 case MUL:{
+                	program.stackRequire(2);
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -207,6 +231,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SUB:{
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -218,6 +243,7 @@ public class VM {
                     program.step();
                 }	break;
                 case DIV:{
+                	program.stackRequire(2);
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -229,6 +255,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SDIV:{
+                	program.stackRequire(2);
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -240,6 +267,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MOD:{
+                	program.stackRequire(2);
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -251,6 +279,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SMOD:{
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -262,6 +291,7 @@ public class VM {
                     program.step();
                 }	break;
                 case EXP:{
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -273,6 +303,7 @@ public class VM {
                     program.step();
                 }	break;
                 case NEG:{
+                	program.stackRequire(1);                	
                 	DataWord word1 = program.stackPop();
                     word1.negate();
 
@@ -283,6 +314,7 @@ public class VM {
                     program.step();
                 }	break;
                 case LT:{
+                	program.stackRequire(2);                	
                 	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -300,6 +332,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SLT:{
+                	program.stackRequire(2);                	
                 	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -317,6 +350,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SGT:{
+                	program.stackRequire(2);                	
                 	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -334,6 +368,7 @@ public class VM {
                     program.step();
                 }	break;
                 case GT:{
+                	program.stackRequire(2);                	
                 	// TODO: can be improved by not using BigInteger
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
@@ -351,6 +386,7 @@ public class VM {
                     program.step();
                 }	break;
                 case EQ:{
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -367,6 +403,7 @@ public class VM {
                     program.step();
                 }	break;
                 case NOT: {
+                	program.stackRequire(1);                	
                 	DataWord word1 = program.stackPop();
                     if (word1.isZero()) {
                         word1.getData()[31] = 1;
@@ -385,6 +422,7 @@ public class VM {
                  * Bitwise Logic Operations
                  */
                 case AND:{
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -396,6 +434,7 @@ public class VM {
                     program.step();
                 }	break;
                 case OR: {
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -407,6 +446,7 @@ public class VM {
                     program.step();
                 }	break;
                 case XOR: {
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -418,6 +458,7 @@ public class VM {
                     program.step();
                 }	break;
                 case BYTE:{
+                	program.stackRequire(2);                	
                 	DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     DataWord result = null;
@@ -437,9 +478,11 @@ public class VM {
                     program.step();
                 }	break;
 				case ADDMOD:{
+                	program.stackRequire(3);					
 					// TODO: Implement new opcodes
 				}	break;
 				case MULMOD:{
+                	program.stackRequire(3);					
 					// TODO: Implement new opcodes
 				}	break;
 
@@ -447,6 +490,7 @@ public class VM {
                  * SHA3
                  */
                 case SHA3:{
+                	program.stackRequire(2);                	
                 	DataWord memOffsetData  = program.stackPop();
                     DataWord lengthData     = program.stackPop();
                     ByteBuffer buffer = program.memoryChunk(memOffsetData, lengthData);
@@ -474,6 +518,7 @@ public class VM {
                     program.step();
                 }	break;
                 case BALANCE:{
+                	program.stackRequire(1);                	
                 	DataWord address = program.stackPop();
                     DataWord balance = program.getBalance(address);
 
@@ -513,6 +558,7 @@ public class VM {
                     program.step();
                 }	break;
                 case CALLDATALOAD:{
+                	program.stackRequire(1);                	
                 	DataWord dataOffs  = program.stackPop();
                     DataWord value = program.getDataValue(dataOffs);
 
@@ -532,6 +578,7 @@ public class VM {
                     program.step();
                 }	break;
                 case CALLDATACOPY:{
+                	program.stackRequire(3);                	
                     DataWord memOffsetData  = program.stackPop();
                     DataWord dataOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
@@ -554,6 +601,7 @@ public class VM {
                     program.step();
                 }	break;
                 case CODECOPY:{
+                	program.stackRequire(3);                	
                     DataWord memOffsetData  = program.stackPop();
                     DataWord codeOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
@@ -649,6 +697,7 @@ public class VM {
                     program.step();
                 }   break;
                 case POP:{
+                	program.stackRequire(1);                	
                 	program.stackPop();
                     program.step();
                 }	break;
@@ -656,8 +705,9 @@ public class VM {
                 case DUP5: case DUP6: case DUP7: case DUP8: 
                 case DUP9: case DUP10: case DUP11: case DUP12: 
                 case DUP13: case DUP14: case DUP15: case DUP16:{
-                	
+
 					int n = op.val() - OpCode.DUP1.val() + 1;
+                	program.stackRequire(n);
 					DataWord word_1 = stack.get(stack.size() - n);
 					program.stackPush(word_1.clone());
 					program.step();
@@ -669,12 +719,14 @@ public class VM {
                 case SWAP13: case SWAP14: case SWAP15: case SWAP16:{
 
         			int n = op.val() - OpCode.SWAP1.val() + 2;
+                	program.stackRequire(n);
         			DataWord word_1 = stack.peek();
         			stack.set(stack.size() - 1, stack.get(stack.size() - n));
         			stack.set(stack.size() - n, word_1);         	
 
                 }	break;
                 case MLOAD:{
+                	program.stackRequire(1);
                 	DataWord addr =  program.stackPop();
                     DataWord data =  program.memoryLoad(addr);
 
@@ -685,6 +737,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MSTORE:{
+                	program.stackRequire(2);
                 	DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
 
@@ -695,6 +748,7 @@ public class VM {
                     program.step();
                 }	break;
                 case MSTORE8:{
+                	program.stackRequire(2);
                 	DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
                     byte[] byteVal = {value.getData()[31]};
@@ -702,6 +756,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SLOAD:{
+                	program.stackRequire(1);
                 	DataWord key =  program.stackPop();
                     DataWord val = program.storageLoad(key);
 
@@ -715,6 +770,7 @@ public class VM {
                     program.step();
                 }	break;
                 case SSTORE:{
+                	program.stackRequire(2);
                 	DataWord addr  =  program.stackPop();
                     DataWord value =  program.stackPop();
 
@@ -725,6 +781,7 @@ public class VM {
                     program.step();
                 }	break;
                 case JUMP:{
+                	program.stackRequire(1);
                 	DataWord pos  =  program.stackPop();
 
                     if (logger.isInfoEnabled())
@@ -733,6 +790,7 @@ public class VM {
                     program.setPC(pos);
                 }	break;
                 case JUMPI:{
+                	program.stackRequire(2);
                 	DataWord pos   =  program.stackPop();
                     DataWord cond  =  program.stackPop();
 
@@ -789,6 +847,7 @@ public class VM {
                     program.stackPush(data);
                 }	break;
                 case CREATE:{
+                	program.stackRequire(3);
                 	DataWord value      =  program.stackPop();
                     DataWord inOffset   =  program.stackPop();
                     DataWord inSize     =  program.stackPop();
@@ -803,7 +862,8 @@ public class VM {
 
                     program.step();
                 }	break;
-                case CALL:{
+                case CALL: {
+                	program.stackRequire(7);
                 	DataWord gas        =  program.stackPop();
                     DataWord toAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
@@ -830,12 +890,14 @@ public class VM {
                     program.step();
                 }	break;
                 case POST:{
-					// TODO: Implement new opcodes
+                	program.stackRequire(5);
+					// TODO: Implement POST execution
                 }	break;
                 case CALLSTATELESS:{
-					// TODO: Implement new opcodes
+					// TODO: Implement CALLSTATELESS (almost same as CALL)
                 }	break;
                 case RETURN:{
+                	program.stackRequire(2);
                 	DataWord offset   =  program.stackPop();
                     DataWord size     =  program.stackPop();
 
@@ -851,6 +913,7 @@ public class VM {
                     program.stop();
                 }	break;
                 case SUICIDE:{
+                	program.stackRequire(1);
                 	DataWord address =  program.stackPop();
                     program.suicide(address);
                     
