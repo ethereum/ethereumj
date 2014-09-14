@@ -12,11 +12,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.DatabaseImpl;
@@ -646,7 +642,7 @@ public class TrieTest {
     	if(massiveUpdateFromDBEnabled) {
 	        List<String> randomWords = Arrays.asList(randomDictionary.split(","));
 	        HashMap<String, String> testerMap = new HashMap<>();
-	
+
 	        Trie trie = new Trie(mockDb);
 	        Random generator = new Random();
 	
@@ -690,6 +686,59 @@ public class TrieTest {
 	            Assert.assertEquals(mapWord2, treeWord2);
 	        }
     	}
+    }
+
+
+    @Test
+    public void testRollbackTrie() throws URISyntaxException, IOException {
+
+        Trie trieSingle = new Trie(mockDb);
+
+        URL massiveUpload_1 = ClassLoader
+                .getSystemResource("trie/massive-upload.dmp");
+
+        File file = new File(massiveUpload_1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        List<byte[]> roots = new ArrayList<>();
+        Map<String, String> trieDumps = new HashMap<>();
+
+        for (int i = 0; i < 100; ++i){
+
+            String[] keyVal= strData.get(i).split("=");
+
+            if (keyVal[0].equals("*"))
+                trieSingle.delete(keyVal[1].trim());
+            else
+                trieSingle.update(keyVal[0].trim(), keyVal[1].trim());
+
+            byte[] hash = trieSingle.getRootHash();
+            roots.add(hash);
+
+            String key =  Hex.toHexString(hash);
+            String dump = trieSingle.getTrieDump();
+
+            System.out.print("(" + i + ") : ");
+            System.out.println(key + " ==> " + dump);
+            trieDumps.put(key, dump);
+
+            System.out.print("(cache) : \n");
+            System.out.println(trieSingle.getCache().cacheDump());
+
+        }
+
+        // compare all 100 rollback dumps and
+        // the originaly saved dumps
+        for (int i = 1; i < roots.size(); ++i){
+
+            byte[] root = roots.get(i);
+            trieSingle.setRoot(root);
+            String currDump = trieSingle.getTrieDump();
+            String originDump = trieDumps.get(Hex.toHexString(root));
+            System.out.println(currDump);
+            Assert.assertEquals(currDump, originDump);
+        }
+
     }
 
 

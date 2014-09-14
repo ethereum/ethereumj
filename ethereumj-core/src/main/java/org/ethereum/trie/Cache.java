@@ -114,4 +114,19 @@ public class Cache {
 	public DB getDb() {
 		return db;
 	}
+
+    public String cacheDump(){
+
+        StringBuffer cacheDump = new StringBuffer();
+
+        for (ByteArrayWrapper key : nodes.keySet()){
+
+            Node node = nodes.get(key);
+
+            if (node.getValue() != null)
+                cacheDump.append(key.toString()).append(" : ").append(node.getValue().toString()).append("\n");
+        }
+
+        return cacheDump.toString();
+    }
 }
