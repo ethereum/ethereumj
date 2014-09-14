@@ -144,7 +144,7 @@ public class VM {
         			program.stackRequire(3);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			break;
-        		case CALL:
+        		case CALL: case CALLSTATELESS:
         			program.stackRequire(7);
         			gasCost = GasCost.CALL;
         			BigInteger callGasWord = stack.get(stack.size()-1).value();
@@ -155,12 +155,6 @@ public class VM {
         			BigInteger x = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value()); // in offset+size
     				BigInteger y = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()); // out offset+size
         			newMemSize = x.max(y);
-        			break;
-        		case CALLSTATELESS:
-        			program.stackRequire(7);
-//					TODO
-//        			runGas = c_callGas + m_stack[m_stack.size() - 1];
-//        			newTempSize = std::max(memNeed(m_stack[m_stack.size() - 6], m_stack[m_stack.size() - 7]), memNeed(m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5]));
         			break;
         		case POST:
         			program.stackRequire(5);
@@ -478,12 +472,18 @@ public class VM {
                     program.step();
                 }	break;
 				case ADDMOD:{
-                	program.stackRequire(3);					
-					// TODO: Implement new opcodes
+                	program.stackRequire(3);
+                	DataWord word1 = program.stackPop();
+                	word1.add(program.stackPop());
+                	word1.mod(program.stackPop());
+                	program.stackPush(word1);
 				}	break;
 				case MULMOD:{
-                	program.stackRequire(3);					
-					// TODO: Implement new opcodes
+                	program.stackRequire(3);
+                	DataWord word1 = program.stackPop();
+                	word1.mul(program.stackPop());
+                	word1.mod(program.stackPop());
+                	program.stackPush(word1);
 				}	break;
 
                 /**
@@ -862,7 +862,7 @@ public class VM {
 
                     program.step();
                 }	break;
-                case CALL: {
+                case CALL: case CALLSTATELESS: {
                 	program.stackRequire(7);
                 	DataWord gas        =  program.stackPop();
                     DataWord toAddress  =  program.stackPop();
@@ -885,16 +885,35 @@ public class VM {
 								program.invokeData.getCallDeep(), hint);
                     }
 
-                    program.callToAddress(gas, toAddress, value, inDataOffs, inDataSize, outDataOffs, outDataSize);
+				program.callToAddress(gas, toAddress, op.equals(CALL) ? toAddress
+						: program.getOwnerAddress(), value, inDataOffs,
+						inDataSize, outDataOffs, outDataSize);
 
                     program.step();
                 }	break;
                 case POST:{
                 	program.stackRequire(5);
-					// TODO: Implement POST execution
-                }	break;
-                case CALLSTATELESS:{
-					// TODO: Implement CALLSTATELESS (almost same as CALL)
+                	DataWord gas        =  program.stackPop();
+                    DataWord toAddress  =  program.stackPop();
+                    DataWord value      =  program.stackPop();
+
+                    DataWord inDataOffs =  program.stackPop();
+                    DataWord inDataSize =  program.stackPop();
+                    
+                    if (logger.isInfoEnabled()) {
+                    	hint = "addr: " + Hex.toHexString(toAddress.getLast20Bytes()) 
+                    			+ " gas: " + gas.shortHex()
+                    			+ " inOff: " + inDataOffs.shortHex()
+                    			+ " inSize: " + inDataSize.shortHex();
+						logger.info(logString, program.getPC(),
+								String.format("%-12s", op.name()),
+								program.getGas().value(),
+								program.invokeData.getCallDeep(), hint);
+                    }
+
+				program.postToAddress(gas, toAddress, toAddress, value, inDataOffs, inDataSize);
+
+                    program.step();
                 }	break;
                 case RETURN:{
                 	program.stackRequire(2);

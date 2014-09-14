@@ -1177,7 +1177,7 @@ public class VMTest {
      * 
      * @param n in DUPn
      */
-    public void testDUPN_1(int n) {
+    private void testDUPN_1(int n) {
 
         VM vm = new VM();
         byte operation = (byte) (OpCode.DUP1.val() + n - 1);
@@ -1218,7 +1218,7 @@ public class VMTest {
     @Test // SWAP1...SWAP16 OP
     public void testSWAPS() {
     	for (int i = 1; i < 17; i++) {
-    		testSWAPN(i);
+    		testSWAPN_1(i);
 		}
     }
     
@@ -1227,7 +1227,7 @@ public class VMTest {
      * 
      * @param n in SWAPn
      */
-    public void testSWAPN(int n) {
+    private void testSWAPN_1(int n) {
 
         VM vm = new VM();
         byte operation = (byte) (OpCode.SWAP1.val() + n - 1);
@@ -1253,7 +1253,7 @@ public class VMTest {
     }
 
     @Test(expected=StackTooSmallException.class)  // SWAPN OP mal data
-    public void testSWAPN_3() {
+    public void testSWAPN_2() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("90"), new ProgramInvokeMockImpl());
@@ -1845,9 +1845,70 @@ public class VMTest {
         	assertTrue(program.isStopped());
         }
     }
+    
+    @Test // ADDMOD OP mal
+    public void testADDMOD_1() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60026002600314"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
-    @Test // MULL OP
-    public void testMULL_1() {
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
+
+    @Test // ADDMOD OP
+    public void testADDMOD_2() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("611000600261100214"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
+
+    @Test // ADDMOD OP
+    public void testADDMOD_3() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61100265123456789009600214"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000093B";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
+
+    @Test(expected=StackTooSmallException.class) // ADDMOD OP mal
+    public void testADDMOD_4() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("61123414"), new ProgramInvokeMockImpl());
+        try {
+            vm.step(program);
+            vm.step(program);
+        } finally {
+        	program.getResult().getRepository().close();
+        	assertTrue(program.isStopped());
+        }
+    }
+
+    @Test // MUL OP
+    public void testMUL_1() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("6003600202"), new ProgramInvokeMockImpl());
@@ -1862,8 +1923,8 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
-    @Test // MULL OP
-    public void testMULL_2() {
+    @Test // MUL OP
+    public void testMUL_2() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("62222222600302"), new ProgramInvokeMockImpl());
@@ -1878,8 +1939,8 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
-    @Test // MULL OP
-    public void testMULL_3() {
+    @Test // MUL OP
+    public void testMUL_3() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("622222226233333302"), new ProgramInvokeMockImpl());
@@ -1894,11 +1955,72 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
-    @Test(expected=StackTooSmallException.class) // MULL OP mal
-    public void testMULL_4() {
+    @Test(expected=StackTooSmallException.class) // MUL OP mal
+    public void testMUL_4() {
 
         VM vm = new VM();
         Program program = new Program(Hex.decode("600102"), new ProgramInvokeMockImpl());
+        try {
+            vm.step(program);
+            vm.step(program);
+        } finally {
+        	program.getResult().getRepository().close();
+        	assertTrue(program.isStopped());
+        }
+    }
+    
+    @Test // MULMOD OP
+    public void testMULMOD_1() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("60036002600415"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
+
+    @Test // MULMOD OP
+    public void testMULMOD_2() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("622222226003600415"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000000C";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
+
+    @Test // MULMOD OP
+    public void testMULMOD_3() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("62222222623333336244444415"), new ProgramInvokeMockImpl());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
+
+    @Test(expected=StackTooSmallException.class) // MULMOD OP mal
+    public void testMULMOD_4() {
+        VM vm = new VM();
+        Program program = new Program(Hex.decode("600115"), new ProgramInvokeMockImpl());
         try {
             vm.step(program);
             vm.step(program);
@@ -2834,14 +2956,14 @@ public class VMTest {
             program.getResult().getRepository().close();
             assertTrue(program.isStopped());
         }
-    }
-
+    }    
+    
     @Test // MOD OP
     public void testMOD_1() {
         VM vm = new VM();
         Program program = new Program(Hex.decode("6003600406"), new ProgramInvokeMockImpl());
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
-
+        
         vm.step(program);
         vm.step(program);
         vm.step(program);

@@ -340,22 +340,44 @@ public class Program {
             }
         }
     }
-
+    
     /**
-     * That method implement internal calls
-     * and code invocations
+     * That method implement internal code invocations.
+     *  
+     * Instead of immediately calling it adds the call 
+     * to a post-queue, to be executed after everything else 
+	 * (including prior-created posts) within the scope 
+	 * of that transaction execution is executed.
      *
      * @param gas - gas to pay for the call, remaining gas will be refunded to the caller
      * @param toAddressDW - address to call
+     * @param storageAddressDW - address of the storage to use 
+     * @param endowmentValue - the value that can be transfer along with the code execution
+     * @param inDataOffs - start of memory to be input data to the call
+     * @param inDataSize - size of memory to be input data to the call
+     */
+    public void postToAddress(DataWord gas, DataWord toAddressDW, DataWord storageAddressDW, 
+    						  DataWord endowmentValue, DataWord inDataOffs, DataWord inDataSize) {
+    	// TODO implement code
+    }
+
+    /**
+     * That method implement internal code invocations
+     *
+     * @param gas - gas to pay for the call, remaining gas will be refunded to the caller
+     * @param toAddressDW - address to call
+     * @param storageAddressDW - address of the storage to use 
      * @param endowmentValue - the value that can be transfer along with the code execution
      * @param inDataOffs - start of memory to be input data to the call
      * @param inDataSize - size of memory to be input data to the call
      * @param outDataOffs - start of memory to be output of the call
      * @param outDataSize - size of memory to be output data to the call
      */
-    public void callToAddress(DataWord gas, DataWord toAddressDW, DataWord endowmentValue,
+    public void callToAddress(DataWord gas, DataWord toAddressDW, DataWord storageAddressDW, DataWord endowmentValue,
                               DataWord inDataOffs, DataWord inDataSize,DataWord outDataOffs, DataWord outDataSize) {
 
+    	// TODO: update code for CALLSTATELESS
+    	
         ByteBuffer data = memoryChunk(inDataOffs, inDataSize);
 
         // FETCH THE SAVED STORAGE
