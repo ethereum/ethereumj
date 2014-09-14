@@ -2,7 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -291,13 +291,13 @@ public class Program {
         result.getRepository().addBalance(senderAddress, endowment.negate());
         result.getRepository().addBalance(newAddress, endowment);
 
-        RepositoryImpl trackRepositoryImpl = result.getRepository().getTrack();
-        trackRepositoryImpl.startTracking();
+        Repository trackRepository = result.getRepository().getTrack();
+        trackRepository.startTracking();
 
         // [5] COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke =
                 ProgramInvokeFactory.createProgramInvoke(this, new DataWord(newAddress), DataWord.ZERO,
-                        new DataWord(gas), BigInteger.ZERO, null, trackRepositoryImpl, this.invokeData.getCallDeep() + 1);
+                        new DataWord(gas), BigInteger.ZERO, null, trackRepository, this.invokeData.getCallDeep() + 1);
 
         VM vm = new VM();
         Program program = new Program(programCode.array(), programInvoke);
@@ -309,18 +309,18 @@ public class Program {
                 result.getException() instanceof Program.OutOfGasException) {
             logger.info("contract run halted by OutOfGas: new contract init ={}" , Hex.toHexString(newAddress));
 
-            trackRepositoryImpl.rollback();
+            trackRepository.rollback();
             stackPushZero();
             return;
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code    = result.getHReturn().array();
-        trackRepositoryImpl.saveCode(newAddress, code);
+        trackRepository.saveCode(newAddress, code);
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
-        trackRepositoryImpl.commit();
+        trackRepository.commit();
 
         // 5. REFUND THE REMAIN GAS
         long refundGas = gas - result.getGasUsed();
@@ -397,15 +397,15 @@ public class Program {
         //  actual gas subtract
         this.spendGas(gas.intValue(), "internal call");
 
-        RepositoryImpl trackRepositoryImpl = result.getRepository().getTrack();
-        trackRepositoryImpl.startTracking();
-        trackRepositoryImpl.addBalance(toAddress, endowmentValue.value());
+        Repository trackRepository = result.getRepository().getTrack();
+        trackRepository.startTracking();
+        trackRepository.addBalance(toAddress, endowmentValue.value());
 
         ProgramInvoke programInvoke =
                 ProgramInvokeFactory.createProgramInvoke(this, toAddressDW,
                         endowmentValue,  gas, result.getRepository().getBalance(toAddress),
                         data.array(),
-                        trackRepositoryImpl, this.invokeData.getCallDeep() + 1);
+                        trackRepository, this.invokeData.getCallDeep() + 1);
 
         ProgramResult result = null;
 
@@ -422,7 +422,7 @@ public class Program {
             result.getException() instanceof Program.OutOfGasException) {
                 logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
 
-                trackRepositoryImpl.rollback();
+                trackRepository.rollback();
                 stackPushZero();
                 return;
         }
@@ -443,7 +443,7 @@ public class Program {
         }
 
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
-        trackRepositoryImpl.commit();
+        trackRepository.commit();
         stackPushOne();
 
         // 5. REFUND THE REMAIN GAS

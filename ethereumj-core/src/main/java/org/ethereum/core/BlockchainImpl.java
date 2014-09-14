@@ -1,7 +1,7 @@
 package org.ethereum.core;
 
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
+import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
@@ -59,7 +59,7 @@ public class BlockchainImpl implements Blockchain {
 	// to avoid using minGasPrice=0 from Genesis for the wallet
 	private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
-	private RepositoryImpl repository;
+	private Repository repository;
     private Block lastBlock;
 
     // keep the index of the chain for
@@ -68,7 +68,7 @@ public class BlockchainImpl implements Blockchain {
 	
     private final BlockQueue blockQueue = new BlockQueue();
 
-	public BlockchainImpl(RepositoryImpl repository) {
+	public BlockchainImpl(Repository repository) {
 		this.repository = repository;
 	}
 	
@@ -325,7 +325,7 @@ public class BlockchainImpl implements Blockchain {
 		if (isContractCreation || code != null) {
 	
 			// START TRACKING FOR REVERT CHANGES OPTION
-			RepositoryImpl trackRepository = repository.getTrack();
+			Repository trackRepository = repository.getTrack();
 			trackRepository.startTracking();
 			try {
 				
@@ -386,7 +386,7 @@ public class BlockchainImpl implements Blockchain {
 	 * @param contractAddress
 	 */
 	private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
-			RepositoryImpl repository, byte[] senderAddress,
+			Repository repository, byte[] senderAddress,
 			byte[] contractAddress, byte[] coinbase, boolean initResults) {
 
 		if (result.getException() != null

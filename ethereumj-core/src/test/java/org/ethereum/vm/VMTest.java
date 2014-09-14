@@ -1,6 +1,6 @@
 package org.ethereum.vm;
 
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.vm.Program.OutOfGasException;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
@@ -1540,7 +1540,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        RepositoryImpl repository = program.result.getRepository();
+        Repository repository = program.result.getRepository();
         DataWord key = new DataWord(Hex.decode(s_expected_key));
         DataWord val = repository.getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(),  key);
 

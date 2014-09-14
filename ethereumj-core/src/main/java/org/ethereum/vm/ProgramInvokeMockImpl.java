@@ -3,6 +3,7 @@ package org.ethereum.vm;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -15,7 +16,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     private byte[] msgData;
 
 
-    private RepositoryImpl repository = null;
+    private Repository repository = null;
     private String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
     public ProgramInvokeMockImpl(byte[] msgDataRaw) {
@@ -179,11 +180,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     @Override
-    public RepositoryImpl getRepository() {
+    public Repository getRepository() {
         return this.repository;
     }
 
-    public void setRepository(RepositoryImpl repository) {
+    public void setRepository(Repository repository) {
         this.repository = repository;
     }
 

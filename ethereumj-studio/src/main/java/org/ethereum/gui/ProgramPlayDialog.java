@@ -45,7 +45,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     			WorldManager.getInstance().getRepository());
     }
     
-    public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke, RepositoryImpl tractRepository) {
+    public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke, Repository tractRepository) {
     	pi = programInvoke;
     	
     	outputList = new ArrayList<String>();

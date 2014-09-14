@@ -10,6 +10,7 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.ClientPeer;
 import org.ethereum.net.client.PeerData;
@@ -26,7 +27,7 @@ import org.ethereum.net.peerdiscovery.PeerDiscovery;
 public class WorldManager {
 
 	private BlockchainImpl blockchain;
-	private RepositoryImpl repository;
+	private Repository repository;
 	private Wallet wallet;
 
     private PeerDiscovery peerDiscovery;
@@ -143,7 +144,7 @@ public class WorldManager {
     	this.wallet = wallet;
     }
 
-	public RepositoryImpl getRepository() {
+	public Repository getRepository() {
 		return repository;
 	}
 	

@@ -4,7 +4,7 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
@@ -67,7 +67,7 @@ public class JSONHelper {
     
 	public static void dumpBlock(ObjectNode blockNode, Block block,
 			long gasUsed, byte[] state, List<ByteArrayWrapper> keys,
-			RepositoryImpl repository) {
+			Repository repository) {
     	
     	blockNode.put("coinbase", Hex.toHexString(block.getCoinbase()));
     	blockNode.put("difficulty", new BigInteger(1, block.calcDifficulty()).toString());

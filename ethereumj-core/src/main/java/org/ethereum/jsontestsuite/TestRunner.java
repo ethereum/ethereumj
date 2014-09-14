@@ -3,6 +3,7 @@ package org.ethereum.jsontestsuite;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
@@ -46,7 +47,7 @@ public class TestRunner {
 
         List<String> results = new ArrayList<>();
 
-        RepositoryImpl repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl();
 
         /* 1. Store pre-exist accounts - Pre */
         for (ByteArrayWrapper key : testCase.getPre().keySet()){
@@ -141,7 +142,7 @@ public class TestRunner {
                 results.add(output);
             }
 
-            if (!Arrays.equals(expectedCode, actualCode)){
+            if (!Arrays.equals(expectedCode, actualCode)) {
 
                 String output =
                         String.format("The code result is different. account: [ %s ],  expectedCode: [ %s ] is actualCode: [ %s ] ",

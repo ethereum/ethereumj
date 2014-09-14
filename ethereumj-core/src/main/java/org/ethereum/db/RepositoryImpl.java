@@ -13,6 +13,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieFacade;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
@@ -92,10 +93,10 @@ public class RepositoryImpl implements Repository {
         this.contractDetailsDB = contractDetailsDB;
     }
 
-    public RepositoryImpl getTrack() {
+    public Repository getTrack() {
         TrackTrie     trackState   = new TrackTrie(accountStateDB);
         TrackDatabase trackDetails = new TrackDatabase(contractDetailsDB);
-        return new RepositoryImpl (trackState, trackDetails);
+        return new RepositoryImpl(trackState, trackDetails);
     }
 
     public void startTracking() {
@@ -210,7 +211,7 @@ public class RepositoryImpl implements Repository {
         return state;
     }
     
-    public Trie getWorldState() {
+    public TrieFacade getWorldState() {
     	return worldState;
     }
 
