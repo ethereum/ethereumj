@@ -45,7 +45,7 @@ public class PeerDiscovery {
                 new ArrayBlockingQueue<Runnable>(CONFIG.peerDiscoveryWorkers()), threadFactory, rejectionHandler);
 
         //start the monitoring thread
-        monitor = new PeerDiscoveryMonitorThread(executorPool, 0);
+        monitor = new PeerDiscoveryMonitorThread(executorPool, 1);
         Thread monitorThread = new Thread(monitor);
         monitorThread.start();
 
