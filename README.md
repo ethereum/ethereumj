@@ -16,7 +16,7 @@ EthereumJ is currently two project:
 :small_orange_diamond: Developed by **Roman Mandeleil** @romanman 2014.   
  * Based on a design by **Vitalik Buterin** @vbuterin. 
 
- 
+   
  Contribution by:   
   * **Alon Muroch** @negedzuregal (Ethereum state digging screen)
  
