@@ -719,11 +719,11 @@ public class TrieTest {
             String dump = trieSingle.getTrieDump();
 
             System.out.print("(" + i + ") : ");
-            System.out.println(key + " ==> " + dump);
+//            System.out.println(key + " ==> " + dump);
             trieDumps.put(key, dump);
 
-            System.out.print("(cache) : \n");
-            System.out.println(trieSingle.getCache().cacheDump());
+//            System.out.print("(cache) : \n");
+//            System.out.println(trieSingle.getCache().cacheDump());
 
         }
 
@@ -735,7 +735,7 @@ public class TrieTest {
             trieSingle.setRoot(root);
             String currDump = trieSingle.getTrieDump();
             String originDump = trieDumps.get(Hex.toHexString(root));
-            System.out.println(currDump);
+//            System.out.println(currDump);
             Assert.assertEquals(currDump, originDump);
         }
 
