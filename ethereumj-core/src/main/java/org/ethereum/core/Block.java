@@ -366,7 +366,7 @@ public class Block {
 		else {
 			Block parent = this.getParent();
 			long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
-			long newDifficulty = this.header.getTimestamp() >= parent.getTimestamp() + 42 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
+			long newDifficulty = this.header.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
 			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
 		}
 	}
