@@ -1,6 +1,6 @@
 package org.ethereum.vm;
 
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 
 import java.math.BigInteger;
 import java.util.Arrays;
@@ -26,7 +26,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
     Map<DataWord, DataWord> storage;
 
-    private RepositoryImpl repository;
+    private Repository repository;
     private boolean byTransaction = true;
     private boolean byTestingSuite = false;
     private int callDeep = 0;
@@ -34,7 +34,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
                              DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord difficulty,
-                             DataWord gaslimit, RepositoryImpl repository, int callDeep) {
+                             DataWord gaslimit, Repository repository, int callDeep) {
 
         // Transaction env
         this.address   = address;
@@ -63,7 +63,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
                              long gaslimit,
-                             RepositoryImpl repository, boolean byTestingSuite) {
+                             Repository repository, boolean byTestingSuite) {
         this(address, origin, caller, balance, gasPrice, gas, callValue, msgData, lastHash, coinbase,
                 timestamp, number, difficulty, gaslimit, repository);
         this.byTestingSuite = byTestingSuite;
@@ -74,7 +74,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
                              long gaslimit,
-                             RepositoryImpl repository) {
+                             Repository repository) {
 
         // Transaction env
         this.address   = new DataWord(address);
@@ -215,7 +215,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*  Storage */
     public Map<DataWord, DataWord> getStorage() { return storage; }
 
-    public RepositoryImpl getRepository() {
+    public Repository getRepository() {
         return repository;
     }
 

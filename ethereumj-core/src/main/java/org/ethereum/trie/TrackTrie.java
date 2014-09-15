@@ -81,4 +81,14 @@ public class TrackTrie implements TrieFacade {
 			trie.delete(key);
 		}
 	}
+
+	@Override
+	public byte[] getRootHash() {
+		return trie.getRootHash();
+	}
+
+	@Override
+	public String getTrieDump() {
+		return trie.getTrieDump();
+	}
 }

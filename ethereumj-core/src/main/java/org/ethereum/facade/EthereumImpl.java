@@ -7,7 +7,6 @@ import java.util.concurrent.Future;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
@@ -195,7 +194,7 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public RepositoryImpl getRepository(){
+    public Repository getRepository(){
         return WorldManager.getInstance().getRepository();
     }
 

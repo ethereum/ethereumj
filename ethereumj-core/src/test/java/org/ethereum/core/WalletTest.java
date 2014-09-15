@@ -2,7 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -37,7 +37,7 @@ public class WalletTest {
     @Test   // Testing account for simple balance set
     public void accountTest_1(){
 
-        RepositoryImpl repository = WorldManager.getInstance().getRepository();
+        Repository repository = WorldManager.getInstance().getRepository();
 
         ECKey cowKey = ECKey.fromPrivate(HashUtil.sha3("cow".getBytes()));
         repository.createAccount(cowKey.getAddress());
@@ -55,7 +55,7 @@ public class WalletTest {
     @Test  // test account balance with pending "unblocked" transaction
     public void accountTest_2(){
 
-        RepositoryImpl repository = WorldManager.getInstance().getRepository();
+        Repository repository = WorldManager.getInstance().getRepository();
 
         ECKey cowKey = ECKey.fromPrivate(HashUtil.sha3("cow".getBytes()));
         repository.createAccount(cowKey.getAddress());

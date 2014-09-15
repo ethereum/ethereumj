@@ -1,6 +1,6 @@
 package org.ethereum.vm;
 
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -18,7 +18,7 @@ public class ProgramResult {
     private RuntimeException exception;
     private List<DataWord> deleteAccounts;
 
-    private RepositoryImpl repository = null;
+    private Repository repository = null;
 
    /*
     * for testing runs ,
@@ -55,11 +55,11 @@ public class ProgramResult {
         this.exception = exception;
     }
 
-    public RepositoryImpl getRepository() {
+    public Repository getRepository() {
         return repository;
     }
 
-    public void setRepository(RepositoryImpl repository) {
+    public void setRepository(Repository repository) {
         this.repository = repository;
     }
 
@@ -82,7 +82,6 @@ public class ProgramResult {
 
         deleteAccounts.addAll(accounts);
     }
-
 
     public List<DataWord> getDeleteAccounts() {
         return deleteAccounts;
