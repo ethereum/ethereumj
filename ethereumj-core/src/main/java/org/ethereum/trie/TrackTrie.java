@@ -84,8 +84,7 @@ public class TrackTrie implements TrieFacade {
 
 	@Override
 	public byte[] getRootHash() {
-		// TODO Auto-generated method stub
-		return null;
+		return trie.getRootHash();
 	}
 
 	@Override
