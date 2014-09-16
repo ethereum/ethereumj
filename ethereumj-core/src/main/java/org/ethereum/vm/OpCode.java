@@ -349,7 +349,10 @@ public enum OpCode {
         return stringToByteMap.get(code);
     }
 
-    public static OpCode code(byte op) {
-        return intToTypeMap.get(op);
+    public static OpCode code(byte code) {
+    	OpCode op = intToTypeMap.get(code);
+    	if (op == null)
+    		throw new RuntimeException("Illegal operation: " + code);
+    	return op;
     }
 }
