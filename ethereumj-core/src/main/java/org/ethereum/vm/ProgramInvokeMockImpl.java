@@ -18,6 +18,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     private Repository repository = null;
     private String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+    private String contractAddress = "471fd3ad3e9eeadeec4608b92d16ce6b500704cc";
 
     public ProgramInvokeMockImpl(byte[] msgDataRaw) {
         this();
@@ -27,6 +28,14 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
         this.repository = new RepositoryImpl("blockchainMoc", "detailsMoc", "stateMoc");
         this.repository.createAccount(Hex.decode(ownerAddress));
+        
+        this.repository.createAccount(Hex.decode(contractAddress));
+        this.repository.saveCode(Hex.decode(contractAddress), 
+        		Hex.decode("385E60076000396000605f556014600054601e60"
+        		+ "205463abcddcba6040545b51602001600a525451"
+        		+ "6040016014525451606001601e52545160800160"
+        		+ "28525460a052546016604860003960166000f260"
+        		+ "00603f556103e75660005460005360200235"));
     }
 
     public ProgramInvokeMockImpl(boolean defaults){
