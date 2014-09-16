@@ -2545,6 +2545,120 @@ public class VMTest {
         }
     }
 
+    @Test // EXTCODECOPY OP
+    public void testEXTCODECOPY_1() {
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("60036007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3B123456"), new ProgramInvokeMockImpl());
+        String m_expected_1 = "6000600000000000000000000000000000000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        
+        program.getResult().getRepository().close();
+        assertEquals(m_expected_1, Hex.toHexString(program.memory.array()).toUpperCase());
+    }
+
+    @Test // EXTCODECOPY OP
+    public void testEXTCODECOPY_2() {
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("603E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3B6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235602054"),
+                        new ProgramInvokeMockImpl());
+        String m_expected_1 = "6000605F556014600054601E60205463ABCDDCBA6040545B51602001600A5254516040016014525451606001601E5254516080016028525460A0525460160000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        program.getResult().getRepository().close();
+        assertEquals(m_expected_1, Hex.toHexString(program.memory.array()).toUpperCase());
+    }
+
+    @Test // EXTCODECOPY OP
+    public void testEXTCODECOPY_3() {
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("605E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3B6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
+                        new ProgramInvokeMockImpl());
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        
+        program.getResult().getRepository().close();
+        assertTrue(program.isStopped());
+    }
+
+    @Test // EXTCODECOPY OP
+    public void testEXTCODECOPY_4() {
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("605E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3B6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
+                        new ProgramInvokeMockImpl());
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        program.getResult().getRepository().close();
+        assertTrue(program.isStopped());
+    }
+
+    @Test // EXTCODECOPY OP
+    public void testEXTCODECOPY_5() {
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("611234600054615566602054603E6000602073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3B6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
+                        new ProgramInvokeMockImpl());
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        program.getResult().getRepository().close();
+        assertFalse(program.isStopped());
+    }
+
+
+    @Test(expected=StackTooSmallException.class) // EXTCODECOPY OP mal
+    public void testEXTCODECOPY_6() {
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("605E600773471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3B"),
+                        new ProgramInvokeMockImpl());
+        try {
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+            vm.step(program);
+        } finally {
+        	program.getResult().getRepository().close();
+        	assertTrue(program.isStopped());
+        }
+    }
+
+
     @Test // CODESIZE OP
     public void testCODESIZE_1() {
 
@@ -2553,6 +2667,21 @@ public class VMTest {
                 new Program(Hex.decode("385E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
                         new ProgramInvokeMockImpl());
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000062";
+
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
+    
+    @Test // EXTCODESIZE OP
+    public void testEXTCODESIZE_1() {
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("73471FD3AD3E9EEADEEC4608B92D16CE6B500704CC395E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
+                        new ProgramInvokeMockImpl()); // Push address on the stack and perform EXTCODECOPY
+        String s_expected_1 = "000000000000000000000000471FD3AD3E9EEADEEC4608B92D16CE6B500704CC";
 
         vm.step(program);
 

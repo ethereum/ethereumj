@@ -9,6 +9,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.ethereum.vm.MessageCall.MsgType;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -144,11 +145,15 @@ public class VM {
         			program.stackRequire(3);
         			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
         			break;
+        		case EXTCODECOPY:
+        			program.stackRequire(4);
+        			newMemSize = stack.get(stack.size()-2).value().add(stack.get(stack.size()-4).value());
+        			break;
         		case CALL: case CALLSTATELESS:
         			program.stackRequire(7);
         			gasCost = GasCost.CALL;
-        			BigInteger callGasWord = stack.get(stack.size()-1).value();
-        			if(callGasWord.compareTo(program.getGas().value()) == 1) {
+        			DataWord callGasWord = stack.get(stack.size()-1);
+        			if(callGasWord.compareTo(program.getGas()) == 1) {
         				throw program.new OutOfGasException();
                     }
         			callGas = callGasWord.longValue();
@@ -158,9 +163,7 @@ public class VM {
         			break;
         		case POST:
         			program.stackRequire(5);
-//					TODO
-//        			runGas = c_callGas + m_stack[m_stack.size() - 1];
-//        			newTempSize = memNeed(m_stack[m_stack.size() - 4], m_stack[m_stack.size() - 5]);
+        			// TODO calculate POST gas cost
         			break;
         		case CREATE:
         			program.stackRequire(3);
@@ -591,36 +594,52 @@ public class VM {
                     program.memorySave(memOffsetData.intValue(), msgData);
                     program.step();
                 }	break;
-                case CODESIZE:{
-                    DataWord length = new DataWord(program.ops.length);
+                case CODESIZE: case EXTCODESIZE: {
+                	
+                	int length;
+                	if (op == OpCode.CODESIZE)
+                		length = program.getCode().length;
+                	else {
+                		program.stackRequire(1);
+                		DataWord address = program.stackPop();
+                		length = program.getCodeAt(address).length;
+                	}
+                    DataWord codeLength = new DataWord(length);
 
                     if (logger.isInfoEnabled())
-                        hint = "size: " + length.value();
+                        hint = "size: " + length;
 
-                    program.stackPush(length);
+                    program.stackPush(codeLength);
                     program.step();
-                }	break;
-                case CODECOPY:{
-                	program.stackRequire(3);                	
-                    DataWord memOffsetData  = program.stackPop();
+                }	break;              
+                case CODECOPY: case EXTCODECOPY: {
+                    byte[] fullCode;
+                    if (op == OpCode.CODECOPY)
+                		fullCode = program.getCode();
+                	else {
+                    	DataWord address = program.stackPop();
+                    	fullCode = program.getCodeAt(address);
+                	}
+
+                	DataWord memOffsetData  = program.stackPop();
                     DataWord codeOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
 
                     int length     = lengthData.intValue();
                     int codeOffset = codeOffsetData.intValue();
 
-                    if (program.ops.length < length + codeOffset) {
+                    if (fullCode == null || fullCode.length < length + codeOffset) {
                         program.stop();
                         break;
                     }
 
-                    byte[] code = new byte[length];
-                    System.arraycopy(program.ops, codeOffset, code, 0, length);
+                    byte[] codeCopy = new byte[length];
+                    System.arraycopy(fullCode, codeOffset, codeCopy, 0, length);
 
                     if (logger.isInfoEnabled())
-                        hint = "code: " + Hex.toHexString(code);
+                        hint = "code: " + Hex.toHexString(codeCopy);
 
-                    program.memorySave(memOffsetData.intValue(), code);
+                    program.memorySave(memOffsetData.intValue(), codeCopy);
                     program.step();
                 }	break;
                 case GASPRICE:{
@@ -632,12 +651,6 @@ public class VM {
                     program.stackPush(gasPrice);
                     program.step();
                 }   break;
-				case EXTCODESIZE:{
-					// TODO: Implement new opcodes
-				}	break;
-				case EXTCODECOPY:{
-					// TODO: Implement new opcodes
-				}	break;
 
                 /**
                  * Block Information
@@ -697,7 +710,7 @@ public class VM {
                     program.step();
                 }   break;
                 case POP:{
-                	program.stackRequire(1);                	
+                	program.stackRequire(1);
                 	program.stackPop();
                     program.step();
                 }	break;
@@ -720,7 +733,7 @@ public class VM {
 
         			int n = op.val() - OpCode.SWAP1.val() + 2;
                 	program.stackRequire(n);
-        			DataWord word_1 = stack.peek();
+                	DataWord word_1 = stack.peek();
         			stack.set(stack.size() - 1, stack.get(stack.size() - n));
         			stack.set(stack.size() - n, word_1);         	
 
@@ -863,7 +876,6 @@ public class VM {
                     program.step();
                 }	break;
                 case CALL: case CALLSTATELESS: {
-                	program.stackRequire(7);
                 	DataWord gas        =  program.stackPop();
                     DataWord toAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
@@ -885,9 +897,11 @@ public class VM {
 								program.invokeData.getCallDeep(), hint);
                     }
 
-				program.callToAddress(gas, toAddress, op.equals(CALL) ? toAddress
-						: program.getOwnerAddress(), value, inDataOffs,
-						inDataSize, outDataOffs, outDataSize);
+                    MessageCall msg = new MessageCall(
+							op.equals(CALL) ? MsgType.CALL : MsgType.STATELESS,
+							gas, toAddress, program.getOwnerAddress(), value,
+							inDataOffs, inDataSize, outDataOffs, outDataSize);
+                    program.callToAddress(msg);
 
                     program.step();
                 }	break;
@@ -911,7 +925,9 @@ public class VM {
 								program.invokeData.getCallDeep(), hint);
                     }
 
-				program.postToAddress(gas, toAddress, toAddress, value, inDataOffs, inDataSize);
+                    MessageCall msgCall = new MessageCall(MsgType.POST, gas, toAddress,
+							program.getOwnerAddress(), value, inDataOffs, inDataSize);
+                    program.queue(msgCall);
 
                     program.step();
                 }	break;

@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EmptyStackException;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Stack;
 
@@ -30,6 +31,8 @@ public class Program {
     private int invokeHash;
     private ProgramListener listener;
 
+    private static LinkedList<MessageCall> postQueue = new LinkedList<>();
+
     Stack<DataWord> stack = new Stack<>();
     ByteBuffer memory = null;
     DataWord programAddress;
@@ -43,18 +46,18 @@ public class Program {
 
     ProgramInvoke invokeData;
 
-    public Program(byte[] ops, ProgramInvoke invokeData) {
-    	
-        if (ops == null) ops = ByteUtil.EMPTY_BYTE_ARRAY;
-        this.ops = ops;
-        
-        if (invokeData != null) {
+	public Program(byte[] ops, ProgramInvoke invokeData) {
+		
+	    if (ops == null) ops = ByteUtil.EMPTY_BYTE_ARRAY;
+	    this.ops = ops;
+	    
+	    if (invokeData != null) {
 	        this.invokeData = invokeData;
 	        this.programAddress = invokeData.getOwnerAddress();
 	    	this.invokeHash = invokeData.hashCode();
 	        this.result.setRepository(invokeData.getRepository());
-        }
-     }
+	    }
+	}
 
     public byte getCurrentOp() {
     	if(ops.length == 0)
@@ -342,59 +345,43 @@ public class Program {
     }
     
     /**
-     * That method implement internal code invocations.
-     *  
-     * Instead of immediately calling it adds the call 
-     * to a post-queue, to be executed after everything else 
+     * Instead of immediately executing a message call, it is
+     * added to a post-queue, to be executed after everything else 
 	 * (including prior-created posts) within the scope 
 	 * of that transaction execution is executed.
      *
-     * @param gas - gas to pay for the call, remaining gas will be refunded to the caller
-     * @param toAddressDW - address to call
-     * @param storageAddressDW - address of the storage to use 
-     * @param endowmentValue - the value that can be transfer along with the code execution
-     * @param inDataOffs - start of memory to be input data to the call
-     * @param inDataSize - size of memory to be input data to the call
+     * @param msg is the message call object
      */
-    public void postToAddress(DataWord gas, DataWord toAddressDW, DataWord storageAddressDW, 
-    						  DataWord endowmentValue, DataWord inDataOffs, DataWord inDataSize) {
-    	// TODO implement code
+    public void queue(MessageCall msg) {
+    	postQueue.push(msg);
     }
 
     /**
-     * That method implement internal code invocations
+     * That method is for internal code invocations
      *
-     * @param gas - gas to pay for the call, remaining gas will be refunded to the caller
-     * @param toAddressDW - address to call
-     * @param storageAddressDW - address of the storage to use 
-     * @param endowmentValue - the value that can be transfer along with the code execution
-     * @param inDataOffs - start of memory to be input data to the call
-     * @param inDataSize - size of memory to be input data to the call
-     * @param outDataOffs - start of memory to be output of the call
-     * @param outDataSize - size of memory to be output data to the call
+     * @param msg is the message call object
      */
-    public void callToAddress(DataWord gas, DataWord toAddressDW, DataWord storageAddressDW, DataWord endowmentValue,
-                              DataWord inDataOffs, DataWord inDataSize,DataWord outDataOffs, DataWord outDataSize) {
+    public void callToAddress(MessageCall msg) {
 
     	// TODO: update code for CALLSTATELESS
     	
-        ByteBuffer data = memoryChunk(inDataOffs, inDataSize);
+        ByteBuffer data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize());
 
         // FETCH THE SAVED STORAGE
-        byte[] toAddress = toAddressDW.getLast20Bytes();
+        byte[] toAddress = msg.getToAddress().getLast20Bytes();
 
         // FETCH THE CODE
         byte[] programCode = this.result.getRepository().getCode(toAddress);
 
         if (logger.isInfoEnabled())
             logger.info("calling for existing contract: address: [ {} ], outDataOffs: [ {} ], outDataSize: [ {} ]  ",
-                    Hex.toHexString(toAddress), outDataOffs.longValue(), outDataSize.longValue());
+                    Hex.toHexString(toAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
 
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        if (this.getGas().longValue() - gas.longValue() < 0 ) {
+        if (this.getGas().longValue() - msg.getGas().longValue() < 0 ) {
             logger.info("No gas for the internal call, \n" +
                     "fromAddress={}, toAddress={}",
                     Hex.toHexString(senderAddress), Hex.toHexString(toAddress));
@@ -402,7 +389,7 @@ public class Program {
             return;
         }
 
-        BigInteger endowment = endowmentValue.value();
+        BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
             stackPushZero();
@@ -416,22 +403,23 @@ public class Program {
             stackPushOne();
 
             this.getResult().addCallCreate(data.array(),
-                    toAddressDW.getLast20Bytes(),
-                    gas.getNoLeadZeroesData(), endowmentValue.getNoLeadZeroesData());
+                    msg.getToAddress().getLast20Bytes(),
+                    msg.getGas().getNoLeadZeroesData(), 
+                    msg.getEndowment().getNoLeadZeroesData());
 
             return;
         }
 
         //  actual gas subtract
-        this.spendGas(gas.intValue(), "internal call");
+        this.spendGas(msg.getGas().intValue(), "internal call");
 
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
-        trackRepository.addBalance(toAddress, endowmentValue.value());
+        trackRepository.addBalance(toAddress, msg.getEndowment().value());
 
         ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(this, toAddressDW,
-                        endowmentValue,  gas, result.getRepository().getBalance(toAddress),
+                ProgramInvokeFactory.createProgramInvoke(this, msg.getToAddress(),
+                        msg.getEndowment(),  msg.getGas(), result.getRepository().getBalance(toAddress),
                         data.array(),
                         trackRepository, this.invokeData.getCallDeep() + 1);
 
@@ -458,10 +446,10 @@ public class Program {
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
         if (result != null) {
             ByteBuffer buffer = result.getHReturn();
-            int allocSize = outDataSize.intValue();
+            int allocSize = msg.getOutDataSize().intValue();
             if (buffer != null && allocSize > 0) {
                 int retSize = buffer.limit();
-                int offset = outDataOffs.intValue();
+                int offset = msg.getOutDataOffs().intValue();
                 if (retSize > allocSize) {
                     this.memorySave(offset, buffer.array());
                 } else {
@@ -476,7 +464,7 @@ public class Program {
 
         // 5. REFUND THE REMAIN GAS
         if (result != null) {
-            BigInteger refundGas = gas.value().subtract(BigInteger.valueOf(result.getGasUsed()));
+            BigInteger refundGas = msg.getGas().value().subtract(BigInteger.valueOf(result.getGasUsed()));
             if (refundGas.compareTo(BigInteger.ZERO) == 1) {
 
                 this.refundGas(refundGas.intValue(), "remaining gas from the internal call");
@@ -484,7 +472,7 @@ public class Program {
                 		Hex.toHexString(senderAddress), refundGas.toString());
             }
         } else {
-            this.refundGas(gas.intValue(), "remaining gas from the internal call");
+            this.refundGas(msg.getGas().intValue(), "remaining gas from the internal call");
         }
     }
 
@@ -510,6 +498,14 @@ public class Program {
         DataWord keyWord = new DataWord(key);
         DataWord valWord = new DataWord(val);
         result.getRepository().addStorageRow(this.programAddress.getLast20Bytes(), keyWord, valWord);
+    }
+    
+    public byte[] getCode() {
+    	return ops;
+    }
+    
+    public byte[] getCodeAt(DataWord address) {
+    	return invokeData.getRepository().getCode(address.getLast20Bytes());
     }
 
     public DataWord getOwnerAddress() {
