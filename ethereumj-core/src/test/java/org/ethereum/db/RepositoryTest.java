@@ -172,20 +172,17 @@ public class RepositoryTest {
     @Test  // get/set code
     public void test8() {
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        String codeHash = "c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
-
+        byte[] addr = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
         Repository repository = new RepositoryImpl();
 
         try {
-            byte[] code0 = repository.getCode(Hex.decode(addr));
-            repository.createAccount(Hex.decode(addr));
-            repository.saveCode(Hex.decode(addr), null);
-            byte[] code1 = repository.getCode(Hex.decode(addr));
-            AccountState accountState = repository.getAccountState(Hex.decode(addr));
+            byte[] code0 = repository.getCode(addr);
+            repository.createAccount(addr);
+            byte[] code1 = repository.getCode(addr);
+            AccountState accountState = repository.getAccountState(addr);
             assertTrue(code0 == null);
             assertNull(code1);
-            assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
+            assertNull(accountState.getCodeHash());
         } finally {
             repository.close();
         }
@@ -211,17 +208,19 @@ public class RepositoryTest {
     @Test // storage set/get
     public void test10() {
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+        byte[] addr = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+        byte[] code = Hex.decode("00");
         Repository repository = new RepositoryImpl();
 
         try {
-            repository.createAccount(Hex.decode(addr));
+            repository.createAccount(addr);
+            repository.saveCode(addr, code);
             byte[] keyBytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
             DataWord key = new DataWord(keyBytes);
             byte[] valueBytes = Hex.decode("0F4240");
             DataWord value = new DataWord(valueBytes);
-            repository.addStorageRow(Hex.decode(addr), key, value);
-            DataWord fetchedValue = repository.getStorageValue(Hex.decode(addr), key);
+            repository.addStorageRow(addr, key, value);
+            DataWord fetchedValue = repository.getStorageValue(addr, key);
             assertEquals(value, fetchedValue);
         } finally {
             repository.close();
@@ -231,13 +230,15 @@ public class RepositoryTest {
     @Test // storage set/get
     public void test11() {
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+        byte[] addr = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+        byte[] code = Hex.decode("00");
         String expectedStorageHash = "a737c40a4aa895fb9eb464536c376ee7c2c08eb733c8fd2353fcc62dc734f075";
 
         Repository repository = new RepositoryImpl();
 
         try {
-            repository.createAccount(Hex.decode(addr));
+            repository.createAccount(addr);
+            repository.saveCode(addr, code);
 
             byte[] keyBytes = Hex.decode("03E8");
             DataWord key1 = new DataWord(keyBytes);
@@ -257,15 +258,15 @@ public class RepositoryTest {
             valueBytes = Hex.decode("0F4242");
             DataWord value3 = new DataWord(valueBytes);
 
-            repository.addStorageRow(Hex.decode(addr), key1, value1);
-            repository.addStorageRow(Hex.decode(addr), key2, value2);
-            repository.addStorageRow(Hex.decode(addr), key3, value3);
+            repository.addStorageRow(addr, key1, value1);
+            repository.addStorageRow(addr, key2, value2);
+            repository.addStorageRow(addr, key3, value3);
 
-            DataWord fetchedValue1 = repository.getStorageValue(Hex.decode(addr), key1);
-            DataWord fetchedValue2 = repository.getStorageValue(Hex.decode(addr), key2);
-            DataWord fetchedValue3 = repository.getStorageValue(Hex.decode(addr), key3);
+            DataWord fetchedValue1 = repository.getStorageValue(addr, key1);
+            DataWord fetchedValue2 = repository.getStorageValue(addr, key2);
+            DataWord fetchedValue3 = repository.getStorageValue(addr, key3);
 
-            AccountState accountState = repository.getAccountState(Hex.decode(addr));
+            AccountState accountState = repository.getAccountState(addr);
             String stateRoot = Hex.toHexString(accountState.getStateRoot());
 
             assertEquals(value1, fetchedValue1);
@@ -281,7 +282,6 @@ public class RepositoryTest {
     public void test12() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        String expectedStorageHash = "365ed874ad42c2b4af335212465291e03dcd1f0c5b600f40f048ed238ad61fd3";
         long expectedBalance = 333;
 
         Repository origRepository = new RepositoryImpl();
@@ -307,7 +307,6 @@ public class RepositoryTest {
     public void test13() {
 
         String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        String expectedStorageHash = "365ed874ad42c2b4af335212465291e03dcd1f0c5b600f40f048ed238ad61fd3";
         long expectedBalance_1 = 55500;
         long expectedBalance_2 = 0;
 

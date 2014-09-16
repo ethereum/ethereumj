@@ -200,7 +200,10 @@ public class RepositoryImpl implements Repository {
         // 1. Save AccountState
         AccountState state =  new AccountState();
         accountStateDB.update(addr, state.getEncoded());
-
+        
+        ContractDetails details = new ContractDetails();
+        contractDetailsDB.put(addr, details.getEncoded());
+        
         if (logger.isDebugEnabled())
             logger.debug("New account created: [ {} ]", Hex.toHexString(addr));
 
@@ -354,7 +357,6 @@ public class RepositoryImpl implements Repository {
             logger.debug("saveCode: \n address: [ {} ], \n code: [ {} ]",
                     Hex.toHexString(addr),
                     Hex.toHexString(code));
-
 
         AccountState state = getAccountState(addr);
         if (state == null) return;
