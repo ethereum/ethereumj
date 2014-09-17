@@ -28,8 +28,6 @@ public class Transaction {
 
 	private static Logger logger = LoggerFactory.getLogger(Transaction.class);
 	
-    public static final byte[] ZERO_ADDRESS = new byte[0];
-	
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
 
@@ -75,7 +73,7 @@ public class Transaction {
     }
 
     /* creation contract tx
-     * [ nonce, gasPrice, gasLimit, 0000000000000000, endowment, init, signature(v, r, s) ]
+     * [ nonce, gasPrice, gasLimit, "", endowment, init, signature(v, r, s) ]
      * or simple send tx
      * [ nonce, gasPrice, gasLimit, receiveAddress, value, data, signature(v, r, s) ]
      */
@@ -87,8 +85,8 @@ public class Transaction {
         this.value = value;
         this.data = data;
 
-        if(receiveAddress == null || receiveAddress.length == 0) {
-            this.receiveAddress = ZERO_ADDRESS;
+        if(receiveAddress == null) {
+            this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
         }
         parsed = true;
     }
@@ -177,7 +175,7 @@ public class Transaction {
     }
 
     public boolean isContractCreation() {
-        return Arrays.equals(this.receiveAddress, ZERO_ADDRESS);
+        return Arrays.equals(this.receiveAddress, ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
     /*********
