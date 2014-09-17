@@ -2,7 +2,7 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.vm.*;
 import org.spongycastle.util.encoders.Hex;
@@ -37,9 +37,8 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     }
     
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
-		this(code,  ProgramInvokeFactory.createProgramInvoke(tx, 
-														lastBlock, 
-														WorldManager.getInstance().getRepository()));
+		this(code, ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, 
+				WorldManager.getInstance().getRepository()));
     }
     
     public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke) {
