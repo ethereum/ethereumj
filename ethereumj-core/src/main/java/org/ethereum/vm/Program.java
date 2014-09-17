@@ -5,6 +5,7 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
+import org.ethereum.vm.MessageCall.MsgType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.EmptyStackException;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Stack;
 
 /**
@@ -31,7 +33,13 @@ public class Program {
     private int invokeHash;
     private ProgramListener listener;
 
-    private static LinkedList<MessageCall> postQueue = new LinkedList<>();
+    /**
+     * Instead of immediately executing a POST message call, 
+     * it is added to a post-queue, to be executed after everything else 
+	 * (including prior-created posts) within the scope 
+	 * of that transaction execution is executed.
+     */
+    private static Queue<MessageCall> messageQueue = new LinkedList<>();
 
     Stack<DataWord> stack = new Stack<>();
     ByteBuffer memory = null;
@@ -239,8 +247,9 @@ public class Program {
      */
     protected void allocateMemory(int offset, int size) {
 
-        int memSize = memory != null ? memory.limit(): 0;
-        double newMemSize = Math.max(memSize, Math.ceil((double)(offset + size) / 32) * 32);
+        int memSize = memory != null ? memory.limit() : 0;
+		double newMemSize = Math.max(memSize, size != 0 ? 
+				Math.ceil((double) (offset + size) / 32) * 32 : 0);
         ByteBuffer tmpMem = ByteBuffer.allocate((int)newMemSize);
         if (memory != null)
         	tmpMem.put(memory.array(), 0, memory.limit());
@@ -344,47 +353,40 @@ public class Program {
         }
     }
     
-    /**
-     * Instead of immediately executing a message call, it is
-     * added to a post-queue, to be executed after everything else 
-	 * (including prior-created posts) within the scope 
-	 * of that transaction execution is executed.
-     *
-     * @param msg is the message call object
-     */
-    public void queue(MessageCall msg) {
-    	postQueue.push(msg);
+    public Queue<MessageCall> getMessageQueue() {
+    	return messageQueue;
     }
 
     /**
      * That method is for internal code invocations
+     * 
+     * - Normal calls invoke a specified contract which updates itself
+     * - Stateless calls invoke another contract, within the context of the caller
      *
      * @param msg is the message call object
      */
     public void callToAddress(MessageCall msg) {
-
-    	// TODO: update code for CALLSTATELESS
     	
         ByteBuffer data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize());
 
         // FETCH THE SAVED STORAGE
-        byte[] toAddress = msg.getToAddress().getLast20Bytes();
+        byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
+        byte[] contextAddress = msg.getType() == MsgType.STATELESS ? senderAddress : codeAddress;
 
         // FETCH THE CODE
-        byte[] programCode = this.result.getRepository().getCode(toAddress);
+        byte[] programCode = this.result.getRepository().getCode(codeAddress);
 
         if (logger.isInfoEnabled())
-            logger.info("calling for existing contract: address: [ {} ], outDataOffs: [ {} ], outDataSize: [ {} ]  ",
-                    Hex.toHexString(toAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
-
-        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
+            logger.info(msg.getType().name() + " for existing contract: address: [ {} ], outDataOffs: [ {} ], outDataSize: [ {} ]  ",
+                    Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
         if (this.getGas().longValue() - msg.getGas().longValue() < 0 ) {
             logger.info("No gas for the internal call, \n" +
-                    "fromAddress={}, toAddress={}",
-                    Hex.toHexString(senderAddress), Hex.toHexString(toAddress));
+                    "fromAddress={}, codeAddress={}",
+                    Hex.toHexString(senderAddress), Hex.toHexString(contextAddress));
             this.stackPushZero();
             return;
         }
@@ -403,7 +405,7 @@ public class Program {
             stackPushOne();
 
             this.getResult().addCallCreate(data.array(),
-                    msg.getToAddress().getLast20Bytes(),
+                    msg.getCodeAddress().getLast20Bytes(),
                     msg.getGas().getNoLeadZeroesData(), 
                     msg.getEndowment().getNoLeadZeroesData());
 
@@ -415,11 +417,11 @@ public class Program {
 
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
-        trackRepository.addBalance(toAddress, msg.getEndowment().value());
+        trackRepository.addBalance(contextAddress, msg.getEndowment().value());
 
         ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(this, msg.getToAddress(),
-                        msg.getEndowment(),  msg.getGas(), result.getRepository().getBalance(toAddress),
+                ProgramInvokeFactory.createProgramInvoke(this, msg.getCodeAddress(),
+                        msg.getEndowment(),  msg.getGas(), result.getRepository().getBalance(contextAddress),
                         data.array(),
                         trackRepository, this.invokeData.getCallDeep() + 1);
 
@@ -436,7 +438,7 @@ public class Program {
         if (result != null &&
             result.getException() != null &&
             result.getException() instanceof Program.OutOfGasException) {
-                logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(toAddress));
+                logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(contextAddress));
 
                 trackRepository.rollback();
                 stackPushZero();

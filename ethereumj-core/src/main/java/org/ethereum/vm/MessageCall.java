@@ -17,10 +17,8 @@ public class MessageCall {
 
     /** gas to pay for the call, remaining gas will be refunded to the caller */
 	private DataWord gas;
-    /** address to call */
-	private DataWord toAddress;
-    /** address of the storage to use */
-	private DataWord storageAddress;
+    /** address of account which code to call */
+	private DataWord codeAddress;
     /** the value that can be transfer along with the code execution */
 	private DataWord endowment;
     /** start of memory to be input data to the call */
@@ -32,23 +30,20 @@ public class MessageCall {
     /** size of memory to be output data to the call */
 	private DataWord outDataSize;
 
-	public MessageCall(MsgType type, DataWord gas, DataWord toAddress,
-			DataWord storageAddress, DataWord endowment,
-			DataWord inDataOffs, DataWord inDataSize) {
+	public MessageCall(MsgType type, DataWord gas, DataWord codeAddress,
+			DataWord endowment, DataWord inDataOffs, DataWord inDataSize) {
 		this.type = type;
 		this.gas = gas;
-		this.toAddress = toAddress;
-		this.storageAddress = (type == MsgType.STATELESS) ? storageAddress: toAddress;
+		this.codeAddress = codeAddress;
 		this.endowment = endowment;
 		this.inDataOffs = inDataOffs;
 		this.inDataSize = inDataSize;
 	}
 	
-	public MessageCall(MsgType type, DataWord gas, DataWord toAddress,
-			DataWord storageAddress, DataWord endowment,
-			DataWord inDataOffs, DataWord inDataSize, DataWord outDataOffs,
-			DataWord outDataSize) {
-		this(type, gas, toAddress, storageAddress, endowment, inDataOffs, inDataSize);
+	public MessageCall(MsgType type, DataWord gas, DataWord codeAddress,
+			DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
+			DataWord outDataOffs, DataWord outDataSize) {
+		this(type, gas, codeAddress, endowment, inDataOffs, inDataSize);
 		this.outDataOffs = outDataOffs;
 		this.outDataSize = outDataSize;
 	}
@@ -61,12 +56,8 @@ public class MessageCall {
 		return gas;
 	}
 
-	public DataWord getToAddress() {
-		return toAddress;
-	}
-
-	public DataWord getStorageAddress() {
-		return storageAddress;
+	public DataWord getCodeAddress() {
+		return codeAddress;
 	}
 
 	public DataWord getEndowment() {

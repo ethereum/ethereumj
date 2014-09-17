@@ -98,14 +98,13 @@ public class VM {
                     break;
         		case SSTORE:
         			program.stackRequire(2);
-        			// for gas calculations [YP 9.2]
         			DataWord newValue = stack.get(stack.size()-2);
                     DataWord oldValue =  program.storageLoad(stack.peek());
-                    if (oldValue == null && !newValue.isZero()) {
+                    if (oldValue == null && !newValue.isZero())
                     	gasCost = GasCost.SSTORE * 2;
-                    } else if (oldValue != null && newValue.isZero()) {
+                    else if (oldValue != null && newValue.isZero())
                         gasCost = GasCost.SSTORE * 0;
-                    } else
+                    else
                         gasCost = GasCost.SSTORE;
         			break;
                 case SLOAD:
@@ -118,36 +117,36 @@ public class VM {
         		// These all operate on memory and therefore potentially expand it:
         		case MSTORE:
         			program.stackRequire(2);
-        			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
+        			newMemSize = memNeeded(stack.peek(), new DataWord(32));
         			break;
         		case MSTORE8:
         			program.stackRequire(2);
-        			newMemSize = stack.peek().value().add(BigInteger.ONE);
+        			newMemSize = memNeeded(stack.peek(), new DataWord(1));
         			break;
         		case MLOAD:
         			program.stackRequire(1);
-        			newMemSize = stack.peek().value().add(BigInteger.valueOf(32));
+        			newMemSize = memNeeded(stack.peek(), new DataWord(32));
         			break;
         		case RETURN:
         			program.stackRequire(2);
-        			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
+        			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-2));
         			break;
         		case SHA3:
         			program.stackRequire(2);
         			gasCost = GasCost.SHA3;
-        			newMemSize = stack.peek().value().add(stack.get(stack.size()-2).value());
+        			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-2));
         			break;
         		case CALLDATACOPY:
         			program.stackRequire(3);
-        			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
+        			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-3));
         			break;
         		case CODECOPY:
         			program.stackRequire(3);
-        			newMemSize = stack.peek().value().add(stack.get(stack.size()-3).value());
+        			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-3));
         			break;
         		case EXTCODECOPY:
         			program.stackRequire(4);
-        			newMemSize = stack.get(stack.size()-2).value().add(stack.get(stack.size()-4).value());
+        			newMemSize = memNeeded(stack.get(stack.size()-2), stack.get(stack.size()-4));
         			break;
         		case CALL: case CALLSTATELESS:
         			program.stackRequire(7);
@@ -157,9 +156,9 @@ public class VM {
         				throw program.new OutOfGasException();
                     }
         			callGas = callGasWord.longValue();
-        			BigInteger x = stack.get(stack.size()-4).value().add(stack.get(stack.size()-5).value()); // in offset+size
-    				BigInteger y = stack.get(stack.size()-6).value().add(stack.get(stack.size()-7).value()); // out offset+size
-        			newMemSize = x.max(y);
+        			BigInteger in = memNeeded(stack.get(stack.size()-4), stack.get(stack.size()-5)); // in offset+size
+    				BigInteger out = memNeeded(stack.get(stack.size()-6), stack.get(stack.size()-7)); // out offset+size
+        			newMemSize = in.max(out);
         			break;
         		case POST:
         			program.stackRequire(5);
@@ -168,7 +167,7 @@ public class VM {
         		case CREATE:
         			program.stackRequire(3);
         			gasCost = GasCost.CREATE;
-        			newMemSize = stack.get(stack.size()-2).value().add(stack.get(stack.size()-3).value());
+        			newMemSize = memNeeded(stack.get(stack.size()-2), stack.get(stack.size()-3));
         			break;
                 default:
                     break;
@@ -877,7 +876,7 @@ public class VM {
                 }	break;
                 case CALL: case CALLSTATELESS: {
                 	DataWord gas        =  program.stackPop();
-                    DataWord toAddress  =  program.stackPop();
+                    DataWord codeAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
 
                     DataWord inDataOffs =  program.stackPop();
@@ -887,7 +886,7 @@ public class VM {
                     DataWord outDataSize =  program.stackPop();
                     
                     if (logger.isInfoEnabled()) {
-                    	hint = "addr: " + Hex.toHexString(toAddress.getLast20Bytes()) 
+                    	hint = "addr: " + Hex.toHexString(codeAddress.getLast20Bytes()) 
                     			+ " gas: " + gas.shortHex()
                     			+ " inOff: " + inDataOffs.shortHex()
                     			+ " inSize: " + inDataSize.shortHex();
@@ -897,10 +896,10 @@ public class VM {
 								program.invokeData.getCallDeep(), hint);
                     }
 
-                    MessageCall msg = new MessageCall(
+					MessageCall msg = new MessageCall(
 							op.equals(CALL) ? MsgType.CALL : MsgType.STATELESS,
-							gas, toAddress, program.getOwnerAddress(), value,
-							inDataOffs, inDataSize, outDataOffs, outDataSize);
+							gas, codeAddress, value, inDataOffs, inDataSize,
+							outDataOffs, outDataSize);
                     program.callToAddress(msg);
 
                     program.step();
@@ -908,14 +907,14 @@ public class VM {
                 case POST:{
                 	program.stackRequire(5);
                 	DataWord gas        =  program.stackPop();
-                    DataWord toAddress  =  program.stackPop();
+                    DataWord codeAddress=  program.stackPop();
                     DataWord value      =  program.stackPop();
 
                     DataWord inDataOffs =  program.stackPop();
                     DataWord inDataSize =  program.stackPop();
                     
                     if (logger.isInfoEnabled()) {
-                    	hint = "addr: " + Hex.toHexString(toAddress.getLast20Bytes()) 
+                    	hint = "addr: " + Hex.toHexString(codeAddress.getLast20Bytes()) 
                     			+ " gas: " + gas.shortHex()
                     			+ " inOff: " + inDataOffs.shortHex()
                     			+ " inSize: " + inDataSize.shortHex();
@@ -925,9 +924,9 @@ public class VM {
 								program.invokeData.getCallDeep(), hint);
                     }
 
-                    MessageCall msgCall = new MessageCall(MsgType.POST, gas, toAddress,
-							program.getOwnerAddress(), value, inDataOffs, inDataSize);
-                    program.queue(msgCall);
+					MessageCall msgCall = new MessageCall(MsgType.POST, gas,
+							codeAddress, value, inDataOffs, inDataSize);
+                    program.getMessageQueue().add(msgCall);
 
                     program.step();
                 }	break;
@@ -995,6 +994,20 @@ public class VM {
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
+    }
+    
+    /**
+     * Utility to calculate new total memory size needed for an operation.
+     * <br/> Basically just offset + size, unless size is 0, in which case the result is also 0.
+     * 
+     * @param offset starting position of the memory
+     * @param size number of bytes needed
+     * @return offset + size, unless size is 0. In that case memNeeded is also 0.
+     */
+    private BigInteger memNeeded(DataWord offset, DataWord size) {
+    	if (size.isZero())
+    		return BigInteger.ZERO;
+    	return offset.value().add(size.value());
     }
     
     /*
