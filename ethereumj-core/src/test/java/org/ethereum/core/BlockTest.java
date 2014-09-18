@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import org.ethereum.manager.WorldManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.spongycastle.util.encoders.Hex;
 import org.junit.Test;
 
@@ -24,15 +25,9 @@ public class BlockTest {
     }
 
 	// https://ethereum.etherpad.mozilla.org/12
-	private String CPP_PoC5_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a08dbd704eb38d1c2b73ee4788715ea5828a030650829703f077729b2b613dd20680834000008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
-	private String CPP_PoC5_GENESIS_HEX_HASH = "a7722d611450de26f55026b6544e34d9431b0a67a829e1794ac36fa4f079208f";
+	private String PoC6_GENESIS_HEX_RLP_ENCODED = "f8abf8a7a00000000000000000000000000000000000000000000000000000000000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347940000000000000000000000000000000000000000a008bf6a98374f333b84e7d063d607696ac7cbbd409bd20fbe6a741c2dfc0eb28580830200008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+	private String PoC6_GENESIS_HEX_HASH = "08436a4d33c77e6acf013e586a3333ad152f25d31df8b68749d85046810e1f4b";
 
-	String block_1 = "f8abf8a7a0000000000000000000000000000000000000000000000000000000"
-			+ "0000000000a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d"
-			+ "49347940000000000000000000000000000000000000000a08dbd704eb38d1c2b73ee47"
-			+ "88715ea5828a030650829703f077729b2b613dd20680834000008080830f4240808080a"
-			+ "004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
-	
 	String block_2 = "f8b5f8b1a0cf4b25b08b39350304fe12a16e4216c01a426f8f3dbf0d392b5b45"
 				   + "8ffb6a399da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a1"
 				   + "42fd40d493479476f5eabe4b342ee56b8ceba6ab2a770c3e2198e7a08a22d58b"
@@ -62,7 +57,7 @@ public class BlockTest {
     @Test /* got from go guy */
     public void testGenesisFromRLP() {
     	// from RLP encoding
-    	byte[] genesisBytes = Hex.decode(CPP_PoC5_GENESIS_HEX_RLP_ENCODED);
+    	byte[] genesisBytes = Hex.decode(PoC6_GENESIS_HEX_RLP_ENCODED);
     	Block genesisFromRLP = new Block(genesisBytes);
     	Block genesis = Genesis.getInstance();
     	assertEquals(Hex.toHexString(genesis.getHash()), Hex.toHexString(genesisFromRLP.getHash()));
@@ -91,8 +86,8 @@ public class BlockTest {
         			)
          */
     	Block genesis = Genesis.getInstance();
-        assertEquals(CPP_PoC5_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
-        assertEquals(CPP_PoC5_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
+        assertEquals(PoC6_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
+    	assertEquals(PoC6_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
     }
     
     @Test /* block without transactions - block#32 in PoC5 cpp-chain */
@@ -111,7 +106,7 @@ public class BlockTest {
 
     @Test /* large block with 5 transactions -block#1 in PoC5 cpp-chain */
     public void testBlockWithContractCreation() {
-        byte[] payload = Hex.decode(block_1);
+        byte[] payload = Hex.decode(PoC6_GENESIS_HEX_RLP_ENCODED);
         Block block = new Block(payload);
         System.out.println(block.toString());
     }
@@ -127,7 +122,7 @@ public class BlockTest {
         // Storing genesis because the parent needs to be in the DB for calculation.
         WorldManager.getInstance().getBlockchain().add(genesis);
 
-        Block block1 = new Block(Hex.decode(block_1));
+        Block block1 = new Block(Hex.decode(PoC6_GENESIS_HEX_RLP_ENCODED));
         BigInteger calcDifficulty = new BigInteger(1, block1.calcDifficulty());
         BigInteger actualDifficulty = new BigInteger(1, block1.getDifficulty());
         System.out.println("Block#1 actual difficulty = " + actualDifficulty.toString());
@@ -147,11 +142,32 @@ public class BlockTest {
 		WorldManager.getInstance().getBlockchain().add(genesis);
     	
     	// Test with block
-    	Block block1 = new Block(Hex.decode(block_1));
+    	Block block1 = new Block(Hex.decode(PoC6_GENESIS_HEX_RLP_ENCODED));
     	long calcGasLimit = block1.calcGasLimit();
     	long actualGasLimit = block1.getGasLimit();
     	System.out.println("Block#1 actual gasLimit = " + actualGasLimit);
     	System.out.println("Block#1 calculated gasLimit = " + calcGasLimit);
     	assertEquals(actualGasLimit, calcGasLimit);
+    }
+
+    @Test
+    @Ignore
+    public void testUncleValidGenerationGap() {
+    	// TODO
+    	fail("Not yet implemented");
+    }
+    
+    @Test
+    @Ignore
+    public void testUncleInvalidGenerationGap() {
+    	// TODO
+    	fail("Not yet implemented");
+    }
+    
+    @Test
+    @Ignore
+    public void testUncleInvalidParentGenerationGap() {
+    	// TODO
+    	fail("Not yet implemented");
     }
 }

@@ -3,16 +3,25 @@ package org.ethereum.core;
 import java.math.BigInteger;
 
 import static org.ethereum.util.ByteUtil.*;
+
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.manager.WorldManager;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.Arrays;
+import org.spongycastle.util.BigIntegers;
 
 /**
  * Block header is a value object containing 
  * the basic information of a block 
  */
 public class BlockHeader {
+	
+	/* A scalar value equal to the mininum limit of gas expenditure per block */
+	private static long MIN_GAS_LIMIT = 125000L;
 	
     /* The SHA3 256-bit hash of the parent block, in its entirety */
 	private  byte[] parentHash;
@@ -97,7 +106,74 @@ public class BlockHeader {
         this.extraData = extraData;
         this.nonce = nonce;
     }
+	
+	public boolean isValid() {
+		boolean isValid = false;
+    	// verify difficulty meets requirements
+    	isValid = this.getDifficulty() == this.calcDifficulty();
+    	isValid = this.validateNonce();
+    	// verify gasLimit meets requirements
+    	isValid = this.getGasLimit() == this.calcGasLimit();
+    	// verify timestamp meets requirements
+    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
+    	// verify extraData doesn't exceed 1024 bytes
+    	isValid = this.getExtraData() == null || this.getExtraData().length <= 1024;
+    	return isValid;
+	}
     
+	/**
+	 * Calculate Difficulty 
+	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
+	 * @return byte array value of the difficulty
+	 */
+	public byte[] calcDifficulty() {
+		if (this.isGenesis())
+			return Genesis.DIFFICULTY;
+		else {
+			Block parent = this.getParent();
+			long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
+			long newDifficulty = this.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
+			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
+		}
+	}
+
+	/**
+	 * Calculate GasLimit 
+	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (25)
+	 * @return long value of the gasLimit
+	 */
+	public long calcGasLimit() {
+		if (this.isGenesis())
+			return Genesis.GAS_LIMIT;
+		else {
+			Block parent = this.getParent();
+			return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
+		}
+	}
+	
+	/**
+	 * Verify that block is valid for its difficulty
+	 * 
+	 * @return
+	 */
+	public boolean validateNonce() {
+		BigInteger max = BigInteger.valueOf(2).pow(256);
+		byte[] target = BigIntegers.asUnsignedByteArray(32,
+				max.divide(new BigInteger(1, this.getDifficulty())));
+		byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
+		byte[] concat = Arrays.concatenate(hash, this.getNonce());
+		byte[] result = HashUtil.sha3(concat);
+		return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
+	}
+
+	public boolean isGenesis() {
+		return this.getNumber() == Genesis.NUMBER;
+	}
+	
+    public Block getParent() {
+		return WorldManager.getInstance().getBlockchain().getBlockByNumber(this.getNumber() - 1);
+    }
+
 	public byte[] getParentHash() {
 		return parentHash;
 	}

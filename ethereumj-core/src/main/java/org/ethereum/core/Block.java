@@ -1,17 +1,13 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.Arrays;
-import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -34,11 +30,11 @@ public class Block {
 
 	private static final Logger logger = LoggerFactory.getLogger("block");
 	
-	/* A scalar value equal to the mininum limit of gas expenditure per block */
-	private static long MIN_GAS_LIMIT = 125000L;
     public  static BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
 	public static BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
-			BigInteger.valueOf(3)).divide(BigInteger.valueOf(4));
+			BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
+	public static BigInteger INCLUSION_REWARD = Block.BLOCK_REWARD
+			.divide(BigInteger.valueOf(32));
 
 	private BlockHeader header;
 	
@@ -111,12 +107,28 @@ public class Block {
 
     public byte[] getHash() {
         if (!parsed) parseRLP();
-       	return HashUtil.sha3(this.getEncoded());
+       	return HashUtil.sha3(this.header.getEncoded());
     }
 
     public Block getParent() {
-		return WorldManager.getInstance().getBlockchain().getBlockByNumber(this.getNumber() - 1);
-    }
+		return this.header.getParent();
+	}
+    
+	public byte[] calcDifficulty() {
+		if (!parsed) parseRLP();
+		return this.header.calcDifficulty();
+	}
+
+	public long calcGasLimit() {
+		if (!parsed) parseRLP();
+		return this.header.calcGasLimit();
+	}
+	
+	public boolean validateNonce() {
+		if (!parsed) parseRLP();
+		return this.header.validateNonce();
+	}
+
     
     public byte[] getParentHash() {
         if (!parsed) parseRLP();
@@ -166,10 +178,6 @@ public class Block {
 	public long getMinGasPrice() {
 		if (!parsed) parseRLP();
 		return this.header.getMinGasPrice();
-	}
-	
-	public boolean isGenesis() {
-		return this.getNumber() == Genesis.NUMBER;
 	}
 
 	public long getGasLimit() {
@@ -323,72 +331,37 @@ public class Block {
 	 * and expected time to the next block, is reduced.
 	 */
     public boolean isValid() {
-    	boolean isValid = true;
+    	boolean isValid = false;
 
     	if(!this.isGenesis()) {
-	    	// verify difficulty meets requirements
-	    	isValid = this.getDifficulty() == this.calcDifficulty();
-	    	isValid = this.validateNonce();
-	    	// verify gasLimit meets requirements
-	    	isValid = this.getGasLimit() == this.calcGasLimit();
-	    	// verify timestamp meets requirements
-	    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
-	    	// verify extraData doesn't exceed 1024 bytes
-	    	isValid = this.getExtraData() == null || this.getExtraData().length <= 1024;
+    		isValid = this.header.isValid();
+	    	
+	    	for (BlockHeader uncle : uncleList) {
+	    		// - They are valid headers (not necessarily valid blocks)
+	    		isValid = uncle.isValid();
+	    		// - Their parent is a kth generation ancestor for k in {2, 3, 4, 5, 6, 7}
+	    		long generationGap = this.getNumber() - uncle.getParent().getNumber();
+	    		isValid = generationGap > 1 && generationGap < 8;
+	    		// - They were not uncles of the kth generation ancestor for k in {1, 2, 3, 4, 5, 6}			
+	    		generationGap = this.getNumber() - uncle.getNumber();
+	    		isValid = generationGap > 0 && generationGap < 7;
+	    	}
     	}
     	if(!isValid)
     		logger.warn("!!!Invalid block!!!");
     	return isValid;
     }
-	
-	/**
-	 * Calculate GasLimit 
-	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (25)
-	 * @return long value of the gasLimit
-	 */
-	public long calcGasLimit() {
-		if (this.isGenesis())
-			return Genesis.GAS_LIMIT;
-		else {
-			Block parent = this.getParent();
-			return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
-		}
+    
+	public boolean isGenesis() {
+		return this.header.isGenesis();
 	}
 	
-	/**
-	 * Calculate Difficulty 
-	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
-	 * @return byte array value of the difficulty
-	 */
-	public byte[] calcDifficulty() {
-		if (this.isGenesis())
-			return Genesis.DIFFICULTY;
-		else {
-			Block parent = this.getParent();
-			long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
-			long newDifficulty = this.header.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
-			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
-		}
-	}
-	
-	/**
-	 * Verify that block is valid for its difficulty
-	 * 
-	 * @return
-	 */
-	public boolean validateNonce() {
-		BigInteger max = BigInteger.valueOf(2).pow(256);
-		byte[] target = BigIntegers.asUnsignedByteArray(32,
-				max.divide(new BigInteger(1, this.getDifficulty())));
-		byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
-		byte[] concat = Arrays.concatenate(hash, this.getNonce());
-		byte[] result = HashUtil.sha3(concat);
-		return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
-	}
-
 	public byte[] getEncoded() {
 		if(rlpEncoded == null) {
-			this.rlpEncoded = this.header.getEncoded();
+			byte[] header = this.header.getEncoded();
+			byte[] transactions = RLP.encodeList();
+			byte[] uncles = RLP.encodeList();
+			this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
 		}
 		return rlpEncoded;
 	}
@@ -397,7 +370,7 @@ public class Block {
 		if (!parsed) parseRLP();
 		byte[] header = this.header.getEncodedWithoutNonce();
         byte[] transactions = RLP.encodeList();
-        byte[] uncles = RLP.encodeList();       
+        byte[] uncles = RLP.encodeList();
         
         return RLP.encodeList(header, transactions, uncles);
 	}

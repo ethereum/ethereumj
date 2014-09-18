@@ -168,8 +168,10 @@ public class BlockchainImpl implements Blockchain {
 	}
 
 	/**
+	 * Add reward to block- and every uncle coinbase 
+	 * assuming the entire block is valid.
 	 * 
-	 * @param block
+	 * @param block object containing the header and uncles
 	 */
 	private void addReward(Block block) {
 		// Create coinbase if doesn't exist yet
@@ -177,19 +179,17 @@ public class BlockchainImpl implements Blockchain {
 			repository.createAccount(block.getCoinbase());
 		
 		// Add standard block reward
-		repository.addBalance(block.getCoinbase(), Block.BLOCK_REWARD);
+		BigInteger totalBlockReward = Block.BLOCK_REWARD;
 		
 		// Add extra rewards based on number of uncles		
 		if(block.getUncleList().size() > 0) {
-			BigInteger partialReward = Block.BLOCK_REWARD
-					.multiply(BigInteger.valueOf(1 * block.getUncleList().size()))
-					.divide(BigInteger.valueOf(8));
-			repository.addBalance(block.getCoinbase(), partialReward);
-			
 			for (BlockHeader uncle : block.getUncleList()) {
 				repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
 			}
+			totalBlockReward.add(Block.INCLUSION_REWARD
+					.multiply(BigInteger.valueOf(block.getUncleList().size())));
 		}
+		repository.addBalance(block.getCoinbase(), totalBlockReward);
 	}
     
     public void storeBlock(Block block) {
