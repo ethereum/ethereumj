@@ -48,7 +48,7 @@ public class Genesis extends Block {
 	public static byte[] PARENT_HASH = zeroHash256;
 	public static byte[] UNCLES_HASH = sha3EmptyList;
 	public static byte[] COINBASE = zeroHash160;
-    public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(22).toByteArray();
+    public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long NUMBER = 0;
     public static long MIN_GAS_PRICE = 0;
     public static long GAS_LIMIT = 1000000;
