@@ -3338,6 +3338,24 @@ public class VMTest {
         program.getResult().getRepository().close();
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
+    
+    @Test // INVALID OP
+    public void testINVALID_1() {
+
+        VM vm = new VM();
+        Program program =
+                new Program(Hex.decode("6001516002"),
+                        createProgramInvoke_1());
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stack.pop();
+        program.getResult().getRepository().close();
+        assertTrue(program.isStopped());
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+    }
 
     /* TEST CASE LIST END */
 
