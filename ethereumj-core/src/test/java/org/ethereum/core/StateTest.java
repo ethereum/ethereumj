@@ -13,16 +13,18 @@ import org.spongycastle.util.encoders.Hex;
 
 public class StateTest {
 
+	private static final String GENESIS_STATE_ROOT = "08bf6a98374f333b84e7d063d607696ac7cbbd409bd20fbe6a741c2dfc0eb285";
+	
     @Test
     public void testGenesisAccounts() {
-        Trie trie = generateGenesis();
-        assertEquals("b4fb905967f9b64f7abb0912884ecc49a13689e268d0913460791746e16aeb7c", Hex.toHexString(trie.getRootHash()));
+        Trie trie = generateGenesisState();
+        assertEquals(GENESIS_STATE_ROOT, Hex.toHexString(trie.getRootHash()));
     }
 
     @Test  // right way to calc tx trie hash
     public void testCalculatePostTxState() {
 
-        /*    txTrieHash=a77691cf47bec9021d3f027fc8ef2d51b758b600a79967154354b8e37108896f */
+        /*    txTrieHash */
         String expected = "a77691cf47bec9021d3f027fc8ef2d51b758b600a79967154354b8e37108896f";
         Transaction tx = new Transaction(
                 new byte[]{},
@@ -43,7 +45,6 @@ public class StateTest {
         Trie trie = new Trie(new MockDB());
         trie.update(RLP.encodeInt(0), tr.getEncoded());
         String txTrieRoot = Hex.toHexString(trie.getRootHash());
-        System.out.println(txTrieRoot);
         assertEquals(expected, txTrieRoot);
 
         /* *** GROSS DATA ***
@@ -91,8 +92,8 @@ public class StateTest {
         // 3) minner gets the gas + coinbase ==> 6260000000000000 + 1500000000000000000
         // 4) calc the root
 
-        Trie trie = generateGenesis();
-        String expected = "be627444b72cad709e3c8ed325d71c965024b64d938fa10a01aa46bd9599b705";
+        Trie trie = generateGenesisState();
+        String expected = "73d725637d76b140720cc75500cfb5ce17bf4c6089798b69a7db1a7e4d97d617";
 
         // Get and update sender in world state
         byte[] cowAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
@@ -157,40 +158,13 @@ public class StateTest {
         assertEquals(expected, Hex.toHexString(trie.getRootHash()));
     }
 
-    private Trie generateGenesis() {
+    private Trie generateGenesisState() {
 
         Trie trie = new Trie(new MockDB());
-        // 2ef47100e0787b915105fd5e3f4ff6752079d5cb # (M)
-        AccountState acct5 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("2ef47100e0787b915105fd5e3f4ff6752079d5cb"), acct5.getEncoded());
-
-        // 1a26338f0d905e295fccb71fa9ea849ffa12aaf4 # (A)
-        AccountState acct4 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"), acct4.getEncoded());
-
-        // e6716f9544a56c530d868e4bfbacb172315bdead # (J)
-        AccountState acct2 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("e6716f9544a56c530d868e4bfbacb172315bdead"), acct2.getEncoded());
-
-        // 8a40bfaa73256b60764c1bf40675a99083efb075 # (G)
-        AccountState acct1 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("8a40bfaa73256b60764c1bf40675a99083efb075"), acct1.getEncoded());
-
-        // e4157b34ea9615cfbde6b4fda419828124b70c78 # (CH)
-        AccountState acct8 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("e4157b34ea9615cfbde6b4fda419828124b70c78"), acct8.getEncoded());
-
-        // 1e12515ce3e0f817a4ddef9ca55788a1d66bd2df # (V)
-        AccountState acct3 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("1e12515ce3e0f817a4ddef9ca55788a1d66bd2df"), acct3.getEncoded());
-
-        // 6c386a4b26f73c802f34673f7248bb118f97424a # (HH)
-        AccountState acct7 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("6c386a4b26f73c802f34673f7248bb118f97424a"), acct7.getEncoded());
-
-        // cd2a3d9f938e13cd947ec05abc7fe734df8dd826 # (R)
-        AccountState acct6 = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-        trie.update(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), acct6.getEncoded());
+        for (String address : Genesis.getPremine()) {
+            AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
+            trie.update(Hex.decode(address), acct.getEncoded());			
+		}
         return trie;
     }
 }
