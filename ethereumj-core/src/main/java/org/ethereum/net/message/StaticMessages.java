@@ -45,7 +45,7 @@ public class StaticMessages {
 
         String helloAnnouncement = String.format("Ethereum(J)/v%s/%s/%s/Java", version, phrase, system);
 
-        return new HelloMessage((byte) 0x17, (byte) 0x00,
+        return new HelloMessage((byte) 0x21, (byte) 0x00,
                 helloAnnouncement, Byte.parseByte("00000111", 2),
                 (short) 30303, peerIdBytes);
     }
