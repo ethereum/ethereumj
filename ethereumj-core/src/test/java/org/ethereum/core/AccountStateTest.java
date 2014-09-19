@@ -11,7 +11,7 @@ public class AccountStateTest {
 
 	@Test
 	public void testGetEncoded() {
-		String expected = "f83e809a010000000000000000000000000000000000000000000000000080a0c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470";
+		String expected = "de809a01000000000000000000000000000000000000000000000000008080";
 		AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
 		assertEquals(expected, Hex.toHexString(acct.getEncoded()));
 	}
