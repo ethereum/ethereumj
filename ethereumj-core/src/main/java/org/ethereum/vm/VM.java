@@ -734,7 +734,8 @@ public class VM {
                 	program.stackRequire(n);
                 	DataWord word_1 = stack.peek();
         			stack.set(stack.size() - 1, stack.get(stack.size() - n));
-        			stack.set(stack.size() - n, word_1);         	
+        			stack.set(stack.size() - n, word_1);
+        			program.step();
 
                 }	break;
                 case MLOAD:{
