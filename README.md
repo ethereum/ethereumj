@@ -1,69 +1,35 @@
 
-.   
+# Welcome to ethereumj 
+[![Build Status](https://travis-ci.org/ethereumj/ethereumj.svg?branch=master)](https://travis-ci.org/ethereumj/ethereumj) [![Coverage Status](https://coveralls.io/repos/ethereumj/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereumj/ethereumj?branch=master)
+[![Stories in Progress](https://badge.waffle.io/ethereumj/ethereumj.png?title=In%20Progress&label=in_progress)](https://waffle.io/ethereumj/ethereumj)
 
+# Goals
 
-# Ethereum Java Implementation 
-[![Build Status](https://travis-ci.org/ethereum/ethereumj.svg?branch=master)](https://travis-ci.org/ethereum/ethereumj) [![Coverage Status](https://coveralls.io/repos/ethereum/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereum/ethereumj?branch=master)
-[![Stories in Progress](https://badge.waffle.io/ethereum/ethereumj.png?title=In%20Progress&label=in_progress)](https://waffle.io/ethereum/ethereumj)
+The ethereumj library is a Java implementation of the Ethereum protocol.
 
-.   
+This repository currently contains: 
+ * [core](ethereumj-core): the core library which can be included into your own Java project.
+ * [studio](ethereumj-studio): a simple graphic interface for Ethereum functionality and set of showcases for core usage. 
 
+For an early peek, have a look at this [video](https://youtu.be/D5ok7jh7AOg)
 
-EthereumJ is currently two project: 
- * [ethereumj-core](ethereumj-core): the core lib - which can be included into any other Java/Scala project.
- * [ethereumj-studio](ethereumj-studio): the studio which is a simple graphic interface for Ethereum functionality and set of showcases for core lib usage. 
+# Todo
 
-:small_orange_diamond: Developed by **Roman Mandeleil** @romanman 2014.   
- * Based on a design by **Vitalik Buterin** @vbuterin. 
-
-   
- Contribution by:   
-  * **Alon Muroch** @negedzuregal (Ethereum state digging screen)
+The Ethereum protocol is currenty heavily in development, thus so is this implementation.
+You can find a todo-list right [here](TODO.md) and the [milestone schedule](https://github.com/ethereum/ethereumj/milestones).
  
-  * **Nick Savers** @nicksavers (Trie & Level DB support & Mining implementation,   
-     key cryptography, Testing and in-code documentation)
-   
-  * **Adrian Benko** @benadrasni (Blockchain explorer screen)
- 
- 
- Many thanks for help to:   
-  * **Gavin Wood** @gavofyork   
-  * **Jeffrey Wilcke** @obscuren   
-  * **Vitalik Buterin** @vbuterin
+# Documentation
 
+To start you can visit [Ethereum.org](https://www.ethereum.org) and if you are looking for more information on the concept, the [ethereum white paper](https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper) is a good place to start as it outlines the vision. For the more technical minded, a protocol description can be found in the [yellow paper](http://gavwood.com/Paper.pdf) by Gavin Wood.
 
-:small_blue_diamond: *We appreciate any contribution to this epic   
-project and encourage you to contact us   
-with your enthusiasm, we are open to discuss   
-any crazy idea, be in touch... cheers!!!*   
- 
-###### :small_blue_diamond: If you want to find out what we are cooking now   
-TODO list is right [here](TODO.md)
- 
-######  :small_blue_diamond: ethereumj-core maven release can be found [here](https://bintray.com/ethereum/maven/org.ethereum/view)
- 
-######  :small_blue_diamond: Community website  http://www.ethereum.org
+# Maven
 
-######  :small_blue_diamond: Yellow Paper (Gav precise definition of every corner in the Ethereum protocol)   
-  http://gavwood.com/Paper.pdf
+The main ethereumj library can be found in the Maven repository
 
-######  :small_blue_diamond: Whitepaper (Vitalik overview of the protocol)    
-  https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper
+https://bintray.com/ethereum/maven/org.ethereum/view
 
-.   
-.   
-.   
-[![ScreenShot](http://i.imgur.com/FQiBihl.jpg)](https://www.youtube.com/watch?v=D5ok7jh7AOg)   
-.   
-.   
-.   
+For building ethereumj-core or ethereumj-studio look in their own individual README
 
-###### License details read [here](LICENSE)
-:sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles::sparkles:
+# License 
 
- 
- 
- 
-
-
-
+This software is released under the MIT license, read it [here](LICENSE)
