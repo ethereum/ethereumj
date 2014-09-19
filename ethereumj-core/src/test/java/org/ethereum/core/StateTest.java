@@ -5,7 +5,7 @@ import static org.junit.Assert.*;
 import java.math.BigInteger;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.trie.MockDB;
+import org.ethereum.db.MockDB;
 import org.ethereum.trie.Trie;
 import org.ethereum.util.RLP;
 import org.junit.Test;

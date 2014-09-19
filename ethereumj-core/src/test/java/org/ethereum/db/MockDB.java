@@ -1,4 +1,4 @@
-package org.ethereum.trie;
+package org.ethereum.db;
 
 import java.io.IOException;
 import java.util.HashMap;

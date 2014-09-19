@@ -16,6 +16,7 @@ import java.util.*;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.DatabaseImpl;
+import org.ethereum.db.MockDB;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -773,7 +774,7 @@ public class TrieTest {
         byte[] val3 = Hex.decode("94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d");
         byte[] val4 = Hex.decode("01");
 
-        Trie storage = new Trie(new org.ethereum.trie.MockDB());
+        Trie storage = new Trie(new org.ethereum.db.MockDB());
         storage.update(key1, val1);
         storage.update(key2, val2);
         storage.update(key3, val3);
