@@ -125,7 +125,7 @@ public class VMComplexTest {
         String contractB_addr = "83c5541a6c8d2dbad642f385d8d06ca9b6c731ee";
 
         String code_a = "60006020023560005460016020023560205460005360005760205360015700";
-        String code_b = "6000601f5560e05b60e05b54600060c05b015560605b6020015b51602001600b5254516040016016525451606001602152546080525460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054";
+        String code_b = "6000601f5560e05b60e05b54600060c05b015560605b6020015b80602001600b9054806040016016905480606001602190546080905460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054";
 
         byte[] caller_addr_bytes = Hex.decode(callerAddr);
 
@@ -222,7 +222,7 @@ public class VMComplexTest {
         String contractB_addr = "83c5541a6c8d2dbad642f385d8d06ca9b6c731ee";
 
         String code_a = "600b60005460166020546021604054602c6060546037608054604260a05460c06000f2";
-        String code_b = "6000601f5560e05b60e05b54600060c05b015560605b6020015b51602001600b5254516040016016525451606001602152546080525460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054";
+        String code_b = "6000601f5560e05b60e05b54600060c05b015560605b6020015b80602001600b9054806040016016905480606001602190546080905460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054";
 
         byte[] caller_addr_bytes = Hex.decode(callerAddr);
 
@@ -351,7 +351,25 @@ public class VMComplexTest {
     @Test // CALL contract with too much gas
     @Ignore
     public void test5() {
-    	// TODO: CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
+    	// TODO CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
+    }
+    
+    @Test // CALLSTATELESS contract
+    @Ignore
+    public void test6() {
+    	// TODO
+    }
+    
+    @Test // POST contract
+    @Ignore
+    public void test7() {
+    	// TODO
+    }
+    
+    @Test // POST after tx runs out of gas
+    @Ignore
+    public void test8() {
+    	// TODO
     }
 
 }

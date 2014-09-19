@@ -351,7 +351,8 @@ public enum OpCode {
 
     public static OpCode code(byte code) {
     	OpCode op = intToTypeMap.get(code);
-    	if (op == null) op = STOP; // invalid operation
+    	if (op == null)
+    		op = STOP; // invalid operation
     	return op;
     }
 }
