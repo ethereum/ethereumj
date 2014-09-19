@@ -16,7 +16,7 @@ public class StateTest {
     @Test
     public void testGenesisAccounts() {
         Trie trie = generateGenesis();
-        assertEquals("23b503734ff34ddb7bd5e478f1645680ec778ab3f90007cb1c854653693e5adc", Hex.toHexString(trie.getRootHash()));
+        assertEquals("b4fb905967f9b64f7abb0912884ecc49a13689e268d0913460791746e16aeb7c", Hex.toHexString(trie.getRootHash()));
     }
 
     @Test  // right way to calc tx trie hash
@@ -92,7 +92,7 @@ public class StateTest {
         // 4) calc the root
 
         Trie trie = generateGenesis();
-        String expected = "69c21ff84a5af0b53b11c61110a16d6ad43dad37b3eb29ae8e88c936eb06456a";
+        String expected = "be627444b72cad709e3c8ed325d71c965024b64d938fa10a01aa46bd9599b705";
 
         // Get and update sender in world state
         byte[] cowAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
@@ -154,7 +154,7 @@ public class StateTest {
          *   cd2a3d9f938e13cd947ec05abc7fe734df8dd826: #1 1606938044258990275541962092341162602522202987522792835300376 (-6260000000001000)
           */
 
-        assertEquals("69c21ff84a5af0b53b11c61110a16d6ad43dad37b3eb29ae8e88c936eb06456a", Hex.toHexString(trie.getRootHash()));
+        assertEquals(expected, Hex.toHexString(trie.getRootHash()));
     }
 
     private Trie generateGenesis() {
