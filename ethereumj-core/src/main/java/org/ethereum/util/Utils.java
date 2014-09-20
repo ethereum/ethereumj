@@ -62,6 +62,10 @@ public class Utils {
         }
         return result.toString() + "·(" + "10^" + pow + ")";
     }
+    
+    public static boolean isValidAddress(byte[] addr) {
+		 return addr != null && addr.length == 20;
+    }
 
     /**
      * @param addr length should be 20
@@ -69,7 +73,7 @@ public class Utils {
      */
     public static String getAddressShortString(byte[] addr) {
 
-        if (addr == null || addr.length != 20) throw new Error("not an address");
+        if (!isValidAddress(addr)) throw new Error("not an address");
 
         String addrShort = Hex.toHexString(addr, 0, 3);
 

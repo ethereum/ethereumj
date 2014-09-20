@@ -305,6 +305,11 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     private void playContractCall() {
 
         byte[] contractAddress = Hex.decode(contractAddrInput.getText());
+        if (!Utils.isValidAddress(contractAddress)) {
+            alertStatusMsg("Not a valid contract address");
+            return;
+        }
+        
         ContractDetails contractDetails =  UIEthereumManager.ethereum.getRepository().getContractDetails(contractAddress);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
