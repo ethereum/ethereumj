@@ -42,6 +42,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.Program;
@@ -50,6 +51,7 @@ import org.ethereum.vm.ProgramInvokeFactory;
 import org.ethereum.vm.Program.ProgramListener;
 import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
+
 import java.awt.Component;
 import java.awt.FlowLayout;
 
@@ -121,7 +123,9 @@ public class StateExplorerWindow extends JFrame{
         btnSearch.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				searchAccount(txfAccountAddress.getText());
+				byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
+				if(addr != null)
+					searchAccount(addr);
 			}			
         });
         
@@ -130,9 +134,12 @@ public class StateExplorerWindow extends JFrame{
         btnPlayCode.addMouseListener(new MouseAdapter(){
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				byte[] code = WorldManager.getInstance().getRepository().getCode(Hex.decode(txfAccountAddress.getText()));
-				if(code != null)
-					ProgramPlayDialog.createAndShowGUI(code, null, null);
+				byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
+				if(addr != null) {
+					byte[] code = WorldManager.getInstance().getRepository().getCode(addr);
+					if(code != null)
+						ProgramPlayDialog.createAndShowGUI(code, null, null);
+				}
 			}			
         });
         
@@ -202,13 +209,8 @@ public class StateExplorerWindow extends JFrame{
         panel.add(scrollPane);
 	}
 	
-	private void searchAccount(String accountStr){
+	private void searchAccount(byte[] add){
 		txaPrinter.clean();
-		
-		byte[] add = null;
-		try { add = Hex.decode(txfAccountAddress.getText()); } 
-		catch(DecoderException ex) {  return; }
-		
 		txaPrinter.println(accountDetailsString(add, dataModel));
 	}
 	
@@ -349,5 +351,5 @@ public class StateExplorerWindow extends JFrame{
                 new StateExplorerWindow(null).setVisible(true);
             }
         });
-    }
+	}
 }

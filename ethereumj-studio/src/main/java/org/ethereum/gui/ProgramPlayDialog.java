@@ -34,18 +34,16 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     private ProgramInvoke pi;
     
     public ProgramPlayDialog(byte[] code) {
-    	this(code, new ProgramInvokeMockImpl(), null);
+    	this(code, new ProgramInvokeMockImpl());
     }
     
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
-    	this(code, 
-    			ProgramInvokeFactory.createProgramInvoke(tx, 
-    													lastBlock, 
-    													WorldManager.getInstance().getRepository()),
-    			WorldManager.getInstance().getRepository());
+		this(code,  ProgramInvokeFactory.createProgramInvoke(tx, 
+														lastBlock, 
+														WorldManager.getInstance().getRepository()));
     }
     
-    public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke, Repository tractRepository) {
+    public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke) {
     	pi = programInvoke;
     	
     	outputList = new ArrayList<String>();
@@ -56,8 +54,8 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         program.fullTrace();
         vm.play(program);
 
-        if(tractRepository != null)
-        	tractRepository.rollback();
+        if(programInvoke.getRepository() != null)
+        	programInvoke.getRepository().rollback();
 
         doGUI();
     }
@@ -134,7 +132,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
      * this method should be invoked from the
      * event-dispatching thread.
      */
-    public static void createAndShowGUI(byte[] runCode, Transaction tx, Block lastBlock) {
+    public static void createAndShowGUI(byte[] runCode, final Transaction tx, Block lastBlock) {
 
         final ProgramPlayDialog ppd;
         if (tx != null)
@@ -162,7 +160,10 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         frame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-            	ppd.pi.getRepository().close();
+            	if (tx == null) {
+            		ppd.pi.getRepository().close();
+                	ppd.pi = null;
+            	}
             }
         });
 

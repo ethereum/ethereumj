@@ -207,6 +207,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
         this.setResizable(false);
+        
+        this.setVisible(true);
     }
 
     protected JRootPane createRootPane() {
@@ -231,7 +233,6 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
         this.setSize(500, 430);
-        this.setVisible(true);
         return rootPane;
     }
 
