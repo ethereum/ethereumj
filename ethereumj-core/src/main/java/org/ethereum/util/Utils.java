@@ -64,7 +64,7 @@ public class Utils {
     }
     
     public static boolean isValidAddress(byte[] addr) {
-		 return addr != null && addr.length == 20;
+    	return addr != null && addr.length == 20;
     }
 
     /**

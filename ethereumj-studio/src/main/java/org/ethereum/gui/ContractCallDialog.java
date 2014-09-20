@@ -7,6 +7,7 @@ import org.ethereum.core.Wallet;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
+import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -18,6 +19,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.table.DefaultTableModel;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigInteger;
@@ -221,16 +223,28 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     private void populateContractDetails() {
 
         String contractAddr = contractAddrInput.getText();
+        if (contractAddr == null || contractAddr.length() == 0) {
+        	alertStatusMsg("");
+        	return;
+        }
+        
         if (!Pattern.matches("[0-9a-fA-F]+", contractAddr) || (contractAddr.length() != 40)) {
+        	alertStatusMsg("Not a valid contract address");
+        	return;
+        }
+		ContractDetails contractDetails = UIEthereumManager.ethereum
+				.getRepository().getContractDetails(Hex.decode(contractAddr));
+        if (contractDetails == null) {
+            alertStatusMsg("No contract for that address");
             return;
         }
 
-        byte[] contractAddress = Hex.decode( contractAddr );
-
-        ContractDetails contractDetails =
-                UIEthereumManager.ethereum.getRepository().getContractDetails(contractAddress);
-
         final byte[] programCode = contractDetails.getCode();
+        if (programCode == null || programCode.length == 0) {
+            alertStatusMsg("Such account exist but no code in the db");
+            return;
+        }
+        
         final Map storageMap = contractDetails.getStorage();
 
         contractDataInput.setBounds(70, 80, 350, 145);
@@ -301,22 +315,22 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         });
         this.repaint();
     }
-
+    
     private void playContractCall() {
 
-        byte[] contractAddress = Hex.decode(contractAddrInput.getText());
-        if (!Utils.isValidAddress(contractAddress)) {
-            alertStatusMsg("Not a valid contract address");
-            return;
-        }
-        
-        ContractDetails contractDetails =  UIEthereumManager.ethereum.getRepository().getContractDetails(contractAddress);
+        String contractAddr = contractAddrInput.getText();
+        if (!Pattern.matches("[0-9a-fA-F]+", contractAddr) || (contractAddr.length() != 40)) {
+        	alertStatusMsg("Not a valid contract address");
+        	return;
+        }       	
+		ContractDetails contractDetails = UIEthereumManager.ethereum
+				.getRepository().getContractDetails(Hex.decode(contractAddr));
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
         }
 
-        byte[] programCode = contractDetails.getCode();
+        final byte[] programCode = contractDetails.getCode();
         if (programCode == null || programCode.length == 0) {
             alertStatusMsg("Such account exist but no code in the db");
             return;
