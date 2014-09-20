@@ -214,6 +214,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
         this.setResizable(false);
+        
+        this.setVisible(true);
     }
 
     private void populateContractDetails() {
@@ -344,7 +346,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
         this.setSize(500, 430);
-        this.setVisible(true);
 
         return rootPane;
     }
