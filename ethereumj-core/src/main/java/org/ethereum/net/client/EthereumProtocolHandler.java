@@ -25,10 +25,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 import static org.ethereum.net.Command.*;
-import static org.ethereum.net.Command.GET_PEERS;
-import static org.ethereum.net.Command.GET_TRANSACTIONS;
-import static org.ethereum.net.Command.PING;
-import static org.ethereum.net.Command.PONG;
 import static org.ethereum.net.message.StaticMessages.*;
 
 
@@ -41,16 +37,13 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
     private Logger logger = LoggerFactory.getLogger("wire");
 
-    private Timer chainAskTimer = new Timer("ChainAskTimer");
-    private int secToAskForChain = 1;
-
+    private Timer blocksAskTimer = new Timer("ChainAskTimer");
     private final Timer timer = new Timer("MiscMessageTimer");
-
+    
+    private int secToAskForBlocks = 1;
     private boolean tearDown = false;
-
     private PeerListener peerListener;
-
-    MessageQueue msgQueue = null;
+    private MessageQueue msgQueue = null;
 
     public EthereumProtocolHandler() {    }
 
@@ -91,12 +84,12 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
             }
         }, 2000, 10000);
 
-        chainAskTimer.scheduleAtFixedRate(new TimerTask() {
+        blocksAskTimer.scheduleAtFixedRate(new TimerTask() {
 
             public void run() {
-                sendGetChain();
+                sendGetBlocks();
             }
-        }, 1000, secToAskForChain * 1000);
+        }, 1000, secToAskForBlocks * 1000);
 
     }
 
@@ -108,11 +101,15 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
         EthereumListener listener = WorldManager.getInstance().getListener();
 
-        byte command = RLP.getCommandCode(payload);
-
-        // got HELLO
-        if (Command.fromInt(command) == HELLO) {
-            logger.info("[Recv: HELLO]" );
+        byte commandCode = RLP.getCommandCode(payload);
+        Command receivedCommand = Command.fromInt(commandCode);
+        
+        logger.info("[Recv: {}]", receivedCommand.name());
+        if (peerListener != null) peerListener.console("[Recv: " + receivedCommand.name() + "]");
+        
+        switch(receivedCommand) {
+    	
+        case HELLO:
             RLPList rlpList = RLP.decode2(payload);
             
             HelloMessage helloMessage = new HelloMessage(rlpList);
@@ -123,13 +120,8 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
                 listener.trace(String.format("Got handshake: [ %s ]", helloMessage.toString()));
                 listener.onRecvMessage(helloMessage);
             }
-
-        }
-        // got DISCONNECT
-        if (Command.fromInt(command) == DISCONNECT) {
-
-            if (peerListener != null) peerListener.console("[Recv: DISCONNECT]");
-
+            break;
+        case DISCONNECT:
             DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
             msgQueue.receivedMessage(disconnectMessage);
 
@@ -138,45 +130,29 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             if (listener != null)
                 listener.onRecvMessage(disconnectMessage);
-
-
-        }
-
-        // got PING send pong
-        if (Command.fromInt(command) == PING) {
-            if (peerListener != null) peerListener.console("[Recv: PING]");
-            msgQueue.receivedMessage(PING_MESSAGE);
+            break;
+        case PING:
+        	msgQueue.receivedMessage(PING_MESSAGE);
             sendPong();
 
             if (listener != null)
                 listener.onRecvMessage(PING_MESSAGE);
-        }
-
-        // got PONG mark it
-        if (Command.fromInt(command) == PONG) {
-            if (peerListener != null) peerListener.console("[Recv: PONG]");
+            break;
+        case PONG:
             msgQueue.receivedMessage(PONG_MESSAGE);
 
             if (listener != null)
                 listener.onRecvMessage(PONG_MESSAGE);
-        }
-
-        // got GETPEERS send peers
-        if (Command.fromInt(command) == GET_PEERS) {
-
-            if (peerListener != null) peerListener.console("[Recv: GETPEERS]");
-            msgQueue.receivedMessage(GET_PEERS_MESSAGE);
+            break;
+        case GET_PEERS:
+        	msgQueue.receivedMessage(GET_PEERS_MESSAGE);
 
             // TODO: send peer list
 
             if (listener != null)
                 listener.onRecvMessage(GET_PEERS_MESSAGE);
-        }
-
-        // got PEERS
-        if (Command.fromInt(command) == PEERS) {
-            if (peerListener != null) peerListener.console("[Recv: PEERS]");
-
+            break;
+        case PEERS:
             PeersMessage peersMessage = new PeersMessage(payload);
             msgQueue.receivedMessage(peersMessage);
 
@@ -187,13 +163,9 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             if (listener != null)
                 listener.onRecvMessage(peersMessage);
-        }
-
-        // got TRANSACTIONS
-        if (Command.fromInt(command) == TRANSACTIONS) {
-
-            if (peerListener != null) peerListener.console("Recv: TRANSACTIONS]");
-            TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
+            break;
+        case TRANSACTIONS:
+        	TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
             msgQueue.receivedMessage(transactionsMessage);
 
             List<Transaction> txList = transactionsMessage.getTransactions();
@@ -207,51 +179,44 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             if (listener != null)
                 listener.onRecvMessage(transactionsMessage);
-        }
-
-        // got BLOCKS
-        if (Command.fromInt(command) == BLOCKS) {
-            if (peerListener != null) peerListener.console("[Recv: BLOCKS]");
-
+            break;
+        case BLOCKS:
             BlocksMessage blocksMessage = new BlocksMessage(payload);
             List<Block> blockList = blocksMessage.getBlockDataList();
             msgQueue.receivedMessage(blocksMessage);
 
+            // If we get one block from a peer we ask less greedy
+            if (blockList.size() <= 1 && secToAskForBlocks != 10) {
 
-            // If we get one block from a peer
-            // we ask less greedy
-            if (blockList.size() <= 1 && secToAskForChain != 10) {
+                logger.info("Now we ask for blocks each 10 seconds");
+                secToAskForBlocks = 10;
 
-                logger.info("Now we ask for a chain each 10 seconds");
-                secToAskForChain = 10;
-
-                chainAskTimer.cancel();
-                chainAskTimer.purge();
-                chainAskTimer = new Timer();
-                chainAskTimer.scheduleAtFixedRate(new TimerTask() {
+                blocksAskTimer.cancel();
+                blocksAskTimer.purge();
+                blocksAskTimer = new Timer();
+                blocksAskTimer.scheduleAtFixedRate(new TimerTask() {
 
                     public void run() {
-                        sendGetChain();
+                        sendGetBlocks();
                     }
-                }, 3000, secToAskForChain * 1000);
+                }, 3000, secToAskForBlocks * 1000);
             }
 
-            // If we get more blocks from a peer
-            // we ask more greedy
-            if (blockList.size() > 2 && secToAskForChain != 1) {
+            // If we get more blocks from a peer we ask more greedy
+            if (blockList.size() > 2 && secToAskForBlocks != 1) {
 
                 logger.info("Now we ask for a chain each 1 seconds");
-                secToAskForChain = 1;
+                secToAskForBlocks = 1;
 
-                chainAskTimer.cancel();
-                chainAskTimer.purge();
-                chainAskTimer = new Timer();
-                chainAskTimer.scheduleAtFixedRate(new TimerTask() {
+                blocksAskTimer.cancel();
+                blocksAskTimer.purge();
+                blocksAskTimer = new Timer();
+                blocksAskTimer.scheduleAtFixedRate(new TimerTask() {
 
                     public void run() {
-                        sendGetChain();
+                        sendGetBlocks();
                     }
-                }, 3000, secToAskForChain * 1000);
+                }, 3000, secToAskForBlocks * 1000);
             }
 
             if (blockList.isEmpty()) return;
@@ -260,57 +225,32 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
 
             if (listener != null)
                 listener.onRecvMessage(blocksMessage);
-        }
+            break;
+        case GET_TRANSACTIONS:
 
-        // got GETCHAIN
-        if (Command.fromInt(command) == GET_CHAIN) {
-            logger.info("[Recv: GET_CHAIN]");
-            if (peerListener != null) peerListener.console("[Recv: GET_CHAIN]");
+            // TODO Implement GET_TRANSACTIONS command
+        	
+//            List<Transaction> pendingTxList =
+//                    WorldManager.getInstance().getBlockchain().getPendingTransactionList();
 
-            RLPList rlpList = RLP.decode2(payload);
-            GetChainMessage getChainMessage = new GetChainMessage(rlpList);
-
-            // todo: send blocks
-
-            logger.info(getChainMessage.toString());
-            if (peerListener != null) peerListener.console(getChainMessage.toString());
-
-            if (listener != null)
-                listener.onRecvMessage(getChainMessage);
-        }
-
-        // got NOTINCHAIN
-        if (Command.fromInt(command) == NOT_IN_CHAIN) {
-            logger.info("[Recv: NOT_IN_CHAIN]");
-            if (peerListener != null) peerListener.console("[Recv: NOT_IN_CHAIN]");
-
-            RLPList rlpList = RLP.decode2(payload);
-            NotInChainMessage notInChainMessage = new NotInChainMessage(rlpList);
-
-            logger.info(notInChainMessage.toString());
-            if (peerListener != null) peerListener.console(notInChainMessage.toString());
-
-            if (listener != null)
-                listener.onRecvMessage(notInChainMessage);
-        }
-
-        // got GETTRANSACTIONS
-        if (Command.fromInt(command) == GET_TRANSACTIONS) {
-            logger.info("[Recv: GET_TRANSACTIONS]");
-            if (peerListener != null) peerListener.console("[Recv: GET_TRANSACTIONS]");
-
-            // TODO: return it in the future
-//            Collection<Transaction> pendingTxList =
-//                    MainData.instance.getBlockchain().getPendingTransactionList();
-
-//            TransactionsMessage txMsg =
-//                    new TransactionsMessage(new ArrayList(pendingTxList));
-
+//            TransactionsMessage txMsg = new TransactionsMessage(pendingTxList);
 //            sendMsg(txMsg, ctx);
 
             if (listener != null)
                 listener.onRecvMessage(GET_TRANSACTIONS_MESSAGE);
-
+            break;
+        case GET_BLOCK_HASHES:
+        	// TODO Implement GET_BLOCK_HASHES command
+        	break;
+        case BLOCK_HASHES:
+        	// TODO Implement BLOCK_HASHES command
+        	break;
+        case GET_BLOCKS:
+        	// TODO Implement GET_BLOCKS command
+        	break;
+        default:
+        	// do nothing and ignore this command
+        	break;
         }
     }
 
@@ -354,7 +294,7 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         sendMsg(GET_TRANSACTIONS_MESSAGE);
     }
 
-    private void sendGetChain() {
+    private void sendGetBlocks() {
 
         if (WorldManager.getInstance().getBlockchain().getBlockQueue().size() >
                 SystemProperties.CONFIG.maxBlocksQueued()) return;
@@ -363,14 +303,14 @@ public class EthereumProtocolHandler extends ChannelInboundHandlerAdapter {
         if (lastBlock == null) return;
 
         byte[] hash = lastBlock.getHash();
-        GetChainMessage chainMessage =
-                new GetChainMessage( SystemProperties.CONFIG.maxBlocksAsk(), hash);
-        sendMsg(chainMessage);
+		GetBlocksMessage getBlocksMessage = new GetBlocksMessage(
+				SystemProperties.CONFIG.maxBlocksAsk(), hash);
+        sendMsg(getBlocksMessage);
     }
 
     public void killTimers(){
-        chainAskTimer.cancel();
-        chainAskTimer.purge();
+        blocksAskTimer.cancel();
+        blocksAskTimer.purge();
 
         timer.cancel();
         timer.purge();

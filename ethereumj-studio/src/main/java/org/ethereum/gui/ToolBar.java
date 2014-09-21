@@ -42,7 +42,7 @@ public class ToolBar extends JFrame {
         String version = SystemProperties.CONFIG.projectVersion();
 
         introLogger.info("");
-        introLogger.info("|Ξ|  EthereumJ [v" + version + "]  by RomanJ");
+        introLogger.info("|Ξ|  EthereumJ [v" + version + "]");
         introLogger.info("|Ξ|  Code by Roman Mandeleil, (c) 2014.");
         introLogger.info("|Ξ|  Contribution: Nick Savers ");
         introLogger.info("|Ξ|  Based on a design by Vitalik Buterin.");

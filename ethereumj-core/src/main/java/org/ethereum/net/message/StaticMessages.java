@@ -1,7 +1,10 @@
 package org.ethereum.net.message;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.manager.WorldManager;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -11,21 +14,20 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class StaticMessages {
 
-    public final static GetTransactionsMessage
-            GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
-    public final static GetPeersMessage GET_PEERS_MESSAGE        = new GetPeersMessage();
     public final static PingMessage     PING_MESSAGE             = new PingMessage();
     public final static PongMessage     PONG_MESSAGE             = new PongMessage();
+    public final static GetPeersMessage GET_PEERS_MESSAGE        = new GetPeersMessage();
+    public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
 
-
-    public static final byte[] PING             = Hex.decode("2240089100000002C102");
-    public static final byte[] PONG             = Hex.decode("2240089100000002C103");
-    public static final byte[] GET_PEERS        = Hex.decode("2240089100000002C110");
+    public static final byte[] PING_PACKET		= Hex.decode("2240089100000002C102");
+    public static final byte[] PONG_PACKET		= Hex.decode("2240089100000002C103");
+    public static final byte[] GET_PEERS_PACKET	= Hex.decode("2240089100000002C110");
     public static final byte[] GET_TRANSACTIONS = Hex.decode("2240089100000002C116");
 
     public static final byte[] DISCONNECT_08 = Hex.decode("2240089100000003C20108");
 
-    public static final byte[] MAGIC_PACKET = Hex.decode("22400891");
+    public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
+    public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
 
     static {
         HELLO_MESSAGE = generateHelloMessage();
@@ -45,8 +47,12 @@ public class StaticMessages {
 
         String helloAnnouncement = String.format("Ethereum(J)/v%s/%s/%s/Java", version, phrase, system);
 
+        Block lastBlock = WorldManager.getInstance().getBlockchain().getLastBlock();
+        byte[] totalDifficulty = lastBlock.getDifficulty();
+        byte[] bestHash = lastBlock.getHash();
+        
         return new HelloMessage((byte) 0x21, (byte) 0x00,
                 helloAnnouncement, Byte.parseByte("00000111", 2),
-                (short) 30303, peerIdBytes);
+                (short) 30303, peerIdBytes, totalDifficulty, bestHash, GENESIS_HASH);
     }
 }

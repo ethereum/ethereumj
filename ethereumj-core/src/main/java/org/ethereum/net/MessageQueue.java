@@ -12,63 +12,60 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * www.ethereumJ.com
+ *	This class contains the logic for sending messages in a queue
  *
- * @author: Roman Mandeleil
- * Created on: 09/07/2014 10:29
+ *	Messages open by send and answered by receive of appropriate message
+ *		GET_BLOCK_HASHES by BLOCK_HASHES
+ *		GET_BLOCKS by BLOCKS
+ *		PING by PONG
+ *		GET_PEERS by PEERS
+ *		GET_TRANSACTIONS by TRANSACTIONS
+ *
+ *	The following messages will not be answered: 
+ *		PONG, PEERS, BLOCKS, TRANSACTIONS
+ *
+ * @author Roman Mandeleil
  */
-
 public class MessageQueue {
-
-    // 1) queue for messages
-    // 2) process for sending messages
-
-    // 3) messages open by send and answered by receive of appropriate message
-    //                    GET_CHAIN by BLOCKS
-    //                    PING  by PONG
-    //                    GET_PEERS by PEERS
-    //                    GET_TRANSACTIONS by TRANSACTIONS
-    //                messages will not be answered: TRANSACTIONS, PONG, PEERS, TRANSACTIONS
 
     private Logger logger = LoggerFactory.getLogger("wire");
 
-    Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
-    ChannelHandlerContext ctx = null;
-    Timer timer = new Timer();
+	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
+	private ChannelHandlerContext ctx = null;
+	private Timer timer = new Timer();
 
-    public MessageQueue(ChannelHandlerContext ctx) {
-        this.ctx = ctx;
+	public MessageQueue(ChannelHandlerContext ctx) {
+		this.ctx = ctx;
 
-        timer.scheduleAtFixedRate (new TimerTask() {
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				nudgeQueue();
+			}
+		}, 10, 10);
+	}
 
-            public void run() {
-                nudgeQueue();
-            }
-        }, 10, 10);
-    }
+    public void sendMessage(Message msg) {
 
-    public void sendMessage(Message msg){
-
-        if (msg instanceof  GetChainMessage && containsGetChain())
+        if (msg instanceof GetBlockHashesMessage && containsGetBlockHashes())
             return;
 
         messageQueue.add(new MessageRoundtrip(msg));
     }
 
-    public void receivedMessage(Message msg){
+    public void receivedMessage(Message msg) {
 
         if (logger.isDebugEnabled())
             logger.debug("Recv: [ {} ] - [ {} ]",
                     msg.getMessageName(),
                     Hex.toHexString(msg.getPayload()));
 
-
             if (null != messageQueue.peek()) {
 
                 MessageRoundtrip messageRoundtrip = messageQueue.peek();
                 Message waitingMessage = messageRoundtrip.getMsg();
-
-                if (waitingMessage.getAnswerMessage() == null) return;
+	
+				if (waitingMessage.getAnswerMessage() == null)
+					return;
 
                 if (msg.getClass() == waitingMessage.getAnswerMessage()){
                     messageRoundtrip.answer();
@@ -77,7 +74,7 @@ public class MessageQueue {
         }
     }
 
-    private void nudgeQueue(){
+    private void nudgeQueue() {
 
         // The message was answered, remove from the queue
         if (null != messageQueue.peek()) {
@@ -89,18 +86,17 @@ public class MessageQueue {
         }
 
         // Now send the next message
-        if (null != messageQueue.peek()){
+        if (null != messageQueue.peek()) {
 
             MessageRoundtrip messageRoundtrip = messageQueue.peek();
-            if (messageRoundtrip.getRetryTimes() == 0 ) {// todo: retry logic || messageRoundtrip.hasToRetry()){
+            if (messageRoundtrip.getRetryTimes() == 0 ) {
+            	// todo: retry logic || messageRoundtrip.hasToRetry()){
 
                 Message msg = messageRoundtrip.getMsg();
                 sendToWire(msg);
 
-                if (msg.getAnswerMessage() == null){
-
+                if (msg.getAnswerMessage() == null)
                     messageQueue.remove();
-                }
                 else {
                     messageRoundtrip.incRetryTimes();
                     messageRoundtrip.saveTime();
@@ -109,7 +105,7 @@ public class MessageQueue {
         }
     }
 
-    private void sendToWire(Message msg){
+    private void sendToWire(Message msg) {
 
         if (logger.isDebugEnabled())
             logger.debug("Send: [ {} ] - [ {} ]",
@@ -117,19 +113,19 @@ public class MessageQueue {
                     Hex.toHexString(msg.getPayload()));
 
         ByteBuf buffer = ctx.alloc().buffer(msg.getPayload().length + 8);
-        buffer.writeBytes(StaticMessages.MAGIC_PACKET);
+        buffer.writeBytes(StaticMessages.SYNC_TOKEN);
         buffer.writeBytes(ByteUtil.calcPacketLength(msg.getPayload()));
         buffer.writeBytes(msg.getPayload());
         ctx.writeAndFlush(buffer);
     }
 
 
-    private boolean containsGetChain(){
+    private boolean containsGetBlockHashes() {
         Iterator<MessageRoundtrip> iterator = messageQueue.iterator();
         while(iterator.hasNext()){
 
             MessageRoundtrip msgRoundTrip = iterator.next();
-            if (msgRoundTrip.getMsg() instanceof GetChainMessage)
+            if (msgRoundTrip.getMsg() instanceof GetBlockHashesMessage)
                 return true;
         }
         return false;

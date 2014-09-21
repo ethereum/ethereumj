@@ -12,84 +12,85 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author: Roman Mandeleil 
  * Created on: 27/07/2014 11:28
  */
 
 public class BlockQueue {
 
-    private static Logger logger = LoggerFactory.getLogger("blockchain");
+	private static Logger logger = LoggerFactory.getLogger("blockchain");
 
-    private Queue<Block> blockQueue = new ConcurrentLinkedQueue<>();
-    private Block lastBlock;
+	private Queue<Block> blockQueue = new ConcurrentLinkedQueue<>();
+	private Block lastBlock;
 
-    private Timer timer = new Timer("BlockQueueTimer");
+	private Timer timer = new Timer("BlockQueueTimer");
 
-    public BlockQueue() {
+	public BlockQueue() {
 
-        timer.scheduleAtFixedRate (new TimerTask() {
+		timer.scheduleAtFixedRate(new TimerTask() {
 
-            public void run() {
-                nudgeQueue();
-            }
-        }, 10, 10);
-    }
+			public void run() {
+				nudgeQueue();
+			}
+		}, 10, 10);
+	}
 
-    private void nudgeQueue() {
-        if (blockQueue.isEmpty()) return;
+	private void nudgeQueue() {
+		if (blockQueue.isEmpty())
+			return;
+		
+		Block block = blockQueue.poll();
+		WorldManager.getInstance().getBlockchain().add(block);
+	}
 
-        Block block = blockQueue.poll();
+	public void addBlocks(List<Block> blockList) {
 
-        WorldManager.getInstance().getBlockchain().add(block);
-    }
+		Block lastReceivedBlock = blockList.get(blockList.size() - 1);
+		if (lastReceivedBlock.getNumber() != getLast().getNumber() + 1)
+			return;
 
-    public void addBlocks(List<Block> blockList) {
+		for (int i = blockList.size() - 1; i >= 0; --i) {
 
-        Block lastReceivedBlock = blockList.get(blockList.size() - 1);
-        if (lastReceivedBlock.getNumber() != getLast().getNumber() + 1) return;
+			if (blockQueue.size() > SystemProperties.CONFIG.maxBlocksQueued())
+				return;
 
-        for (int i = blockList.size() - 1; i >= 0; --i) {
+			this.lastBlock = blockList.get(i);
+			logger.trace("Last block now index: [ {} ]", lastBlock.getNumber());
+			blockQueue.add(lastBlock);
+		}
+		logger.trace("Blocks waiting to be proceed in the queue: [ {} ]",
+				blockQueue.size());
+	}
 
-            if (blockQueue.size() >
-                    SystemProperties.CONFIG.maxBlocksQueued()) return;
+	public Block getLast() {
+		if (blockQueue.isEmpty())
+			return WorldManager.getInstance().getBlockchain().getLastBlock();
+		return lastBlock;
+	}
 
-            this.lastBlock = blockList.get(i);
-            logger.trace("Last block now index: [ {} ]", lastBlock.getNumber());
-            blockQueue.add(lastBlock);
-        }
+	private class BlockByIndexComparator implements Comparator<Block> {
 
-        logger.trace("Blocks waiting to be proceed in the queue: [ {} ]", blockQueue.size());
-    }
+		@Override
+		public int compare(Block o1, Block o2) {
 
-    public Block getLast() {
+			if (o1 == null || o2 == null)
+				throw new NullPointerException();
 
-        if (blockQueue.isEmpty())
-            return WorldManager.getInstance().getBlockchain().getLastBlock();
+			if (o1.getNumber() > o2.getNumber())
+				return 1;
+			if (o1.getNumber() < o2.getNumber())
+				return -1;
 
-        return lastBlock;
-    }
+			return 0;
+		}
+	}
 
-    private class BlockByIndexComparator implements Comparator<Block> {
+	public int size() {
+		return blockQueue.size();
+	}
 
-        @Override
-        public int compare(Block o1, Block o2) {
-
-            if (o1 == null || o2 == null ) throw new NullPointerException();
-
-            if (o1.getNumber() > o2.getNumber()) return 1;
-            if (o1.getNumber() < o2.getNumber()) return -1;
-
-            return 0;
-        }
-    }
-
-    public int size() {
-        return blockQueue.size();
-    }
-
-    public void close(){
-        timer.cancel();
-        timer.purge();
-    }
-
+	public void close() {
+		timer.cancel();
+		timer.purge();
+	}
 }

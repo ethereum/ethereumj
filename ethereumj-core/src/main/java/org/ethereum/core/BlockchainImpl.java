@@ -42,7 +42,7 @@ import static org.ethereum.core.Denomination.SZABO;
  * <li>Let S_FINAL be S[n], but adding the block reward paid to the miner.</li>
  * <li>Check if S_FINAL is the same as the STATE_ROOT. If it is, the block is valid; otherwise, it is not valid.</li>
  * </ol>
- * See <a href="https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper#blockchain-and-mining">Ethereum Whitepaper</a>
+ * See <a href="https://github.com/ethereum/wiki/wiki/White-Paper#blockchain-and-mining">Ethereum Whitepaper</a>
  *
  *
  * www.ethereumJ.com
@@ -104,7 +104,7 @@ public class BlockchainImpl implements Blockchain {
 						block.getParentHash())) {
 			return;
 		}
-        // if there is some blocks already keep chain continuity
+        // if there are some blocks already keep chain continuity
         if (!blockCache.isEmpty()) {
             String hashLast = Hex.toHexString(getLastBlock().getHash());
             String blockParentHash = Hex.toHexString(block.getParentHash());

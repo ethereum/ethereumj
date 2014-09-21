@@ -108,9 +108,8 @@ public class Program {
 
         this.pc = pc.intValue();
 
-        if (this.pc == ops.length) {
+        if (this.pc == ops.length)
             stop();
-        }
         
         if (this.pc > ops.length) {
             stop();
@@ -154,9 +153,8 @@ public class Program {
     }
 
     public DataWord stackPop() {
-        if (stack.size() == 0) {
+        if (stack.size() == 0)
             throw new EmptyStackException();
-        }
         return stack.pop();
     }
     
@@ -174,9 +172,7 @@ public class Program {
     }
 
     public int getMemSize() {
-        int memSize = 0;
-        if (memory != null) memSize = memory.limit();
-        return memSize;
+        return memory != null ? memory.limit() : 0;
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
@@ -361,7 +357,7 @@ public class Program {
      * That method is for internal code invocations
      * 
      * - Normal calls invoke a specified contract which updates itself
-     * - Stateless calls invoke another contract, within the context of the caller
+     * - Stateless calls invoke code from another contract, within the context of the caller
      *
      * @param msg is the message call object
      */
@@ -452,11 +448,10 @@ public class Program {
             if (buffer != null && allocSize > 0) {
                 int retSize = buffer.limit();
                 int offset = msg.getOutDataOffs().intValue();
-                if (retSize > allocSize) {
+                if (retSize > allocSize)
                     this.memorySave(offset, buffer.array());
-                } else {
+                else
                     this.memorySave(offset, allocSize, buffer.array());
-                }
             }
         }
 
@@ -609,10 +604,7 @@ public class Program {
 
             byte value = memory.get(i);
             // Check if value is ASCII 
-            // (should be until 0x7e - but using 0x7f 
-            // to be compatible with cpp-ethereum)
-            // See: https://github.com/ethereum/cpp-ethereum/issues/299
-            String character = 	((byte)0x20 <= value && value <= (byte)0x7f) ? new String(new byte[]{value}) : "?";
+			String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[] { value }) : "?";
             firstLine.append(character).append("");
             secondLine.append(Utils.oneByteToHexString(value)).append(" ");
 
@@ -706,21 +698,19 @@ public class Program {
             globalOutput.append(" -- MEMORY --  ").append(memoryData).append("\n");
             globalOutput.append(" -- STORAGE -- ").append(storageData).append("\n");
 
-            if (result.getHReturn() != null) {
-                globalOutput.append("\n  HReturn: ").append(Hex.toHexString(result.getHReturn().array()));
-            }
+            if (result.getHReturn() != null)
+				globalOutput.append("\n  HReturn: ").append(
+						Hex.toHexString(result.getHReturn().array()));
 
-            // soffisticated assumption that msg.data != codedata
+            // sophisticated assumption that msg.data != codedata
             // means we are calling the contract not creating it
             byte[] txData = invokeData.getDataCopy(DataWord.ZERO, getDataSize());
-            if (!Arrays.equals(txData, ops)) {
-                globalOutput.append("\n  msg.data: ").append(Hex.toHexString( txData ));
-            }
+            if (!Arrays.equals(txData, ops))
+				globalOutput.append("\n  msg.data: ").append(Hex.toHexString(txData));
             globalOutput.append("\n\n  Spent Gas: ").append(result.getGasUsed());
 
-			if (listener != null) {
+			if (listener != null)
 				listener.output(globalOutput.toString());
-			}
         }
     }
     
@@ -731,27 +721,25 @@ public class Program {
     	OpCode op = OpCode.code(code[index]);
     	byte[] continuedCode = null;
     			
-    	switch(op){
-    	case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
-        case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
-        case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
-        case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:
-        	result += ' ' + op.name() + ' ';
-        	
-        	int nPush = op.val() - OpCode.PUSH1.val() + 1;
-        	byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
-        	result += new BigInteger(data).toString() + ' ';
-        	
-    		continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
-        	break;
-    		
-    	default:
-    		result += ' ' + op.name();
-    		continuedCode = Arrays.copyOfRange(code, index + 1, code.length);
-    		break;
-    		
+    	switch(op) {
+	    	case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
+	        case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
+	        case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
+	        case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:
+	        	result += ' ' + op.name() + ' ';
+	        	
+	        	int nPush = op.val() - OpCode.PUSH1.val() + 1;
+	        	byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
+	        	result += new BigInteger(data).toString() + ' ';
+	        	
+	    		continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
+	        	break;
+	    		
+	    	default:
+	    		result += ' ' + op.name();
+	    		continuedCode = Arrays.copyOfRange(code, index + 1, code.length);
+	    		break;
     	}    	
-
     	return stringify(continuedCode, 0, result);
     }
 

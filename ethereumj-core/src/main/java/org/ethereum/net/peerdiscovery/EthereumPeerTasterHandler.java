@@ -145,15 +145,15 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendPing(ChannelHandlerContext ctx) {
-        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PING.length);
-        buffer.writeBytes(StaticMessages.PING);
+        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PING_PACKET.length);
+        buffer.writeBytes(StaticMessages.PING_PACKET);
         ctx.writeAndFlush(buffer);
     }
 
     private void sendPong(ChannelHandlerContext ctx) {
         logger.info("[Send: PONG]");
-        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PONG.length);
-        buffer.writeBytes(StaticMessages.PONG);
+        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.PONG_PACKET.length);
+        buffer.writeBytes(StaticMessages.PONG_PACKET);
         ctx.writeAndFlush(buffer);
     }
 
@@ -165,8 +165,8 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
     }
 
     private void sendGetPeers(ChannelHandlerContext ctx) {
-        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_PEERS.length);
-        buffer.writeBytes(StaticMessages.GET_PEERS);
+        ByteBuf buffer = ctx.alloc().buffer(StaticMessages.GET_PEERS_PACKET.length);
+        buffer.writeBytes(StaticMessages.GET_PEERS_PACKET);
         ctx.writeAndFlush(buffer);
     }
 

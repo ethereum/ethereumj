@@ -20,12 +20,11 @@ public abstract class Message {
         parsed = false;
     }
 
-    public abstract void parseRLP();
-    public abstract byte[] getPayload();
+	public abstract void parseRLP();
 
-    public abstract String getMessageName();
+	public abstract byte[] getPayload();
 
-    public abstract Class getAnswerMessage();
+	public abstract String getMessageName();
 
-
+	public abstract Class<?> getAnswerMessage();
 }

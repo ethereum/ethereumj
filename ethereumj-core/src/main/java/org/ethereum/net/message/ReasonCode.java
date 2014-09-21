@@ -3,9 +3,13 @@ package org.ethereum.net.message;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Reason is an optional integer specifying one 
+ * of a number of reasons for disconnect 
+ */
 public enum ReasonCode {
 
-    DISCONNECT_REQUESTED(0x00),
+    REQUESTED(0x00),
     TCP_ERROR(0x01),
     BAD_PROTOCOL(0x02),
     USELESS_PEER(0x03),

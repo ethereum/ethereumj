@@ -6,7 +6,7 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 import static org.ethereum.net.Command.DISCONNECT;
-import static org.ethereum.net.message.ReasonCode.DISCONNECT_REQUESTED;
+import static org.ethereum.net.message.ReasonCode.REQUESTED;
 
 /**
  * www.ethereumJ.com
@@ -21,7 +21,6 @@ public class DisconnectMessage extends Message {
         super(RLP.decode2(payload));
         this.payload = payload;
     }
-
 
     public DisconnectMessage(RLPList rawData) {
         super(rawData);
@@ -38,7 +37,7 @@ public class DisconnectMessage extends Message {
 
         byte[] reasonB = ((RLPItem)paramsList.get(1)).getRLPData();
         if (reasonB == null) {
-            this.reason = DISCONNECT_REQUESTED;
+            this.reason = REQUESTED;
         } else {
             this.reason = ReasonCode.fromInt(reasonB[0]);
         }

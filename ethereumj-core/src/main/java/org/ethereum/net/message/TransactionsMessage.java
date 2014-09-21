@@ -36,21 +36,19 @@ public class TransactionsMessage extends Message {
         for (Transaction tx : transactionList) {
 
             byte[] txPayload = tx.getEncoded();
-            try {
-                baos.write(txPayload);
-            } catch (IOException e) {
-            	logger.error(e.getMessage(), e);
-            }
+			try {
+				baos.write(txPayload);
+			} catch (IOException e) {
+				logger.error(e.getMessage(), e);
+			}
         }
 
         byte[][] elements = new byte[transactionList.size() + 1][];
         elements[0] = new byte[]{Command.TRANSACTIONS.asByte()};
-        for (int i = 0; i < transactionList.size(); ++i) {
+        for (int i = 0; i < transactionList.size(); ++i)
             elements[i + 1] = transactionList.get(i).getEncoded();
-        }
         payload = RLP.encodeList(elements);
     }
-
 
     public TransactionsMessage(byte[] payload) {
         super(RLP.decode2(payload));
@@ -66,9 +64,8 @@ public class TransactionsMessage extends Message {
     public void parseRLP() {
         RLPList paramsList = (RLPList) rawData.get(0);
 
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != TRANSACTIONS) {
-            throw new Error("TransactionMessage: parsing for mal data");
-        }
+		if (Command.fromInt(((RLPItem) (paramsList).get(0)).getRLPData()[0] & 0xFF) != TRANSACTIONS)
+			throw new Error("TransactionMessage: parsing for mal data");
 
         transactions = new ArrayList<Transaction>();
         int size = paramsList.size();
@@ -103,9 +100,8 @@ public class TransactionsMessage extends Message {
     public String toString() {
         if(!parsed) parseRLP();
         StringBuffer sb = new StringBuffer();
-        for (Transaction transaction : transactions) {
+        for (Transaction transaction : transactions)
             sb.append("   ").append(transaction).append("\n");
-        }
         return "Transactions Message [\n" + sb.toString() + " ]";
     }
 }
