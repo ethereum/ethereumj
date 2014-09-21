@@ -10,7 +10,7 @@ import org.spongycastle.util.encoders.Hex;
  * Created on: 29/08/2014 10:46
  */
 
-public class TraceAllNodes implements Trie.ScanAction {
+public class TraceAllNodes implements TrieImpl.ScanAction {
 
     StringBuilder output = new StringBuilder();
 

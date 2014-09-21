@@ -2,6 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public class Genesis extends Block {
 				NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED, TIMESTAMP,
 				EXTRA_DATA, NONCE, null, null);
 		
-		Trie state = new Trie(null);
+		Trie state = new TrieImpl(null);
         // The proof-of-concept series include a development premine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {

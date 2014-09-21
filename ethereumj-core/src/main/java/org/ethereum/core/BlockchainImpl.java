@@ -44,12 +44,10 @@ import static org.ethereum.core.Denomination.SZABO;
  * </ol>
  * See <a href="https://github.com/ethereum/wiki/wiki/White-Paper#blockchain-and-mining">Ethereum Whitepaper</a>
  *
- *
  * www.ethereumJ.com
  * @authors: Roman Mandeleil,
  *           Nick Savers
  * Created on: 20/05/2014 10:44
- *
  */
 public class BlockchainImpl implements Blockchain {
 
@@ -212,8 +210,7 @@ public class BlockchainImpl implements Blockchain {
         if (logger.isDebugEnabled())
 			logger.debug("block added {}", block.toFlatString());
 		logger.info("*** Last block added [ #{} ]", block.getNumber());
-    }
-    
+    }    
     
     /**
      * Apply the transaction to the world state.

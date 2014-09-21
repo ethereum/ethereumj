@@ -12,7 +12,7 @@ import java.util.Set;
  * Created on: 29/08/2014 10:46
  */
 
-public class CollectFullSetOfNodes implements Trie.ScanAction {
+public class CollectFullSetOfNodes implements TrieImpl.ScanAction {
     Set<byte[]> nodes = new HashSet<>();
 
     @Override

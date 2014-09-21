@@ -12,8 +12,8 @@ import org.ethereum.json.JSONHelper;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieFacade;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
@@ -84,7 +84,7 @@ public class RepositoryImpl implements Repository {
         detailsDB     		= new DatabaseImpl(detailsDbName);
         contractDetailsDB 	= new TrackDatabase(detailsDB);
         stateDB 			= new DatabaseImpl(stateDbName);
-        worldState 			= new Trie(stateDB.getDb());
+        worldState 			= new TrieImpl(stateDB.getDb());
         accountStateDB 		= new TrackTrie(worldState);
     }
 
@@ -210,7 +210,7 @@ public class RepositoryImpl implements Repository {
         return state;
     }
     
-    public TrieFacade getWorldState() {
+    public Trie getWorldState() {
     	return worldState;
     }
 

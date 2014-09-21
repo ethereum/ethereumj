@@ -6,7 +6,7 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.trie.TrieFacade;
+import org.ethereum.trie.Trie;
 import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
 
@@ -144,7 +144,7 @@ public interface Repository {
      * 
      * @return the <code>Trie</code> representing the entire current state
      */
-    public TrieFacade getWorldState();
+    public Trie getWorldState();
     
     /**
      * Load the blockchain into cache memory

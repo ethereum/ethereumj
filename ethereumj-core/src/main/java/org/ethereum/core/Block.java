@@ -2,6 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -286,7 +287,7 @@ public class Block {
     
     private void parseTxs(byte[] expectedRoot, RLPList txReceipts) {
 
-        this.txsState = new Trie(null);
+        this.txsState = new TrieImpl(null);
         for (int i = 0; i < txReceipts.size(); i++) {
         	RLPElement rlpTxReceipt = txReceipts.get(i);
             RLPElement txData = ((RLPList)rlpTxReceipt).get(0);

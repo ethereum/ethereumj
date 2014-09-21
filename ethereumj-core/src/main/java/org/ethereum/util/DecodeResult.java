@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 import org.spongycastle.util.encoders.Hex;
 
+@SuppressWarnings("serial")
 public class DecodeResult implements Serializable {
 
 	private int pos;

@@ -7,6 +7,7 @@ import java.math.BigInteger;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.MockDB;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.RLP;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -42,7 +43,7 @@ public class StateTest {
 
         TransactionReceipt tr = new TransactionReceipt(tx, postTxState, cumGas);
 
-        Trie trie = new Trie(new MockDB());
+        Trie trie = new TrieImpl(new MockDB());
         trie.update(RLP.encodeInt(0), tr.getEncoded());
         String txTrieRoot = Hex.toHexString(trie.getRootHash());
         assertEquals(expected, txTrieRoot);
@@ -160,7 +161,7 @@ public class StateTest {
 
     private Trie generateGenesisState() {
 
-        Trie trie = new Trie(new MockDB());
+        Trie trie = new TrieImpl(new MockDB());
         for (String address : Genesis.getPremine()) {
             AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
             trie.update(Hex.decode(address), acct.getEncoded());			

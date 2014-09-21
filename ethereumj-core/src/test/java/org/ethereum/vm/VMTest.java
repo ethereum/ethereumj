@@ -6,7 +6,6 @@ import org.ethereum.vm.Program.OutOfGasException;
 import org.ethereum.vm.Program.PcOverflowException;
 import org.ethereum.vm.Program.StackTooSmallException;
 import org.junit.FixMethodOrder;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
@@ -1524,7 +1523,6 @@ public class VMTest {
     }
 
     @Test // SSTORE OP
-    @Ignore
     public void testSSTORE_1() {
 
         VM vm = new VM();
@@ -1546,7 +1544,6 @@ public class VMTest {
     }
 
     @Test // SSTORE OP
-    @Ignore
     public void testSSTORE_2() {
 
         VM vm = new VM();
@@ -1586,7 +1583,6 @@ public class VMTest {
     }
 
     @Test // SLOAD OP
-    @Ignore
     public void testSLOAD_1() {
 
         VM vm = new VM();
@@ -1601,7 +1597,6 @@ public class VMTest {
     }
 
     @Test // SLOAD OP
-    @Ignore
     public void testSLOAD_2() {
 
         VM vm = new VM();
@@ -1619,7 +1614,6 @@ public class VMTest {
     }
 
     @Test // SLOAD OP
-    @Ignore
     public void testSLOAD_3() {
 
         VM vm = new VM();
@@ -1667,7 +1661,6 @@ public class VMTest {
 
 
     @Test // PC OP
-    @Ignore
     public void testPC_2() {
 
         VM vm = new VM();

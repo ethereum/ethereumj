@@ -9,7 +9,7 @@ import org.ethereum.util.Value;
  * Created on: 29/08/2014 10:46
  */
 
-public class CountAllNodes implements Trie.ScanAction {
+public class CountAllNodes implements TrieImpl.ScanAction {
 
     int counted = 0;
 

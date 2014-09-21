@@ -9,20 +9,23 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * The TrackTrie is a wrapper around and actual Modified Merkle Patricia Trie 
+ * to keep track of changes which can be rolled back or committed down into 
+ * the original trie after successful execution of a transaction. 
+ * 
  * www.ethereumJ.com
- *
  * @author: Roman Mandeleil
  * Created on: 11/06/2014 19:47
  */
-public class TrackTrie implements TrieFacade {
+public class TrackTrie implements Trie {
 
-	private TrieFacade trie;
+	private Trie trie;
 
 	private boolean trackingChanges = false;
 	private Map<ByteArrayWrapper, byte[]> changes;
 	private List<ByteArrayWrapper> deletes;
 
-	public TrackTrie(TrieFacade trie) {
+	public TrackTrie(Trie trie) {
 		this.trie = trie;
 	}
 
@@ -33,12 +36,10 @@ public class TrackTrie implements TrieFacade {
 	}
 
 	public void commitTrack() {
-		for (ByteArrayWrapper key : changes.keySet()) {
+		for (ByteArrayWrapper key : changes.keySet())
 			trie.update(key.getData(), changes.get(key));
-		}
-		for (ByteArrayWrapper key : deletes) {
+		for (ByteArrayWrapper key : deletes)
 			trie.update(key.getData(), ByteUtil.EMPTY_BYTE_ARRAY);
-		}
 		changes = null;
 		trackingChanges = false;
 	}
@@ -52,11 +53,10 @@ public class TrackTrie implements TrieFacade {
 
 	@Override
 	public void update(byte[] key, byte[] value) {
-		if (trackingChanges) {
+		if (trackingChanges)
 			changes.put(new ByteArrayWrapper(key), value);
-		} else {
+		else
 			trie.update(key, value);
-		}
 	}
 
 	@Override
@@ -77,9 +77,8 @@ public class TrackTrie implements TrieFacade {
 		if (trackingChanges) {
 			ByteArrayWrapper wKey = new ByteArrayWrapper(key);
 			deletes.add(wKey);
-		} else {
+		} else
 			trie.delete(key);
-		}
 	}
 
 	@Override
@@ -90,5 +89,15 @@ public class TrackTrie implements TrieFacade {
 	@Override
 	public String getTrieDump() {
 		return trie.getTrieDump();
+	}
+
+	@Override
+	public void setRoot(byte[] root) {
+		trie.setRoot(root);
+	}
+
+	@Override
+	public void sync() {
+		trie.sync();
 	}
 }

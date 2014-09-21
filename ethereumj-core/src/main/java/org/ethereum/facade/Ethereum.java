@@ -27,7 +27,6 @@ public interface Ethereum {
      */
     public PeerData findOnlinePeer(PeerData excludePeer) ;
 
-
     /**
      * Find an online peer but not from excluded list
      *

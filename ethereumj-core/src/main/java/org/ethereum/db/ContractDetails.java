@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
@@ -28,7 +29,7 @@ public class ContractDetails {
 
     private byte[] code;
 
-    private Trie storageTrie = new Trie(null);
+    private Trie storageTrie = new TrieImpl(null);
 
     public ContractDetails() {
     }
@@ -88,7 +89,7 @@ public class ContractDetails {
 
     public byte[] getStorageHash() {
 
-    	storageTrie = new Trie(null);
+    	storageTrie = new TrieImpl(null);
         // calc the trie for root hash
         for (int i = 0; i < storageKeys.size(); ++i){
 			storageTrie.update(storageKeys.get(i).getData(), RLP

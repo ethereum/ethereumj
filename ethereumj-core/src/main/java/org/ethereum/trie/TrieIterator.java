@@ -12,14 +12,14 @@ import static org.ethereum.util.CompactEncoder.unpackToNibbles;
  */
 public class TrieIterator {
 	
-	private Trie trie;
+	private TrieImpl trie;
 	private String key;
 	private String value;
 
 	private List<byte[]> shas;
 	private List<String> values;
 
-	public TrieIterator(Trie t) {
+	public TrieIterator(TrieImpl t) {
 		this.trie = t;
 	}
 
