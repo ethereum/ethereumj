@@ -20,36 +20,29 @@ import java.math.BigInteger;
  */
 public class HelloMessage extends Message {
 
-    private byte protocolVersion;
-    private byte networkId;
+	/** The implemented version of the P2P protocol. */
+    private byte p2pVersion;
+    /** The underlying client. A user-readable string. */
     private String clientId;
+    /** A peer-network capability code, readable ASCII and 3 letters. 
+     * Currently only "eth" and "shh" are known.  */
     private byte capabilities;
-    private short peerPort;
+    /** The port on which the peer is listening for an incoming connection */
+    private short listenPort;
+    /** The identity and public key of the peer */
     private byte[] peerId;
-    
-    /** Total difficulty of the best chain as found in block header. */
-    private byte[] totalDifficulty;
-    /** The hash of the best (i.e. highest TD) known block. */
-    private byte[] bestHash;
-    /** The hash of the Genesis block */
-    private byte[] genesisHash;
 
     public HelloMessage(RLPList rawData) {
         super(rawData);
     }
 
-	public HelloMessage(byte protocolVersion, byte networkId, String clientId,
-			byte capabilities, short peerPort, byte[] peerId, byte[] totalDifficulty, 
-			byte[] bestHash, byte[] genesisHash) {
-        this.protocolVersion = protocolVersion;
-        this.networkId = networkId;
+	public HelloMessage(byte p2pVersion, String clientId,
+			byte capabilities, short listenPort, byte[] peerId) {
+        this.p2pVersion = p2pVersion;
         this.clientId = clientId;
         this.capabilities = capabilities;
-        this.peerPort = peerPort;
+        this.listenPort = listenPort;
         this.peerId = peerId;
-        this.totalDifficulty = totalDifficulty;
-        this.bestHash = bestHash;
-        this.genesisHash = genesisHash;
         this.parsed = true;
     }
 
@@ -60,30 +53,20 @@ public class HelloMessage extends Message {
 
         // the message does no distinguish between the 0 and null so here I check command code for null
         // TODO: find out if it can be 00
-        if (((RLPItem)paramsList.get(0)).getRLPData() != null) {
+		if (((RLPItem) paramsList.get(0)).getRLPData() != null)
             throw new Error("HelloMessage: parsing for mal data");
-        }
         
-        this.protocolVersion	= ((RLPItem) paramsList.get(1)).getRLPData()[0];
+        this.p2pVersion			= ((RLPItem) paramsList.get(1)).getRLPData()[0];
         
-        byte[] networkIdBytes	= ((RLPItem) paramsList.get(2)).getRLPData();
-        this.networkId			= networkIdBytes == null ? 0 : networkIdBytes[0];
-        
-        byte[] clientIdBytes	= ((RLPItem) paramsList.get(3)).getRLPData();
+        byte[] clientIdBytes	= ((RLPItem) paramsList.get(2)).getRLPData();
         this.clientId			= new String(clientIdBytes != null ? clientIdBytes : EMPTY_BYTE_ARRAY);
         
-        this.capabilities		= ((RLPItem) paramsList.get(4)).getRLPData()[0];
+        this.capabilities		= ((RLPItem) paramsList.get(3)).getRLPData()[0];
 
-        byte[] peerPortBytes	= ((RLPItem) paramsList.get(5)).getRLPData();
-        this.peerPort         	= new BigInteger(peerPortBytes).shortValue();
+        byte[] peerPortBytes	= ((RLPItem) paramsList.get(4)).getRLPData();
+        this.listenPort         	= new BigInteger(peerPortBytes).shortValue();
         
-        this.peerId           	= ((RLPItem) paramsList.get(6)).getRLPData();
-        
-        this.totalDifficulty	= ((RLPItem) paramsList.get(7)).getRLPData();
-        
-        this.bestHash 			= ((RLPItem) paramsList.get(8)).getRLPData();
-        
-        this.genesisHash 		= ((RLPItem) paramsList.get(9)).getRLPData();
+        this.peerId           	= ((RLPItem) paramsList.get(5)).getRLPData();
         
         this.parsed = true;
         // TODO: what to do when mal data ?
@@ -92,19 +75,14 @@ public class HelloMessage extends Message {
     public byte[] getPayload() {
 
         byte[] command			= RLP.encodeByte(HELLO.asByte());
-        byte[] protocolVersion	= RLP.encodeByte(this.protocolVersion);
-        byte[] networkId		= RLP.encodeByte(this.networkId);
+        byte[] protocolVersion	= RLP.encodeByte(this.p2pVersion);
         byte[] clientId			= RLP.encodeString(this.clientId);
         byte[] capabilities		= RLP.encodeByte(this.capabilities);
-        byte[] peerPort			= RLP.encodeShort(this.peerPort);
+        byte[] peerPort			= RLP.encodeShort(this.listenPort);
         byte[] peerId			= RLP.encodeElement(this.peerId);
-        byte[] totalDifficulty	= RLP.encodeElement(this.totalDifficulty);
-        byte[] bestHash			= RLP.encodeElement(this.bestHash);
-        byte[] genesisHash		= RLP.encodeElement(this.genesisHash);
 
-		byte[] data = RLP.encodeList(command, protocolVersion, networkId,
-				clientId, capabilities, peerPort, peerId, totalDifficulty,
-				bestHash, genesisHash);
+		byte[] data = RLP.encodeList(command, protocolVersion, 
+				clientId, capabilities, peerPort, peerId);
 
         return data;
     }
@@ -114,14 +92,9 @@ public class HelloMessage extends Message {
         return HELLO.asByte();
     }
 
-    public byte getProtocolVersion() {
+    public byte getP2PVersion() {
         if (!parsed) parseRLP();
-        return protocolVersion;
-    }
-
-    public byte getNetworkId() {
-        if (!parsed) parseRLP();
-        return networkId;
+        return p2pVersion;
     }
 
     public String getClientId() {
@@ -134,9 +107,9 @@ public class HelloMessage extends Message {
         return capabilities;
     }
 
-    public short getPeerPort() {
+    public short getListenPort() {
         if (!parsed) parseRLP();
-        return peerPort;
+        return listenPort;
     }
 
     public byte[] getPeerId() {
@@ -144,21 +117,6 @@ public class HelloMessage extends Message {
         return peerId;
     }
     
-    public byte[] getTotalDifficulty() {
-    	if (!parsed) parseRLP();
-		return totalDifficulty;
-	}
-
-	public byte[] getBestHash() {
-		if (!parsed) parseRLP();
-		return bestHash;
-	}
-
-	public byte[] getGenesisHash() {
-		if (!parsed) parseRLP();
-		return genesisHash;
-	}
-
 	@Override
     public String getMessageName() {
         return "HelloMessage";
@@ -172,15 +130,11 @@ public class HelloMessage extends Message {
     public String toString() {
         if (!parsed) parseRLP();
         return "Hello Message [ command=" + HELLO.asByte() + " " +
-                " protocolVersion=" + this.protocolVersion + " " +
-                " networkId=" + this.networkId + " " +
+                " p2pVersion=" + this.p2pVersion + " " +
                 " clientId=" + this.clientId + " " +
                 " capabilities=" + this.capabilities + " " +
-                " peerPort=" + this.peerPort + " " +
+                " peerPort=" + this.listenPort + " " +
                 " peerId=" + Hex.toHexString(this.peerId) + " " +
-                " totalDifficulty=" + Hex.toHexString(this.totalDifficulty) + " " +
-                " bestHash=" + Hex.toHexString(this.bestHash) + " " +
-                " genesisHash=" + Hex.toHexString(this.genesisHash) + " " +
                 "]";
     }
 }

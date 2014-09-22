@@ -51,7 +51,7 @@ public class EthereumPeerTasterHandler extends ChannelInboundHandlerAdapter {
         // Here we send the hello message with random id each time
         // to not interrupt active peer
 
-        HelloMessage helloMessage = StaticMessages.generateHelloMessage();
+        HelloMessage helloMessage = StaticMessages.HELLO_MESSAGE;
 
         byte[] helloLength =ByteUtil.calcPacketLength(helloMessage.getPayload());
 

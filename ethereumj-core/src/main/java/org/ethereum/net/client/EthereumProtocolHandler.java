@@ -24,9 +24,7 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import static org.ethereum.net.Command.*;
 import static org.ethereum.net.message.StaticMessages.*;
-
 
 /**
  * www.ethereumJ.com
