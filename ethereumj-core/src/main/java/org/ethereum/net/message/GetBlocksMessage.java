@@ -14,19 +14,19 @@ import org.spongycastle.util.encoders.Hex;
 
 public class GetBlocksMessage extends Message {
 
-    private List<byte[]> blockHashList = new ArrayList<byte[]>();
+    private List<byte[]> blockHashList = new ArrayList<>();
     private BigInteger blockNum;
     
-	public GetBlocksMessage(RLPList rawData) {
-		super(rawData);
+	public GetBlocksMessage(byte[] encoded) {
+		super(encoded);
 	}
 
-	// TODO: it get's byte for now change it to int
+	// TODO: it get's byte for now. change it to int
     public GetBlocksMessage(byte number , byte[]... blockHashList) {
 
         byte[][] encodedElements = new byte[blockHashList.length + 2][];
 
-        encodedElements[0] = new byte[]{0x14};
+        encodedElements[0] = new byte[]{GET_BLOCKS.asByte()};
         int i = 1;
         for (byte[] hash : blockHashList) {
             this.blockHashList.add(hash);
@@ -36,17 +36,16 @@ public class GetBlocksMessage extends Message {
         }
         encodedElements[i] = RLP.encodeByte(number);
 
-        this.payload = RLP.encodeList(encodedElements);
+        this.encoded = RLP.encodeList(encodedElements);
         this.parsed = true;
     }
     
-    @Override
-	public void parseRLP() {
-        RLPList paramsList = (RLPList) rawData.get(0);
+	public void parse() {
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-		if (Command.fromInt(((RLPItem) (paramsList).get(0)).getRLPData()[0]) != GET_BLOCKS)
-            throw new Error("GetBlocks: parsing for mal data");
-
+        if ( (((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != GET_BLOCKS.asByte())
+            throw new RuntimeException("Not a GetBlockssMessage command");
+        
         int size = paramsList.size();
         for (int i = 1; i < size - 1; ++i) {
             blockHashList.add(((RLPItem) paramsList.get(i)).getRLPData());
@@ -57,17 +56,16 @@ public class GetBlocksMessage extends Message {
 		this.blockNum = new BigInteger(blockNumB);
 
         this.parsed = true;
-        // TODO: what to do when mal data ?
 	}
 
 	@Override
-	public byte[] getPayload() {
-		return payload;
+	public byte[] getEncoded() {
+		return encoded;
 	}
 
 	@Override
-	public String getMessageName() {
-		return "GetBlocks";
+	public Command getCommand() {
+		return GET_BLOCKS;
 	}
 
 	@Override
@@ -76,12 +74,13 @@ public class GetBlocksMessage extends Message {
 	}
 	
     public String toString() {
-        if (!parsed) parseRLP();
+        if (!parsed) parse();
 
         StringBuffer sb = new StringBuffer();
-        for (byte[] blockHash : blockHashList)
-            sb.append("").append(Hex.toHexString(blockHash)).append(", ");
+        for (byte[] blockHash : blockHashList) {
+            sb.append("").append(Hex.toHexString(blockHash)).append("\n ");
+        }
         sb.append(" blockNum=").append(blockNum);
-        return "GetBlocks Message [" + sb.toString() + " ]";
+        return "[command=" + this.getCommand().name() + " " + sb.toString() + " ]";
     }
 }

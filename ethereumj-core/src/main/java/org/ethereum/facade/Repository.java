@@ -4,7 +4,6 @@ import java.math.BigInteger;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockchainImpl;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.trie.Trie;
 import org.ethereum.vm.DataWord;
@@ -151,7 +150,7 @@ public interface Repository {
      * 
      * @return the <code>Blockchain</code> object
      */
-    public BlockchainImpl loadBlockchain();
+    public Blockchain loadBlockchain();
     
     /**
      * Dump the full state of the current repository into a file with JSON format

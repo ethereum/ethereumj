@@ -119,13 +119,6 @@ public class Utils {
         return Double.parseDouble (version.substring (0, pos - 1));
     }
 
-    public static String oneByteToHexString(byte value) {
-        String retVal = Integer.toString(value & 0xFF, 16);
-        if (retVal.length() == 1) retVal = "0" + retVal;
-        return retVal;
-    }
-
-
     public static String getFromUrl(String urlToRead) {
         URL url;
         HttpURLConnection conn;

@@ -20,11 +20,8 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class PeerTaster {
 
     private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
-    final EthereumPeerTasterHandler handler = new EthereumPeerTasterHandler();
-
-    public PeerTaster() {
-    }
-
+    private final PeerProtocolHandler handler = new PeerProtocolHandler();
+    
     public void connect(String host, int port) {
 
         logger.debug("connecting: {}:{}", host, port);
@@ -34,7 +31,6 @@ public class PeerTaster {
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
-
             b.handler(new ChannelInitializer<NioSocketChannel>() {
                 @Override
                 public void initChannel(NioSocketChannel ch) throws Exception {
@@ -43,14 +39,14 @@ public class PeerTaster {
                     ch.pipeline().addLast(handler);
                 }
             });
-
-            // Start the client.
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerDiscoveryTimeout());
+            
+            // Start the client.
             ChannelFuture f = b.connect(host, port).sync(); // (5)
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
-            logger.debug("connection is closed");
+            logger.debug("Connection is closed");
 
         } catch (InterruptedException ie) {
            logger.info("-- ClientPeer: catch (InterruptedException ie) --");
@@ -66,5 +62,4 @@ public class PeerTaster {
     public HelloMessage getHandshake() {
         return handler.getHandshake();
     }
-
 }

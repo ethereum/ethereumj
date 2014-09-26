@@ -17,57 +17,45 @@ public class DisconnectMessage extends Message {
 
     private ReasonCode reason;
 
-    public DisconnectMessage(byte[] payload) {
-        super(RLP.decode2(payload));
-        this.payload = payload;
+    public DisconnectMessage(byte[] encoded) {
+        super(encoded);
     }
 
-    public DisconnectMessage(RLPList rawData) {
-        super(rawData);
-    }
+    private void parse() {
 
-    @Override
-    public void parseRLP() {
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        RLPList paramsList = (RLPList) rawData.get(0);
-
-        if (Command.fromInt(((RLPItem)(paramsList).get(0)).getRLPData()[0]) != DISCONNECT) {
-            throw new Error("Disconnect: parsing for mal data");
-        }
-
-        byte[] reasonB = ((RLPItem)paramsList.get(1)).getRLPData();
-        if (reasonB == null) {
+		byte[] reasonB = ((RLPItem) paramsList.get(1)).getRLPData();
+        if (reasonB == null)
             this.reason = REQUESTED;
-        } else {
+        else
             this.reason = ReasonCode.fromInt(reasonB[0]);
-        }
+        
         this.parsed = true;
-        // TODO: what to do when mal data ?
     }
 
+	@Override
+	public Command getCommand() {
+		return DISCONNECT;
+	}
+
     @Override
-    public byte[] getPayload() {
+    public byte[] getEncoded() {
+        return encoded;
+    }
+    
+    @Override
+    public Class<?> getAnswerMessage() {
         return null;
     }
 
     public ReasonCode getReason() {
-        if (!parsed) parseRLP();
+        if (!parsed) parse();
         return reason;
     }
 
-    @Override
-    public String getMessageName() {
-        return "Disconnect";
-    }
-
-    @Override
-    public Class getAnswerMessage() {
-        return null;
-    }
-
     public String toString() {
-        if (!parsed) parseRLP();
-        return "Disconnect Message [ reason=" + reason + " ]";
+        if (!parsed) parse();
+        return "[command=" + this.getCommand().name() + " reason=" + reason + "]";
     }
 }
-

@@ -4,7 +4,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.Utils;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -257,7 +256,7 @@ public class Program {
         DataWord balance = getBalance(this.getOwnerAddress());
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
-			logger.info("Transfer to: [ {} ] heritage: [ {} ]",
+			logger.info("Transfer to: [{}] heritage: [{}]",
 					Hex.toHexString(obtainer.getLast20Bytes()),
 					balance.longValue());
 
@@ -342,7 +341,7 @@ public class Program {
             this.refundGas(refundGas, "remain gas from the internal call");
             if (logger.isInfoEnabled()){
 
-                logger.info("The remaining gas is refunded, account: [ {} ], gas: [ {} ] ",
+                logger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
                         Hex.toHexString(this.getOwnerAddress().getLast20Bytes()),
                         refundGas);
             }
@@ -374,7 +373,7 @@ public class Program {
         byte[] programCode = this.result.getRepository().getCode(codeAddress);
 
         if (logger.isInfoEnabled())
-            logger.info(msg.getType().name() + " for existing contract: address: [ {} ], outDataOffs: [ {} ], outDataSize: [ {} ]  ",
+            logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
                     Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
         // 2.1 PERFORM THE GAS VALUE TX
@@ -465,7 +464,7 @@ public class Program {
             if (refundGas.compareTo(BigInteger.ZERO) == 1) {
 
                 this.refundGas(refundGas.intValue(), "remaining gas from the internal call");
-                logger.info("The remaining gas refunded, account: [ {} ], gas: [ {} ] ",
+                logger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
                 		Hex.toHexString(senderAddress), refundGas.toString());
             }
         } else {
@@ -474,7 +473,7 @@ public class Program {
     }
 
     public void spendGas(long gasValue, String cause) {
-        gasLogger.info("[{}] Spent for cause: [ {} ], gas: [ {} ]", invokeHash, cause, gasValue);
+        gasLogger.info("[{}] Spent for cause: [{}], gas: [{}]", invokeHash, cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
         if (afterSpend < 0)
@@ -483,7 +482,7 @@ public class Program {
     }
 
     public void refundGas(long gasValue, String cause) {
-        gasLogger.info("[{}] Refund for cause: [ {} ], gas: [ {} ]", invokeHash, cause, gasValue);
+        gasLogger.info("[{}] Refund for cause: [{}], gas: [{}]", invokeHash, cause, gasValue);
         result.refundGas(gasValue);
     }
 
@@ -606,7 +605,7 @@ public class Program {
             // Check if value is ASCII 
 			String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[] { value }) : "?";
             firstLine.append(character).append("");
-            secondLine.append(Utils.oneByteToHexString(value)).append(" ");
+            secondLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
             if ((i + 1) % 8 == 0) {
                 String tmp = String.format("%4s", Integer.toString(i - 7, 16)).replace(" ", "0");
@@ -650,7 +649,7 @@ public class Program {
             for (int i = 0; memory != null && i < memory.limit(); ++i) {
 
                 byte value = memory.get(i);
-                oneLine.append(Utils.oneByteToHexString(value)).append(" ");
+                oneLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
                 if ((i + 1) % 16 == 0) {
                     String tmp = String.format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
@@ -682,7 +681,7 @@ public class Program {
             logger.trace(" -- STACK --   {}", stackData);
             logger.trace(" -- MEMORY --  {}", memoryData);
             logger.trace(" -- STORAGE -- {}\n", storageData);
-            logger.trace("\n  Spent Gas: [ {} ]/[ {} ]\n  Left Gas:  [ {} ]\n",
+            logger.trace("\n  Spent Gas: [{}]/[{}]\n  Left Gas:  [{}]\n",
                     result.getGasUsed(),
                     invokeData.getGas().longValue(),
                     getGas().longValue());

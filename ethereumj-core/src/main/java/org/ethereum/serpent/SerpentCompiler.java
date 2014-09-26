@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -77,7 +78,7 @@ public class SerpentCompiler {
 
         String[] lexaArr = code.split("\\s+");
 
-        List<String> lexaList = new ArrayList<String>();
+        List<String> lexaList = new ArrayList<>();
         Collections.addAll(lexaList, lexaArr);
 
         // Encode push_n numbers
@@ -134,7 +135,7 @@ public class SerpentCompiler {
         }
 
         // calc label pos & remove labels
-        HashMap<String, Integer> labels = new HashMap<String, Integer>();
+        Map<String, Integer> labels = new HashMap<>();
 
         for (int i = 0; i < lexaList.size(); ++i) {
 
@@ -164,7 +165,7 @@ public class SerpentCompiler {
             String labelNum = ref.split("REF_")[1];
 
             Integer pos = labels.get(labelNum);
-            int bytesNum = ByteUtil.numBytes( pos.toString() );
+            int bytesNum = ByteUtil.numBytes(pos.toString());
 
             lexaList.add(i, pos.toString());
 
@@ -178,8 +179,8 @@ public class SerpentCompiler {
         for (String lexa : lexaList) {
 
             if (OpCode.contains(lexa))
-                baos.write( OpCode.byteVal(lexa) );
-            else{
+                baos.write(OpCode.byteVal(lexa));
+            else {
                 // TODO: support for number more than one byte
                 baos.write(Integer.parseInt(lexa) & 0xFF);
             }

@@ -1,7 +1,6 @@
-package org.ethereum.net;
+package org.ethereum.core;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Block;
 import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +25,7 @@ public class BlockQueue {
 	private Timer timer = new Timer("BlockQueueTimer");
 
 	public BlockQueue() {
-
 		timer.scheduleAtFixedRate(new TimerTask() {
-
 			public void run() {
 				nudgeQueue();
 			}
@@ -55,10 +52,10 @@ public class BlockQueue {
 				return;
 
 			this.lastBlock = blockList.get(i);
-			logger.trace("Last block now index: [ {} ]", lastBlock.getNumber());
+			logger.trace("Last block now index: [{}]", lastBlock.getNumber());
 			blockQueue.add(lastBlock);
 		}
-		logger.trace("Blocks waiting to be proceed in the queue: [ {} ]",
+		logger.trace("Blocks waiting to be proceed in the queue: [{}]", 
 				blockQueue.size());
 	}
 

@@ -4,8 +4,8 @@ import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.BlockQueue;
 import org.ethereum.util.AdvancedDeviceUtils;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,7 +59,8 @@ public class BlockchainImpl implements Blockchain {
 
 	private Repository repository;
     private Block lastBlock;
-
+    private BigInteger totalDifficulty;
+    
     // keep the index of the chain for
     // convenient usage, <block_number, block_hash>
     private final Map<Long, byte[]> blockCache = new HashMap<>();
@@ -70,11 +71,13 @@ public class BlockchainImpl implements Blockchain {
 		this.repository = repository;
 	}
 	
+	@Override
     public long getGasPrice() {
         // In case of the genesis block we don't want to rely on the min gas price
         return lastBlock.isGenesis() ? lastBlock.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
     }
 
+    @Override
     public byte[] getLatestBlockHash() {
         if (blockCache.isEmpty())
             return Genesis.getInstance().getHash();
@@ -82,14 +85,17 @@ public class BlockchainImpl implements Blockchain {
             return getLastBlock().getHash();
     }
     
+    @Override
     public int getSize() {
         return blockCache.size();
     }
 
+    @Override
     public Block getBlockByNumber(long blockNr) {
     	return repository.getBlock(blockNr);
 	}
 
+    @Override
     public void add(Block block) {
 
 		if (block == null)
@@ -127,7 +133,7 @@ public class BlockchainImpl implements Blockchain {
             ethereumListener.onBlock(block);
     }
     
-    public void processBlock(Block block) {
+    private void processBlock(Block block) {
     	if(block.isValid()) {
             if (!block.isGenesis()) {
                 if (!CONFIG.blockChainOnly()) {
@@ -142,12 +148,12 @@ public class BlockchainImpl implements Blockchain {
     	}
     }
     
-	public void applyBlock(Block block) {
+	private void applyBlock(Block block) {
 
 		int i = 0;
 		long totalGasUsed = 0;
 		for (TransactionReceipt txr : block.getTxReceiptList()) {
-			stateLogger.debug("apply block: [ {} ] tx: [ {} ] ", block.getNumber(), i);
+			stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 			totalGasUsed += applyTransaction(block, txr.getTransaction());
 			if(block.getNumber() >= CONFIG.traceStartBlock())
 				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
@@ -160,9 +166,17 @@ public class BlockchainImpl implements Blockchain {
 		}
 		
 		this.addReward(block);
+		this.increaseTotalDifficulty(block);
 		
         if(block.getNumber() >= CONFIG.traceStartBlock())
         	repository.dumpState(block, totalGasUsed, 0, null);
+	}
+
+	private void increaseTotalDifficulty(Block block) {
+		totalDifficulty.add(new BigInteger(block.getDifficulty()));
+		for (BlockHeader uncleHeader : block.getUncleList()) {
+			totalDifficulty.add(new BigInteger(uncleHeader.getDifficulty()));
+		}
 	}
 
 	/**
@@ -190,6 +204,7 @@ public class BlockchainImpl implements Blockchain {
 		repository.addBalance(block.getCoinbase(), totalBlockReward);
 	}
     
+	@Override
     public void storeBlock(Block block) {
 
         /* Debug check to see if the state is still as expected */
@@ -433,23 +448,33 @@ public class BlockchainImpl implements Blockchain {
         }
 	}
 	
+	@Override
 	public BlockQueue getBlockQueue() {
         return blockQueue;
     }
     
+	@Override
     public Map<Long, byte[]> getBlockCache() {
     	return this.blockCache;
     }
     
+    @Override
 	public Block getLastBlock() {
 		return lastBlock;
 	}
 
+	@Override
     public void setLastBlock(Block block) {
     	this.lastBlock = block;
     }
 
+    @Override
     public void close(){
         blockQueue.close();
     }
+
+	@Override
+	public byte[] getTotalDifficulty() {
+		return ByteUtil.bigIntegerToBytes(totalDifficulty);
+	}
 }

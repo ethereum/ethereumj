@@ -1,5 +1,8 @@
 package org.ethereum.net.message;
 
+import static org.ethereum.net.Command.GET_TRANSACTIONS;
+
+import org.ethereum.net.Command;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -9,26 +12,26 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class GetTransactionsMessage extends Message {
 
-    public GetTransactionsMessage() {
-        this.payload = Hex.decode("C116");
+	/** GetTransactions message is always a the same single command payload */ 
+	private static byte[] FIXED_PAYLOAD = Hex.decode("C116");
+
+    public byte[] getEncoded() {
+        return FIXED_PAYLOAD;
     }
+
+	@Override
+	public Command getCommand() {
+		return GET_TRANSACTIONS;
+	}
 
     @Override
-    public void parseRLP() {
+    public Class<TransactionsMessage> getAnswerMessage() {
+        return TransactionsMessage.class;
     }
-
-    public byte[] getPayload() {
-        return payload;
-    }
-
+    
     @Override
-    public String getMessageName(){
-        return "GetTransactions";
-    }
-
-    @Override
-    public Class getAnswerMessage() {
-        return null;
+    public String toString() {
+    	return "[command=" + this.getCommand().name() + "]";
     }
 }
 

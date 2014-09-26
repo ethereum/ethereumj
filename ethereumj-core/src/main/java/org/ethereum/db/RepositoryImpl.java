@@ -3,9 +3,9 @@ package org.ethereum.db;
 import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
@@ -128,8 +128,8 @@ public class RepositoryImpl implements Repository {
     	this.worldState.sync();
     }
 	
-	public BlockchainImpl loadBlockchain() {
-		BlockchainImpl blockchain = WorldManager.getInstance().getBlockchain();
+	public Blockchain loadBlockchain() {
+		Blockchain blockchain = WorldManager.getInstance().getBlockchain();
 		DBIterator iterator = chainDB.iterator();
 		try {
 			if (!iterator.hasNext()) {
@@ -161,10 +161,9 @@ public class RepositoryImpl implements Repository {
                     }
     	            logger.debug("Block #{} -> {}", block.getNumber(), block.toFlatString());
             	}
-				logger.info(
-						"*** Loaded up to block [ {} ] with stateRoot [ {} ]",
-                                    blockchain.getLastBlock().getNumber(),
-                                        Hex.toHexString(blockchain.getLastBlock().getStateRoot()));
+				logger.info("*** Loaded up to block [{}] with stateRoot [{}]", 
+						blockchain.getLastBlock().getNumber(), 
+						Hex.toHexString(blockchain.getLastBlock().getStateRoot()));
             }
 		} finally {
 			// Make sure you close the iterator to avoid resource leaks.
@@ -178,8 +177,8 @@ public class RepositoryImpl implements Repository {
         if (CONFIG.rootHashStart() != null){
 
             // update world state by dummy hash
-            byte[] rootHash = Hex.decode( CONFIG.rootHashStart() );
-            logger.info("Loading root hash from property file: [ {} ]", CONFIG.rootHashStart());
+            byte[] rootHash = Hex.decode(CONFIG.rootHashStart());
+            logger.info("Loading root hash from property file: [{}]", CONFIG.rootHashStart());
             this.worldState.setRoot(rootHash);
 
         } else{
@@ -194,7 +193,7 @@ public class RepositoryImpl implements Repository {
 
     public AccountState createAccount(byte[] addr) {
 
-        logger.trace("createAccount: [ {} ]", Hex.toHexString(addr)) ;
+        logger.trace("createAccount: [{}]", Hex.toHexString(addr)) ;
     	this.validateAddress(addr);
     	    	
         // 1. Save AccountState
@@ -205,7 +204,7 @@ public class RepositoryImpl implements Repository {
         contractDetailsDB.put(addr, details.getEncoded());
         
         if (logger.isDebugEnabled())
-            logger.debug("New account created: [ {} ]", Hex.toHexString(addr));
+            logger.debug("New account created: [{}]", Hex.toHexString(addr));
 
         return state;
     }
@@ -238,7 +237,7 @@ public class RepositoryImpl implements Repository {
 		this.validateAddress(addr);
 
         if (logger.isDebugEnabled())
-            logger.debug("Get contract details for: [ {} ]", Hex.toHexString(addr));
+            logger.debug("Get contract details for: [{}]", Hex.toHexString(addr));
 
         byte[] accountDetailsRLP = contractDetailsDB.get(addr);
         
@@ -246,7 +245,7 @@ public class RepositoryImpl implements Repository {
         	return null;
         	        			
         if (logger.isDebugEnabled())
-            logger.debug("Contract details RLP: [ {} ]", Hex.toHexString(accountDetailsRLP));
+            logger.debug("Contract details RLP: [{}]", Hex.toHexString(accountDetailsRLP));
 
 		ContractDetails details = new ContractDetails(accountDetailsRLP);
 		return details;
@@ -264,7 +263,7 @@ public class RepositoryImpl implements Repository {
 		BigInteger newBalance = state.addToBalance(value);
 
 		if (logger.isDebugEnabled())
-			logger.debug("Changing balance: account: [ {} ] new balance: [ {} ] delta: [ {} ]",
+			logger.debug("Changing balance: account: [{}] new balance: [{}] delta: [{}]",
 					Hex.toHexString(addr), newBalance.toString(), value);
 
 		accountStateDB.update(addr, state.getEncoded());
@@ -294,7 +293,7 @@ public class RepositoryImpl implements Repository {
         state.incrementNonce();
 
         if (logger.isDebugEnabled())
-            logger.debug("Incerement nonce: account: [ {} ] new nonce: [ {} ]",
+            logger.debug("Incerement nonce: account: [{}] new nonce: [{}]",
                     Hex.toHexString(addr), state.getNonce().longValue());
 
         accountStateDB.update(addr, state.getEncoded());
@@ -316,7 +315,7 @@ public class RepositoryImpl implements Repository {
         state.setStateRoot(storageHash);
 
         if (logger.isDebugEnabled())
-            logger.debug("Storage key/value saved: account: [ {} ]\n key: [ {} ]  value: [ {} ]\n new storageHash: [ {} ]",
+            logger.debug("Storage key/value saved: account: [{}]\n key: [{}]  value: [{}]\n new storageHash: [{}]",
                     Hex.toHexString(addr),
                     Hex.toHexString(key.getNoLeadZeroesData()),
                     Hex.toHexString(value.getNoLeadZeroesData()),
@@ -354,7 +353,7 @@ public class RepositoryImpl implements Repository {
         this.validateAddress(addr);
         
         if (logger.isDebugEnabled())
-            logger.debug("saveCode: \n address: [ {} ], \n code: [ {} ]",
+            logger.debug("saveCode: \n address: [{}], \n code: [{}]",
                     Hex.toHexString(addr),
                     Hex.toHexString(code));
 
@@ -368,7 +367,7 @@ public class RepositoryImpl implements Repository {
         state.setCodeHash(codeHash);
 
         if (logger.isDebugEnabled())
-            logger.debug("Program code saved:\n account: [ {} ]\n codeHash: [ {} ] \n code: [ {} ]",
+            logger.debug("Program code saved:\n account: [{}]\n codeHash: [{}] \n code: [{}]",
                     Hex.toHexString(addr),
                     Hex.toHexString(codeHash),
                     Hex.toHexString(code));
@@ -377,7 +376,7 @@ public class RepositoryImpl implements Repository {
         contractDetailsDB.put(addr, details.getEncoded());
 
         if (logger.isDebugEnabled())
-            logger.debug("saveCode: \n accountState: [ {} ], \n contractDetails: [ {} ]",
+            logger.debug("saveCode: \n accountState: [{}], \n contractDetails: [{}]",
                     Hex.toHexString(state.getEncoded()),
                     Hex.toHexString(details.getEncoded()));
     }

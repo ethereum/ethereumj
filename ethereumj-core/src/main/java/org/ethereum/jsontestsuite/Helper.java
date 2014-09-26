@@ -55,8 +55,8 @@ public class Helper {
             } else if (val instanceof Long) {
 
                 // Simple long
-                byte[] data = ByteUtil.bigIntegerToBytes( BigInteger.valueOf((Long)val) );
-                try {bos.write(data);} catch (IOException e) { logger.error("should not happen", e);}
+                byte[] data = ByteUtil.bigIntegerToBytes(BigInteger.valueOf((Long)val));
+                try {bos.write(data);} catch (IOException e) {logger.error("should not happen", e);}
             } else {
                 throw new Error("Wrong test case JSON format");
             }

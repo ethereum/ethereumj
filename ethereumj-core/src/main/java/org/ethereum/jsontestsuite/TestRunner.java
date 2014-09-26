@@ -24,16 +24,16 @@ public class TestRunner {
 
     private Logger logger = LoggerFactory.getLogger("JSONTest");
 
-    public List<String> runTestSuite(TestSuite testSuite){
+    public List<String> runTestSuite(TestSuite testSuite) {
 
         Iterator<TestCase> testIterator = testSuite.iterator();
         List<String> resultCollector = new ArrayList<>();
 
-        while (testIterator.hasNext()){
+        while (testIterator.hasNext()) {
 
             TestCase testCase = testIterator.next();
 
-            logger.info("Running: [ {} ]", testCase.getName());
+            logger.info("Running: [{}]", testCase.getName());
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
             resultCollector.addAll(result);
@@ -43,14 +43,14 @@ public class TestRunner {
     }
 
 
-    public List<String> runTestCase(TestCase testCase){
+    public List<String> runTestCase(TestCase testCase) {
 
         List<String> results = new ArrayList<>();
 
         Repository repository = new RepositoryImpl();
 
         /* 1. Store pre-exist accounts - Pre */
-        for (ByteArrayWrapper key : testCase.getPre().keySet()){
+        for (ByteArrayWrapper key : testCase.getPre().keySet()) {
 
             AccountState accountState = testCase.getPre().get(key);
 
@@ -100,7 +100,7 @@ public class TestRunner {
         }
 
         /* 5. Assert Post values */
-        for (ByteArrayWrapper key : testCase.getPost().keySet()){
+        for (ByteArrayWrapper key : testCase.getPost().keySet()) {
 
             AccountState accountState = testCase.getPost().get(key);
 
@@ -109,7 +109,7 @@ public class TestRunner {
             byte[]     expectedCode      = accountState.getCode();
 
             boolean accountExist = (null != repository.getAccountState(key.getData()));
-            if (!accountExist){
+            if (!accountExist) {
 
                 String output =
                         String.format("The expected account does not exist. key: [ %s ]",
@@ -124,7 +124,7 @@ public class TestRunner {
             byte[]     actualCode    = repository.getCode(key.getData());
             if (actualCode == null) actualCode = "".getBytes();
 
-            if (expectedNonce != actualNonce){
+            if (expectedNonce != actualNonce) {
 
                 String output =
                         String.format("The nonce result is different. key: [ %s ],  expectedNonce: [ %d ] is actualNonce: [ %d ] ",
@@ -133,7 +133,7 @@ public class TestRunner {
                 results.add(output);
             }
 
-            if (!expectedBalance.equals(actualBalance)){
+            if (!expectedBalance.equals(actualBalance)) {
 
                 String output =
                         String.format("The balance result is different. key: [ %s ],  expectedBalance: [ %s ] is actualBalance: [ %s ] ",
@@ -155,14 +155,14 @@ public class TestRunner {
 
             // assert storage
             Map<ByteArrayWrapper, ByteArrayWrapper> storage = accountState.getStorage();
-            for (ByteArrayWrapper storageKey  :  storage.keySet()  ){
+            for (ByteArrayWrapper storageKey  :  storage.keySet()  ) {
 
                 byte[] expectedStValue = storage.get(storageKey).getData();
 
                 ContractDetails contractDetails =
                         program.getResult().getRepository().getContractDetails(accountState.getAddress());
 
-                if (contractDetails == null){
+                if (contractDetails == null) {
 
                     String output =
                             String.format("Storage raw doesn't exist: key [ %s ], expectedValue: [ %s ]",
@@ -177,7 +177,7 @@ public class TestRunner {
                 Map<DataWord, DataWord>  testStorage = contractDetails.getStorage();
                 DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
 
-                if (!Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())){
+                if (!Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())) {
 
                     String output =
                             String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
@@ -199,17 +199,16 @@ public class TestRunner {
                 program.getResult().getCallCreateList();
 
         // assert call creates
-        for (int i = 0; i < testCase.getCallCreateList().size(); ++i){
+        for (int i = 0; i < testCase.getCallCreateList().size(); ++i) {
 
             org.ethereum.vm.CallCreate resultCallCreate = null;
-            if (resultCallCreates != null && resultCallCreates.size() > i){
+            if (resultCallCreates != null && resultCallCreates.size() > i) {
                 resultCallCreate = resultCallCreates.get(i);
             }
 
-            CallCreate expectedCallCreate =
-                    testCase.getCallCreateList().get(i);
+            CallCreate expectedCallCreate = testCase.getCallCreateList().get(i);
 
-            if (resultCallCreate == null && expectedCallCreate != null){
+            if (resultCallCreate == null && expectedCallCreate != null) {
 
                 String output =
                         String.format("Missing call/create invoke: to: [ %s ], data: [ %s ], gas: [ %s ], value: [ %s ]",
@@ -223,9 +222,10 @@ public class TestRunner {
                 continue;
             }
 
-            boolean assertDestination = Arrays.equals(expectedCallCreate.getDestination(),
+            boolean assertDestination = Arrays.equals(
+            		expectedCallCreate.getDestination(),
                     resultCallCreate.getDestination());
-            if (!assertDestination){
+            if (!assertDestination) {
 
                 String output =
                         String.format("Call/Create destination is different expected: [ %s ], result: [ %s ]",
@@ -235,38 +235,39 @@ public class TestRunner {
                 results.add(output);
             }
 
-            boolean assertData = Arrays.equals(expectedCallCreate.getData(),
+            boolean assertData = Arrays.equals(
+            		expectedCallCreate.getData(),
                     resultCallCreate.getData());
-            if (!assertData){
+            if (!assertData) {
 
                 String output =
                         String.format("Call/Create data is different expected: [ %s ], result: [ %s ]",
-                                Hex.toHexString(  expectedCallCreate.getData() ),
-                                Hex.toHexString(resultCallCreate.getData()) );
+                                Hex.toHexString(expectedCallCreate.getData()),
+                                Hex.toHexString(resultCallCreate.getData()));
                 logger.info(output);
                 results.add(output);
             }
 
-            boolean assertGasLimit = Arrays.equals(expectedCallCreate.getGasLimit(),
+            boolean assertGasLimit = Arrays.equals(
+            		expectedCallCreate.getGasLimit(),
                     resultCallCreate.getGasLimit());
-            if (!assertGasLimit){
-
+            if (!assertGasLimit) {
                 String output =
                         String.format("Call/Create gasLimit is different expected: [ %s ], result: [ %s ]",
-                                Hex.toHexString( expectedCallCreate.getGasLimit() ),
-                                Hex.toHexString( resultCallCreate.getGasLimit()) );
+                                Hex.toHexString(expectedCallCreate.getGasLimit()),
+                                Hex.toHexString(resultCallCreate.getGasLimit()));
                 logger.info(output);
                 results.add(output);
             }
 
-            boolean assertValue = Arrays.equals(expectedCallCreate.getValue(),
+            boolean assertValue = Arrays.equals(
+            		expectedCallCreate.getValue(),
                     resultCallCreate.getValue());
-            if (!assertValue){
-
+            if (!assertValue) {
                 String output =
                         String.format("Call/Create value is different expected: [ %s ], result: [ %s ]",
-                                Hex.toHexString( expectedCallCreate.getValue() ),
-                                Hex.toHexString( resultCallCreate.getValue() ));
+                                Hex.toHexString(expectedCallCreate.getValue()),
+                                Hex.toHexString(resultCallCreate.getValue()));
                 logger.info(output);
                 results.add(output);
             }
@@ -275,16 +276,16 @@ public class TestRunner {
         // assert out
         byte[] expectedHReturn = testCase.getOut();
         byte[] actualHReturn = new byte[0];
-        if (program.getResult().getHReturn() != null){
+        if (program.getResult().getHReturn() != null) {
             actualHReturn = program.getResult().getHReturn().array();
         }
 
-        if (!Arrays.equals(expectedHReturn, actualHReturn)){
+        if (!Arrays.equals(expectedHReturn, actualHReturn)) {
 
             String output =
                     String.format("HReturn is differnt expected hReturn: [ %s ], actual hReturn: [ %s ]",
-                            Hex.toHexString( expectedHReturn ),
-                            Hex.toHexString( actualHReturn ));
+                            Hex.toHexString(expectedHReturn),
+                            Hex.toHexString(actualHReturn));
             logger.info(output);
             results.add(output);
         }
@@ -293,7 +294,7 @@ public class TestRunner {
         BigInteger expectedGas = new BigInteger(testCase.getGas());
         BigInteger actualGas = new BigInteger(gas).subtract(BigInteger.valueOf(program.getResult().getGasUsed()));
 
-        if (!expectedGas.equals(actualGas)){
+        if (!expectedGas.equals(actualGas)) {
 
             String output =
                     String.format("Gas usage is differnt expected gas usage: [ %s ], actual gas usage: [ %s ]",

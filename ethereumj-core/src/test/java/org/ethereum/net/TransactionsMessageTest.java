@@ -12,8 +12,6 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -22,7 +20,7 @@ public class TransactionsMessageTest {
     /* TRANSACTIONS */
     
     @Test  /* Transactions message 1 */
-    public void test_8() {
+    public void test_1() {
 
         String txsPacketRaw = "f86e12f86b04648609184e72a00094cd2a3d9f938e13cd947ec05abc7fe734df8dd826"
         		+ "881bc16d674ec80000801ba05c89ebf2b77eeab88251e553f6f9d53badc1d800"
@@ -30,9 +28,8 @@ public class TransactionsMessageTest {
         		+ "daa3653a8d9f424c6a3265f06c";
         
         byte[] payload = Hex.decode(txsPacketRaw);
-        RLPList rlpList = RLP.decode2(payload);
 
-        TransactionsMessage transactionsMessage = new TransactionsMessage(rlpList);
+        TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
         System.out.println(transactionsMessage);
 
         assertEquals(1, transactionsMessage.getTransactions().size());
@@ -45,7 +42,7 @@ public class TransactionsMessageTest {
 		assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(tx.getReceiveAddress()));
 		assertEquals("64", Hex.toHexString(tx.getGasPrice()));
 		assertEquals("09184e72a000", Hex.toHexString(tx.getGasLimit()));
-		assertEquals("null", ByteUtil.toHexString(tx.getData()));
+		assertEquals("", ByteUtil.toHexString(tx.getData()));
 
 		assertEquals("1b", Hex.toHexString(new byte[] { tx.getSignature().v }));
 		assertEquals("5c89ebf2b77eeab88251e553f6f9d53badc1d800bbac02d830801c2aa94a4c9f", Hex.toHexString(tx.getSignature().r.toByteArray()));
@@ -53,7 +50,7 @@ public class TransactionsMessageTest {
     }
     
     @Test  /* Transactions message 2 */
-    public void test_9() {
+    public void test_2() {
 
         String txsPacketRaw = "f9025012f89d8080940000000000000000000000000000000000000000860918"
                             + "4e72a000822710b3606956330c0d630000003359366000530a0d630000003359"
@@ -76,15 +73,13 @@ public class TransactionsMessageTest {
                             + "d7393152a7fbe41530e5bb8ac8f35433e5931b";
 
         byte[] payload = Hex.decode(txsPacketRaw);
-        RLPList rlpList = RLP.decode2(payload);
 
-        TransactionsMessage transactionsMessage = new TransactionsMessage(rlpList);
+        TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
         System.out.println(transactionsMessage);
 
         assertEquals(3, transactionsMessage.getTransactions().size());
 
-        Transaction tx =
-                transactionsMessage.getTransactions().get(0);
+        Transaction tx = transactionsMessage.getTransactions().get(0);
 
         assertEquals("1b9d9456293cbcbc2f28a0fdc67028128ea571b033fb0e21d0ee00bcd6167e5d",
         		Hex.toHexString(tx.getHash()));
@@ -98,7 +93,7 @@ public class TransactionsMessageTest {
         assertEquals("09184e72a000",
         		Hex.toHexString(tx.getReceiveAddress()));
 
-        assertNull( tx.getGasPrice() );
+        assertNull(tx.getGasPrice());
 
         assertEquals("0000000000000000000000000000000000000000",
         		Hex.toHexString(tx.getGasLimit()));
@@ -148,7 +143,7 @@ public class TransactionsMessageTest {
     }
     
     @Test /* Transactions msg encode */
-    public void test15() throws Exception {
+    public void test_3() throws Exception {
 
         String expected = "f87312f870808b00d3c21bcecceda10000009479b08ad8787060333663d19704909ee7b1903e588609184e72a000824255801ca00f410a70e42b2c9854a8421d32c87c370a2b9fff0a27f9f031bb4443681d73b5a018a7dc4c4f9dee9f3dc35cb96ca15859aa27e219a8e4a8547be6bd3206979858";
 
@@ -166,11 +161,11 @@ public class TransactionsMessageTest {
         tx.sign(privKey);
         tx.getEncoded();
 
-        List<Transaction> txList =  new ArrayList<Transaction>();
+        List<Transaction> txList =  new ArrayList<>();
         txList.add(tx);
         TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
 
-        assertEquals(expected, Hex.toHexString( transactionsMessage.getPayload()) );
+        assertEquals(expected, Hex.toHexString(transactionsMessage.getEncoded()));
     }
 }
 

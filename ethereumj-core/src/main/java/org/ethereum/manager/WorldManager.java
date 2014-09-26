@@ -10,10 +10,11 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.ClientPeer;
-import org.ethereum.net.client.PeerData;
+import org.ethereum.net.client.Peer;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 
 /**
@@ -26,13 +27,13 @@ import org.ethereum.net.peerdiscovery.PeerDiscovery;
  */
 public class WorldManager {
 
-	private BlockchainImpl blockchain;
+	private Blockchain blockchain;
 	private Repository repository;
 	private Wallet wallet;
 
     private PeerDiscovery peerDiscovery;
     
-    private final Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
+    private final Set<Peer> peers = Collections.synchronizedSet(new HashSet<Peer>());
     
     private ClientPeer activePeer;
 
@@ -50,11 +51,10 @@ public class WorldManager {
 		this.blockchain = new BlockchainImpl(repository);
 		
         // Initialize PeerData
-        List<PeerData> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
+        List<Peer> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
         peers.addAll(peerDataList);
 
         peerDiscovery = new PeerDiscovery(peers);
-
 	}
 
     // used for testing
@@ -85,10 +85,10 @@ public class WorldManager {
         this.listener = listener;
     }
 
-    public void addPeers(final Set<PeerData> newPeers) {
+    public void addPeers(final Set<Peer> newPeers) {
 
         synchronized (peers) {
-            for (final PeerData peer : newPeers) {
+            for (final Peer peer : newPeers) {
                 if (peerDiscovery.isStarted() && !peers.contains(peer)) {
                     peerDiscovery.addNewPeerData(peer);
                 }
@@ -116,10 +116,10 @@ public class WorldManager {
         return listener;
     }
 
-    public List<PeerData> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
+    public List<Peer> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
 
-        final List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
-        final List<PeerData> peers = new ArrayList<>();
+        final List<String> ipList = Arrays.asList(peerDiscoveryIpList.split(","));
+        final List<Peer> peers = new ArrayList<>();
 
         for (String ip : ipList){
             String[] addr = ip.trim().split(":");
@@ -130,13 +130,12 @@ public class WorldManager {
                 InetAddress iAddr = InetAddress.getByName(ip_trim);
                 int port = Integer.parseInt(port_trim);
 
-                PeerData peerData = new PeerData(iAddr.getAddress(), port, new byte[]{00});
+                Peer peerData = new Peer(iAddr.getAddress(), port, new byte[]{00});
                 peers.add(peerData);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
         }
-
         return peers;
     }
     
@@ -148,7 +147,7 @@ public class WorldManager {
 		return repository;
 	}
 	
-	public BlockchainImpl getBlockchain() {
+	public Blockchain getBlockchain() {
 		return blockchain;
 	}
 	
@@ -168,7 +167,7 @@ public class WorldManager {
         return activePeer;
     }
 
-    public Set<PeerData> getPeers() {
+    public Set<Peer> getPeers() {
 		return peers;
 	}
 

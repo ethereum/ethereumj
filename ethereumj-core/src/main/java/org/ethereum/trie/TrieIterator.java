@@ -33,7 +33,7 @@ public class TrieIterator {
 				this.workNode(currentNode.get(1));
 			} else {
 				if (k[k.length-1] == 16) {
-					this.values.add( currentNode.get(1).asString() );
+					this.values.add(currentNode.get(1).asString());
 				} else {
 					this.shas.add(currentNode.get(1).asBytes());
 					this.getNode(currentNode.get(1).asBytes());
@@ -42,7 +42,7 @@ public class TrieIterator {
 		} else {
 			for (int i = 0; i < currentNode.length(); i++) {
 				if (i == 16 && currentNode.get(i).length() != 0) {
-					this.values.add( currentNode.get(i).asString() );
+					this.values.add(currentNode.get(i).asString());
 				} else {
 					if (currentNode.get(i).asString() == "") {
 						this.workNode(currentNode.get(i));

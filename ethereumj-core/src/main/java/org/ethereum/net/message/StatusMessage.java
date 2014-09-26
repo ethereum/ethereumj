@@ -2,9 +2,12 @@ package org.ethereum.net.message;
 
 import static org.ethereum.net.Command.STATUS;
 
+import org.ethereum.net.Command;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum StatusMessage on the network 
@@ -23,8 +26,8 @@ public class StatusMessage extends Message {
     /** The hash of the Genesis block */
     private byte[] genesisHash;
 
-    public StatusMessage(RLPList rawData) {
-        super(rawData);
+    public StatusMessage(byte[] encoded) {
+        super(encoded);
     }
 
 	public StatusMessage(byte protocolVersion, byte networkId, 
@@ -35,18 +38,18 @@ public class StatusMessage extends Message {
         this.bestHash = bestHash;
         this.genesisHash = genesisHash;
         this.parsed = true;
+        this.encode();
     }
 	
-    @Override
-    public void parseRLP() {
+    public void parse() {
 
-        RLPList paramsList = (RLPList) rawData.get(0);
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         /* the message does not distinguish between the 0 and null
          * so check command code for null */
         // TODO: find out if it can be 00
-		if (((RLPItem) paramsList.get(0)).getRLPData() != null)
-            throw new Error("StaticMessage: parsing for mal data");
+        if ( (((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != STATUS.asByte())
+            throw new RuntimeException("Not a StatusMessage command");
         
         this.protocolVersion	= ((RLPItem) paramsList.get(1)).getRLPData()[0];
         byte[] networkIdBytes	= ((RLPItem) paramsList.get(2)).getRLPData();
@@ -59,7 +62,12 @@ public class StatusMessage extends Message {
     }
 
 	@Override
-	public byte[] getPayload() {
+	public byte[] getEncoded() {
+		if (encoded == null) this.encode();
+        return encoded;
+	}
+	
+	private void encode() {
         byte[] command			= RLP.encodeByte(STATUS.asByte());
         byte[] protocolVersion	= RLP.encodeByte(this.protocolVersion);
         byte[] networkId		= RLP.encodeByte(this.networkId);
@@ -67,19 +75,54 @@ public class StatusMessage extends Message {
         byte[] bestHash			= RLP.encodeElement(this.bestHash);
         byte[] genesisHash		= RLP.encodeElement(this.genesisHash);
 
-		byte[] data = RLP.encodeList(command, protocolVersion, networkId,
+		this.encoded = RLP.encodeList(command, protocolVersion, networkId,
 				totalDifficulty, bestHash, genesisHash);
-
-        return data;
 	}
 
 	@Override
-	public String getMessageName() {
-		return "StatusMessage";
+	public Command getCommand() {
+		return STATUS;
 	}
 
 	@Override
 	public Class<?> getAnswerMessage() {
 		return null;
+	}
+
+	public byte getProtocolVersion() {
+		if (!parsed) this.parse();
+		return protocolVersion;
+	}
+
+	public byte getNetworkId() {
+		if (!parsed) this.parse();
+		return networkId;
+	}
+
+	public byte[] getTotalDifficulty() {
+		if (!parsed) this.parse();
+		return totalDifficulty;
+	}
+
+	public byte[] getBestHash() {
+		if (!parsed) this.parse();
+		return bestHash;
+	}
+
+	public byte[] getGenesisHash() {
+		if (!parsed) this.parse();
+		return genesisHash;
+	}
+	
+	@Override
+	public String toString() {
+		if (!parsed) parse();
+		return "[command=" + this.getCommand().name() +
+    		" protocolVersion=" + this.protocolVersion +
+            " networkId=" + this.networkId +
+            " totalDifficulty=" + ByteUtil.toHexString(this.totalDifficulty) +
+            " bestHash=" + Hex.toHexString(this.bestHash) + " " +
+            " genesisHash=" + Hex.toHexString(this.genesisHash) + " " +
+            "]";
 	}
 }

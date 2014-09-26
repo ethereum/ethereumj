@@ -66,13 +66,13 @@ public class TransactionTest {
         System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
         System.out.println("s\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().s)));
 
-        System.out.println("RLP encoded tx\t\t: " + Hex.toHexString( tx.getEncoded() ));
+        System.out.println("RLP encoded tx\t\t: " + Hex.toHexString(tx.getEncoded()));
 
         // retrieve the signer/sender of the transaction
         ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature().toBase64());
 
-        System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString( tx.getEncodedRaw()));
-        System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString( tx.getEncoded() ));
+        System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString(tx.getEncodedRaw()));
+        System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString(tx.getEncoded()));
 
         System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
         System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
@@ -107,13 +107,13 @@ public class TransactionTest {
         System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
         System.out.println("s\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().s)));
 
-        System.out.println("RLP encoded tx\t\t: " + Hex.toHexString( tx.getEncoded() ));
+        System.out.println("RLP encoded tx\t\t: " + Hex.toHexString(tx.getEncoded()));
 
         // retrieve the signer/sender of the transaction
         ECKey key = ECKey.signatureToKey(tx.getHash(), tx.getSignature().toBase64());
 
-        System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString( tx.getEncodedRaw()));
-        System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString( tx.getEncoded() ));
+        System.out.println("Tx unsigned RLP\t\t: " + Hex.toHexString(tx.getEncodedRaw()));
+        System.out.println("Tx signed   RLP\t\t: " + Hex.toHexString(tx.getEncoded()));
 
         System.out.println("Signature public key\t: " + Hex.toHexString(key.getPubKey()));
         System.out.println("Sender is\t\t: " + Hex.toHexString(key.getAddress()));
@@ -252,17 +252,17 @@ public class TransactionTest {
         Transaction tx2 = new Transaction(payload);
 //        tx2.getSender();
 
-        String plainTx1 = Hex.toHexString( tx1.getEncodedRaw() );
-        String plainTx2 = Hex.toHexString( tx2.getEncodedRaw() );
+        String plainTx1 = Hex.toHexString(tx1.getEncodedRaw());
+        String plainTx2 = Hex.toHexString(tx2.getEncodedRaw());
 
 //        Transaction tx = new Transaction(Hex.decode(rlp));
 
-        System.out.println("tx1.hash: " + Hex.toHexString( tx1.getHash() ));
-        System.out.println("tx2.hash: " + Hex.toHexString( tx2.getHash() ));
+        System.out.println("tx1.hash: " + Hex.toHexString(tx1.getHash()));
+        System.out.println("tx2.hash: " + Hex.toHexString(tx2.getHash()));
         System.out.println();
         System.out.println("plainTx1: " + plainTx1 );
         System.out.println("plainTx2: " + plainTx2 );
 
-        System.out.println( Hex.toHexString( tx2.getSender() ));
+        System.out.println( Hex.toHexString(tx2.getSender()));
     }
 }

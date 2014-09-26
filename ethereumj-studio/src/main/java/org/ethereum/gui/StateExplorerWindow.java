@@ -38,7 +38,6 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.Program;
-import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
 import java.awt.Component;

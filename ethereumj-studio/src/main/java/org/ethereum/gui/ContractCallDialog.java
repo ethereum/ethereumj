@@ -7,7 +7,6 @@ import org.ethereum.core.Wallet;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
-import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -26,8 +25,6 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
-import java.util.regex.Pattern;
-
 /**
  * www.ethereumJ.com
  * @author: Roman Mandeleil

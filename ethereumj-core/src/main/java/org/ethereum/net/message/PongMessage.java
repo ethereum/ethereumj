@@ -1,5 +1,8 @@
 package org.ethereum.net.message;
 
+import static org.ethereum.net.Command.PONG;
+
+import org.ethereum.net.Command;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -9,25 +12,26 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class PongMessage extends Message {
 
-    public PongMessage() {
-        this.payload = Hex.decode("C103");
-    }
+	/** Pong message is always a the same single command payload */ 
+	private static byte[] FIXED_PAYLOAD = Hex.decode("C103");
 
+	@Override
+	public byte[] getEncoded() {
+		return FIXED_PAYLOAD;
+	}
+
+	@Override
+	public Command getCommand() {
+		return PONG;
+	}
+
+	@Override
+	public Class<?> getAnswerMessage() {
+		return null;
+	}
+	
     @Override
-    public void parseRLP() {
-    }
-
-    public byte[] getPayload() {
-        return payload;
-    }
-
-    public String getMessageName(){
-        return "Pong";
-    }
-
-    @Override
-    public Class getAnswerMessage() {
-        return null;
+    public String toString() {
+    	return "[command=PONG]";
     }
 }
-

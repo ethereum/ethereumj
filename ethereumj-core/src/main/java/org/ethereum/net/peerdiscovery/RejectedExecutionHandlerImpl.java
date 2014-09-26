@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 public class RejectedExecutionHandlerImpl implements RejectedExecutionHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
+	private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     @Override
     public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {

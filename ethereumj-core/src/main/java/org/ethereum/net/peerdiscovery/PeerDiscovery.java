@@ -1,6 +1,6 @@
 package org.ethereum.net.peerdiscovery;
 
-import org.ethereum.net.client.PeerData;
+import org.ethereum.net.client.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,11 +24,11 @@ public class PeerDiscovery {
     private ThreadPoolExecutor executorPool;
     private PeerDiscoveryMonitorThread monitor;
     
-    private final Set<PeerData> peers;
+    private final Set<Peer> peers;
 
     private final AtomicBoolean started = new AtomicBoolean(false);
 
-    public PeerDiscovery(Set<PeerData> peers) {
+    public PeerDiscovery(Set<Peer> peers) {
         this.peers = peers;
     }
 
@@ -49,14 +49,14 @@ public class PeerDiscovery {
         Thread monitorThread = new Thread(monitor);
         monitorThread.start();
 
-        for (PeerData peerData : this.peers) {
+        for (Peer peerData : this.peers) {
             executorPool.execute(new WorkerThread(peerData, executorPool));
         }
         
         started.set(true);
     }
 
-    public void addNewPeerData(PeerData peerData) {
+    public void addNewPeerData(Peer peerData) {
         logger.debug("add new peer for discovery: {}", peerData);
         executorPool.execute(new WorkerThread(peerData, executorPool));
     }

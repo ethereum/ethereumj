@@ -627,7 +627,7 @@ public class RLP {
 				// It's an item less than 55 bytes long,
 				// data[0] - 0x80 == length of the item
 				if ((msgData[pos] & 0xFF) > OFFSET_SHORT_ITEM
-						&& (msgData[pos] & 0xFF) < OFFSET_LONG_ITEM) {
+						&& (msgData[pos] & 0xFF) <= OFFSET_LONG_ITEM) {
 
 					byte length = (byte) ((msgData[pos] & 0xFF) - OFFSET_SHORT_ITEM);
 
@@ -706,7 +706,7 @@ public class RLP {
 	}
 		
 	private static DecodeResult decodeList(byte[] data, int pos, int prevPos, int len) {
-		List<Object> slice = new ArrayList<Object>();
+		List<Object> slice = new ArrayList<>();
 		for (int i = 0; i < len;) {
 			// Get the next item in the data list and append it
 			DecodeResult result = decode(data, pos);
@@ -825,12 +825,10 @@ public class RLP {
     public static byte[] encodeElement(byte[] srcData) {
 
         if ( srcData == null ||
-             (srcData.length == 1 && srcData[0] == 0) ) {
+             (srcData.length == 1 && srcData[0] == 0)) {
             return new byte[]{(byte) 0x80};
         } if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
-
             return srcData;
-
         } else if (srcData.length < SIZE_THRESHOLD) {
             // length = 8X
             byte length = (byte) (OFFSET_SHORT_ITEM + srcData.length);

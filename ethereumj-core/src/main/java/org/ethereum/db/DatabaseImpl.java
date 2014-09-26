@@ -120,7 +120,7 @@ public class DatabaseImpl implements Database {
 
 	public List<ByteArrayWrapper> dumpKeys() {
 		DBIterator iterator = getDb().iterator();
-		ArrayList<ByteArrayWrapper> keys = new ArrayList<ByteArrayWrapper>();
+		ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
 
 		while (iterator.hasNext()) {
 			ByteArrayWrapper key = new ByteArrayWrapper(iterator.next().getKey());

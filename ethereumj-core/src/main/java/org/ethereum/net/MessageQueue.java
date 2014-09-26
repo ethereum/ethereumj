@@ -55,22 +55,25 @@ public class MessageQueue {
     public void receivedMessage(Message msg) {
 
         if (logger.isDebugEnabled())
-            logger.debug("Recv: [ {} ] - [ {} ]",
-                    msg.getMessageName(),
-                    Hex.toHexString(msg.getPayload()));
+            logger.debug("Recv: [{}] - [{}]",
+                    msg.getCommand().name(),
+                    Hex.toHexString(msg.getEncoded()));
 
-            if (null != messageQueue.peek()) {
+        if (logger.isInfoEnabled())
+            logger.info("Recv: {}", msg.toString());
 
-                MessageRoundtrip messageRoundtrip = messageQueue.peek();
-                Message waitingMessage = messageRoundtrip.getMsg();
-	
-				if (waitingMessage.getAnswerMessage() == null)
-					return;
+        if (null != messageQueue.peek()) {
 
-                if (msg.getClass() == waitingMessage.getAnswerMessage()){
-                    messageRoundtrip.answer();
-                    logger.debug("Message round trip covered: [ {} ] ", messageRoundtrip.getMsg().getMessageName());
-                }
+            MessageRoundtrip messageRoundtrip = messageQueue.peek();
+            Message waitingMessage = messageRoundtrip.getMsg();
+
+			if (waitingMessage.getAnswerMessage() == null)
+				return;
+
+            if (msg.getClass() == waitingMessage.getAnswerMessage()){
+                messageRoundtrip.answer();
+                logger.debug("Message round trip covered: [{}] ", messageRoundtrip.getMsg().getCommand());
+            }
         }
     }
 
@@ -108,17 +111,20 @@ public class MessageQueue {
     private void sendToWire(Message msg) {
 
         if (logger.isDebugEnabled())
-            logger.debug("Send: [ {} ] - [ {} ]",
-                    msg.getMessageName(),
-                    Hex.toHexString(msg.getPayload()));
+            logger.debug("Send: [{}] - [{}]",
+                    msg.getCommand().name(),
+                    Hex.toHexString(msg.getEncoded()));
+        
+        if (logger.isInfoEnabled())
+            logger.info("Send: {}", msg.toString());
 
-        ByteBuf buffer = ctx.alloc().buffer(msg.getPayload().length + 8);
+        int packetLength = StaticMessages.SYNC_TOKEN.length + msg.getEncoded().length;
+        ByteBuf buffer = ctx.alloc().buffer(packetLength);
         buffer.writeBytes(StaticMessages.SYNC_TOKEN);
-        buffer.writeBytes(ByteUtil.calcPacketLength(msg.getPayload()));
-        buffer.writeBytes(msg.getPayload());
+        buffer.writeBytes(ByteUtil.calcPacketLength(msg.getEncoded()));
+        buffer.writeBytes(msg.getEncoded());
         ctx.writeAndFlush(buffer);
     }
-
 
     private boolean containsGetBlockHashes() {
         Iterator<MessageRoundtrip> iterator = messageQueue.iterator();

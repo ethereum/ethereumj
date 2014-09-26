@@ -10,7 +10,7 @@ import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.ClientPeer;
-import org.ethereum.net.client.PeerData;
+import org.ethereum.net.client.Peer;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.slf4j.Logger;
@@ -37,24 +37,24 @@ public class EthereumImpl implements Ethereum {
      * @return online peer
      */
     @Override
-    public PeerData findOnlinePeer(PeerData peerData) {
+    public Peer findOnlinePeer(Peer peerData) {
 
-        Set<PeerData> excludePeers = new HashSet<>();
+        Set<Peer> excludePeers = new HashSet<>();
         excludePeers.add(peerData);
 
         return findOnlinePeer(excludePeers);
     }
 
     @Override
-    public PeerData findOnlinePeer() {
+    public Peer findOnlinePeer() {
 
-        Set<PeerData> excludePeers = new HashSet<>();
+        Set<Peer> excludePeers = new HashSet<>();
         return findOnlinePeer(excludePeers);
     }
 
 
     @Override
-    public PeerData findOnlinePeer(Set<PeerData> excludePeers)  {
+    public Peer findOnlinePeer(Set<Peer> excludePeers)  {
         logger.info("Looking for online peers...");
 
         final EthereumListener listener = WorldManager.getInstance().getListener();
@@ -64,10 +64,10 @@ public class EthereumImpl implements Ethereum {
 
         WorldManager.getInstance().startPeerDiscovery();
 
-        final Set<PeerData> peers = WorldManager.getInstance().getPeers();
+        final Set<Peer> peers = WorldManager.getInstance().getPeers();
         synchronized (peers) {
 
-            for (PeerData peer : peers) { // it blocks until a peer is available.
+            for (Peer peer : peers) { // it blocks until a peer is available.
 
                 if (peer.isOnline() &&   !excludePeers.contains(peer)) {
 
@@ -85,9 +85,9 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public PeerData waitForOnlinePeer(){
+    public Peer waitForOnlinePeer(){
 
-        PeerData peer = null;
+        Peer peer = null;
         while(peer == null){
 
             try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
@@ -99,7 +99,7 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Set<PeerData> getPeers() {
+    public Set<Peer> getPeers() {
         return WorldManager.getInstance().getPeers();
     }
 

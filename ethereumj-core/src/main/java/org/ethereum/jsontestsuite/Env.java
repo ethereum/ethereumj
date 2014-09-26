@@ -42,10 +42,10 @@ public class Env {
         String prevHash   = env.get("previousHash").toString();
 
         this.currentCoinbase  = Hex.decode(coinbase);
-        this.currentDifficlty = ByteUtil.bigIntegerToBytes( new BigInteger(difficulty) );
-        this.currentGasLimit  = ByteUtil.bigIntegerToBytes( new BigInteger(gasLimit) );
-        this.currentNumber    = ByteUtil.bigIntegerToBytes( new BigInteger(number) );
-        this.currentTimestamp = ByteUtil.bigIntegerToBytes( new BigInteger(timestamp) );
+        this.currentDifficlty = ByteUtil.bigIntegerToBytes(new BigInteger(difficulty));
+        this.currentGasLimit  = ByteUtil.bigIntegerToBytes(new BigInteger(gasLimit));
+        this.currentNumber    = ByteUtil.bigIntegerToBytes(new BigInteger(number));
+        this.currentTimestamp = ByteUtil.bigIntegerToBytes(new BigInteger(timestamp));
         this.previousHash     = Hex.decode(prevHash);
 
     }

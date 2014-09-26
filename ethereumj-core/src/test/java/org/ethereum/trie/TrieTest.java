@@ -595,7 +595,7 @@ public class TrieTest {
         }
 
 
-        System.out.println( "root_1:  => " + Hex.toHexString( trieSingle.getRootHash() ));
+        System.out.println("root_1:  => " + Hex.toHexString(trieSingle.getRootHash()));
 
         // *** Part - 2 ***
         // pre. we use the same data from massive-upload.dmp
@@ -630,7 +630,7 @@ public class TrieTest {
                 trie2.update(keyVal[0].trim(), keyVal[1].trim());
         }
 
-        System.out.println( "root_2:  => " + Hex.toHexString( trie2.getRootHash() ));
+        System.out.println("root_2:  => " + Hex.toHexString( trie2.getRootHash()));
 
         assertEquals(trieSingle.getRootHash(), trie2.getRootHash());
 
@@ -642,7 +642,7 @@ public class TrieTest {
     	
     	if(massiveUpdateFromDBEnabled) {
 	        List<String> randomWords = Arrays.asList(randomDictionary.split(","));
-	        HashMap<String, String> testerMap = new HashMap<>();
+	        Map<String, String> testerMap = new HashMap<>();
 
 	        TrieImpl trie = new TrieImpl(mockDb);
 	        Random generator = new Random();
@@ -850,19 +850,19 @@ public class TrieTest {
         String dmp = trie.getTrieDump();
         System.out.println(dmp);
         System.out.println();
-        Assert.assertEquals("ed6e08740e4a267eca9d4740f71f573e9aabbcc739b16a2fa6c1baed5ec21278", Hex.toHexString( trie.getRootHash() ));
+        Assert.assertEquals("ed6e08740e4a267eca9d4740f71f573e9aabbcc739b16a2fa6c1baed5ec21278", Hex.toHexString(trie.getRootHash()));
 
         trie.update("do", "verb");
         dmp = trie.getTrieDump();
         System.out.println(dmp);
         System.out.println();
-        Assert.assertEquals("779db3986dd4f38416bfde49750ef7b13c6ecb3e2221620bcad9267e94604d36", Hex.toHexString( trie.getRootHash() ));
+        Assert.assertEquals("779db3986dd4f38416bfde49750ef7b13c6ecb3e2221620bcad9267e94604d36", Hex.toHexString(trie.getRootHash()));
 
         trie.update("doggiestan", "aeswome_place");
         dmp = trie.getTrieDump();
         System.out.println(dmp);
         System.out.println();
-        Assert.assertEquals("8bd5544747b4c44d1274aa99a6293065fe319b3230e800203317e4c75a770099", Hex.toHexString( trie.getRootHash() ));
+        Assert.assertEquals("8bd5544747b4c44d1274aa99a6293065fe319b3230e800203317e4c75a770099", Hex.toHexString(trie.getRootHash()));
     }
 
 }

@@ -8,6 +8,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,10 +20,10 @@ import java.util.regex.Pattern;
 public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
     private int labelIndex = 0;
-    private ArrayList<String> vars   = new ArrayList<String>();
+    private List<String> vars   = new ArrayList<>();
 
-    private HashMap<String, Integer> arraysSize = new HashMap<String, Integer>();
-    private List<String> arraysIndex = new ArrayList<String>();
+    private Map<String, Integer> arraysSize = new HashMap<>();
+    private List<String> arraysIndex = new ArrayList<>();
 
     @Override
     public String visitParse(@NotNull SerpentParser.ParseContext ctx) {

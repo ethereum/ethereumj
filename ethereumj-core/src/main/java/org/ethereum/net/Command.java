@@ -90,7 +90,7 @@ public enum Command {
 
     private int cmd;
     
-    private static final Map<Integer, Command> intToTypeMap = new HashMap<Integer, Command>();
+    private static final Map<Integer, Command> intToTypeMap = new HashMap<>();
     static {
         for (Command type : Command.values()) {
             intToTypeMap.put(type.cmd, type);

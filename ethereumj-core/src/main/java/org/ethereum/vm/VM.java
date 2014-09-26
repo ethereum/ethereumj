@@ -970,12 +970,12 @@ public class VM {
 			
 			vmCounter++;
         } catch (RuntimeException e) {
-            if(e instanceof OutOfGasException)
-            	logger.warn("OutOfGasException occurred", e);
-            else
+        	if(e instanceof OutOfGasException)
+               	logger.warn("OutOfGasException occurred", e);
+        	else
             	logger.error("VM halted", e);
-            program.stop();
-            throw e;
+           	program.stop();
+           	throw e;
         }
     }
 

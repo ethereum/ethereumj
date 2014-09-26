@@ -18,25 +18,18 @@ import org.ethereum.util.RLPList;
  */
 public class BlocksMessage extends Message {
 
-	private List<Block> blockDataList = new ArrayList<Block>();
+	private List<Block> blockDataList = new ArrayList<>();
 
-	public BlocksMessage(RLPList rawData) {
-		super(rawData);
-	}
-
-    public BlocksMessage(byte[] payload) {
-        super(RLP.decode2(payload));
-        this.payload = payload;
+    public BlocksMessage(byte[] encoded) {
+        super(encoded);
     }
 
+	public void parse() {
 
-	public void parseRLP() {
-
-		RLPList paramsList = (RLPList) rawData.get(0);
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 		
-		if (Command.fromInt(((RLPItem) (paramsList).get(0)).getRLPData()[0]) != BLOCKS) {
-			throw new Error("BlocksMessage: parsing for mal data");
-		}
+        if ( (((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != BLOCKS.asByte())
+            throw new RuntimeException("Not a BlocksMessage command");
 
 		for (int i = 1; i < paramsList.size(); ++i) {
 			RLPList rlpData = ((RLPList) paramsList.get(i));
@@ -45,35 +38,34 @@ public class BlocksMessage extends Message {
 		}
 		parsed = true;
 	}
+	
+	@Override
+	public Command getCommand() {
+		return BLOCKS;
+	}
 
 	@Override
-	public byte[] getPayload() {
-		return payload;
+	public byte[] getEncoded() {
+		return encoded;
 	}
 
 	public List<Block> getBlockDataList() {
-		if (!parsed) parseRLP();
+		if (!parsed) parse();
 		return blockDataList;
 	}
 
-    @Override
-    public String getMessageName() {
-        return "Block";
-    }
-
-    @Override
-    public Class getAnswerMessage() {
+	@Override
+    public Class<?> getAnswerMessage() {
         return null;
     }
 
     public String toString() {
-        if (!parsed) parseRLP();
+        if (!parsed) parse();
 
 		StringBuffer sb = new StringBuffer();
 		for (Block blockData : this.getBlockDataList()) {
 			sb.append("   ").append(blockData.toFlatString()).append("\n");
-
 		}
-		return "Blocks Message [\n" + sb.toString() + " ]";
+		return "[command=" + getCommand().name() + "\n" + sb.toString() + " ]";
 	}
 }

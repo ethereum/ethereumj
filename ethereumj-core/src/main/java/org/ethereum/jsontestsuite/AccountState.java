@@ -47,34 +47,30 @@ public class AccountState {
 
         int size = store.keySet().size();
         Object[] keys = store.keySet().toArray();
-        for (int i = 0; i < size; ++i){
+        for (int i = 0; i < size; ++i) {
 
             String keyS = keys[i].toString();
             String valS =  store.get(keys[i]).toString();
 
             ByteArrayWrapper key;
             boolean hexVal = Pattern.matches("0[xX][0-9a-fA-F]+", keyS);
-            if (hexVal){
-                key = new ByteArrayWrapper(  Hex.decode(keyS.substring(2)) );
+            if (hexVal) {
+                key = new ByteArrayWrapper(Hex.decode(keyS.substring(2)));
             } else {
-
-                byte[] data = ByteUtil.bigIntegerToBytes( new BigInteger(keyS) );
-                key = new ByteArrayWrapper( data );
+                byte[] data = ByteUtil.bigIntegerToBytes(new BigInteger(keyS));
+                key = new ByteArrayWrapper(data);
             }
 
             ByteArrayWrapper value;
             hexVal = Pattern.matches("0[xX][0-9a-fA-F]+", valS);
-            if (hexVal){
-                value = new ByteArrayWrapper(  Hex.decode(valS.substring(2)) );
+            if (hexVal) {
+                value = new ByteArrayWrapper(Hex.decode(valS.substring(2)));
             } else {
-
-                byte[] data = ByteUtil.bigIntegerToBytes( new BigInteger(valS) );
-                value = new ByteArrayWrapper( data );
+                byte[] data = ByteUtil.bigIntegerToBytes(new BigInteger(valS));
+                value = new ByteArrayWrapper(data);
             }
-
             storage.put(key, value);
         }
-
     }
 
     public byte[] getAddress() {

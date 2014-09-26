@@ -50,10 +50,9 @@ public class ValueTest {
 
         String testRlp = "f7808080d387206f72726563748a626574656c676575736580d387207870726573738a70726564696361626c658080808080808080808080";
 
-        Value val =
-              Value.fromRlpEncoded(Hex.decode(testRlp));
+        Value val = Value.fromRlpEncoded(Hex.decode(testRlp));
 
-        assertEquals( testRlp, Hex.toHexString( val.encode() ));
+        assertEquals(testRlp, Hex.toHexString(val.encode()));
     }
 
 

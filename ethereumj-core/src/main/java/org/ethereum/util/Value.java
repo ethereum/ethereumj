@@ -263,9 +263,9 @@ public class Value {
                 output.append("'");
                 for (byte oneByte : asBytes()) {
                     if (oneByte < 16) {
-                        output.append("\\x").append(Utils.oneByteToHexString(oneByte));
+                        output.append("\\x").append(ByteUtil.oneByteToHexString(oneByte));
                     } else {
-                        output.append( Character.valueOf((char)oneByte) );
+                        output.append(Character.valueOf((char)oneByte));
                     }
                 }
                 output.append("'");
@@ -278,17 +278,16 @@ public class Value {
         return "Unexpected type";
     }
 
-    public int countYourBranchNodes(){
+    public int countBranchNodes() {
 
-        if (this.isList()){
-
+        if (this.isList()) {
             List<Object> objList = this.asList();
             int i = 0;
-            for (Object obj : objList){
-                i += (new Value(obj)).countYourBranchNodes();
+            for (Object obj : objList) {
+                i += (new Value(obj)).countBranchNodes();
             }
             return i;
-        } else if (this.isBytes()){
+        } else if (this.isBytes()) {
             this.asBytes();
         }
         return 0;

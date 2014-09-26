@@ -16,7 +16,7 @@ import org.iq80.leveldb.WriteOptions;
 
 public class MockDB implements DB {
 
-    Map<ByteArrayWrapper, byte[]> storage = new HashMap<ByteArrayWrapper, byte[]>();
+    Map<ByteArrayWrapper, byte[]> storage = new HashMap<>();
 
     @Override
     public void close() throws IOException {

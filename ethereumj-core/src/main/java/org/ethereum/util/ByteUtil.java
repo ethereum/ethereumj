@@ -22,8 +22,8 @@ public class ByteUtil {
     }
 
     /**
-     * The regular {@link java.math.BigInteger#toByteArray()} method isn't quite what we often need: it appends a
-     * leading zero to indicate that the number is positive and may need padding.
+     * The regular {@link java.math.BigInteger#toByteArray()} method isn't quite what we often need: 
+     * it appends a leading zero to indicate that the number is positive and may need padding.
      *
      * @param b the integer to format into a byte array
      * @param numBytes the desired size of the resulting byte array
@@ -41,10 +41,10 @@ public class ByteUtil {
     }
 
     /**
-     * emitting sign indication byte
+     * Omitting sign indication byte
      *
      * @param b - any big integer number
-     * @return
+     * @return a byte array representation of this number without a sign byte
      */
     public static byte[] bigIntegerToBytes(BigInteger b) {
         if (b == null)
@@ -84,7 +84,7 @@ public class ByteUtil {
     }
     
     public static String toHexString(byte[] data) {
-        if (data == null) return "null";
+        if (data == null) return "";
         else return Hex.toHexString(data);
     }
     
@@ -129,10 +129,16 @@ public class ByteUtil {
     public static String nibblesToPrettyString(byte[] nibbles){
         StringBuffer buffer = new StringBuffer();
         for (byte nibble : nibbles) {
-            String nibleString = Utils.oneByteToHexString(nibble);
+            String nibleString = oneByteToHexString(nibble);
             buffer.append("\\x" + nibleString);
         }
         return buffer.toString();
+    }
+    
+    public static String oneByteToHexString(byte value) {
+        String retVal = Integer.toString(value & 0xFF, 16);
+        if (retVal.length() == 1) retVal = "0" + retVal;
+        return retVal;
     }
 
     /**
@@ -153,6 +159,22 @@ public class ByteUtil {
         }
         if (bytes == 0) ++bytes;
         return bytes;
+    }
+    
+    /**
+     * Convert an array of byte arrays to a single string
+     * <br/>
+     * Example: "eth" or "eth shh bzz"
+     * 
+     * @return byte arrays as String
+     */
+    public static String toString(byte[][] arrays) {
+    	StringBuilder sb = new StringBuilder();
+		for (byte[] array : arrays) {
+			sb.append(new String(array)).append(" ");
+		}
+		if(sb.length() > 0) sb.deleteCharAt(sb.length()-1);
+		return sb.toString();
     }
 
     /**

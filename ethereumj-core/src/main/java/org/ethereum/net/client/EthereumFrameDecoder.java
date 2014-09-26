@@ -37,19 +37,19 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
             // TODO: normally , if it's happens to often , than
             // TODO: it's an attack and I should drop the peer.
 
-            logger.error("abandon garbage, wrong magic bytes: [ {} ] msgSize: [ {} ]", magicBytes, msgSize);
+            logger.error("abandon garbage, wrong magic bytes: [{}] msgSize: [{}]", magicBytes, msgSize);
             ctx.close();
         }
 
         // Don't have the full packet yet
         if (msgSize > in.readableBytes()) {
 
-            logger.trace("msg decode: magicBytes: [ {} ], readBytes: [ {} ] / msgSize: [ {} ] ", magicBytes, in.readableBytes(), msgSize);
+            logger.trace("msg decode: magicBytes: [{}], readBytes: [{}] / msgSize: [{}] ", magicBytes, in.readableBytes(), msgSize);
             in.resetReaderIndex();
             return;
         }
 
-        logger.trace("message fully constructed go handle it: readBytes: [ {} ] / msgSize: [ {} ]", in.readableBytes(), msgSize);
+        logger.trace("message fully constructed go handle it: readBytes: [{}] / msgSize: [{}]", in.readableBytes(), msgSize);
 
         byte[] decoded = new byte[(int)msgSize];
         in.readBytes(decoded);

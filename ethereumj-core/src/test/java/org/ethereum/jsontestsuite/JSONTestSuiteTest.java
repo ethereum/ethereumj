@@ -38,11 +38,11 @@ public class JSONTestSuiteTest {
         String expectedBalance = "0de0b6b3a763ff6c";
         String expectedCode    = "6000600060006000604a3360c85c03f1";
 
-        ByteArrayWrapper expectedKey1 = new ByteArrayWrapper( Hex.decode("ffaa") );
-        ByteArrayWrapper expectedKey2 = new ByteArrayWrapper( Hex.decode("ffab") );
+        ByteArrayWrapper expectedKey1 = new ByteArrayWrapper(Hex.decode("ffaa"));
+        ByteArrayWrapper expectedKey2 = new ByteArrayWrapper(Hex.decode("ffab"));
 
-        ByteArrayWrapper expectedVal1 = new ByteArrayWrapper( Hex.decode("c8") );
-        ByteArrayWrapper expectedVal2 = new ByteArrayWrapper( Hex.decode("b2b2b2") );
+        ByteArrayWrapper expectedVal1 = new ByteArrayWrapper(Hex.decode("c8"));
+        ByteArrayWrapper expectedVal2 = new ByteArrayWrapper(Hex.decode("b2b2b2"));
 
         JSONParser parser = new JSONParser();
         String accountString = "{'balance':999999999999999852,'nonce':1," +
@@ -60,10 +60,10 @@ public class JSONTestSuiteTest {
         Assert.assertEquals(expectedBalance, Hex.toHexString(state.balance));
         Assert.assertEquals(expectedCode, Hex.toHexString(state.code));
 
-        Assert.assertTrue( state.storage.keySet().contains(expectedKey1) );
+        Assert.assertTrue(state.storage.keySet().contains(expectedKey1));
         Assert.assertTrue(state.storage.keySet().contains(expectedKey2));
 
-        Assert.assertTrue( state.storage.values().contains(expectedVal1) );
+        Assert.assertTrue(state.storage.values().contains(expectedVal1));
         Assert.assertTrue(state.storage.values().contains(expectedVal2));
     }
 
@@ -130,11 +130,11 @@ public class JSONTestSuiteTest {
 
         Env env = new Env(envJSONObj);
 
-        Assert.assertEquals(expectedCurrentCoinbase,    Hex.toHexString(env.getCurrentCoinbase()));
-        Assert.assertEquals(expectedCurrentDifficulty, new BigInteger( env.getCurrentDifficlty()).toString());
-        Assert.assertEquals(expectedCurrentGasLimit,   new BigInteger( env.getCurrentGasLimit()).toString());
-        Assert.assertEquals(expectedCurrentNumber,     new BigInteger( env.getCurrentNumber()).toString());
-        Assert.assertEquals(expectedCurrentTimestamp,  new BigInteger( env.getCurrentTimestamp()).toString());
+        Assert.assertEquals(expectedCurrentCoinbase,   Hex.toHexString(env.getCurrentCoinbase()));
+        Assert.assertEquals(expectedCurrentDifficulty, new BigInteger(env.getCurrentDifficlty()).toString());
+        Assert.assertEquals(expectedCurrentGasLimit,   new BigInteger(env.getCurrentGasLimit()).toString());
+        Assert.assertEquals(expectedCurrentNumber,     new BigInteger(env.getCurrentNumber()).toString());
+        Assert.assertEquals(expectedCurrentTimestamp,  new BigInteger(env.getCurrentTimestamp()).toString());
         Assert.assertEquals(expectedPreviousHash,      Hex.toHexString(env.getPreviousHash()));
 
     }

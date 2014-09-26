@@ -40,11 +40,11 @@ public class Block {
 	private BlockHeader header;
 	
     /* Transactions */
-    private List<TransactionReceipt> txReceiptList = new CopyOnWriteArrayList<TransactionReceipt>() ;
-	private List<Transaction> transactionsList = new CopyOnWriteArrayList<Transaction>();
+    private List<TransactionReceipt> txReceiptList = new CopyOnWriteArrayList<>() ;
+	private List<Transaction> transactionsList = new CopyOnWriteArrayList<>();
 	
 	/* Uncles */
-    private List<BlockHeader> uncleList = new CopyOnWriteArrayList<BlockHeader>();
+    private List<BlockHeader> uncleList = new CopyOnWriteArrayList<>();
 
     /* Private */ 	
 	
@@ -257,7 +257,7 @@ public class Block {
         for (Transaction tx : getTransactionsList()) {
 
             toStringBuff.append("\n");
-            toStringBuff.append( tx.toString() );
+            toStringBuff.append(tx.toString());
         }
 
         toStringBuff.append("]");
@@ -276,7 +276,7 @@ public class Block {
 
         for (TransactionReceipt tx : getTxReceiptList()) {
             toStringBuff.append("<br/>");
-            toStringBuff.append( tx.toStylishString() );
+            toStringBuff.append(tx.toStylishString());
             toStringBuff.append("<br/>");
         }
 

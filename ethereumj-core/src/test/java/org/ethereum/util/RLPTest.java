@@ -305,7 +305,7 @@ public class RLPTest {
         String tx = "F86E12F86B80881BC16D674EC8000094CD2A3D9F938E13CD947EC05ABC7FE734DF8DD8268609184E72A00064801BA0C52C114D4F5A3BA904A9B3036E5E118FE0DBB987FE3955DA20F2CD8F6C21AB9CA06BA4C2874299A55AD947DBC98A25EE895AABF6B625C26C435E84BFD70EDF2F69";
         byte[] payload = Hex.decode(tx);
 
-        Queue<Integer> index = new LinkedList<Integer>();
+        Queue<Integer> index = new LinkedList<>();
         RLP.fullTraverse(payload, 0, 0, payload.length, 1, index);
 
         // TODO: assert lenght overflow while parsing list in RLP

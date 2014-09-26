@@ -7,11 +7,7 @@ import org.ethereum.net.Command;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,52 +18,39 @@ import java.util.List;
  */
 public class TransactionsMessage extends Message {
 	
-	private Logger logger = LoggerFactory.getLogger("wire");
-    private List<Transaction> transactions = new ArrayList<Transaction>();
+    private List<Transaction> transactions = new ArrayList<>();
 
-    public TransactionsMessage() {
+    public TransactionsMessage(byte[] encoded) {
+        super(encoded);
     }
 
     public TransactionsMessage(List<Transaction> transactionList) {
-
         this.transactions = transactionList;
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-
-        for (Transaction tx : transactionList) {
-
-            byte[] txPayload = tx.getEncoded();
-			try {
-				baos.write(txPayload);
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-			}
-        }
-
-        byte[][] elements = new byte[transactionList.size() + 1][];
-        elements[0] = new byte[]{Command.TRANSACTIONS.asByte()};
-        for (int i = 0; i < transactionList.size(); ++i)
-            elements[i + 1] = transactionList.get(i).getEncoded();
-        payload = RLP.encodeList(elements);
     }
-
-    public TransactionsMessage(byte[] payload) {
-        super(RLP.decode2(payload));
-        this.payload = payload;
-    }
-
-    public TransactionsMessage(RLPList rawData) {
-        this.rawData = rawData;
-        parsed = false;
-    }
-
+    
     @Override
-    public void parseRLP() {
-        RLPList paramsList = (RLPList) rawData.get(0);
+    public byte[] getEncoded() {
+    	if (encoded == null) this.encode();
+    	return encoded;
+    }
 
-		if (Command.fromInt(((RLPItem) (paramsList).get(0)).getRLPData()[0] & 0xFF) != TRANSACTIONS)
-			throw new Error("TransactionMessage: parsing for mal data");
+    private void encode() {
+        byte[][] encodedTransactions = new byte[transactions.size()][];
+        byte[] command = new byte[]{Command.TRANSACTIONS.asByte()};
+        for (int i = 0; i < transactions.size(); ++i)
+            encodedTransactions[i + 1] = transactions.get(i).getEncoded();
+        byte[] encodedTxsList = RLP.encodeList(encodedTransactions);
+        this.encoded = RLP.encodeList(command, encodedTxsList);
+    }
 
-        transactions = new ArrayList<Transaction>();
+    private void parse() {
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+
+		int commandByte = ((RLPItem) (paramsList).get(0)).getRLPData()[0] & 0xFF;
+		if (Command.fromInt(commandByte) != TRANSACTIONS)
+			throw new RuntimeException("Not a TransactionMessage: " + Integer.toHexString(commandByte));
+
+        transactions = new ArrayList<>();
         int size = paramsList.size();
         for (int i = 1; i < size; ++i) {
             RLPList rlpTxData = (RLPList) paramsList.get(i);
@@ -78,27 +61,22 @@ public class TransactionsMessage extends Message {
     }
 
     public List<Transaction> getTransactions() {
-        if (!parsed) parseRLP();
+        if (!parsed) parse();
         return transactions;
     }
 
-    @Override
-    public String getMessageName() {
-        return "Transactions";
-    }
+	@Override
+	public Command getCommand() {
+		return TRANSACTIONS;
+	}
 
     @Override
-    public Class getAnswerMessage() {
+    public Class<?> getAnswerMessage() {
         return null;
     }
-
-    @Override
-    public byte[] getPayload() {
-        return payload;
-    }
-
+    
     public String toString() {
-        if(!parsed) parseRLP();
+        if(!parsed) parse();
         StringBuffer sb = new StringBuffer();
         for (Transaction transaction : transactions)
             sb.append("   ").append(transaction).append("\n");

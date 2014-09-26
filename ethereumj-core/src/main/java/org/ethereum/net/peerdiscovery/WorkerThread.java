@@ -1,6 +1,6 @@
 package org.ethereum.net.peerdiscovery;
 
-import org.ethereum.net.client.PeerData;
+import org.ethereum.net.client.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,28 +16,26 @@ public class WorkerThread implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     ThreadPoolExecutor poolExecutor;
-    private PeerData peerData;
+    private Peer peerData;
     private PeerTaster peerTaster;
 
-    public WorkerThread(PeerData peerData, ThreadPoolExecutor poolExecutor) {
+    public WorkerThread(Peer peerData, ThreadPoolExecutor poolExecutor) {
         this.poolExecutor = poolExecutor;
         this.peerData = peerData;
     }
 
     @Override
     public void run() {
-        logger.info(Thread.currentThread().getName()+" Start. Command = "+ peerData.toString());
+        logger.info("{} start", Thread.currentThread().getName());
         processCommand();
-        logger.info(Thread.currentThread().getName()+" End.");
+        logger.info("{} end", Thread.currentThread().getName());
 
-        try {Thread.sleep(10000); } catch (InterruptedException e) {logger.error("sleep interrupted");}
         poolExecutor.execute(this);
     }
 
     private void processCommand() {
 
         try {
-
             peerTaster = new PeerTaster();
             peerTaster.connect(peerData.getInetAddress().getHostAddress(), peerData.getPort());
 
@@ -47,9 +45,8 @@ public class WorkerThread implements Runnable {
         }
         catch (Throwable e) {
             if (peerData.isOnline() == true)
-                logger.info("Peer: [ {} ] got offline, due: [ {} ]",
-                        peerData.getInetAddress().getHostAddress(),
-                        e);
+                logger.info("Peer: [{}] went offline, due to: [{}]",
+                        peerData.getInetAddress().getHostAddress(), e);
             logger.info("Peer: " + peerData.toString() + " isOnline: false");
             peerData.setOnline(false);
         } finally {

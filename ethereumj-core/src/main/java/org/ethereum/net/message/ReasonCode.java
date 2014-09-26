@@ -22,7 +22,7 @@ public enum ReasonCode {
 
     private int reason;
     
-    private static final Map<Integer, ReasonCode> intToTypeMap = new HashMap<Integer, ReasonCode>();
+    private static final Map<Integer, ReasonCode> intToTypeMap = new HashMap<>();
     static {
         for (ReasonCode type : ReasonCode.values()) {
             intToTypeMap.put(type.reason, type);

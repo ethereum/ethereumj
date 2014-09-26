@@ -312,8 +312,8 @@ public enum OpCode {
 	
 	private byte opcode;
     
-    private static final Map<Byte, OpCode> intToTypeMap = new HashMap<Byte, OpCode>();
-    private static final Map<String, Byte> stringToByteMap = new HashMap<String, Byte>();
+    private static final Map<Byte, OpCode> intToTypeMap = new HashMap<>();
+    private static final Map<String, Byte> stringToByteMap = new HashMap<>();
 
     static {
         for (OpCode type : OpCode.values()) {

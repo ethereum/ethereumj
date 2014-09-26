@@ -77,7 +77,6 @@ public class ClientPeer {
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
 
-
         } catch (InterruptedException ie) {
            logger.error("-- ClientPeer: catch (InterruptedException ie) --", ie);
         } finally {
@@ -85,10 +84,10 @@ public class ClientPeer {
 
             handler.killTimers();
 
-            final Set<PeerData> peers =  WorldManager.getInstance().getPeers();
+            final Set<Peer> peers =  WorldManager.getInstance().getPeers();
 
-            synchronized (peers){
-                for (PeerData peer : peers){
+            synchronized (peers) {
+                for (Peer peer : peers) {
                     if (host.equals(peer.getInetAddress().getHostAddress()) &&
                             port == peer.getPort()){
                         peer.setOnline(false);
@@ -97,10 +96,7 @@ public class ClientPeer {
             }
 
             EthereumListener listener = WorldManager.getInstance().getListener();
-            if (listener != null){
-                listener.onPeerDisconnect(host, port);
-            }
-
+            if (listener != null) listener.onPeerDisconnect(host, port);
         }
     }
 
@@ -108,25 +104,20 @@ public class ClientPeer {
         this.peerListener = peerListener;
     }
 
-
     /*
      * The wire gets data for signed transactions and
      * sends it to the net.
      */
     public void sendTransaction(Transaction transaction) {
-
-        transaction.getEncoded();
-        java.util.List<Transaction> txList =  new ArrayList<Transaction>();
+    	
+        List<Transaction> txList =  new ArrayList<>();
         txList.add(transaction);
         TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
 
+        byte[] payload = transactionsMessage.getEncoded();
 
-        byte[] payload = transactionsMessage.getPayload();
-
-        if (peerListener != null)
-         peerListener.console("Send msg: [ " +
-                 Hex.toHexString(payload) +
-                 " ]");
+        if (peerListener != null) 
+        	peerListener.console("Send msg: [" + Hex.toHexString(payload) + "]");
 
         handler.sendMsg(transactionsMessage);
     }

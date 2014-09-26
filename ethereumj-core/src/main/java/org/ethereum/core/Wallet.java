@@ -164,8 +164,8 @@ public class Wallet {
             sender.addPendingTransaction(transaction);
 
             logger.info("Pending transaction added to " +
-                            "\n account: [ {} ], " +
-                            "\n tx: [ {} ]",
+                            "\n account: [{}], " +
+                            "\n tx: [{}]",
                     Hex.toHexString(sender.getAddress()), Hex.toHexString(transaction.getHash()));
         }
 
@@ -175,8 +175,8 @@ public class Wallet {
             receiver.addPendingTransaction(transaction);
 
             logger.info("Pending transaction added to " +
-                            "\n account: [ {} ], " +
-                            "\n tx: [ {} ]",
+                            "\n account: [{}], " +
+                            "\n tx: [{}]",
                     Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
         }
         this.notifyListeners();

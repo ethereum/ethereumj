@@ -20,7 +20,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.Command;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
-import org.ethereum.net.client.PeerData;
+import org.ethereum.net.client.Peer;
 import org.ethereum.net.message.DisconnectMessage;
 import org.ethereum.net.message.HelloMessage;
 import org.ethereum.net.message.Message;
@@ -194,7 +194,7 @@ public class PeerProtocolHandler extends ChannelInboundHandlerAdapter {
     }
     
     protected void sendPeers() {
-    	Set<PeerData> peers = WorldManager.getInstance().getPeers();
+    	Set<Peer> peers = WorldManager.getInstance().getPeers();
     	PeersMessage peersMessage = new PeersMessage(peers);
         sendMsg(peersMessage);
     }

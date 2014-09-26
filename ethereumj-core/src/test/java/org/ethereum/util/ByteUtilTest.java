@@ -22,10 +22,34 @@ public class ByteUtilTest {
 //	public void testBigIntegerToBytes() {
 //		fail("Not yet implemented");
 //	}
+	
+	@Test
+	public void testToStringDoubleByteArray_1() {
+		String expected = "eth";
+		byte[][] input = new byte[][]{"eth".getBytes()};
+		String result = ByteUtil.toString(input);
+		assertEquals(expected, result);
+	}
 
 	@Test
+	public void testToStringDoubleByteArray_2() {
+		String expected = "eth shh";
+		byte[][] input = new byte[][]{"eth".getBytes(), "shh".getBytes()};
+		String result = ByteUtil.toString(input);
+		assertEquals(expected, result);
+	}
+	
+	@Test
+	public void testToStringDoubleByteArray_3() {
+		String expected = "";
+		byte[][] input = new byte[0][];
+		String result = ByteUtil.toString(input);
+		assertEquals(expected, result);
+	}
+	
+	@Test
 	public void testToHexString() {
-		assertEquals("null", ByteUtil.toHexString(null));
+		assertEquals("", ByteUtil.toHexString(null));
 	}
 
 	@Test

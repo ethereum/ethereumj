@@ -133,11 +133,10 @@ public class TrieImpl implements Trie {
      * @return value
      */
     public byte[] get(byte[] key) {
-        if(logger.isDebugEnabled()) {
-            logger.debug("Retrieving key {}", Hex.toHexString(key));
-        }
+        if (logger.isDebugEnabled()) 
+        	logger.debug("Retrieving key {}", Hex.toHexString(key));
         byte[] k = binToNibbles(key);
-        Value c = new Value( this.get(this.root, k) );
+        Value c = new Value(this.get(this.root, k));
 
         return (c == null)? null : c.asBytes();
     }
@@ -468,11 +467,11 @@ public class TrieImpl implements Trie {
             this.getCache().delete(key.getData());
 
             if (logger.isTraceEnabled())
-                logger.trace("Garbage collected node: [ {} ]",
-                        Hex.toHexString( key.getData() ));
+                logger.trace("Garbage collected node: [{}]",
+                        Hex.toHexString(key.getData()));
         }
-        logger.info("Garbage collected node list, size: [ {} ]", toRemoveSet.size());
-        logger.info("Garbage collection time: [ {}ms ]", System.currentTimeMillis() - startTime);
+        logger.info("Garbage collected node list, size: [{}]", toRemoveSet.size());
+        logger.info("Garbage collection time: [{}ms]", System.currentTimeMillis() - startTime);
     }
 
     public void scanTree(byte[] hash, ScanAction scanAction) {
