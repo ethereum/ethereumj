@@ -221,19 +221,14 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     }
 
     private void populateContractDetails() {
-
-        String contractAddr = contractAddrInput.getText();
-        if (contractAddr == null || contractAddr.length() == 0) {
-        	alertStatusMsg("");
+		byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
+		if(addr == null) {
+			alertStatusMsg("Not a valid contract address");
         	return;
-        }
-        
-        if (!Pattern.matches("[0-9a-fA-F]+", contractAddr) || (contractAddr.length() != 40)) {
-        	alertStatusMsg("Not a valid contract address");
-        	return;
-        }
+		}
+			
 		ContractDetails contractDetails = UIEthereumManager.ethereum
-				.getRepository().getContractDetails(Hex.decode(contractAddr));
+				.getRepository().getContractDetails(addr);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
@@ -316,15 +311,15 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         this.repaint();
     }
     
-    private void playContractCall() {
-
-        String contractAddr = contractAddrInput.getText();
-        if (!Pattern.matches("[0-9a-fA-F]+", contractAddr) || (contractAddr.length() != 40)) {
-        	alertStatusMsg("Not a valid contract address");
+    private void playContractCall() {   	
+        byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
+		if(addr == null) {
+			alertStatusMsg("Not a valid contract address");
         	return;
-        }       	
+		}
+		
 		ContractDetails contractDetails = UIEthereumManager.ethereum
-				.getRepository().getContractDetails(Hex.decode(contractAddr));
+				.getRepository().getContractDetails(addr);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;

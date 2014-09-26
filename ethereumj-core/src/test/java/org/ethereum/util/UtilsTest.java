@@ -1,6 +1,7 @@
 package org.ethereum.util;
 
 import org.junit.Test;
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -58,5 +59,32 @@ public class UtilsTest {
         String result = Utils.getValueShortString(new BigInteger(decimal));
 
         assertEquals(expected, result);
+    }
+    
+    @Test
+    public void testAddressStringToBytes() {
+    	// valid address
+    	String HexStr = "6c386a4b26f73c802f34673f7248bb118f97424a";
+    	byte[] expected = Hex.decode(HexStr);
+    	byte[] result = Utils.addressStringToBytes(HexStr);
+    	assertEquals(Arrays.areEqual(expected, result), true);
+    	
+    	// invalid address, we removed the last char so it cannot decode
+    	HexStr = "6c386a4b26f73c802f34673f7248bb118f97424";
+    	expected = null;
+    	result = Utils.addressStringToBytes(HexStr);
+    	assertEquals(expected, result);
+    	
+    	// invalid address, longer than 20 bytes
+    	HexStr = new String(Hex.encode("I am longer than 20 bytes, i promise".getBytes()));
+    	expected = null;
+    	result = Utils.addressStringToBytes(HexStr);
+    	assertEquals(expected, result);
+    	
+    	// invalid address, shorter than 20 bytes
+    	HexStr = new String(Hex.encode("I am short".getBytes()));
+    	expected = null;
+    	result = Utils.addressStringToBytes(HexStr);
+    	assertEquals(expected, result);
     }
 }

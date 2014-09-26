@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
 
+import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
 public class Utils {
@@ -61,6 +62,22 @@ public class Utils {
             pow += 3;
         }
         return result.toString() + "·(" + "10^" + pow + ")";
+    }
+    
+    /**
+     * Decodes a hex string to address bytes and checks validity 
+     * 
+     * @param hex - a hex string of the address, e.g., 6c386a4b26f73c802f34673f7248bb118f97424a
+     * @return - decode and validated address byte[]
+     */
+    public static byte[] addressStringToBytes(String hex) {
+    	byte[] addr = null;
+		try { addr = Hex.decode(hex); }
+    	catch(DecoderException addressIsNotValid) { return null; }
+		
+		if(isValidAddress(addr))
+			return addr;
+		return null;
     }
     
     public static boolean isValidAddress(byte[] addr) {

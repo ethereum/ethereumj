@@ -617,13 +617,15 @@ public class Program {
             ContractDetails contractDetails = this.result.getRepository().
                     getContractDetails(this.programAddress.getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
-            List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
-    		Collections.sort((List<DataWord>) storageKeys);
-            for (DataWord key : storageKeys) {
-                storageData.append(" ").append(key).append(" -> ").
-                        append(contractDetails.getStorage().get(key)).append("\n");
+            if(contractDetails != null) {
+                List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
+        		Collections.sort((List<DataWord>) storageKeys);
+                for (DataWord key : storageKeys) {
+                    storageData.append(" ").append(key).append(" -> ").
+                            append(contractDetails.getStorage().get(key)).append("\n");
+                }
+                if (storageData.length() > 0) storageData.insert(0, "\n");
             }
-            if (storageData.length() > 0) storageData.insert(0, "\n");
 
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();
