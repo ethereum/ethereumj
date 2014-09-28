@@ -55,36 +55,39 @@ public enum Command {
 	
 	/* Ethereum */
 	
+	/** [0x11] 	 * Request the peer to send all transactions 
+	 * currently in the queue. */
+	GET_TRANSACTIONS(0x11),
+	
 	/** [0x12, [nonce, receiving_address, value, ... ], ... ] <br/>
 	 * Specify (a) transaction(s) that the peer should make sure is included 
 	 * on its transaction queue. The items in the list (following the first item 0x12) 
 	 * are transactions in the format described in the main Ethereum specification. */
 	TRANSACTIONS(0x12),
-	
-	/** [0x13, [block_header, transaction_list, uncle_list], ... ] <br/>
-	 * Specify (a) block(s) that the peer should know about. 
-	 * The items in the list (following the first item, 0x13) 
-	 * are blocks in the format described in the main Ethereum specification. */
-	BLOCKS(0x13),
-	GET_TRANSACTIONS(0x16),
-	
-	/** [0x17, [ hash : B_32, maxBlocks: P ]: <br/>
+
+	/** [0x13, [ hash : B_32, maxBlocks: P ]: <br/>
 	 * Requests a BlockHashes message of at most maxBlocks entries, 
 	 * of block hashes from the blockchain, starting at the parent of block hash. 
 	 * Does not require the peer to give maxBlocks hashes - 
 	 * they could give somewhat fewer. */	
-	GET_BLOCK_HASHES(0x17),
+	GET_BLOCK_HASHES(0x13),
 	
-	/** [0x18, [ hash_0: B_32, hash_1: B_32, .... ]: <br/>Gives a series of hashes 
+	/** [0x14, [ hash_0: B_32, hash_1: B_32, .... ]: <br/>Gives a series of hashes 
 	 * of blocks (each the child of the next). This implies that the blocks 
 	 * are ordered from youngest to oldest. */
-	BLOCK_HASHES(0x18),
+	BLOCK_HASHES(0x14),
 	
-	/** [0x19, [ hash_0: B_32, hash_1: B_32, .... ]: <br/>Requests a Blocks message 
+	/** [0x15, [ hash_0: B_32, hash_1: B_32, .... ]: <br/>Requests a Blocks message 
 	 * detailing a number of blocks to be sent, each referred to by a hash. <br/>
 	 * <b>Note:</b> Don't expect that the peer necessarily give you all these blocks 
 	 * in a single message - you might have to re-request them. */
-	GET_BLOCKS(0x19),
+	GET_BLOCKS(0x15),
+	
+	/** [0x16, [block_header, transaction_list, uncle_list], ... ] <br/>
+	 * Specify (a) block(s) that the peer should know about. 
+	 * The items in the list (following the first item, 0x13) 
+	 * are blocks in the format described in the main Ethereum specification. */
+	BLOCKS(0x16),
 	
 	UNKNOWN(0xFF);
 
