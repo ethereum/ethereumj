@@ -104,7 +104,6 @@ public class PeerProtocolHandler extends ChannelInboundHandlerAdapter {
 	            handshake = helloMessage;            
 	            if (listener != null)
 	                listener.onRecvMessage(helloMessage);
-	            sendGetPeers();
 	         	break;
 	        case STATUS:
 	        	StatusMessage statusMessage = new StatusMessage(payload);

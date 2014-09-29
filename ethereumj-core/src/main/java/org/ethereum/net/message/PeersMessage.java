@@ -97,7 +97,7 @@ public class PeersMessage extends Message {
         
         StringBuffer sb = new StringBuffer();
 		for (Peer peerData : peers) {
-            sb.append("\n       [").append(peerData).append("]");
+            sb.append("\n       ").append(peerData);
         }
         return "[command=" + this.getCommand().name() + sb.toString() + "]";
     }

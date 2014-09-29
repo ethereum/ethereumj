@@ -51,10 +51,10 @@ public class WorldManager {
 		this.blockchain = new BlockchainImpl(repository);
 		
         // Initialize PeerData
-        List<Peer> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
-        peers.addAll(peerDataList);
+        Set<Peer> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
+//        peers.addAll(peerDataList);
 
-        peerDiscovery = new PeerDiscovery(peers);
+        peerDiscovery = new PeerDiscovery(peerDataList);
 	}
 
     // used for testing
@@ -89,13 +89,11 @@ public class WorldManager {
 
         synchronized (peers) {
             for (final Peer peer : newPeers) {
-                if (peerDiscovery.isStarted() && !peers.contains(peer)) {
+                if (peerDiscovery.isStarted() && !peers.contains(peer))
                     peerDiscovery.addNewPeerData(peer);
-                }
                 peers.add(peer);
             }
         }
-
     }
 
     public void startPeerDiscovery() {
@@ -116,10 +114,10 @@ public class WorldManager {
         return listener;
     }
 
-    public List<Peer> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
+    public Set<Peer> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
 
         final List<String> ipList = Arrays.asList(peerDiscoveryIpList.split(","));
-        final List<Peer> peers = new ArrayList<>();
+        final Set<Peer> peers = new HashSet<>();
 
         for (String ip : ipList){
             String[] addr = ip.trim().split(":");

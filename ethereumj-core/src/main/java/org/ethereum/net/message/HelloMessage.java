@@ -143,8 +143,8 @@ public class HelloMessage extends Message {
         		" p2pVersion=" + this.p2pVersion +
                 " clientId=" + this.clientId +
                 " capabilities=[" + Joiner.on(" ").join(this.capabilities) + "]" +
-                " peerPort=" + this.listenPort + " " +
-                " peerId=" + Hex.toHexString(this.peerId) + " " +
+                " peerPort=" + this.listenPort +
+                " peerId=" + Hex.toHexString(this.peerId) +
                 "]";
     }
 }
