@@ -71,7 +71,6 @@ public class PeerProtocolHandler extends ChannelInboundHandlerAdapter {
 
     	msgQueue = new MessageQueue(ctx);
         msgQueue.sendMessage(StaticMessages.HELLO_MESSAGE);
-        sendPing();
 
         // sample for pinging in background
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -101,7 +100,7 @@ public class PeerProtocolHandler extends ChannelInboundHandlerAdapter {
 	            HelloMessage helloMessage = new HelloMessage(payload);
 	            if (peerListener != null) peerListener.console(helloMessage.toString());
 	            msgQueue.receivedMessage(helloMessage);
-	            handshake = helloMessage;            
+	            handshake = helloMessage;
 	            if (listener != null)
 	                listener.onRecvMessage(helloMessage);
 	         	break;

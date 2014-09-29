@@ -103,8 +103,8 @@ public class Peer {
     @Override
     public String toString() {
 		return "[ip=" + getInetAddress().getHostAddress() + 
-				", port=" + getPort() + 
-				", peerId=" + (getPeerId() == null ? "" : Hex.toHexString(getPeerId()))
+				" port=" + getPort() +
+				" peerId=" + (getPeerId() == null ? "" : Hex.toHexString(getPeerId()))
 				+ "]";
     }
 

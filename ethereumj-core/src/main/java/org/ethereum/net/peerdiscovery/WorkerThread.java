@@ -41,15 +41,14 @@ public class WorkerThread implements Runnable {
 
             peerData.setOnline(true);
             peerData.setHandshake(peerTaster.getHandshake());
-            logger.info("Peer: " + peerData.toString() + " isOnline: true");
         }
         catch (Throwable e) {
             if (peerData.isOnline() == true)
                 logger.info("Peer: [{}] went offline, due to: [{}]",
                         peerData.getInetAddress().getHostAddress(), e);
-            logger.info("Peer: " + peerData.toString() + " isOnline: false");
             peerData.setOnline(false);
         } finally {
+            logger.info("Peer: " + peerData.toString() + " isOnline: " + peerData.isOnline());
             peerData.setLastCheckTime(System.currentTimeMillis());
         }
     }

@@ -42,6 +42,6 @@ public class BlockHashesMessage extends Message {
 	@Override
     public String toString() {
         if (!parsed) parse();
-        return "[command=" + this.getCommand().name() + " hashes=" + Joiner.on("\n").join(hashes) + " ]";
+        return "[command=" + this.getCommand().name() + " hashes=" + Joiner.on("\n").join(hashes) + "]";
     }
 }

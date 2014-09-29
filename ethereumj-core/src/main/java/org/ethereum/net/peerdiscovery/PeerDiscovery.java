@@ -50,7 +50,7 @@ public class PeerDiscovery {
         monitorThread.start();
 
         for (Peer peerData : this.peers) {
-            executorPool.execute(new WorkerThread(peerData, executorPool));
+            this.addNewPeerData(peerData);
         }
         
         started.set(true);
@@ -70,6 +70,5 @@ public class PeerDiscovery {
     public boolean isStarted() {
         return started.get();
     }
-
 }
 

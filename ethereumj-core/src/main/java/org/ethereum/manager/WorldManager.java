@@ -52,7 +52,6 @@ public class WorldManager {
 		
         // Initialize PeerData
         Set<Peer> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
-//        peers.addAll(peerDataList);
 
         peerDiscovery = new PeerDiscovery(peerDataList);
 	}

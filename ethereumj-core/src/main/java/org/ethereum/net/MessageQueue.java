@@ -32,7 +32,7 @@ public class MessageQueue {
 
 	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
 	private ChannelHandlerContext ctx = null;
-	private Timer timer = new Timer();
+	private final Timer timer = new Timer();
 
 	public MessageQueue(ChannelHandlerContext ctx) {
 		this.ctx = ctx;
@@ -54,13 +54,11 @@ public class MessageQueue {
 
     public void receivedMessage(Message msg) {
 
-        if (logger.isDebugEnabled())
-            logger.debug("Recv: [{}] - [{}]",
-                    msg.getCommand().name(),
-                    Hex.toHexString(msg.getEncoded()));
-
         if (logger.isInfoEnabled())
-            logger.info("Recv: {}", msg.toString());
+			logger.info("From: \t{} \tRecv: \t{}", ctx.channel()
+					.remoteAddress().toString(), msg.toString());
+        if (logger.isDebugEnabled())
+            logger.debug("Encoded: [{}]", Hex.toHexString(msg.getEncoded()));
 
         if (null != messageQueue.peek()) {
 
@@ -110,14 +108,12 @@ public class MessageQueue {
 
     private void sendToWire(Message msg) {
 
-        if (logger.isDebugEnabled())
-            logger.debug("Send: [{}] - [{}]",
-                    msg.getCommand().name(),
-                    Hex.toHexString(msg.getEncoded()));
-        
         if (logger.isInfoEnabled())
-            logger.info("Send: {}", msg.toString());
-
+			logger.info("To: \t{} \tSend: \t{}", ctx.channel()
+					.remoteAddress().toString(), msg.toString());
+        if (logger.isDebugEnabled())
+            logger.debug("Encdoded: [{}]", Hex.toHexString(msg.getEncoded()));
+        
         int packetLength = StaticMessages.SYNC_TOKEN.length + msg.getEncoded().length;
         ByteBuf buffer = ctx.alloc().buffer(packetLength);
         buffer.writeBytes(StaticMessages.SYNC_TOKEN);
