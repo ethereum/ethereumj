@@ -47,7 +47,7 @@ public class DatabaseImpl implements Database {
 				destroyDB(fileLocation);
 			}
 
-			logger.debug("Initializing new or existing DB: '" + name + "'");
+			logger.debug("Initializing new or existing database: '{}'", name);
 			db = factory.open(fileLocation, options);
 //			logger.debug("Showing database stats");
 //			String stats = DATABASE.getProperty("leveldb.stats");
@@ -55,7 +55,7 @@ public class DatabaseImpl implements Database {
 
             if (logger.isTraceEnabled()){
 
-                logger.trace("dump for: {}", fileLocation.toString());
+                logger.trace("Dump for: {}", fileLocation.toString());
                 DBIterator iter =  db.iterator();
 
                 while(iter.hasNext()){
@@ -65,10 +65,7 @@ public class DatabaseImpl implements Database {
                     logger.trace("key={}, value={}", Hex.toHexString(key), Hex.toHexString(value));
                     iter.next();
                 }
-
-
             }
-
 		} catch (IOException ioe) {
 			logger.error(ioe.getMessage(), ioe);
 			throw new RuntimeException("Can't initialize database");
@@ -76,7 +73,7 @@ public class DatabaseImpl implements Database {
 	}
 	
 	public void destroyDB(File fileLocation) {
-		logger.debug("Destroying existing DB");
+		logger.debug("Destroying existing database");
 		Options options = new Options();
 		try {
 			factory.destroy(fileLocation, options);
@@ -85,17 +82,17 @@ public class DatabaseImpl implements Database {
 		}
 	}
 	
-	/** Get object (key) -> value */
+	@Override
 	public byte[] get(byte[] key) {
 		return db.get(key);
 	}
 	
-	/** Insert object(value) (key = sha3(value)) */
+	@Override
 	public void put(byte[] key, byte[] value) {
 		db.put(key, value);
 	}
 	
-	/** Delete object (key) from db **/
+	@Override
 	public void delete(byte[] key) {
 		db.delete(key);
 	}
@@ -111,10 +108,10 @@ public class DatabaseImpl implements Database {
     @Override
     public void close() {
         try {
-            logger.info("Release DB: {}", name);
+            logger.info("Close db: {}", name);
             db.close();
         } catch (IOException e) {
-            logger.error("failed to find the db file on the close: {} ", name);
+            logger.error("Failed to find the db file on the close: {} ", name);
         }
     }
 
