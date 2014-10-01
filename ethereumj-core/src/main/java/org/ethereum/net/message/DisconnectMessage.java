@@ -8,65 +8,65 @@ import static org.ethereum.net.message.Command.DISCONNECT;
 import static org.ethereum.net.message.ReasonCode.REQUESTED;
 
 /**
- * Wrapper around an Ethereum Disconnect message on the network 
+ * Wrapper around an Ethereum Disconnect message on the network
  *
  * @see {@link org.ethereum.net.message.Command#DISCONNECT}
  */
 public class DisconnectMessage extends Message {
 
-    private ReasonCode reason;
+	private ReasonCode reason;
 
-    public DisconnectMessage(byte[] encoded) {
-        super(encoded);
-    }
-    
-    public DisconnectMessage(ReasonCode reason) {
-    	this.reason = reason;
-    	parsed = true;
-    }
+	public DisconnectMessage(byte[] encoded) {
+		super(encoded);
+	}
 
-    private void parse() {
+	public DisconnectMessage(ReasonCode reason) {
+		this.reason = reason;
+		parsed = true;
+	}
+
+	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 		validateMessage(paramsList, DISCONNECT);
-		
+
 		byte[] reasonBytes = ((RLPItem) paramsList.get(1)).getRLPData();
-        if (reasonBytes == null)
-            this.reason = REQUESTED;
-        else
-            this.reason = ReasonCode.fromInt(reasonBytes[0]);
-        
-        this.parsed = true;
-    }
-    
-    private void encode() {
-    	byte[] encodedCommand = RLP.encodeByte(DISCONNECT.asByte());
-    	byte[] encodedReason = RLP.encodeByte(this.reason.asByte());
-    	this.encoded = RLP.encodeList(encodedCommand, encodedReason);
-    }
+		if (reasonBytes == null)
+			this.reason = REQUESTED;
+		else
+			this.reason = ReasonCode.fromInt(reasonBytes[0]);
+
+		parsed = true;
+	}
+
+	private void encode() {
+		byte[] encodedCommand = RLP.encodeByte(DISCONNECT.asByte());
+		byte[] encodedReason = RLP.encodeByte(this.reason.asByte());
+		this.encoded = RLP.encodeList(encodedCommand, encodedReason);
+	}
 
 	@Override
 	public Command getCommand() {
 		return DISCONNECT;
 	}
 
-    @Override
-    public byte[] getEncoded() {
-    	if (encoded == null) this.encode();
-        return encoded;
-    }
-    
-    @Override
-    public Class<?> getAnswerMessage() {
-        return null;
-    }
+	@Override
+	public byte[] getEncoded() {
+		if (encoded == null) encode();
+		return encoded;
+	}
 
-    public ReasonCode getReason() {
-        if (!parsed) parse();
-        return reason;
-    }
+	@Override
+	public Class<?> getAnswerMessage() {
+		return null;
+	}
 
-    public String toString() {
-        if (!parsed) parse();
-        return "[" + this.getCommand().name() + " reason=" + reason + "]";
-    }
+	public ReasonCode getReason() {
+		if (!parsed) parse();
+		return reason;
+	}
+
+	public String toString() {
+		if (!parsed) parse();
+		return "[" + this.getCommand().name() + " reason=" + reason + "]";
+	}
 }

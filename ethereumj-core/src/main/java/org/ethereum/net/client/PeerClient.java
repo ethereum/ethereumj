@@ -36,15 +36,15 @@ public class PeerClient {
         this.peerListener = peerListener;
     }
 
-    public void connect(String host, int port) {
+	public void connect(String host, int port) {
 
-    	EventLoopGroup workerGroup = new NioEventLoopGroup();
+		EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-        if (peerListener != null) {
-        	peerListener.console("Connecting to: " + host + ":" + port);
-            handler = new ProtocolHandler(peerListener);
-        } else
-            handler = new ProtocolHandler();
+		if (peerListener != null) {
+			peerListener.console("Connecting to: " + host + ":" + port);
+			handler = new ProtocolHandler(peerListener);
+		} else
+			handler = new ProtocolHandler();
 
         try {
             Bootstrap b = new Bootstrap();
@@ -73,18 +73,18 @@ public class PeerClient {
             f.channel().closeFuture().sync();
             logger.debug("Connection is closed");
 
-        } catch (InterruptedException ie) {
-           logger.error("-- ClientPeer: catch (InterruptedException ie) --", ie);
-        } finally {
-            try {
-                workerGroup.shutdownGracefully().sync();
-            } catch (InterruptedException e) {
-            	logger.error(e.getMessage(), e);
-            }
+		} catch (InterruptedException ie) {
+			logger.error("-- ClientPeer: catch (InterruptedException ie) --", ie);
+		} finally {
+			try {
+				workerGroup.shutdownGracefully().sync();
+			} catch (InterruptedException e) {
+				logger.error(e.getMessage(), e);
+			}
 
-            handler.killTimers();
+			handler.killTimers();
 
-            final Set<Peer> peers =  WorldManager.getInstance().getPeers();
+			final Set<Peer> peers = WorldManager.getInstance().getPeers();
 
 			synchronized (peers) {
 				for (Peer peer : peers) {
@@ -94,14 +94,14 @@ public class PeerClient {
 				}
 			}
 
-            EthereumListener listener = WorldManager.getInstance().getListener();
-            if (listener != null) listener.onPeerDisconnect(host, port);
-        }
-    }
+			EthereumListener listener = WorldManager.getInstance().getListener();
+			if (listener != null) listener.onPeerDisconnect(host, port);
+		}
+	}
 
-    public void setPeerListener(PeerListener peerListener) {
-        this.peerListener = peerListener;
-    }
+	public void setPeerListener(PeerListener peerListener) {
+		this.peerListener = peerListener;
+	}
 
 	public ProtocolHandler getHandler() {
 		return handler;

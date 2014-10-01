@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class MessageQueue {
 
-    private Logger logger = LoggerFactory.getLogger("wire");
+	private Logger logger = LoggerFactory.getLogger("wire");
 
 	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
 	private PeerListener listener;
@@ -47,79 +47,80 @@ public class MessageQueue {
 		}, 10, 10);
 	}
 
-    public void sendMessage(Message msg) {
+	public void sendMessage(Message msg) {
 		messageQueue.add(new MessageRoundtrip(msg));
-    }
+	}
 
-    public void receivedMessage(Message msg) throws InterruptedException {
+	public void receivedMessage(Message msg) throws InterruptedException {
 
-    	if (listener != null)
-    		listener.console("[Recv: " + msg + "]");
+		if (listener != null)
+			listener.console("[Recv: " + msg + "]");
 		if (logger.isInfoEnabled())
 			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
-        if (logger.isDebugEnabled())
-            logger.debug("Encoded: [{}]", Hex.toHexString(msg.getEncoded()));
-        
-        if (messageQueue.peek() != null) {
-            MessageRoundtrip messageRoundtrip = messageQueue.peek();
-            Message waitingMessage = messageRoundtrip.getMsg();
+		if (logger.isDebugEnabled())
+			logger.debug("Encoded: [{}]", Hex.toHexString(msg.getEncoded()));
+
+		if (messageQueue.peek() != null) {
+			MessageRoundtrip messageRoundtrip = messageQueue.peek();
+			Message waitingMessage = messageRoundtrip.getMsg();
 
 			if (waitingMessage.getAnswerMessage() != null
 					&& msg.getClass() == waitingMessage.getAnswerMessage()) {
-                messageRoundtrip.answer();
-                logger.debug("Message round trip covered: [{}] ", messageRoundtrip.getMsg().getCommand());
-            }
+				messageRoundtrip.answer();
+				logger.debug("Message round trip covered: [{}] ",
+						messageRoundtrip.getMsg().getCommand());
+			}
 			if (msg instanceof DisconnectMessage) {
 				ctx.close().sync();
 				ctx.disconnect().sync();
 			}
-        }
-    }
+		}
+	}
 
-    private void nudgeQueue() {
+	private void nudgeQueue() {
 
-        // The message was answered, remove from the queue
-        if (messageQueue.peek() != null) {
-            MessageRoundtrip messageRoundtrip = messageQueue.peek();
-            if (messageRoundtrip.isAnswered()) {
-                messageQueue.remove();
-            }
-        }
+		// The message was answered, remove from the queue
+		if (messageQueue.peek() != null) {
+			MessageRoundtrip messageRoundtrip = messageQueue.peek();
+			if (messageRoundtrip.isAnswered()) {
+				messageQueue.remove();
+			}
+		}
 
-        // Now send the next message
-        if (null != messageQueue.peek()) {
+		// Now send the next message
+		if (null != messageQueue.peek()) {
 
-            MessageRoundtrip messageRoundtrip = messageQueue.peek();
-            if (messageRoundtrip.getRetryTimes() == 0 ) {
-            	// todo: retry logic || messageRoundtrip.hasToRetry()){
+			MessageRoundtrip messageRoundtrip = messageQueue.peek();
+			if (messageRoundtrip.getRetryTimes() == 0) {
+				// todo: retry logic || messageRoundtrip.hasToRetry()){
 
-                Message msg = messageRoundtrip.getMsg();
-                sendToWire(msg);
+				Message msg = messageRoundtrip.getMsg();
+				sendToWire(msg);
 
-                if (msg.getAnswerMessage() == null)
-                    messageQueue.remove();
-                else {
-                    messageRoundtrip.incRetryTimes();
-                    messageRoundtrip.saveTime();
-                }
-            }
-        }
-    }
+				if (msg.getAnswerMessage() == null)
+					messageQueue.remove();
+				else {
+					messageRoundtrip.incRetryTimes();
+					messageRoundtrip.saveTime();
+				}
+			}
+		}
+	}
 
-    private void sendToWire(Message msg) {
+	private void sendToWire(Message msg) {
 
-    	if (listener != null)
-    		listener.console("[Send: " + msg + "]");
+		if (listener != null)
+			listener.console("[Send: " + msg + "]");
 		if (logger.isInfoEnabled())
 			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
-        if (logger.isDebugEnabled())
-            logger.debug("Encdoded: [{}]", Hex.toHexString(msg.getEncoded()));
-        
-        int packetLength = StaticMessages.SYNC_TOKEN.length + msg.getEncoded().length;
-        ByteBuf buffer = ctx.alloc().buffer(packetLength);
-        buffer.writeBytes(StaticMessages.SYNC_TOKEN);
-        buffer.writeBytes(ByteUtil.calcPacketLength(msg.getEncoded()));
-        buffer.writeBytes(msg.getEncoded());
-        ctx.writeAndFlush(buffer);
-    }
+		if (logger.isDebugEnabled())
+			logger.debug("Encdoded: [{}]", Hex.toHexString(msg.getEncoded()));
+
+		int packetLength = StaticMessages.SYNC_TOKEN.length + msg.getEncoded().length;
+		ByteBuf buffer = ctx.alloc().buffer(packetLength);
+		buffer.writeBytes(StaticMessages.SYNC_TOKEN);
+		buffer.writeBytes(ByteUtil.calcPacketLength(msg.getEncoded()));
+		buffer.writeBytes(msg.getEncoded());
+		ctx.writeAndFlush(buffer);
+	}
 }

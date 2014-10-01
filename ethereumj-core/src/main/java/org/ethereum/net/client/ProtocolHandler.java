@@ -71,149 +71,151 @@ import org.slf4j.LoggerFactory;
  */
 public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 
-    private final static Logger logger = LoggerFactory.getLogger("wire");
+	private final static Logger logger = LoggerFactory.getLogger("wire");
 
-    private long lastPongTime;
-    private boolean tearDown = false;
-    private HelloMessage handshake = null;
-    
-    private Timer blocksAskTimer = new Timer("ChainAskTimer");
-    private int secToAskForBlocks = 1;
+	private long lastPongTime;
+	private boolean tearDown = false;
+	private HelloMessage handshake = null;
 
-    private PeerListener peerListener;
-    private EthereumListener listener;
-    
-    private MessageQueue msgQueue = null;
-    private final Timer timer = new Timer("MiscMessageTimer");
-    
-    public ProtocolHandler() {}
+	private Timer blocksAskTimer = new Timer("ChainAskTimer");
+	private int secToAskForBlocks = 1;
 
-    public ProtocolHandler(PeerListener peerListener) {
-        this.peerListener = peerListener;
-        this.listener = WorldManager.getInstance().getListener();
-    }
+	private PeerListener peerListener;
+	private EthereumListener listener;
 
-    @Override
-    public void channelActive(final ChannelHandlerContext ctx) {
-    	msgQueue = new MessageQueue(ctx, peerListener);
-    	sendHello();
-    }
+	private MessageQueue msgQueue = null;
+	private final Timer timer = new Timer("MiscMessageTimer");
 
-    @Override
-    public void channelRead(final ChannelHandlerContext ctx, Object msg) throws InterruptedException {
-        byte[] payload = (byte[]) msg;
+	public ProtocolHandler() {
+	}
 
-        Command receivedCommand = Command.fromInt(RLP.getCommandCode(payload));
+	public ProtocolHandler(PeerListener peerListener) {
+		this.peerListener = peerListener;
+		this.listener = WorldManager.getInstance().getListener();
+	}
 
-        switch(receivedCommand) {
-	        case HELLO:
-	            HelloMessage helloMessage = new HelloMessage(payload);
-	            msgQueue.receivedMessage(helloMessage);
-	            
-	            setHandshake(helloMessage, ctx);
-	            
-	            if (listener != null) listener.onRecvMessage(helloMessage);
-	         	break;
-	        case STATUS:
-	        	StatusMessage statusMessage = new StatusMessage(payload);
-	            msgQueue.receivedMessage(statusMessage);
-	            
-	            processStatus(statusMessage);
-	            
-	            if (listener != null) listener.onRecvMessage(statusMessage);
-	        	break;
-	        case DISCONNECT:
-	            DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
-	            msgQueue.receivedMessage(disconnectMessage);
+	@Override
+	public void channelActive(final ChannelHandlerContext ctx) {
+		msgQueue = new MessageQueue(ctx, peerListener);
+		sendHello();
+	}
 
-	            ctx.close().sync();
-	            ctx.disconnect().sync();
+	@Override
+	public void channelRead(final ChannelHandlerContext ctx, Object msg) throws InterruptedException {
 
-	            if (listener != null) listener.onRecvMessage(disconnectMessage);
-	        	break;
-	        case PING:
-	        	msgQueue.receivedMessage(StaticMessages.PING_MESSAGE);
-	        	
-	        	sendPong();
-	        	
-	            if (listener != null) listener.onRecvMessage(PING_MESSAGE);
-	         	break;
-	        case PONG:
-	        	msgQueue.receivedMessage(PONG_MESSAGE);
-	        	
-	            lastPongTime = System.currentTimeMillis();
-	            
-	            if (listener != null) listener.onRecvMessage(PONG_MESSAGE);
-	            break;
-	        case GET_PEERS:
-	        	msgQueue.receivedMessage(GET_PEERS_MESSAGE);
-	        	
-	        	sendPeers();
-	        	
-	            if (listener != null) listener.onRecvMessage(GET_PEERS_MESSAGE);
-    			break;        		
-	        case PEERS:
-	            PeersMessage peersMessage = new PeersMessage(payload);
-	        	msgQueue.receivedMessage(peersMessage);
-	            
-	            processPeers(peersMessage);
-	            
-	            if (listener != null) listener.onRecvMessage(peersMessage);
-	            break;
-        	case TRANSACTIONS:
-        		TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
-        		msgQueue.receivedMessage(transactionsMessage);
-        		
-//        		List<Transaction> txList = transactionsMessage.getTransactions();
-//        		for(Transaction tx : txList)
-//					WorldManager.getInstance().getBlockchain().applyTransaction(null, tx);
-//	                WorldManager.getInstance().getWallet().addTransaction(tx);
-	
-	            if (listener != null) listener.onRecvMessage(transactionsMessage);
-	            break;
-	        case BLOCKS:
-	            BlocksMessage blocksMessage = new BlocksMessage(payload);
-	            msgQueue.receivedMessage(blocksMessage);
+		byte[] payload = (byte[]) msg;
+		Command receivedCommand = Command.fromInt(RLP.getCommandCode(payload));
 
-	            processBlocks(blocksMessage);
-	            
-	            if (listener != null) listener.onRecvMessage(blocksMessage);
-	            break;
-	        case GET_TRANSACTIONS:
-	        	msgQueue.receivedMessage(GET_TRANSACTIONS_MESSAGE);
-	        	
-	        	sendPendingTransactions();
-	
-	            if (listener != null) listener.onRecvMessage(GET_TRANSACTIONS_MESSAGE);
-	            break;
-	        case GET_BLOCK_HASHES:
-	            GetBlockHashesMessage getBlockHashesMessage = new GetBlockHashesMessage(payload);
-	            msgQueue.receivedMessage(getBlockHashesMessage);
-	            
-	            sendBlockHashes();
-
-	            if (listener != null) listener.onRecvMessage(getBlockHashesMessage);
-	            break;
-	        case BLOCK_HASHES:
-	        	BlockHashesMessage blockHashesMessage = new BlockHashesMessage(payload);
-	        	msgQueue.receivedMessage(blockHashesMessage);
-
-	            processBlockHashes(blockHashesMessage);
-
-	            if (listener != null) listener.onRecvMessage(blockHashesMessage);
-	            break;
-	        case GET_BLOCKS:
-	        	GetBlocksMessage getBlocksMessage = new GetBlocksMessage(payload);
-	        	msgQueue.receivedMessage(getBlocksMessage);
-
-	        	sendBlocks();
-
-	        	if (listener != null) listener.onRecvMessage(getBlocksMessage);
-	            break;	            
-	        default:
-	        	break;
-        }
-    }
+		switch (receivedCommand) {
+			case HELLO:
+				HelloMessage helloMessage = new HelloMessage(payload);
+				msgQueue.receivedMessage(helloMessage);
+			
+				setHandshake(helloMessage, ctx);
+			
+				if (listener != null) listener.onRecvMessage(helloMessage);
+				break;
+			case STATUS:
+				StatusMessage statusMessage = new StatusMessage(payload);
+				msgQueue.receivedMessage(statusMessage);
+			
+				processStatus(statusMessage);
+			
+				if (listener != null) listener.onRecvMessage(statusMessage);
+				break;
+			case DISCONNECT:
+				DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
+				msgQueue.receivedMessage(disconnectMessage);
+			
+				ctx.close().sync();
+				ctx.disconnect().sync();
+			
+				if (listener != null) listener.onRecvMessage(disconnectMessage);
+				break;
+			case PING:
+				msgQueue.receivedMessage(PING_MESSAGE);
+			
+				sendPong();
+			
+				if (listener != null) listener.onRecvMessage(PING_MESSAGE);
+				break;
+			case PONG:
+				msgQueue.receivedMessage(PONG_MESSAGE);
+			
+				lastPongTime = System.currentTimeMillis();
+			
+				if (listener != null) listener.onRecvMessage(PONG_MESSAGE);
+				break;
+			case GET_PEERS:
+				msgQueue.receivedMessage(GET_PEERS_MESSAGE);
+			
+				sendPeers();
+			
+				if (listener != null) listener.onRecvMessage(GET_PEERS_MESSAGE);
+				break;
+			case PEERS:
+				PeersMessage peersMessage = new PeersMessage(payload);
+				msgQueue.receivedMessage(peersMessage);
+			
+				processPeers(peersMessage);
+			
+				if (listener != null) listener.onRecvMessage(peersMessage);
+				break;
+			case TRANSACTIONS:
+				TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
+				msgQueue.receivedMessage(transactionsMessage);
+			
+				// List<Transaction> txList = transactionsMessage.getTransactions();
+				// for(Transaction tx : txList)
+				// WorldManager.getInstance().getBlockchain().applyTransaction(null,
+				// tx);
+				// WorldManager.getInstance().getWallet().addTransaction(tx);
+			
+				if (listener != null) listener.onRecvMessage(transactionsMessage);
+				break;
+			case BLOCKS:
+				BlocksMessage blocksMessage = new BlocksMessage(payload);
+				msgQueue.receivedMessage(blocksMessage);
+			
+				processBlocks(blocksMessage);
+			
+				if (listener != null) listener.onRecvMessage(blocksMessage);
+				break;
+			case GET_TRANSACTIONS:
+				msgQueue.receivedMessage(GET_TRANSACTIONS_MESSAGE);
+			
+				sendPendingTransactions();
+			
+				if (listener != null) listener.onRecvMessage(GET_TRANSACTIONS_MESSAGE);
+				break;
+			case GET_BLOCK_HASHES:
+				GetBlockHashesMessage getBlockHashesMessage = new GetBlockHashesMessage(payload);
+				msgQueue.receivedMessage(getBlockHashesMessage);
+			
+				sendBlockHashes();
+			
+				if (listener != null) listener.onRecvMessage(getBlockHashesMessage);
+				break;
+			case BLOCK_HASHES:
+				BlockHashesMessage blockHashesMessage = new BlockHashesMessage(payload);
+				msgQueue.receivedMessage(blockHashesMessage);
+			
+				processBlockHashes(blockHashesMessage);
+			
+				if (listener != null) listener.onRecvMessage(blockHashesMessage);
+				break;
+			case GET_BLOCKS:
+				GetBlocksMessage getBlocksMessage = new GetBlocksMessage(payload);
+				msgQueue.receivedMessage(getBlocksMessage);
+			
+				sendBlocks();
+			
+				if (listener != null) listener.onRecvMessage(getBlocksMessage);
+				break;
+			default:
+				break;
+		}
+	}
 
     private void processPeers(PeersMessage peersMessage) {
     	WorldManager.getInstance().addPeers(peersMessage.getPeers());
@@ -226,7 +228,7 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
      * - send a GET_BLOCK_HASHES based on bestHash
      * @param msg is the StatusMessage
      */
-	private void processStatus(StatusMessage msg) throws InterruptedException {
+	private void processStatus(StatusMessage msg) {
 		if (!Arrays.equals(msg.getGenesisHash(), StaticMessages.GENESIS_HASH))
 			sendDisconnect(ReasonCode.WRONG_GENESIS);
 		else if (msg.getProtocolVersion() != 33)
@@ -270,8 +272,7 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 	private void sendMsg(Message msg) {
         msgQueue.sendMessage(msg);
 
-        if (listener != null)
-            listener.onSendMessage(msg);
+        if (listener != null) listener.onSendMessage(msg);
     }
     
     private void sendHello() {

@@ -68,7 +68,7 @@ public class StatusMessage extends Message {
 
 	@Override
 	public byte[] getEncoded() {
-		if (encoded == null) this.encode();
+		if (encoded == null) encode();
         return encoded;
 	}
 	
@@ -83,27 +83,27 @@ public class StatusMessage extends Message {
 	}
 
 	public byte getProtocolVersion() {
-		if (!parsed) this.parse();
+		if (!parsed) parse();
 		return protocolVersion;
 	}
 
 	public byte getNetworkId() {
-		if (!parsed) this.parse();
+		if (!parsed) parse();
 		return networkId;
 	}
 
 	public byte[] getTotalDifficulty() {
-		if (!parsed) this.parse();
+		if (!parsed) parse();
 		return totalDifficulty;
 	}
 
 	public byte[] getBestHash() {
-		if (!parsed) this.parse();
+		if (!parsed) parse();
 		return bestHash;
 	}
 
 	public byte[] getGenesisHash() {
-		if (!parsed) this.parse();
+		if (!parsed) parse();
 		return genesisHash;
 	}
 	

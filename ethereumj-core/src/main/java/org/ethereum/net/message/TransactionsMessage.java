@@ -54,7 +54,7 @@ public class TransactionsMessage extends Message {
     
     @Override
     public byte[] getEncoded() {
-    	if (encoded == null) this.encode();
+    	if (encoded == null) encode();
     	return encoded;
     }
 

@@ -6,5 +6,5 @@ package org.ethereum.net;
  */
 public interface PeerListener {
 
-    public void console(String output);
+	public void console(String output);
 }

@@ -19,29 +19,30 @@ public class TransactionTask implements Callable<Transaction> {
 	private Logger logger = LoggerFactory.getLogger(TransactionTask.class);
 
 	private Transaction tx;
-    
-    public TransactionTask(Transaction tx) {
-        this.tx = tx;
-    }
 
-    @Override
-    public Transaction call() throws Exception {
+	public TransactionTask(Transaction tx) {
+		this.tx = tx;
+	}
 
-        try {
-            logger.info("Call() tx: {}", tx.toString());
+	@Override
+	public Transaction call() throws Exception {
 
-            PeerClient peer = WorldManager.getInstance().getActivePeer();
-			WalletTransaction walletTransaction = WorldManager.getInstance().getWallet().addByWalletTransaction(tx);
-            peer.getHandler().sendTransaction(tx);
+		try {
+			logger.info("Call() tx: {}", tx.toString());
 
-            while(walletTransaction.getApproved() < 1) {
-                sleep(10);
-            }
-            logger.info("return approved: {}", walletTransaction.getApproved());
-        } catch (Throwable th) {
-            logger.warn("Exception caught: {}", th);
-            WorldManager.getInstance().getWallet().removeTransaction(tx);
-        }
-        return null;
-    }
+			PeerClient peer = WorldManager.getInstance().getActivePeer();
+			WalletTransaction walletTransaction = WorldManager.getInstance()
+					.getWallet().addByWalletTransaction(tx);
+			peer.getHandler().sendTransaction(tx);
+
+			while (walletTransaction.getApproved() < 1) {
+				sleep(10);
+			}
+			logger.info("return approved: {}", walletTransaction.getApproved());
+		} catch (Throwable th) {
+			logger.warn("Exception caught: {}", th);
+			WorldManager.getInstance().getWallet().removeTransaction(tx);
+		}
+		return null;
+	}
 }

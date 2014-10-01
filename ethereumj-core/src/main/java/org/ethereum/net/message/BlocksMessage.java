@@ -10,7 +10,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 /**
- * Wrapper around an Ethereum Blocks message on the network 
+ * Wrapper around an Ethereum Blocks message on the network
  *
  * @see {@link org.ethereum.net.message.Command#BLOCKS}
  */
@@ -18,15 +18,15 @@ public class BlocksMessage extends Message {
 
 	private List<Block> blocks;
 
-    public BlocksMessage(byte[] encoded) {
-        super(encoded);
-    }
+	public BlocksMessage(byte[] encoded) {
+		super(encoded);
+	}
 
 	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 		validateMessage(paramsList, BLOCKS);
 
-        blocks = new ArrayList<>();
+		blocks = new ArrayList<>();
 		for (int i = 1; i < paramsList.size(); ++i) {
 			RLPList rlpData = ((RLPList) paramsList.get(i));
 			Block blockData = new Block(rlpData.getRLPData());
@@ -39,24 +39,24 @@ public class BlocksMessage extends Message {
 	public byte[] getEncoded() {
 		return encoded;
 	}
-	
+
 	@Override
 	public Command getCommand() {
 		return BLOCKS;
 	}
-	
+
 	public List<Block> getBlocks() {
 		if (!parsed) parse();
 		return blocks;
 	}
 
 	@Override
-    public Class<?> getAnswerMessage() {
-        return null;
-    }
+	public Class<?> getAnswerMessage() {
+		return null;
+	}
 
-    public String toString() {
-        if (!parsed) parse();
+	public String toString() {
+		if (!parsed) parse();
 
 		StringBuffer sb = new StringBuffer();
 		for (Block blockData : this.getBlocks()) {
