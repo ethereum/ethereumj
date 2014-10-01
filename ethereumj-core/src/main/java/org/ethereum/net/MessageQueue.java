@@ -32,11 +32,13 @@ public class MessageQueue {
     private Logger logger = LoggerFactory.getLogger("wire");
 
 	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
+	private PeerListener listener;
 	private ChannelHandlerContext ctx = null;
 	private final Timer timer = new Timer();
 
-	public MessageQueue(ChannelHandlerContext ctx) {
+	public MessageQueue(ChannelHandlerContext ctx, PeerListener listener) {
 		this.ctx = ctx;
+		this.listener = listener;
 
 		timer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
@@ -51,11 +53,13 @@ public class MessageQueue {
 
     public void receivedMessage(Message msg) throws InterruptedException {
 
+    	if (listener != null)
+    		listener.console("[Recv: " + msg + "]");
 		if (logger.isInfoEnabled())
 			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
         if (logger.isDebugEnabled())
             logger.debug("Encoded: [{}]", Hex.toHexString(msg.getEncoded()));
-
+        
         if (messageQueue.peek() != null) {
             MessageRoundtrip messageRoundtrip = messageQueue.peek();
             Message waitingMessage = messageRoundtrip.getMsg();
@@ -104,6 +108,8 @@ public class MessageQueue {
 
     private void sendToWire(Message msg) {
 
+    	if (listener != null)
+    		listener.console("[Send: " + msg + "]");
 		if (logger.isInfoEnabled())
 			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
         if (logger.isDebugEnabled())
