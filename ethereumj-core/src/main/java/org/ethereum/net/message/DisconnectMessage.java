@@ -26,11 +26,8 @@ public class DisconnectMessage extends Message {
     }
 
     private void parse() {
-
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-
-        if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != DISCONNECT.asByte())
-            throw new RuntimeException("Not a DisconnectMessage command");
+		validateMessage(paramsList, DISCONNECT);
 		
 		byte[] reasonBytes = ((RLPItem) paramsList.get(1)).getRLPData();
         if (reasonBytes == null)

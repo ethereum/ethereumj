@@ -1,5 +1,8 @@
 package org.ethereum.net.message;
 
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
+
 /**
  * Abstract message class for all messages on the Ethereum network
  * 
@@ -16,6 +19,15 @@ public abstract class Message {
     public Message(byte[] encoded) {
         this.encoded = encoded;
         parsed = false;
+    }
+    
+    protected void validateMessage(RLPList data, Command expectedCode) {
+    	RLPItem item = (RLPItem) data.get(0);
+		if (item.getRLPData() == null && expectedCode == Command.HELLO)
+			return;
+		if ((item.getRLPData()[0] & 0xFF) == expectedCode.asByte())
+			return;
+    	throw new RuntimeException("Expected " + expectedCode);
     }
     
     public abstract Command getCommand();

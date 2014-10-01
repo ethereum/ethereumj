@@ -7,7 +7,6 @@ import static org.ethereum.net.message.Command.BLOCKS;
 
 import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 /**
@@ -24,11 +23,8 @@ public class BlocksMessage extends Message {
     }
 
 	private void parse() {
-
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-		
-        if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != BLOCKS.asByte())
-            throw new RuntimeException("Not a BlocksMessage command");
+		validateMessage(paramsList, BLOCKS);
 
         blocks = new ArrayList<>();
 		for (int i = 1; i < paramsList.size(); ++i) {

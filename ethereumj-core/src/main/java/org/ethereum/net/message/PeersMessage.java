@@ -36,11 +36,8 @@ public class PeersMessage extends Message {
     }
 
     private void parse() {
-
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-
-        if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != PEERS.asByte())
-            throw new RuntimeException("Not a PeersMessage command");
+		validateMessage(paramsList, PEERS);
 
         peers = new LinkedHashSet<>();
         for (int i = 1; i < paramsList.size(); ++i) {

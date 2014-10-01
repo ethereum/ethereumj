@@ -41,14 +41,8 @@ public class StatusMessage extends Message {
     }
 	
     private void parse() {
-
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-
-        /* the message does not distinguish between the 0 and null
-         * so check command code for null */
-        // TODO: find out if it can be 00
-        if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != STATUS.asByte())
-            throw new RuntimeException("Not a StatusMessage command");
+		validateMessage(paramsList, STATUS);
         
         this.protocolVersion	= ((RLPItem) paramsList.get(1)).getRLPData()[0];
         byte[] networkIdBytes	= ((RLPItem) paramsList.get(2)).getRLPData();

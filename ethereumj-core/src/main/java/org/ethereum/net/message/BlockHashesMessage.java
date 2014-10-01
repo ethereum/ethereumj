@@ -30,9 +30,7 @@ public class BlockHashesMessage extends Message {
 	
 	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-		
-        if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != BLOCK_HASHES.asByte())
-            throw new RuntimeException("Not a BlockHashesMessage command");
+		validateMessage(paramsList, BLOCK_HASHES);
 
         hashes = new ArrayList<>();
 		for (int i = 1; i < paramsList.size(); ++i) {

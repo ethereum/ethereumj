@@ -40,9 +40,7 @@ public class GetBlockHashesMessage extends Message {
 	
 	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-
-        if ( (((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != GET_BLOCK_HASHES.asByte())
-            throw new RuntimeException("Not a GetBlockHashesMessage command");
+		validateMessage(paramsList, GET_BLOCK_HASHES);
         
         this.hash = ((RLPItem) paramsList.get(1)).getRLPData();
         byte[] maxBlocksBytes = ((RLPItem) paramsList.get(2)).getRLPData();

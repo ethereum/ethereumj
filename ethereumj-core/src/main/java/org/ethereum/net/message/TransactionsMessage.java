@@ -4,7 +4,6 @@ import static org.ethereum.net.message.Command.TRANSACTIONS;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
@@ -32,9 +31,7 @@ public class TransactionsMessage extends Message {
     
     private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-
-		if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != TRANSACTIONS.asByte())
-			throw new RuntimeException("Not a TransactionsMessage command");
+		validateMessage(paramsList, TRANSACTIONS);
 
 		transactions = new HashSet<>();
         for (int i = 1; i < paramsList.size(); ++i) {

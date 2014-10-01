@@ -50,15 +50,12 @@ public class HelloMessage extends Message {
     }
 
     private void parse() {
-
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-      
-        // TODO: find out if it can be 00. Do we need to check for this?
+		// TODO: find out if it can be 0x00. Do we need to check for this?
         // The message does not distinguish between 0 and null, 
         // so we check command code for null.
-		if (((RLPItem)paramsList.get(0)).getRLPData() != null)
-            throw new Error("HelloMessage: parsing for mal data"); 
-        
+		validateMessage(paramsList, HELLO);
+		
         byte[] p2pVersionBytes	= ((RLPItem) paramsList.get(1)).getRLPData();
         this.p2pVersion			= p2pVersionBytes != null ? p2pVersionBytes[0] : 0;
         
