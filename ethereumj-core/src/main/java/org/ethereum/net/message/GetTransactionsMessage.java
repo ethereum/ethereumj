@@ -1,14 +1,13 @@
 package org.ethereum.net.message;
 
-import static org.ethereum.net.Command.GET_TRANSACTIONS;
+import static org.ethereum.net.message.Command.GET_TRANSACTIONS;
 
-import org.ethereum.net.Command;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 06/04/14 14:56
+ * Wrapper around an Ethereum GetTransactions message on the network 
+ *
+ * @see {@link org.ethereum.net.message.Command#GET_TRANSACTIONS}
  */
 public class GetTransactionsMessage extends Message {
 
@@ -31,7 +30,7 @@ public class GetTransactionsMessage extends Message {
     
     @Override
     public String toString() {
-    	return "[command=" + this.getCommand().name() + "]";
+    	return "[" + this.getCommand().name() + "]";
     }
 }
 

@@ -7,22 +7,21 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.client.ClientPeer;
+import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.client.Peer;
-import org.ethereum.net.peerdiscovery.PeerDiscovery;
+import org.ethereum.net.client.PeerDiscovery;
 
 /**
- * WorldManager is the main class to handle the processing of transactions and
- * managing the world state.
+ * WorldManager is a singleton containing references to different parts of the system.
  * 
- * www.ethereumJ.com
- * @author: Roman Mandeleil 
+ * @author Roman Mandeleil 
  * Created on: 01/06/2014 10:44
  */
 public class WorldManager {
@@ -31,29 +30,25 @@ public class WorldManager {
 	private Repository repository;
 	private Wallet wallet;
 
+    private PeerClient activePeer;
     private PeerDiscovery peerDiscovery;
     
     private final Set<Peer> peers = Collections.synchronizedSet(new HashSet<Peer>());
-    
-    private ClientPeer activePeer;
+    private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
     private EthereumListener listener;
     
-    private static final class WorldManagerHolder {
-    	private static final WorldManager instance = new WorldManager();
-        static{
-            instance.init();
-        }
-    }
+	private static final class WorldManagerHolder {
+		private static final WorldManager instance = new WorldManager();
+		static {
+			instance.init();
+		}
+	}
     
 	private WorldManager() {
 		this.repository = new RepositoryImpl();
 		this.blockchain = new BlockchainImpl(repository);
-		
-        // Initialize PeerData
-        Set<Peer> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
-
-        peerDiscovery = new PeerDiscovery(peerDataList);
+        this.peerDiscovery = new PeerDiscovery();
 	}
 
     // used for testing
@@ -63,13 +58,9 @@ public class WorldManager {
     }
 
     public void init() {
-
     	this.wallet = new Wallet();
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
         wallet.importKey(cowAddr);
-
-//        AccountState state = wallet.getAccountState(key.getAddress());
-//        state.addToBalance(BigInteger.valueOf(2).pow(200));
 
         String secret = CONFIG.coinbaseSecret();
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());
@@ -84,13 +75,18 @@ public class WorldManager {
         this.listener = listener;
     }
 
+    /**
+     * Update list of known peers with new peers
+     * This method checks for duplicate peer id's and addresses
+     *
+     * @param newPeers to be added to the list of known peers
+     */
     public void addPeers(final Set<Peer> newPeers) {
-
         synchronized (peers) {
-            for (final Peer peer : newPeers) {
-                if (peerDiscovery.isStarted() && !peers.contains(peer))
-                    peerDiscovery.addNewPeerData(peer);
-                peers.add(peer);
+            for (final Peer newPeer : newPeers) {
+            	if(!peers.contains(newPeer))
+                    peerDiscovery.addNewPeer(newPeer);
+                peers.add(newPeer);
             }
         }
     }
@@ -100,11 +96,9 @@ public class WorldManager {
             peerDiscovery.start();
     }
 
-    public void stopPeerDiscovery(){
-
+    public void stopPeerDiscovery() {
         if (listener != null)
             listener.trace("Stopping peer discovery");
-
         if (peerDiscovery.isStarted())
             peerDiscovery.stop();
     }
@@ -127,8 +121,8 @@ public class WorldManager {
                 InetAddress iAddr = InetAddress.getByName(ip_trim);
                 int port = Integer.parseInt(port_trim);
 
-                Peer peerData = new Peer(iAddr.getAddress(), port, new byte[]{00});
-                peers.add(peerData);
+                Peer peer = new Peer(iAddr, port, null);
+                peers.add(peer);
             } catch (UnknownHostException e) {
                 e.printStackTrace();
             }
@@ -156,11 +150,11 @@ public class WorldManager {
 		return wallet;
 	}
 
-    public void setActivePeer(ClientPeer peer) {
+    public void setActivePeer(PeerClient peer) {
         this.activePeer = peer;
     }
 
-    public ClientPeer getActivePeer() {
+    public PeerClient getActivePeer() {
         return activePeer;
     }
 
@@ -168,13 +162,12 @@ public class WorldManager {
 		return peers;
 	}
 
-
-    public boolean isBlockChainLoading(){
-
-        if (blockchain.getBlockQueue().size() > 2)
-            return true;
-        else
-            return false;
+    public Set<Transaction> getPendingTransactions() {
+    	return pendingTransactions;
+    }
+    
+    public boolean isBlockchainLoading(){
+        return blockchain.getBlockQueue().size() > 2;
     }
 
     public void close() {

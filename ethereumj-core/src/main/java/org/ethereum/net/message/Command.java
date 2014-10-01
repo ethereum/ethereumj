@@ -1,4 +1,4 @@
-package org.ethereum.net;
+package org.ethereum.net.message;
 
 import java.util.HashMap;
 import java.util.Map;

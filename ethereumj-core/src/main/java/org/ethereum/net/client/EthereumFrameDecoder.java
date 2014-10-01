@@ -17,10 +17,11 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
 
     private Logger logger = LoggerFactory.getLogger("wire");
 
-    @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+	@Override
+	protected void decode(ChannelHandlerContext ctx, ByteBuf in,
+			List<Object> out) throws Exception {
 
-        // No header for Eth. message
+        // Ethereum message is at least 8 bytes
         if (in.readableBytes() < 8) return;
 
         long magicBytes = in.readUnsignedInt();
@@ -31,11 +32,10 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
               (magicBytes >>  8   &  0xFF) == 0x08  &&
               (magicBytes         &  0xFF) == 0x91 )) {
 
-            // TODO: (!!!) the collision can happen,
-            // TODO: rare but can on the good roundtrips
-            // TODO: so I want to drop the frame and continue
-            // TODO: normally , if it's happens to often , than
-            // TODO: it's an attack and I should drop the peer.
+        	// TODO: Drop frame and continue.
+        	// A collision can happen (although rare)
+        	// If this happens too often, it's an attack.
+        	// In that case, drop the peer.
 
             logger.error("abandon garbage, wrong magic bytes: [{}] msgSize: [{}]", magicBytes, msgSize);
             ctx.close();
@@ -43,20 +43,18 @@ public class EthereumFrameDecoder extends ByteToMessageDecoder {
 
         // Don't have the full packet yet
         if (msgSize > in.readableBytes()) {
-
             logger.trace("msg decode: magicBytes: [{}], readBytes: [{}] / msgSize: [{}] ", magicBytes, in.readableBytes(), msgSize);
             in.resetReaderIndex();
             return;
         }
 
         logger.trace("message fully constructed go handle it: readBytes: [{}] / msgSize: [{}]", in.readableBytes(), msgSize);
-
-        byte[] decoded = new byte[(int)msgSize];
+        
+        byte[] decoded = new byte[(int) msgSize];
         in.readBytes(decoded);
 
         out.add(decoded);
 
         in.markReaderIndex();
-
     }
 }

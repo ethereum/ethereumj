@@ -5,25 +5,25 @@ package org.ethereum.trie;
  * which is used to store both the account state and storage of each account.
  */
 public interface Trie {
-
-	/**
-	 * Adds or updates a value to the trie for the specified key
-	 * 
-	 * @param key - any length byte array
-	 * @param value - an rlp encoded byte representation of the object to store
-	 */
-    public void update(byte[] key, byte[] value);
     
     /**
      * Gets a value from the trie for a given key
      *   
      * @param key - any length byte array
-     * @return value - an rlp encoded byte array of the stored object
+     * @return an rlp encoded byte array of the stored object
      */
     public byte[] get(byte[] key);
+
+	/**
+	 * Insert or update a value in the trie for a specified key
+	 * 
+	 * @param key - any length byte array
+	 * @param an rlp encoded byte array of the object to store
+	 */
+    public void update(byte[] key, byte[] value);
     
     /**
-     * Deletes a value from the trie for a given key
+     * Deletes a key/value from the trie for a given key
      * 
      * @param key - any length byte array
      */
@@ -47,6 +47,11 @@ public interface Trie {
      * Commit all the changes until now
      */
     public void sync();
+    
+    /**
+     * Discard all the changes until now
+     */
+    public void undo();
     
     public String getTrieDump();
 }

@@ -4,55 +4,44 @@ import org.ethereum.net.message.HelloMessage;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.Arrays;
+
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 13/04/14 17:36
+ * This class models a peer in the network
  */
 public class Peer {
 
-	private byte[] ip;
-	private short port;
+	private InetAddress address;
+	private int port;
 	private byte[] peerId;
+	
     private List<String> capabilities;
     private HelloMessage handshake;
 
 	private transient boolean isOnline = false;
 	private transient long    lastCheckTime = 0;
 
-    public Peer(byte[] ip, int port, byte[] peerId) {
-        this.ip = ip;
-        this.port = (short) (port & 0xFFFF);
+    public Peer(InetAddress ip, int port, byte[] peerId) {
+        this.address = ip;
+        this.port = port;
         this.peerId = peerId;
         this.capabilities = new ArrayList<>();
     }
 
-    public InetAddress getInetAddress() {
-        InetAddress addr = null;
-        try {
-            addr = InetAddress.getByAddress(ip);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-            throw new Error("malformed ip");
-        }
-        return addr;
-    }
-
-    public byte[] getIp() {
-        return ip;
+    public InetAddress getAddress() {
+        return address;
     }
 
     public int getPort() {
         return port;
     }
 
-    public byte[] getPeerId() {
-        return peerId;
+    public String getPeerId() {
+    	return peerId == null ? "" : Hex.toHexString(peerId);
     }
 
     public boolean isOnline() {
@@ -89,8 +78,8 @@ public class Peer {
     }
     
     public byte[] getEncoded() {
-    	byte[] ip				= RLP.encodeElement(this.ip);
-    	byte[] port				= RLP.encodeShort(this.port);
+    	byte[] ip				= RLP.encodeElement(this.address.getAddress());
+    	byte[] port				= RLP.encodeInt(this.port);
     	byte[] peerId			= RLP.encodeElement(this.peerId);
     	byte[][] encodedCaps 	= new byte[this.capabilities.size()][];
     	for (int i = 0; i < this.capabilities.size(); i++) {
@@ -102,21 +91,21 @@ public class Peer {
 
     @Override
     public String toString() {
-		return "[ip=" + getInetAddress().getHostAddress() + 
+		return "[ip=" + getAddress().getHostAddress() + 
 				" port=" + getPort() +
-				" peerId=" + (getPeerId() == null ? "" : Hex.toHexString(getPeerId()))
-				+ "]";
+				" peerId=" + getPeerId() + "]";
     }
 
     @Override
     public boolean equals(Object obj) {
         if (obj == null) return false;
         Peer peerData = (Peer) obj;
-        return this.getInetAddress().equals(peerData.getInetAddress());
+		return Arrays.equals(peerData.peerId, this.peerId)
+				|| this.getAddress().equals(peerData.getAddress());
     }
 
     @Override
     public int hashCode() {
-        return getInetAddress().hashCode();
+        return -1; // override for equals function
     }
 }

@@ -48,5 +48,4 @@ public class MessageRoundtrip {
     public Message getMsg() {
         return msg;
     }
-
 }

@@ -1,4 +1,4 @@
-package org.ethereum.net.peerdiscovery;
+package org.ethereum.net.client;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -6,15 +6,15 @@ import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class PeerDiscoveryMonitorThread implements Runnable {
-    private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
+public class PeerMonitorThread implements Runnable {
+    private final static Logger logger = LoggerFactory.getLogger("peermonitor");
 
     private ThreadPoolExecutor executor;
     private int seconds;
     private volatile boolean run = true;
     private StringBuffer toStringBuff = new StringBuffer();
     
-	public PeerDiscoveryMonitorThread(ThreadPoolExecutor executor, int delay) {
+	public PeerMonitorThread(ThreadPoolExecutor executor, int delay) {
 		this.executor = executor;
 		this.seconds = delay;
 	}

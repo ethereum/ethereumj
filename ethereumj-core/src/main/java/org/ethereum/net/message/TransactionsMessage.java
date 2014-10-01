@@ -1,31 +1,58 @@
 package org.ethereum.net.message;
 
-import static org.ethereum.net.Command.TRANSACTIONS;
+import static org.ethereum.net.message.Command.TRANSACTIONS;
 
 import org.ethereum.core.Transaction;
-import org.ethereum.net.Command;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 06/04/14 14:56
+ * Wrapper around an Ethereum Transactions message on the network 
+ *
+ * @see {@link org.ethereum.net.message.Command#TRANSACTIONS}
  */
 public class TransactionsMessage extends Message {
 	
-    private List<Transaction> transactions = new ArrayList<>();
+    private Set<Transaction> transactions;
 
     public TransactionsMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public TransactionsMessage(List<Transaction> transactionList) {
+    public TransactionsMessage(Set<Transaction> transactionList) {
         this.transactions = transactionList;
+        parsed = true;
+    }
+    
+    private void parse() {
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+
+		if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != TRANSACTIONS.asByte())
+			throw new RuntimeException("Not a TransactionsMessage command");
+
+		transactions = new HashSet<>();
+        for (int i = 1; i < paramsList.size(); ++i) {
+            RLPList rlpTxData = (RLPList) paramsList.get(i);
+            Transaction tx = new Transaction(rlpTxData.getRLPData());
+            transactions.add(tx);
+        }
+        parsed = true;
+    }
+    
+    private void encode() {
+    	List<byte[]> encodedElements = new ArrayList<>();
+    	encodedElements.add(RLP.encodeByte(TRANSACTIONS.asByte()));
+    	for (Transaction tx : transactions)
+            encodedElements.add(tx.getEncoded());
+		byte[][] encodedElementArray = encodedElements
+				.toArray(new byte[encodedElements.size()][]);
+        this.encoded = RLP.encodeList(encodedElementArray);
     }
     
     @Override
@@ -34,41 +61,15 @@ public class TransactionsMessage extends Message {
     	return encoded;
     }
 
-    private void encode() {
-        byte[][] encodedTransactions = new byte[transactions.size()][];
-        byte[] command = new byte[]{Command.TRANSACTIONS.asByte()};
-        for (int i = 0; i < transactions.size(); ++i)
-            encodedTransactions[i + 1] = transactions.get(i).getEncoded();
-        byte[] encodedTxsList = RLP.encodeList(encodedTransactions);
-        this.encoded = RLP.encodeList(command, encodedTxsList);
-    }
-
-    private void parse() {
-		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-
-		int commandByte = ((RLPItem) (paramsList).get(0)).getRLPData()[0] & 0xFF;
-		if (Command.fromInt(commandByte) != TRANSACTIONS)
-			throw new RuntimeException("Not a TransactionMessage: " + Integer.toHexString(commandByte));
-
-        transactions = new ArrayList<>();
-        int size = paramsList.size();
-        for (int i = 1; i < size; ++i) {
-            RLPList rlpTxData = (RLPList) paramsList.get(i);
-            Transaction tx = new Transaction(rlpTxData.getRLPData());
-            transactions.add(tx);
-        }
-        parsed = true;
-    }
-
-    public List<Transaction> getTransactions() {
-        if (!parsed) parse();
-        return transactions;
-    }
-
 	@Override
 	public Command getCommand() {
 		return TRANSACTIONS;
 	}
+    
+    public Set<Transaction> getTransactions() {
+        if (!parsed) parse();
+        return transactions;
+    }
 
     @Override
     public Class<?> getAnswerMessage() {
@@ -79,7 +80,7 @@ public class TransactionsMessage extends Message {
         if(!parsed) parse();
         StringBuffer sb = new StringBuffer();
         for (Transaction transaction : transactions)
-            sb.append("   ").append(transaction).append("\n");
-        return "Transactions Message [\n" + sb.toString() + " ]";
+            sb.append("\n   ").append(transaction);
+        return "[" + this.getCommand().name() + sb.toString() + "]";
     }
 }

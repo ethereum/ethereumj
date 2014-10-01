@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.ethereum.net.message.Command;
 import org.ethereum.net.message.HelloMessage;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -30,6 +31,7 @@ public class HelloMessageTest {
         HelloMessage helloMessage = new HelloMessage(payload);
         System.out.println(helloMessage);
 
+        assertEquals(Command.HELLO, helloMessage.getCommand());
         assertEquals(0, helloMessage.getP2PVersion());
         assertEquals("Ethereum(++)/Peer Server Zero/v0.6.8d/Release/Linux/g++", helloMessage.getClientId());
         assertEquals(0, helloMessage.getCapabilities().size());
@@ -52,9 +54,9 @@ public class HelloMessageTest {
     	
         byte[] payload = Hex.decode(helloMessageRaw);
         HelloMessage helloMessage = new HelloMessage(payload);
-        helloMessage.parse();
         System.out.println(helloMessage);
 
+        assertEquals(Command.HELLO, helloMessage.getCommand());
         assertEquals(0, helloMessage.getP2PVersion());
         assertEquals("NEthereum(++)/ZeroGox/v0.6.9/ncurses/Linux/g++", helloMessage.getClientId());
         assertEquals(1, helloMessage.getCapabilities().size());
@@ -69,7 +71,7 @@ public class HelloMessageTest {
         String helloAnnouncement = "Ethereum(J)/0.6.0/dev/Windows/Java";
         byte p2pVersion = 0x00;
         List<String> capabilities = new ArrayList<>(Arrays.asList("eth", "shh"));
-        short listenPort = (short) 30303;
+        int listenPort = 30303;
         byte[] peerIdBytes = Hex.decode("CAB0D93EEE1F44EF1286367101F1553450E3DDCE"
         		+ "EA45ABCAB0AC21E1EFB48A6610EBE88CE7317EB09229558311BA8B7250911D"
         		+ "7E49562C3988CA3143329DA3EA");
@@ -82,8 +84,8 @@ public class HelloMessageTest {
         		+ "7696E646F77732F4A617661C8836574688373686882765FB840CAB0D93EEE1F"
         		+ "44EF1286367101F1553450E3DDCEEA45ABCAB0AC21E1EFB48A6610EBE88CE73"
         		+ "17EB09229558311BA8B7250911D7E49562C3988CA3143329DA3EA";
-        
+ 
+        assertEquals(Command.HELLO, helloMessage.getCommand());
         assertEquals(expected, Hex.toHexString(helloMessage.getEncoded()).toUpperCase());
     }
 }
-

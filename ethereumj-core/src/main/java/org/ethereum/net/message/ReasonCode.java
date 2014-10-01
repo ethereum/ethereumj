@@ -9,15 +9,35 @@ import java.util.Map;
  */
 public enum ReasonCode {
 
+	/** [0x00] Disconnect request by other peer */
     REQUESTED(0x00),
+    
+    /** [0x01] */
     TCP_ERROR(0x01),
+    
+    /** [0x02] Packets can not be parsed */
     BAD_PROTOCOL(0x02),
+    
+    /** [0x03] This peer is too slow or delivers unreliable data */
     USELESS_PEER(0x03),
+    
+    /** [0x04] Already too many connections with other peers */
     TOO_MANY_PEERS(0x04),
+    
+    /** [0x05] Already have a running connection with this peer */
     ALREADY_CONNECTED(0x05),
+    
+    /** [0x06] Genesis is not the same as ours */
     WRONG_GENESIS(0x06),
+    
+    /** [0x07] Peer identifies itself with the 
+     * wrong p2pVersion, protocolVersion or networkId */
     INCOMPATIBLE_PROTOCOL(0x07),
+    
+    /** [0x08] Peer quit voluntarily */
     PEER_QUITING(0x08),
+    
+    /** [0xFF] Reason not specified */
 	UNKNOWN(0xFF);
 
     private int reason;

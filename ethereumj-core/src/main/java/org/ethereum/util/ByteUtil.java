@@ -79,10 +79,26 @@ public class ByteUtil {
         return i;
     }
     
-    public static byte[] longToBytes(long l) {
-    	return ByteBuffer.allocate(8).putLong(l).array();
+    /**
+     * Converts a long value into a byte array.
+     * 
+     * @param val - long value to convert
+     * @return <code>byte[]</code> of length 8, representing the long value
+     */
+    public static byte[] longToBytes(long val) {
+    	return ByteBuffer.allocate(8).putLong(val).array();
     }
     
+    /**
+     * Convert a byte-array into a hex String. <br/>
+     * Works similar to {@link Hex#toHexString} 
+     * but allows for <code>null</code>
+     * 
+     * @param data - byte-array to convert to a hex-string
+     * @return hex representation of the data.<br/> 
+     * 		Returns an empty String if the input is <code>null</code>
+     * @see {@link Hex#toHexString}
+     */
     public static String toHexString(byte[] data) {
         if (data == null) return "";
         else return Hex.toHexString(data);

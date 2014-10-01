@@ -63,6 +63,10 @@ public class TrieImpl implements Trie {
     public TrieIterator getIterator() {
         return new TrieIterator(this);
     }
+    
+    public void setCache(Cache cache) {
+        this.cache = cache;
+    }
 
     public Cache getCache() {
         return this.cache;
@@ -76,18 +80,35 @@ public class TrieImpl implements Trie {
         return root;
     }
 
+    @Override
     public void setRoot(byte[] root) {
     	this.root = root;
-    }
-    
-    public void setCache(Cache cache) {
-        this.cache = cache;
     }
 
     /**************************************
      * Public (query) interface functions *
      **************************************/
 
+    /**
+     * Retrieve a value from a key as String
+     *
+     * @param key
+     * @return value
+     */
+    public byte[] get(String key) {
+        return this.get(key.getBytes());
+    }
+
+    @Override
+    public byte[] get(byte[] key) {
+        if (logger.isDebugEnabled()) 
+        	logger.debug("Retrieving key {}", Hex.toHexString(key));
+        byte[] k = binToNibbles(key);
+        Value c = new Value(this.get(this.root, k));
+
+        return (c == null)? null : c.asBytes();
+    }
+    
     /**
      * Insert key/value pair into trie
      *
@@ -98,12 +119,7 @@ public class TrieImpl implements Trie {
         this.update(key.getBytes(), value.getBytes());
     }
 
-    /**
-     * Insert key/value pair into trie
-     *
-     * @param key
-     * @param value
-     */
+    @Override
     public void update(byte[] key, byte[] value) {
         if (key == null)
             throw new NullPointerException("Key should not be blank");
@@ -117,35 +133,15 @@ public class TrieImpl implements Trie {
     }
 
     /**
-     * Retrieve a value from a node
-     *
-     * @param key
-     * @return value
-     */
-    public byte[] get(String key) {
-        return this.get(key.getBytes());
-    }
-
-    /**
-     * Retrieve a value from a node
-     *
-     * @param key
-     * @return value
-     */
-    public byte[] get(byte[] key) {
-        if (logger.isDebugEnabled()) 
-        	logger.debug("Retrieving key {}", Hex.toHexString(key));
-        byte[] k = binToNibbles(key);
-        Value c = new Value(this.get(this.root, k));
-
-        return (c == null)? null : c.asBytes();
-    }
-
-    /**
      * Delete a key/value pair from the trie
      *
      * @param key
      */
+    public void delete(String key) {
+        this.update(key.getBytes(), "".getBytes());
+    }
+    
+    @Override
     public void delete(byte[] key) {
         delete(new String(key));
         if(logger.isDebugEnabled()) {
@@ -153,14 +149,20 @@ public class TrieImpl implements Trie {
             logger.debug("New root-hash: {}", Hex.toHexString(this.getRootHash()));
         }
     }
-
-    /**
-     * Delete a key/value pair from the trie
-     *
-     * @param key
-     */
-    public void delete(String key) {
-        this.update(key.getBytes(), "".getBytes());
+    
+    @Override
+    public byte[] getRootHash() {
+        if (root == null
+                || (root instanceof byte[] && ((byte[]) root).length == 0)
+                || (root instanceof String && "".equals((String) root))) {
+            return ByteUtil.EMPTY_BYTE_ARRAY;
+        } else if (root instanceof byte[]) {
+            return (byte[]) this.getRoot();
+        } else {
+            Value rootValue = new Value(this.getRoot());
+            byte[] val = rootValue.encode();
+            return HashUtil.sha3(val);
+        }
     }
 
     /****************************************
@@ -378,24 +380,28 @@ public class TrieImpl implements Trie {
         Object[] itemList = emptyStringSlice(LIST_SIZE);
         for (int i = 0; i < LIST_SIZE; i++) {
             Object cpy = currentNode.get(i).asObj();
-            if (cpy != null) {
+            if (cpy != null)
                 itemList[i] = cpy;
-            }
         }
         return itemList;
     }
 
-    // Simple compare function which compared the tries based on their stateRoot
-    public boolean cmp(TrieImpl trie) {
-        return Arrays.equals(this.getRootHash(), trie.getRootHash());
+    // Simple compare function which compares two tries based on their stateRoot
+    @Override
+    public boolean equals(Object trie) {
+    	if (this == trie) return true;
+    	if (trie instanceof Trie)
+    		return Arrays.equals(this.getRootHash(), ((Trie) trie).getRootHash());
+    	return false;
     }
 
-    // Save the cached value to the database.
+    @Override
     public void sync() {
         this.cache.commit();
         this.prevRoot = this.root;
     }
 
+    @Override
     public void undo() {
         this.cache.undo();
         this.root = this.prevRoot;
@@ -424,28 +430,14 @@ public class TrieImpl implements Trie {
         return slice;
     }
 
-    public byte[] getRootHash() {
-        if (root == null
-                || (root instanceof byte[] && ((byte[]) root).length == 0)
-                || (root instanceof String && "".equals((String) root))) {
-            return ByteUtil.EMPTY_BYTE_ARRAY;
-        } else if (root instanceof byte[]) {
-            return (byte[]) this.getRoot();
-        } else {
-            Value rootValue = new Value(this.getRoot());
-            byte[] val = rootValue.encode();
-            return HashUtil.sha3(val);
-        }
-    }
-
-    /*
-     * insert/delete operations  on a Trie structure
-     * leaves unnecessary nodes, this method scans the
+    /**
+     * Insert/delete operations on a Trie structure
+     * leaves the old nodes in cache, this method scans the
      * cache and removes them. The method is not thread
      * safe, the tree should not be modified during the
      * cleaning process.
      */
-    public void cleanCacheGarbage() {
+    public void cleanCache() {
 
         CollectFullSetOfNodes collectAction = new CollectFullSetOfNodes();
         long startTime = System.currentTimeMillis();
@@ -474,7 +466,7 @@ public class TrieImpl implements Trie {
         logger.info("Garbage collection time: [{}ms]", System.currentTimeMillis() - startTime);
     }
 
-    public void scanTree(byte[] hash, ScanAction scanAction) {
+    private void scanTree(byte[] hash, ScanAction scanAction) {
 
         Value node = this.getCache().get(hash);
         if (node == null) return;

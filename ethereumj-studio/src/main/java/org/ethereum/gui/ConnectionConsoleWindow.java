@@ -1,5 +1,7 @@
 package org.ethereum.gui;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -8,7 +10,7 @@ import javax.swing.*;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.PeerListener;
-import org.ethereum.net.client.ClientPeer;
+import org.ethereum.net.client.PeerClient;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -68,15 +70,18 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener {
 //        setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setLocation(802, 460);
-
+        
+        if (CONFIG.peerDiscovery())
+            UIEthereumManager.ethereum.startPeerDiscovery();
+		
         Thread t = new Thread() {
-                    public void run() {
-                        ClientPeer clientPeer = UIEthereumManager.ethereum.getDefaultPeer();
-                        clientPeer.setPeerListener(thisConsole);
-                        clientPeer.connect(SystemProperties.CONFIG.activePeerIP(),
-                                SystemProperties.CONFIG.activePeerPort());
-                    }
-        };
+			public void run() {
+				PeerClient clientPeer = UIEthereumManager.ethereum.getDefaultPeer();
+				clientPeer.setPeerListener(thisConsole);
+				clientPeer.connect(SystemProperties.CONFIG.activePeerIP(),
+						SystemProperties.CONFIG.activePeerPort());
+			}
+		};
         t.start();
     }
 

@@ -15,8 +15,6 @@ import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 
 /**
- * www.ethereumJ.com
- *
  * @author: Roman Mandeleil
  * Created on: 24/06/2014 00:12
  */

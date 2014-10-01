@@ -360,18 +360,18 @@ public class TrieTest {
     }
 
     @Test
-    public void testTrieCmp() {
+    public void testTrieEquals() {
         TrieImpl trie1 = new TrieImpl(mockDb);
         TrieImpl trie2 = new TrieImpl(mockDb);
 
         trie1.update(doge, LONG_STRING);
         trie2.update(doge, LONG_STRING);
-        assertTrue("Expected tries to be equal", trie1.cmp(trie2));
+        assertTrue("Expected tries to be equal", trie1.equals(trie2));
         assertEquals(Hex.toHexString(trie1.getRootHash()), Hex.toHexString(trie2.getRootHash()));
 
         trie1.update(dog, LONG_STRING);
         trie2.update(cat, LONG_STRING);
-        assertFalse("Expected tries not to be equal", trie1.cmp(trie2));
+        assertFalse("Expected tries not to be equal", trie1.equals(trie2));
         assertNotEquals(Hex.toHexString(trie1.getRootHash()), Hex.toHexString(trie2.getRootHash()));
     }
 
@@ -417,9 +417,9 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update("doe", "reindeer");
         TrieImpl trie2 = trie.copy();
-        assertFalse(trie.equals(trie2)); // avoid possibility that its just a reference copy
+        assertNotEquals(trie.hashCode(), trie2.hashCode()); // avoid possibility that its just a reference copy
         assertEquals(Hex.toHexString(trie.getRootHash()), Hex.toHexString(trie2.getRootHash()));
-        assertTrue(trie.cmp(trie2));
+        assertTrue(trie.equals(trie2));
     }
 
     @Test
@@ -552,7 +552,7 @@ public class TrieTest {
 	            trie.delete(word1);
 	        }
 	
-	        trie.cleanCacheGarbage();
+	        trie.cleanCache();
 	        trie.sync();
 	
 	        // Assert the result now
@@ -615,7 +615,7 @@ public class TrieTest {
                 trie.update(keyVal[0].trim(), keyVal[1].trim());
         }
 
-        trie.cleanCacheGarbage();
+        trie.cleanCache();
         trie.sync();
 
         TrieImpl trie2 = new TrieImpl(mockDb, trie.getRootHash());
@@ -660,7 +660,7 @@ public class TrieTest {
 	            testerMap.put(word1, word2);
 	        }
 	
-	        trie.cleanCacheGarbage();
+	        trie.cleanCache();
 	        trie.sync();
 	
 	        // Assert the result now

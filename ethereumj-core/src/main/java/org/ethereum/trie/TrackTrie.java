@@ -100,4 +100,9 @@ public class TrackTrie implements Trie {
 	public void sync() {
 		trie.sync();
 	}
+
+	@Override
+	public void undo() {
+		trie.undo();		
+	}
 }

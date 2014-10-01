@@ -15,9 +15,6 @@ public class EthereumMessageSizeEstimator implements MessageSizeEstimator {
 
     private static final class HandleImpl implements Handle {
 
-        private HandleImpl() {
-        }
-
         @Override
         public int size(Object msg) {
 

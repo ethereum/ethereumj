@@ -10,8 +10,10 @@ import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
+ * This class contains static values of messages on the network.
+ * These message will always be the same and therefor don't need to be created each time.
+ * 
+ * @author Roman Mandeleil
  * Created on: 13/04/14 20:19
  */
 public class StaticMessages {
@@ -22,8 +24,6 @@ public class StaticMessages {
     public final static GetPeersMessage GET_PEERS_MESSAGE				= new GetPeersMessage();
     public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
 
-    public static final byte[] DISCONNECT_PEER_QUITTING = Hex.decode("2240089100000003C20108");
-
     public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
     public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
    
@@ -31,7 +31,7 @@ public class StaticMessages {
         String helloAnnouncement = buildHelloAnnouncement();
         byte p2pVersion = 0x00;
         List<String> capabilities = new ArrayList<>(Arrays.asList("eth"));
-        short listenPort = (short) 30303;
+        int listenPort = 30303;
         byte[] peerIdBytes = HashUtil.randomPeerId();
 
         return new HelloMessage(p2pVersion, helloAnnouncement, 

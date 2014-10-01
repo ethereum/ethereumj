@@ -2,7 +2,7 @@ package org.ethereum.net.submit;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.ClientPeer;
+import org.ethereum.net.client.PeerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,8 +11,7 @@ import java.util.concurrent.Callable;
 import static java.lang.Thread.sleep;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 23/05/2014 18:33
  */
 public class TransactionTask implements Callable<Transaction> {
@@ -29,19 +28,18 @@ public class TransactionTask implements Callable<Transaction> {
     public Transaction call() throws Exception {
 
         try {
-            logger.info("call() tx: {}", tx.toString());
+            logger.info("Call() tx: {}", tx.toString());
 
-            ClientPeer peer = WorldManager.getInstance().getActivePeer();
-
+            PeerClient peer = WorldManager.getInstance().getActivePeer();
 			WalletTransaction walletTransaction = WorldManager.getInstance().getWallet().addByWalletTransaction(tx);
-            peer.sendTransaction(tx);
+            peer.getHandler().sendTransaction(tx);
 
             while(walletTransaction.getApproved() < 1) {
                 sleep(10);
             }
             logger.info("return approved: {}", walletTransaction.getApproved());
         } catch (Throwable th) {
-            logger.info("exception caugh: {}", th);
+            logger.warn("Exception caught: {}", th);
             WorldManager.getInstance().getWallet().removeTransaction(tx);
         }
         return null;

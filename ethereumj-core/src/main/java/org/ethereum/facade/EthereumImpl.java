@@ -9,7 +9,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.ClientPeer;
+import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.client.Peer;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
@@ -33,25 +33,21 @@ public class EthereumImpl implements Ethereum {
 
     /**
      * Find a peer but not this one
-     * @param peerData - peer to exclude
+     * @param peer - peer to exclude
      * @return online peer
      */
     @Override
-    public Peer findOnlinePeer(Peer peerData) {
-
+    public Peer findOnlinePeer(Peer peer) {
         Set<Peer> excludePeers = new HashSet<>();
-        excludePeers.add(peerData);
-
+        excludePeers.add(peer);
         return findOnlinePeer(excludePeers);
     }
 
     @Override
     public Peer findOnlinePeer() {
-
         Set<Peer> excludePeers = new HashSet<>();
         return findOnlinePeer(excludePeers);
     }
-
 
     @Override
     public Peer findOnlinePeer(Set<Peer> excludePeers)  {
@@ -66,16 +62,11 @@ public class EthereumImpl implements Ethereum {
 
         final Set<Peer> peers = WorldManager.getInstance().getPeers();
         synchronized (peers) {
-
             for (Peer peer : peers) { // it blocks until a peer is available.
-
-                if (peer.isOnline() &&   !excludePeers.contains(peer)) {
-
+				if (peer.isOnline() && !excludePeers.contains(peer)) {
                     logger.info("Found peer: {}", peer.toString());
-
                     if (listener != null)
                         listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
-
                     return peer;
                 }
             }
@@ -83,20 +74,20 @@ public class EthereumImpl implements Ethereum {
         return null;
     }
 
-
     @Override
-    public Peer waitForOnlinePeer(){
+    public Peer waitForOnlinePeer() {
 
         Peer peer = null;
-        while(peer == null){
-
-            try {Thread.sleep(100);} catch (InterruptedException e) {e.printStackTrace();}
-            peer = this.findOnlinePeer();
-        }
-
+		while (peer == null) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			peer = this.findOnlinePeer();
+		}
         return peer;
     }
-
 
     @Override
     public Set<Peer> getPeers() {
@@ -108,23 +99,20 @@ public class EthereumImpl implements Ethereum {
         WorldManager.getInstance().startPeerDiscovery();
     }
 
-
     @Override
-    public void stopPeerDiscovery(){
+    public void stopPeerDiscovery() {
         WorldManager.getInstance().stopPeerDiscovery();
     }
 
     @Override
-    public void connect(InetAddress addr, int port){
+    public void connect(InetAddress addr, int port) {
         connect(addr.getHostName(), port);
     }
 
     @Override
-    public void connect(String ip, int port){
-
-        logger.info("Connecting to: {}:{}", ip, port);
-        new ClientPeer().connect(ip,
-                port);
+    public void connect(String ip, int port) {
+		logger.info("Connecting to: {}:{}", ip, port);
+		new PeerClient().connect(ip, port);
     }
 
     @Override
@@ -138,8 +126,8 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public boolean isBlockChainLoading() {
-        return WorldManager.getInstance().isBlockChainLoading();
+    public boolean isBlockchainLoading() {
+        return WorldManager.getInstance().isBlockchainLoading();
     }
 
     @Override
@@ -148,15 +136,11 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public ClientPeer getDefaultPeer(){
+    public PeerClient getDefaultPeer(){
 
-        ClientPeer peer = WorldManager.getInstance().getActivePeer();
-        if (peer == null){
-
-            peer = new ClientPeer();
-            WorldManager.getInstance().setActivePeer(peer);
-        }
-
+        PeerClient peer = WorldManager.getInstance().getActivePeer();
+        if (peer == null)
+            peer = new PeerClient();
         return peer;
     }
 
@@ -164,7 +148,6 @@ public class EthereumImpl implements Ethereum {
     public boolean isConnected() {
         return WorldManager.getInstance().getActivePeer() != null;
     }
-
 
     @Override
     public Transaction createTransaction(byte[] nonce, byte[] gasPrice, byte[] gas,

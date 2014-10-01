@@ -1,14 +1,18 @@
 package org.ethereum.net.message;
 
-import java.math.BigInteger;
+import static org.ethereum.net.message.Command.GET_BLOCK_HASHES;
 
-import static org.ethereum.net.Command.GET_BLOCK_HASHES;
-
-import org.ethereum.net.Command;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
+/**
+ * Wrapper around an Ethereum GetBlockHashes message on the network 
+ *
+ * @see {@link org.ethereum.net.message.Command#GET_BLOCK_HASHES}
+ */
 public class GetBlockHashesMessage extends Message {
 	
     /** The hash from the block of which parent hash to start sending */
@@ -23,23 +27,26 @@ public class GetBlockHashesMessage extends Message {
 	public GetBlockHashesMessage(byte[] hash, int maxBlocks) {
         this.hash = hash;
         this.maxBlocks = maxBlocks;
-        this.parsed = true;
-        this.encode();
+        parsed = true;
+        encode();
     }
 
 	private void encode() {
-		byte[] command 		= RLP.encodeByte(this.getCommand().asByte());
+		byte[] command 		= RLP.encodeByte(GET_BLOCK_HASHES.asByte());
 		byte[] hash 		= RLP.encodeElement(this.hash);
 		byte[] maxBlocks 	= RLP.encodeInt(this.maxBlocks);
 		this.encoded = RLP.encodeList(command, hash, maxBlocks);
 	}
 	
-	public void parse() {
+	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
+        if ( (((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != GET_BLOCK_HASHES.asByte())
+            throw new RuntimeException("Not a GetBlockHashesMessage command");
+        
         this.hash = ((RLPItem) paramsList.get(1)).getRLPData();
         byte[] maxBlocksBytes = ((RLPItem) paramsList.get(2)).getRLPData();
-        this.maxBlocks		= new BigInteger(1, maxBlocksBytes).intValue();
+        this.maxBlocks		= ByteUtil.byteArrayToInt(maxBlocksBytes);
         
         this.parsed = true;
 	}
@@ -71,7 +78,9 @@ public class GetBlockHashesMessage extends Message {
 
 	@Override
 	public String toString() {
-		return "[command=" + this.getCommand().name() + "]"; //TODO
+		if(!this.parsed) this.parse();
+		return "[" + this.getCommand().name() + 
+				" hash=" + Hex.toHexString(hash) + 
+				" maxBlocks=" + maxBlocks + "]";
 	}
-
 }

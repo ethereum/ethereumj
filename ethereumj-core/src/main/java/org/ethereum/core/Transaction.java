@@ -207,7 +207,7 @@ public class Transaction {
     @Override
     public String toString() {
         if (!parsed) rlpParse();
-        return "TransactionData [" +  " hash=" + ByteUtil.toHexString(hash) +
+        return "TransactionData [" +  "hash=" + ByteUtil.toHexString(hash) +
                 "  nonce=" + ByteUtil.toHexString(nonce) +
                 ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
                 ", gas=" + ByteUtil.toHexString(gasLimit) +
@@ -217,7 +217,7 @@ public class Transaction {
                 ", signatureV=" + signature.v +
                 ", signatureR=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r)) +
                 ", signatureS=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) +
-                " ]";
+                "]";
     }
 
     public String toStylishString() {
@@ -234,7 +234,6 @@ public class Transaction {
                 "->  , <font color=\"${attribute_color}\"> signatureS</font>=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) + "<br/>" +
                 " ]";
     }
-
 
     /**
      *  For signatures you have to keep also
@@ -291,7 +290,7 @@ public class Transaction {
         byte[] hash = this.getHash();
         int hashCode = 0;
 
-        for (int i = 0; i < hash.length; ++i){
+        for (int i = 0; i < hash.length; ++i) {
             hashCode += hash[i] * i;
         }
 

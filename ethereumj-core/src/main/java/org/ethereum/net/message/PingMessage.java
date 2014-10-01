@@ -1,14 +1,13 @@
 package org.ethereum.net.message;
 
-import static org.ethereum.net.Command.PING;
+import static org.ethereum.net.message.Command.PING;
 
-import org.ethereum.net.Command;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 06/04/14 14:56
+ * Wrapper around an Ethereum Ping message on the network 
+ *
+ * @see {@link org.ethereum.net.message.Command#PING}
  */
 public class PingMessage extends Message {
 
@@ -31,6 +30,6 @@ public class PingMessage extends Message {
     
     @Override
     public String toString() {
-    	return "[command=" + getCommand().name() + "]";
+    	return "[" + getCommand().name() + "]";
     }
 }

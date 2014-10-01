@@ -97,7 +97,6 @@ public class AccountState {
     public BigInteger addToBalance(BigInteger value) {
         if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.add(value);
-
         return this.balance;
     }
 

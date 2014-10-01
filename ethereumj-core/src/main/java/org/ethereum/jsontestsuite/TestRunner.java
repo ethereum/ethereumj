@@ -155,7 +155,7 @@ public class TestRunner {
 
             // assert storage
             Map<ByteArrayWrapper, ByteArrayWrapper> storage = accountState.getStorage();
-            for (ByteArrayWrapper storageKey  :  storage.keySet()  ) {
+            for (ByteArrayWrapper storageKey : storage.keySet()) {
 
                 byte[] expectedStValue = storage.get(storageKey).getData();
 

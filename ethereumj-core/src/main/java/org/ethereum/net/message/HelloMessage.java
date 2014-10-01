@@ -1,9 +1,9 @@
 package org.ethereum.net.message;
 
-import static org.ethereum.net.Command.HELLO;
+import static org.ethereum.net.message.Command.HELLO;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
-import org.ethereum.net.Command;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
@@ -11,14 +11,13 @@ import org.spongycastle.util.encoders.Hex;
 
 import com.google.common.base.Joiner;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Wrapper around an Ethereum HelloMessage on the network 
  *
- * @see {@link org.ethereum.net.Command#HELLO}
+ * @see {@link org.ethereum.net.message.Command#HELLO}
  * 
  * @author Roman Mandeleil
  */
@@ -32,7 +31,7 @@ public class HelloMessage extends Message {
      * Currently only "eth" and "shh" are known.  */
     private List<String> capabilities;
     /** The port on which the peer is listening for an incoming connection */
-    private short listenPort;
+    private int listenPort;
     /** The identity and public key of the peer */
     private byte[] peerId;
 
@@ -41,7 +40,7 @@ public class HelloMessage extends Message {
     }
 
 	public HelloMessage(byte p2pVersion, String clientId,
-			List<String> capabilities, short listenPort, byte[] peerId) {
+			List<String> capabilities, int listenPort, byte[] peerId) {
         this.p2pVersion = p2pVersion;
         this.clientId = clientId;
         this.capabilities = capabilities;
@@ -50,14 +49,14 @@ public class HelloMessage extends Message {
         this.parsed = true;
     }
 
-    public void parse() {
+    private void parse() {
 
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
       
         // TODO: find out if it can be 00. Do we need to check for this?
         // The message does not distinguish between 0 and null, 
         // so we check command code for null.
-		if (((RLPItem) paramsList.get(0)).getRLPData() != null)
+		if (((RLPItem)paramsList.get(0)).getRLPData() != null)
             throw new Error("HelloMessage: parsing for mal data"); 
         
         byte[] p2pVersionBytes	= ((RLPItem) paramsList.get(1)).getRLPData();
@@ -73,17 +72,11 @@ public class HelloMessage extends Message {
         }
         
         byte[] peerPortBytes	= ((RLPItem) paramsList.get(4)).getRLPData();
-        this.listenPort         = new BigInteger(peerPortBytes).shortValue();
+        this.listenPort         = ByteUtil.byteArrayToInt(peerPortBytes);
         
         this.peerId           	= ((RLPItem) paramsList.get(5)).getRLPData();
         
         this.parsed = true;
-    }
-    
-    @Override
-    public byte[] getEncoded() {
-    	if (encoded == null) this.encode();
-        return encoded;
     }
 
     private void encode() {
@@ -95,11 +88,22 @@ public class HelloMessage extends Message {
 			capabilities[i] = RLP.encode(this.capabilities.get(i).getBytes());
 		}
         byte[] capabilityList	= RLP.encodeList(capabilities);
-        byte[] peerPort			= RLP.encodeShort(this.listenPort);
+        byte[] peerPort			= RLP.encodeInt(this.listenPort);
         byte[] peerId			= RLP.encodeElement(this.peerId);
 
 		this.encoded = RLP.encodeList(command, p2pVersion, 
 				clientId, capabilityList, peerPort, peerId);
+	}
+    
+    @Override
+    public byte[] getEncoded() {
+    	if (encoded == null) this.encode();
+        return encoded;
+    }
+    
+	@Override
+	public Command getCommand() {
+		return HELLO;
 	}
     
     public byte getP2PVersion() {
@@ -117,7 +121,7 @@ public class HelloMessage extends Message {
         return capabilities;
     }
 
-    public short getListenPort() {
+    public int getListenPort() {
         if (!parsed) parse();
         return listenPort;
     }
@@ -127,11 +131,6 @@ public class HelloMessage extends Message {
         return peerId;
     }
     
-	@Override
-	public Command getCommand() {
-		return HELLO;
-	}
-
     @Override
     public Class<?> getAnswerMessage() {
         return null;
@@ -139,7 +138,7 @@ public class HelloMessage extends Message {
 
     public String toString() {
         if (!parsed) parse();
-        return "[command=" + this.getCommand().name() +
+        return "[" + this.getCommand().name() +
         		" p2pVersion=" + this.p2pVersion +
                 " clientId=" + this.clientId +
                 " capabilities=[" + Joiner.on(" ").join(this.capabilities) + "]" +

@@ -1,8 +1,7 @@
 package org.ethereum.net.message;
 
-import static org.ethereum.net.Command.STATUS;
+import static org.ethereum.net.message.Command.STATUS;
 
-import org.ethereum.net.Command;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
@@ -10,9 +9,9 @@ import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * Wrapper around an Ethereum StatusMessage on the network 
+ * Wrapper around an Ethereum Status message on the network 
  *
- * @see {@link org.ethereum.net.Command#STATUS}
+ * @see {@link org.ethereum.net.message.Command#STATUS}
  */
 public class StatusMessage extends Message {
 
@@ -41,14 +40,14 @@ public class StatusMessage extends Message {
         this.encode();
     }
 	
-    public void parse() {
+    private void parse() {
 
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         /* the message does not distinguish between the 0 and null
          * so check command code for null */
         // TODO: find out if it can be 00
-        if ( (((RLPItem)(paramsList).get(0)).getRLPData()[0] & 0xFF) != STATUS.asByte())
+        if ((((RLPItem)paramsList.get(0)).getRLPData()[0] & 0xFF) != STATUS.asByte())
             throw new RuntimeException("Not a StatusMessage command");
         
         this.protocolVersion	= ((RLPItem) paramsList.get(1)).getRLPData()[0];
@@ -58,16 +57,10 @@ public class StatusMessage extends Message {
         this.bestHash 			= ((RLPItem) paramsList.get(4)).getRLPData();
         this.genesisHash 		= ((RLPItem) paramsList.get(5)).getRLPData();
         
-        this.parsed = true;
+        parsed = true;
     }
 
-	@Override
-	public byte[] getEncoded() {
-		if (encoded == null) this.encode();
-        return encoded;
-	}
-	
-	private void encode() {
+    private void encode() {
         byte[] command			= RLP.encodeByte(STATUS.asByte());
         byte[] protocolVersion	= RLP.encodeByte(this.protocolVersion);
         byte[] networkId		= RLP.encodeByte(this.networkId);
@@ -79,6 +72,12 @@ public class StatusMessage extends Message {
 				totalDifficulty, bestHash, genesisHash);
 	}
 
+	@Override
+	public byte[] getEncoded() {
+		if (encoded == null) this.encode();
+        return encoded;
+	}
+	
 	@Override
 	public Command getCommand() {
 		return STATUS;
@@ -117,7 +116,7 @@ public class StatusMessage extends Message {
 	@Override
 	public String toString() {
 		if (!parsed) parse();
-		return "[command=" + this.getCommand().name() +
+		return "[" + this.getCommand().name() +
     		" protocolVersion=" + this.protocolVersion +
             " networkId=" + this.networkId +
             " totalDifficulty=" + ByteUtil.toHexString(this.totalDifficulty) +

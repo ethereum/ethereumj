@@ -11,8 +11,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
+ * Utility class to retrieve property values from the system.properties files
+ *
+ * @author Roman Mandeleil
  * Created on: 22/05/2014 19:22
  */
 public class SystemProperties {
@@ -59,7 +60,7 @@ public class SystemProperties {
                 fileName = "system.properties";
                 input = SystemProperties.class.getClassLoader().getResourceAsStream(fileName);
                 if (input == null) {
-                    logger.error("Sorry, unable to find " + fileName);
+                    logger.error("Sorry, unable to find {}", fileName);
                     return;
                 }
             }
@@ -90,10 +91,10 @@ public class SystemProperties {
 		return Integer.parseInt(prop.getProperty("peer.discovery.workers"));
     }
 
-    public int peerDiscoveryTimeout() {
+    public int peerConnectionTimeout() {
 		if (prop.isEmpty())
 			return 10000;
-		return Integer.parseInt(prop.getProperty("peer.discovery.timeout")) * 1000;
+		return Integer.parseInt(prop.getProperty("peer.connection.timeout")) * 1000;
     }
 
     public int transactionApproveTimeout() {
@@ -132,9 +133,9 @@ public class SystemProperties {
         return prop.getProperty("coinbase.secret");
     }
 
-    public Integer activePeerChannelTimeout() {
+    public Integer peerChannelReadTimeout() {
         if(prop.isEmpty()) return DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT;
-        return Integer.parseInt(prop.getProperty("active.peer.channel.timeout"));
+        return Integer.parseInt(prop.getProperty("peer.channel.read.timeout"));
     }
 
     public Integer traceStartBlock() {

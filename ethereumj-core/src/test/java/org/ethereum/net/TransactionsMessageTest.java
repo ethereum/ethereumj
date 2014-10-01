@@ -4,19 +4,36 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.net.message.Command;
+import org.ethereum.net.message.GetTransactionsMessage;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.Arrays;
+
 public class TransactionsMessageTest {
 
+    /* GET_TRANSACTIONS */
+    
+    @Test  /* GetTransactions message 1 */
+    public void testGetTransactions() {
+
+    	GetTransactionsMessage getTransactionsMessage = new GetTransactionsMessage();
+        System.out.println(getTransactionsMessage);
+
+        assertEquals(Command.GET_TRANSACTIONS, getTransactionsMessage.getCommand());
+        assertEquals(TransactionsMessage.class, getTransactionsMessage.getAnswerMessage());
+    }
+	
     /* TRANSACTIONS */
     
     @Test  /* Transactions message 1 */
@@ -32,9 +49,10 @@ public class TransactionsMessageTest {
         TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
         System.out.println(transactionsMessage);
 
+        assertEquals(Command.TRANSACTIONS, transactionsMessage.getCommand());
         assertEquals(1, transactionsMessage.getTransactions().size());
 
-		Transaction tx = transactionsMessage.getTransactions().get(0);
+		Transaction tx = transactionsMessage.getTransactions().iterator().next();
 
 		assertEquals("5d2aee0490a9228024158433d650335116b4af5a30b8abb10e9b7f9f7e090fd8", Hex.toHexString(tx.getHash()));
 		assertEquals("04", Hex.toHexString(tx.getNonce()));
@@ -77,69 +95,73 @@ public class TransactionsMessageTest {
         TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
         System.out.println(transactionsMessage);
 
+        assertEquals(Command.TRANSACTIONS, transactionsMessage.getCommand());
+        
         assertEquals(3, transactionsMessage.getTransactions().size());
 
-        Transaction tx = transactionsMessage.getTransactions().get(0);
-
+        Iterator<Transaction> txIter = transactionsMessage.getTransactions().iterator();
+        Transaction tx1 = txIter.next(); txIter.next(); // skip one
+        Transaction tx3 = txIter.next();
+        
         assertEquals("1b9d9456293cbcbc2f28a0fdc67028128ea571b033fb0e21d0ee00bcd6167e5d",
-        		Hex.toHexString(tx.getHash()));
+        		Hex.toHexString(tx3.getHash()));
 
         assertEquals("00",
-        		Hex.toHexString(tx.getNonce()));
+        		Hex.toHexString(tx3.getNonce()));
 
         assertEquals("2710",
-        		Hex.toHexString(tx.getValue()));
+        		Hex.toHexString(tx3.getValue()));
 
         assertEquals("09184e72a000",
-        		Hex.toHexString(tx.getReceiveAddress()));
+        		Hex.toHexString(tx3.getReceiveAddress()));
 
-        assertNull(tx.getGasPrice());
+        assertNull(tx3.getGasPrice());
 
         assertEquals("0000000000000000000000000000000000000000",
-        		Hex.toHexString(tx.getGasLimit()));
+        		Hex.toHexString(tx3.getGasLimit()));
 
         assertEquals("606956330c0d630000003359366000530a0d630000003359602060005301356000533557604060005301600054630000000c58",
-        		Hex.toHexString(tx.getData()));
+        		Hex.toHexString(tx3.getData()));
 
         assertEquals("33",
-        		Hex.toHexString(new byte[] {tx.getSignature().v}));
+        		Hex.toHexString(new byte[] {tx3.getSignature().v}));
 
         assertEquals("1c",
-        		Hex.toHexString(tx.getSignature().r.toByteArray()));
+        		Hex.toHexString(tx3.getSignature().r.toByteArray()));
 
         assertEquals("7f6eb94576346488c6253197bde6a7e59ddc36f2773672c849402aa9c402c3c4",
-        		Hex.toHexString(tx.getSignature().s.toByteArray()));
+        		Hex.toHexString(tx3.getSignature().s.toByteArray()));
 
-        tx = transactionsMessage.getTransactions().get(2);
-
+        // Transaction #2
+        
         assertEquals("dde9543921850f41ca88e5401322cd7651c78a1e4deebd5ee385af8ac343f0ad",
-        		Hex.toHexString(tx.getHash()));
+        		Hex.toHexString(tx1.getHash()));
 
         assertEquals("02",
-        		Hex.toHexString(tx.getNonce()));
+        		Hex.toHexString(tx1.getNonce()));
 
         assertEquals("2710",
-        		Hex.toHexString(tx.getValue()));
+        		Hex.toHexString(tx1.getValue()));
 
         assertEquals("09184e72a000",
-        		Hex.toHexString(tx.getReceiveAddress()));
+        		Hex.toHexString(tx1.getReceiveAddress()));
 
-        assertNull(tx.getGasPrice());
+        assertNull(tx1.getGasPrice());
 
         assertEquals("ccdeac59d35627b7de09332e819d5159e7bb7250",
-        		Hex.toHexString(tx.getGasLimit()));
+        		Hex.toHexString(tx1.getGasLimit()));
 
         assertEquals("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d0aceee7e5ab874e22ccf8d1a649f59106d74e8",
-        		Hex.toHexString(tx.getData()));
+        		Hex.toHexString(tx1.getData()));
 
         assertEquals("1b",
-        		Hex.toHexString(new byte[] {tx.getSignature().v}));
+        		Hex.toHexString(new byte[] {tx1.getSignature().v}));
 
         assertEquals("00d05887574456c6de8f7a0d172342c2cbdd4cf7afe15d9dbb8b75b748ba6791c9",
-        		Hex.toHexString(tx.getSignature().r.toByteArray()));
+        		Hex.toHexString(tx1.getSignature().r.toByteArray()));
 
         assertEquals("1e87172a861f6c37b5a9e3a5d0d7393152a7fbe41530e5bb8ac8f35433e5931b",
-                Hex.toHexString(tx.getSignature().s.toByteArray()));
+                Hex.toHexString(tx1.getSignature().s.toByteArray()));
     }
     
     @Test /* Transactions msg encode */
@@ -161,10 +183,10 @@ public class TransactionsMessageTest {
         tx.sign(privKey);
         tx.getEncoded();
 
-        List<Transaction> txList =  new ArrayList<>();
-        txList.add(tx);
-        TransactionsMessage transactionsMessage = new TransactionsMessage(txList);
+        Set<Transaction> txs = new HashSet<>(Arrays.asList(tx));
+        TransactionsMessage transactionsMessage = new TransactionsMessage(txs);
 
+        assertEquals(Command.TRANSACTIONS, transactionsMessage.getCommand());
         assertEquals(expected, Hex.toHexString(transactionsMessage.getEncoded()));
     }
 }

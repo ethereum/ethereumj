@@ -2,6 +2,7 @@ package org.ethereum.net;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
+
 import org.ethereum.net.message.*;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
@@ -45,41 +46,36 @@ public class MessageQueue {
 	}
 
     public void sendMessage(Message msg) {
-
-        if (msg instanceof GetBlockHashesMessage && containsGetBlockHashes())
-            return;
-
-        messageQueue.add(new MessageRoundtrip(msg));
+		messageQueue.add(new MessageRoundtrip(msg));
     }
 
-    public void receivedMessage(Message msg) {
+    public void receivedMessage(Message msg) throws InterruptedException {
 
-        if (logger.isInfoEnabled())
-			logger.info("From: \t{} \tRecv: \t{}", ctx.channel()
-					.remoteAddress().toString(), msg.toString());
+		if (logger.isInfoEnabled())
+			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
         if (logger.isDebugEnabled())
             logger.debug("Encoded: [{}]", Hex.toHexString(msg.getEncoded()));
 
-        if (null != messageQueue.peek()) {
-
+        if (messageQueue.peek() != null) {
             MessageRoundtrip messageRoundtrip = messageQueue.peek();
             Message waitingMessage = messageRoundtrip.getMsg();
 
-			if (waitingMessage.getAnswerMessage() == null)
-				return;
-
-            if (msg.getClass() == waitingMessage.getAnswerMessage()){
+			if (waitingMessage.getAnswerMessage() != null
+					&& msg.getClass() == waitingMessage.getAnswerMessage()) {
                 messageRoundtrip.answer();
                 logger.debug("Message round trip covered: [{}] ", messageRoundtrip.getMsg().getCommand());
             }
+			if (msg instanceof DisconnectMessage) {
+				ctx.close().sync();
+				ctx.disconnect().sync();
+			}
         }
     }
 
     private void nudgeQueue() {
 
         // The message was answered, remove from the queue
-        if (null != messageQueue.peek()) {
-
+        if (messageQueue.peek() != null) {
             MessageRoundtrip messageRoundtrip = messageQueue.peek();
             if (messageRoundtrip.isAnswered()) {
                 messageQueue.remove();
@@ -108,9 +104,8 @@ public class MessageQueue {
 
     private void sendToWire(Message msg) {
 
-        if (logger.isInfoEnabled())
-			logger.info("To: \t{} \tSend: \t{}", ctx.channel()
-					.remoteAddress().toString(), msg.toString());
+		if (logger.isInfoEnabled())
+			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
         if (logger.isDebugEnabled())
             logger.debug("Encdoded: [{}]", Hex.toHexString(msg.getEncoded()));
         
@@ -120,16 +115,5 @@ public class MessageQueue {
         buffer.writeBytes(ByteUtil.calcPacketLength(msg.getEncoded()));
         buffer.writeBytes(msg.getEncoded());
         ctx.writeAndFlush(buffer);
-    }
-
-    private boolean containsGetBlockHashes() {
-        Iterator<MessageRoundtrip> iterator = messageQueue.iterator();
-        while(iterator.hasNext()){
-
-            MessageRoundtrip msgRoundTrip = iterator.next();
-            if (msgRoundTrip.getMsg() instanceof GetBlockHashesMessage)
-                return true;
-        }
-        return false;
     }
 }

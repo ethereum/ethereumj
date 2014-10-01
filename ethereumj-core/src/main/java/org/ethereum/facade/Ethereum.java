@@ -4,7 +4,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.client.ClientPeer;
+import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.client.Peer;
 
 import java.net.InetAddress;
@@ -55,7 +55,7 @@ public interface Ethereum {
      *  safe then should be traversed
      *  sync safe:
      *    synchronized (peers){
-     *        for (final PeerData peer : newPeers) {}
+     *        for (final Peer peer : newPeers) {}
      *    }
      *
      */
@@ -69,11 +69,11 @@ public interface Ethereum {
 
     public Blockchain getBlockChain();
 
-    public boolean isBlockChainLoading();
+    public boolean isBlockchainLoading();
 
     public void addListener(EthereumListener listener);
 
-    public ClientPeer getDefaultPeer();
+    public PeerClient getDefaultPeer();
 
     public boolean isConnected();
 

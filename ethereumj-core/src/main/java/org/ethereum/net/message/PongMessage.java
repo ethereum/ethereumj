@@ -1,14 +1,13 @@
 package org.ethereum.net.message;
 
-import static org.ethereum.net.Command.PONG;
+import static org.ethereum.net.message.Command.PONG;
 
-import org.ethereum.net.Command;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 06/04/14 14:56
+ * Wrapper around an Ethereum Pong message on the network 
+ *
+ * @see {@link org.ethereum.net.message.Command#PONG}
  */
 public class PongMessage extends Message {
 
@@ -32,6 +31,6 @@ public class PongMessage extends Message {
 	
     @Override
     public String toString() {
-    	return "[command=PONG]";
+    	return "[" + this.getCommand().name() + "]";
     }
 }

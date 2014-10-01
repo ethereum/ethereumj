@@ -69,14 +69,11 @@ public class Account  {
                         balance = balance.add(new BigInteger(1, tx.getValue()));
                     }
                 }
-
                 // todo: calculate the fee for pending
             }
         }
-
         return balance;
     }
-
 
     public BigInteger getNonce() {
 
@@ -98,17 +95,17 @@ public class Account  {
                 }
             }
         }
-
         return nonce;
     }
-
+    
+    public Set<Transaction> getPendingTransactins() {
+    	return this.pendingTransactions;
+    }
 
     public void addPendingTransaction(Transaction transaction){
         synchronized (pendingTransactions){
             pendingTransactions.add(transaction);
         }
-
-
     }
 
     public void clearAllPendingTransactions(){

@@ -1,12 +1,9 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.Command;
-
 /**
  * Abstract message class for all messages on the Ethereum network
  * 
- * www.ethereumJ.com
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 06/04/14 14:58
  */
 public abstract class Message {
@@ -29,7 +26,7 @@ public abstract class Message {
      * @return RLP encoded byte array representation of this message
      */
 	public abstract byte[] getEncoded();
-
+	
 	public abstract Class<?> getAnswerMessage();
 	
 	/**

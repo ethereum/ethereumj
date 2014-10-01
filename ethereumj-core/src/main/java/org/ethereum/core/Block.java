@@ -56,7 +56,7 @@ public class Block {
     /* Constructors */
     
     public Block(byte[] rawData) {
-    	logger.debug("new Block from RLP encoded [ " + Hex.toHexString(rawData) + " ]");
+    	logger.debug("new from [" + Hex.toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
         this.parsed = false;
     }
@@ -234,14 +234,14 @@ public class Block {
         toStringBuff.setLength(0);
         toStringBuff.append(Hex.toHexString(this.rlpEncoded)).append("\n");
         toStringBuff.append("BlockData [\n");
-        toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
+        toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
         
         for (TransactionReceipt txReceipt : getTxReceiptList()) {
             toStringBuff.append("\n");
             toStringBuff.append(txReceipt.toString());
         }
-        toStringBuff.append("\n ]");
+        toStringBuff.append("\n]");
 
         return toStringBuff.toString();
     }
@@ -251,11 +251,10 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
-        toStringBuff.append(" hash=" + ByteUtil.toHexString(this.getHash())).append("");
+        toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("");
         toStringBuff.append(header.toFlatString());
         
         for (Transaction tx : getTransactionsList()) {
-
             toStringBuff.append("\n");
             toStringBuff.append(tx.toString());
         }
@@ -270,7 +269,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("<font color=\"${header_color}\"> BlockData </font> [");
-        toStringBuff.append(" <font color=\"${attribute_color}\"> hash</font>=" +
+        toStringBuff.append("<font color=\"${attribute_color}\">hash</font>=" +
                 ByteUtil.toHexString(this.getHash())).append("<br/>");
         toStringBuff.append(header.toStylishString());
 
@@ -349,7 +348,7 @@ public class Block {
 	    	}
     	}
     	if(!isValid)
-    		logger.warn("!!!Invalid block!!!");
+    		logger.warn("WARNING: Invalid - {}", this);
     	return isValid;
     }
     

@@ -142,7 +142,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
     private boolean validInput() {
 
-        if (UIEthereumManager.ethereum.isBlockChainLoading()){
+        if (UIEthereumManager.ethereum.isBlockchainLoading()){
             alertStatusMsg("No transaction is allowed during block chain downloading.");
             return false;
         }

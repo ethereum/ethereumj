@@ -9,12 +9,9 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil 
+ * @author Roman Mandeleil 
  * Created on: 27/07/2014 11:28
  */
-
 public class BlockQueue {
 
 	private static Logger logger = LoggerFactory.getLogger("blockchain");
