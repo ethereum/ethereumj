@@ -55,7 +55,7 @@ public class MessageQueue {
 
 		if (listener != null)
 			listener.console("[Recv: " + msg + "]");
-		if (logger.isInfoEnabled() 
+		if (logger.isInfoEnabled()
 				&& msg.getCommand() != Command.PING
 				&& msg.getCommand() != Command.PONG 
 				&& msg.getCommand() != Command.PEERS 

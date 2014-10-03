@@ -35,8 +35,7 @@ public class WorkerThread implements Runnable {
 
 		try {
 			clientPeer = new PeerClient();
-			clientPeer.connect(peer.getAddress().getHostAddress(),
-					peer.getPort());
+			clientPeer.connect(peer.getAddress().getHostAddress(), peer.getPort());
 
 			peer.setOnline(true);
 			peer.setHandshake(clientPeer.getHandler().getHandshake());

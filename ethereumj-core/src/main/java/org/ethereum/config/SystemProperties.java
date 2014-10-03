@@ -21,8 +21,8 @@ public class SystemProperties {
     private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 	
 	private static int     DEFAULT_TX_APPROVE_TIMEOUT = 10;
-	private static String  DEFAULT_DISCOVERY_PEER_LIST = "54.201.28.117:30303";
-	private static String  DEFAULT_ACTIVE_PEER_IP = "54.201.28.117";
+	private static String  DEFAULT_DISCOVERY_PEER_LIST = "poc-6.ethdev.com:30303";
+	private static String  DEFAULT_ACTIVE_PEER_IP = "poc-6.ethdev.com";
 	private static int     DEFAULT_ACTIVE_PORT = 30303;
     private static String  DEFAULT_SAMPLES_DIR = "samples";
     private static String  DEFAULT_COINBASE_SECRET = "monkey";

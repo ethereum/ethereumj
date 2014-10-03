@@ -23,7 +23,6 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockQueue;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.listener.EthereumListener;
@@ -125,7 +124,7 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 				msgQueue.receivedMessage(statusMessage);
 			
 				processStatus(statusMessage);
-			
+
 				if (listener != null) listener.onRecvMessage(statusMessage);
 				break;
 			case DISCONNECT:
@@ -220,15 +219,9 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 	}
 	
     @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws InterruptedException  {
-        tearDown = true;
-        logger.warn("Lost connection to {}", ctx.channel().remoteAddress());
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
-        logger.info("Reason: {} ({})", cause.getMessage(), cause.getClass().getName());
-        logger.debug("Stacktrace", cause);
-        ctx.close().sync();
-        ctx.disconnect().sync();
-        killTimers();
+        ctx.close();
     }
     
     @Override
