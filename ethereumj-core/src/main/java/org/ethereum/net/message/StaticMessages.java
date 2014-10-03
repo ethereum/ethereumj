@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.encoders.Hex;
 
@@ -25,7 +24,6 @@ public class StaticMessages {
 	public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
 
 	public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
-	public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
 
 	private static HelloMessage generateHelloMessage() {
 		String helloAnnouncement = buildHelloAnnouncement();

@@ -26,6 +26,7 @@ public class PeerClient {
 
     private Logger logger = LoggerFactory.getLogger("wire");
 
+    private PeerDiscovery peerDiscovery;
     private PeerListener peerListener;
     private ProtocolHandler handler;
 
@@ -84,7 +85,8 @@ public class PeerClient {
 
 			handler.killTimers();
 
-			final Set<Peer> peers = WorldManager.getInstance().getPeers();
+			final Set<Peer> peers = WorldManager.getInstance()
+					.getPeerDiscovery().getPeers();
 
 			synchronized (peers) {
 				for (Peer peer : peers) {

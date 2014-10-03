@@ -55,7 +55,11 @@ public class MessageQueue {
 
 		if (listener != null)
 			listener.console("[Recv: " + msg + "]");
-		if (logger.isInfoEnabled())
+		if (logger.isInfoEnabled() 
+				&& msg.getCommand() != Command.PING
+				&& msg.getCommand() != Command.PONG 
+				&& msg.getCommand() != Command.PEERS 
+				&& msg.getCommand() != Command.GET_PEERS)
 			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
 		if (logger.isDebugEnabled())
 			logger.debug("Encoded: [{}]", Hex.toHexString(msg.getEncoded()));
@@ -70,11 +74,9 @@ public class MessageQueue {
 				logger.debug("Message round trip covered: [{}] ",
 						messageRoundtrip.getMsg().getCommand());
 			}
-			if (msg instanceof DisconnectMessage) {
-				ctx.close().sync();
-				ctx.disconnect().sync();
-			}
 		}
+		if (msg instanceof DisconnectMessage)
+			disconnect();
 	}
 
 	private void nudgeQueue() {
@@ -111,7 +113,11 @@ public class MessageQueue {
 
 		if (listener != null)
 			listener.console("[Send: " + msg + "]");
-		if (logger.isInfoEnabled())
+		if (logger.isInfoEnabled() 
+				&& msg.getCommand() != Command.PING
+				&& msg.getCommand() != Command.PONG 
+				&& msg.getCommand() != Command.PEERS 
+				&& msg.getCommand() != Command.GET_PEERS)
 			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
 		if (logger.isDebugEnabled())
 			logger.debug("Encdoded: [{}]", Hex.toHexString(msg.getEncoded()));
@@ -122,5 +128,15 @@ public class MessageQueue {
 		buffer.writeBytes(ByteUtil.calcPacketLength(msg.getEncoded()));
 		buffer.writeBytes(msg.getEncoded());
 		ctx.writeAndFlush(buffer);
+		
+		if(msg instanceof DisconnectMessage)
+			disconnect();
 	}
+	
+	private void disconnect() {
+		throw new DisconnectException();
+	}
+	
+	@SuppressWarnings("serial")
+	public class DisconnectException extends RuntimeException {}
 }

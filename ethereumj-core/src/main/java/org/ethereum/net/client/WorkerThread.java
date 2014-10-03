@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class WorkerThread implements Runnable {
 
-	private final static Logger logger = LoggerFactory.getLogger("wire");
+	private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
 	private Peer peer;
 	private PeerClient clientPeer;
@@ -41,13 +41,13 @@ public class WorkerThread implements Runnable {
 			peer.setOnline(true);
 			peer.setHandshake(clientPeer.getHandler().getHandshake());
 		} catch (Throwable e) {
-			if (peer.isOnline() == true)
+			if (peer.isOnline())
 				logger.info("Peer: [{}] went offline, due to: [{}]", peer
 						.getAddress().getHostAddress(), e);
 			peer.setOnline(false);
 		} finally {
-			logger.info("Peer: " + peer.toString() + " isOnline: "
-					+ peer.isOnline());
+			logger.info("Peer: " + peer.toString() + " is "
+					+ (peer.isOnline() ? "online" : "offline"));
 			peer.setLastCheckTime(System.currentTimeMillis());
 		}
 	}

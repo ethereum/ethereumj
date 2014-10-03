@@ -1,11 +1,15 @@
 package org.ethereum.facade;
 
+import java.math.BigInteger;
 import java.util.Map;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockQueue;
+import org.ethereum.core.Genesis;
 
 public interface Blockchain  {
+
+	public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
 
     public int getSize();
     public void add(Block block);
@@ -15,8 +19,8 @@ public interface Blockchain  {
     public long getGasPrice();
     public void setLastBlock(Block block);
     public Block getLastBlock();
-    public BlockQueue getBlockQueue();
+    public BlockQueue getQueue();
     public void close();
-	public byte[] getTotalDifficulty();
+	public BigInteger getTotalDifficulty();
 	public byte[] getLatestBlockHash();
 }

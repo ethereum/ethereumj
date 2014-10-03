@@ -3,6 +3,9 @@ package org.ethereum.net.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -14,9 +17,10 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class PeerDiscovery {
 
-	private static final Logger logger = LoggerFactory
-			.getLogger("peerdiscovery");
+	private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
+	private final Set<Peer> peers = Collections.synchronizedSet(new HashSet<Peer>());
+	
 	private PeerMonitorThread monitor;
 	private ThreadFactory threadFactory;
 	private ThreadPoolExecutor executorPool;
@@ -45,11 +49,6 @@ public class PeerDiscovery {
 		started.set(true);
 	}
 
-	public void addNewPeer(Peer peer) {
-		logger.debug("Add new peer for discovery: {}", peer);
-		executorPool.execute(new WorkerThread(peer, executorPool));
-	}
-
 	public void stop() {
 		executorPool.shutdown();
 		monitor.shutdown();
@@ -59,4 +58,30 @@ public class PeerDiscovery {
 	public boolean isStarted() {
 		return started.get();
 	}
+	
+    /**
+     * Update list of known peers with new peers
+     * This method checks for duplicate peer id's and addresses
+     *
+     * @param newPeers to be added to the list of known peers
+     */
+    public void addPeers(final Set<Peer> newPeers) {
+        synchronized (peers) {
+            for (final Peer newPeer : newPeers) {
+            	if(!peers.contains(newPeer))
+                    addNewPeer(newPeer);
+                peers.add(newPeer);
+            }
+        }
+    }
+
+	public void addNewPeer(Peer peer) {
+		logger.debug("Add new peer for discovery: {}", peer);
+		executorPool.execute(new WorkerThread(peer, executorPool));
+	}
+
+    public Set<Peer> getPeers() {
+		return peers;
+	}
+	
 }

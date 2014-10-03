@@ -5,7 +5,6 @@ import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.AdvancedDeviceUtils;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -449,7 +448,7 @@ public class BlockchainImpl implements Blockchain {
 	}
 	
 	@Override
-	public BlockQueue getBlockQueue() {
+	public BlockQueue getQueue() {
         return blockQueue;
     }
     
@@ -474,7 +473,7 @@ public class BlockchainImpl implements Blockchain {
     }
 
 	@Override
-	public byte[] getTotalDifficulty() {
-		return ByteUtil.bigIntegerToBytes(totalDifficulty);
+	public BigInteger getTotalDifficulty() {
+		return totalDifficulty;
 	}
 }

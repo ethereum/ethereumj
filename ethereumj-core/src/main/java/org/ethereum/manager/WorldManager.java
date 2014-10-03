@@ -33,9 +33,9 @@ public class WorldManager {
     private PeerClient activePeer;
     private PeerDiscovery peerDiscovery;
     
-    private final Set<Peer> peers = Collections.synchronizedSet(new HashSet<Peer>());
     private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
+    
     private EthereumListener listener;
     
 	private static final class WorldManagerHolder {
@@ -75,32 +75,18 @@ public class WorldManager {
         this.listener = listener;
     }
 
-    /**
-     * Update list of known peers with new peers
-     * This method checks for duplicate peer id's and addresses
-     *
-     * @param newPeers to be added to the list of known peers
-     */
-    public void addPeers(final Set<Peer> newPeers) {
-        synchronized (peers) {
-            for (final Peer newPeer : newPeers) {
-            	if(!peers.contains(newPeer))
-                    peerDiscovery.addNewPeer(newPeer);
-                peers.add(newPeer);
-            }
-        }
-    }
-
     public void startPeerDiscovery() {
         if (!peerDiscovery.isStarted())
             peerDiscovery.start();
     }
 
     public void stopPeerDiscovery() {
-        if (listener != null)
-            listener.trace("Stopping peer discovery");
         if (peerDiscovery.isStarted())
             peerDiscovery.stop();
+    }
+    
+    public PeerDiscovery getPeerDiscovery() {
+    	return peerDiscovery;
     }
 
     public EthereumListener getListener() {
@@ -158,16 +144,12 @@ public class WorldManager {
         return activePeer;
     }
 
-    public Set<Peer> getPeers() {
-		return peers;
-	}
-
     public Set<Transaction> getPendingTransactions() {
     	return pendingTransactions;
     }
-    
-    public boolean isBlockchainLoading(){
-        return blockchain.getBlockQueue().size() > 2;
+
+	public boolean isBlockchainLoading(){
+        return blockchain.getQueue().size() > 2;
     }
 
     public void close() {
@@ -175,5 +157,4 @@ public class WorldManager {
         repository.close();
         blockchain.close();
     }
-
 }

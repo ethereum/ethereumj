@@ -37,10 +37,11 @@ public class SystemProperties {
     private static Boolean DEFAULT_PLAY_VM = true;
     private static Boolean DEFAULT_BLOCKCHAIN_ONLY = false;
     private static int     DEFAULT_TRACE_STARTBLOCK = -1;
+    private static int     DEFAULT_MAX_HASHES_ASK = -1; // unlimited
     private static byte    DEFAULT_MAX_BLOCKS_ASK = 10;
     private static int     DEFAULT_MAX_BLOCKS_QUEUED = 300;
     private static String  DEFAULT_PROJECT_VERSION = "";
-    private static String  DEFAULT_HELLO_PHRASE = "RJ";
+    private static String  DEFAULT_HELLO_PHRASE = "Dev";
 
 
 	public static SystemProperties CONFIG = new SystemProperties();
@@ -195,6 +196,10 @@ public class SystemProperties {
         return Boolean.parseBoolean(prop.getProperty("blockchain.only"));
     }
 
+    public Integer maxHashesAsk() {
+        if(prop.isEmpty()) return DEFAULT_MAX_HASHES_ASK;
+        return Integer.parseInt(prop.getProperty("max.hashes.ask"));
+    }
 
     public Byte maxBlocksAsk() {
         if(prop.isEmpty()) return DEFAULT_MAX_BLOCKS_ASK;

@@ -5,10 +5,11 @@ import static org.ethereum.net.message.StaticMessages.PING_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.PONG_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.GET_PEERS_MESSAGE;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -21,9 +22,10 @@ import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockQueue;
 import org.ethereum.core.Transaction;
+import org.ethereum.facade.Blockchain;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
@@ -38,9 +40,9 @@ import org.ethereum.net.message.HelloMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.PeersMessage;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.message.StatusMessage;
 import org.ethereum.net.message.TransactionsMessage;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +82,7 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 	private Timer blocksAskTimer = new Timer("ChainAskTimer");
 	private int secToAskForBlocks = 1;
 
+	private PeerDiscovery peerDiscovery;
 	private PeerListener peerListener;
 	private EthereumListener listener;
 
@@ -87,11 +90,13 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 	private final Timer timer = new Timer("MiscMessageTimer");
 
 	public ProtocolHandler() {
+		this.listener = WorldManager.getInstance().getListener();
+		this.peerDiscovery = WorldManager.getInstance().getPeerDiscovery();
 	}
 
 	public ProtocolHandler(PeerListener peerListener) {
+		this();
 		this.peerListener = peerListener;
-		this.listener = WorldManager.getInstance().getListener();
 	}
 
 	@Override
@@ -126,9 +131,6 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 			case DISCONNECT:
 				DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
 				msgQueue.receivedMessage(disconnectMessage);
-			
-				ctx.close().sync();
-				ctx.disconnect().sync();
 			
 				if (listener != null) listener.onRecvMessage(disconnectMessage);
 				break;
@@ -216,9 +218,28 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 				break;
 		}
 	}
+	
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws InterruptedException  {
+        tearDown = true;
+        logger.warn("Lost connection to {}", ctx.channel().remoteAddress());
+        cause.printStackTrace();
+        logger.info("Reason: {} ({})", cause.getMessage(), cause.getClass().getName());
+        logger.debug("Stacktrace", cause);
+        ctx.close().sync();
+        ctx.disconnect().sync();
+        killTimers();
+    }
+    
+    @Override
+    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+        // limit the size of recieving buffer to 1024
+        ctx.channel().config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
+        ctx.channel().config().setOption(ChannelOption.SO_RCVBUF, 32368);
+    }
 
     private void processPeers(PeersMessage peersMessage) {
-    	WorldManager.getInstance().addPeers(peersMessage.getPeers());
+    	peerDiscovery.addPeers(peersMessage.getPeers());
 	}
 
 	/**
@@ -229,18 +250,24 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
      * @param msg is the StatusMessage
      */
 	private void processStatus(StatusMessage msg) {
-		if (!Arrays.equals(msg.getGenesisHash(), StaticMessages.GENESIS_HASH))
+		if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH))
 			sendDisconnect(ReasonCode.WRONG_GENESIS);
 		else if (msg.getProtocolVersion() != 33)
 			sendDisconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);		
 		else if (msg.getNetworkId() != 0)
 			sendDisconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);	
 		else {
-			// if totalDifficulty is highest known from all peers
-	        // 			- update bestHash
-	        //	sendGetBlockHashes(msg.getBestHash());
+//			BlockQueue chainQueue = WorldManager.getInstance().getBlockchain().getQueue();
+//			BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
+//			BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
+//			if (peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
+//				WorldManager.getInstance().getBlockchain().getQueue()
+//						.setHighestTotalDifficulty(peerTotalDifficulty);
+//				WorldManager.getInstance().getBlockchain().getQueue()
+//						.setBestHash(msg.getBestHash());
+//				sendGetBlockHashes(msg.getBestHash());
+//			}
 		}
-		// TODO: discard peer from pool
 	}
 	
 	private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
@@ -265,7 +292,7 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (blockList.isEmpty()) return;
-        WorldManager.getInstance().getBlockchain().getBlockQueue().addBlocks(blockList);
+        WorldManager.getInstance().getBlockchain().getQueue().addBlocks(blockList);
 		
 	}
 	
@@ -282,7 +309,6 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
     private void sendDisconnect(ReasonCode reason) {
     	DisconnectMessage msg = new DisconnectMessage(reason);
     	sendMsg(msg);
-    	// TODO actually disconnect from peer (and remove from list of peers)
     }
     
     private void sendPing() {
@@ -298,47 +324,17 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
     }
     
     private void sendPeers() {
-    	Set<Peer> peers = WorldManager.getInstance().getPeers();
-    	PeersMessage msg = new PeersMessage(peers);
+    	PeersMessage msg = new PeersMessage(peerDiscovery.getPeers());
         sendMsg(msg);
-    }
-    
-	private void updateBlockAskTimer(int seconds) {
-        secToAskForBlocks = seconds;
-        blocksAskTimer.cancel();
-        blocksAskTimer.purge();
-        blocksAskTimer = new Timer();
-        blocksAskTimer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                sendGetBlocks();
-            }
-        }, 3000, secToAskForBlocks * 1000);
-	}
-
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws InterruptedException  {
-        tearDown = true;
-        logger.warn("Lost connection to {}", ctx.channel().remoteAddress());
-        logger.info("Reason: {} ({})", cause.getMessage(), cause.getClass().getName());
-        logger.debug("Stacktrace", cause);
-        ctx.close().sync();
-        ctx.disconnect().sync();
-        killTimers();
-    }
-    
-    @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        // limit the size of recieving buffer to 1024
-        ctx.channel().config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
-        ctx.channel().config().setOption(ChannelOption.SO_RCVBUF, 32368);
     }
 
     private void sendStatus() {
+    	Blockchain chain = WorldManager.getInstance().getBlockchain();
     	byte protocolVersion = 33, networkId = 0;
-    	byte[] totalDifficulty = WorldManager.getInstance().getBlockchain().getTotalDifficulty();
-    	byte[] bestHash = WorldManager.getInstance().getBlockchain().getLatestBlockHash();
+    	BigInteger totalDifficulty = chain.getTotalDifficulty();
+		byte[] bestHash = chain.getLatestBlockHash();
 		StatusMessage msg = new StatusMessage(protocolVersion, networkId,
-				totalDifficulty, bestHash, StaticMessages.GENESIS_HASH);
+				ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
         sendMsg(msg);
     }
 
@@ -356,21 +352,26 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
         sendMsg(GET_TRANSACTIONS_MESSAGE);
     }
     
-    private void sendGetBlockHashes(byte[] bestHash) {
-		GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, 128);
+	private void sendGetBlockHashes(byte[] bestHash) {
+		GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, CONFIG.maxHashesAsk());
 		sendMsg(msg);
 	}
 
     private void sendGetBlocks() {
 
-        if (WorldManager.getInstance().getBlockchain().getBlockQueue().size() >
-                SystemProperties.CONFIG.maxBlocksQueued()) return;
+		if (WorldManager.getInstance().getBlockchain().getQueue().size() > 
+				CONFIG.maxBlocksQueued()) return;
 
-        Block lastBlock = WorldManager.getInstance().getBlockchain().getBlockQueue().getLast();
+		Block lastBlock = WorldManager.getInstance().getBlockchain().getQueue()
+				.getLastBlock();
         if (lastBlock == null) return;
 
-        List<byte[]> hashes = new ArrayList<>(); // retrieve list from block-hashes queue
-		GetBlocksMessage msg = new GetBlocksMessage(hashes);
+        // retrieve list of block hashes from queue
+        int blocksPerPeer = CONFIG.maxBlocksAsk();
+		List<byte[]> hashes = WorldManager.getInstance().getBlockchain()
+				.getQueue().getHashes(blocksPerPeer);
+
+        GetBlocksMessage msg = new GetBlocksMessage(hashes);
         sendMsg(msg);
     }
     
@@ -388,14 +389,6 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 	private void sendBlockHashes() {
 		// TODO: Send block hashes
 	}
-
-    public void killTimers(){
-        blocksAskTimer.cancel();
-        blocksAskTimer.purge();
-
-        timer.cancel();
-        timer.purge();
-    }
     
     private void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
     	// TODO validate p2pVersion
@@ -406,7 +399,7 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
     	Peer confirmedPeer = new Peer(address, port, peerId);
     	confirmedPeer.setOnline(true);
     	confirmedPeer.setHandshake(handshake);
-    	WorldManager.getInstance().getPeers().add(confirmedPeer);
+    	WorldManager.getInstance().getPeerDiscovery().getPeers().add(confirmedPeer);
     	
     	startTimers();
     }
@@ -442,6 +435,26 @@ public class ProtocolHandler extends ChannelInboundHandlerAdapter {
 //				}, 1000, secToAskForBlocks * 1000);
 			}
 		}
+    }
+    
+	private void updateBlockAskTimer(int seconds) {
+        secToAskForBlocks = seconds;
+        blocksAskTimer.cancel();
+        blocksAskTimer.purge();
+        blocksAskTimer = new Timer();
+        blocksAskTimer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                sendGetBlocks();
+            }
+        }, 3000, secToAskForBlocks * 1000);
+	}
+	
+    public void killTimers(){
+        blocksAskTimer.cancel();
+        blocksAskTimer.purge();
+
+        timer.cancel();
+        timer.purge();
     }
     
     protected HelloMessage getHandshake() {

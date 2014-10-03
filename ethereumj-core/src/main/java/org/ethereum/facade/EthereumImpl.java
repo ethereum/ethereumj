@@ -60,7 +60,7 @@ public class EthereumImpl implements Ethereum {
 
         WorldManager.getInstance().startPeerDiscovery();
 
-        final Set<Peer> peers = WorldManager.getInstance().getPeers();
+        final Set<Peer> peers = WorldManager.getInstance().getPeerDiscovery().getPeers();
         synchronized (peers) {
             for (Peer peer : peers) { // it blocks until a peer is available.
 				if (peer.isOnline() && !excludePeers.contains(peer)) {
@@ -91,7 +91,7 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public Set<Peer> getPeers() {
-        return WorldManager.getInstance().getPeers();
+        return WorldManager.getInstance().getPeerDiscovery().getPeers();
     }
 
     @Override

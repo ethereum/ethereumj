@@ -44,7 +44,8 @@ public class PeerMonitorThread implements Runnable {
 				toStringBuff.append(", isTerminated: ");
 				toStringBuff.append(this.executor.isTerminated());
 				toStringBuff.append(", peersDiscovered: ");
-				toStringBuff.append(WorldManager.getInstance().getPeers().size());
+				toStringBuff.append(WorldManager.getInstance()
+						.getPeerDiscovery().getPeers().size());
 				logger.trace(toStringBuff.toString());
 			}
 			try {
