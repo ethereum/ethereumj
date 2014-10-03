@@ -136,7 +136,7 @@ public class RepositoryImpl implements Repository {
                 logger.info("DB is empty - adding Genesis");
                 for (String address : Genesis.getPremine()) {
             		this.createAccount(Hex.decode(address));
-            		this.addBalance   (Hex.decode(address), Genesis.getPremineAmount());
+            		this.addBalance   (Hex.decode(address), Genesis.PREMINE_AMOUNT);
 				}
                 blockchain.storeBlock(Genesis.getInstance());
 

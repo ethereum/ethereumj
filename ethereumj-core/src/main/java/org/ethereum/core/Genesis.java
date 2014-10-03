@@ -29,6 +29,8 @@ import java.math.BigInteger;
  */
 public class Genesis extends Block {
 
+	public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
+	
     private static String[] premine = new String[] {
             "51ba59315b3a95761d0863b05ccc7a7f54703d99",
             "e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
@@ -70,7 +72,7 @@ public class Genesis extends Block {
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {
 			AccountState acctState = new AccountState();
-			acctState.addToBalance(getPremineAmount());
+			acctState.addToBalance(PREMINE_AMOUNT);
 			state.update(Hex.decode(address), acctState.getEncoded());
         }
 		setStateRoot(state.getRootHash());
@@ -88,9 +90,5 @@ public class Genesis extends Block {
 	
 	public final static String[] getPremine() {
 		return premine;
-	}
-	
-	public final static BigInteger getPremineAmount() {
-		return BigInteger.valueOf(2).pow(200);
 	}
 }
