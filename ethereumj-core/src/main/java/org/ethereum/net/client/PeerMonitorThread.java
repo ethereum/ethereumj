@@ -27,7 +27,7 @@ public class PeerMonitorThread implements Runnable {
 	@Override
 	public void run() {
 		while (run) {
-			if (logger.isDebugEnabled()) {
+			if (logger.isInfoEnabled()) {
 				toStringBuff.setLength(0);
 				toStringBuff.append("[monitor] [");
 				toStringBuff.append(this.executor.getPoolSize());
@@ -46,7 +46,7 @@ public class PeerMonitorThread implements Runnable {
 				toStringBuff.append(", peersDiscovered: ");
 				toStringBuff.append(WorldManager.getInstance()
 						.getPeerDiscovery().getPeers().size());
-				logger.trace(toStringBuff.toString());
+				logger.info(toStringBuff.toString());
 			}
 			try {
 				Thread.sleep(seconds * 1000);
