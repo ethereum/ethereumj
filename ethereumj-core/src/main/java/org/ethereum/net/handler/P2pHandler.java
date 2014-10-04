@@ -84,10 +84,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<Message> {
 				processPeers((PeersMessage)msg);			
 				break;
 			default:
+				ctx.fireChannelRead(msg);
 				break;
 		}
 	}
-	
+		
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error(cause.getCause().toString());
@@ -116,7 +117,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<Message> {
     		msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
     	else {
 	    	if(msg.getCapabilities().contains("eth"))
-	    		ctx.pipeline().addLast(new EthHandler(peerListener));
+	    		ctx.pipeline().addLast(new EthHandler(peerListener)).fireChannelActive();
 
 	    	InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
 	    	int port = msg.getListenPort();

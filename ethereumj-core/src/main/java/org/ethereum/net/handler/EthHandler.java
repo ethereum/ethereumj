@@ -72,7 +72,7 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 		this();
 		this.peerListener = peerListener;
 	}
-
+	
 	@Override
 	public void channelRead0(final ChannelHandlerContext ctx, Message msg) throws InterruptedException {
 		logger.trace("Read channel for {}", ctx.channel().remoteAddress());
@@ -137,7 +137,7 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
      */
 	private void processStatus(StatusMessage msg, ChannelHandlerContext ctx) {
 		if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH) || msg.getProtocolVersion() != 33)
-			ctx.pipeline().remove(this);
+			ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
 		else if (msg.getNetworkId() != 0)
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));	
 		else {
