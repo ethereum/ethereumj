@@ -37,7 +37,6 @@ public class StatusMessage extends Message {
         this.bestHash = bestHash;
         this.genesisHash = genesisHash;
         this.parsed = true;
-        this.encode();
     }
 	
     private void parse() {

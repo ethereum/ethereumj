@@ -27,12 +27,11 @@ public enum ReasonCode {
     /** [0x05] Already have a running connection with this peer */
     ALREADY_CONNECTED(0x05),
     
-    /** [0x06] Genesis is not the same as ours */
-    WRONG_GENESIS(0x06),
+    /** [0x06] Version of the p2p protocol is not the same as ours */
+    INCOMPATIBLE_PROTOCOL(0x06),
     
-    /** [0x07] Peer identifies itself with the 
-     * wrong p2pVersion, protocolVersion or networkId */
-    INCOMPATIBLE_PROTOCOL(0x07),
+    /** [0x07] Peer identifies itself with the wrong networkId */
+    INCOMPATIBLE_NETWORK(0x07),
     
     /** [0x08] Peer quit voluntarily */
     PEER_QUITING(0x08),

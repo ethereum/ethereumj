@@ -3,8 +3,12 @@ package org.ethereum.net.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -59,6 +63,10 @@ public class PeerDiscovery {
 		return started.get();
 	}
 	
+    public Set<Peer> getPeers() {
+		return peers;
+	}
+		
     /**
      * Update list of known peers with new peers
      * This method checks for duplicate peer id's and addresses
@@ -69,19 +77,38 @@ public class PeerDiscovery {
         synchronized (peers) {
             for (final Peer newPeer : newPeers) {
             	if(!peers.contains(newPeer))
-                    addNewPeer(newPeer);
+                    startWorker(newPeer);
                 peers.add(newPeer);
             }
         }
     }
 
-	public void addNewPeer(Peer peer) {
+	private void startWorker(Peer peer) {
 		logger.debug("Add new peer for discovery: {}", peer);
 		executorPool.execute(new WorkerThread(peer, executorPool));
 	}
-
-    public Set<Peer> getPeers() {
-		return peers;
-	}
 	
+    private Set<Peer> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
+
+        final List<String> ipList = Arrays.asList(peerDiscoveryIpList.split(","));
+        final Set<Peer> peers = new HashSet<>();
+
+        for (String ip : ipList){
+            String[] addr = ip.trim().split(":");
+            String ip_trim = addr[0];
+            String port_trim = addr[1];
+
+            try {
+                InetAddress iAddr = InetAddress.getByName(ip_trim);
+                int port = Integer.parseInt(port_trim);
+
+                Peer peer = new Peer(iAddr, port, null);
+                peers.add(peer);
+            } catch (UnknownHostException e) {
+                e.printStackTrace();
+            }
+        }
+        return peers;
+    }
+
 }

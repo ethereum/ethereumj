@@ -11,7 +11,6 @@ import javax.swing.table.AbstractTableModel;
 
 import org.ethereum.geo.IpGeoDB;
 import org.ethereum.net.client.Peer;
-import org.ethereum.net.message.HelloMessage;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;
@@ -118,7 +117,7 @@ public class PeersTableModel extends AbstractTableModel {
                 for (Peer peer : peers) {
                     InetAddress addr = peer.getAddress();
                     Location cr = IpGeoDB.getLocationForIp(addr);
-                    peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getHandshake(), peer.getLastCheckTime()));
+                    peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getLastCheckTime()));
                 }
             }
         }
@@ -129,12 +128,11 @@ public class PeersTableModel extends AbstractTableModel {
         Location         location;
         InetAddress      ip;
         boolean          connected;
-        HelloMessage     handshake;
         long lastAccessed = 0;
 
 
-		private PeerInfo(Location location, InetAddress ip, boolean isConnected,
-                         HelloMessage handshake, long lastAccessed) {
+		private PeerInfo(Location location, InetAddress ip,
+				boolean isConnected, long lastAccessed) {
 
             if (location == null)
                 this.location = new Location();
@@ -143,7 +141,6 @@ public class PeersTableModel extends AbstractTableModel {
 
             this.ip = ip;
             this.connected = isConnected;
-            this.handshake = handshake;
             this.lastAccessed = lastAccessed;
         }
 
@@ -157,10 +154,6 @@ public class PeersTableModel extends AbstractTableModel {
 
         private boolean isConnected() {
             return connected;
-        }
-
-        public HelloMessage getHandshake() {
-            return handshake;
         }
 
         public long getLastAccessed() {

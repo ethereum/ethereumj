@@ -67,7 +67,7 @@ public interface Ethereum {
     public void connect(InetAddress addr, int port);
     public void connect(String ip, int port);
 
-    public Blockchain getBlockChain();
+    public Blockchain getBlockchain();
 
     public boolean isBlockchainLoading();
 

@@ -331,7 +331,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        Block lastBlock = UIEthereumManager.ethereum.getBlockChain().getLastBlock();
+        Block lastBlock = UIEthereumManager.ethereum.getBlockchain().getLastBlock();
         ProgramPlayDialog.createAndShowGUI(programCode, tx, lastBlock);
     }
 

@@ -1,13 +1,10 @@
 package org.ethereum.net;
 
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 
 import org.ethereum.net.message.*;
-import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -55,14 +52,12 @@ public class MessageQueue {
 
 		if (listener != null)
 			listener.console("[Recv: " + msg + "]");
-		if (logger.isInfoEnabled()
-				&& msg.getCommand() != Command.PING
-				&& msg.getCommand() != Command.PONG 
-				&& msg.getCommand() != Command.PEERS 
-				&& msg.getCommand() != Command.GET_PEERS)
+		if (logger.isInfoEnabled())
+//				&& msg.getCommand() != Command.PING
+//				&& msg.getCommand() != Command.PONG 
+//				&& msg.getCommand() != Command.PEERS 
+//				&& msg.getCommand() != Command.GET_PEERS)
 			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
-		if (logger.isDebugEnabled())
-			logger.debug("Encoded: [{}]", Hex.toHexString(msg.getEncoded()));
 
 		if (messageQueue.peek() != null) {
 			MessageRoundtrip messageRoundtrip = messageQueue.peek();
@@ -75,8 +70,6 @@ public class MessageQueue {
 						messageRoundtrip.getMsg().getCommand());
 			}
 		}
-		if (msg instanceof DisconnectMessage)
-			disconnect();
 	}
 
 	private void nudgeQueue() {
@@ -90,11 +83,11 @@ public class MessageQueue {
 		}
 
 		// Now send the next message
-		if (null != messageQueue.peek()) {
+		if (messageQueue.peek() != null) {
 
 			MessageRoundtrip messageRoundtrip = messageQueue.peek();
 			if (messageRoundtrip.getRetryTimes() == 0) {
-				// todo: retry logic || messageRoundtrip.hasToRetry()){
+				// TODO: retry logic || messageRoundtrip.hasToRetry()){
 
 				Message msg = messageRoundtrip.getMsg();
 				sendToWire(msg);
@@ -113,30 +106,13 @@ public class MessageQueue {
 
 		if (listener != null)
 			listener.console("[Send: " + msg + "]");
-		if (logger.isInfoEnabled() 
-				&& msg.getCommand() != Command.PING
-				&& msg.getCommand() != Command.PONG 
-				&& msg.getCommand() != Command.PEERS 
-				&& msg.getCommand() != Command.GET_PEERS)
+		if (logger.isInfoEnabled())
+//				&& msg.getCommand() != Command.PING
+//				&& msg.getCommand() != Command.PONG 
+//				&& msg.getCommand() != Command.PEERS 
+//				&& msg.getCommand() != Command.GET_PEERS)
 			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
-		if (logger.isDebugEnabled())
-			logger.debug("Encdoded: [{}]", Hex.toHexString(msg.getEncoded()));
 
-		int packetLength = StaticMessages.SYNC_TOKEN.length + msg.getEncoded().length;
-		ByteBuf buffer = ctx.alloc().buffer(packetLength);
-		buffer.writeBytes(StaticMessages.SYNC_TOKEN);
-		buffer.writeBytes(ByteUtil.calcPacketLength(msg.getEncoded()));
-		buffer.writeBytes(msg.getEncoded());
-		ctx.writeAndFlush(buffer);
-		
-		if(msg instanceof DisconnectMessage)
-			disconnect();
+			ctx.writeAndFlush(msg);			
 	}
-	
-	private void disconnect() {
-		throw new DisconnectException();
-	}
-	
-	@SuppressWarnings("serial")
-	public class DisconnectException extends RuntimeException {}
 }

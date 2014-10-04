@@ -18,8 +18,6 @@ import java.util.List;
  * Wrapper around an Ethereum HelloMessage on the network
  *
  * @see {@link org.ethereum.net.message.Command#HELLO}
- * 
- * @author Roman Mandeleil
  */
 public class HelloMessage extends Message {
 

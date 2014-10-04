@@ -29,6 +29,7 @@ public class StaticMessages {
 		String helloAnnouncement = buildHelloAnnouncement();
 		byte p2pVersion = 0x00;
 		List<String> capabilities = new ArrayList<>(Arrays.asList("eth"));
+//		List<String> capabilities = new ArrayList<>(Arrays.asList("eth"));
 		int listenPort = 30303;
 		byte[] peerIdBytes = HashUtil.randomPeerId();
 

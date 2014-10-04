@@ -9,11 +9,7 @@ import java.util.Map;
  * The codes for these commands are the first byte in every packet.
  * 
  * @see <a href="https://github.com/ethereum/wiki/wiki/Wire-Protocol">
- * https://github.com/ethereum/wiki/wiki/Wire-Protocol</a><br/>
- * <a href="https://github.com/ethereum/cpp-ethereum/wiki/%C3%90%CE%9EVP2P-Networking">
- * https://github.com/ethereum/cpp-ethereum/wiki/ÐΞVP2P-Networking</a><br/>
- * <a href="https://github.com/ethereum/cpp-ethereum/wiki/PoC-6-Network-Protocol">
- * https://github.com/ethereum/cpp-ethereum/wiki/PoC-6-Network-Protocol</a>
+ * https://github.com/ethereum/wiki/wiki/Wire-Protocol</a>
  */
 public enum Command {
 

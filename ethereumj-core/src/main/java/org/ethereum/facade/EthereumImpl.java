@@ -76,7 +76,6 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public Peer waitForOnlinePeer() {
-
         Peer peer = null;
 		while (peer == null) {
 			try {
@@ -116,7 +115,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public Blockchain getBlockChain() {
+    public Blockchain getBlockchain() {
         return WorldManager.getInstance().getBlockchain();
     }
 

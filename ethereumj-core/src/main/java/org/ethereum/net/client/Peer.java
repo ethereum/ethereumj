@@ -1,6 +1,5 @@
 package org.ethereum.net.client;
 
-import org.ethereum.net.message.HelloMessage;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
@@ -20,7 +19,6 @@ public class Peer {
 	private byte[] peerId;
 
 	private List<String> capabilities;
-	private HelloMessage handshake;
 
 	private transient boolean isOnline = false;
 	private transient long lastCheckTime = 0;
@@ -63,19 +61,7 @@ public class Peer {
 	}
 
 	public List<String> getCapabilities() {
-
-		if (handshake != null)
-			return handshake.getCapabilities();
-		else
-			return new ArrayList<String>();
-	}
-
-	public HelloMessage getHandshake() {
-		return handshake;
-	}
-
-	public void setHandshake(HelloMessage handshake) {
-		this.handshake = handshake;
+		return capabilities;
 	}
 
 	public byte[] getEncoded() {

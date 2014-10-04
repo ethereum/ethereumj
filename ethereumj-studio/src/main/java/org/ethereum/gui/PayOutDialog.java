@@ -113,7 +113,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
 				byte[] nonce = PayOutDialog.this.account.getNonce() == BigInteger.ZERO ? null : PayOutDialog.this.account.getNonce().toByteArray();
 
-                byte[] gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockChain().getGasPrice()).toByteArray();
+                byte[] gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockchain().getGasPrice()).toByteArray();
 
 				Transaction tx = new Transaction(nonce, gasPrice, BigIntegers
 						.asUnsignedByteArray(fee), address, BigIntegers
@@ -194,7 +194,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         // check if the tx is affordable
         BigInteger ammountValue = new BigInteger(amountText);
         BigInteger feeValue = new BigInteger(feeText);
-        BigInteger gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockChain().getGasPrice());
+        BigInteger gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockchain().getGasPrice());
         BigInteger currentBalance = account.getBalance();
 
         boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;

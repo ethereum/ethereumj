@@ -1,61 +1,67 @@
-package org.ethereum.net.client;
+package org.ethereum.net.handler;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+
+import org.ethereum.net.message.MessageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
 /**
- * @author Roman Mandeleil
- * Created on: 13/04/14 21:51
+ * The PacketDecoder parses every valid Ethereum packet to a Message object
  */
-public class EthereumFrameDecoder extends ByteToMessageDecoder {
+public class PacketDecoder extends ByteToMessageDecoder {
 
 	private Logger logger = LoggerFactory.getLogger("wire");
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
+		if (!isValidEthereumPacket(in)) {
+			return;
+		}
+
+		byte[] encoded = new byte[in.readInt()];
+		in.readBytes(encoded);
+		
+		if (logger.isDebugEnabled())
+			logger.debug("Encoded: [{}]", Hex.toHexString(encoded));
+
+		out.add(MessageFactory.createMessage(encoded));
+    }
+	
+	private boolean isValidEthereumPacket(ByteBuf in) {
 		// Ethereum message is at least 8 bytes
 		if (in.readableBytes() < 8)
-			return;
+			return false;
 
-		long magicBytes = in.readUnsignedInt();
-		long msgSize = in.readUnsignedInt();
+		long syncToken = in.readUnsignedInt();
 
-        if (!((magicBytes >> 24   &  0xFF) == 0x22  &&
-              (magicBytes >> 16   &  0xFF) == 0x40  &&
-              (magicBytes >>  8   &  0xFF) == 0x08  &&
-              (magicBytes         &  0xFF) == 0x91 )) {
+        if (!((syncToken >> 24   &  0xFF) == 0x22  &&
+              (syncToken >> 16   &  0xFF) == 0x40  &&
+              (syncToken >>  8   &  0xFF) == 0x08  &&
+              (syncToken         &  0xFF) == 0x91 )) {
 
 			// TODO: Drop frame and continue.
 			// A collision can happen (although rare)
 			// If this happens too often, it's an attack.
 			// In that case, drop the peer.
-
-			logger.error("abandon garbage, wrong magic bytes: [{}] msgSize: [{}]", magicBytes, msgSize);
-			ctx.close();
+			logger.error("Abandon garbage, wrong sync token: [{}]", syncToken);
 		}
 
 		// Don't have the full packet yet
+        long msgSize = in.getInt(in.readerIndex());
 		if (msgSize > in.readableBytes()) {
 			logger.trace("msg decode: magicBytes: [{}], readBytes: [{}] / msgSize: [{}] ",
-					magicBytes, in.readableBytes(), msgSize);
+					syncToken, in.readableBytes(), msgSize);
 			in.resetReaderIndex();
-			return;
+			return false;
 		}
-
-		logger.trace("message fully constructed go handle it: readBytes: [{}] / msgSize: [{}]",
-				in.readableBytes(), msgSize);
-
-		byte[] decoded = new byte[(int) msgSize];
-		in.readBytes(decoded);
-
-		out.add(decoded);
-
-		in.markReaderIndex();
-    }
+		logger.trace("Message fully constructed: readBytes: [{}] / msgSize: [{}]", in.readableBytes(), msgSize);
+		return true;
+	}
 }

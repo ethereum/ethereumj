@@ -2,8 +2,6 @@ package org.ethereum.manager;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.*;
 
 import org.ethereum.core.BlockchainImpl;
@@ -15,7 +13,6 @@ import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.client.Peer;
 import org.ethereum.net.client.PeerDiscovery;
 
 /**
@@ -91,29 +88,6 @@ public class WorldManager {
 
     public EthereumListener getListener() {
         return listener;
-    }
-
-    public Set<Peer> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
-
-        final List<String> ipList = Arrays.asList(peerDiscoveryIpList.split(","));
-        final Set<Peer> peers = new HashSet<>();
-
-        for (String ip : ipList){
-            String[] addr = ip.trim().split(":");
-            String ip_trim = addr[0];
-            String port_trim = addr[1];
-
-            try {
-                InetAddress iAddr = InetAddress.getByName(ip_trim);
-                int port = Integer.parseInt(port_trim);
-
-                Peer peer = new Peer(iAddr, port, null);
-                peers.add(peer);
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
-            }
-        }
-        return peers;
     }
     
     public void setWallet(Wallet wallet)  {

@@ -101,7 +101,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                         }
                         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
-                        Block lastBlock = UIEthereumManager.ethereum.getBlockChain().getLastBlock();
+                        Block lastBlock = UIEthereumManager.ethereum.getBlockchain().getLastBlock();
                         ProgramPlayDialog.createAndShowGUI(tx.getData(), tx, lastBlock);
                     }}
         );
@@ -298,7 +298,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
         BigInteger currentBalance = account.getBalance();
 
-        long currGasPrice = UIEthereumManager.ethereum.getBlockChain().getGasPrice();
+        long currGasPrice = UIEthereumManager.ethereum.getBlockchain().getGasPrice();
         BigInteger gasPrice = BigInteger.valueOf(currGasPrice);
         BigInteger gasInput = new BigInteger( this.gasInput.getText());
 
