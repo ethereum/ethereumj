@@ -16,7 +16,8 @@ For an early peek, have a look at this [video](https://youtu.be/D5ok7jh7AOg)
 # Todo
 
 The Ethereum protocol is currenty heavily in development, thus so is this implementation.
-You can find a todo-list right [here](TODO.md) and the [milestone schedule](https://github.com/ethereum/ethereumj/milestones).
+You can find a todo-list right [here](TODO.md) and the [milestone schedule](https://github.com/ethereum/ethereumj/milestones). 
+For questions you can reach us in #ethereumj on Freenode.
  
 # Documentation
 
