@@ -25,7 +25,7 @@ public class BlockHashesMessageTest {
         System.out.println(blockHashesMessage);
         
         assertEquals(Command.BLOCK_HASHES, blockHashesMessage.getCommand());
-        assertEquals(128, blockHashesMessage.getHashes().size());
+        assertEquals(128, blockHashesMessage.getBlockHashes().size());
         // TODO maybe also assert values for individual hashes
         assertEquals(null, blockHashesMessage.getAnswerMessage());
     }
@@ -43,7 +43,7 @@ public class BlockHashesMessageTest {
     	assertEquals(expected, Hex.toHexString(blockHashesMessage.getEncoded()));
     	
         assertEquals(Command.BLOCK_HASHES, blockHashesMessage.getCommand());
-        assertEquals(2, blockHashesMessage.getHashes().size());
+        assertEquals(2, blockHashesMessage.getBlockHashes().size());
         // TODO maybe also assert values for individual hashes
         assertEquals(null, blockHashesMessage.getAnswerMessage());
     }

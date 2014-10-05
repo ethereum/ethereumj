@@ -26,18 +26,18 @@ public class MessageFactory {
 		
 			case STATUS:
 				return new StatusMessage(encoded);
-			case TRANSACTIONS:
-				return new TransactionsMessage(encoded);
-			case BLOCKS:
-				return new BlocksMessage(encoded);
 			case GET_TRANSACTIONS:
 				return StaticMessages.GET_TRANSACTIONS_MESSAGE;
+			case TRANSACTIONS:
+				return new TransactionsMessage(encoded);
 			case GET_BLOCK_HASHES:
 				return new GetBlockHashesMessage(encoded);
 			case BLOCK_HASHES:
 				return new BlockHashesMessage(encoded);
 			case GET_BLOCKS:
 				return new GetBlocksMessage(encoded);
+			case BLOCKS:
+				return new BlocksMessage(encoded);
 			default:
 				throw new IllegalArgumentException("No such message");
 		}

@@ -8,7 +8,7 @@ import java.util.List;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
+import org.ethereum.util.Utils;
 
 /**
  * Wrapper around an Ethereum GetBlocks message on the network
@@ -17,6 +17,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class GetBlocksMessage extends Message {
 
+	/** List of block hashes for which to retrieve the blocks */
 	private List<byte[]> blockHashes;
 
 	public GetBlocksMessage(byte[] encoded) {
@@ -73,10 +74,7 @@ public class GetBlocksMessage extends Message {
 	public String toString() {
 		if (!parsed) parse();
 
-		StringBuffer sb = new StringBuffer();
-		for (byte[] blockHash : blockHashes) {
-			sb.append(Hex.toHexString(blockHash)).append("\n ");
-		}
-		return "[" + this.getCommand().name() + sb.toString() + "]";
+		StringBuffer sb = Utils.getHashlistShort(this.blockHashes);
+		return "[" + this.getCommand().name() + sb.toString() + "] (" + this.blockHashes.size() + ")";
 	}
 }

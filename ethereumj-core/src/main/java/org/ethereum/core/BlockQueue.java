@@ -17,10 +17,9 @@ public class BlockQueue {
 
 	private static Logger logger = LoggerFactory.getLogger("blockchain");
 
-	private Queue<byte[]> blockHashQueue = new ConcurrentLinkedQueue<>();	
+	private Deque<byte[]> blockHashQueue = new ArrayDeque<>();
 	private Queue<Block> blockReceivedQueue = new ConcurrentLinkedQueue<>();
     private BigInteger highestTotalDifficulty;
-    private byte[] bestHash;
 	private Block lastBlock;
 
 	private Timer timer = new Timer("BlockQueueTimer");
@@ -74,13 +73,19 @@ public class BlockQueue {
 		return lastBlock;
 	}
 
-	public void setBestHash(byte[] bestHash) {
-		this.bestHash = bestHash;
+	public void setBestHash(byte[] hash) {
+		blockHashQueue.clear();
+		blockHashQueue.addLast(hash);
 	}
 
 	public byte[] getBestHash() {
-		return bestHash;
+		return blockHashQueue.peekLast();
 	}
+
+	public void addHash(byte[] hash) {
+		blockHashQueue.addLast(hash);
+	}
+
 	public List<byte[]> getHashes(int amount) {
 		List<byte[]> hashes = new ArrayList<>();
 		for (int i = 0; i < amount; i++) {

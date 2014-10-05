@@ -10,6 +10,7 @@ import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.regex.Pattern;
 
 import javax.swing.ImageIcon;
@@ -142,5 +143,12 @@ public class Utils {
         }
         return result;
     }
+
+	public static StringBuffer getHashlistShort(List<byte[]> blockHashes) {
+		StringBuffer sb = new StringBuffer();
+		String firstHash = Hex.toHexString(blockHashes.get(0));
+		String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size()-1));
+		return sb.append(" ").append(firstHash).append("...").append(lastHash);
+	}
 
 }

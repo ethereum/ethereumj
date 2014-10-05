@@ -15,8 +15,8 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class GetBlockHashesMessage extends Message {
 
-	/** The hash from the block of which parent hash to start sending */
-	private byte[] hash;
+	/** The newest block hash from which to start sending older hashes */
+	private byte[] bestHash;
 	
 	/** The maximum number of blocks to return. 
 	 * <b>Note:</b> the peer could return fewer. */
@@ -27,7 +27,7 @@ public class GetBlockHashesMessage extends Message {
 	}
 
 	public GetBlockHashesMessage(byte[] hash, int maxBlocks) {
-		this.hash = hash;
+		this.bestHash = hash;
 		this.maxBlocks = maxBlocks;
 		parsed = true;
 		encode();
@@ -35,7 +35,7 @@ public class GetBlockHashesMessage extends Message {
 
 	private void encode() {
 		byte[] command = RLP.encodeByte(GET_BLOCK_HASHES.asByte());
-		byte[] hash = RLP.encodeElement(this.hash);
+		byte[] hash = RLP.encodeElement(this.bestHash);
 		byte[] maxBlocks = RLP.encodeInt(this.maxBlocks);
 		this.encoded = RLP.encodeList(command, hash, maxBlocks);
 	}
@@ -44,7 +44,7 @@ public class GetBlockHashesMessage extends Message {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 		validateMessage(paramsList, GET_BLOCK_HASHES);
 
-		this.hash = ((RLPItem) paramsList.get(1)).getRLPData();
+		this.bestHash = ((RLPItem) paramsList.get(1)).getRLPData();
 		byte[] maxBlocksBytes = ((RLPItem) paramsList.get(2)).getRLPData();
 		this.maxBlocks = ByteUtil.byteArrayToInt(maxBlocksBytes);
 
@@ -67,9 +67,9 @@ public class GetBlockHashesMessage extends Message {
 		return BlockHashesMessage.class;
 	}
 
-	public byte[] getHash() {
+	public byte[] getBestHash() {
 		if (!parsed) parse();
-		return hash;
+		return bestHash;
 	}
 
 	public int getMaxBlocks() {
@@ -81,7 +81,7 @@ public class GetBlockHashesMessage extends Message {
 	public String toString() {
 		if (!parsed) parse();
 		return "[" + this.getCommand().name() + 
-				" hash=" + Hex.toHexString(hash) + 
+				" bestHash=" + Hex.toHexString(bestHash) + 
 				" maxBlocks=" + maxBlocks + "]";
 	}
 }

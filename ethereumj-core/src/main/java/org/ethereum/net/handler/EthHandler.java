@@ -6,6 +6,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -18,7 +19,6 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockQueue;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Blockchain;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
@@ -32,6 +32,7 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StatusMessage;
 import org.ethereum.net.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,18 +54,19 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 
 	private final static Logger logger = LoggerFactory.getLogger("wire");
 
-	private Timer getBlocksTimer = new Timer("GetBlocksTimer");
 	private int secToAskForBlocks = 1;
 
 	private Blockchain blockchain;
 	private PeerListener peerListener;
-	private EthereumListener listener;
 
+	private static boolean hashRetrievalLocked = false;
 	private MessageQueue msgQueue = null;
-	private final Timer timer = new Timer("MiscMessageTimer");
+
+	private Timer getBlocksTimer 	= new Timer("GetBlocksTimer");
+	private Timer getHashesTimer 	= new Timer("GetBlockHashesTimer");
+	private Timer getTxTimer	= new Timer("GetTransactionsTimer");
 
 	public EthHandler() {
-		this.listener = WorldManager.getInstance().getListener();
 		this.blockchain = WorldManager.getInstance().getBlockchain();
 	}
 
@@ -77,34 +79,38 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 	public void channelRead0(final ChannelHandlerContext ctx, Message msg) throws InterruptedException {
 		logger.trace("Read channel for {}", ctx.channel().remoteAddress());
 		
-		msgQueue.receivedMessage(msg);
-		if (listener != null) listener.onRecvMessage(msg);
-
 		switch (msg.getCommand()) {
 			case STATUS:
+				msgQueue.receivedMessage(msg);
 				processStatus((StatusMessage)msg, ctx);
 				break;
+			case GET_TRANSACTIONS:
+				msgQueue.receivedMessage(msg);
+				sendPendingTransactions();
+				break;
 			case TRANSACTIONS:
+				msgQueue.receivedMessage(msg);
 				// List<Transaction> txList = transactionsMessage.getTransactions();
 				// for(Transaction tx : txList)
 				// WorldManager.getInstance().getBlockchain().applyTransaction(null,
 				// tx);
 				// WorldManager.getInstance().getWallet().addTransaction(tx);
 				break;
-			case BLOCKS:			
-				processBlocks((BlocksMessage)msg);
-				break;
-			case GET_TRANSACTIONS:
-				sendPendingTransactions();
-				break;
 			case GET_BLOCK_HASHES:
-				sendBlockHashes();
+				msgQueue.receivedMessage(msg);
+//				sendBlockHashes();
 				break;
 			case BLOCK_HASHES:
+				msgQueue.receivedMessage(msg);
 				processBlockHashes((BlockHashesMessage)msg);
 				break;
 			case GET_BLOCKS:
-				sendBlocks();
+				msgQueue.receivedMessage(msg);
+//				sendBlocks();
+				break;
+			case BLOCKS:
+				msgQueue.receivedMessage(msg);
+//				processBlocks((BlocksMessage)msg);
 				break;
 			default:
 				break;
@@ -117,10 +123,17 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
         super.exceptionCaught(ctx, cause);
         ctx.close();
     }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+    	logger.debug("handlerRemoved: kill timers in EthHandler");
+    	this.killTimers();
+    }
     
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         msgQueue = new MessageQueue(ctx, peerListener);
+        // Send STATUS once when channel connection has been established
         sendStatus();
     }
 
@@ -136,28 +149,51 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
      * @param ctx the ChannelHandlerContext
      */
 	private void processStatus(StatusMessage msg, ChannelHandlerContext ctx) {
-		if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH) || msg.getProtocolVersion() != 33)
+		if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH) || msg.getProtocolVersion() != 33) {
+			logger.info("Removing EthHandler due to protocol incompatibility");
 			ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
-		else if (msg.getNetworkId() != 0)
+		} else if (msg.getNetworkId() != 0)
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));	
 		else {
 			BlockQueue chainQueue = this.blockchain.getQueue();
-			BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
-			BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
-//			if (peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
-//				this.blockchain.getQueue().setHighestTotalDifficulty(peerTotalDifficulty);
-//				this.blockchain.getQueue().setBestHash(msg.getBestHash());
-//				sendGetBlockHashes(msg.getBestHash());
-//			}
-			startTimers();
+			if(!hashRetrievalLocked) {
+				BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
+				BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
+				if (highestKnownTotalDifficulty == null 
+						|| peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
+					chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
+					chainQueue.setBestHash(msg.getBestHash());
+				}
+				hashRetrievalLocked = true;
+				sendGetBlockHashes();
+			}
 		}
 	}
 	
 	private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
-    	// for each block hash
-    	//		check if blockHash != known hash
-    	// 		store blockhash
-    	// if no known hash has been reached, another getBlockHashes with last stored hash.
+		List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
+		BlockQueue chainQueue = this.blockchain.getQueue();
+
+		// result is empty, peer has no more hashes
+		if (receivedHashes.isEmpty()) {
+//			startGetBlockTimer(); // start getting blocks from hash queue
+			return;
+		}
+	
+		Iterator<byte[]> hashIterator = receivedHashes.iterator();
+		byte[] foundHash, latestHash = this.blockchain.getLatestBlockHash();
+		while(hashIterator.hasNext()) {
+			foundHash = hashIterator.next();
+			if (FastByteComparisons.compareTo(foundHash, 0, 32, latestHash, 0, 32) != 0)
+				chainQueue.addHash(foundHash); 	// store unknown hashes in queue until known hash is found
+			else {
+				// if known hash is found, ignore the rest
+//				startGetBlockTimer(); // start getting blocks from hash queue
+				return;
+			}
+		}
+		// no known hash has been reached
+		sendGetBlockHashes(); // another getBlockHashes with last received hash.
 	}
 	
 	private void processBlocks(BlocksMessage blocksMessage) {
@@ -176,7 +212,6 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 
         if (blockList.isEmpty()) return;
         this.blockchain.getQueue().addBlocks(blockList);
-		
 	}
 	
     private void sendStatus() {
@@ -202,22 +237,23 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
     	msgQueue.sendMessage(GET_TRANSACTIONS_MESSAGE);
     }
     
-	private void sendGetBlockHashes(byte[] bestHash) {
+	private void sendGetBlockHashes() {
+		byte[] bestHash = this.blockchain.getQueue().getBestHash();
 		GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, CONFIG.maxHashesAsk());
 		msgQueue.sendMessage(msg);
 	}
 
+	// Parallel download blocks based on hashQueue
     private void sendGetBlocks() {
+    	BlockQueue queue = this.blockchain.getQueue();
+		if (queue.size() > CONFIG.maxBlocksQueued()) return;
 
-		if (WorldManager.getInstance().getBlockchain().getQueue().size() > 
-				CONFIG.maxBlocksQueued()) return;
-
-		Block lastBlock = this.blockchain.getQueue().getLastBlock();
+		Block lastBlock = queue.getLastBlock();
         if (lastBlock == null) return;
 
         // retrieve list of block hashes from queue
         int blocksPerPeer = CONFIG.maxBlocksAsk();
-		List<byte[]> hashes = this.blockchain.getQueue().getHashes(blocksPerPeer);
+		List<byte[]> hashes = queue.getHashes(blocksPerPeer);
 
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
         msgQueue.sendMessage(msg);
@@ -238,20 +274,22 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 		// TODO: Send block hashes
 	}
     
-    private void startTimers() {
-		timer.scheduleAtFixedRate(new TimerTask() {
+	private void startTxTimer() {
+		getTxTimer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
 				sendGetTransactions();
 			}
 		}, 2000, 10000);
-	        
+	}
+
+	public void startGetBlockTimer() {
 		getBlocksTimer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
 				sendGetBlocks();
 			}
 		}, 1000, secToAskForBlocks * 1000);
     }
-    
+
 	private void updateGetBlocksTimer(int seconds) {
         secToAskForBlocks = seconds;
         getBlocksTimer.cancel();
@@ -263,12 +301,25 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
             }
         }, 3000, secToAskForBlocks * 1000);
 	}
-	
-    public void killTimers(){
+
+	private void stopGetHashesTimer() {
+        getHashesTimer.cancel();
+        getHashesTimer.purge();
+	}
+
+	private void stopGetBlocksTimer() {
         getBlocksTimer.cancel();
         getBlocksTimer.purge();
+	}
 
-        timer.cancel();
-        timer.purge();
+	private void stopGetTxTimer() {
+        getTxTimer.cancel();
+        getTxTimer.purge();
+	}
+
+    public void killTimers(){
+    	stopGetBlocksTimer();
+    	stopGetHashesTimer();
+    	stopGetTxTimer();
     }
 }

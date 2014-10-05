@@ -1,10 +1,10 @@
 package org.ethereum.net.handler;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
+import org.ethereum.net.message.Command;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.util.ByteUtil;
@@ -21,9 +21,19 @@ public class PacketEncoder extends MessageToByteEncoder<Message> {
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
+		
+		if (logger.isInfoEnabled())
+//				&& msg.getCommand() != Command.PING
+//				&& msg.getCommand() != Command.PONG 
+//				&& msg.getCommand() != Command.PEERS 
+//				&& msg.getCommand() != Command.GET_PEERS)
+			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
+
 		byte[] encoded = msg.getEncoded();
+		
 		if (logger.isDebugEnabled())
 			logger.debug("Encoded: [{}]", Hex.toHexString(encoded));
+		
 		out.capacity(encoded.length + 8);
         out.writeBytes(StaticMessages.SYNC_TOKEN);
         out.writeBytes(ByteUtil.calcPacketLength(encoded));

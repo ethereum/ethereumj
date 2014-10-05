@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
+import org.ethereum.net.message.Command;
+import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,11 +29,20 @@ public class PacketDecoder extends ByteToMessageDecoder {
 
 		byte[] encoded = new byte[in.readInt()];
 		in.readBytes(encoded);
-		
+	
 		if (logger.isDebugEnabled())
 			logger.debug("Encoded: [{}]", Hex.toHexString(encoded));
 
-		out.add(MessageFactory.createMessage(encoded));
+		Message msg = MessageFactory.createMessage(encoded);
+
+		if (logger.isInfoEnabled())
+//				&& msg.getCommand() != Command.PING
+//				&& msg.getCommand() != Command.PONG 
+//				&& msg.getCommand() != Command.PEERS 
+//				&& msg.getCommand() != Command.GET_PEERS)
+			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
+
+		out.add(msg);
     }
 	
 	private boolean isValidEthereumPacket(ByteBuf in) {

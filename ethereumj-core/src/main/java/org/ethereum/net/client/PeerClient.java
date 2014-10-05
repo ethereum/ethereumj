@@ -28,7 +28,7 @@ public class PeerClient {
     private Logger logger = LoggerFactory.getLogger("wire");
 
     private PeerListener peerListener;
-    private P2pHandler handler;
+    private P2pHandler p2pHandler;
 
     public PeerClient() {
     }
@@ -44,6 +44,8 @@ public class PeerClient {
         if (peerListener != null)
         	peerListener.console("Connecting to: " + host + ":" + port);
 
+        p2pHandler = new P2pHandler(peerListener);
+        
         try {
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
@@ -61,7 +63,7 @@ public class PeerClient {
 							new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
 					ch.pipeline().addLast(new PacketDecoder());
 					ch.pipeline().addLast(new PacketEncoder());
-                    ch.pipeline().addLast(new P2pHandler(peerListener));
+					ch.pipeline().addLast(p2pHandler);
                     // limit the size of receiving buffer to 1024
                     ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
                     ch.config().setOption(ChannelOption.SO_RCVBUF, 32368);
@@ -81,7 +83,7 @@ public class PeerClient {
         } finally {
         	workerGroup.shutdownGracefully();
 
-            handler.killTimers();
+        	p2pHandler.killTimers();
 
             final Set<Peer> peers =  WorldManager.getInstance().getPeerDiscovery().getPeers();
 
@@ -99,7 +101,7 @@ public class PeerClient {
         this.peerListener = peerListener;
     }
 
-	public P2pHandler getHandler() {
-		return handler;
+	public P2pHandler getP2pHandler() {
+		return p2pHandler;
 	}
 }

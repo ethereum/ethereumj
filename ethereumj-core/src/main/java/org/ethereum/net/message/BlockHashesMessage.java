@@ -8,7 +8,7 @@ import java.util.List;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
+import org.ethereum.util.Utils;
 
 /**
  * Wrapper around an Ethereum BlockHashes message on the network
@@ -17,14 +17,15 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class BlockHashesMessage extends Message {
 
-	private List<byte[]> hashes;
+	/** List of block hashes from the peer ordered from child to parent */
+	private List<byte[]> blockHashes;
 
 	public BlockHashesMessage(byte[] payload) {
 		super(payload);
 	}
 
 	public BlockHashesMessage(List<byte[]> blockHashes) {
-		this.hashes = blockHashes;
+		this.blockHashes = blockHashes;
 		parsed = true;
 	}
 
@@ -32,10 +33,10 @@ public class BlockHashesMessage extends Message {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 		validateMessage(paramsList, BLOCK_HASHES);
 
-		hashes = new ArrayList<>();
+		blockHashes = new ArrayList<>();
 		for (int i = 1; i < paramsList.size(); ++i) {
 			RLPItem rlpData = ((RLPItem) paramsList.get(i));
-			hashes.add(rlpData.getRLPData());
+			blockHashes.add(rlpData.getRLPData());
 		}
 		parsed = true;
 	}
@@ -43,8 +44,8 @@ public class BlockHashesMessage extends Message {
 	private void encode() {
 		List<byte[]> encodedElements = new ArrayList<>();
 		encodedElements.add(RLP.encodeByte(BLOCK_HASHES.asByte()));
-		for (byte[] hash : hashes)
-			encodedElements.add(RLP.encodeElement(hash));
+		for (byte[] blockHash : blockHashes)
+			encodedElements.add(RLP.encodeElement(blockHash));
 		byte[][] encodedElementArray = encodedElements
 				.toArray(new byte[encodedElements.size()][]);
 		this.encoded = RLP.encodeList(encodedElementArray);
@@ -66,18 +67,16 @@ public class BlockHashesMessage extends Message {
 		return null;
 	}
 
-	public List<byte[]> getHashes() {
+	public List<byte[]> getBlockHashes() {
 		if (!parsed) parse();
-		return hashes;
+		return blockHashes;
 	}
 
 	@Override
 	public String toString() {
 		if (!parsed) parse();
-		StringBuffer sb = new StringBuffer();
-		for (byte[] hash : this.hashes) {
-			sb.append("\n   ").append(Hex.toHexString(hash));
-		}
-		return "[" + this.getCommand().name() + sb.toString() + "]";
+		
+		StringBuffer sb = Utils.getHashlistShort(this.blockHashes);
+		return "[" + this.getCommand().name() + sb.toString() + "] (" + this.blockHashes.size() + ")";
 	}
 }

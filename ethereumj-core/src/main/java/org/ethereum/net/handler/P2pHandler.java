@@ -59,28 +59,39 @@ public class P2pHandler extends SimpleChannelInboundHandler<Message> {
 		this();
 		this.peerListener = peerListener;
 	}
+	
+	@Override
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		msgQueue = new MessageQueue(ctx, peerListener);
+		// Send HELLO once when channel connection has been established
+		msgQueue.sendMessage(HELLO_MESSAGE);
+	}
 
 	@Override
 	public void channelRead0(final ChannelHandlerContext ctx, Message msg) throws InterruptedException {
 		logger.trace("Read channel for {}", ctx.channel().remoteAddress());
 		
-		msgQueue.receivedMessage(msg);
-
 		switch (msg.getCommand()) {
 			case HELLO:
+				msgQueue.receivedMessage(msg);
 				setHandshake((HelloMessage)msg, ctx);
 				break;
 			case DISCONNECT:
+				msgQueue.receivedMessage(msg);
 				break;
 			case PING:
+				msgQueue.receivedMessage(msg);
 				msgQueue.sendMessage(PONG_MESSAGE);
 				break;
 			case PONG:
+				msgQueue.receivedMessage(msg);
 				break;
 			case GET_PEERS:
+				msgQueue.receivedMessage(msg);
 				sendPeers();
 				break;
 			case PEERS:
+				msgQueue.receivedMessage(msg);
 				processPeers((PeersMessage)msg);			
 				break;
 			default:
@@ -97,12 +108,10 @@ public class P2pHandler extends SimpleChannelInboundHandler<Message> {
     }
     
     @Override
-    public void handlerAdded(ChannelHandlerContext ctx) {
-		msgQueue = new MessageQueue(ctx, peerListener);
-		// Send HELLO once when channel connection has been established
-		msgQueue.sendMessage(HELLO_MESSAGE);
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    	this.killTimers();
     }
-
+    
     private void processPeers(PeersMessage peersMessage) {
     	peerDiscovery.addPeers(peersMessage.getPeers());
 	}
@@ -117,7 +126,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<Message> {
     		msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
     	else {
 	    	if(msg.getCapabilities().contains("eth"))
-	    		ctx.pipeline().addLast(new EthHandler(peerListener)).fireChannelActive();
+	    		ctx.pipeline().addLast(new EthHandler(peerListener)).fireChannelReadComplete();
 
 	    	InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
 	    	int port = msg.getListenPort();

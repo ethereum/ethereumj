@@ -21,7 +21,7 @@ public class GetBlockHashesMessageTest {
         System.out.println(getBlockHashesMessage);
         
         assertEquals(Command.GET_BLOCK_HASHES, getBlockHashesMessage.getCommand());
-        assertEquals("5ad1c9caeade4cdf5798e796dc87939231d9c76c20a6a33fea6dab8e9d6dd009", Hex.toHexString(getBlockHashesMessage.getHash()));
+        assertEquals("5ad1c9caeade4cdf5798e796dc87939231d9c76c20a6a33fea6dab8e9d6dd009", Hex.toHexString(getBlockHashesMessage.getBestHash()));
         assertEquals(256, getBlockHashesMessage.getMaxBlocks());
         assertEquals(BlockHashesMessage.class, getBlockHashesMessage.getAnswerMessage());
     }
@@ -36,7 +36,7 @@ public class GetBlockHashesMessageTest {
     	assertEquals(expected, Hex.toHexString(getBlockHashesMessage.getEncoded()));
     	
         assertEquals(Command.GET_BLOCK_HASHES, getBlockHashesMessage.getCommand());
-        assertEquals(Hex.toHexString(bestHash), Hex.toHexString(getBlockHashesMessage.getHash()));
+        assertEquals(Hex.toHexString(bestHash), Hex.toHexString(getBlockHashesMessage.getBestHash()));
         assertEquals(128, getBlockHashesMessage.getMaxBlocks());
         assertEquals(BlockHashesMessage.class, getBlockHashesMessage.getAnswerMessage());
     }

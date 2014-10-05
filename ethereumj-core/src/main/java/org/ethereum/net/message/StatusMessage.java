@@ -113,8 +113,8 @@ public class StatusMessage extends Message {
     		" protocolVersion=" + this.protocolVersion +
             " networkId=" + this.networkId +
             " totalDifficulty=" + ByteUtil.toHexString(this.totalDifficulty) +
-            " bestHash=" + Hex.toHexString(this.bestHash) + " " +
-            " genesisHash=" + Hex.toHexString(this.genesisHash) + " " +
+            " bestHash=" + Hex.toHexString(this.bestHash) +
+            " genesisHash=" + Hex.toHexString(this.genesisHash) +
             "]";
 	}
 }
