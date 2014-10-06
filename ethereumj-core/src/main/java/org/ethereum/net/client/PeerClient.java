@@ -8,6 +8,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.PeerListener;
+import org.ethereum.net.handler.EthHandler;
 import org.ethereum.net.handler.P2pHandler;
 import org.ethereum.net.handler.PacketDecoder;
 import org.ethereum.net.handler.PacketEncoder;
@@ -29,6 +30,7 @@ public class PeerClient {
 
     private PeerListener peerListener;
     private P2pHandler p2pHandler;
+    private EthHandler ethHandler;
 
     public PeerClient() {
     }
@@ -45,6 +47,7 @@ public class PeerClient {
         	peerListener.console("Connecting to: " + host + ":" + port);
 
         p2pHandler = new P2pHandler(peerListener);
+        ethHandler = new EthHandler(peerListener);
         
         try {
             Bootstrap b = new Bootstrap();
@@ -61,9 +64,11 @@ public class PeerClient {
                 public void initChannel(NioSocketChannel ch) throws Exception {
 					ch.pipeline().addLast("readTimeoutHandler",
 							new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-					ch.pipeline().addLast(new PacketDecoder());
 					ch.pipeline().addLast(new PacketEncoder());
-					ch.pipeline().addLast(p2pHandler);
+					ch.pipeline().addLast(new PacketDecoder());
+					ch.pipeline().addLast("p2p", p2pHandler);
+					ch.pipeline().addLast("eth", ethHandler);
+
                     // limit the size of receiving buffer to 1024
                     ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
                     ch.config().setOption(ChannelOption.SO_RCVBUF, 32368);

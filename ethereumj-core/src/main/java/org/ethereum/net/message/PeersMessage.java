@@ -20,7 +20,7 @@ import org.ethereum.util.RLPList;
  *
  * @see {@link org.ethereum.net.message.Command#PEERS}
  */
-public class PeersMessage extends Message {
+public class PeersMessage extends P2pMessage {
 
 	private boolean parsed = false;
 

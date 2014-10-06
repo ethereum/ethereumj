@@ -9,7 +9,7 @@ import org.spongycastle.util.encoders.Hex;
  *
  * @see {@link org.ethereum.net.message.Command#PONG}
  */
-public class PongMessage extends Message {
+public class PongMessage extends P2pMessage {
 
 	/** Pong message is always a the same single command payload */
 	private static byte[] FIXED_PAYLOAD = Hex.decode("C103");

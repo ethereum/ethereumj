@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -17,7 +18,7 @@ public class BlockQueue {
 
 	private static Logger logger = LoggerFactory.getLogger("blockchain");
 
-	private Deque<byte[]> blockHashQueue = new ArrayDeque<>();
+	private Deque<byte[]> blockHashQueue = new ConcurrentLinkedDeque<>();
 	private Queue<Block> blockReceivedQueue = new ConcurrentLinkedQueue<>();
     private BigInteger highestTotalDifficulty;
 	private Block lastBlock;
@@ -90,7 +91,7 @@ public class BlockQueue {
 		List<byte[]> hashes = new ArrayList<>();
 		for (int i = 0; i < amount; i++) {
 			if (!blockHashQueue.isEmpty())
-				hashes.add(blockHashQueue.poll());
+				hashes.add(blockHashQueue.pollLast());
 			else break;
 		}
 		return hashes;

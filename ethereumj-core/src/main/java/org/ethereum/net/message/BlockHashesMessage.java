@@ -15,7 +15,7 @@ import org.ethereum.util.Utils;
  *
  * @see {@link org.ethereum.net.message.Command#BLOCK_HASHES}
  */
-public class BlockHashesMessage extends Message {
+public class BlockHashesMessage extends EthMessage {
 
 	/** List of block hashes from the peer ordered from child to parent */
 	private List<byte[]> blockHashes;

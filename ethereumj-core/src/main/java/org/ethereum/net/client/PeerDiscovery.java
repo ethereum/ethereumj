@@ -1,5 +1,6 @@
 package org.ethereum.net.client;
 
+import org.ethereum.net.message.StaticMessages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,11 +76,13 @@ public class PeerDiscovery {
      */
     public void addPeers(final Set<Peer> newPeers) {
         synchronized (peers) {
-            for (final Peer newPeer : newPeers) {
-            	if(!peers.contains(newPeer))
-                    startWorker(newPeer);
-                peers.add(newPeer);
-            }
+			for (final Peer newPeer : newPeers) {
+				if (!StaticMessages.PEER_ID.equals(newPeer.getPeerId())) {
+					if (!peers.contains(newPeer))
+						startWorker(newPeer);
+					peers.add(newPeer);
+				}
+			}
         }
     }
 

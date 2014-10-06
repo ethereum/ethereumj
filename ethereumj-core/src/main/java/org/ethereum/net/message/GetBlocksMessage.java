@@ -15,7 +15,7 @@ import org.ethereum.util.Utils;
  *
  * @see {@link org.ethereum.net.message.Command#GET_BLOCKS}
  */
-public class GetBlocksMessage extends Message {
+public class GetBlocksMessage extends EthMessage {
 
 	/** List of block hashes for which to retrieve the blocks */
 	private List<byte[]> blockHashes;

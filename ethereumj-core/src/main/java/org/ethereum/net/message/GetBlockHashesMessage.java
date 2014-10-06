@@ -13,7 +13,7 @@ import org.spongycastle.util.encoders.Hex;
  *
  * @see {@link org.ethereum.net.message.Command#GET_BLOCK_HASHES}
  */
-public class GetBlockHashesMessage extends Message {
+public class GetBlockHashesMessage extends EthMessage {
 
 	/** The newest block hash from which to start sending older hashes */
 	private byte[] bestHash;

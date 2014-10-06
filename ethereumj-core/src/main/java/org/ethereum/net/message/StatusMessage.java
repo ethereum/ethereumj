@@ -13,7 +13,7 @@ import org.spongycastle.util.encoders.Hex;
  *
  * @see {@link org.ethereum.net.message.Command#STATUS}
  */
-public class StatusMessage extends Message {
+public class StatusMessage extends EthMessage {
 
     private byte protocolVersion;
     private byte networkId;

@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -25,9 +26,9 @@ import org.ethereum.net.PeerListener;
 import org.ethereum.net.message.BlockHashesMessage;
 import org.ethereum.net.message.BlocksMessage;
 import org.ethereum.net.message.DisconnectMessage;
+import org.ethereum.net.message.EthMessage;
 import org.ethereum.net.message.GetBlockHashesMessage;
 import org.ethereum.net.message.GetBlocksMessage;
-import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StatusMessage;
 import org.ethereum.net.message.TransactionsMessage;
@@ -50,7 +51,8 @@ import org.slf4j.LoggerFactory;
  * 	<li>BLOCKS				:	Send a list of blocks</li>
  * </ul>
  */
-public class EthHandler extends SimpleChannelInboundHandler<Message> {
+@ChannelHandler.Sharable
+public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
 	private final static Logger logger = LoggerFactory.getLogger("wire");
 
@@ -74,9 +76,15 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 		this();
 		this.peerListener = peerListener;
 	}
-	
+
 	@Override
-	public void channelRead0(final ChannelHandlerContext ctx, Message msg) throws InterruptedException {
+	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+		msgQueue = new MessageQueue(ctx, peerListener);
+		sendStatus();
+	}
+
+	@Override
+	public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 		logger.trace("Read channel for {}", ctx.channel().remoteAddress());
 		
 		switch (msg.getCommand()) {
@@ -110,7 +118,7 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 				break;
 			case BLOCKS:
 				msgQueue.receivedMessage(msg);
-//				processBlocks((BlocksMessage)msg);
+				processBlocks((BlocksMessage)msg);
 				break;
 			default:
 				break;
@@ -130,13 +138,6 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
     	this.killTimers();
     }
     
-    @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
-        msgQueue = new MessageQueue(ctx, peerListener);
-        // Send STATUS once when channel connection has been established
-        sendStatus();
-    }
-
 	/**
      * Processing:
      * <ul>
@@ -149,8 +150,10 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
      * @param ctx the ChannelHandlerContext
      */
 	private void processStatus(StatusMessage msg, ChannelHandlerContext ctx) {
-		if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH) || msg.getProtocolVersion() != 33) {
-			logger.info("Removing EthHandler due to protocol incompatibility");
+		if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
+				|| msg.getProtocolVersion() != CONFIG.protocolVersion()) {
+			logger.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
+//			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
 			ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
 		} else if (msg.getNetworkId() != 0)
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));	
@@ -176,7 +179,7 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 
 		// result is empty, peer has no more hashes
 		if (receivedHashes.isEmpty()) {
-//			startGetBlockTimer(); // start getting blocks from hash queue
+			startGetBlockTimer(); // start getting blocks from hash queue
 			return;
 		}
 	
@@ -188,7 +191,7 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
 				chainQueue.addHash(foundHash); 	// store unknown hashes in queue until known hash is found
 			else {
 				// if known hash is found, ignore the rest
-//				startGetBlockTimer(); // start getting blocks from hash queue
+				startGetBlockTimer(); // start getting blocks from hash queue
 				return;
 			}
 		}
@@ -213,7 +216,7 @@ public class EthHandler extends SimpleChannelInboundHandler<Message> {
         if (blockList.isEmpty()) return;
         this.blockchain.getQueue().addBlocks(blockList);
 	}
-	
+
     private void sendStatus() {
     	byte protocolVersion = 33, networkId = 0;
     	BigInteger totalDifficulty = this.blockchain.getTotalDifficulty();

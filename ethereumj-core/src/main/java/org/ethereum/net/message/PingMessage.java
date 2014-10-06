@@ -9,7 +9,7 @@ import org.spongycastle.util.encoders.Hex;
  *
  * @see {@link org.ethereum.net.message.Command#PING}
  */
-public class PingMessage extends Message {
+public class PingMessage extends P2pMessage {
 
 	/** Ping message is always a the same single command payload */
 	private static byte[] FIXED_PAYLOAD = Hex.decode("C102");

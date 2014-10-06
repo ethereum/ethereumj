@@ -1,6 +1,5 @@
 package org.ethereum.net.message;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,6 +16,8 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class StaticMessages {
 
+	public static final String PEER_ID = Hex.toHexString(HashUtil.randomPeerId());
+	
 	public final static PingMessage PING_MESSAGE 						= new PingMessage();
 	public final static PongMessage PONG_MESSAGE 						= new PongMessage();
 	public final static HelloMessage HELLO_MESSAGE 						= generateHelloMessage();
@@ -28,13 +29,11 @@ public class StaticMessages {
 	private static HelloMessage generateHelloMessage() {
 		String helloAnnouncement = buildHelloAnnouncement();
 		byte p2pVersion = 0x00;
-		List<String> capabilities = new ArrayList<>(Arrays.asList("eth"));
-//		List<String> capabilities = new ArrayList<>(Arrays.asList("eth"));
+		List<String> capabilities = Arrays.asList("eth");
 		int listenPort = 30303;
-		byte[] peerIdBytes = HashUtil.randomPeerId();
 
 		return new HelloMessage(p2pVersion, helloAnnouncement, 
-				capabilities, listenPort, peerIdBytes);
+				capabilities, listenPort, Hex.decode(PEER_ID));
 	}
 
 	private static String buildHelloAnnouncement() {

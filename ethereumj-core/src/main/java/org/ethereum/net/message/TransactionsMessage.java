@@ -16,7 +16,7 @@ import java.util.Set;
  *
  * @see {@link org.ethereum.net.message.Command#TRANSACTIONS}
  */
-public class TransactionsMessage extends Message {
+public class TransactionsMessage extends EthMessage {
 	
     private Set<Transaction> transactions;
 

@@ -12,7 +12,7 @@ import static org.ethereum.net.message.ReasonCode.REQUESTED;
  *
  * @see {@link org.ethereum.net.message.Command#DISCONNECT}
  */
-public class DisconnectMessage extends Message {
+public class DisconnectMessage extends P2pMessage {
 
 	private ReasonCode reason;
 

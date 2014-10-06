@@ -9,7 +9,7 @@ import org.spongycastle.util.encoders.Hex;
  *
  * @see {@link org.ethereum.net.message.Command#GET_TRANSACTIONS}
  */
-public class GetTransactionsMessage extends Message {
+public class GetTransactionsMessage extends EthMessage {
 
 	/** GetTransactions message is always a the same single command payload */ 
 	private static byte[] FIXED_PAYLOAD = Hex.decode("C116");

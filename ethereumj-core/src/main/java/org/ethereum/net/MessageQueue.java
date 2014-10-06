@@ -19,7 +19,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *		GET_BLOCK_HASHES by BLOCK_HASHES
  *		GET_BLOCKS by BLOCKS
  *
- *	The following messages will not be answered: 
+ *	The following messages will not be answered:
  *		PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
  *
  * @author Roman Mandeleil

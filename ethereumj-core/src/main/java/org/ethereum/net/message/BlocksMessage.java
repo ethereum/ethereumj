@@ -14,7 +14,7 @@ import org.ethereum.util.RLPList;
  *
  * @see {@link org.ethereum.net.message.Command#BLOCKS}
  */
-public class BlocksMessage extends Message {
+public class BlocksMessage extends EthMessage {
 
 	private List<Block> blocks;
 

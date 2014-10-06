@@ -19,7 +19,7 @@ import java.util.List;
  *
  * @see {@link org.ethereum.net.message.Command#HELLO}
  */
-public class HelloMessage extends Message {
+public class HelloMessage extends P2pMessage {
 
 	/** The implemented version of the P2P protocol. */
 	private byte p2pVersion;

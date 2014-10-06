@@ -9,7 +9,7 @@ import org.spongycastle.util.encoders.Hex;
  *
  * @see {@link org.ethereum.net.message.Command#GET_PEERS}
  */
-public class GetPeersMessage extends Message {
+public class GetPeersMessage extends P2pMessage {
 
 	/** GetPeers message is always a the same single command payload */
 	private final static byte[] FIXED_PAYLOAD = Hex.decode("C104");
