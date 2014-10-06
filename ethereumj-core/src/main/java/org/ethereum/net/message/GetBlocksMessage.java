@@ -34,7 +34,7 @@ public class GetBlocksMessage extends EthMessage {
 		validateMessage(paramsList, GET_BLOCKS);
 
 		blockHashes = new ArrayList<>();
-		for (int i = 1; i < paramsList.size() - 1; ++i) {
+		for (int i = 1; i < paramsList.size(); ++i) {
 			blockHashes.add(((RLPItem) paramsList.get(i)).getRLPData());
 		}
 		parsed = true;
