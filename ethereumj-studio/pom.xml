@@ -76,14 +76,21 @@
         </dependency>
 
 		<dependency>
+			<groupId>com.maxmind.geoip</groupId>
+			<artifactId>geoip-api</artifactId>
+			<version>1.2.11</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.maxmind.geoip2</groupId>
 			<artifactId>geoip2</artifactId>
 			<version>0.6.0</version>
 		</dependency>
+
 		<dependency>
-			<groupId>com.maxmind.geoip</groupId>
-			<artifactId>geoip-api</artifactId>
-			<version>1.2.11</version>
+			<groupId>com.fifesoft</groupId>
+			<artifactId>rsyntaxtextarea</artifactId>
+			<version>2.5.0</version>
 		</dependency>
 
     </dependencies>
