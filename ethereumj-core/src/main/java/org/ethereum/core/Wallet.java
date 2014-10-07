@@ -170,14 +170,16 @@ public class Wallet {
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
-        Account receiver =  rows.get(Hex.toHexString(receiveAddress));
-        if (receiver != null) {
-            receiver.addPendingTransaction(transaction);
-
-            logger.info("Pending transaction added to " +
-                            "\n account: [{}], " +
-                            "\n tx: [{}]",
-                    Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
+        if(receiveAddress != null) {
+	        Account receiver =  rows.get(Hex.toHexString(receiveAddress));
+	        if (receiver != null) {
+	            receiver.addPendingTransaction(transaction);
+	
+	            logger.info("Pending transaction added to " +
+	                            "\n account: [{}], " +
+	                            "\n tx: [{}]",
+	                    Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
+	        }
         }
         this.notifyListeners();
     }

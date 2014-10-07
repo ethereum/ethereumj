@@ -175,7 +175,7 @@ public class Transaction {
     }
 
     public boolean isContractCreation() {
-        return Arrays.equals(this.receiveAddress, ByteUtil.EMPTY_BYTE_ARRAY);
+        return this.receiveAddress == null;
     }
 
     /*********
