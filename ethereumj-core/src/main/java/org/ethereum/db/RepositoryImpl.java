@@ -154,7 +154,7 @@ public class RepositoryImpl implements Repository {
             		Block block = new Block(iterator.next().getValue());
             		blockchain.getBlockCache().put(block.getNumber(), block.getHash());
             		blockchain.setLastBlock(block);
-
+            		blockchain.addTotalDifficulty(block.getTotalDifficulty());
                     EthereumListener listener =  WorldManager.getInstance().getListener();
                     if (listener != null){
                         listener.onPreloadedBlock(block);

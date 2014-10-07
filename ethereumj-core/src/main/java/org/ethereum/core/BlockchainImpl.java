@@ -165,17 +165,10 @@ public class BlockchainImpl implements Blockchain {
 		}
 		
 		this.addReward(block);
-		this.increaseTotalDifficulty(block);
+		this.addTotalDifficulty(block.getTotalDifficulty());
 		
         if(block.getNumber() >= CONFIG.traceStartBlock())
         	repository.dumpState(block, totalGasUsed, 0, null);
-	}
-
-	private void increaseTotalDifficulty(Block block) {
-		totalDifficulty.add(new BigInteger(block.getDifficulty()));
-		for (BlockHeader uncleHeader : block.getUncleList()) {
-			totalDifficulty.add(new BigInteger(uncleHeader.getDifficulty()));
-		}
 	}
 
 	/**
@@ -475,5 +468,13 @@ public class BlockchainImpl implements Blockchain {
 	@Override
 	public BigInteger getTotalDifficulty() {
 		return totalDifficulty;
+	}
+
+	@Override
+	public void addTotalDifficulty(BigInteger totalDifficulty) {
+		if (this.totalDifficulty == null)
+			this.totalDifficulty = totalDifficulty;
+		else
+			this.totalDifficulty.add(totalDifficulty);
 	}
 }

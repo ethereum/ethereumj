@@ -166,6 +166,15 @@ public class Block {
         return this.header.getDifficulty();
     }
 
+    public BigInteger getTotalDifficulty() {
+        if (!parsed) parseRLP();
+        BigInteger totalDifficulty = new BigInteger(1, this.header.getDifficulty());
+        for (BlockHeader uncle : uncleList) {
+			totalDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
+		}
+        return totalDifficulty;
+    }
+    
     public long getTimestamp() {
         if (!parsed) parseRLP();
         return this.header.getTimestamp();
