@@ -166,13 +166,13 @@ public class Block {
         return this.header.getDifficulty();
     }
 
-    public BigInteger getTotalDifficulty() {
+    public BigInteger getCumulativeDifficulty() {
         if (!parsed) parseRLP();
-        BigInteger totalDifficulty = new BigInteger(1, this.header.getDifficulty());
+		BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
         for (BlockHeader uncle : uncleList) {
-			totalDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
+			calcDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
 		}
-        return totalDifficulty;
+        return calcDifficulty;
     }
     
     public long getTimestamp() {

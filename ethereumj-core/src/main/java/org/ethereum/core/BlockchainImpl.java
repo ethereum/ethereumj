@@ -165,7 +165,7 @@ public class BlockchainImpl implements Blockchain {
 		}
 		
 		this.addReward(block);
-		this.addTotalDifficulty(block.getTotalDifficulty());
+		this.updateTotalDifficulty(block);
 		
         if(block.getNumber() >= CONFIG.traceStartBlock())
         	repository.dumpState(block, totalGasUsed, 0, null);
@@ -471,10 +471,10 @@ public class BlockchainImpl implements Blockchain {
 	}
 
 	@Override
-	public void addTotalDifficulty(BigInteger totalDifficulty) {
+	public void updateTotalDifficulty(Block block) {
 		if (this.totalDifficulty == null)
-			this.totalDifficulty = totalDifficulty;
+			this.totalDifficulty = block.getCumulativeDifficulty();
 		else
-			this.totalDifficulty.add(totalDifficulty);
+			this.totalDifficulty.add(block.getCumulativeDifficulty());
 	}
 }

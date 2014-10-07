@@ -21,7 +21,7 @@ public interface Blockchain  {
     public Block getLastBlock();
     public BlockQueue getQueue();
     public void close();
-	public void addTotalDifficulty(BigInteger totalDifficulty);
+	public void updateTotalDifficulty(Block block);
     public BigInteger getTotalDifficulty();
 	public byte[] getLatestBlockHash();
 }
