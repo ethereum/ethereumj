@@ -190,7 +190,7 @@ public class BlockchainImpl implements Blockchain {
 			for (BlockHeader uncle : block.getUncleList()) {
 				repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
 			}
-			totalBlockReward.add(Block.INCLUSION_REWARD
+			totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD
 					.multiply(BigInteger.valueOf(block.getUncleList().size())));
 		}
 		repository.addBalance(block.getCoinbase(), totalBlockReward);
