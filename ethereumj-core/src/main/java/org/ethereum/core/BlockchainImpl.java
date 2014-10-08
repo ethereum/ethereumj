@@ -420,7 +420,7 @@ public class BlockchainImpl implements Blockchain {
 		if (initResults) {
             // Save the code created by init
             byte[] bodyCode = null;
-            if (result.getHReturn() != null) {
+            if (result.getHReturn() != null && result.getHReturn().array().length > 0) {
                 bodyCode = result.getHReturn().array();
             }
 
