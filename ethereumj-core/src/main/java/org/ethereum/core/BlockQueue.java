@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
@@ -20,7 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class BlockQueue {
 
-	private static Logger logger = LoggerFactory.getLogger("blockchain");
+	private static Logger logger = LoggerFactory.getLogger("blockqueue");
 
 	/** The list of hashes of the heaviest chain on the network, 
 	 * for which this client doesn't have the blocks yet */
@@ -52,6 +54,7 @@ public class BlockQueue {
 		if (blockReceivedQueue.isEmpty())
 			return;
 		
+		logger.debug("BlockQueue size: {}", blockReceivedQueue.size());
 		Block block = blockReceivedQueue.poll();
 		WorldManager.getInstance().getBlockchain().add(block);
 	}
@@ -74,14 +77,14 @@ public class BlockQueue {
 
 		for (Block block : blockList) {
 			
-			if (blockReceivedQueue.size() > SystemProperties.CONFIG.maxBlocksQueued())
+			if (blockReceivedQueue.size() <= SystemProperties.CONFIG.maxBlocksQueued())
 				return;
 
 			this.lastBlock = block;
-			logger.trace("Last block now index: [{}]", lastBlock.getNumber());
+			logger.debug("Last block now index: [{}]", lastBlock.getNumber());
 			blockReceivedQueue.add(lastBlock);
 		}
-		logger.trace("Blocks waiting to be proceed in the queue: [{}]", 
+		logger.debug("Blocks waiting to be proceed in the queue: [{}]", 
 				blockReceivedQueue.size());
 	}
 	
@@ -90,6 +93,8 @@ public class BlockQueue {
 	 * this will return the last block added to the blockchain.
 	 * 
 	 * @return The last known block this client on the network
+	 * and will never return <code>null</code> as there is 
+	 * always the Genesis block at the start of the chain.
 	 */
 	public Block getLastBlock() {
 		if (blockReceivedQueue.isEmpty())
@@ -128,12 +133,12 @@ public class BlockQueue {
 	 * @param amount - the number of hashes to return
 	 * @return A list of hashes for which blocks need to be retrieved.
 	 */
-	public List<byte[]> getHashes(int amount) {
+	public List<byte[]> getHashes() {
+		int amount = CONFIG.maxBlocksAsk();
 		List<byte[]> hashes = new ArrayList<>();
 		for (int i = 0; i < amount; i++) {
-			if (!blockHashQueue.isEmpty())
+			while (!blockHashQueue.isEmpty())
 				hashes.add(blockHashQueue.pollLast());
-			else break;
 		}
 		return hashes;
 	}

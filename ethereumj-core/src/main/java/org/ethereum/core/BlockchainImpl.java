@@ -216,7 +216,8 @@ public class BlockchainImpl implements Blockchain {
 		
         if (logger.isDebugEnabled())
 			logger.debug("block added {}", block.toFlatString());
-		logger.info("*** Last block added [ #{} ]", block.getNumber());
+        if (block.getNumber() % 100 == 0)
+        	logger.info("*** Last block added [ #{} ]", block.getNumber());
     }    
     
     /**

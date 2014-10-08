@@ -31,14 +31,14 @@ public class HelloMessage extends P2pMessage {
 	/** The port on which the peer is listening for an incoming connection */
 	private int listenPort;
 	/** The identity and public key of the peer */
-	private byte[] peerId;
+	private String peerId;
 
 	public HelloMessage(byte[] encoded) {
 		super(encoded);
 	}
 
 	public HelloMessage(byte p2pVersion, String clientId,
-			List<String> capabilities, int listenPort, byte[] peerId) {
+			List<String> capabilities, int listenPort, String peerId) {
 		this.p2pVersion = p2pVersion;
 		this.clientId = clientId;
 		this.capabilities = capabilities;
@@ -69,8 +69,8 @@ public class HelloMessage extends P2pMessage {
 		byte[] peerPortBytes = ((RLPItem) paramsList.get(4)).getRLPData();
 		this.listenPort = ByteUtil.byteArrayToInt(peerPortBytes);
 
-		this.peerId = ((RLPItem) paramsList.get(5)).getRLPData();
-
+		byte[] peerIdBytes = ((RLPItem) paramsList.get(5)).getRLPData();
+		this.peerId = Hex.toHexString(peerIdBytes);
 		this.parsed = true;
 	}
 
@@ -84,7 +84,7 @@ public class HelloMessage extends P2pMessage {
 		}
 		byte[] capabilityList = RLP.encodeList(capabilities);
 		byte[] peerPort = RLP.encodeInt(this.listenPort);
-		byte[] peerId = RLP.encodeElement(this.peerId);
+		byte[] peerId = RLP.encodeElement(Hex.decode(this.peerId));
 
 		this.encoded = RLP.encodeList(command, p2pVersion, clientId,
 				capabilityList, peerPort, peerId);
@@ -121,7 +121,7 @@ public class HelloMessage extends P2pMessage {
 		return listenPort;
 	}
 
-	public byte[] getPeerId() {
+	public String getPeerId() {
 		if (!parsed) parse();
 		return peerId;
 	}
@@ -137,6 +137,6 @@ public class HelloMessage extends P2pMessage {
 				+ this.p2pVersion + " clientId=" + this.clientId
 				+ " capabilities=[" + Joiner.on(" ").join(this.capabilities)
 				+ "]" + " peerPort=" + this.listenPort + " peerId="
-				+ Hex.toHexString(this.peerId) + "]";
+				+ this.peerId + "]";
 	}
 }

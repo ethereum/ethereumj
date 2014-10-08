@@ -58,10 +58,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
 	private int secToAskForBlocks = 1;
 
+	private String peerId;
 	private Blockchain blockchain;
 	private PeerListener peerListener;
 
-	private static boolean hashRetrievalLocked = false;
+	private static String hashRetrievalLock;
 	private MessageQueue msgQueue = null;
 
 	private Timer getBlocksTimer 	= new Timer("GetBlocksTimer");
@@ -72,8 +73,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 		this.blockchain = WorldManager.getInstance().getBlockchain();
 	}
 
-	public EthHandler(PeerListener peerListener) {
+	public EthHandler(String peerId, PeerListener peerListener) {
 		this();
+		this.peerId = peerId;
 		this.peerListener = peerListener;
 	}
 
@@ -159,17 +161,16 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));	
 		else {
 			BlockQueue chainQueue = this.blockchain.getQueue();
-			if(!hashRetrievalLocked) {
-				BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
-				BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
-				if (highestKnownTotalDifficulty == null 
-						|| peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
-					chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
-					chainQueue.setBestHash(msg.getBestHash());
-				}
-				hashRetrievalLocked = true;
+			BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
+			BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
+			if (highestKnownTotalDifficulty == null 
+					|| peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
+				hashRetrievalLock = this.peerId;
+				chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
+				chainQueue.setBestHash(msg.getBestHash());
 				sendGetBlockHashes();
-			}
+			} else
+				startGetBlockTimer();
 		}
 	}
 	
@@ -178,7 +179,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 		BlockQueue chainQueue = this.blockchain.getQueue();
 
 		// result is empty, peer has no more hashes
-		if (receivedHashes.isEmpty()) {
+		// or peer doesn't have the best hash anymore
+		if (receivedHashes.isEmpty()
+				|| !this.peerId.equals(hashRetrievalLock)) {
 			startGetBlockTimer(); // start getting blocks from hash queue
 			return;
 		}
@@ -250,13 +253,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private void sendGetBlocks() {
     	BlockQueue queue = this.blockchain.getQueue();
 		if (queue.size() > CONFIG.maxBlocksQueued()) return;
-
-		Block lastBlock = queue.getLastBlock();
-        if (lastBlock == null) return;
-
+		
         // retrieve list of block hashes from queue
-        int blocksPerPeer = CONFIG.maxBlocksAsk();
-		List<byte[]> hashes = queue.getHashes(blocksPerPeer);
+		List<byte[]> hashes = queue.getHashes();
 
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
         msgQueue.sendMessage(msg);

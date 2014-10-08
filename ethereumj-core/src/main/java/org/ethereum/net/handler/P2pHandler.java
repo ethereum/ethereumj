@@ -130,13 +130,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 		else {
 			if (msg.getCapabilities().contains("eth")) {
 				// Activate EthHandler for this peer
+				ctx.pipeline().addLast(new EthHandler(msg.getPeerId(), peerListener));
 				ctx.fireChannelActive();
 			}
 
 			InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
 			int port = msg.getListenPort();
-			byte[] peerId = msg.getPeerId();
-			Peer confirmedPeer = new Peer(address, port, peerId);
+			Peer confirmedPeer = new Peer(address, port, msg.getPeerId());
 			confirmedPeer.setOnline(true);
 			confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
 			WorldManager.getInstance().getPeerDiscovery().getPeers().add(confirmedPeer);

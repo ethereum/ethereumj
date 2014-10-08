@@ -39,7 +39,7 @@ public class SystemProperties {
 	private static Boolean  DEFAULT_BLOCKCHAIN_ONLY = false;
 	private static int      DEFAULT_TRACE_STARTBLOCK = -1;
 	private static int      DEFAULT_MAX_HASHES_ASK = -1; // unlimited
-	private static byte     DEFAULT_MAX_BLOCKS_ASK = 10;
+	private static int      DEFAULT_MAX_BLOCKS_ASK = 10;
 	private static int      DEFAULT_MAX_BLOCKS_QUEUED = 300;
 	private static String   DEFAULT_PROJECT_VERSION = "";
 	private static String   DEFAULT_HELLO_PHRASE = "Dev";
@@ -192,9 +192,9 @@ public class SystemProperties {
 		return Integer.parseInt(prop.getProperty("max.hashes.ask"));
 	}
 
-	public Byte maxBlocksAsk() {
+	public Integer maxBlocksAsk() {
 		if (prop.isEmpty()) return DEFAULT_MAX_BLOCKS_ASK;
-		return Byte.parseByte(prop.getProperty("max.blocks.ask"));
+		return Integer.parseInt(prop.getProperty("max.blocks.ask"));
 	}
 
 	public Integer maxBlocksQueued() {

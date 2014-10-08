@@ -3,8 +3,6 @@ package org.ethereum.net.client;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Arrays;
-
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,14 +14,14 @@ public class Peer {
 
 	private InetAddress address;
 	private int port;
-	private byte[] peerId;
+	private String peerId;
 
 	private List<String> capabilities;
 
 	private transient boolean isOnline = false;
 	private transient long lastCheckTime = 0;
 
-	public Peer(InetAddress ip, int port, byte[] peerId) {
+	public Peer(InetAddress ip, int port, String peerId) {
 		this.address = ip;
 		this.port = port;
 		this.peerId = peerId;
@@ -39,7 +37,7 @@ public class Peer {
 	}
 
 	public String getPeerId() {
-		return peerId == null ? "" : Hex.toHexString(peerId);
+		return peerId == null ? "" : peerId;
 	}
 
 	public boolean isOnline() {
@@ -67,7 +65,7 @@ public class Peer {
 	public byte[] getEncoded() {
 		byte[] ip = RLP.encodeElement(this.address.getAddress());
 		byte[] port = RLP.encodeInt(this.port);
-		byte[] peerId = RLP.encodeElement(this.peerId);
+		byte[] peerId = RLP.encodeElement(Hex.decode(this.peerId));
 		byte[][] encodedCaps = new byte[this.capabilities.size()][];
 		for (int i = 0; i < this.capabilities.size(); i++) {
 			encodedCaps[i] = RLP.encodeString(this.capabilities.get(i));
@@ -87,7 +85,7 @@ public class Peer {
 	public boolean equals(Object obj) {
 		if (obj == null) return false;
 		Peer peerData = (Peer) obj;
-		return Arrays.equals(peerData.peerId, this.peerId)
+		return peerData.peerId.equals(this.peerId)
 				|| this.getAddress().equals(peerData.getAddress());
 	}
 

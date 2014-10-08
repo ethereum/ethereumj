@@ -38,7 +38,7 @@ public class HelloMessageTest {
         assertEquals(30303, helloMessage.getListenPort());
         assertEquals(
             "2017B95D5586ADD053E7C5DCC8112DB1D557ED83589C4E0BD25442F39E4111655A487257AA7E4ED309E8B4D55BE5FA8D8D6E97B72C67D76AA03EB69AD981ED60",
-            Hex.toHexString(helloMessage.getPeerId()).toUpperCase());
+            helloMessage.getPeerId().toUpperCase());
     }
     
     @Test /* HelloMessage 2 from Node */
@@ -63,7 +63,7 @@ public class HelloMessageTest {
         assertEquals("eth", helloMessage.getCapabilities().get(0));
         assertEquals(30303, helloMessage.getListenPort());
 		assertEquals("cadfb93d2bb5fbe2943584d93ed90e374667c9e8b2502e974693ccc6b3d370bd4cde7738d0b626e3d2f3caecc59e1302d1711bf595711060d7b4921e18b97656",
-				Hex.toHexString(helloMessage.getPeerId()));
+				helloMessage.getPeerId());
     }
     
     @Test /* HelloMessage 3 from new */
@@ -72,12 +72,12 @@ public class HelloMessageTest {
         byte p2pVersion = 0x00;
         List<String> capabilities = new ArrayList<>(Arrays.asList("eth", "shh"));
         int listenPort = 30303;
-        byte[] peerIdBytes = Hex.decode("CAB0D93EEE1F44EF1286367101F1553450E3DDCE"
+        String peerId = "CAB0D93EEE1F44EF1286367101F1553450E3DDCE"
         		+ "EA45ABCAB0AC21E1EFB48A6610EBE88CE7317EB09229558311BA8B7250911D"
-        		+ "7E49562C3988CA3143329DA3EA");
+        		+ "7E49562C3988CA3143329DA3EA";
 
         HelloMessage helloMessage = new HelloMessage(p2pVersion, helloAnnouncement, 
-				capabilities, listenPort, peerIdBytes);
+				capabilities, listenPort, peerId);
         System.out.println(helloMessage);
         // rlp encoded hello message
         String expected = "F8738080A2457468657265756D284A292F302E362E302F6465762F5"

@@ -64,8 +64,8 @@ public class PeersMessageTest {
     @Test /*  PeersMessage 2 from constructor */
     public void testPeers_2() throws UnknownHostException {
     	Set<Peer> peers = new HashSet<>();
-    	peers.add(new Peer(InetAddress.getByName("82.217.72.169"), 30303, Hex.decode("585764a3c49a3838c69ad0855abfeb5672f71b072af62082b5679961781100814b8de88a8fbc1da7c73791f88159d73b5d2a13a5579535d603e045c3db5cbb75")));
-    	peers.add(new Peer(InetAddress.getByName("192.168.1.193"), 30303, new byte[0]));
+    	peers.add(new Peer(InetAddress.getByName("82.217.72.169"), 30303, "585764a3c49a3838c69ad0855abfeb5672f71b072af62082b5679961781100814b8de88a8fbc1da7c73791f88159d73b5d2a13a5579535d603e045c3db5cbb75"));
+    	peers.add(new Peer(InetAddress.getByName("192.168.1.193"), 30303, ""));
         PeersMessage peersMessage = new PeersMessage(peers);
         System.out.println(peersMessage.toString());
 

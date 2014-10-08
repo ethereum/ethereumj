@@ -14,6 +14,7 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum Peers message on the network
@@ -49,7 +50,7 @@ public class PeersMessage extends P2pMessage {
 			try {
 				int peerPort = ByteUtil.byteArrayToInt(portBytes);
 				InetAddress address = InetAddress.getByAddress(ipBytes);
-				Peer peer = new Peer(address, peerPort, peerId);
+				Peer peer = new Peer(address, peerPort, Hex.toHexString(peerId));
 				peers.add(peer);
 			} catch (UnknownHostException e) {
 				throw new RuntimeException("Malformed ip", e);

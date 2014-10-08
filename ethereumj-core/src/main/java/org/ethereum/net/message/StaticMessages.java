@@ -33,7 +33,7 @@ public class StaticMessages {
 		int listenPort = 30303;
 
 		return new HelloMessage(p2pVersion, helloAnnouncement, 
-				capabilities, listenPort, Hex.decode(PEER_ID));
+				capabilities, listenPort, PEER_ID);
 	}
 
 	private static String buildHelloAnnouncement() {
