@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
@@ -26,7 +25,7 @@ public class BlockQueue {
 
 	/** The list of hashes of the heaviest chain on the network, 
 	 * for which this client doesn't have the blocks yet */
-	private Deque<byte[]> blockHashQueue = new ConcurrentLinkedDeque<>();
+	private Deque<byte[]> blockHashQueue = new ArrayDeque<>();
 	
 	/** Queue with blocks to be validated and added to the blockchain */
 	private Queue<Block> blockReceivedQueue = new ConcurrentLinkedQueue<>();
@@ -77,12 +76,13 @@ public class BlockQueue {
 
 		for (Block block : blockList) {
 			
-			if (blockReceivedQueue.size() <= SystemProperties.CONFIG.maxBlocksQueued())
+			if (blockReceivedQueue.size() >= SystemProperties.CONFIG.maxBlocksQueued())
 				return;
 
 			this.lastBlock = block;
 			logger.debug("Last block now index: [{}]", lastBlock.getNumber());
 			blockReceivedQueue.add(lastBlock);
+			blockHashQueue.removeLast();
 		}
 		logger.debug("Blocks waiting to be proceed in the queue: [{}]", 
 				blockReceivedQueue.size());
@@ -134,11 +134,10 @@ public class BlockQueue {
 	 * @return A list of hashes for which blocks need to be retrieved.
 	 */
 	public List<byte[]> getHashes() {
-		int amount = CONFIG.maxBlocksAsk();
 		List<byte[]> hashes = new ArrayList<>();
-		for (int i = 0; i < amount; i++) {
-			while (!blockHashQueue.isEmpty())
-				hashes.add(blockHashQueue.pollLast());
+		Iterator<byte[]> hashIterator = blockHashQueue.descendingIterator();
+		while (hashIterator.hasNext() && hashes.size() <= CONFIG.maxBlocksAsk()) {
+				hashes.add(hashIterator.next());
 		}
 		return hashes;
 	}
