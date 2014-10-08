@@ -66,7 +66,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 	private MessageQueue msgQueue = null;
 
 	private Timer getBlocksTimer 	= new Timer("GetBlocksTimer");
-	private Timer getHashesTimer 	= new Timer("GetBlockHashesTimer");
 	private Timer getTxTimer	= new Timer("GetTransactionsTimer");
 
 	public EthHandler() {
@@ -304,11 +303,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }, 3000, secToAskForBlocks * 1000);
 	}
 
-	private void stopGetHashesTimer() {
-        getHashesTimer.cancel();
-        getHashesTimer.purge();
-	}
-
 	private void stopGetBlocksTimer() {
         getBlocksTimer.cancel();
         getBlocksTimer.purge();
@@ -321,7 +315,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void killTimers(){
     	stopGetBlocksTimer();
-    	stopGetHashesTimer();
     	stopGetTxTimer();
     }
 }
