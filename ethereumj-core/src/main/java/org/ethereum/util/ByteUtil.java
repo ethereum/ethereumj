@@ -287,4 +287,36 @@ public class ByteUtil {
         }
         return address;
     }
+
+    /**
+     * Utility function to copy a byte array into a new byte array with given size.
+     * If the src length is smaller than the given size, the result will be left-padded 
+     * with zeros.
+     * 
+     * @param src
+     * @param size
+     * @return Byte array of given size with a copy of the </code>src</code>
+     */
+    public static byte[] copyToArray(byte[] src, int size) {
+    	byte[] dest = ByteBuffer.allocate(size).array();
+    	return copyToArray(src, dest);
+    }
+
+    /**
+     * Utility function to copy a byte array into a given byte array.
+     * If the src length is smaller than the given size, the result will be left-padded 
+     * with the original bytes.
+     *
+     * @param src
+     * @param dest
+     * @param size
+     * @return Destination byte array filled with a copy of the </code>src</code>
+     */
+    public static byte[] copyToArray(byte[] src, byte[] dest) {
+    	if (src.length > dest.length)
+    		System.arraycopy(src, src.length-dest.length, dest, 0, dest.length-1);
+    	else
+    		System.arraycopy(src, 0, dest, dest.length - src.length, src.length);
+    	return dest;
+    }
 }

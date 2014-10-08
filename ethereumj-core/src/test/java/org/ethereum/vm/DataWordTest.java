@@ -88,4 +88,37 @@ public class DataWordTest {
 		assertEquals(32, y.getData().length);
 		assertEquals(expected, Hex.toHexString(y.getData()));
 	}
+	
+	@Test
+	public void testMul() {
+		byte[] one = new byte[32];
+		one[31] = 0x1; // 0x0000000000000000000000000000000000000000000000000000000000000001
+
+		byte[] two = new byte[32];
+		two[11] = 0x1; // 0x0000000000000000000000010000000000000000000000000000000000000000
+
+		DataWord x = new DataWord(one);// System.out.println(x.value());
+		DataWord y = new DataWord(two);// System.out.println(y.value());
+		x.mul(y);
+		assertEquals(32, y.getData().length);
+		assertEquals("0000000000000000000000010000000000000000000000000000000000000000", Hex.toHexString(y.getData()));
+	}
+	
+	@Test
+	public void testMulOverflow() {
+		
+		byte[] one = new byte[32];
+		one[30] = 0x1; // 0x0000000000000000000000000000000000000000000000000000000000000100
+
+		byte[] two = new byte[32];
+		two[0] = 0x1; //  0x1000000000000000000000000000000000000000000000000000000000000000
+
+		DataWord x = new DataWord(one);// System.out.println(x.value());
+		DataWord y = new DataWord(two);// System.out.println(y.value());
+		x.mul(y);
+		assertEquals(32, y.getData().length);
+		assertEquals("0100000000000000000000000000000000000000000000000000000000000000", Hex.toHexString(y.getData()));
+	}
+	
+	
 }

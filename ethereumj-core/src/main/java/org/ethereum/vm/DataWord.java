@@ -163,26 +163,16 @@ public class DataWord implements Comparable<DataWord> {
     
     // old add-method with BigInteger quick hack
     public void add2(DataWord word) {
-
 		BigInteger result = value().add(word.value());
-        byte[] bytes = result.toByteArray();
-
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
     }
     
     // TODO: mul can be done in more efficient way
     // TODO:     with shift left shift right trick
     // TODO      without BigInteger quick hack
     public void mul(DataWord word) {
-
 		BigInteger result = value().multiply(word.value());
-        byte[] bytes = result.toByteArray();
-
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+        this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
     }
 
     // TODO: improve with no BigInteger
@@ -194,11 +184,7 @@ public class DataWord implements Comparable<DataWord> {
         }
 
 		BigInteger result = value().divide(word.value());
-        byte[] bytes = result.toByteArray();
-
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
     }
 
     // TODO: improve with no BigInteger
@@ -210,37 +196,25 @@ public class DataWord implements Comparable<DataWord> {
         }
 
 		BigInteger result = sValue().divide(word.sValue());
-        byte[] bytes = result.toByteArray();
 
         ByteBuffer data    =  ByteBuffer.allocate(32);
-        if (result.compareTo(BigInteger.ZERO) == -1)
+        if (result.signum() == -1)
             Arrays.fill(data.array(), (byte) 0xFF);
 
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+        this.data = ByteUtil.copyToArray(result.toByteArray(), data.array());
     }
 
 
     // TODO: improve with no BigInteger
     public void sub(DataWord word) {
-
 		BigInteger result = value().subtract(word.value());
-        byte[] bytes = result.toByteArray();
-
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
     }
 
     // TODO: improve with no BigInteger
     public void exp(DataWord word) {
-
 		BigInteger result = value().pow(word.intValue());
-        byte[] bytes = result.toByteArray();
-
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
     }
 
     // TODO: improve with no BigInteger
@@ -252,11 +226,7 @@ public class DataWord implements Comparable<DataWord> {
         }
 
         BigInteger result = value().mod(word.value());
-        byte[] bytes = result.toByteArray();
-
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+        this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
     }
 
     // TODO: improve with no BigInteger
@@ -268,16 +238,14 @@ public class DataWord implements Comparable<DataWord> {
         }
 
         BigInteger result = sValue().mod( word.sValue());
-        byte[] bytes = result.toByteArray();
-
+        
         ByteBuffer data    =  ByteBuffer.allocate(32);
-        if (result.compareTo(BigInteger.ZERO) == -1)
+        if (result.signum() == -1)
             Arrays.fill(data.array(), (byte) 0xFF);
 
-        System.arraycopy(bytes, 0, data.array(), 32 - bytes.length, bytes.length);
-        this.data = data.array();
+        this.data = ByteUtil.copyToArray(result.toByteArray(), data.array());
     }
-
+    
     public String toString() {
         return Hex.toHexString(data);
     }
