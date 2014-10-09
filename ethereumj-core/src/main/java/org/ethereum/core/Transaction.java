@@ -14,7 +14,6 @@ import org.spongycastle.util.BigIntegers;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
-import java.util.Arrays;
 
 /**
  * A transaction (formally, T) is a single cryptographically 
@@ -151,11 +150,6 @@ public class Transaction {
     public byte[] getGasLimit() {
         if (!parsed) rlpParse();
         return gasLimit;
-    }
-
-    // TODO: performance improve multiply without BigInteger
-    public BigInteger getTotalGasValueDebit() {
-		return new BigInteger(1, gasLimit).multiply(new BigInteger(1, gasPrice));
     }
 
     public byte[] getData() {

@@ -132,7 +132,7 @@ public class BlockchainImpl implements Blockchain {
             ethereumListener.onBlock(block);
     }
     
-    private void processBlock(Block block) {
+    private void processBlock(Block block) {    	
     	if(block.isValid()) {
             if (!block.isGenesis()) {
                 if (!CONFIG.blockChainOnly()) {
@@ -300,7 +300,9 @@ public class BlockchainImpl implements Blockchain {
 		}
 
 		// GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
-		BigInteger gasDebit = tx.getTotalGasValueDebit();
+	    // TODO: performance improve multiply without BigInteger
+		BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
+		BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
 	
 		// Debit the actual total gas value from the sender
 		// the purchased gas will be available for 
@@ -357,7 +359,7 @@ public class BlockchainImpl implements Blockchain {
                 if (CONFIG.playVM())
 				    vm.play(program);
 				ProgramResult result = program.getResult();
-				applyProgramResult(result, gasDebit, trackRepository,
+				applyProgramResult(result, gasDebit, gasPrice, trackRepository,
 						senderAddress, receiverAddress, coinbase, isContractCreation);
 				gasUsed = result.getGasUsed();
 
@@ -371,7 +373,6 @@ public class BlockchainImpl implements Blockchain {
 			long dataCost = tx.getData() == null ? 0: tx.getData().length * GasCost.TXDATA;
 			gasUsed = GasCost.TRANSACTION + dataCost;
 			
-			BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
 			BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));
 			if (refund.signum() > 0) {
 				repository.addBalance(senderAddress, refund);
@@ -391,7 +392,7 @@ public class BlockchainImpl implements Blockchain {
 	 * @param contractAddress
 	 */
 	private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
-			Repository repository, byte[] senderAddress,
+			BigInteger gasPrice, Repository repository, byte[] senderAddress,
 			byte[] contractAddress, byte[] coinbase, boolean initResults) {
 
 		if (result.getException() != null
@@ -401,7 +402,6 @@ public class BlockchainImpl implements Blockchain {
 			throw result.getException();
 		}
 
-		BigInteger gasPrice = BigInteger.valueOf(this.getGasPrice());
 		BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
 				result.getGasUsed()).multiply(gasPrice));
 
