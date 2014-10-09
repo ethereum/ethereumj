@@ -57,7 +57,11 @@ public class AccountState {
             if (hexVal) {
                 key = new ByteArrayWrapper(Hex.decode(keyS.substring(2)));
             } else {
-                byte[] data = ByteUtil.bigIntegerToBytes(new BigInteger(keyS));
+            	byte[] data;
+                if (keyS != null && keyS.length() > 2)
+                    data    = Hex.decode(keyS);
+                else
+                    data = new byte[0];
                 key = new ByteArrayWrapper(data);
             }
 
