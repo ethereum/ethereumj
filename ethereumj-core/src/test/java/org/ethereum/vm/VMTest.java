@@ -1852,13 +1852,14 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
+        assertTrue(program.isStopped());
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
     @Test // ADDMOD OP
     public void testADDMOD_2() {
         VM vm = new VM();
-        Program program = new Program(Hex.decode("611000600261100214"), new ProgramInvokeMockImpl());
+        Program program = new Program(Hex.decode("6110006002611002146000"), new ProgramInvokeMockImpl());
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -1868,6 +1869,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
+        assertFalse(program.isStopped());
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
@@ -1884,6 +1886,7 @@ public class VMTest {
 
         DataWord item1 = program.stack.pop();
         program.getResult().getRepository().close();
+        assertTrue(program.isStopped());
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 

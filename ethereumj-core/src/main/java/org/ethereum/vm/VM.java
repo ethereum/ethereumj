@@ -479,6 +479,7 @@ public class VM {
                 	word1.add(program.stackPop());
                 	word1.mod(program.stackPop());
                 	program.stackPush(word1);
+                	program.step();
 				}	break;
 				case MULMOD:{
                 	program.stackRequire(3);
@@ -486,6 +487,7 @@ public class VM {
                 	word1.mul(program.stackPop());
                 	word1.mod(program.stackPop());
                 	program.stackPush(word1);
+                	program.step();
 				}	break;
 
                 /**
