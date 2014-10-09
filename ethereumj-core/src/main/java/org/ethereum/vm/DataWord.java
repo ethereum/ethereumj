@@ -237,7 +237,7 @@ public class DataWord implements Comparable<DataWord> {
             return;
         }
 
-        BigInteger result = sValue().mod( word.sValue());
+        BigInteger result = sValue().mod(word.sValue());
         
         ByteBuffer data    =  ByteBuffer.allocate(32);
         if (result.signum() == -1)

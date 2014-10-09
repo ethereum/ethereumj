@@ -283,7 +283,7 @@ public class TestRunner {
         if (!Arrays.equals(expectedHReturn, actualHReturn)) {
 
             String output =
-                    String.format("HReturn is differnt expected hReturn: [ %s ], actual hReturn: [ %s ]",
+                    String.format("HReturn is different expected hReturn: [ %s ], actual hReturn: [ %s ]",
                             Hex.toHexString(expectedHReturn),
                             Hex.toHexString(actualHReturn));
             logger.info(output);
