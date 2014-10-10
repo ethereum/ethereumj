@@ -227,7 +227,6 @@ public class DataWord implements Comparable<DataWord> {
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
-    // TODO: improve with no BigInteger
     public void sMod(DataWord word) {
 
         if (word.isZero()) {
@@ -236,6 +235,17 @@ public class DataWord implements Comparable<DataWord> {
         }
 
         BigInteger result = sValue().remainder(word.sValue());
+        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+    }
+    
+    public void addmod(DataWord word1, DataWord word2) {
+		this.add(word1);
+		BigInteger result = this.value().mod(word2.value());
+        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+    }
+    
+    public void mulmod(DataWord word1, DataWord word2) {
+		BigInteger result = value().multiply(word1.value()).mod(word2.value());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
     

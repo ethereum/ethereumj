@@ -476,16 +476,18 @@ public class VM {
 				case ADDMOD:{
                 	program.stackRequire(3);
                 	DataWord word1 = program.stackPop();
-                	word1.add(program.stackPop());
-                	word1.mod(program.stackPop());
+                	DataWord word2 = program.stackPop();
+                	DataWord word3 = program.stackPop();
+                	word1.addmod(word2, word3);
                 	program.stackPush(word1);
                 	program.step();
 				}	break;
 				case MULMOD:{
                 	program.stackRequire(3);
                 	DataWord word1 = program.stackPop();
-                	word1.mul(program.stackPop());
-                	word1.mod(program.stackPop());
+                	DataWord word2 = program.stackPop();
+                	DataWord word3 = program.stackPop();
+                	word1.mulmod(word2, word3);
                 	program.stackPush(word1);
                 	program.step();
 				}	break;
