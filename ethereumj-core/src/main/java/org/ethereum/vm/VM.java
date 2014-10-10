@@ -78,6 +78,10 @@ public class VM {
     	
         try {
             OpCode op = OpCode.code(program.getCurrentOp());
+            
+            if (op == null)
+            	throw new IllegalOperationException();
+            
             program.setLastOp(op.val());
 
             long oldMemSize = program.getMemSize();
@@ -961,9 +965,8 @@ public class VM {
                     
                     program.stop();
                 }	break;
-                default:{
-                	throw new IllegalOperationException();
-                }
+                default:
+                	break;
             }
             
 			if (logger.isInfoEnabled() && !op.equals(CALL)
@@ -1077,7 +1080,7 @@ public class VM {
 					gasBefore, gasCost, memWords);    	
     	}
     }
-	
+    
     @SuppressWarnings("serial")
-    private class IllegalOperationException extends RuntimeException {}
+    public class IllegalOperationException extends RuntimeException {}
 }

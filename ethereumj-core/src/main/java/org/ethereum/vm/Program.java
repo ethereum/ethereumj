@@ -14,7 +14,6 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EmptyStackException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -152,8 +151,6 @@ public class Program {
     }
 
     public DataWord stackPop() {
-        if (stack.size() == 0)
-            throw new EmptyStackException();
         return stack.pop();
     }
     

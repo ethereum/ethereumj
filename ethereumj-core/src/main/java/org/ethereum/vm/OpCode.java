@@ -325,14 +325,7 @@ public enum OpCode {
     private OpCode(int op) {
         this.opcode = (byte) op;
     }
-
-    public static OpCode fromInt(int i) {
-    	OpCode type = intToTypeMap.get(i);
-        if (type == null)
-            return OpCode.STOP;
-        return type;
-    }
-
+    
     public byte val() {
         return opcode;
     }
@@ -350,9 +343,6 @@ public enum OpCode {
     }
 
     public static OpCode code(byte code) {
-    	OpCode op = intToTypeMap.get(code);
-    	if (op == null)
-    		op = STOP; // invalid operation
-    	return op;
+    	return intToTypeMap.get(code);
     }
 }
