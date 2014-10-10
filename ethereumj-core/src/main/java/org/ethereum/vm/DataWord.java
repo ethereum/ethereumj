@@ -235,7 +235,7 @@ public class DataWord implements Comparable<DataWord> {
             return;
         }
 
-        BigInteger result = sValue().mod(word.sValue());
+        BigInteger result = sValue().remainder(word.sValue());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
     
