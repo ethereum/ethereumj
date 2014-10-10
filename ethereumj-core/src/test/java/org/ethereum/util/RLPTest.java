@@ -266,13 +266,27 @@ public class RLPTest {
     	assertArrayEquals(new byte[] { (byte) 0xc0 }, actuals);
     }
     
-    @Test /** encode list */
+    @Test /** encode null value */
     public void testEncodeElementNull() {
     	
     	byte[] actuals = RLP.encodeElement(null);
     	assertArrayEquals(new byte[] { (byte) 0x80 }, actuals);
     }
+    
+    @Test /** encode single byte 0x00 */
+    public void testEncodeElementZero() {
+    	
+    	byte[] actuals = RLP.encodeElement(new byte[] {0x00});
+    	assertArrayEquals(new byte[] { (byte) 0x00 }, actuals);
+    }
 
+    @Test /** encode single byte 0x01 */
+    public void testEncodeElementOne() {
+    	
+    	byte[] actuals = RLP.encodeElement(new byte[] {0x00});
+    	assertArrayEquals(new byte[] { (byte) 0x00 }, actuals);
+    }
+    
     @Test /** found bug encode list affects element value,
               hhh... not really at  the end but keep the test */
     public void test10() {

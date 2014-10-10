@@ -71,14 +71,16 @@ public class RLP {
 	 * its own RLP encoding.
 	 */
 
-	/*
+	/**
+	 * [0x80]
 	 * If a string is 0-55 bytes long, the RLP encoding consists of a single
 	 * byte with value 0x80 plus the length of the string followed by the
 	 * string. The range of the first byte is thus [0x80, 0xb7].
 	 */
 	private static int OFFSET_SHORT_ITEM = 0x80;
 
-	/*
+	/**
+	 * [0xb7]
 	 * If a string is more than 55 bytes long, the RLP encoding consists of a
 	 * single byte with value 0xb7 plus the length of the length of the string
 	 * in binary form, followed by the length of the string, followed by the
@@ -88,7 +90,8 @@ public class RLP {
 	 */
 	private static int OFFSET_LONG_ITEM = 0xb7;
 
-	/*
+	/**
+	 * [0xc0]
 	 * If the total payload of a list (i.e. the combined length of all its
 	 * items) is 0-55 bytes long, the RLP encoding consists of a single byte
 	 * with value 0xc0 plus the length of the list followed by the concatenation
@@ -97,7 +100,8 @@ public class RLP {
 	 */
 	private static int OFFSET_SHORT_LIST = 0xc0;
 
-	/*
+	/**
+	 * [0xf7]
 	 * If the total payload of a list is more than 55 bytes long, the RLP
 	 * encoding consists of a single byte with value 0xf7 plus the length of the
 	 * length of the list in binary form, followed by the length of the list,
@@ -824,10 +828,9 @@ public class RLP {
 
     public static byte[] encodeElement(byte[] srcData) {
 
-        if ( srcData == null ||
-             (srcData.length == 1 && srcData[0] == 0)) {
-            return new byte[]{(byte) 0x80};
-        } if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
+        if (srcData == null)
+        	return new byte[]{(byte) OFFSET_SHORT_ITEM};
+        else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
             return srcData;
         } else if (srcData.length < SIZE_THRESHOLD) {
             // length = 8X
