@@ -1,10 +1,6 @@
 package org.ethereum.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.math.BigInteger;
-import java.net.HttpURLConnection;
 import java.net.URL;
 import java.security.SecureRandom;
 import java.text.DateFormat;
@@ -12,7 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
-
+w
 import javax.swing.ImageIcon;
 
 import org.spongycastle.util.encoders.DecoderException;
@@ -118,30 +114,6 @@ public class Utils {
             if (version.charAt(pos) == '.') count ++;
         }
         return Double.parseDouble (version.substring (0, pos - 1));
-    }
-
-    public static String getFromUrl(String urlToRead) {
-        URL url;
-        HttpURLConnection conn;
-        BufferedReader rd;
-        String line;
-        String result = "";
-        try {
-            url = new URL(urlToRead);
-            conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(3000);
-            rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
-            while ((line = rd.readLine()) != null) {
-                result += line;
-            }
-            rd.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-        return result;
     }
 
 	public static StringBuffer getHashlistShort(List<byte[]> blockHashes) {

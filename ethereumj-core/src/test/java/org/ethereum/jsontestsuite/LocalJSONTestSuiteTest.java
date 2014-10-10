@@ -1,24 +1,20 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.Utils;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
-
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.util.Iterator;
 import java.util.List;
+
+import org.ethereum.db.ByteArrayWrapper;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
+import org.junit.Assert;
+import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
@@ -185,12 +181,7 @@ public class LocalJSONTestSuiteTest {
     @Test // TestCase file: vmtest-1.json  //
     public void test6() throws ParseException, IOException, URISyntaxException {
 
-        URL vmtest = ClassLoader
-                .getSystemResource("jsontestsuite/vmtest-1.json");
-
-        File vmTestFile = new File(vmtest.toURI());
-        byte[] testData = Files.readAllBytes(vmTestFile.toPath());
-        String testSrc = new String(testData);
+    	String testSrc = JSONReader.getFromLocal("vmtest-1.json");
 
         JSONParser parser = new JSONParser();
         JSONObject testCaseJSONObj = (JSONObject)parser.parse(testSrc);
