@@ -182,8 +182,8 @@ public class TestRunner {
                     String output =
                             String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
                                     Hex.toHexString(storageKey.getData()),
-                                    Hex.toHexString(actualValue.getData()),
-                                    Hex.toHexString(expectedStValue)
+                                    Hex.toHexString(expectedStValue),
+                                    Hex.toHexString(actualValue.getData())
                                     );
                     logger.info(output);
                     results.add(output);
@@ -228,7 +228,7 @@ public class TestRunner {
             if (!assertDestination) {
 
                 String output =
-                        String.format("Call/Create destination is different expected: [ %s ], result: [ %s ]",
+                        String.format("Call/Create destination is different. Expected: [ %s ], result: [ %s ]",
                                 Hex.toHexString(expectedCallCreate.getDestination()),
                                 Hex.toHexString(resultCallCreate.getDestination()));
                 logger.info(output);
@@ -241,7 +241,7 @@ public class TestRunner {
             if (!assertData) {
 
                 String output =
-                        String.format("Call/Create data is different expected: [ %s ], result: [ %s ]",
+                        String.format("Call/Create data is different. Expected: [ %s ], result: [ %s ]",
                                 Hex.toHexString(expectedCallCreate.getData()),
                                 Hex.toHexString(resultCallCreate.getData()));
                 logger.info(output);
@@ -253,7 +253,7 @@ public class TestRunner {
                     resultCallCreate.getGasLimit());
             if (!assertGasLimit) {
                 String output =
-                        String.format("Call/Create gasLimit is different expected: [ %s ], result: [ %s ]",
+                        String.format("Call/Create gasLimit is different. Expected: [ %s ], result: [ %s ]",
                                 Hex.toHexString(expectedCallCreate.getGasLimit()),
                                 Hex.toHexString(resultCallCreate.getGasLimit()));
                 logger.info(output);
@@ -265,7 +265,7 @@ public class TestRunner {
                     resultCallCreate.getValue());
             if (!assertValue) {
                 String output =
-                        String.format("Call/Create value is different expected: [ %s ], result: [ %s ]",
+                        String.format("Call/Create value is different. Expected: [ %s ], result: [ %s ]",
                                 Hex.toHexString(expectedCallCreate.getValue()),
                                 Hex.toHexString(resultCallCreate.getValue()));
                 logger.info(output);
@@ -283,7 +283,7 @@ public class TestRunner {
         if (!Arrays.equals(expectedHReturn, actualHReturn)) {
 
             String output =
-                    String.format("HReturn is different expected hReturn: [ %s ], actual hReturn: [ %s ]",
+                    String.format("HReturn is different. Expected hReturn: [ %s ], actual hReturn: [ %s ]",
                             Hex.toHexString(expectedHReturn),
                             Hex.toHexString(actualHReturn));
             logger.info(output);
@@ -297,7 +297,7 @@ public class TestRunner {
         if (!expectedGas.equals(actualGas)) {
 
             String output =
-                    String.format("Gas usage is differnt expected gas usage: [ %s ], actual gas usage: [ %s ]",
+                    String.format("Gas usage is different. Expected gas usage: [ %s ], actual gas usage: [ %s ]",
                             expectedGas.toString() ,
                             actualGas.toString());
             logger.info(output);

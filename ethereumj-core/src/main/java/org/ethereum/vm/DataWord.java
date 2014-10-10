@@ -19,6 +19,9 @@ import java.nio.ByteBuffer;
  */
 public class DataWord implements Comparable<DataWord> {
 
+	/* Maximum value of the DataWord */
+	public static final BigInteger _2_256			= BigInteger.valueOf(2).pow(256);
+	public static final BigInteger MAX_VALUE		= _2_256.subtract(BigInteger.ONE);
     public static final DataWord ZERO 				= new DataWord(new byte[32]);      // don't push it in to the stack
     public static final DataWord ZERO_EMPTY_ARRAY	= new DataWord(new byte[0]);      // don't push it in to the stack
 
@@ -164,7 +167,7 @@ public class DataWord implements Comparable<DataWord> {
     // old add-method with BigInteger quick hack
     public void add2(DataWord word) {
 		BigInteger result = value().add(word.value());
-		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
+		this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
     
     // TODO: mul can be done in more efficient way
@@ -172,7 +175,7 @@ public class DataWord implements Comparable<DataWord> {
     // TODO      without BigInteger quick hack
     public void mul(DataWord word) {
 		BigInteger result = value().multiply(word.value());
-        this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
+        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
     // TODO: improve with no BigInteger
@@ -184,7 +187,7 @@ public class DataWord implements Comparable<DataWord> {
         }
 
 		BigInteger result = value().divide(word.value());
-		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
+		this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
     // TODO: improve with no BigInteger
@@ -196,25 +199,20 @@ public class DataWord implements Comparable<DataWord> {
         }
 
 		BigInteger result = sValue().divide(word.sValue());
-
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        if (result.signum() == -1)
-            Arrays.fill(data.array(), (byte) 0xFF);
-
-        this.data = ByteUtil.copyToArray(result.toByteArray(), data.array());
+        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
 
     // TODO: improve with no BigInteger
     public void sub(DataWord word) {
-		BigInteger result = value().subtract(word.value());
-		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
+		BigInteger result = value().subtract(word.value());        
+		this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
     // TODO: improve with no BigInteger
     public void exp(DataWord word) {
-		BigInteger result = value().pow(word.intValue());
-		this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
+		BigInteger result = value().modPow(word.value(), _2_256);
+		this.data = ByteUtil.copyToArray(result);
     }
 
     // TODO: improve with no BigInteger
@@ -226,7 +224,7 @@ public class DataWord implements Comparable<DataWord> {
         }
 
         BigInteger result = value().mod(word.value());
-        this.data = ByteUtil.copyToArray(result.toByteArray(), 32);
+        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
     // TODO: improve with no BigInteger
@@ -238,12 +236,7 @@ public class DataWord implements Comparable<DataWord> {
         }
 
         BigInteger result = sValue().mod(word.sValue());
-        
-        ByteBuffer data    =  ByteBuffer.allocate(32);
-        if (result.signum() == -1)
-            Arrays.fill(data.array(), (byte) 0xFF);
-
-        this.data = ByteUtil.copyToArray(result.toByteArray(), data.array());
+        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
     
     public String toString() {
