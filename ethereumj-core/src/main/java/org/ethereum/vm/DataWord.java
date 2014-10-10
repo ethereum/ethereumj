@@ -230,7 +230,7 @@ public class DataWord implements Comparable<DataWord> {
     // TODO: improve with no BigInteger
     public void sMod(DataWord word) {
 
-        if (word.isZero() || word.isNegative()) {
+        if (word.isZero()) {
             this.and(ZERO);
             return;
         }
