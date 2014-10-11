@@ -86,8 +86,7 @@ public class GitHubJSONTestSuiteTest {
         while (testIterator.hasNext()){
 
             TestCase testCase = testIterator.next();
-
-            System.out.println("Running: " + testCase.getName());
+            
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
             Assert.assertTrue(result.isEmpty());

@@ -215,15 +215,15 @@ public class RepositoryImpl implements Repository {
 
     public AccountState getAccountState(byte[] addr) {
 
-        if (logger.isTraceEnabled())
-            logger.trace("getAccountState: {}", Hex.toHexString(addr));
+        if (logger.isDebugEnabled())
+            logger.debug("Get account state for: [{}]", Hex.toHexString(addr));
 
     	this.validateAddress(addr);
 
         byte[] accountStateRLP = accountStateDB.get(addr);
 
-        if (logger.isTraceEnabled())
-            logger.trace("getAccountState: RLP: {}", Hex.toHexString(accountStateRLP));
+        if (logger.isDebugEnabled())
+            logger.debug("Found account state RLP: [{}]", Hex.toHexString(accountStateRLP));
 
         if (accountStateRLP == null || accountStateRLP.length == 0)
             return null;
@@ -245,15 +245,13 @@ public class RepositoryImpl implements Repository {
         	return null;
         	        			
         if (logger.isDebugEnabled())
-            logger.debug("Contract details RLP: [{}]", Hex.toHexString(accountDetailsRLP));
+            logger.debug("Found contract details RLP: [{}]", Hex.toHexString(accountDetailsRLP));
 
 		ContractDetails details = new ContractDetails(accountDetailsRLP);
 		return details;
 	}
 
 	public BigInteger addBalance(byte[] addr, BigInteger value) {
-
-		this.validateAddress(addr);
     	
 		AccountState state = getAccountState(addr);
 
@@ -263,7 +261,7 @@ public class RepositoryImpl implements Repository {
 		BigInteger newBalance = state.addToBalance(value);
 
 		if (logger.isDebugEnabled())
-			logger.debug("Changing balance: account: [{}] new balance: [{}] delta: [{}]",
+			logger.debug("Changing balance: \n account:\t [{}]\n new balance:\t [{}]\n delta:\t\t [{}]",
 					Hex.toHexString(addr), newBalance.toString(), value);
 
 		accountStateDB.update(addr, state.getEncoded());
@@ -271,29 +269,24 @@ public class RepositoryImpl implements Repository {
 	}
 
     public BigInteger getBalance(byte[] addr) {
-    	this.validateAddress(addr);
         AccountState state = getAccountState(addr);
         if (state == null) return BigInteger.ZERO;
         return state.getBalance();
     }
 
     public BigInteger getNonce(byte[] addr) {
-    	this.validateAddress(addr);
         AccountState state = getAccountState(addr);
         if (state == null) return BigInteger.ZERO;
         return state.getNonce();
     }
 
     public BigInteger increaseNonce(byte[] addr) {
-		
-    	this.validateAddress(addr);
-    	
         AccountState state = getAccountState(addr);
         if (state == null) return BigInteger.ZERO;
         state.incrementNonce();
 
         if (logger.isDebugEnabled())
-            logger.debug("Incerement nonce: account: [{}] new nonce: [{}]",
+            logger.debug("Increment nonce:\n account:\t [{}]\n new nonce:\t [{}]",
                     Hex.toHexString(addr), state.getNonce().longValue());
 
         accountStateDB.update(addr, state.getEncoded());
@@ -303,8 +296,6 @@ public class RepositoryImpl implements Repository {
 	public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
 
         if (key == null) return;
-        this.validateAddress(addr);
-
         AccountState      state = getAccountState(addr);
         ContractDetails   details = getContractDetails(addr);
 
@@ -315,7 +306,7 @@ public class RepositoryImpl implements Repository {
         state.setStateRoot(storageHash);
 
         if (logger.isDebugEnabled())
-            logger.debug("Storage key/value saved: account: [{}]\n key: [{}]  value: [{}]\n new storageHash: [{}]",
+            logger.debug("Storage key/value saved:\n account:\t [{}]\n key:\t\t [{}]\n value:\t\t [{}]\n new hash:\t [{}]",
                     Hex.toHexString(addr),
                     Hex.toHexString(key.getNoLeadZeroesData()),
                     Hex.toHexString(value.getNoLeadZeroesData()),
@@ -328,7 +319,6 @@ public class RepositoryImpl implements Repository {
     public DataWord getStorageValue(byte[] addr, DataWord key) {
 
         if (key == null) return null;
-        this.validateAddress(addr);
 
         AccountState state = getAccountState(addr);
         if (state == null) return null;
@@ -340,8 +330,6 @@ public class RepositoryImpl implements Repository {
     }
 
     public byte[] getCode(byte[] addr) {
-
-    	this.validateAddress(addr);
         ContractDetails details = getContractDetails(addr);
         if (details == null) return null;
         return details.getCode();
@@ -350,15 +338,13 @@ public class RepositoryImpl implements Repository {
     public void saveCode(byte[] addr, byte[] code) {
     	
     	if (code == null) return;
-        this.validateAddress(addr);
-        
-        if (logger.isDebugEnabled())
-            logger.debug("saveCode: \n address: [{}], \n code: [{}]",
-                    Hex.toHexString(addr),
-                    Hex.toHexString(code));
-
         AccountState state = getAccountState(addr);
         if (state == null) return;
+        
+        if (logger.isDebugEnabled())
+            logger.debug("Saving code: \n address:\t [{}], \n code:\t\t [{}]",
+                    Hex.toHexString(addr),
+                    Hex.toHexString(code));
 
         ContractDetails details = getContractDetails(addr);
         details.setCode(code);
@@ -366,29 +352,23 @@ public class RepositoryImpl implements Repository {
         byte[] codeHash = HashUtil.sha3(code);
         state.setCodeHash(codeHash);
 
-        if (logger.isDebugEnabled())
-            logger.debug("Program code saved:\n account: [{}]\n codeHash: [{}] \n code: [{}]",
-                    Hex.toHexString(addr),
-                    Hex.toHexString(codeHash),
-                    Hex.toHexString(code));
-
         accountStateDB.update(addr, state.getEncoded());
         contractDetailsDB.put(addr, details.getEncoded());
-
+        
         if (logger.isDebugEnabled())
-            logger.debug("saveCode: \n accountState: [{}], \n contractDetails: [{}]",
+            logger.debug("Code saved: \n accountstate:\t [{}]\n codeHash:\t [{}]\n details RLP:\t [{}]",
                     Hex.toHexString(state.getEncoded()),
+                    Hex.toHexString(codeHash),
                     Hex.toHexString(details.getEncoded()));
     }
 
     public void delete(byte[] addr) {
-
     	this.validateAddress(addr);
         accountStateDB.delete(addr);
         contractDetailsDB.delete(addr);
     }
 
-    public List<ByteArrayWrapper> dumpKeys(){
+    public List<ByteArrayWrapper> dumpKeys() {
         return stateDB.dumpKeys();
     }
 
@@ -410,10 +390,9 @@ public class RepositoryImpl implements Repository {
         if (txHash != null)
 			fileName = String.format("%07d_%d_%s.dmp", block.getNumber(), txNumber,
 					Hex.toHexString(txHash).substring(0, 8));
-        else{
-
-            fileName = String.format("%07d_c.dmp", block.getNumber());
-        }
+		else {
+			fileName = String.format("%07d_c.dmp", block.getNumber());
+		}
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
@@ -441,9 +420,11 @@ public class RepositoryImpl implements Repository {
         	logger.error(e.getMessage(), e);
         } finally {
             try {
-                if (bw != null)bw.close();
-                if (fw != null)fw.close();
-            } catch (IOException e) {e.printStackTrace();}
+				if (bw != null) bw.close();
+				if (fw != null) fw.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
         }
     }
 
@@ -495,15 +476,11 @@ public class RepositoryImpl implements Repository {
             chainDB.close();
             chainDB = null;
         }
-
         if (this.stateDB != null){
-
             stateDB.close();
             stateDB = null;
         }
-
         if (this.detailsDB != null){
-
             detailsDB.close();
             detailsDB = null;
         }

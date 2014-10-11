@@ -25,7 +25,7 @@ public class TestRunner {
     private Logger logger = LoggerFactory.getLogger("JSONTest");
 
     public List<String> runTestSuite(TestSuite testSuite) {
-
+    	
         Iterator<TestCase> testIterator = testSuite.iterator();
         List<String> resultCollector = new ArrayList<>();
 
@@ -33,7 +33,6 @@ public class TestRunner {
 
             TestCase testCase = testIterator.next();
 
-            logger.info("Running: [{}]", testCase.getName());
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
             resultCollector.addAll(result);
@@ -45,6 +44,7 @@ public class TestRunner {
 
     public List<String> runTestCase(TestCase testCase) {
 
+    	System.out.println("\nRunning test case: " + testCase.getName());
         List<String> results = new ArrayList<>();
 
         Repository repository = new RepositoryImpl();
