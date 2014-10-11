@@ -60,7 +60,7 @@ public class HashUtil {
     public static byte[] calcNewAddr(byte[] addr, byte[] nonce) {
 
         byte[] encSender = RLP.encodeElement(addr);
-        byte[] encNonce = RLP.encodeElement(nonce);
+        byte[] encNonce = RLP.encodeBigInteger(new BigInteger(1, nonce));
         byte[] newAddress = sha3omit12(RLP.encodeList(encSender, encNonce));
 
         return newAddress;
