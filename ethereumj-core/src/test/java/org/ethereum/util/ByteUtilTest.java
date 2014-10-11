@@ -5,6 +5,8 @@ import static org.junit.Assert.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
+import javassist.bytecode.ByteArray;
+
 import org.junit.Test;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -18,33 +20,28 @@ public class ByteUtilTest {
 		assertArrayEquals("test".getBytes(), ByteUtil.appendByte(bytes, b));
 	}
 
-//	@Test
-//	public void testBigIntegerToBytes() {
-//		fail("Not yet implemented");
-//	}
-	
 	@Test
-	public void testToStringDoubleByteArray_1() {
-		String expected = "eth";
-		byte[][] input = new byte[][]{"eth".getBytes()};
-		String result = ByteUtil.toString(input);
-		assertEquals(expected, result);
+	public void testBigIntegerToBytes() {
+		byte[] expecteds = new byte[]{0x0A};
+		BigInteger b = BigInteger.valueOf(16772216);
+		byte[] actuals = ByteUtil.bigIntegerToBytes(b);
+		assertArrayEquals(expecteds, actuals);
 	}
 
 	@Test
-	public void testToStringDoubleByteArray_2() {
-		String expected = "eth shh";
-		byte[][] input = new byte[][]{"eth".getBytes(), "shh".getBytes()};
-		String result = ByteUtil.toString(input);
-		assertEquals(expected, result);
+	public void testBigIntegerToBytesNegative() {
+		byte[] expecteds = new byte[]{0x01};
+		BigInteger b = BigInteger.valueOf(-16772216);
+		byte[] actuals = ByteUtil.bigIntegerToBytes(b);
+		assertArrayEquals(expecteds, actuals);
 	}
 	
-	@Test
-	public void testToStringDoubleByteArray_3() {
-		String expected = "";
-		byte[][] input = new byte[0][];
-		String result = ByteUtil.toString(input);
-		assertEquals(expected, result);
+	@Test 
+	public void testBigIntegerToBytesZero() {
+		byte[] expecteds = new byte[]{0x00};
+		BigInteger b = BigInteger.ZERO;
+		byte[] actuals = ByteUtil.bigIntegerToBytes(b);
+		assertArrayEquals(expecteds, actuals);
 	}
 	
 	@Test
@@ -63,6 +60,22 @@ public class ByteUtilTest {
 	public void testByteArrayToInt() {
 		assertEquals(0, ByteUtil.byteArrayToInt(null));
 		assertEquals(0, ByteUtil.byteArrayToInt(new byte[0]));
+	
+//		byte[] x = new byte[] { 5,1,7,0,8 };
+//		long start = System.currentTimeMillis();
+//		for (int i = 0; i < 100000000; i++) {
+//			 ByteArray.read32bit(x, 0);
+//		}
+//		long end = System.currentTimeMillis();
+//		System.out.println(end - start + "ms");
+//
+//		long start1 = System.currentTimeMillis();
+//		for (int i = 0; i < 100000000; i++) {
+//			new BigInteger(1, x).intValue();
+//		}
+//		long end1 = System.currentTimeMillis();
+//		System.out.println(end1 - start1 + "ms");
+
 	}
 
 	@Test

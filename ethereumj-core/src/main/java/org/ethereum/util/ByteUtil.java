@@ -41,16 +41,20 @@ public class ByteUtil {
     }
 
     /**
-     * Omitting sign indication byte
+     * Omitting sign indication byte.
+     * <br/><br/>
+     * Instead of {@link org.spongycastle.util.BigIntegers#asUnsignedByteArray(BigInteger)} 
+     * <br/>we use this custom method to avoid an empty array in case of BigInteger.ZERO
      *
-     * @param b - any big integer number
-     * @return a byte array representation of this number without a sign byte
+     * @param value - any big integer number. A <code>null</code>-value will return <code>null</code>
+     * @return A byte array without a leading zero byte if present in the signed encoding. 
+     * 		BigInteger.ZERO will return an array with length 1 and byte-value 0.
      */
-    public static byte[] bigIntegerToBytes(BigInteger b) {
-        if (b == null)
+    public static byte[] bigIntegerToBytes(BigInteger value) {
+        if (value == null)
             return null;
-
-        byte[] data = b.toByteArray();
+        
+        byte[] data = value.toByteArray();
 
         if (data.length != 1 && data[0] == 0) {
             byte[] tmp = new byte[data.length - 1];
@@ -65,8 +69,8 @@ public class ByteUtil {
      * 	amount will never be larger than smallest input
      * 
      * @param a - first input
-     * @param b second input
-     * @return number of bytes that match
+     * @param b - second input
+     * @return Number of bytes that match
      */
     public static int matchingNibbleLength(byte[] a, byte[] b) {
         int i = 0;
@@ -100,8 +104,7 @@ public class ByteUtil {
      * @see {@link Hex#toHexString}
      */
     public static String toHexString(byte[] data) {
-        if (data == null) return "";
-        else return Hex.toHexString(data);
+        return data == null ? "" : Hex.toHexString(data);
     }
     
     /**
@@ -177,22 +180,6 @@ public class ByteUtil {
         return bytes;
     }
     
-    /**
-     * Convert an array of byte arrays to a single string
-     * <br/>
-     * Example: "eth" or "eth shh bzz"
-     * 
-     * @return byte arrays as String
-     */
-    public static String toString(byte[][] arrays) {
-    	StringBuilder sb = new StringBuilder();
-		for (byte[] array : arrays) {
-			sb.append(new String(array)).append(" ");
-		}
-		if(sb.length() > 0) sb.deleteCharAt(sb.length()-1);
-		return sb.toString();
-    }
-
     /**
      * @param arg - not more that 32 bits
      * @return - bytes of the value pad with complete to 32 zeroes
@@ -279,26 +266,16 @@ public class ByteUtil {
         return (i >= startIndex || bytes[startIndex] != 0);
     }
 
-    public static byte[] padAddressWithZeroes(byte[] address){
-        if (address.length < 20) {
-            byte[] newAddr = new byte[20];
-            System.arraycopy(address, 0, newAddr, newAddr.length - address.length, address.length);
-            return newAddr;
-        }
-        return address;
-    }
-
     /**
      * Utility function to copy a byte array into a new byte array with given size.
      * If the src length is smaller than the given size, the result will be left-padded 
      * with zeros.
      * 
-     * @param src
-     * @param size
+     * @param value - a BigInteger with a maximum value of 2^256-1
      * @return Byte array of given size with a copy of the </code>src</code>
      */
-    public static byte[] copyToArray(BigInteger result) {
-		byte[] src = ByteUtil.bigIntegerToBytes(result);
+    public static byte[] copyToArray(BigInteger value) {
+		byte[] src = ByteUtil.bigIntegerToBytes(value);
     	byte[] dest = ByteBuffer.allocate(32).array();
     	System.arraycopy(src, 0, dest, dest.length - src.length, src.length);
     	return dest;
