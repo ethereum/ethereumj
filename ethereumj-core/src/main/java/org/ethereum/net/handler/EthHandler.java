@@ -220,7 +220,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 	}
 
     private void sendStatus() {
-    	byte protocolVersion = 33, networkId = 0;
+    	byte protocolVersion = CONFIG.protocolVersion(), networkId = 0;
     	BigInteger totalDifficulty = this.blockchain.getTotalDifficulty();
 		byte[] bestHash = this.blockchain.getLatestBlockHash();
 		StatusMessage msg = new StatusMessage(protocolVersion, networkId,

@@ -21,7 +21,7 @@ public class SystemProperties {
 	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 
 	private static int      DEFAULT_TX_APPROVE_TIMEOUT = 10;
-	private static int      DEFAULT_PROTOCOL_VERSION = 33;
+	private static byte     DEFAULT_PROTOCOL_VERSION = 0;
 	private static String   DEFAULT_DISCOVERY_PEER_LIST = "poc-6.ethdev.com:30303";
 	private static String   DEFAULT_ACTIVE_PEER_IP = "poc-6.ethdev.com";
 	private static int      DEFAULT_ACTIVE_PORT = 30303;
@@ -82,9 +82,9 @@ public class SystemProperties {
 		}
 	}
 
-	public int protocolVersion() {
+	public byte protocolVersion() {
 		if (prop.isEmpty()) return DEFAULT_PROTOCOL_VERSION;
-		return Integer.parseInt(prop.getProperty("protocol.version"));
+		return Byte.parseByte(prop.getProperty("protocol.version"));
 	}
 
 	public boolean peerDiscovery() {
