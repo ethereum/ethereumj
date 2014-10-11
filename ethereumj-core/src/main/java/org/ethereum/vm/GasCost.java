@@ -8,16 +8,28 @@ package org.ethereum.vm;
  */
 public class GasCost {
 
+	/** Cost 1 gas */
 	public static int STEP = 1;
+	/** Cost 0 gas */
 	public static int STOP = 0;
+	/** Cost 0 gas */
 	public static int SUICIDE = 0;
+	/** Cost 20 gas */
 	public static int SLOAD = 20;
+	/** Cost 20 gas */
 	public static int SHA3 = 20;
+	/** Cost 100 gas */
 	public static int SSTORE = 100;
+	/** Cost 20 gas */
 	public static int BALANCE = 20;
+	/** Cost 100 gas */
 	public static int CREATE = 100;
-	public static int CALL = 20;			 
+	/** Cost 20 gas */
+	public static int CALL = 20;
+	/** Cost 1 gas */
 	public static int MEMORY = 1;
+	/** Cost 5 gas */
 	public static int TXDATA = 5;
+	/** Cost 500 gas */
 	public static int TRANSACTION = 500;
 }
