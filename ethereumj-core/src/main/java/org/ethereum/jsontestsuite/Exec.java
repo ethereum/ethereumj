@@ -60,12 +60,12 @@ public class Exec {
         if (code != null && code.length() > 2)
             this.code    = Hex.decode(code.substring(2));
         else
-            this.code = new byte[0];
+            this.code = ByteUtil.EMPTY_BYTE_ARRAY;
 
         if (data != null && data.length() > 2)
             this.data    = Hex.decode(data.substring(2));
         else
-            this.data = new byte[0];
+            this.data = ByteUtil.EMPTY_BYTE_ARRAY;
 
         this.gas      = ByteUtil.bigIntegerToBytes(new BigInteger(gas));
         this.gasPrice = ByteUtil.bigIntegerToBytes(new BigInteger(gasPrice));

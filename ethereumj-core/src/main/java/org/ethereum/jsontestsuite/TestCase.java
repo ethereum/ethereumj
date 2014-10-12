@@ -65,7 +65,7 @@ public class TestCase {
             if (outString != null && outString.length() > 2)
                 this.out    = Hex.decode(outString.substring(2));
             else
-                this.out = new byte[0];
+                this.out = ByteUtil.EMPTY_BYTE_ARRAY;
 
             for (Object key : preJSON.keySet()){
 

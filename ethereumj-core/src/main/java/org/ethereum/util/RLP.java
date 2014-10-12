@@ -649,7 +649,7 @@ public class RLP {
 				}
 				// null item
 				if ((msgData[pos] & 0xFF) == OFFSET_SHORT_ITEM) {
-					byte[] item = new byte[0];
+					byte[] item = ByteUtil.EMPTY_BYTE_ARRAY;
 					RLPItem rlpItem = new RLPItem(item);
 					rlpList.add(rlpItem);
 					pos += 1;
@@ -741,7 +741,7 @@ public class RLP {
 			if (inputArray.size() == 0) {
 				return encodeLength(inputArray.size(), OFFSET_SHORT_LIST);
 			}
-			byte[] output = new byte[0];
+			byte[] output = ByteUtil.EMPTY_BYTE_ARRAY;
 			for (Object object : inputArray) {
 				output = concatenate(output, encode(object));
 			}
@@ -916,13 +916,13 @@ public class RLP {
 			return inputString.getBytes();
 		} else if(input instanceof Long) {
 			Long inputLong = (Long) input;	
-			return (inputLong == 0) ? new byte[0] : asUnsignedByteArray(BigInteger.valueOf(inputLong));
+			return (inputLong == 0) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(inputLong));
 		} else if(input instanceof Integer) {
 			Integer inputInt = (Integer) input;	
-			return (inputInt == 0) ? new byte[0] : asUnsignedByteArray(BigInteger.valueOf(inputInt.intValue()));
+			return (inputInt == 0) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(inputInt.intValue()));
 		} else if(input instanceof BigInteger) {
 			BigInteger inputBigInt = (BigInteger) input;
-			return (inputBigInt == BigInteger.ZERO) ? new byte[0] : asUnsignedByteArray(inputBigInt);
+			return (inputBigInt == BigInteger.ZERO) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(inputBigInt);
 		} else if (input instanceof Value) {
 			Value val = (Value) input;
 			return toBytes(val.asObj());

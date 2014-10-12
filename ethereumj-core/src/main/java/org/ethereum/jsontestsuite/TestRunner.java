@@ -49,6 +49,7 @@ public class TestRunner {
 
         Repository repository = new RepositoryImpl();
 
+        System.out.println("--------- PRE ---------");
         /* 1. Store pre-exist accounts - Pre */
         for (ByteArrayWrapper key : testCase.getPre().keySet()) {
 
@@ -69,7 +70,7 @@ public class TestRunner {
         byte[] address     = exec.getAddress();
         byte[] origin      = exec.getOrigin();
         byte[] caller      = exec.getCaller();
-        byte[] balance     =  ByteUtil.bigIntegerToBytes(repository.getBalance(exec.getAddress()));
+        byte[] balance     = ByteUtil.bigIntegerToBytes(repository.getBalance(exec.getAddress()));
         byte[] gasPrice    = exec.getGasPrice();
         byte[] gas         = exec.getGas();
         byte[] callValue   = exec.getValue();
@@ -91,14 +92,14 @@ public class TestRunner {
         Program program = new Program(exec.getCode(), programInvoke);
 
         try {
+            System.out.println("--------  EXEC --------");
             while(!program.isStopped())
                 vm.step(program);
-
-            System.out.println();
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }
 
+        System.out.println("--------- POST --------");
         /* 5. Assert Post values */
         for (ByteArrayWrapper key : testCase.getPost().keySet()) {
 
@@ -275,7 +276,7 @@ public class TestRunner {
 
         // assert out
         byte[] expectedHReturn = testCase.getOut();
-        byte[] actualHReturn = new byte[0];
+        byte[] actualHReturn = ByteUtil.EMPTY_BYTE_ARRAY;
         if (program.getResult().getHReturn() != null) {
             actualHReturn = program.getResult().getHReturn().array();
         }

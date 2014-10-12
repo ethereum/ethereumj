@@ -41,7 +41,7 @@ public class AccountState {
         if (code != null && code.length() > 2)
             this.code    = Hex.decode(code.substring(2));
         else
-            this.code = new byte[0];
+            this.code = ByteUtil.EMPTY_BYTE_ARRAY;
 
         this.nonce   = new BigInteger(nonce).toByteArray();
 
@@ -61,7 +61,7 @@ public class AccountState {
                 if (keyS != null && keyS.length() > 2)
                     data    = Hex.decode(keyS);
                 else
-                    data = new byte[0];
+                    data 	= ByteUtil.EMPTY_BYTE_ARRAY;
                 key = new ByteArrayWrapper(data);
             }
 

@@ -38,14 +38,12 @@ public class CallCreate {
         if (data != null && data.length() > 2)
             this.data    = Hex.decode(data.substring(2));
         else
-            this.data = new byte[0];
-
+            this.data = ByteUtil.EMPTY_BYTE_ARRAY;
 
         this.destination = Hex.decode(destination);
         this.gasLimit    = ByteUtil.bigIntegerToBytes(new BigInteger(gasLimit));
         this.value       = ByteUtil.bigIntegerToBytes(new BigInteger(value));
     }
-
 
     public byte[] getData() {
         return data;

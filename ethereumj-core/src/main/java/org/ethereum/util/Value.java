@@ -81,7 +81,7 @@ public class Value {
         } else if(isString()) {
             return asString().getBytes();
         }
-        return new byte[0];
+        return ByteUtil.EMPTY_BYTE_ARRAY;
     }
 
     public int[] asSlice() {
