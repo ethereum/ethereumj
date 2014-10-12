@@ -5,7 +5,7 @@
 	<artifactId>ethereumj-studio</artifactId>
 	<packaging>jar</packaging>
 	<version>0.6.0</version>
-	<name>EthereumJ</name>
+	<name>EthereumJ Studio</name>
 	<url>http://www.ethereumj.org</url>
 
 <!--
