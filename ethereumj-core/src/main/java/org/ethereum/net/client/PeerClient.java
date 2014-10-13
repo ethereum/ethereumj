@@ -8,9 +8,10 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.PeerListener;
+import org.ethereum.net.handler.MessageDecoder;
+import org.ethereum.net.handler.MessageEncoder;
 import org.ethereum.net.handler.P2pHandler;
-import org.ethereum.net.handler.PacketDecoder;
-import org.ethereum.net.handler.PacketEncoder;
+import org.ethereum.net.peerdiscovery.PeerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +31,13 @@ public class PeerClient {
     private PeerListener peerListener;
     private P2pHandler p2pHandler;
 
+    private boolean peerDiscoveryMode = false;
+
     public PeerClient() {
+    }
+
+    public PeerClient(boolean peerDiscoveryMode){
+        this.peerDiscoveryMode = peerDiscoveryMode;
     }
 
     public PeerClient(PeerListener peerListener) {
@@ -44,7 +51,10 @@ public class PeerClient {
         if (peerListener != null)
         	peerListener.console("Connecting to: " + host + ":" + port);
 
-        p2pHandler = new P2pHandler(peerListener);
+        if (peerDiscoveryMode)
+            p2pHandler = new P2pHandler(peerDiscoveryMode);
+        else
+            p2pHandler = new P2pHandler(peerListener);
         
         try {
             Bootstrap b = new Bootstrap();
@@ -61,8 +71,8 @@ public class PeerClient {
                 public void initChannel(NioSocketChannel ch) throws Exception {
 					ch.pipeline().addLast("readTimeoutHandler",
 							new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-					ch.pipeline().addLast(new PacketEncoder());
-					ch.pipeline().addLast(new PacketDecoder());
+					ch.pipeline().addLast(new MessageEncoder());
+					ch.pipeline().addLast(new MessageDecoder());
 					ch.pipeline().addLast(p2pHandler);
 
                     // limit the size of receiving buffer to 1024
@@ -86,10 +96,10 @@ public class PeerClient {
 
         	p2pHandler.killTimers();
 
-            final Set<Peer> peers =  WorldManager.getInstance().getPeerDiscovery().getPeers();
+            final Set<PeerData> peers =  WorldManager.getInstance().getPeerDiscovery().getPeers();
 
 			synchronized (peers) {
-				for (Peer peer : peers) {
+				for (PeerData peer : peers) {
 					if (host.equals(peer.getAddress().getHostAddress())
 							&& port == peer.getPort())
 						peer.setOnline(false);

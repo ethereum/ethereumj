@@ -4,7 +4,7 @@ import java.math.BigInteger;
 import java.util.Map;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockQueue;
+import org.ethereum.net.BlockQueue;
 import org.ethereum.core.Genesis;
 
 public interface Blockchain  {

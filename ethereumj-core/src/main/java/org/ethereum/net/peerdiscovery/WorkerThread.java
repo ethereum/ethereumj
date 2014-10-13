@@ -1,5 +1,7 @@
-package org.ethereum.net.client;
+package org.ethereum.net.peerdiscovery;
 
+import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.peerdiscovery.PeerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,11 +15,11 @@ public class WorkerThread implements Runnable {
 
 	private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-	private Peer peer;
+	private PeerData peer;
 	private PeerClient clientPeer;
 	private ThreadPoolExecutor poolExecutor;
 
-	public WorkerThread(Peer peer, ThreadPoolExecutor poolExecutor) {
+	public WorkerThread(PeerData peer, ThreadPoolExecutor poolExecutor) {
 		this.peer = peer;
 		this.poolExecutor = poolExecutor;
 	}
@@ -34,7 +36,7 @@ public class WorkerThread implements Runnable {
 	private void processCommand() {
 
 		try {
-			clientPeer = new PeerClient();
+			clientPeer = new PeerClient(true);
 			clientPeer.connect(peer.getAddress().getHostAddress(), peer.getPort());
 			peer.setOnline(true);
 		} catch (Throwable e) {
@@ -46,6 +48,7 @@ public class WorkerThread implements Runnable {
 			logger.info("Peer: " + peer.toString() + " is "
 					+ (peer.isOnline() ? "online" : "offline"));
 			peer.setLastCheckTime(System.currentTimeMillis());
+
 		}
 	}
 

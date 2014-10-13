@@ -1,4 +1,4 @@
-package org.ethereum.net.client;
+package org.ethereum.net.peerdiscovery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

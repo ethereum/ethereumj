@@ -80,7 +80,7 @@ public class HelloMessage extends P2pMessage {
 		byte[] clientId = RLP.encodeString(this.clientId);
 		byte[][] capabilities = new byte[this.capabilities.size()][];
 		for (int i = 0; i < this.capabilities.size(); i++) {
-			capabilities[i] = RLP.encodeElement(this.capabilities.get(i).getBytes());
+			capabilities[i] = RLP.encode(this.capabilities.get(i).getBytes());
 		}
 		byte[] capabilityList = RLP.encodeList(capabilities);
 		byte[] peerPort = RLP.encodeInt(this.listenPort);

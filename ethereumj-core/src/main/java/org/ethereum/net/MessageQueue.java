@@ -26,12 +26,12 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class MessageQueue {
 
-	private Logger logger = LoggerFactory.getLogger("wire");
+	private Logger logger = LoggerFactory.getLogger("net");
 
 	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
 	private PeerListener listener;
 	private ChannelHandlerContext ctx = null;
-	private final Timer timer = new Timer();
+	private final Timer timer = new Timer("MessageQueue");
 
 	public MessageQueue(ChannelHandlerContext ctx, PeerListener listener) {
 		this.ctx = ctx;
@@ -95,4 +95,8 @@ public class MessageQueue {
 			}
 		}
 	}
+
+    public void close(){
+        timer.purge();
+    }
 }

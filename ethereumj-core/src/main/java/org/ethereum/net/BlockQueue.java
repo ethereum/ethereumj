@@ -1,8 +1,9 @@
-package org.ethereum.core;
+package org.ethereum.net;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

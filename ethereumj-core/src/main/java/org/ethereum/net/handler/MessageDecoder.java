@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * The PacketDecoder parses every valid Ethereum packet to a Message object
  */
-public class PacketDecoder extends ByteToMessageDecoder {
+public class MessageDecoder extends ByteToMessageDecoder {
 
 	private Logger logger = LoggerFactory.getLogger("wire");
 
@@ -43,6 +43,7 @@ public class PacketDecoder extends ByteToMessageDecoder {
 			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
 
 		out.add(msg);
+        in.markReaderIndex();
     }
 	
 	private boolean isValidEthereumPacket(ByteBuf in) {
@@ -64,7 +65,7 @@ public class PacketDecoder extends ByteToMessageDecoder {
 			logger.error("Abandon garbage, wrong sync token: [{}]", syncToken);
 		}
 
-		// Don't have the full packet yet
+		// Don't have the full message yet
         long msgSize = in.getInt(in.readerIndex());
 		if (msgSize > in.readableBytes()) {
 			logger.trace("msg decode: magicBytes: [{}], readBytes: [{}] / msgSize: [{}] ",
@@ -72,6 +73,7 @@ public class PacketDecoder extends ByteToMessageDecoder {
 			in.resetReaderIndex();
 			return false;
 		}
+
 		logger.trace("Message fully constructed: readBytes: [{}] / msgSize: [{}]", in.readableBytes(), msgSize);
 		return true;
 	}

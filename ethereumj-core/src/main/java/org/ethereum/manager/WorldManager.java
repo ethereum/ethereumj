@@ -13,7 +13,7 @@ import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.client.PeerDiscovery;
+import org.ethereum.net.peerdiscovery.PeerDiscovery;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.
@@ -81,7 +81,7 @@ public class WorldManager {
         if (peerDiscovery.isStarted())
             peerDiscovery.stop();
     }
-    
+
     public PeerDiscovery getPeerDiscovery() {
     	return peerDiscovery;
     }

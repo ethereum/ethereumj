@@ -15,7 +15,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * The PacketEncoder encodes the message and adds a sync token to every packet.
  */
-public class PacketEncoder extends MessageToByteEncoder<Message> {
+public class MessageEncoder extends MessageToByteEncoder<Message> {
 
 	private Logger logger = LoggerFactory.getLogger("wire");
 

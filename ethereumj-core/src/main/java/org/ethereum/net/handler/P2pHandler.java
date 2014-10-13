@@ -7,6 +7,7 @@ import static org.ethereum.net.message.StaticMessages.GET_PEERS_MESSAGE;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -17,8 +18,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
-import org.ethereum.net.client.Peer;
-import org.ethereum.net.client.PeerDiscovery;
+import org.ethereum.net.peerdiscovery.PeerData;
 import org.ethereum.net.message.DisconnectMessage;
 import org.ethereum.net.message.HelloMessage;
 import org.ethereum.net.message.P2pMessage;
@@ -43,19 +43,24 @@ import org.slf4j.LoggerFactory;
 @ChannelHandler.Sharable
 public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
-	private final static Logger logger = LoggerFactory.getLogger("wire");
+	private final static Logger logger = LoggerFactory.getLogger("net");
 
 	private final Timer timer = new Timer("MessageTimer");
 
-	private PeerDiscovery peerDiscovery;
 	private PeerListener peerListener;
 	
 	private MessageQueue msgQueue = null;
 	private boolean tearDown = false;
 
+    private boolean peerDiscoveryMode = false;
+
 	public P2pHandler() {
-		this.peerDiscovery = WorldManager.getInstance().getPeerDiscovery();
 	}
+
+    public P2pHandler(boolean peerDiscoveryMode) {
+        super();
+        this.peerDiscoveryMode = peerDiscoveryMode;
+    }
 
 	public P2pHandler(PeerListener peerListener) {
 		this();
@@ -77,7 +82,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 		switch (msg.getCommand()) {
 			case HELLO:
 				msgQueue.receivedMessage(msg);
-				setHandshake((HelloMessage) msg, ctx);
+                if (!peerDiscoveryMode)
+				    setHandshake((HelloMessage) msg, ctx);
 				break;
 			case DISCONNECT:
 				msgQueue.receivedMessage(msg);
@@ -96,7 +102,14 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 			case PEERS:
 				msgQueue.receivedMessage(msg);
 				processPeers(ctx, (PeersMessage) msg);
-				break;
+
+                if (peerDiscoveryMode){
+                    msgQueue.sendMessage(new DisconnectMessage(ReasonCode.REQUESTED));
+                    killTimers();
+                    ctx.close().sync();
+                    ctx.disconnect().sync();
+                }
+                break;
 			default:
 				ctx.fireChannelRead(msg);
 				break;
@@ -116,11 +129,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     }
         
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
-    	peerDiscovery.addPeers(peersMessage.getPeers());
+//        WorldManager.getInstance().getPeerDiscovery().addPeers(peersMessage.getPeers());
 	}
-    
+
     private void sendPeers() {
-    	PeersMessage msg = new PeersMessage(peerDiscovery.getPeers());
+        Set<PeerData> peers = WorldManager.getInstance().getPeerDiscovery().getPeers();
+    	PeersMessage msg = new PeersMessage(peers);
     	msgQueue.sendMessage(msg);
     }
     
@@ -136,7 +150,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 			InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
 			int port = msg.getListenPort();
-			Peer confirmedPeer = new Peer(address, port, msg.getPeerId());
+			PeerData confirmedPeer = new PeerData(address, port, msg.getPeerId());
 			confirmedPeer.setOnline(true);
 			confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
 			WorldManager.getInstance().getPeerDiscovery().getPeers().add(confirmedPeer);
@@ -156,11 +170,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             public void run() {
             	msgQueue.sendMessage(GET_PEERS_MESSAGE);
             }
-        }, 2000, 25000);
+        }, 500, 25000);
     }
 	
     public void killTimers(){
         timer.cancel();
         timer.purge();
+        msgQueue.close();
+
     }
 }

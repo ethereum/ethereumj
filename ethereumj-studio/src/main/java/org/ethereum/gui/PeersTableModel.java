@@ -10,7 +10,7 @@ import javax.swing.table.AbstractTableModel;
 
 
 import org.ethereum.geo.IpGeoDB;
-import org.ethereum.net.client.Peer;
+import org.ethereum.net.peerdiscovery.PeerData;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;
@@ -110,11 +110,11 @@ public class PeersTableModel extends AbstractTableModel {
         synchronized (peerInfoList) {
             peerInfoList.clear();
 
-            final Set<Peer> peers = UIEthereumManager.ethereum.getPeers();
+            final Set<PeerData> peers = UIEthereumManager.ethereum.getPeers();
 
             synchronized (peers){
 
-                for (Peer peer : peers) {
+                for (PeerData peer : peers) {
                     InetAddress addr = peer.getAddress();
                     Location cr = IpGeoDB.getLocationForIp(addr);
                     peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getLastCheckTime()));

@@ -1,4 +1,4 @@
-package org.ethereum.net.client;
+package org.ethereum.net.peerdiscovery;
 
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * This class models a peer in the network
  */
-public class Peer {
+public class PeerData {
 
 	private InetAddress address;
 	private int port;
@@ -21,7 +21,7 @@ public class Peer {
 	private transient boolean isOnline = false;
 	private transient long lastCheckTime = 0;
 
-	public Peer(InetAddress ip, int port, String peerId) {
+	public PeerData(InetAddress ip, int port, String peerId) {
 		this.address = ip;
 		this.port = port;
 		this.peerId = peerId;
@@ -84,7 +84,7 @@ public class Peer {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null) return false;
-		Peer peerData = (Peer) obj;
+		PeerData peerData = (PeerData) obj;
 		return peerData.peerId.equals(this.peerId)
 				|| this.getAddress().equals(peerData.getAddress());
 	}

@@ -2,10 +2,9 @@ package org.ethereum.facade;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
-import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.client.Peer;
+import org.ethereum.net.peerdiscovery.PeerData;
 
 import java.net.InetAddress;
 import java.util.Set;
@@ -25,7 +24,7 @@ public interface Ethereum {
      * @param excludePeer - peer to exclude
      * @return online peer if available otherwise null
      */
-    public Peer findOnlinePeer(Peer excludePeer) ;
+    public PeerData findOnlinePeer(PeerData excludePeer) ;
 
     /**
      * Find an online peer but not from excluded list
@@ -33,12 +32,12 @@ public interface Ethereum {
      * @param excludePeerSet - peers to exclude
      * @return online peer if available otherwise null
      */
-    public Peer findOnlinePeer(Set<Peer> excludePeerSet) ;
+    public PeerData findOnlinePeer(Set<PeerData> excludePeerSet) ;
 
     /**
      * @return online peer if available
      */
-    public Peer findOnlinePeer();
+    public PeerData findOnlinePeer();
 
 
     /**
@@ -46,7 +45,7 @@ public interface Ethereum {
      *
      * @return online peer.
      */
-    public Peer waitForOnlinePeer();
+    public PeerData waitForOnlinePeer();
 
     /*
      *
@@ -59,7 +58,7 @@ public interface Ethereum {
      *    }
      *
      */
-    public Set<Peer> getPeers();
+    public Set<PeerData> getPeers();
 
     public void startPeerDiscovery();
     public void stopPeerDiscovery();

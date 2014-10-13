@@ -9,10 +9,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.ethereum.net.client.Peer;
+import org.ethereum.net.peerdiscovery.PeerData;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
@@ -25,13 +24,13 @@ public class PeersMessage extends P2pMessage {
 
 	private boolean parsed = false;
 
-	private Set<Peer> peers;
+	private Set<PeerData> peers;
 
 	public PeersMessage(byte[] payload) {
 		super(payload);
 	}
 
-	public PeersMessage(Set<Peer> peers) {
+	public PeersMessage(Set<PeerData> peers) {
 		this.peers = peers;
 		parsed = true;
 	}
@@ -43,14 +42,16 @@ public class PeersMessage extends P2pMessage {
 		peers = new LinkedHashSet<>();
 		for (int i = 1; i < paramsList.size(); ++i) {
 			RLPList peerParams = (RLPList) paramsList.get(i);
-			byte[] ipBytes = ((RLPItem) peerParams.get(0)).getRLPData();
-			byte[] portBytes = ((RLPItem) peerParams.get(1)).getRLPData();
-			byte[] peerId = ((RLPItem) peerParams.get(2)).getRLPData();
+			byte[] ipBytes = peerParams.get(0).getRLPData();
+			byte[] portBytes = peerParams.get(1).getRLPData();
+			byte[] peerIdRaw = peerParams.get(2).getRLPData();
 
 			try {
 				int peerPort = ByteUtil.byteArrayToInt(portBytes);
 				InetAddress address = InetAddress.getByAddress(ipBytes);
-				Peer peer = new Peer(address, peerPort, Hex.toHexString(peerId));
+
+                String peerId = peerIdRaw == null ? "" :  Hex.toHexString(peerIdRaw);
+				PeerData peer = new PeerData(address, peerPort, peerId);
 				peers.add(peer);
 			} catch (UnknownHostException e) {
 				throw new RuntimeException("Malformed ip", e);
@@ -62,7 +63,7 @@ public class PeersMessage extends P2pMessage {
 	private void encode() {
 		byte[][] encodedByteArrays = new byte[this.peers.size() + 1][];
 		encodedByteArrays[0] = RLP.encodeByte(this.getCommand().asByte());
-		List<Peer> peerList = new ArrayList<>(this.peers);
+		List<PeerData> peerList = new ArrayList<>(this.peers);
 		for (int i = 0; i < peerList.size(); i++) {
 			encodedByteArrays[i + 1] = peerList.get(i).getEncoded();
 		}
@@ -80,7 +81,7 @@ public class PeersMessage extends P2pMessage {
 		return encoded;
 	}
 
-	public Set<Peer> getPeers() {
+	public Set<PeerData> getPeers() {
 		if (!parsed) this.parse();
 		return peers;
 	}
@@ -94,7 +95,7 @@ public class PeersMessage extends P2pMessage {
 		if (!parsed) this.parse();
 
 		StringBuffer sb = new StringBuffer();
-		for (Peer peerData : peers) {
+		for (PeerData peerData : peers) {
 			sb.append("\n       ").append(peerData);
 		}
 		return "[" + this.getCommand().name() + sb.toString() + "]";

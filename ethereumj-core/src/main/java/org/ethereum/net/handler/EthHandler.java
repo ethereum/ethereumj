@@ -17,7 +17,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockQueue;
+import org.ethereum.net.BlockQueue;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
@@ -220,7 +220,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 	}
 
     private void sendStatus() {
-    	byte protocolVersion = CONFIG.protocolVersion(), networkId = 0;
+    	byte protocolVersion = 33, networkId = 0;
     	BigInteger totalDifficulty = this.blockchain.getTotalDifficulty();
 		byte[] bestHash = this.blockchain.getLatestBlockHash();
 		StatusMessage msg = new StatusMessage(protocolVersion, networkId,

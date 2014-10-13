@@ -1,4 +1,4 @@
-package org.ethereum.net.client;
+package org.ethereum.net.peerdiscovery;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
