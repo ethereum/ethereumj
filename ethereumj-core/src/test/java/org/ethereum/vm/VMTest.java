@@ -3166,7 +3166,7 @@ public class VMTest {
         Program program = new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE2" + //  -30
                                                  "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
                                                  "07"), new ProgramInvokeMockImpl());
-        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
+        String s_expected_1 = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEC";
 
         vm.step(program);
         vm.step(program);
@@ -3192,12 +3192,6 @@ public class VMTest {
         DataWord item1 = program.stackPop();
         program.getResult().getRepository().close();
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
-    }
-
-    @Test
-    public void testSMOD_x() {
-    	int x = -170 % 30;
-    	System.out.println(x);
     }
     
     @Test(expected=StackTooSmallException.class) // SMOD OP mal
