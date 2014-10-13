@@ -68,7 +68,7 @@ public class HelloMessageTest {
     
     @Test /* HelloMessage 3 from new */
     public void testFromNew() {
-        String helloAnnouncement = "Ethereum(J)/0.6.0/dev/Windows/Java";
+        String helloAnnouncement = "Ethereum(J)/0.6.1/dev/Windows/Java";
         byte p2pVersion = 0x00;
         List<String> capabilities = new ArrayList<>(Arrays.asList("eth", "shh"));
         int listenPort = 30303;
