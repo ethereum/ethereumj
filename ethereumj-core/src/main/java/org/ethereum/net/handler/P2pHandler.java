@@ -129,7 +129,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     }
         
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
-//        WorldManager.getInstance().getPeerDiscovery().addPeers(peersMessage.getPeers());
+        WorldManager.getInstance().getPeerDiscovery().addPeers(peersMessage.getPeers());
 	}
 
     private void sendPeers() {
