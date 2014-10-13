@@ -5,8 +5,6 @@ import static org.junit.Assert.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
-import javassist.bytecode.ByteArray;
-
 import org.junit.Test;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
@@ -22,7 +20,7 @@ public class ByteUtilTest {
 
 	@Test
 	public void testBigIntegerToBytes() {
-		byte[] expecteds = new byte[]{0x0A};
+		byte[] expecteds = new byte[]{(byte) 0xff, (byte) 0xec, 0x78};
 		BigInteger b = BigInteger.valueOf(16772216);
 		byte[] actuals = ByteUtil.bigIntegerToBytes(b);
 		assertArrayEquals(expecteds, actuals);
@@ -30,7 +28,7 @@ public class ByteUtilTest {
 
 	@Test
 	public void testBigIntegerToBytesNegative() {
-		byte[] expecteds = new byte[]{0x01};
+		byte[] expecteds = new byte[]{(byte) 0xff, 0x0, 0x13, (byte) 0x88};
 		BigInteger b = BigInteger.valueOf(-16772216);
 		byte[] actuals = ByteUtil.bigIntegerToBytes(b);
 		assertArrayEquals(expecteds, actuals);
