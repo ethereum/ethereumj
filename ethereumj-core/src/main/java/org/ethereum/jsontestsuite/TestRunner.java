@@ -82,6 +82,10 @@ public class TestRunner {
         byte[] difficulty  = env.getCurrentDifficlty();
         long gaslimit      = new BigInteger(env.getCurrentGasLimit()).longValue();
 
+        // Origin and caller need to exist in order to be able to execute
+        repository.createAccount(origin);
+        repository.createAccount(caller);
+        
         ProgramInvoke programInvoke = new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, msgData, lastHash, coinbase,
                 timestamp, number, difficulty, gaslimit, repository, true);
