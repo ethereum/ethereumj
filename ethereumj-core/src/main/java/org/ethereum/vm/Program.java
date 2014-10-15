@@ -751,6 +751,9 @@ public class Program {
 	public class OutOfGasException extends RuntimeException {
 	}
 	
+    @SuppressWarnings("serial")
+    public class IllegalOperationException extends RuntimeException {}
+	
 	@SuppressWarnings("serial")
 	public class StackTooSmallException extends RuntimeException {
 		public StackTooSmallException(String message) {

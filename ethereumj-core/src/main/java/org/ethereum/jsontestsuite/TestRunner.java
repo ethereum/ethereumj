@@ -298,7 +298,7 @@ public class TestRunner {
         if (!expectedGas.equals(actualGas)) {
 
             String output =
-                    String.format("Gas usage is different. Expected gas usage: [ %s ], actual gas usage: [ %s ]",
+                    String.format("Gas remaining is different. Expected gas remaining: [ %s ], actual gas remaining: [ %s ]",
                             expectedGas.toString() ,
                             actualGas.toString());
             logger.info(output);

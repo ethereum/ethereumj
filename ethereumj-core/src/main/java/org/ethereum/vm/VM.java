@@ -80,7 +80,7 @@ public class VM {
             OpCode op = OpCode.code(program.getCurrentOp());
             
             if (op == null)
-            	throw new IllegalOperationException();
+            	throw program.new IllegalOperationException();
             
             program.setLastOp(op.val());
 
@@ -1080,7 +1080,4 @@ public class VM {
 					gasBefore, gasCost, memWords);    	
     	}
     }
-    
-    @SuppressWarnings("serial")
-    public class IllegalOperationException extends RuntimeException {}
 }

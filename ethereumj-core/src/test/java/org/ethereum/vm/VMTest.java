@@ -5,7 +5,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.Program.OutOfGasException;
 import org.ethereum.vm.Program.PcOverflowException;
 import org.ethereum.vm.Program.StackTooSmallException;
-import org.ethereum.vm.VM.IllegalOperationException;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -3336,7 +3335,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
     
-    @Test(expected=IllegalOperationException.class) // INVALID OP
+    @Test(expected=Program.IllegalOperationException.class) // INVALID OP
     public void testINVALID_1() {
 
         VM vm = new VM();
