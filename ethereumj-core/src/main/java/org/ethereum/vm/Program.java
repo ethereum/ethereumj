@@ -14,9 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.Stack;
 
 /**
@@ -30,14 +28,6 @@ public class Program {
     private Logger gasLogger = LoggerFactory.getLogger("gas");
     private int invokeHash;
     private ProgramListener listener;
-
-    /**
-     * Instead of immediately executing a POST message call, 
-     * it is added to a post-queue, to be executed after everything else 
-	 * (including prior-created posts) within the scope 
-	 * of that transaction execution is executed.
-     */
-    private static Queue<MessageCall> messageQueue = new LinkedList<>();
 
     Stack<DataWord> stack = new Stack<>();
     ByteBuffer memory = null;
@@ -344,10 +334,6 @@ public class Program {
             }
         }
     }
-    
-    public Queue<MessageCall> getMessageQueue() {
-    	return messageQueue;
-    }
 
     /**
      * That method is for internal code invocations
@@ -378,7 +364,7 @@ public class Program {
         if (this.getGas().longValue() - msg.getGas().longValue() < 0 ) {
             logger.info("No gas for the internal call, \n" +
                     "fromAddress={}, codeAddress={}",
-                    Hex.toHexString(senderAddress), Hex.toHexString(contextAddress));
+                    Hex.toHexString(senderAddress), Hex.toHexString(codeAddress));
             this.stackPushZero();
             return;
         }
@@ -476,6 +462,10 @@ public class Program {
         if (afterSpend < 0)
             throw new OutOfGasException();
         result.spendGas(gasValue);
+    }
+    
+    public void spendAllGas() {
+    	spendGas(invokeData.getGas().longValue() - result.getGasUsed(), "Spending all remaining");
     }
 
     public void refundGas(long gasValue, String cause) {

@@ -152,7 +152,7 @@ public class VM {
         			program.stackRequire(4);
         			newMemSize = memNeeded(stack.get(stack.size()-2), stack.get(stack.size()-4));
         			break;
-        		case CALL: case CALLSTATELESS:
+        		case CALL: case CALLCODE:
         			program.stackRequire(7);
         			gasCost = GasCost.CALL;
         			DataWord callGasWord = stack.get(stack.size()-1);
@@ -163,10 +163,6 @@ public class VM {
         			BigInteger in = memNeeded(stack.get(stack.size()-4), stack.get(stack.size()-5)); // in offset+size
     				BigInteger out = memNeeded(stack.get(stack.size()-6), stack.get(stack.size()-7)); // out offset+size
         			newMemSize = in.max(out);
-        			break;
-        		case POST:
-        			program.stackRequire(5);
-        			// TODO calculate POST gas cost
         			break;
         		case CREATE:
         			program.stackRequire(3);
@@ -804,6 +800,8 @@ public class VM {
                 case JUMP:{
                 	program.stackRequire(1);
                 	DataWord pos  =  program.stackPop();
+//        			if (!pos.equals(DataWord.ZERO) && OpCode.code(program.getCurrentOp()) != OpCode.JUMPDEST)
+//        				throw new BadJumpDestinationException();
 
                     if (logger.isInfoEnabled())
                         hint = "~> " + pos.value();
@@ -814,10 +812,12 @@ public class VM {
                 	program.stackRequire(2);
                 	DataWord pos   =  program.stackPop();
                     DataWord cond  =  program.stackPop();
-
+//                    if (!pos.isZero() && OpCode.code(program.getCurrentOp()) != OpCode.JUMPDEST)
+//        				throw new BadJumpDestinationException();
+        			
                     if (!cond.isZero()) {
                         program.setPC(pos);
-                    } else{
+                    } else {
                         program.step();
                     }
 
@@ -867,6 +867,8 @@ public class VM {
 
                     program.stackPush(data);
                 }	break;
+                case JUMPDEST:{
+                }	break;
                 case CREATE:{
                 	program.stackRequire(3);
                 	DataWord value      =  program.stackPop();
@@ -883,7 +885,7 @@ public class VM {
 
                     program.step();
                 }	break;
-                case CALL: case CALLSTATELESS: {
+                case CALL: case CALLCODE: {
                 	DataWord gas        =  program.stackPop();
                     DataWord codeAddress  =  program.stackPop();
                     DataWord value      =  program.stackPop();
@@ -910,32 +912,6 @@ public class VM {
 							gas, codeAddress, value, inDataOffs, inDataSize,
 							outDataOffs, outDataSize);
                     program.callToAddress(msg);
-
-                    program.step();
-                }	break;
-                case POST:{
-                	program.stackRequire(5);
-                	DataWord gas        =  program.stackPop();
-                    DataWord codeAddress=  program.stackPop();
-                    DataWord value      =  program.stackPop();
-
-                    DataWord inDataOffs =  program.stackPop();
-                    DataWord inDataSize =  program.stackPop();
-                    
-                    if (logger.isInfoEnabled()) {
-                    	hint = "addr: " + Hex.toHexString(codeAddress.getLast20Bytes()) 
-                    			+ " gas: " + gas.shortHex()
-                    			+ " inOff: " + inDataOffs.shortHex()
-                    			+ " inSize: " + inDataSize.shortHex();
-						logger.info(logString, program.getPC(),
-								String.format("%-12s", op.name()),
-								program.getGas().value(),
-								program.invokeData.getCallDeep(), hint);
-                    }
-
-					MessageCall msgCall = new MessageCall(MsgType.POST, gas,
-							codeAddress, value, inDataOffs, inDataSize);
-                    program.getMessageQueue().add(msgCall);
 
                     program.step();
                 }	break;
@@ -977,8 +953,10 @@ public class VM {
 			
 			vmCounter++;
         } catch (RuntimeException e) {
-        	if(e instanceof OutOfGasException)
+        	if(e instanceof OutOfGasException) {
                	logger.warn("OutOfGasException occurred", e);
+               	program.spendAllGas();
+        	}
         	else
             	logger.error("VM halted", e);
            	program.stop();
@@ -1080,4 +1058,8 @@ public class VM {
 					gasBefore, gasCost, memWords);    	
     	}
     }
+
+    @SuppressWarnings("serial")
+    public class BadJumpDestinationException extends RuntimeException {}
+    
 }

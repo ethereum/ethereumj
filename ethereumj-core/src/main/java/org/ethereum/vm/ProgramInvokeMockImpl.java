@@ -17,9 +17,12 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
 
     private Repository repository = null;
-    private String ownerAddress = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-    private String contractAddress = "471fd3ad3e9eeadeec4608b92d16ce6b500704cc";
+    private byte[] ownerAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+    private byte[] contractAddress = Hex.decode("471fd3ad3e9eeadeec4608b92d16ce6b500704cc");
 
+    // default for most tests. This can be overwritten by the test
+    private long gasLimit = 1000000;
+    
     public ProgramInvokeMockImpl(byte[] msgDataRaw) {
         this();
         this.msgData = msgDataRaw;
@@ -27,10 +30,10 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     public ProgramInvokeMockImpl() {
         this.repository = new RepositoryImpl("blockchainMoc", "detailsMoc", "stateMoc");
-        this.repository.createAccount(Hex.decode(ownerAddress));
+        this.repository.createAccount(ownerAddress);
         
-        this.repository.createAccount(Hex.decode(contractAddress));
-        this.repository.saveCode(Hex.decode(contractAddress), 
+        this.repository.createAccount(contractAddress);
+        this.repository.saveCode(contractAddress, 
         		Hex.decode("385E60076000396000605f556014600054601e60"
         		+ "205463abcddcba6040545b51602001600a525451"
         		+ "6040016014525451606001601e52545160800160"
@@ -45,8 +48,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     /*           ADDRESS op         */
     public DataWord getOwnerAddress() {
-        byte[] addr = Hex.decode(ownerAddress);
-        return new DataWord(addr);
+        return new DataWord(ownerAddress);
     }
 
     /*           BALANCE op         */
@@ -82,8 +84,8 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     /*           GAS op       */
     public DataWord getGas() {
-        byte[] minGasPrice = Hex.decode("0F4240");
-        return new DataWord(minGasPrice);
+    	
+        return new DataWord(gasLimit);
     }
 
     /*          CALLVALUE op    */
@@ -170,11 +172,14 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     @Override
     public DataWord getGaslimit() {
-        long gasLimit = 1000000;
         return new DataWord(gasLimit);
     }
+    
+    public void setGasLimit(long gasLimit) {
+    	this.gasLimit = gasLimit;
+    }    
 
-    public void setOwnerAddress(String ownerAddress) {
+    public void setOwnerAddress(byte[] ownerAddress) {
         this.ownerAddress = ownerAddress;
     }
 

@@ -92,6 +92,4 @@ public class GitHubJSONTestSuiteTest {
             Assert.assertTrue(result.isEmpty());
         }
     }
-    
-
 }

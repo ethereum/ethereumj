@@ -58,7 +58,7 @@ public class VMComplexTest {
         accountState.setCodeHash(codeKey);
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setOwnerAddress("77045e71a7a2c50903d88e564cd72fab11e82051");
+        pi.setOwnerAddress(contractAddrB);
         Repository repository = pi.getRepository();
 
         repository.createAccount(callerAddrB);
@@ -132,12 +132,12 @@ public class VMComplexTest {
         byte[] contractA_addr_bytes = Hex.decode(contractA_addr);
         byte[] codeA = Hex.decode(code_a);
 
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setOwnerAddress(contractB_addr);
-        Repository repository = pi.getRepository();
-
         byte[] contractB_addr_bytes = Hex.decode(contractB_addr);
         byte[] codeB = Hex.decode(code_b);
+
+        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        pi.setOwnerAddress(contractB_addr_bytes);
+        Repository repository = pi.getRepository();
 
         repository.createAccount(contractA_addr_bytes);
         repository.saveCode(contractA_addr_bytes, codeA);
@@ -216,24 +216,16 @@ public class VMComplexTest {
         long expectedVal_6 = 66;
 
         // Set contract into Database
-        String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+        byte[] caller_addr_bytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
 
-        String contractA_addr = "77045e71a7a2c50903d88e564cd72fab11e82051";
-        String contractB_addr = "83c5541a6c8d2dbad642f385d8d06ca9b6c731ee";
+        byte[] contractA_addr_bytes = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
+        byte[] contractB_addr_bytes = Hex.decode("83c5541a6c8d2dbad642f385d8d06ca9b6c731ee");
 
-        String code_a = "600b60005460166020546021604054602c6060546037608054604260a05460c06000f2";
-        String code_b = "6000601f5560e05b60e05b54600060c05b015560605b6020015b80602001600b9054806040016016905480606001602190546080905460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054";
-
-        byte[] caller_addr_bytes = Hex.decode(callerAddr);
-
-        byte[] contractA_addr_bytes = Hex.decode(contractA_addr);
-        byte[] codeA = Hex.decode(code_a);
-
-        byte[] contractB_addr_bytes = Hex.decode(contractB_addr);
-        byte[] codeB = Hex.decode(code_b);
+        byte[] codeA = Hex.decode("600b60005460166020546021604054602c6060546037608054604260a05460c06000f2");
+        byte[] codeB = Hex.decode("6000601f5560e05b60e05b54600060c05b015560605b6020015b80602001600b9054806040016016905480606001602190546080905460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054");
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setOwnerAddress(contractB_addr);
+        pi.setOwnerAddress(contractB_addr_bytes);
         Repository repository  = pi.getRepository();
         repository.createAccount(contractA_addr_bytes);
         repository.saveCode(contractA_addr_bytes, codeA);
@@ -303,24 +295,19 @@ public class VMComplexTest {
          */
 
         // Set contract into Database
-        String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+    	byte[] caller_addr_bytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
 
-        String contractA_addr = "77045e71a7a2c50903d88e564cd72fab11e82051";
+        byte[] contractA_addr_bytes = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
 
-        String code_a = "7f7f60c860005461012c602054000000000000" +
+        byte[] codeA = Hex.decode("7f7f60c860005461012c602054000000000000" +
                         "00000000000000000000000000006000547e60" +
                         "005460206000f2000000000000000000000000" +
-                        "0000000000000000000000602054602960006064f0";
+                        "0000000000000000000000602054602960006064f0");
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
-        pi.setOwnerAddress(contractA_addr);
+        pi.setOwnerAddress(contractA_addr_bytes);
 
         Repository repository = pi.getRepository();
-
-        byte[] caller_addr_bytes = Hex.decode(callerAddr);
-
-        byte[] contractA_addr_bytes = Hex.decode(contractA_addr);
-        byte[] codeA = Hex.decode(code_a);
 
         repository.createAccount(contractA_addr_bytes);
         repository.saveCode(contractA_addr_bytes, codeA);
@@ -354,22 +341,80 @@ public class VMComplexTest {
     	// TODO CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
     }
     
-    @Test // CALLSTATELESS contract
-    @Ignore
+    @Test // contractB call itself with code from contractA
     public void test6() {
-    	// TODO
-    }
-    
-    @Test // POST contract
-    @Ignore
-    public void test7() {
-    	// TODO
-    }
-    
-    @Test // POST after tx runs out of gas
-    @Ignore
-    public void test8() {
-    	// TODO
-    }
+        /**
+         *       #The code will run
+         *       ------------------
 
+         contract A: 945304eb96065b2a98b57a48a06ae28d285a71b5
+         ---------------
+		
+		 PUSH1 0 CALLDATALOAD SLOAD NOT PUSH1 9 JUMPI STOP 
+		 PUSH1 32 CALLDATALOAD PUSH1 0 CALLDATALOAD SSTORE
+
+         contract B: 0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6
+         -----------
+             { (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) 
+               (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa)
+               [[ 0 ]] (CALLSTATELESS 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0)
+             }
+         */
+
+    	// Set contract into Database
+    	byte[] caller_addr_bytes = Hex.decode("cd1722f3947def4cf144679da39c4c32bdc35681");
+
+    	byte[] contractA_addr_bytes = Hex.decode("945304eb96065b2a98b57a48a06ae28d285a71b5");
+    	byte[] contractB_addr_bytes = Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6");
+
+    	byte[] codeA = Hex.decode("600035560f6009590060203560003557");
+        byte[] codeB = Hex.decode("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6000547faaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa6020546000604060406000601773945304eb96065b2a98b57a48a06ae28d285a71b5620f4240f3600057");
+
+        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        pi.setOwnerAddress(contractB_addr_bytes);
+        pi.setGasLimit(10000000000000l);
+        
+        Repository repository  = pi.getRepository();
+        repository.createAccount(contractA_addr_bytes);
+        repository.saveCode(contractA_addr_bytes, codeA);
+        repository.addBalance(contractA_addr_bytes, BigInteger.valueOf(23));
+
+        repository.createAccount(contractB_addr_bytes);
+        repository.saveCode(contractB_addr_bytes, codeB);
+        repository.addBalance(contractB_addr_bytes, new BigInteger("1000000000000000000"));
+
+        repository.createAccount(caller_addr_bytes);
+        repository.addBalance(caller_addr_bytes, new BigInteger("100000000000000000000"));
+
+        // ****************** //
+        //  Play the program  //
+        // ****************** //
+        VM vm = new VM();
+        Program program = new Program(codeB, pi);
+
+        try {
+            while(!program.isStopped())
+                vm.step(program);
+        } catch (RuntimeException e) {
+            program.setRuntimeFailure(e);
+        }
+
+        System.out.println();
+        System.out.println("============ Results ============");
+        System.out.println("*** Used gas: " + program.result.getGasUsed());
+
+        DataWord memValue1 = program.memoryLoad(new DataWord(0));
+        DataWord memValue2 = program.memoryLoad(new DataWord(32));
+
+        DataWord storeValue1 = repository.getStorageValue(contractB_addr_bytes, new DataWord(00));
+
+        repository.close();
+
+        assertEquals("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff", memValue1.toString());
+        assertEquals("aaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa", memValue2.toString());
+
+        assertEquals("0x1", storeValue1.shortHex());
+
+        // TODO: check that the value pushed after exec is 1
+    }
 }

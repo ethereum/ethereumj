@@ -83,8 +83,10 @@ public class TestRunner {
         long gaslimit      = new BigInteger(env.getCurrentGasLimit()).longValue();
 
         // Origin and caller need to exist in order to be able to execute
-        repository.createAccount(origin);
-        repository.createAccount(caller);
+        if(repository.getAccountState(origin) == null)
+        	repository.createAccount(origin);
+        if(repository.getAccountState(caller) == null)
+        	repository.createAccount(caller);
         
         ProgramInvoke programInvoke = new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, msgData, lastHash, coinbase,

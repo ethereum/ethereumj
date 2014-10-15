@@ -101,12 +101,13 @@ public enum OpCode {
 	/** (0x3a) Get price of gas in current 
 	 * environment								*/
 	GASPRICE(0x3a),
-	/** (0x3b) Copy code running in current 
-	 * environment to memory with given offset	*/
-	EXTCODECOPY(0x3b),
-	/** (0x3c) Get size of code running in 
+	/** (0x3b) Get size of code running in 
 	 * current environment with given offset	*/
-	EXTCODESIZE(0x3c),
+	EXTCODESIZE(0x3b),
+	/** (0x3c) Copy code running in current 
+	 * environment to memory with given offset	*/
+	EXTCODECOPY(0x3c),
+
 	
 	/*	Block Information	*/
 	
@@ -149,6 +150,8 @@ public enum OpCode {
 	MSIZE(0x5b),
 	/** (0x5c) Get the amount of available gas	*/
 	GAS(0x5c),
+	/** (0x5d) */
+	JUMPDEST(0x5d),
 	
 	/*	Push Operations	*/
 	
@@ -296,16 +299,9 @@ public enum OpCode {
 	CALL(0xf1),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr] [gas] CALL
 	/** (0xf2) Halt execution returning output data			*/
 	RETURN(0xf2),
-	/** (0xf3) Same as call, except 5 arguments in 
-	 * and 0 arguments out, and instead of immediately 
-	 * calling it adds the call to a postqueue, to be 
-	 * executed after everything else 
-	 * (including prior-created posts) within the scope 
-	 * of that transaction execution is executed */
-	POST(0xf3),
-	/** (0xf4) Calls self, but grabbing the code from the 
+	/** (0xf3) Calls self, but grabbing the code from the 
 	 * TO argument instead of from one's own address 		*/
-	CALLSTATELESS(0xf4),
+	CALLCODE(0xf3),
 	/** (0xff) Halt execution and register account for 
 	 * later deletion */
 	SUICIDE(0xff);
