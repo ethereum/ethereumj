@@ -1,12 +1,15 @@
-package org.ethereum.net.handler;
+package org.ethereum.net.p2p;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.message.StaticMessages.PING_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.PONG_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.GET_PEERS_MESSAGE;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.List;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -15,15 +18,18 @@ import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
+import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.eth.StatusMessage;
+import org.ethereum.net.shh.ShhHandler;
+import org.ethereum.net.message.*;
 import org.ethereum.net.peerdiscovery.PeerData;
-import org.ethereum.net.message.DisconnectMessage;
-import org.ethereum.net.message.HelloMessage;
-import org.ethereum.net.message.P2pMessage;
-import org.ethereum.net.message.PeersMessage;
-import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.shh.ShhMessageCodes;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,9 +44,9 @@ import org.slf4j.LoggerFactory;
  * 	<li>PEERS		:	Send a list of known peers</li>
  * 	<li>PING		: 	Check if another peer is still alive</li>
  * 	<li>PONG		:	Confirm that they themselves are still alive</li>
+ * 	<li>USER        :   Announce data about the peer </>
  * </ul>
  */
-@ChannelHandler.Sharable
 public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 	private final static Logger logger = LoggerFactory.getLogger("net");
@@ -69,6 +75,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 	
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        logger.info("P2P protocol activated");
 		msgQueue = new MessageQueue(ctx, peerListener);
 		// Send HELLO once when channel connection has been established
 		msgQueue.sendMessage(HELLO_MESSAGE);
@@ -77,13 +84,16 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 	@Override
 	public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
-		logger.trace("Read channel for {}", ctx.channel().remoteAddress());
-		
+
+        if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
+            logger.info("P2PHandler invoke: {}", msg.getCommand());
+
 		switch (msg.getCommand()) {
 			case HELLO:
 				msgQueue.receivedMessage(msg);
                 if (!peerDiscoveryMode)
-				    setHandshake((HelloMessage) msg, ctx);
+                setHandshake((HelloMessage) msg, ctx);
+                sendUser();
 				break;
 			case DISCONNECT:
 				msgQueue.receivedMessage(msg);
@@ -97,7 +107,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 				break;
 			case GET_PEERS:
 				msgQueue.receivedMessage(msg);
-				sendPeers();
+                // sendPeers(); // todo: implement session management for peer request
 				break;
 			case PEERS:
 				msgQueue.receivedMessage(msg);
@@ -110,11 +120,24 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                     ctx.disconnect().sync();
                 }
                 break;
+            case USER:
+
+                processUser((UserMessage)msg, ctx);
+                break;
 			default:
 				ctx.fireChannelRead(msg);
 				break;
 		}
 	}
+
+
+    public void processUser(UserMessage msg, ChannelHandlerContext ctx){
+
+        ChannelHandler handler = ctx.pipeline().get("eth");
+        if (handler != null){
+            ((EthHandler)handler).processUser(msg, ctx);
+        }
+    }
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
@@ -137,28 +160,67 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     	PeersMessage msg = new PeersMessage(peers);
     	msgQueue.sendMessage(msg);
     }
+
+    private void sendUser(){
+
+        Blockchain blockChain= WorldManager.getInstance().getBlockchain();
+
+        byte protocolVersion = EthHandler.version, networkId = 0;
+        BigInteger totalDifficulty = blockChain.getTotalDifficulty();
+        byte[] bestHash = blockChain.getLatestBlockHash();
+        UserMessage msg = new UserMessage(protocolVersion, networkId,
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
+        msgQueue.sendMessage(msg);
+    }
     
 	private void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
-		if (msg.getP2PVersion() != 0)
+		if (msg.getP2PVersion() != HELLO_MESSAGE.getP2PVersion())
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
 		else {
+
+            adaptMessageIds(msg.getCapabilities());
+
 			if (msg.getCapabilities().contains("eth")) {
 				// Activate EthHandler for this peer
-				ctx.pipeline().addLast(new EthHandler(msg.getPeerId(), peerListener));
-				ctx.fireChannelActive();
+				ctx.pipeline().addLast("eth", new EthHandler(msg.getPeerId(), peerListener, msgQueue));
 			}
+
+            if (msg.getCapabilities().contains("shh")) {
+                // Activate ShhHandler for this peer
+                ctx.pipeline().addLast("shh", new ShhHandler(msg.getPeerId(), peerListener));
+            }
 
 			InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
 			int port = msg.getListenPort();
 			PeerData confirmedPeer = new PeerData(address, port, msg.getPeerId());
 			confirmedPeer.setOnline(true);
 			confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
+
+            //todo calculate the Offsets
 			WorldManager.getInstance().getPeerDiscovery().getPeers().add(confirmedPeer);
 		}
 	}
-    
+
+    public void adaptMessageIds(List<String> capabilities) {
+
+        byte offset = 0x10;
+        for (String capability : capabilities){
+
+            if (capability.equals("eth")){
+                EthMessageCodes.setOffset(offset);
+                offset += EthMessageCodes.values().length;
+            }
+
+            if (capability.equals("shh")){
+                ShhMessageCodes.setOffset(offset);
+                offset += ShhMessageCodes.values().length;
+            }
+        }
+    }
+
     private void startTimers() {
         // sample for pinging in background
+
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 if (tearDown) cancel();
@@ -166,11 +228,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             }
         }, 2000, 5000);
 
+/*
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
             	msgQueue.sendMessage(GET_PEERS_MESSAGE);
             }
         }, 500, 25000);
+*/
     }
 	
     public void killTimers(){

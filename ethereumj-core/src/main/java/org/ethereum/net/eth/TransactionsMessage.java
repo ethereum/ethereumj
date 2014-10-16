@@ -1,8 +1,9 @@
-package org.ethereum.net.message;
+package org.ethereum.net.eth;
 
-import static org.ethereum.net.message.Command.TRANSACTIONS;
+import static org.ethereum.net.eth.EthMessageCodes.TRANSACTIONS;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.net.eth.EthMessage;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -14,7 +15,6 @@ import java.util.Set;
 /**
  * Wrapper around an Ethereum Transactions message on the network 
  *
- * @see {@link org.ethereum.net.message.Command#TRANSACTIONS}
  */
 public class TransactionsMessage extends EthMessage {
 	
@@ -31,7 +31,6 @@ public class TransactionsMessage extends EthMessage {
     
     private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-		validateMessage(paramsList, TRANSACTIONS);
 
 		transactions = new HashSet<>();
         for (int i = 1; i < paramsList.size(); ++i) {
@@ -58,14 +57,15 @@ public class TransactionsMessage extends EthMessage {
     	return encoded;
     }
 
-	@Override
-	public Command getCommand() {
-		return TRANSACTIONS;
-	}
-    
+
     public Set<Transaction> getTransactions() {
         if (!parsed) parse();
         return transactions;
+    }
+
+    @Override
+    public EthMessageCodes getCommand(){
+        return EthMessageCodes.TRANSACTIONS;
     }
 
     @Override

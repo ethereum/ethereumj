@@ -2,7 +2,7 @@ package org.ethereum.net;
 
 import static org.junit.Assert.assertEquals;
 
-import org.ethereum.net.message.DisconnectMessage;
+import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;

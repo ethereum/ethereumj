@@ -12,7 +12,8 @@ import org.ethereum.util.RLPList;
 public abstract class Message {
 
     protected boolean parsed;
-    protected byte[] encoded;
+    protected byte[]  encoded;
+    protected byte code;
 
 	public Message() {}
 
@@ -20,17 +21,7 @@ public abstract class Message {
         this.encoded = encoded;
         parsed = false;
     }
-    
-    protected void validateMessage(RLPList data, Command expectedCode) {
-    	RLPItem item = (RLPItem) data.get(0);
-		if (item.getRLPData() == null && expectedCode == Command.HELLO)
-			return;
-		if ((item.getRLPData()[0] & 0xFF) == expectedCode.asByte())
-			return;
-    	throw new RuntimeException("Expected " + expectedCode);
-    }
-    
-    public abstract Command getCommand();
+
     
     /**
      * Gets the RLP encoded byte array of this message

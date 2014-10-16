@@ -4,8 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.List;
 
-import org.ethereum.net.message.BlockHashesMessage;
-import org.ethereum.net.message.Command;
+import org.ethereum.net.eth.BlockHashesMessage;
+import org.ethereum.net.eth.EthMessageCodes;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -24,7 +24,7 @@ public class BlockHashesMessageTest {
         BlockHashesMessage blockHashesMessage = new BlockHashesMessage(payload);
         System.out.println(blockHashesMessage);
         
-        assertEquals(Command.BLOCK_HASHES, blockHashesMessage.getCommand());
+        assertEquals(EthMessageCodes.BLOCK_HASHES, blockHashesMessage.getCommand());
         assertEquals(128, blockHashesMessage.getBlockHashes().size());
         // TODO maybe also assert values for individual hashes
         assertEquals(null, blockHashesMessage.getAnswerMessage());
@@ -42,7 +42,7 @@ public class BlockHashesMessageTest {
         String expected = "f84314a04ee6424d776b3f59affc20bc2de59e67f36e22cc07897ff8df152242c921716ba07d2fe4df0dbbc9011da2b3bf177f0c6b7e71a11c509035c5d751efa5cf9b4817";
     	assertEquals(expected, Hex.toHexString(blockHashesMessage.getEncoded()));
     	
-        assertEquals(Command.BLOCK_HASHES, blockHashesMessage.getCommand());
+        assertEquals(EthMessageCodes.BLOCK_HASHES, blockHashesMessage.getCommand());
         assertEquals(2, blockHashesMessage.getBlockHashes().size());
         // TODO maybe also assert values for individual hashes
         assertEquals(null, blockHashesMessage.getAnswerMessage());

@@ -5,6 +5,11 @@ import java.util.List;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.net.eth.GetTransactionsMessage;
+import org.ethereum.net.p2p.GetPeersMessage;
+import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.p2p.PongMessage;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -28,8 +33,8 @@ public class StaticMessages {
 
 	private static HelloMessage generateHelloMessage() {
 		String helloAnnouncement = buildHelloAnnouncement();
-		byte p2pVersion = 0x00;
-		List<String> capabilities = Arrays.asList("eth");
+		byte p2pVersion = 0x02;
+		List<String> capabilities = Arrays.asList("eth", "shh");
 		int listenPort = 30303;
 
 		return new HelloMessage(p2pVersion, helloAnnouncement, 

@@ -1,13 +1,10 @@
-package org.ethereum.net.message;
-
-import static org.ethereum.net.message.Command.PING;
+package org.ethereum.net.p2p;
 
 import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum Ping message on the network
  *
- * @see {@link org.ethereum.net.message.Command#PING}
  */
 public class PingMessage extends P2pMessage {
 
@@ -19,14 +16,14 @@ public class PingMessage extends P2pMessage {
 	}
 
 	@Override
-	public Command getCommand() {
-		return PING;
-	}
-
-	@Override
 	public Class<PongMessage> getAnswerMessage() {
 		return PongMessage.class;
 	}
+
+    @Override
+    public P2pMessageCodes getCommand(){
+        return P2pMessageCodes.PING;
+    }
 
 	@Override
 	public String toString() {

@@ -1,6 +1,6 @@
-package org.ethereum.net.message;
+package org.ethereum.net.p2p;
 
-import static org.ethereum.net.message.Command.PEERS;
+import static org.ethereum.net.p2p.P2pMessageCodes.PEERS;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.ethereum.net.p2p.P2pMessage;
 import org.ethereum.net.peerdiscovery.PeerData;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -18,7 +19,6 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * Wrapper around an Ethereum Peers message on the network
  *
- * @see {@link org.ethereum.net.message.Command#PEERS}
  */
 public class PeersMessage extends P2pMessage {
 
@@ -37,7 +37,6 @@ public class PeersMessage extends P2pMessage {
 
 	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-		validateMessage(paramsList, PEERS);
 
 		peers = new LinkedHashSet<>();
 		for (int i = 1; i < paramsList.size(); ++i) {
@@ -71,11 +70,6 @@ public class PeersMessage extends P2pMessage {
 	}
 
 	@Override
-	public Command getCommand() {
-		return PEERS;
-	}
-
-	@Override
 	public byte[] getEncoded() {
 		if (encoded == null) encode();
 		return encoded;
@@ -85,6 +79,12 @@ public class PeersMessage extends P2pMessage {
 		if (!parsed) this.parse();
 		return peers;
 	}
+
+    @Override
+    public P2pMessageCodes getCommand(){
+        return P2pMessageCodes.PEERS;
+    }
+
 
 	@Override
 	public Class<?> getAnswerMessage() {

@@ -1,12 +1,12 @@
-package org.ethereum.net.message;
+package org.ethereum.net.p2p;
 
-import static org.ethereum.net.message.Command.HELLO;
+import static org.ethereum.net.p2p.P2pMessageCodes.HELLO;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
+import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.p2p.P2pMessage;
+import org.ethereum.net.shh.ShhHandler;
+import org.ethereum.util.*;
 import org.spongycastle.util.encoders.Hex;
 
 import com.google.common.base.Joiner;
@@ -17,7 +17,6 @@ import java.util.List;
 /**
  * Wrapper around an Ethereum HelloMessage on the network
  *
- * @see {@link org.ethereum.net.message.Command#HELLO}
  */
 public class HelloMessage extends P2pMessage {
 
@@ -52,7 +51,6 @@ public class HelloMessage extends P2pMessage {
 		// TODO: find out if it can be 0x00. Do we need to check for this?
 		// The message does not distinguish between 0 and null,
 		// so we check command code for null.
-		validateMessage(paramsList, HELLO);
 
 		byte[] p2pVersionBytes = ((RLPItem) paramsList.get(1)).getRLPData();
 		this.p2pVersion = p2pVersionBytes != null ? p2pVersionBytes[0] : 0;
@@ -63,7 +61,9 @@ public class HelloMessage extends P2pMessage {
 		RLPList capabilityList = (RLPList) paramsList.get(3);
 		this.capabilities = new ArrayList<>();
 		for (int i = 0; i < capabilityList.size(); i++) {
-			this.capabilities.add(new String(capabilityList.get(i).getRLPData()));
+
+            RLPElement capabilitiesID = ((RLPList)capabilityList.get(i)).get(0);
+			this.capabilities.add(new String(capabilitiesID.getRLPData()));
 		}
 
 		byte[] peerPortBytes = ((RLPItem) paramsList.get(4)).getRLPData();
@@ -80,7 +80,16 @@ public class HelloMessage extends P2pMessage {
 		byte[] clientId = RLP.encodeString(this.clientId);
 		byte[][] capabilities = new byte[this.capabilities.size()][];
 		for (int i = 0; i < this.capabilities.size(); i++) {
-			capabilities[i] = RLP.encodeElement(this.capabilities.get(i).getBytes());
+
+            String capability = this.capabilities.get(i);
+            byte version = 0;
+
+            if (capability.equals("eth")) version = EthHandler.version;
+            if (capability.equals("shh")) version = ShhHandler.version;
+
+			capabilities[i] = RLP.encodeList(
+                    RLP.encodeElement( capability.getBytes() ),
+                    RLP.encodeElement( new byte[]{version} ));
 		}
 		byte[] capabilityList = RLP.encodeList(capabilities);
 		byte[] peerPort = RLP.encodeInt(this.listenPort);
@@ -94,11 +103,6 @@ public class HelloMessage extends P2pMessage {
 	public byte[] getEncoded() {
 		if (encoded == null) encode();
 		return encoded;
-	}
-
-	@Override
-	public Command getCommand() {
-		return HELLO;
 	}
 
 	public byte getP2PVersion() {
@@ -125,6 +129,12 @@ public class HelloMessage extends P2pMessage {
 		if (!parsed) parse();
 		return peerId;
 	}
+
+    @Override
+    public P2pMessageCodes getCommand(){
+        return P2pMessageCodes.HELLO;
+    }
+
 
 	@Override
 	public Class<?> getAnswerMessage() {

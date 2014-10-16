@@ -7,10 +7,11 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.manager.WorldManager;
+import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
-import org.ethereum.net.handler.MessageDecoder;
-import org.ethereum.net.handler.MessageEncoder;
-import org.ethereum.net.handler.P2pHandler;
+import org.ethereum.net.wire.MessageDecoder;
+import org.ethereum.net.wire.MessageEncoder;
+import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.peerdiscovery.PeerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,6 +31,8 @@ public class PeerClient {
 
     private PeerListener peerListener;
     private P2pHandler p2pHandler;
+
+    private MessageQueue queue;
 
     private boolean peerDiscoveryMode = false;
 
@@ -71,9 +74,9 @@ public class PeerClient {
                 public void initChannel(NioSocketChannel ch) throws Exception {
 					ch.pipeline().addLast("readTimeoutHandler",
 							new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-					ch.pipeline().addLast(new MessageEncoder());
-					ch.pipeline().addLast(new MessageDecoder());
-					ch.pipeline().addLast(p2pHandler);
+					ch.pipeline().addLast("out encoder", new MessageEncoder());
+					ch.pipeline().addLast("in  encoder", new MessageDecoder());
+					ch.pipeline().addLast("p2p", p2pHandler);
 
                     // limit the size of receiving buffer to 1024
                     ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));

@@ -1,13 +1,12 @@
-package org.ethereum.net.message;
+package org.ethereum.net.eth;
 
-import static org.ethereum.net.message.Command.GET_TRANSACTIONS;
-
+import org.ethereum.net.eth.EthMessage;
+import org.ethereum.net.eth.TransactionsMessage;
 import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum GetTransactions message on the network 
  *
- * @see {@link org.ethereum.net.message.Command#GET_TRANSACTIONS}
  */
 public class GetTransactionsMessage extends EthMessage {
 
@@ -18,16 +17,16 @@ public class GetTransactionsMessage extends EthMessage {
         return FIXED_PAYLOAD;
     }
 
-	@Override
-	public Command getCommand() {
-		return GET_TRANSACTIONS;
-	}
-
     @Override
     public Class<TransactionsMessage> getAnswerMessage() {
         return TransactionsMessage.class;
     }
-    
+
+    @Override
+    public EthMessageCodes getCommand(){
+        return EthMessageCodes.GET_TRANSACTIONS;
+    }
+
     @Override
     public String toString() {
     	return "[" + this.getCommand().name() + "]";

@@ -4,8 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Enumeration;
-import java.util.Properties;
+import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,6 @@ public class SystemProperties {
 	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 
 	private static int      DEFAULT_TX_APPROVE_TIMEOUT = 10;
-	private static byte      DEFAULT_PROTOCOL_VERSION = 33;
 	private static String   DEFAULT_DISCOVERY_PEER_LIST = "poc-6.ethdev.com:30303";
 	private static String   DEFAULT_ACTIVE_PEER_IP = "poc-6.ethdev.com";
 	private static int      DEFAULT_ACTIVE_PORT = 30303;
@@ -43,6 +41,9 @@ public class SystemProperties {
 	private static int      DEFAULT_MAX_BLOCKS_QUEUED = 300;
 	private static String   DEFAULT_PROJECT_VERSION = "";
 	private static String   DEFAULT_HELLO_PHRASE = "Dev";
+
+    private static List<String> DEFAULT_PROTOCOL_LIST = new ArrayList<>();
+    static { DEFAULT_PROTOCOL_LIST.add("eth"); DEFAULT_PROTOCOL_LIST.add("shh"); }
 
 	public static SystemProperties CONFIG = new SystemProperties();
 	private Properties prop = new Properties();
@@ -80,11 +81,6 @@ public class SystemProperties {
 				}
 			}
 		}
-	}
-
-	public byte protocolVersion() {
-		if (prop.isEmpty()) return DEFAULT_PROTOCOL_VERSION;
-		return Byte.parseByte(prop.getProperty("protocol.version"));
 	}
 
 	public boolean peerDiscovery() {
@@ -219,6 +215,12 @@ public class SystemProperties {
 			return null;
 		return hash;
 	}
+
+    public List<String> peerCapabilities(){
+        if (prop.isEmpty()) return DEFAULT_PROTOCOL_LIST;
+        String capabilitiesList = prop.getProperty("peer.capabilities");
+        return Arrays.asList(capabilitiesList.split(","));
+    }
 
 	public void print() {
 		Enumeration<?> e = prop.propertyNames();

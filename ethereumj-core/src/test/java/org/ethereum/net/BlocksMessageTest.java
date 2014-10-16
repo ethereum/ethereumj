@@ -11,7 +11,7 @@ import java.nio.file.Files;
 import java.util.List;
 
 import org.ethereum.core.Block;
-import org.ethereum.net.message.BlocksMessage;
+import org.ethereum.net.eth.BlocksMessage;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;

@@ -8,9 +8,9 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.ethereum.net.message.Command;
-import org.ethereum.net.message.GetPeersMessage;
-import org.ethereum.net.message.PeersMessage;
+import org.ethereum.net.p2p.GetPeersMessage;
+import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.p2p.PeersMessage;
 import org.ethereum.net.peerdiscovery.PeerData;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -25,7 +25,7 @@ public class PeersMessageTest {
         GetPeersMessage getPeersMessage = new GetPeersMessage();
         System.out.println(getPeersMessage);
 
-        assertEquals(Command.GET_PEERS, getPeersMessage.getCommand());
+        assertEquals(P2pMessageCodes.GET_PEERS, getPeersMessage.getCommand());
         assertEquals(PeersMessage.class, getPeersMessage.getAnswerMessage());
     }
 	
@@ -54,7 +54,7 @@ public class PeersMessageTest {
         Iterator<PeerData> it = peersMessage.getPeers().iterator(); it.next();
         PeerData peer = it.next();
 
-        assertEquals(Command.PEERS, peersMessage.getCommand());
+        assertEquals(P2pMessageCodes.PEERS, peersMessage.getCommand());
         assertEquals("/81.99.225.18", peer.getAddress().toString());
         assertEquals(30303, peer.getPort());
         assertEquals("5F1DBE5E50E92A6B67377E079D986155C0D82D964E65332F524810ED7831A52837F1C0FB042EA2A25548E3B444C337F54C7547B2D877734E2899F40BFA23ED51",
@@ -70,7 +70,7 @@ public class PeersMessageTest {
         System.out.println(peersMessage.toString());
 
         String expected = "f85905f84b8452d948a982765fb840585764a3c49a3838c69ad0855abfeb5672f71b072af62082b5679961781100814b8de88a8fbc1da7c73791f88159d73b5d2a13a5579535d603e045c3db5cbb75c0ca84c0a801c182765f80c0";
-        assertEquals(Command.PEERS, peersMessage.getCommand());
+        assertEquals(P2pMessageCodes.PEERS, peersMessage.getCommand());
         assertEquals(expected, Hex.toHexString(peersMessage.getEncoded()));
     }
     

@@ -1,10 +1,9 @@
-package org.ethereum.net.handler;
+package org.ethereum.net.wire;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
-import org.ethereum.net.message.Command;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.util.ByteUtil;

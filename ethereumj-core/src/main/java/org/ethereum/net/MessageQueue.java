@@ -61,7 +61,7 @@ public class MessageQueue {
 					&& msg.getClass() == waitingMessage.getAnswerMessage()) {
 				messageRoundtrip.answer();
 				logger.debug("Message round trip covered: [{}] ",
-						messageRoundtrip.getMsg().getCommand());
+						messageRoundtrip.getMsg().getClass());
 			}
 		}
 	}

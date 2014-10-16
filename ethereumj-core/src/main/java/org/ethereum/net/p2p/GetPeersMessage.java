@@ -1,13 +1,9 @@
-package org.ethereum.net.message;
-
-import static org.ethereum.net.message.Command.GET_PEERS;
+package org.ethereum.net.p2p;
 
 import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum GetPeers message on the network
- *
- * @see {@link org.ethereum.net.message.Command#GET_PEERS}
  */
 public class GetPeersMessage extends P2pMessage {
 
@@ -19,10 +15,10 @@ public class GetPeersMessage extends P2pMessage {
 		return FIXED_PAYLOAD;
 	}
 
-	@Override
-	public Command getCommand() {
-		return GET_PEERS;
-	}
+    @Override
+    public P2pMessageCodes getCommand(){
+        return P2pMessageCodes.GET_PEERS;
+    }
 
 	@Override
 	public Class<PeersMessage> getAnswerMessage() {

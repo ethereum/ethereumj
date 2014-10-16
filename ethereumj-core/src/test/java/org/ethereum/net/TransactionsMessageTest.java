@@ -11,9 +11,9 @@ import java.util.Set;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.net.message.Command;
-import org.ethereum.net.message.GetTransactionsMessage;
-import org.ethereum.net.message.TransactionsMessage;
+import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.eth.GetTransactionsMessage;
+import org.ethereum.net.eth.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -30,7 +30,7 @@ public class TransactionsMessageTest {
     	GetTransactionsMessage getTransactionsMessage = new GetTransactionsMessage();
         System.out.println(getTransactionsMessage);
 
-        assertEquals(Command.GET_TRANSACTIONS, getTransactionsMessage.getCommand());
+        assertEquals(EthMessageCodes.GET_TRANSACTIONS, getTransactionsMessage.getCommand());
         assertEquals(TransactionsMessage.class, getTransactionsMessage.getAnswerMessage());
     }
 	
@@ -49,7 +49,7 @@ public class TransactionsMessageTest {
         TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
         System.out.println(transactionsMessage);
 
-        assertEquals(Command.TRANSACTIONS, transactionsMessage.getCommand());
+        assertEquals(EthMessageCodes.TRANSACTIONS, transactionsMessage.getCommand());
         assertEquals(1, transactionsMessage.getTransactions().size());
 
 		Transaction tx = transactionsMessage.getTransactions().iterator().next();
@@ -95,7 +95,7 @@ public class TransactionsMessageTest {
         TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
         System.out.println(transactionsMessage);
 
-        assertEquals(Command.TRANSACTIONS, transactionsMessage.getCommand());
+        assertEquals(EthMessageCodes.TRANSACTIONS, transactionsMessage.getCommand());
         
         assertEquals(3, transactionsMessage.getTransactions().size());
 
@@ -186,7 +186,7 @@ public class TransactionsMessageTest {
         Set<Transaction> txs = new HashSet<>(Arrays.asList(tx));
         TransactionsMessage transactionsMessage = new TransactionsMessage(txs);
 
-        assertEquals(Command.TRANSACTIONS, transactionsMessage.getCommand());
+        assertEquals(EthMessageCodes.TRANSACTIONS, transactionsMessage.getCommand());
         assertEquals(expected, Hex.toHexString(transactionsMessage.getEncoded()));
     }
 }

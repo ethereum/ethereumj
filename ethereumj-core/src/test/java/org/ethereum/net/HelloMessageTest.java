@@ -6,8 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.ethereum.net.message.Command;
-import org.ethereum.net.message.HelloMessage;
+import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.p2p.P2pMessageCodes;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -31,7 +31,7 @@ public class HelloMessageTest {
         HelloMessage helloMessage = new HelloMessage(payload);
         System.out.println(helloMessage);
 
-        assertEquals(Command.HELLO, helloMessage.getCommand());
+        assertEquals(P2pMessageCodes.HELLO, helloMessage.getCommand());
         assertEquals(0, helloMessage.getP2PVersion());
         assertEquals("Ethereum(++)/Peer Server Zero/v0.6.8d/Release/Linux/g++", helloMessage.getClientId());
         assertEquals(0, helloMessage.getCapabilities().size());
@@ -56,7 +56,7 @@ public class HelloMessageTest {
         HelloMessage helloMessage = new HelloMessage(payload);
         System.out.println(helloMessage);
 
-        assertEquals(Command.HELLO, helloMessage.getCommand());
+        assertEquals(P2pMessageCodes.HELLO, helloMessage.getCommand());
         assertEquals(0, helloMessage.getP2PVersion());
         assertEquals("NEthereum(++)/ZeroGox/v0.6.9/ncurses/Linux/g++", helloMessage.getClientId());
         assertEquals(1, helloMessage.getCapabilities().size());
@@ -85,7 +85,7 @@ public class HelloMessageTest {
         		+ "44EF1286367101F1553450E3DDCEEA45ABCAB0AC21E1EFB48A6610EBE88CE73"
         		+ "17EB09229558311BA8B7250911D7E49562C3988CA3143329DA3EA";
  
-        assertEquals(Command.HELLO, helloMessage.getCommand());
+        assertEquals(P2pMessageCodes.HELLO, helloMessage.getCommand());
         assertEquals(expected, Hex.toHexString(helloMessage.getEncoded()).toUpperCase());
     }
 }

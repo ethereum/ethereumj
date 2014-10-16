@@ -1,18 +1,18 @@
-package org.ethereum.net.message;
+package org.ethereum.net.eth;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.net.message.Command.BLOCKS;
+import static org.ethereum.net.eth.EthMessageCodes.BLOCK_HASHES;
 
 import org.ethereum.core.Block;
+import org.ethereum.net.eth.EthMessage;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
 /**
  * Wrapper around an Ethereum Blocks message on the network
  *
- * @see {@link org.ethereum.net.message.Command#BLOCKS}
  */
 public class BlocksMessage extends EthMessage {
 
@@ -24,7 +24,6 @@ public class BlocksMessage extends EthMessage {
 
 	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-		validateMessage(paramsList, BLOCKS);
 
 		blocks = new ArrayList<>();
 		for (int i = 1; i < paramsList.size(); ++i) {
@@ -40,15 +39,15 @@ public class BlocksMessage extends EthMessage {
 		return encoded;
 	}
 
-	@Override
-	public Command getCommand() {
-		return BLOCKS;
-	}
-
 	public List<Block> getBlocks() {
 		if (!parsed) parse();
 		return blocks;
 	}
+
+    @Override
+    public EthMessageCodes getCommand(){
+        return EthMessageCodes.BLOCKS;
+    }
 
 	@Override
 	public Class<?> getAnswerMessage() {

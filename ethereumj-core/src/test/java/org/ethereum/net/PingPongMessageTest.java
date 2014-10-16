@@ -2,9 +2,9 @@ package org.ethereum.net;
 
 import static org.junit.Assert.assertEquals;
 
-import org.ethereum.net.message.Command;
-import org.ethereum.net.message.PingMessage;
-import org.ethereum.net.message.PongMessage;
+import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.p2p.PongMessage;
 import org.junit.Test;
 
 public class PingPongMessageTest {
@@ -19,7 +19,7 @@ public class PingPongMessageTest {
 
         assertEquals(PongMessage.class, pingMessage.getAnswerMessage());
         
-        assertEquals(Command.PING, pingMessage.getCommand());
+        assertEquals(P2pMessageCodes.PING, pingMessage.getCommand());
     }
     
     @Test /* PongMessage */
@@ -28,7 +28,7 @@ public class PingPongMessageTest {
         PongMessage pongMessage = new PongMessage();
         System.out.println(pongMessage);
 
-        assertEquals(Command.PONG, pongMessage.getCommand());
+        assertEquals(P2pMessageCodes.PONG, pongMessage.getCommand());
         assertEquals(null, pongMessage.getAnswerMessage());
     }
 }

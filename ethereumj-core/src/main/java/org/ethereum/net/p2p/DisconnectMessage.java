@@ -1,16 +1,17 @@
-package org.ethereum.net.message;
+package org.ethereum.net.p2p;
 
+import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.p2p.P2pMessage;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
-import static org.ethereum.net.message.Command.DISCONNECT;
+import static org.ethereum.net.p2p.P2pMessageCodes.DISCONNECT;
 import static org.ethereum.net.message.ReasonCode.REQUESTED;
 
 /**
  * Wrapper around an Ethereum Disconnect message on the network
  *
- * @see {@link org.ethereum.net.message.Command#DISCONNECT}
  */
 public class DisconnectMessage extends P2pMessage {
 
@@ -27,7 +28,6 @@ public class DisconnectMessage extends P2pMessage {
 
 	private void parse() {
 		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-		validateMessage(paramsList, DISCONNECT);
 
 		byte[] reasonBytes = ((RLPItem) paramsList.get(1)).getRLPData();
 		if (reasonBytes == null)
@@ -42,11 +42,6 @@ public class DisconnectMessage extends P2pMessage {
 		byte[] encodedCommand = RLP.encodeByte(DISCONNECT.asByte());
 		byte[] encodedReason = RLP.encodeByte(this.reason.asByte());
 		this.encoded = RLP.encodeList(encodedCommand, encodedReason);
-	}
-
-	@Override
-	public Command getCommand() {
-		return DISCONNECT;
 	}
 
 	@Override
