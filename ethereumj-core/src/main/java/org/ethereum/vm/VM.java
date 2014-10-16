@@ -800,23 +800,25 @@ public class VM {
                 case JUMP:{
                 	program.stackRequire(1);
                 	DataWord pos  =  program.stackPop();
-//        			if (!pos.equals(DataWord.ZERO) && OpCode.code(program.getCurrentOp()) != OpCode.JUMPDEST)
+                	int nextPC = pos.intValue();
+//        			if (nextPC != 0 && program.getOp(nextPC-1) != OpCode.JUMPDEST.asInt())
 //        				throw new BadJumpDestinationException();
 
                     if (logger.isInfoEnabled())
                         hint = "~> " + pos.value();
 
-                    program.setPC(pos);
+                    program.setPC(nextPC);
                 }	break;
                 case JUMPI:{
                 	program.stackRequire(2);
                 	DataWord pos   =  program.stackPop();
                     DataWord cond  =  program.stackPop();
-//                    if (!pos.isZero() && OpCode.code(program.getCurrentOp()) != OpCode.JUMPDEST)
+                	int nextPC = pos.intValue();
+//        			if (nextPC != 0 && program.getOp(nextPC-1) != OpCode.JUMPDEST.asInt())
 //        				throw new BadJumpDestinationException();
         			
                     if (!cond.isZero()) {
-                        program.setPC(pos);
+                        program.setPC(nextPC);
                     } else {
                         program.step();
                     }

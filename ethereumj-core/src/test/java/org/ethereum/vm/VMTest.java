@@ -1776,6 +1776,55 @@ public class VMTest {
         	assertTrue(program.isStopped());
         }
     }
+    
+    @Test // JUMPDEST OP for JUMP
+    public void testJUMPDEST_1() {
+
+        VM vm = new VM();
+        ProgramInvokeMockImpl invoke = new ProgramInvokeMockImpl();
+        Program program = new Program(Hex.decode("602360085860015d600257"), invoke);
+        
+        String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
+        String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
+        
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+            	
+        DataWord key = new DataWord(Hex.decode(s_expected_key));
+        DataWord val = program.result.getRepository().getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(), key);
+    	
+    	assertTrue(program.isStopped());
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
+    }
+    
+    @Test // JUMPDEST OP for JUMPI
+    public void testJUMPDEST_2() {
+
+        VM vm = new VM();
+        ProgramInvokeMockImpl invoke = new ProgramInvokeMockImpl();
+        Program program = new Program(Hex.decode("60236001600a5960015d600257"), invoke);
+        
+        String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
+        String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
+        
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+            	
+        DataWord key = new DataWord(Hex.decode(s_expected_key));
+        DataWord val = program.result.getRepository().getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(), key);
+    	
+    	assertTrue(program.isStopped());
+        program.getResult().getRepository().close();
+        assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
+    }
 
     @Test // ADD OP mal
     public void testADD_1() {

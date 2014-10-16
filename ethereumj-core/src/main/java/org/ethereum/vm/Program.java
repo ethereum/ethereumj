@@ -54,7 +54,13 @@ public class Program {
 	        this.result.setRepository(invokeData.getRepository());
 	    }
 	}
-
+	
+	public byte getOp(int pc) {
+    	if(ops.length == 0)
+    		return 0;
+        return ops[pc];
+	}
+	
     public byte getCurrentOp() {
     	if(ops.length == 0)
     		return 0;
@@ -93,9 +99,12 @@ public class Program {
     }
 
     public void setPC(DataWord pc) {
+        this.setPC(pc.intValue());
+    }
 
-        this.pc = pc.intValue();
-
+    public void setPC(int pc) {
+        this.pc = pc;
+        
         if (this.pc == ops.length)
             stop();
         
@@ -103,10 +112,6 @@ public class Program {
             stop();
             throw new PcOverflowException("pc overflow pc=" + pc);
         }
-    }
-
-    public void setPC(int pc) {
-        this.pc = pc;
     }
 
     public boolean isStopped() {
