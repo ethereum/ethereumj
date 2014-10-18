@@ -190,8 +190,7 @@ public class TestRunner {
                             String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
                                     Hex.toHexString(storageKey.getData()),
                                     Hex.toHexString(expectedStValue),
-                                    Hex.toHexString(actualValue.getData())
-                                    );
+                                    Hex.toHexString(actualValue.getNoLeadZeroesData()));
                     logger.info(output);
                     results.add(output);
                 }

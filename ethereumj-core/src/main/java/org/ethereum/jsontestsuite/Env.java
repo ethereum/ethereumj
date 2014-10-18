@@ -1,6 +1,5 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.util.ByteUtil;
 import org.json.simple.JSONObject;
 import org.spongycastle.util.encoders.Hex;
 
@@ -42,10 +41,10 @@ public class Env {
         String prevHash   = env.get("previousHash").toString();
 
         this.currentCoinbase  = Hex.decode(coinbase);
-        this.currentDifficlty = ByteUtil.bigIntegerToBytes(new BigInteger(difficulty));
-        this.currentGasLimit  = ByteUtil.bigIntegerToBytes(new BigInteger(gasLimit));
-        this.currentNumber    = ByteUtil.bigIntegerToBytes(new BigInteger(number));
-        this.currentTimestamp = ByteUtil.bigIntegerToBytes(new BigInteger(timestamp));
+        this.currentDifficlty = new BigInteger(difficulty).toByteArray();
+        this.currentGasLimit  = new BigInteger(gasLimit).toByteArray();
+        this.currentNumber    = new BigInteger(number).toByteArray();
+        this.currentTimestamp = new BigInteger(timestamp).toByteArray();
         this.previousHash     = Hex.decode(prevHash);
 
     }
