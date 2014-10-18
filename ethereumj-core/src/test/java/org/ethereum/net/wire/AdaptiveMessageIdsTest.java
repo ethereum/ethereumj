@@ -40,7 +40,7 @@ public class AdaptiveMessageIdsTest {
         Assert.assertEquals(3,  P2pMessageCodes.PONG.asByte());
         Assert.assertEquals(4,  P2pMessageCodes.GET_PEERS.asByte());
         Assert.assertEquals(5,  P2pMessageCodes.PEERS.asByte());
-        Assert.assertEquals(16, P2pMessageCodes.USER.asByte());
+        Assert.assertEquals(15, P2pMessageCodes.USER.asByte());
     }
 
 
@@ -102,48 +102,48 @@ public class AdaptiveMessageIdsTest {
 				new Capability(Capability.SHH, ShhHandler.VERSION));
         p2pHandler.adaptMessageIds(capabilities);
 
-        Assert.assertEquals(0x10 + 1,  EthMessageCodes.STATUS.asByte());
-        Assert.assertEquals(0x10 + 2,  EthMessageCodes.GET_TRANSACTIONS.asByte());
-        Assert.assertEquals(0x10 + 3,  EthMessageCodes.TRANSACTIONS.asByte());
-        Assert.assertEquals(0x10 + 4,  EthMessageCodes.GET_BLOCK_HASHES.asByte());
-        Assert.assertEquals(0x10 + 5,  EthMessageCodes.BLOCK_HASHES.asByte());
-        Assert.assertEquals(0x10 + 6,  EthMessageCodes.GET_BLOCKS.asByte());
-        Assert.assertEquals(0x10 + 7,  EthMessageCodes.BLOCKS.asByte());
-        Assert.assertEquals(0x10 + 8,  EthMessageCodes.NEW_BLOCK.asByte());
-        Assert.assertEquals(0x10 + 9, EthMessageCodes.PACKET_COUNT.asByte());
+        Assert.assertEquals(0x10 + 0, EthMessageCodes.STATUS.asByte());
+        Assert.assertEquals(0x10 + 1, EthMessageCodes.GET_TRANSACTIONS.asByte());
+        Assert.assertEquals(0x10 + 2, EthMessageCodes.TRANSACTIONS.asByte());
+        Assert.assertEquals(0x10 + 3, EthMessageCodes.GET_BLOCK_HASHES.asByte());
+        Assert.assertEquals(0x10 + 4, EthMessageCodes.BLOCK_HASHES.asByte());
+        Assert.assertEquals(0x10 + 5, EthMessageCodes.GET_BLOCKS.asByte());
+        Assert.assertEquals(0x10 + 6, EthMessageCodes.BLOCKS.asByte());
+        Assert.assertEquals(0x10 + 7, EthMessageCodes.NEW_BLOCK.asByte());
+        Assert.assertEquals(0x10 + 8, EthMessageCodes.PACKET_COUNT.asByte());
 
-        Assert.assertEquals(0x19 + 1, ShhMessageCodes.STATUS.asByte());
-        Assert.assertEquals(0x19 + 2, ShhMessageCodes.MESSAGE.asByte());
-        Assert.assertEquals(0x19 + 3, ShhMessageCodes.ADD_FILTER.asByte());
-        Assert.assertEquals(0x19 + 4, ShhMessageCodes.REMOVE_FILTER.asByte());
-        Assert.assertEquals(0x19 + 5, ShhMessageCodes.PACKET_COUNT.asByte());
+        Assert.assertEquals(0x19 + 0, ShhMessageCodes.STATUS.asByte());
+        Assert.assertEquals(0x19 + 1, ShhMessageCodes.MESSAGE.asByte());
+        Assert.assertEquals(0x19 + 2, ShhMessageCodes.ADD_FILTER.asByte());
+        Assert.assertEquals(0x19 + 3, ShhMessageCodes.REMOVE_FILTER.asByte());
+        Assert.assertEquals(0x19 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
     }
 
-    @Test
+    @Test // Capabilities should be read in alphabetical order
     public void test5(){
 
         P2pHandler p2pHandler = new P2pHandler();
 
 		List<Capability> capabilities = Arrays.asList(
-				new Capability(Capability.ETH, EthHandler.VERSION),
-				new Capability(Capability.SHH, ShhHandler.VERSION));
+				new Capability(Capability.SHH, ShhHandler.VERSION),
+				new Capability(Capability.ETH, EthHandler.VERSION));
         p2pHandler.adaptMessageIds(capabilities);
 
-        Assert.assertEquals(0x10 + 1, ShhMessageCodes.STATUS.asByte());
-        Assert.assertEquals(0x10 + 2, ShhMessageCodes.MESSAGE.asByte());
-        Assert.assertEquals(0x10 + 3, ShhMessageCodes.ADD_FILTER.asByte());
-        Assert.assertEquals(0x10 + 4, ShhMessageCodes.REMOVE_FILTER.asByte());
-        Assert.assertEquals(0x10 + 5, ShhMessageCodes.PACKET_COUNT.asByte());
+        Assert.assertEquals(0x10 + 0, EthMessageCodes.STATUS.asByte());
+        Assert.assertEquals(0x10 + 1, EthMessageCodes.GET_TRANSACTIONS.asByte());
+        Assert.assertEquals(0x10 + 2, EthMessageCodes.TRANSACTIONS.asByte());
+        Assert.assertEquals(0x10 + 3, EthMessageCodes.GET_BLOCK_HASHES.asByte());
+        Assert.assertEquals(0x10 + 4, EthMessageCodes.BLOCK_HASHES.asByte());
+        Assert.assertEquals(0x10 + 5, EthMessageCodes.GET_BLOCKS.asByte());
+        Assert.assertEquals(0x10 + 6, EthMessageCodes.BLOCKS.asByte());
+        Assert.assertEquals(0x10 + 7, EthMessageCodes.NEW_BLOCK.asByte());
+        Assert.assertEquals(0x10 + 8, EthMessageCodes.PACKET_COUNT.asByte());
 
-        Assert.assertEquals(0x15 + 1,  EthMessageCodes.STATUS.asByte());
-        Assert.assertEquals(0x15 + 2,  EthMessageCodes.GET_TRANSACTIONS.asByte());
-        Assert.assertEquals(0x15 + 3,  EthMessageCodes.TRANSACTIONS.asByte());
-        Assert.assertEquals(0x15 + 4,  EthMessageCodes.GET_BLOCK_HASHES.asByte());
-        Assert.assertEquals(0x15 + 5,  EthMessageCodes.BLOCK_HASHES.asByte());
-        Assert.assertEquals(0x15 + 6,  EthMessageCodes.GET_BLOCKS.asByte());
-        Assert.assertEquals(0x15 + 7,  EthMessageCodes.BLOCKS.asByte());
-        Assert.assertEquals(0x15 + 8,  EthMessageCodes.NEW_BLOCK.asByte());
-        Assert.assertEquals(0x15 + 9, EthMessageCodes.PACKET_COUNT.asByte());
+        Assert.assertEquals(0x19 + 0, ShhMessageCodes.STATUS.asByte());
+        Assert.assertEquals(0x19 + 1, ShhMessageCodes.MESSAGE.asByte());
+        Assert.assertEquals(0x19 + 2, ShhMessageCodes.ADD_FILTER.asByte());
+        Assert.assertEquals(0x19 + 3, ShhMessageCodes.REMOVE_FILTER.asByte());
+        Assert.assertEquals(0x19 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
     }
 
 

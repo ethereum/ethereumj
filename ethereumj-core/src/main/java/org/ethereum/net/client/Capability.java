@@ -3,7 +3,7 @@ package org.ethereum.net.client;
 /**
  * The protocols and versions of those protocols that this peer support
  */
-public class Capability {
+public class Capability implements Comparable<Capability> {
 	
 	public final static String ETH = "eth";
 	public final static String SHH = "shh";
@@ -24,15 +24,21 @@ public class Capability {
 		return version;
 	}
 	
-	public boolean equals(Object o) {
-		if(o instanceof Capability) {
-			Capability cap = (Capability) o;
-			if (cap.getName() == null)
-				return this.name == null;
-			else
-				return cap.getName().equals(this.name) && cap.getVersion() == this.version;
-		}
-		return false;
+	@Override
+	public boolean equals(Object obj) {
+	    if (this == obj) return true;
+	    if (!(obj instanceof Capability)) return false;
+
+	    Capability other = (Capability)obj;
+	    if (this.name == null)
+			return other.name == null;
+		else
+			return this.name.equals(other.name) && this.version == other.version;
+	}
+
+	@Override
+	public int compareTo(Capability o) {
+		return this.name.compareTo(o.name);
 	}
 	
 	public String toString() {

@@ -7,6 +7,7 @@ import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -183,7 +184,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public void adaptMessageIds(List<Capability> capabilities) {
 
+    	Collections.sort(capabilities);
         byte offset = (byte) (P2pMessageCodes.USER.asByte() + 1);
+
         for (Capability capability : capabilities) {
 
             if (capability.getName().equals(Capability.ETH)) {
