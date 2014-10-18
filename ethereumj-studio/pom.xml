@@ -71,7 +71,7 @@
         <dependency>
             <groupId>org.ethereum</groupId>
             <artifactId>ethereumj</artifactId>
-            <version>0.6.1.20141014.0918</version>
+            <version>0.7.1</version>
             <type>jar</type>
         </dependency>
 

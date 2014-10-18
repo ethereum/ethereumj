@@ -40,7 +40,7 @@ public class GetBlockHashesMessage extends EthMessage {
 	}
 
 	private void parse() {
-		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(1);
 
 		this.bestHash = paramsList.get(1).getRLPData();
 		byte[] maxBlocksBytes = paramsList.get(2).getRLPData();

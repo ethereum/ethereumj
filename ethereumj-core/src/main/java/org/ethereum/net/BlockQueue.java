@@ -56,6 +56,8 @@ public class BlockQueue {
 		
 		logger.debug("BlockQueue size: {}", blockReceivedQueue.size());
 		Block block = blockReceivedQueue.poll();
+
+        logger.info("Processing block index: {}", block.getNumber());
 		WorldManager.getInstance().getBlockchain().add(block);
 	}
 
@@ -72,22 +74,38 @@ public class BlockQueue {
 	public void addBlocks(List<Block> blockList) {
 
 		Block lastReceivedBlock = blockList.get(0);
-		if (lastReceivedBlock.getNumber() != getLastBlock().getNumber() + 1)
-			return;
+		if (lastReceivedBlock.getNumber() != getLastBlock().getNumber() + 1){
+            logger.error("Block download out of sync");
+            return;
+        }
 
-		for (Block block : blockList) {
-			
-			if (blockReceivedQueue.size() >= SystemProperties.CONFIG.maxBlocksQueued())
-				return;
+        blockReceivedQueue.addAll(blockList);
+        lastBlock = blockList.get(blockList.size() - 1);
 
-			this.lastBlock = block;
-			logger.debug("Last block now index: [{}]", lastBlock.getNumber());
-			blockReceivedQueue.add(lastBlock);
-			blockHashQueue.removeLast();
-		}
-		logger.debug("Blocks waiting to be proceed in the queue: [{}]", 
-				blockReceivedQueue.size());
+		logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]" ,
+				blockReceivedQueue.size(),
+                lastBlock.getNumber());
 	}
+
+    /**
+     * adding single block to the queue usually
+     *        a result of a NEW_BLOCK message announce.
+     * @param block - new block
+     */
+    public void addBlock(Block block){
+
+        if (block.getNumber() != getLastBlock().getNumber() + 1){
+            logger.error("Block download out of sync");
+            return;
+        }
+
+        blockReceivedQueue.add(block);
+        lastBlock = block;
+
+        logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]" ,
+                blockReceivedQueue.size(),
+                lastBlock.getNumber());
+    }
 	
 	/**
 	 * Returns the last block in the queue. If the queue is empty, 
@@ -127,21 +145,29 @@ public class BlockQueue {
 	public void addHash(byte[] hash) {
 		blockHashQueue.addLast(hash);
 	}
+
+    public void addNewBlockHash(byte[] hash){
+        blockHashQueue.addFirst(hash);
+    }
 	
 	/**
 	 * Return a list of hashes from blocks that still need to be downloaded.
 	 * 
-	 * @param amount - the number of hashes to return
 	 * @return A list of hashes for which blocks need to be retrieved.
 	 */
 	public List<byte[]> getHashes() {
 		List<byte[]> hashes = new ArrayList<>();
-		Iterator<byte[]> hashIterator = blockHashQueue.descendingIterator();
-		while (hashIterator.hasNext() && hashes.size() <= CONFIG.maxBlocksAsk()) {
-				hashes.add(hashIterator.next());
+		while (!blockHashQueue.isEmpty() && hashes.size() < CONFIG.maxBlocksAsk()) {
+				hashes.add(blockHashQueue.removeLast());
 		}
 		return hashes;
 	}
+
+    // a bit ugly but really gives
+    // good result
+    public void logHashQueueSize(){
+        logger.trace("Block hashes list size: [{}]", blockHashQueue.size());
+    }
 
 	private class BlockByIndexComparator implements Comparator<Block> {
 

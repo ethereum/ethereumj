@@ -86,14 +86,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 	public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
 
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
-            logger.info("P2PHandler invoke: {}", msg.getCommand());
+            logger.info("P2PHandler invoke: [{}]", msg.getCommand());
 
 		switch (msg.getCommand()) {
 			case HELLO:
 				msgQueue.receivedMessage(msg);
                 if (!peerDiscoveryMode)
                 setHandshake((HelloMessage) msg, ctx);
-                sendUser();
 				break;
 			case DISCONNECT:
 				msgQueue.receivedMessage(msg);
@@ -122,7 +121,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 break;
             case USER:
 
-                processUser((UserMessage)msg, ctx);
+                processUser((UserMessage) msg);
                 break;
 			default:
 				ctx.fireChannelRead(msg);
@@ -131,12 +130,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 	}
 
 
-    public void processUser(UserMessage msg, ChannelHandlerContext ctx){
-
-        ChannelHandler handler = ctx.pipeline().get("eth");
-        if (handler != null){
-            ((EthHandler)handler).processUser(msg, ctx);
-        }
+    public void processUser(UserMessage msg){
     }
 
 	@Override
@@ -161,18 +155,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     	msgQueue.sendMessage(msg);
     }
 
-    private void sendUser(){
 
-        Blockchain blockChain= WorldManager.getInstance().getBlockchain();
-
-        byte protocolVersion = EthHandler.version, networkId = 0;
-        BigInteger totalDifficulty = blockChain.getTotalDifficulty();
-        byte[] bestHash = blockChain.getLatestBlockHash();
-        UserMessage msg = new UserMessage(protocolVersion, networkId,
-                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
-        msgQueue.sendMessage(msg);
-    }
-    
 	private void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
 		if (msg.getP2PVersion() != HELLO_MESSAGE.getP2PVersion())
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
@@ -203,7 +186,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public void adaptMessageIds(List<String> capabilities) {
 
-        byte offset = 0x10;
+        byte offset = (byte) (P2pMessageCodes.USER.asByte() + 1);
         for (String capability : capabilities){
 
             if (capability.equals("eth")){

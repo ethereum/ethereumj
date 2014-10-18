@@ -48,7 +48,7 @@ public enum P2pMessageCodes {
     /**
      *
      */
-    USER(0x10);
+    USER(0x0F);
 
 
     private int cmd;

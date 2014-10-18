@@ -38,7 +38,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 	public void channelRead0(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
 
         if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
-            logger.info("ShhHandler invoke: {}", msg.getCommand());
+            logger.info("ShhHandler invoke: [{}]", msg.getCommand());
 		
 		switch (msg.getCommand()) {
             case STATUS:

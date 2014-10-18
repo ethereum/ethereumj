@@ -11,7 +11,7 @@ import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
-import org.ethereum.net.p2p.UserMessage;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,15 +41,17 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private final static Logger logger = LoggerFactory.getLogger("net");
     public static byte version = 0x23;
 
-    private int secToAskForBlocks = 1;
-
     private String peerId;
     private PeerListener peerListener;
 
     private static String hashRetrievalLock;
     private MessageQueue msgQueue = null;
 
+    private SyncSatus syncStatus = SyncSatus.INIT;
+
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
+
+    //
     private Timer getTxTimer = new Timer("GetTransactionsTimer");
 
     public EthHandler(MessageQueue msgQueue) {
@@ -65,6 +67,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     @Override
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         logger.info("ETH protocol activated");
+        sendStatus();
     }
 
     @Override
@@ -76,12 +79,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
         if (EthMessageCodes.inRange(msg.getCommand().asByte()))
-            logger.info("EthHandler invoke: {}", msg.getCommand());
+            logger.info("EthHandler invoke: [{}]", msg.getCommand());
 
         switch (msg.getCommand()) {
             case STATUS:
                 msgQueue.receivedMessage(msg);
-//				processStatus((StatusMessage)msg, ctx);
+				processStatus((StatusMessage) msg, ctx);
                 break;
             case GET_TRANSACTIONS:
                 msgQueue.receivedMessage(msg);
@@ -111,6 +114,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 msgQueue.receivedMessage(msg);
                 processBlocks((BlocksMessage) msg);
                 break;
+            case NEW_BLOCK:
+                procesNewBlock((NewBlockMessage)msg);
             default:
                 break;
         }
@@ -140,7 +145,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      * @param msg is the StatusMessage
      * @param ctx the ChannelHandlerContext
      */
-    public void processUser(UserMessage msg, ChannelHandlerContext ctx) {
+    public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) {
 
         Blockchain blockchain = WorldManager.getInstance().getBlockchain();
 
@@ -160,12 +165,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 hashRetrievalLock = this.peerId;
                 chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
                 chainQueue.setBestHash(msg.getBestHash());
+                syncStatus = SyncSatus.HASH_RETREIVING;
                 sendGetBlockHashes();
             } else
                 startGetBlockTimer();
         }
     }
-
 
     private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
 
@@ -185,8 +190,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         byte[] foundHash, latestHash = blockchain.getLatestBlockHash();
         while (hashIterator.hasNext()) {
             foundHash = hashIterator.next();
-            if (FastByteComparisons.compareTo(foundHash, 0, 32, latestHash, 0, 32) != 0)
+            if (FastByteComparisons.compareTo(foundHash, 0, 32, latestHash, 0, 32) != 0){
                 chainQueue.addHash(foundHash);    // store unknown hashes in queue until known hash is found
+            }
             else {
                 // if known hash is found, ignore the rest
                 startGetBlockTimer(); // start getting blocks from hash queue
@@ -194,30 +200,67 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             }
         }
         // no known hash has been reached
+        chainQueue.logHashQueueSize();
         sendGetBlockHashes(); // another getBlockHashes with last received hash.
     }
 
     private void processBlocks(BlocksMessage blocksMessage) {
         Blockchain blockchain = WorldManager.getInstance().getBlockchain();
         List<Block> blockList = blocksMessage.getBlocks();
-        // If we get one block from a peer we ask less greedy
-        if (blockList.size() <= 1 && secToAskForBlocks != 10) {
-            logger.info("Now we ask for blocks every 10 seconds");
-            updateGetBlocksTimer(10);
-        }
 
-        // If we get more blocks from a peer we ask more greedy
-        if (blockList.size() > 2 && secToAskForBlocks != 1) {
-            logger.info("Now we ask for a chain every 1 seconds");
-            updateGetBlocksTimer(1);
+        // If we got less blocks then we could get,
+        // it the correct indication that we are in sync we
+        // the chain from here there will be NEW_BLOCK only
+        // message expectation
+        if (blockList.size() < CONFIG.maxBlocksAsk()) {
+            logger.info(" *** The chain sync process fully complete ***");
+            syncStatus = SyncSatus.SYNC_DONE;
+            stopGetBlocksTimer();
         }
 
         if (blockList.isEmpty()) return;
         blockchain.getQueue().addBlocks(blockList);
+        blockchain.getQueue().logHashQueueSize();
     }
 
-    private void sendStatus() {
-        StatusMessage msg = new StatusMessage();
+
+    /**
+     * Processing NEW_BLOCK announce message
+     * @param newBlockMessage - new block message
+     */
+    private void procesNewBlock(NewBlockMessage newBlockMessage){
+
+        Blockchain blockchain = WorldManager.getInstance().getBlockchain();
+        Block newBlock = newBlockMessage.getBlock();
+
+        // If the hashes still being downloaded ignore the NEW_BLOCKs
+        // that block hash will be retrieved by the others and letter the block itself
+        if (syncStatus == SyncSatus.INIT || syncStatus == SyncSatus.HASH_RETREIVING) {
+            logger.debug("Sync status INIT or HASH_RETREIVING ignore new block.index: [{}]", newBlock.getNumber());
+            return;
+        }
+
+        // If the GET_BLOCKs stage started add hash to the end of the hash list
+        // then the block will be retrieved in it's turn;
+        if (syncStatus == SyncSatus.BLOCK_RETREIVING){
+            logger.debug("Sync status BLOCK_RETREIVING add to the end of hash list: block.index: [{}]", newBlock.getNumber());
+            blockchain.getQueue().addNewBlockHash(newBlockMessage.getBlock().getHash());
+            return;
+        }
+
+        logger.info("New block received: block.index [{}]", newBlockMessage.getBlock().getNumber());
+
+        blockchain.getQueue().addBlock(newBlockMessage.getBlock());
+        blockchain.getQueue().logHashQueueSize();
+    }
+
+    private void sendStatus(){
+        Blockchain blockChain= WorldManager.getInstance().getBlockchain();
+        byte protocolVersion = EthHandler.version, networkId = 0;
+        BigInteger totalDifficulty = blockChain.getTotalDifficulty();
+        byte[] bestHash = blockChain.getLatestBlockHash();
+        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
         msgQueue.sendMessage(msg);
     }
 
@@ -250,6 +293,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         // retrieve list of block hashes from queue
         List<byte[]> hashes = queue.getHashes();
+        if (hashes.isEmpty()) {
+            stopGetBlocksTimer();
+            return;
+        }
 
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
         msgQueue.sendMessage(msg);
@@ -279,23 +326,17 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     public void startGetBlockTimer() {
+        syncStatus = SyncSatus.BLOCK_RETREIVING;
         getBlocksTimer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
+                BlockQueue blockQueue = WorldManager.getInstance().getBlockchain().getQueue();
+                if (blockQueue.size() > CONFIG.maxBlocksQueued()) {
+                    logger.info("Blocks queue too big temporary postpone blocks request");
+                    return;
+                }
                 sendGetBlocks();
             }
-        }, 1000, secToAskForBlocks * 1000);
-    }
-
-    private void updateGetBlocksTimer(int seconds) {
-        secToAskForBlocks = seconds;
-        getBlocksTimer.cancel();
-        getBlocksTimer.purge();
-        getBlocksTimer = new Timer();
-        getBlocksTimer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                sendGetBlocks();
-            }
-        }, 3000, secToAskForBlocks * 1000);
+        }, 1000, 300);
     }
 
     private void stopGetBlocksTimer() {
@@ -311,5 +352,13 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void killTimers() {
         stopGetBlocksTimer();
         stopGetTxTimer();
+    }
+
+
+    private enum SyncSatus{
+        INIT,
+        HASH_RETREIVING,
+        BLOCK_RETREIVING,
+        SYNC_DONE;
     }
 }
