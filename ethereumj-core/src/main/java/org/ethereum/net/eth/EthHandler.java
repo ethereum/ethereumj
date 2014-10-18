@@ -115,6 +115,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 processBlocks((BlocksMessage) msg);
                 break;
             case NEW_BLOCK:
+                msgQueue.receivedMessage(msg);
                 procesNewBlock((NewBlockMessage)msg);
             default:
                 break;

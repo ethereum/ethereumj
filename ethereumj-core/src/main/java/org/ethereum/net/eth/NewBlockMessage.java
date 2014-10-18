@@ -51,6 +51,7 @@ public class NewBlockMessage extends EthMessage {
 	public String toString() {
 		if (!parsed) parse();
 
-        return "";
+        String blockString = this.getBlock().toString();
+        return "NEW_BLOCK [ " + blockString + " ]";
 	}
 }
