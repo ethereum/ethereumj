@@ -6,6 +6,7 @@ import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.Timer;
@@ -17,6 +18,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
+import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.shh.ShhHandler;
@@ -100,7 +102,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 				break;
 			case GET_PEERS:
 				msgQueue.receivedMessage(msg);
-                // sendPeers(); // todo: implement session management for peer request
+                //sendPeers(); // todo: implement session management for peer request
 				break;
 			case PEERS:
 				msgQueue.receivedMessage(msg);
@@ -154,18 +156,19 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 		if (msg.getP2PVersion() != P2pHandler.VERSION)
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
 		else {
-
-            adaptMessageIds(msg.getCapabilities());
-
-			if (msg.getCapabilities().contains("eth")) {
-				// Activate EthHandler for this peer
-				ctx.pipeline().addLast("eth", new EthHandler(msg.getPeerId(), peerListener, msgQueue));
+			List<Capability> capInCommon = new ArrayList<>();
+			for (Capability capability : msg.getCapabilities()) {
+				if (HELLO_MESSAGE.getCapabilities().contains(capability)) {
+	    			if (capability.getName().equals(Capability.ETH))
+	    				// Activate EthHandler for this peer
+	    				ctx.pipeline().addLast(Capability.ETH, new EthHandler(msg.getPeerId(), peerListener, msgQueue));
+	    			else if (capability.getName().equals(Capability.SHH))
+	                    // Activate ShhHandler for this peer
+	                    ctx.pipeline().addLast(Capability.SHH, new ShhHandler(msg.getPeerId(), peerListener));
+					capInCommon.add(capability);
+				}
 			}
-
-            if (msg.getCapabilities().contains("shh")) {
-                // Activate ShhHandler for this peer
-                ctx.pipeline().addLast("shh", new ShhHandler(msg.getPeerId(), peerListener));
-            }
+            adaptMessageIds(capInCommon);
 
 			InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
 			int port = msg.getListenPort();
@@ -178,17 +181,17 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 		}
 	}
 
-    public void adaptMessageIds(List<String> capabilities) {
+    public void adaptMessageIds(List<Capability> capabilities) {
 
         byte offset = (byte) (P2pMessageCodes.USER.asByte() + 1);
-        for (String capability : capabilities){
+        for (Capability capability : capabilities) {
 
-            if (capability.equals("eth")){
+            if (capability.getName().equals(Capability.ETH)) {
                 EthMessageCodes.setOffset(offset);
                 offset += EthMessageCodes.values().length;
-            }
+            } 
 
-            if (capability.equals("shh")){
+            if (capability.getName().equals(Capability.SHH)) {
                 ShhMessageCodes.setOffset(offset);
                 offset += ShhMessageCodes.values().length;
             }

@@ -1,14 +1,17 @@
 package org.ethereum.net.wire;
 
+import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -94,9 +97,10 @@ public class AdaptiveMessageIdsTest {
 
         P2pHandler p2pHandler = new P2pHandler();
 
-        List<String> capabilities = new ArrayList<String>();
-        capabilities.add("eth"); capabilities.add("shh");
-        p2pHandler.adaptMessageIds( capabilities);
+		List<Capability> capabilities = Arrays.asList(
+				new Capability(Capability.ETH, EthHandler.VERSION),
+				new Capability(Capability.SHH, ShhHandler.VERSION));
+        p2pHandler.adaptMessageIds(capabilities);
 
         Assert.assertEquals(0x10 + 1,  EthMessageCodes.STATUS.asByte());
         Assert.assertEquals(0x10 + 2,  EthMessageCodes.GET_TRANSACTIONS.asByte());
@@ -120,9 +124,10 @@ public class AdaptiveMessageIdsTest {
 
         P2pHandler p2pHandler = new P2pHandler();
 
-        List<String> capabilities = new ArrayList<String>();
-        capabilities.add("shh"); capabilities.add("eth");
-        p2pHandler.adaptMessageIds( capabilities);
+		List<Capability> capabilities = Arrays.asList(
+				new Capability(Capability.ETH, EthHandler.VERSION),
+				new Capability(Capability.SHH, ShhHandler.VERSION));
+        p2pHandler.adaptMessageIds(capabilities);
 
         Assert.assertEquals(0x10 + 1, ShhMessageCodes.STATUS.asByte());
         Assert.assertEquals(0x10 + 2, ShhMessageCodes.MESSAGE.asByte());

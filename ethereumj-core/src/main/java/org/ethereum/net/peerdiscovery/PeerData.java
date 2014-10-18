@@ -1,5 +1,6 @@
 package org.ethereum.net.peerdiscovery;
 
+import org.ethereum.net.client.Capability;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
@@ -16,7 +17,7 @@ public class PeerData {
 	private int port;
 	private String peerId;
 
-	private List<String> capabilities;
+	private List<Capability> capabilities;
 
 	private transient boolean isOnline = false;
 	private transient long lastCheckTime = 0;
@@ -58,7 +59,7 @@ public class PeerData {
 		this.lastCheckTime = lastCheckTime;
 	}
 
-	public List<String> getCapabilities() {
+	public List<Capability> getCapabilities() {
 		return capabilities;
 	}
 
@@ -67,8 +68,9 @@ public class PeerData {
 		byte[] port = RLP.encodeInt(this.port);
 		byte[] peerId = RLP.encodeElement(Hex.decode(this.peerId));
 		byte[][] encodedCaps = new byte[this.capabilities.size()][];
-		for (int i = 0; i < this.capabilities.size(); i++) {
-			encodedCaps[i] = RLP.encodeString(this.capabilities.get(i));
+		for (int i = 0; i < this.capabilities.size()*2; i++) {
+			encodedCaps[i] = RLP.encodeString(this.capabilities.get(i).getName());
+			encodedCaps[i] = RLP.encodeByte(this.capabilities.get(i).getVersion());
 		}
 		byte[] capabilities = RLP.encodeList(encodedCaps);
 		return RLP.encodeList(ip, port, peerId, capabilities);

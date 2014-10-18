@@ -3,9 +3,8 @@ package org.ethereum.net.p2p;
 import static org.ethereum.net.p2p.P2pMessageCodes.HELLO;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
-import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.P2pMessage;
-import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.util.*;
 import org.spongycastle.util.encoders.Hex;
 
@@ -27,7 +26,7 @@ public class HelloMessage extends P2pMessage {
 	private String clientId;
 	/** A peer-network capability code, readable ASCII and 3 letters. 
 	 * Currently only "eth", "shh" and "bzz" are known. */
-	private List<String> capabilities;
+	private List<Capability> capabilities;
 	/** The port on which the peer is listening for an incoming connection */
 	private int listenPort;
 	/** The identity and public key of the peer */
@@ -38,7 +37,7 @@ public class HelloMessage extends P2pMessage {
 	}
 
 	public HelloMessage(byte p2pVersion, String clientId,
-			List<String> capabilities, int listenPort, String peerId) {
+			List<Capability> capabilities, int listenPort, String peerId) {
 		this.p2pVersion = p2pVersion;
 		this.clientId = clientId;
 		this.capabilities = capabilities;
@@ -63,8 +62,14 @@ public class HelloMessage extends P2pMessage {
 		this.capabilities = new ArrayList<>();
 		for (int i = 0; i < capabilityList.size(); i++) {
 
-            RLPElement capabilitiesID = ((RLPList)capabilityList.get(i)).get(0);
-			this.capabilities.add(new String(capabilitiesID.getRLPData()));
+            RLPElement capId = ((RLPList)capabilityList.get(i)).get(0);
+            RLPElement capVersion = ((RLPList)capabilityList.get(i)).get(1);
+            
+            String name = new String(capId.getRLPData());
+            byte version = capVersion.getRLPData() == null ? 0 : capVersion.getRLPData()[0];
+            
+            Capability cap = new Capability(name, version);
+			this.capabilities.add(cap);
 		}
 
 		byte[] peerPortBytes = ((RLPItem) paramsList.get(4)).getRLPData();
@@ -81,16 +86,10 @@ public class HelloMessage extends P2pMessage {
 		byte[] clientId = RLP.encodeString(this.clientId);
 		byte[][] capabilities = new byte[this.capabilities.size()][];
 		for (int i = 0; i < this.capabilities.size(); i++) {
-
-            String capability = this.capabilities.get(i);
-            byte version = 0;
-
-            if (capability.equals("eth")) version = EthHandler.VERSION;
-            if (capability.equals("shh")) version = ShhHandler.VERSION;
-
+			Capability capability = this.capabilities.get(i);
 			capabilities[i] = RLP.encodeList(
-                    RLP.encodeElement( capability.getBytes() ),
-                    RLP.encodeElement( new byte[]{version} ));
+                    RLP.encodeElement(capability.getName().getBytes()),
+                    RLP.encodeElement(new byte[] {capability.getVersion() }));
 		}
 		byte[] capabilityList = RLP.encodeList(capabilities);
 		byte[] peerPort = RLP.encodeInt(this.listenPort);
@@ -116,7 +115,7 @@ public class HelloMessage extends P2pMessage {
 		return clientId;
 	}
 
-	public List<String> getCapabilities() {
+	public List<Capability> getCapabilities() {
 		if (!parsed) parse();
 		return capabilities;
 	}
