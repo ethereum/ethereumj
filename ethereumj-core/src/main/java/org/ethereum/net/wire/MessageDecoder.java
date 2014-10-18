@@ -35,10 +35,6 @@ public class MessageDecoder extends ByteToMessageDecoder {
 		Message msg = MessageFactory.createMessage(encoded);
 
 		if (logger.isInfoEnabled())
-//				&& msg.getCommand() != Command.PING
-//				&& msg.getCommand() != Command.PONG 
-//				&& msg.getCommand() != Command.PEERS 
-//				&& msg.getCommand() != Command.GET_PEERS)
 			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
 
 		out.add(msg);

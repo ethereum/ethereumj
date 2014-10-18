@@ -4,7 +4,8 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum Ping message on the network
- *
+ * 
+ * @see {@link org.ethereum.net.p2p.P2pMessageCodes#PING}
  */
 public class PingMessage extends P2pMessage {
 

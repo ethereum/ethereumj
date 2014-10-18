@@ -1,7 +1,5 @@
 package org.ethereum.net.p2p;
 
-import static org.ethereum.net.p2p.P2pMessageCodes.PEERS;
-
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -18,7 +16,8 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum Peers message on the network
- *
+ * 
+ * @see {@link org.ethereum.net.p2p.P2pMessageCodes#PEERS}
  */
 public class PeersMessage extends P2pMessage {
 
@@ -84,7 +83,6 @@ public class PeersMessage extends P2pMessage {
     public P2pMessageCodes getCommand(){
         return P2pMessageCodes.PEERS;
     }
-
 
 	@Override
 	public Class<?> getAnswerMessage() {

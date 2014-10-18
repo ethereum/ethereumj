@@ -20,8 +20,8 @@ public class SystemProperties {
 	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
 
 	private static int      DEFAULT_TX_APPROVE_TIMEOUT = 10;
-	private static String   DEFAULT_DISCOVERY_PEER_LIST = "poc-6.ethdev.com:30303";
-	private static String   DEFAULT_ACTIVE_PEER_IP = "poc-6.ethdev.com";
+	private static String   DEFAULT_DISCOVERY_PEER_LIST = "poc-7.ethdev.com:30303";
+	private static String   DEFAULT_ACTIVE_PEER_IP = "poc-7.ethdev.com";
 	private static int      DEFAULT_ACTIVE_PORT = 30303;
 	private static String   DEFAULT_SAMPLES_DIR = "samples";
 	private static String   DEFAULT_COINBASE_SECRET = "monkey";
@@ -42,8 +42,7 @@ public class SystemProperties {
 	private static String   DEFAULT_PROJECT_VERSION = "";
 	private static String   DEFAULT_HELLO_PHRASE = "Dev";
 
-    private static List<String> DEFAULT_PROTOCOL_LIST = new ArrayList<>();
-    static { DEFAULT_PROTOCOL_LIST.add("eth"); DEFAULT_PROTOCOL_LIST.add("shh"); }
+    private static List<String> DEFAULT_PROTOCOL_LIST = Arrays.asList("eth", "shh");
 
 	public static SystemProperties CONFIG = new SystemProperties();
 	private Properties prop = new Properties();

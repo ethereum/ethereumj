@@ -11,7 +11,8 @@ import static org.ethereum.net.message.ReasonCode.REQUESTED;
 
 /**
  * Wrapper around an Ethereum Disconnect message on the network
- *
+ * 
+ * @see {@link org.ethereum.net.p2p.P2pMessageCodes#DISCONNECT}
  */
 public class DisconnectMessage extends P2pMessage {
 

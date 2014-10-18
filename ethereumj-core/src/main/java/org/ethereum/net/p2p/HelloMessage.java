@@ -16,7 +16,8 @@ import java.util.List;
 
 /**
  * Wrapper around an Ethereum HelloMessage on the network
- *
+ * 
+ * @see {@link org.ethereum.net.p2p.P2pMessageCodes#HELLO}
  */
 public class HelloMessage extends P2pMessage {
 
@@ -84,8 +85,8 @@ public class HelloMessage extends P2pMessage {
             String capability = this.capabilities.get(i);
             byte version = 0;
 
-            if (capability.equals("eth")) version = EthHandler.version;
-            if (capability.equals("shh")) version = ShhHandler.version;
+            if (capability.equals("eth")) version = EthHandler.VERSION;
+            if (capability.equals("shh")) version = ShhHandler.VERSION;
 
 			capabilities[i] = RLP.encodeList(
                     RLP.encodeElement( capability.getBytes() ),

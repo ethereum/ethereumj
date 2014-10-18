@@ -4,13 +4,13 @@ import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCK_HASHES;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum GetBlockHashes message on the network
- *
+ * 
+ * @see {@link org.ethereum.net.eth.EthMessageCodes#GET_BLOCK_HASHES}
  */
 public class GetBlockHashesMessage extends EthMessage {
 

@@ -1,6 +1,5 @@
 package org.ethereum.net.eth;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,7 +12,8 @@ import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCKS;
 
 /**
  * Wrapper around an Ethereum GetBlocks message on the network
- *
+ * 
+ * @see {@link org.ethereum.net.eth.EthMessageCodes#GET_BLOCKS}
  */
 public class GetBlocksMessage extends EthMessage {
 

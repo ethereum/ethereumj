@@ -1,13 +1,13 @@
 package org.ethereum.net.eth;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.BlockHeader;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 /**
  * Wrapper around an Ethereum Blocks message on the network
+ * 
+ * @see {@link org.ethereum.net.eth.EthMessageCodes#NEW_BLOCK}
  */
 public class NewBlockMessage extends EthMessage {
 
@@ -31,6 +31,11 @@ public class NewBlockMessage extends EthMessage {
     public Block getBlock(){
         if (!parsed) parse();
         return block;
+    }
+    
+    public byte[] getDifficulty(){
+        if (!parsed) parse();
+        return difficulty;
     }
 
 	@Override

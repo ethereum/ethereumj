@@ -7,7 +7,6 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
@@ -31,8 +30,6 @@ public class PeerClient {
 
     private PeerListener peerListener;
     private P2pHandler p2pHandler;
-
-    private MessageQueue queue;
 
     private boolean peerDiscoveryMode = false;
 

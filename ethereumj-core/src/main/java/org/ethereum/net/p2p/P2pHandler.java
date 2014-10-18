@@ -1,12 +1,9 @@
 package org.ethereum.net.p2p;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.message.StaticMessages.PING_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.PONG_MESSAGE;
 import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
-import static org.ethereum.net.message.StaticMessages.GET_PEERS_MESSAGE;
 
-import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -14,22 +11,18 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.message.*;
 import org.ethereum.net.peerdiscovery.PeerData;
 import org.ethereum.net.shh.ShhMessageCodes;
-import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,18 +37,19 @@ import org.slf4j.LoggerFactory;
  * 	<li>PEERS		:	Send a list of known peers</li>
  * 	<li>PING		: 	Check if another peer is still alive</li>
  * 	<li>PONG		:	Confirm that they themselves are still alive</li>
- * 	<li>USER        :   Announce data about the peer </>
  * </ul>
  */
 public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
+	public final static byte VERSION = 0x2;
+	
 	private final static Logger logger = LoggerFactory.getLogger("net");
 
 	private final Timer timer = new Timer("MessageTimer");
 
 	private PeerListener peerListener;
 	
-	private MessageQueue msgQueue = null;
+	private MessageQueue msgQueue;;
 	private boolean tearDown = false;
 
     private boolean peerDiscoveryMode = false;
@@ -157,7 +151,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 
 	private void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
-		if (msg.getP2PVersion() != HELLO_MESSAGE.getP2PVersion())
+		if (msg.getP2PVersion() != P2pHandler.VERSION)
 			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
 		else {
 

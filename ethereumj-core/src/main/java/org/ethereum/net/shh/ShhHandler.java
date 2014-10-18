@@ -3,7 +3,6 @@ package org.ethereum.net.shh;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.net.PeerListener;
-import org.ethereum.net.eth.EthMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,12 +15,11 @@ import org.slf4j.LoggerFactory;
  */
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
+	public final static byte VERSION = 0x1;
+	
 	private final static Logger logger = LoggerFactory.getLogger("net");
-    public static byte version = 0x1;
-
 
 	public ShhHandler() {
-
 	}
 
 	public ShhHandler(String peerId, PeerListener peerListener) {
@@ -32,7 +30,6 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
         logger.info("SHH protocol activated");
     }
-
 
 	@Override
 	public void channelRead0(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
@@ -68,6 +65,4 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     	logger.debug("handlerRemoved: ... ");
 
     }
-    
-
 }

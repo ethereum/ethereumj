@@ -104,7 +104,6 @@ public class UserMessage extends P2pMessage {
         return P2pMessageCodes.USER;
     }
 
-
 	@Override
 	public String toString() {
 		if (!parsed) parse();

@@ -3,8 +3,6 @@ package org.ethereum.net.eth;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.net.eth.EthMessageCodes.BLOCK_HASHES;
-
 import org.ethereum.core.Block;
 import org.ethereum.net.eth.EthMessage;
 import org.ethereum.util.RLP;
@@ -13,6 +11,7 @@ import org.ethereum.util.RLPList;
 /**
  * Wrapper around an Ethereum Blocks message on the network
  *
+ * @see {@link org.ethereum.net.eth.EthMessageCodes#BLOCKS}
  */
 public class BlocksMessage extends EthMessage {
 

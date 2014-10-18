@@ -5,8 +5,9 @@ import org.ethereum.net.eth.TransactionsMessage;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * Wrapper around an Ethereum GetTransactions message on the network 
- *
+ * Wrapper around an Ethereum GetTransactions message on the network
+ * 
+ * @see {@link org.ethereum.net.eth.EthMessageCodes#GET_TRANSACTIONS} *
  */
 public class GetTransactionsMessage extends EthMessage {
 

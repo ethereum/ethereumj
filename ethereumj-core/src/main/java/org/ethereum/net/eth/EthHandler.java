@@ -38,8 +38,10 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
  */
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
+    public final static byte VERSION = 0x23;
+    public final static byte NETWORK_ID = 0x0;
+
     private final static Logger logger = LoggerFactory.getLogger("net");
-    public static byte version = 0x23;
 
     private String peerId;
     private PeerListener peerListener;
@@ -151,11 +153,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         Blockchain blockchain = WorldManager.getInstance().getBlockchain();
 
         if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
-                || msg.getProtocolVersion() != EthHandler.version) {
+                || msg.getProtocolVersion() != EthHandler.VERSION) {
             logger.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
 //			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
             ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
-        } else if (msg.getNetworkId() != 0)
+        } else if (msg.getNetworkId() != EthHandler.NETWORK_ID)
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
         else {
             BlockQueue chainQueue = blockchain.getQueue();
@@ -166,7 +168,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 hashRetrievalLock = this.peerId;
                 chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
                 chainQueue.setBestHash(msg.getBestHash());
-                syncStatus = SyncSatus.HASH_RETREIVING;
+                syncStatus = SyncSatus.HASH_RETRIEVING;
                 sendGetBlockHashes();
             } else
                 startGetBlockTimer();
@@ -236,14 +238,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         // If the hashes still being downloaded ignore the NEW_BLOCKs
         // that block hash will be retrieved by the others and letter the block itself
-        if (syncStatus == SyncSatus.INIT || syncStatus == SyncSatus.HASH_RETREIVING) {
+        if (syncStatus == SyncSatus.INIT || syncStatus == SyncSatus.HASH_RETRIEVING) {
             logger.debug("Sync status INIT or HASH_RETREIVING ignore new block.index: [{}]", newBlock.getNumber());
             return;
         }
 
         // If the GET_BLOCKs stage started add hash to the end of the hash list
         // then the block will be retrieved in it's turn;
-        if (syncStatus == SyncSatus.BLOCK_RETREIVING){
+        if (syncStatus == SyncSatus.BLOCK_RETRIEVING){
             logger.debug("Sync status BLOCK_RETREIVING add to the end of hash list: block.index: [{}]", newBlock.getNumber());
             blockchain.getQueue().addNewBlockHash(newBlockMessage.getBlock().getHash());
             return;
@@ -257,7 +259,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private void sendStatus(){
         Blockchain blockChain= WorldManager.getInstance().getBlockchain();
-        byte protocolVersion = EthHandler.version, networkId = 0;
+        byte protocolVersion = EthHandler.VERSION, networkId = EthHandler.NETWORK_ID;
         BigInteger totalDifficulty = blockChain.getTotalDifficulty();
         byte[] bestHash = blockChain.getLatestBlockHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
@@ -327,7 +329,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     public void startGetBlockTimer() {
-        syncStatus = SyncSatus.BLOCK_RETREIVING;
+        syncStatus = SyncSatus.BLOCK_RETRIEVING;
         getBlocksTimer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 BlockQueue blockQueue = WorldManager.getInstance().getBlockchain().getQueue();
@@ -358,8 +360,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private enum SyncSatus{
         INIT,
-        HASH_RETREIVING,
-        BLOCK_RETREIVING,
+        HASH_RETRIEVING,
+        BLOCK_RETRIEVING,
         SYNC_DONE;
     }
 }

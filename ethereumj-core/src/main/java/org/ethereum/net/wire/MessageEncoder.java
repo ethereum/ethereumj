@@ -22,10 +22,6 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
 	protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
 		
 		if (logger.isInfoEnabled())
-//				&& msg.getCommand() != Command.PING
-//				&& msg.getCommand() != Command.PONG 
-//				&& msg.getCommand() != Command.PEERS 
-//				&& msg.getCommand() != Command.GET_PEERS)
 			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
 
 		byte[] encoded = msg.getEncoded();

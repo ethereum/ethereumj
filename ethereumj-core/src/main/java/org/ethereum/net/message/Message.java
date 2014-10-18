@@ -1,8 +1,5 @@
 package org.ethereum.net.message;
 
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
-
 /**
  * Abstract message class for all messages on the Ethereum network
  * 
@@ -21,7 +18,6 @@ public abstract class Message {
         this.encoded = encoded;
         parsed = false;
     }
-
     
     /**
      * Gets the RLP encoded byte array of this message
