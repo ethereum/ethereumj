@@ -269,7 +269,7 @@ public class Program {
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
         //  actual gas subtract
-        int gas = this.getGas().intValue();
+        long gas = this.getGas().longValue();
         this.spendGas(gas, "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
@@ -365,8 +365,7 @@ public class Program {
             logger.info("No gas for the internal call, \n" +
                     "fromAddress={}, codeAddress={}",
                     Hex.toHexString(senderAddress), Hex.toHexString(codeAddress));
-            this.stackPushZero();
-            return;
+            throw new OutOfGasException();
         }
 
         BigInteger endowment = msg.getEndowment().value();
@@ -376,32 +375,26 @@ public class Program {
             return;
         }
         result.getRepository().addBalance(senderAddress, endowment.negate());
+        BigInteger contextBalance = result.getRepository().addBalance(contextAddress, endowment);
 
         if (invokeData.byTestingSuite()) {
-            logger.info("[testing suite] - omit real call");
-
-            stackPushOne();
-
+            // This keeps track of the calls created for a test
             this.getResult().addCallCreate(data.array(),
                     msg.getCodeAddress().getLast20Bytes(),
                     msg.getGas().getNoLeadZeroesData(), 
                     msg.getEndowment().getNoLeadZeroesData());
-
-            return;
         }
-
+        
         //  actual gas subtract
-        this.spendGas(msg.getGas().intValue(), "internal call");
+        this.spendGas(msg.getGas().longValue(), "internal call");
 
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
-        trackRepository.addBalance(contextAddress, msg.getEndowment().value());
 
-        ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(this, msg.getCodeAddress(),
-                        msg.getEndowment(),  msg.getGas(), result.getRepository().getBalance(contextAddress),
-                        data.array(),
-                        trackRepository, this.invokeData.getCallDeep() + 1);
+		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
+				this, msg.getCodeAddress(), msg.getEndowment(), msg.getGas(),
+				contextBalance, data.array(), trackRepository,
+				this.invokeData.getCallDeep() + 1);
 
         ProgramResult result = null;
 
@@ -412,15 +405,15 @@ public class Program {
             result = program.getResult();
             this.result.addDeleteAccounts(result.getDeleteAccounts());
         }
-
+        
         if (result != null &&
-            result.getException() != null &&
-            result.getException() instanceof Program.OutOfGasException) {
-                logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(contextAddress));
+	            result.getException() != null &&
+	            result.getException() instanceof Program.OutOfGasException) {
+            logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(contextAddress));
 
-                trackRepository.rollback();
-                stackPushZero();
-                return;
+            trackRepository.rollback();
+            stackPushZero();
+            return;
         }
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
@@ -436,22 +429,21 @@ public class Program {
                     this.memorySave(offset, allocSize, buffer.array());
             }
         }
-
+        
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
         trackRepository.commit();
         stackPushOne();
-
+        
         // 5. REFUND THE REMAIN GAS
         if (result != null) {
             BigInteger refundGas = msg.getGas().value().subtract(BigInteger.valueOf(result.getGasUsed()));
             if (refundGas.compareTo(BigInteger.ZERO) == 1) {
-
-                this.refundGas(refundGas.intValue(), "remaining gas from the internal call");
+                this.refundGas(refundGas.longValue(), "remaining gas from the internal call");
                 logger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
                 		Hex.toHexString(senderAddress), refundGas.toString());
             }
         } else {
-            this.refundGas(msg.getGas().intValue(), "remaining gas from the internal call");
+            this.refundGas(msg.getGas().longValue(), "remaining gas from the internal call");
         }
     }
 
