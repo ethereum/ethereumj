@@ -282,9 +282,10 @@ public class DataWord implements Comparable<DataWord> {
     @Override
     public int compareTo(DataWord o) {
         if (o == null || o.getData() == null) return -1;
-
-        return FastByteComparisons.compareTo(
+        int result = FastByteComparisons.compareTo(
                 data, 0, data.length,
                 o.getData(), 0, o.getData().length);
+        // Convert result into -1, 0 or 1 as is the convention
+        return (int) Math.signum(result);
     }
 }
