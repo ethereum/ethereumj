@@ -326,8 +326,7 @@ public class Program {
         long refundGas = gas - result.getGasUsed();
         if (refundGas > 0) {
             this.refundGas(refundGas, "remain gas from the internal call");
-            if (logger.isInfoEnabled()){
-
+            if (logger.isInfoEnabled()) {
                 logger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
                         Hex.toHexString(this.getOwnerAddress().getLast20Bytes()),
                         refundGas);
@@ -380,7 +379,7 @@ public class Program {
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test
             this.getResult().addCallCreate(data.array(),
-                    msg.getCodeAddress().getLast20Bytes(),
+                    contextAddress,
                     msg.getGas().getNoLeadZeroesData(), 
                     msg.getEndowment().getNoLeadZeroesData());
         }
@@ -392,7 +391,7 @@ public class Program {
         trackRepository.startTracking();
 
 		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
-				this, msg.getCodeAddress(), msg.getEndowment(), msg.getGas(),
+				this, new DataWord(contextAddress), msg.getEndowment(), msg.getGas(),
 				contextBalance, data.array(), trackRepository,
 				this.invokeData.getCallDeep() + 1);
 
