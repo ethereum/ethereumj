@@ -213,7 +213,7 @@ public class Program {
 
         allocateMemory(offset, size);
         byte[] chunk;
-        if (memory != null)
+        if (memory != null && size != 0)
         	chunk = Arrays.copyOfRange(memory.array(), offset, offset+size);
         else
         	chunk = new byte[size];
