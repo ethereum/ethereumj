@@ -256,11 +256,6 @@ public class Program {
 
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
 
-		if (invokeData.byTestingSuite()) {
-            logger.info("[testing suite] - omit real create");
-            return;
-        }
-
         // [1] FETCH THE CODE FROM THE MEMORY
         ByteBuffer programCode = memoryChunk(memStart, memSize);
 
@@ -269,8 +264,8 @@ public class Program {
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
         //  actual gas subtract
-        long gas = this.getGas().longValue();
-        this.spendGas(gas, "internal call");
+        DataWord gasLimit = this.getGas();
+        this.spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
         byte[] nonce =  result.getRepository().getNonce(senderAddress).toByteArray();
@@ -280,6 +275,13 @@ public class Program {
         // [3] UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
         result.getRepository().increaseNonce(senderAddress);
+
+        if (invokeData.byTestingSuite()) {
+        	// This keeps track of the contracts created for a test
+        	this.getResult().addCallCreate(programCode.array(), newAddress,
+        			gasLimit.getNoLeadZeroesData(),
+        			value.getNoLeadZeroesData());
+        }
 
         // [4] TRANSFER THE BALANCE
         BigInteger endowment = value.value();
@@ -297,7 +299,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke =
                 ProgramInvokeFactory.createProgramInvoke(this, new DataWord(newAddress), DataWord.ZERO,
-                        new DataWord(gas), BigInteger.ZERO, null, trackRepository, this.invokeData.getCallDeep() + 1);
+                        gasLimit, BigInteger.ZERO, null, trackRepository, this.invokeData.getCallDeep() + 1);
 
         VM vm = new VM();
         Program program = new Program(programCode.array(), programInvoke);
@@ -323,7 +325,7 @@ public class Program {
         trackRepository.commit();
 
         // 5. REFUND THE REMAIN GAS
-        long refundGas = gas - result.getGasUsed();
+        long refundGas = gasLimit.longValue() - result.getGasUsed();
         if (refundGas > 0) {
             this.refundGas(refundGas, "remain gas from the internal call");
             if (logger.isInfoEnabled()) {
