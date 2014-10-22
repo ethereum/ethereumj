@@ -16,18 +16,20 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class MessageEncoder extends MessageToByteEncoder<Message> {
 
-	private Logger logger = LoggerFactory.getLogger("wire");
+	private Logger loggerWire = LoggerFactory.getLogger("wire");
+	private Logger loggerNet  = LoggerFactory.getLogger("net");
+
 
 	@Override
 	protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
 		
-		if (logger.isInfoEnabled())
-			logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
+		if (loggerNet.isInfoEnabled())
+            loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
 
 		byte[] encoded = msg.getEncoded();
 		
-		if (logger.isDebugEnabled())
-			logger.debug("Encoded: [{}]", Hex.toHexString(encoded));
+		if (loggerWire.isDebugEnabled())
+			loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
 		
 		out.capacity(encoded.length + 8);
         out.writeBytes(StaticMessages.SYNC_TOKEN);

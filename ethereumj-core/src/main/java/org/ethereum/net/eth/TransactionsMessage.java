@@ -25,6 +25,13 @@ public class TransactionsMessage extends EthMessage {
         super(encoded);
     }
 
+    public TransactionsMessage(Transaction transaction) {
+
+        transactions = new HashSet<Transaction>();
+        transactions.add(transaction);
+        parsed = true;
+    }
+
     public TransactionsMessage(Set<Transaction> transactionList) {
         this.transactions = transactionList;
         parsed = true;
@@ -79,6 +86,7 @@ public class TransactionsMessage extends EthMessage {
         StringBuffer sb = new StringBuffer();
         for (Transaction transaction : transactions)
             sb.append("\n   ").append(transaction);
-        return "[" + this.getCommand().name() + sb.toString() + "]";
+        return "[" + this.getCommand().name() + " num:"
+                + transactions.size() +  " " + sb.toString() + "]";
     }
 }

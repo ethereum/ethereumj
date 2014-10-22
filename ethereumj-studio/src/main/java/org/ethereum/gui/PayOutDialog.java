@@ -2,6 +2,8 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Account;
 import org.ethereum.core.Transaction;
+import org.ethereum.util.ByteUtil;
+import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -111,7 +113,8 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 				}
 
 				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-				byte[] nonce = PayOutDialog.this.account.getNonce() == BigInteger.ZERO ? null : PayOutDialog.this.account.getNonce().toByteArray();
+				byte[] nonce = PayOutDialog.this.account.getNonce() == BigInteger.ZERO ? null :
+                        ByteUtil.bigIntegerToBytes( PayOutDialog.this.account.getNonce() );
 
                 byte[] gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockchain().getGasPrice()).toByteArray();
 

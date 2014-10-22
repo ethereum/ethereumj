@@ -1,7 +1,10 @@
 package org.ethereum.listener;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.Transaction;
 import org.ethereum.net.message.Message;
+
+import java.util.Set;
 
 /**
  * @author Roman Mandeleil
@@ -31,5 +34,14 @@ public class EthereumListenerAdapter implements EthereumListener {
 
     @Override
     public void onPeerDisconnect(String host, long port) {
+    }
+
+    @Override
+    public void onPendingTransactionsReceived(Set<Transaction> transactions) {
+    }
+
+    @Override
+    public void onSyncDone() {
+
     }
 }

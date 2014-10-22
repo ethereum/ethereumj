@@ -16,12 +16,14 @@ import java.util.TimerTask;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.eth.TransactionsMessage;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.message.*;
 import org.ethereum.net.peerdiscovery.PeerData;
@@ -52,8 +54,10 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 	private PeerListener peerListener;
 	
-	private MessageQueue msgQueue;;
+	private MessageQueue msgQueue;
 	private boolean tearDown = false;
+
+    private boolean active = false;
 
     private boolean peerDiscoveryMode = false;
 
@@ -65,22 +69,33 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.peerDiscoveryMode = peerDiscoveryMode;
     }
 
-	public P2pHandler(PeerListener peerListener) {
+	public P2pHandler(PeerListener peerListener, MessageQueue msgQueue) {
 		this();
+        this.msgQueue = msgQueue;
 		this.peerListener = peerListener;
 	}
-	
+
 	@Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        logger.info("P2P protocol activated");
-		msgQueue = new MessageQueue(ctx, peerListener);
+        msgQueue.activate(ctx);
 		// Send HELLO once when channel connection has been established
 		msgQueue.sendMessage(HELLO_MESSAGE);
 		startTimers();
 	}
 
+    public void activate(){
+        logger.info("P2P protocol activated");
+        active = true;
+    }
+
+    public boolean isActive(){
+        return active;
+    }
+
 	@Override
 	public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
+
+        if (!isActive()) return;
 
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("P2PHandler invoke: [{}]", msg.getCommand());
@@ -160,12 +175,24 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 			List<Capability> capInCommon = new ArrayList<>();
 			for (Capability capability : msg.getCapabilities()) {
 				if (HELLO_MESSAGE.getCapabilities().contains(capability)) {
-	    			if (capability.getName().equals(Capability.ETH))
-	    				// Activate EthHandler for this peer
-	    				ctx.pipeline().addLast(Capability.ETH, new EthHandler(msg.getPeerId(), peerListener, msgQueue));
-	    			else if (capability.getName().equals(Capability.SHH))
-	                    // Activate ShhHandler for this peer
-	                    ctx.pipeline().addLast(Capability.SHH, new ShhHandler(msg.getPeerId(), peerListener));
+	    			if (capability.getName().equals(Capability.ETH)){
+
+                        // Activate EthHandler for this peer
+                        EthHandler ethHandler =
+                                (EthHandler)ctx.pipeline().get(Capability.ETH);
+
+                        ethHandler.setPeerId(msg.getPeerId());
+                        ethHandler.activate();
+                    }
+                    else if (capability.getName().equals(Capability.SHH)){
+
+                        // Activate ShhHandler for this peer
+                        ShhHandler shhHandler =
+                                (ShhHandler)ctx.pipeline().get(Capability.SHH);
+                        shhHandler.activate();
+                    }
+
+
 					capInCommon.add(capability);
 				}
 			}
@@ -181,6 +208,16 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 			WorldManager.getInstance().getPeerDiscovery().getPeers().add(confirmedPeer);
 		}
 	}
+
+    /**
+     * submit transaction to the network
+     * @param tx - fresh transaction object
+     */
+    public void sendTransaction(Transaction tx ){
+
+        TransactionsMessage msg = new TransactionsMessage(tx);
+        msgQueue.sendMessage(msg);
+    }
 
     public void adaptMessageIds(List<Capability> capabilities) {
 

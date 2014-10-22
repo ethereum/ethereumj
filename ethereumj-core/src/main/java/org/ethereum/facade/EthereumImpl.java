@@ -1,5 +1,6 @@
 package org.ethereum.facade;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
@@ -13,6 +14,7 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerData;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -149,11 +151,19 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public Transaction createTransaction(byte[] nonce, byte[] gasPrice, byte[] gas,
-                                      byte[] recieveAddress, byte[] value, byte[] data ){
+    public Transaction createTransaction(BigInteger nonce,
+                                         BigInteger gasPrice,
+                                         BigInteger gas,
+                                         byte[] recieveAddress,
+                                         BigInteger value, byte[] data ){
 
-        Transaction tx = new Transaction(nonce, gasPrice, gas,
-                recieveAddress, value, data);
+        byte[] nonceBytes    =  ByteUtil.bigIntegerToBytes(nonce);
+        byte[] gasPriceBytes =  ByteUtil.bigIntegerToBytes(gasPrice);
+        byte[] gasBytes      =  ByteUtil.bigIntegerToBytes(gas);
+        byte[] valueBytes    =  ByteUtil.bigIntegerToBytes(value);
+
+        Transaction tx = new Transaction(nonceBytes, gasPriceBytes, gasBytes,
+                recieveAddress, valueBytes, data);
 
         return tx;
     }

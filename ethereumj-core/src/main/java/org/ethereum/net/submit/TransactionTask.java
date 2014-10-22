@@ -33,7 +33,7 @@ public class TransactionTask implements Callable<Transaction> {
 			PeerClient peer = WorldManager.getInstance().getActivePeer();
 			WalletTransaction walletTransaction = WorldManager.getInstance()
 					.getWallet().addByWalletTransaction(tx);
-//			peer.getHandler().sendTransaction(tx);
+			peer.getP2pHandler().sendTransaction(tx);
 
 			while (walletTransaction.getApproved() < 1) {
 				sleep(10);

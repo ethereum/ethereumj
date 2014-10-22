@@ -163,12 +163,12 @@ public class Transaction {
     }
 
     public byte[] getContractAddress() {
-
         if (!isContractCreation()) return null;
         return HashUtil.calcNewAddr(this.getSender(), this.getNonce());
     }
 
     public boolean isContractCreation() {
+        if (!parsed) rlpParse();
         return this.receiveAddress == null;
     }
 
@@ -238,7 +238,13 @@ public class Transaction {
         if (!parsed) rlpParse();
         if (rlpRaw != null) return rlpRaw;
 
-        byte[] nonce 				= RLP.encodeElement(this.nonce);
+        // parse null as 0 for nonce
+        byte[] nonce = null;
+        if ( this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0){
+            nonce 				= RLP.encodeElement(null);
+        } else {
+            nonce 				= RLP.encodeElement(this.nonce);
+        }
         byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
         byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
         byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
@@ -254,7 +260,13 @@ public class Transaction {
 
         if(rlpEncoded != null) return rlpEncoded;
 
-        byte[] nonce 				= RLP.encodeElement(this.nonce);
+        // parse null as 0 for nonce
+        byte[] nonce = null;
+        if (this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0){
+            nonce 				= RLP.encodeElement(null);
+        } else {
+            nonce 				= RLP.encodeElement(this.nonce);
+        }
         byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
         byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
         byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);

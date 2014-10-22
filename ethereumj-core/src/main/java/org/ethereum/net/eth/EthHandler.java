@@ -50,35 +50,31 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private MessageQueue msgQueue = null;
 
     private SyncSatus syncStatus = SyncSatus.INIT;
+    private boolean active = false;
 
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
 
     //
     private Timer getTxTimer = new Timer("GetTransactionsTimer");
 
-    public EthHandler(MessageQueue msgQueue) {
+    public EthHandler(MessageQueue msgQueue, PeerListener peerListener) {
         this.msgQueue = msgQueue;
     }
 
-    public EthHandler(String peerId, PeerListener peerListener, MessageQueue msgQueue) {
-        this(msgQueue);
-        this.peerId = peerId;
-        this.peerListener = peerListener;
-    }
-
-    @Override
-    public void handlerAdded(ChannelHandlerContext ctx) throws Exception {
+    public void activate(){
         logger.info("ETH protocol activated");
+        active = true;
         sendStatus();
     }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-//		sendStatus();
+    public boolean isActive(){
+        return active;
     }
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
+
+        if (!isActive()) return;
 
         if (EthMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("EthHandler invoke: [{}]", msg.getCommand());
@@ -89,11 +85,13 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 				processStatus((StatusMessage) msg, ctx);
                 break;
             case GET_TRANSACTIONS:
-                msgQueue.receivedMessage(msg);
-                sendPendingTransactions();
+                // todo: eventually get_transaction is going deprecated
+//                msgQueue.receivedMessage(msg);
+//                sendPendingTransactions();
                 break;
             case TRANSACTIONS:
                 msgQueue.receivedMessage(msg);
+                processTransactions((TransactionsMessage)msg);
                 // List<Transaction> txList = transactionsMessage.getTransactions();
                 // for(Transaction tx : txList)
                 // WorldManager.getInstance().getBlockchain().applyTransaction(null,
@@ -121,6 +119,16 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 procesNewBlock((NewBlockMessage)msg);
             default:
                 break;
+        }
+    }
+
+    private void processTransactions(TransactionsMessage msg) {
+
+        Set<Transaction> txSet = msg.getTransactions();
+        WorldManager.getInstance().addPendingTransactions(txSet);
+
+        for (Transaction tx : txSet){
+            WorldManager.getInstance().getWallet().addTransaction(tx);
         }
     }
 
@@ -211,6 +219,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         Blockchain blockchain = WorldManager.getInstance().getBlockchain();
         List<Block> blockList = blocksMessage.getBlocks();
 
+        if (blockList.isEmpty()) return;
+        blockchain.getQueue().addBlocks(blockList);
+        blockchain.getQueue().logHashQueueSize();
+
         // If we got less blocks then we could get,
         // it the correct indication that we are in sync we
         // the chain from here there will be NEW_BLOCK only
@@ -220,10 +232,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             syncStatus = SyncSatus.SYNC_DONE;
             stopGetBlocksTimer();
         }
-
-        if (blockList.isEmpty()) return;
-        blockchain.getQueue().addBlocks(blockList);
-        blockchain.getQueue().logHashQueueSize();
     }
 
 
@@ -251,8 +259,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             return;
         }
 
+        // here is post sync process
         logger.info("New block received: block.index [{}]", newBlockMessage.getBlock().getNumber());
-
+        WorldManager.getInstance().clearPendingTransactions(newBlockMessage.getBlock().getTransactionsList());
         blockchain.getQueue().addBlock(newBlockMessage.getBlock());
         blockchain.getQueue().logHashQueueSize();
     }
@@ -357,8 +366,17 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         stopGetTxTimer();
     }
 
+    public SyncSatus getSyncStatus(){
 
-    private enum SyncSatus{
+
+        return syncStatus;
+    }
+
+    public void setPeerId(String peerId){
+        this.peerId = peerId;
+    }
+
+    public enum SyncSatus{
         INIT,
         HASH_RETRIEVING,
         BLOCK_RETRIEVING,

@@ -7,7 +7,10 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
 import org.ethereum.manager.WorldManager;
+import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
+import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
 import org.ethereum.net.p2p.P2pHandler;
@@ -31,16 +34,24 @@ public class PeerClient {
     private PeerListener peerListener;
     private P2pHandler p2pHandler;
 
+    private MessageQueue msgQueue;
+
+    private EthHandler ethHandler;
+    private ShhHandler shhHandler;
+
     private boolean peerDiscoveryMode = false;
 
     public PeerClient() {
+        msgQueue = new MessageQueue(peerListener);
     }
 
     public PeerClient(boolean peerDiscoveryMode){
+        super();
         this.peerDiscoveryMode = peerDiscoveryMode;
     }
 
     public PeerClient(PeerListener peerListener) {
+        super();
     	this.peerListener = peerListener;
     }
 
@@ -54,8 +65,12 @@ public class PeerClient {
         if (peerDiscoveryMode)
             p2pHandler = new P2pHandler(peerDiscoveryMode);
         else
-            p2pHandler = new P2pHandler(peerListener);
-        
+            p2pHandler = new P2pHandler(peerListener, msgQueue);
+        p2pHandler.activate();
+
+        ethHandler = new EthHandler(msgQueue, peerListener);
+        shhHandler = new ShhHandler(msgQueue, peerListener);
+
         try {
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
@@ -73,7 +88,9 @@ public class PeerClient {
 							new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
 					ch.pipeline().addLast("out encoder", new MessageEncoder());
 					ch.pipeline().addLast("in  encoder", new MessageDecoder());
-					ch.pipeline().addLast("p2p", p2pHandler);
+					ch.pipeline().addLast(Capability.P2P , p2pHandler);
+					ch.pipeline().addLast(Capability.ETH, ethHandler);
+					ch.pipeline().addLast(Capability.SHH, shhHandler);
 
                     // limit the size of receiving buffer to 1024
                     ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
@@ -115,4 +132,13 @@ public class PeerClient {
 	public P2pHandler getP2pHandler() {
 		return p2pHandler;
 	}
+
+    public boolean isSyncDone(){
+
+        if (ethHandler.isActive() && ethHandler.getSyncStatus() == EthHandler.SyncSatus.SYNC_DONE)
+            return true;
+        else
+            return false;
+
+    }
 }

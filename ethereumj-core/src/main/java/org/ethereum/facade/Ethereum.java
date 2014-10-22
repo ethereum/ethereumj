@@ -6,6 +6,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerData;
 
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.Set;
 import java.util.concurrent.Future;
@@ -94,17 +95,20 @@ public interface Ethereum {
      *               transactions this one is empty.
      * @return newly created transaction
      */
-    public Transaction createTransaction(byte[] nonce, byte[] gasPrice, byte[] gas,
-                                         byte[] recieveAddress, byte[] value, byte[] data );
+    public Transaction createTransaction(BigInteger nonce,
+                                         BigInteger gasPrice,
+                                         BigInteger gas,
+                                         byte[] recieveAddress,
+                                         BigInteger value, byte[] data);
 
 
-    /**
-     *
-     * @param transaction - submit transaction to the net, return
-     *                      option to wait for net return this transaction
-     *                      as approved
-     * @return
-     */
+                                         /**
+                                          *
+                                          * @param transaction - submit transaction to the net, return
+                                          *                      option to wait for net return this transaction
+                                          *                      as approved
+                                          * @return
+                                          */
     public Future<Transaction> submitTransaction(Transaction transaction);
 
 

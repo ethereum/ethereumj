@@ -118,7 +118,9 @@ public class RepositoryImpl implements Repository {
     }
     
     public Block getBlock(long blockNr) {
-    	return new Block(chainDB.get(ByteUtil.longToBytes(blockNr)));
+        byte[] raw = chainDB.get(ByteUtil.longToBytes(blockNr));
+        if (raw == null) return null;
+    	return new Block(raw);
     }
     
     public void saveBlock(Block block) {

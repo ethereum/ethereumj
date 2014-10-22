@@ -5,6 +5,7 @@ import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
+import org.ethereum.net.eth.EthHandler;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
@@ -12,9 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
@@ -66,6 +65,7 @@ public class BlockchainImpl implements Blockchain {
     private final Map<Long, byte[]> blockCache = new HashMap<>();
 	
     private final BlockQueue blockQueue = new BlockQueue();
+    private boolean syncDoneCalled = false;
 
 	public BlockchainImpl(Repository repository) {
 		this.repository = repository;
@@ -129,17 +129,28 @@ public class BlockchainImpl implements Blockchain {
             listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
         EthereumListener ethereumListener =  WorldManager.getInstance().getListener();
-        if (ethereumListener != null)
+        if (ethereumListener != null){
             ethereumListener.onBlock(block);
+
+            if (blockQueue.size() == 0 &&
+                !syncDoneCalled &&
+                WorldManager.getInstance().getActivePeer().isSyncDone()){
+                syncDoneCalled = true;
+                ethereumListener.onSyncDone();
+            }
+        }
     }
     
     private void processBlock(Block block) {    	
     	if(block.isValid()) {
             if (!block.isGenesis()) {
                 if (!CONFIG.blockChainOnly()) {
-                	WorldManager.getInstance().getWallet().addTransactions(block.getTransactionsList());
+
+                    Wallet wallet = WorldManager.getInstance().getWallet();
+
+                    wallet.addTransactions(block.getTransactionsList());
                 	this.applyBlock(block);
-                    WorldManager.getInstance().getWallet().processBlock(block);
+                    wallet.processBlock(block);
                 }
             }
             this.storeBlock(block);

@@ -33,16 +33,18 @@ public class MessageQueue {
 	private ChannelHandlerContext ctx = null;
 	private final Timer timer = new Timer("MessageQueue");
 
-	public MessageQueue(ChannelHandlerContext ctx, PeerListener listener) {
-		this.ctx = ctx;
+	public MessageQueue(PeerListener listener) {
 		this.listener = listener;
-
-		timer.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
-				nudgeQueue();
-			}
-		}, 10, 10);
 	}
+
+    public void activate(ChannelHandlerContext ctx){
+        this.ctx = ctx;
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                nudgeQueue();
+            }
+        }, 10, 10);
+    }
 
 	public void sendMessage(Message msg) {
 		messageQueue.add(new MessageRoundtrip(msg));

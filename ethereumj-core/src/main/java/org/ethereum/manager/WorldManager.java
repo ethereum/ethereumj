@@ -14,6 +14,9 @@ import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.
@@ -22,6 +25,8 @@ import org.ethereum.net.peerdiscovery.PeerDiscovery;
  * Created on: 01/06/2014 10:44
  */
 public class WorldManager {
+
+    private static final Logger logger = LoggerFactory.getLogger("general");
 
 	private Blockchain blockchain;
 	private Repository repository;
@@ -80,6 +85,22 @@ public class WorldManager {
     public void stopPeerDiscovery() {
         if (peerDiscovery.isStarted())
             peerDiscovery.stop();
+    }
+
+    public void addPendingTransactions(Set<Transaction> transactions){
+        logger.info("Pending transaction list added: size: [{}]", transactions.size());
+
+        if (listener != null)
+            listener.onPendingTransactionsReceived(transactions);
+        pendingTransactions.addAll(transactions);
+    }
+
+    public void clearPendingTransactions(List<Transaction> recivedTransactions){
+
+        for (Transaction tx : recivedTransactions){
+            logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+            pendingTransactions.remove(tx);
+        }
     }
 
     public PeerDiscovery getPeerDiscovery() {

@@ -17,7 +17,8 @@ import java.util.List;
  */
 public class MessageDecoder extends ByteToMessageDecoder {
 
-	private Logger logger = LoggerFactory.getLogger("wire");
+    private Logger loggerWire = LoggerFactory.getLogger("wire");
+    private Logger loggerNet = LoggerFactory.getLogger("net");
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
@@ -29,13 +30,13 @@ public class MessageDecoder extends ByteToMessageDecoder {
 		byte[] encoded = new byte[in.readInt()];
 		in.readBytes(encoded);
 	
-		if (logger.isDebugEnabled())
-			logger.debug("Encoded: [{}]", Hex.toHexString(encoded));
+		if (loggerWire.isDebugEnabled())
+			loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
 
 		Message msg = MessageFactory.createMessage(encoded);
 
-		if (logger.isInfoEnabled())
-			logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
+		if (loggerNet.isInfoEnabled())
+            loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
 
 		out.add(msg);
         in.markReaderIndex();
@@ -57,19 +58,19 @@ public class MessageDecoder extends ByteToMessageDecoder {
 			// A collision can happen (although rare)
 			// If this happens too often, it's an attack.
 			// In that case, drop the peer.
-			logger.error("Abandon garbage, wrong sync token: [{}]", syncToken);
+			loggerWire.error("Abandon garbage, wrong sync token: [{}]", syncToken);
 		}
 
 		// Don't have the full message yet
         long msgSize = in.getInt(in.readerIndex());
 		if (msgSize > in.readableBytes()) {
-			logger.trace("msg decode: magicBytes: [{}], readBytes: [{}] / msgSize: [{}] ",
-					syncToken, in.readableBytes(), msgSize);
+			loggerWire.trace("msg decode: magicBytes: [{}], readBytes: [{}] / msgSize: [{}] ",
+                    syncToken, in.readableBytes(), msgSize);
 			in.resetReaderIndex();
 			return false;
 		}
 
-		logger.trace("Message fully constructed: readBytes: [{}] / msgSize: [{}]", in.readableBytes(), msgSize);
+		loggerWire.trace("Message fully constructed: readBytes: [{}] / msgSize: [{}]", in.readableBytes(), msgSize);
 		return true;
 	}
 }

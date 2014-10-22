@@ -4,7 +4,8 @@ package org.ethereum.net.client;
  * The protocols and versions of those protocols that this peer support
  */
 public class Capability implements Comparable<Capability> {
-	
+
+    public final static String P2P = "p2p";
 	public final static String ETH = "eth";
 	public final static String SHH = "shh";
 	
