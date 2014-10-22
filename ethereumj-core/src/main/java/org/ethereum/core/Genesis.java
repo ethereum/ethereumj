@@ -3,8 +3,6 @@ package org.ethereum.core;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -41,8 +39,6 @@ public class Genesis extends Block {
             "1a26338f0d905e295fccb71fa9ea849ffa12aaf4",		// # (A)
     };
 
-	Logger logger = LoggerFactory.getLogger("main");
-
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
 
@@ -74,9 +70,6 @@ public class Genesis extends Block {
 			state.update(Hex.decode(address), acctState.getEncoded());
         }
 		setStateRoot(state.getRootHash());
-        
-		logger.info("Genesis-hash: {}", Hex.toHexString(this.getHash()));
-		logger.info("Genesis-stateRoot: {}", Hex.toHexString(this.getStateRoot()));
     }
 	
 	public static Block getInstance() {
