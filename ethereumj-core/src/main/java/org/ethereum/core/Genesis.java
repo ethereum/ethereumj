@@ -3,7 +3,6 @@ package org.ethereum.core;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.RLP;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -46,10 +45,9 @@ public class Genesis extends Block {
 
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
-	private static byte[] sha3EmptyList = HashUtil.sha3(RLP.encodeList());
 
 	public static byte[] PARENT_HASH = zeroHash256;
-	public static byte[] UNCLES_HASH = sha3EmptyList;
+	public static byte[] UNCLES_HASH = new byte[0];
 	public static byte[] COINBASE = zeroHash160;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long NUMBER = 0;
