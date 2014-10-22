@@ -405,24 +405,25 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
         byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
         byte[] nonce = account.getNonce() == BigInteger.ZERO ? null : account.getNonce().toByteArray();
-        byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
+        BigInteger gasPrice = new BigInteger("10000000000000");
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
         byte[] gasValue  = BigIntegers.asUnsignedByteArray(gasBI);
-        byte[] endowment = BigIntegers.asUnsignedByteArray(new BigInteger("1000"));
+        BigInteger endowment = new BigInteger("1000");
 
         if (logger.isInfoEnabled()) {
             logger.info("Contract call:");
             logger.info("tx.nonce: {}", nonce == null ? "null" : Hex.toHexString(nonce));
-            logger.info("tx.gasPrice: {}", Hex.toHexString(gasPrice));
+            logger.info("tx.gasPrice: {}", Hex.toHexString(BigIntegers.asUnsignedByteArray( gasPrice )));
             logger.info("tx.gasValue: {}", Hex.toHexString(gasValue));
             logger.info("tx.address: {}", Hex.toHexString(contractAddress));
-            logger.info("tx.endowment: {}", Hex.toHexString(endowment));
+            logger.info("tx.endowment: {}", Hex.toHexString(BigIntegers.asUnsignedByteArray( endowment)));
             logger.info("tx.data: {}", Hex.toHexString(data));
         }
 
 
-        Transaction tx = UIEthereumManager.ethereum.createTransaction(nonce, gasPrice, gasValue,
+        Transaction tx = UIEthereumManager.ethereum.createTransaction(account.getNonce(),
+                gasPrice, gasBI,
                 contractAddress, endowment, data);
 
         try {
