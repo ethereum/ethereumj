@@ -12,9 +12,9 @@ import java.nio.file.Files;
 public class JSONReader {
 
     public static String loadJSON(String filename) {
-    	return getFromLocal(filename);
-//    	String json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/master/vmtests/" + filename);
-//    	return json == "" ? json = getFromLocal(filename) : json;
+//    	return getFromLocal(filename);
+    	String json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/" + filename);
+    	return json == "" ? json = getFromLocal(filename) : json;
     }
     
     public static String getFromLocal(String filename) {

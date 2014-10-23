@@ -16,8 +16,8 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class MessageEncoder extends MessageToByteEncoder<Message> {
 
-	private Logger loggerWire = LoggerFactory.getLogger("wire");
-	private Logger loggerNet  = LoggerFactory.getLogger("net");
+	private static final Logger loggerWire = LoggerFactory.getLogger("wire");
+	private static final Logger loggerNet  = LoggerFactory.getLogger("net");
 
 
 	@Override

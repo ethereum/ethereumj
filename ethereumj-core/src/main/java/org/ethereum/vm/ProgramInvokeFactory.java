@@ -18,8 +18,16 @@ import java.math.BigInteger;
  */
 public class ProgramInvokeFactory {
 
-    private static Logger logger = LoggerFactory.getLogger("VM");
+    private static final Logger logger = LoggerFactory.getLogger("VM");
 
+    /** 
+     * This attribute defines the number of resursive calls allowed in the EVM
+     * Note: For the JVM to reach this level without a StackOverflow exception,
+     * ethereumj may need to be started with a JVM argument to increase 
+     * the stack size. For example: -Xss10m
+     */
+    private static final int MAX_CREATE_CALL_DEPTH = 1024; 
+    
         // Invocation by the wire tx
     public static ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
 
@@ -122,7 +130,7 @@ public class ProgramInvokeFactory {
     public static ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
                                                     DataWord inValue, DataWord inGas,
                                                     BigInteger balanceInt,  byte[] dataIn,
-                                                    Repository repository, int callDeep) {
+                                                    Repository repository) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
@@ -174,9 +182,13 @@ public class ProgramInvokeFactory {
                     Hex.toHexString(difficulty.getNoLeadZeroesData()),
                     gasLimit.longValue());
         }
+        
+    	if(program.invokeData.getCallDeep() >= MAX_CREATE_CALL_DEPTH) {
+    		throw program.new OutOfGasException();
+    	}
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, callDeep);
+                repository, program.invokeData.getCallDeep()+1);
     }
 }

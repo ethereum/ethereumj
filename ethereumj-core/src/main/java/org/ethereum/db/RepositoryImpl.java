@@ -56,7 +56,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class RepositoryImpl implements Repository {
 
-    private Logger logger = LoggerFactory.getLogger("repository");
+    private static final Logger logger = LoggerFactory.getLogger("repository");
 
     private Trie 			worldState;
     private TrackTrie     	accountStateDB;
@@ -473,18 +473,17 @@ public class RepositoryImpl implements Repository {
     }
 
     public void close() {
-
-        if (this.chainDB != null){
-            chainDB.close();
-            chainDB = null;
+        if (this.detailsDB != null){
+            detailsDB.close();
+            detailsDB = null;
         }
         if (this.stateDB != null){
             stateDB.close();
             stateDB = null;
         }
-        if (this.detailsDB != null){
-            detailsDB.close();
-            detailsDB = null;
+        if (this.chainDB != null){
+            chainDB.close();
+            chainDB = null;
         }
     }
 

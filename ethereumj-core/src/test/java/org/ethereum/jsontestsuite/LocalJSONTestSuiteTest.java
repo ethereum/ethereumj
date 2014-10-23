@@ -1,11 +1,6 @@
 package org.ethereum.jsontestsuite;
 
-import java.io.File;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
 import java.util.List;
 
 import org.ethereum.db.ByteArrayWrapper;
@@ -173,110 +168,52 @@ public class LocalJSONTestSuiteTest {
 
         TestRunner runner = new TestRunner();
         List<String> result = runner.runTestCase(testCase);
-
         Assert.assertTrue(result.size() == 0);
-
     }
 
     @Test // TestCase file: vmtest-1.json  //
-    public void test6() throws ParseException, IOException, URISyntaxException {
-
-    	String testSrc = JSONReader.getFromLocal("vmtest-1.json");
-
-        JSONParser parser = new JSONParser();
-        JSONObject testCaseJSONObj = (JSONObject)parser.parse(testSrc);
-
-        TestSuite testSuite = new TestSuite(testCaseJSONObj);
-
-        TestRunner runner = new TestRunner();
-        List<String> result = runner.runTestSuite(testSuite);
-
-        Assert.assertTrue(result.size() == 0);
+    public void test6() {
+    	String vmtest = JSONReader.getFromLocal("vmtest-1.json");
+    	runTest(vmtest);
     }
 
-
     @Test // TestCase file: vmtest-2.json  //
-    public void test7() throws ParseException, IOException, URISyntaxException {
-
-        URL vmtest = ClassLoader
-                .getSystemResource("jsontestsuite/vmtest-2.json");
-
-        File vmTestFile = new File(vmtest.toURI());
-        byte[] testData = Files.readAllBytes(vmTestFile.toPath());
-        String testSrc = new String(testData);
-
-        JSONParser parser = new JSONParser();
-        JSONObject testCaseJSONObj = (JSONObject)parser.parse(testSrc);
-
-        TestSuite testSuite = new TestSuite(testCaseJSONObj);
-
-        TestRunner runner = new TestRunner();
-        List<String> result = runner.runTestSuite(testSuite);
-
-        Assert.assertTrue(result.size() == 0);
+    public void test7() {
+    	String vmtest = JSONReader.getFromLocal("vmtest-2.json");
+        runTest(vmtest);
     }
 
     @Test // TestCase file: vmtest-3.json  //
-    public void test8() throws ParseException, IOException, URISyntaxException {
-
-        URL vmtest = ClassLoader
-                .getSystemResource("jsontestsuite/vmtest-3.json");
-
-        File vmTestFile = new File(vmtest.toURI());
-        byte[] testData = Files.readAllBytes(vmTestFile.toPath());
-        String testSrc = new String(testData);
-
-        JSONParser parser = new JSONParser();
-        JSONObject testCaseJSONObj = (JSONObject)parser.parse(testSrc);
-
-        TestSuite testSuite = new TestSuite(testCaseJSONObj);
-
-        TestRunner runner = new TestRunner();
-        List<String> result = runner.runTestSuite(testSuite);
-
-        Assert.assertTrue(result.size() == 0);
-    }
-
-
-    @Test // TestCase file: vmtest-4.json  //
-    public void test9() throws ParseException, IOException, URISyntaxException {
-
-        URL vmtest = ClassLoader
-                .getSystemResource("jsontestsuite/vmtest-4.json");
-
-        File vmTestFile = new File(vmtest.toURI());
-        byte[] testData = Files.readAllBytes(vmTestFile.toPath());
-        String testSrc = new String(testData);
-
-        JSONParser parser = new JSONParser();
-        JSONObject testCaseJSONObj = (JSONObject)parser.parse(testSrc);
-
-        TestSuite testSuite = new TestSuite(testCaseJSONObj);
-
-        TestRunner runner = new TestRunner();
-        List<String> result = runner.runTestSuite(testSuite);
-
-        Assert.assertTrue(result.size() == 0);
+    public void test8() {
+    	String vmtest = JSONReader.getFromLocal("vmtest-3.json");
+        runTest(vmtest);
     }
 
     @Test // TestCase file: vmtest-4.json  //
-    public void test10() throws ParseException, IOException, URISyntaxException {
+    public void test9() {
+    	String vmtest = JSONReader.getFromLocal("vmtest-4.json");
+        runTest(vmtest);
+    }
 
-        URL vmtest = ClassLoader
-                .getSystemResource("jsontestsuite/vmtest-5.json");
-
-        File vmTestFile = new File(vmtest.toURI());
-        byte[] testData = Files.readAllBytes(vmTestFile.toPath());
-        String testSrc = new String(testData);
-
-        JSONParser parser = new JSONParser();
-        JSONObject testCaseJSONObj = (JSONObject)parser.parse(testSrc);
-
-        TestSuite testSuite = new TestSuite(testCaseJSONObj);
-
-        TestRunner runner = new TestRunner();
-        List<String> result = runner.runTestSuite(testSuite);
-
-        Assert.assertTrue(result.size() == 0);
+    @Test // TestCase file: vmtest-5.json  //
+    public void test10() {
+    	String vmtest = JSONReader.getFromLocal("vmtest-5.json");
+        runTest(vmtest);
+    }
+    
+    private void runTest(String vmtest) {
+    	try {
+	        JSONParser parser = new JSONParser();
+	        JSONObject testCaseJSONObj = (JSONObject)parser.parse(vmtest);
+	
+	        TestSuite testSuite = new TestSuite(testCaseJSONObj);
+	
+	        TestRunner runner = new TestRunner();
+	        List<String> result = runner.runTestSuite(testSuite);
+	
+	        Assert.assertTrue(result.size() == 0);
+    	} catch (ParseException e) {
+    		Assert.fail(e.getMessage());
+    	}
     }
 }

@@ -16,7 +16,7 @@ import static java.lang.Thread.sleep;
  */
 public class TransactionTask implements Callable<Transaction> {
 
-	private Logger logger = LoggerFactory.getLogger(TransactionTask.class);
+	private static final Logger logger = LoggerFactory.getLogger(TransactionTask.class);
 
 	private Transaction tx;
 

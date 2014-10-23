@@ -24,8 +24,9 @@ import java.util.Stack;
  */
 public class Program {
 	
-    private Logger logger = LoggerFactory.getLogger("VM");
-    private Logger gasLogger = LoggerFactory.getLogger("gas");
+    private static final Logger logger = LoggerFactory.getLogger("VM");
+    private static final Logger gasLogger = LoggerFactory.getLogger("gas");
+    
     private int invokeHash;
     private ProgramListener listener;
 
@@ -54,13 +55,13 @@ public class Program {
 	        this.result.setRepository(invokeData.getRepository());
 	    }
 	}
-	
+
 	public byte getOp(int pc) {
-    	if(ops.length == 0)
-    		return 0;
-        return ops[pc];
+		if (ops.length <= pc)
+			return 0;
+		return ops[pc];
 	}
-	
+
     public byte getCurrentOp() {
     	if(ops.length == 0)
     		return 0;
@@ -135,7 +136,7 @@ public class Program {
 
         if (pc + n > ops.length) {
             stop();
-            throw new RuntimeException("pc overflow sweep n: " + n + " pc: " + pc);
+            throw new PcOverflowException("pc overflow sweep n: " + n + " pc: " + pc);
         }
 
         byte[] data = Arrays.copyOfRange(ops, pc, pc + n);
@@ -262,12 +263,12 @@ public class Program {
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
 
         // [1] FETCH THE CODE FROM THE MEMORY
-        ByteBuffer programCode = memoryChunk(memStart, memSize);
+        byte[] programCode = memoryChunk(memStart, memSize).array();
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
-
+        
         //  actual gas subtract
         DataWord gasLimit = this.getGas();
         this.spendGas(gasLimit.longValue(), "internal call");
@@ -277,16 +278,12 @@ public class Program {
         byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
         result.getRepository().createAccount(newAddress);
 
-        // [3] UPDATE THE NONCE
-        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        result.getRepository().increaseNonce(senderAddress);
-
-        if (invokeData.byTestingSuite()) {
-        	// This keeps track of the contracts created for a test
-        	this.getResult().addCallCreate(programCode.array(), newAddress,
-        			gasLimit.getNoLeadZeroesData(),
-        			value.getNoLeadZeroesData());
-        }
+		if (invokeData.byTestingSuite()) {
+			// This keeps track of the contracts created for a test
+			this.getResult().addCallCreate(programCode, newAddress,
+					gasLimit.getNoLeadZeroesData(),
+					value.getNoLeadZeroesData());
+		}
 
         // [4] TRANSFER THE BALANCE
         BigInteger endowment = value.value();
@@ -296,23 +293,32 @@ public class Program {
             return;
         }
         result.getRepository().addBalance(senderAddress, endowment.negate());
-        result.getRepository().addBalance(newAddress, endowment);
+        BigInteger newBalance = result.getRepository().addBalance(newAddress, endowment);
 
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
+        
+        // [3] UPDATE THE NONCE
+        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
+        trackRepository.increaseNonce(senderAddress);
 
         // [5] COOK THE INVOKE AND EXECUTE
-        ProgramInvoke programInvoke =
-                ProgramInvokeFactory.createProgramInvoke(this, new DataWord(newAddress), DataWord.ZERO,
-                        gasLimit, BigInteger.ZERO, null, trackRepository, this.invokeData.getCallDeep() + 1);
-
-        VM vm = new VM();
-        Program program = new Program(programCode.array(), programInvoke);
-        vm.play(program);
-        ProgramResult result = program.getResult();
-        this.result.addDeleteAccounts(result.getDeleteAccounts());
-
-        if (result.getException() != null &&
+		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
+				this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
+				newBalance, null, trackRepository);
+		
+        ProgramResult result = null;
+        
+        if (programCode != null && programCode.length != 0) {
+            VM vm = new VM();
+            Program program = new Program(programCode, programInvoke);
+            vm.play(program);
+            result = program.getResult();
+            this.result.addDeleteAccounts(result.getDeleteAccounts());
+        }
+        
+        if (result != null && 
+        		result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException) {
             logger.info("contract run halted by OutOfGas: new contract init ={}" , Hex.toHexString(newAddress));
 
@@ -324,17 +330,18 @@ public class Program {
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code    = result.getHReturn().array();
         trackRepository.saveCode(newAddress, code);
-
+        trackRepository.commit();
+        
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
-        trackRepository.commit();
-
+        
         // 5. REFUND THE REMAIN GAS
+
         long refundGas = gasLimit.longValue() - result.getGasUsed();
         if (refundGas > 0) {
             this.refundGas(refundGas, "remain gas from the internal call");
-            if (logger.isInfoEnabled()) {
-                logger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
+            if (gasLogger.isInfoEnabled()) {
+                gasLogger.info("The remaining gas is refunded, account: [{}], gas: [{}] ",
                         Hex.toHexString(this.getOwnerAddress().getLast20Bytes()),
                         refundGas);
             }
@@ -351,7 +358,7 @@ public class Program {
      */
     public void callToAddress(MessageCall msg) {
     	
-        ByteBuffer data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize());
+        byte[] data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
 
         // FETCH THE SAVED STORAGE
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
@@ -368,12 +375,12 @@ public class Program {
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
         if (this.getGas().longValue() - msg.getGas().longValue() < 0 ) {
-            logger.info("No gas for the internal call, \n" +
+            gasLogger.info("No gas for the internal call, \n" +
                     "fromAddress={}, codeAddress={}",
                     Hex.toHexString(senderAddress), Hex.toHexString(codeAddress));
             throw new OutOfGasException();
         }
-
+        
         BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
@@ -382,11 +389,10 @@ public class Program {
         }
         result.getRepository().addBalance(senderAddress, endowment.negate());
         BigInteger contextBalance = result.getRepository().addBalance(contextAddress, endowment);
-
+        
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test
-            this.getResult().addCallCreate(data.array(),
-                    contextAddress,
+			this.getResult().addCallCreate(data, contextAddress,
                     msg.getGas().getNoLeadZeroesData(), 
                     msg.getEndowment().getNoLeadZeroesData());
         }
@@ -398,9 +404,8 @@ public class Program {
         trackRepository.startTracking();
 
 		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
-				this, new DataWord(contextAddress), msg.getEndowment(), msg.getGas(),
-				contextBalance, data.array(), trackRepository,
-				this.invokeData.getCallDeep() + 1);
+				this, new DataWord(contextAddress), msg.getEndowment(),
+				msg.getGas(), contextBalance, data, trackRepository);
 
         ProgramResult result = null;
 
@@ -415,7 +420,7 @@ public class Program {
         if (result != null &&
 	            result.getException() != null &&
 	            result.getException() instanceof Program.OutOfGasException) {
-            logger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(contextAddress));
+            gasLogger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(contextAddress));
 
             trackRepository.rollback();
             stackPushZero();
@@ -443,10 +448,12 @@ public class Program {
         // 5. REFUND THE REMAIN GAS
         if (result != null) {
             BigInteger refundGas = msg.getGas().value().subtract(BigInteger.valueOf(result.getGasUsed()));
-            if (refundGas.compareTo(BigInteger.ZERO) == 1) {
+            if (refundGas.signum() == 1) {
                 this.refundGas(refundGas.longValue(), "remaining gas from the internal call");
-                logger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
-                		Hex.toHexString(senderAddress), refundGas.toString());
+                if(gasLogger.isInfoEnabled())
+					gasLogger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
+							Hex.toHexString(senderAddress),
+							refundGas.toString());
             }
         } else {
             this.refundGas(msg.getGas().longValue(), "remaining gas from the internal call");

@@ -5,7 +5,6 @@ import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
-import org.ethereum.net.eth.EthHandler;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;

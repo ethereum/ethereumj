@@ -47,7 +47,7 @@ public class VMComplexTest {
         // Set contract into Database
         String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         String contractAddr = "77045e71a7a2c50903d88e564cd72fab11e82051";
-        String code         = "6103e75660005460006000530b0f630000004b596001600053036103e757600060006000600060007377045e71a7a2c50903d88e564cd72fab11e820516008600a5c0402f1630000004c5800";
+        String code         = "6103e75660005460006000530b0f630000004c596001600053036103e757600060006000600060007377045e71a7a2c50903d88e564cd72fab11e820516008600a5c0402f1630000004c585d00";
 
         byte[] contractAddrB = Hex.decode(contractAddr);
         byte[] callerAddrB = Hex.decode(callerAddr);
