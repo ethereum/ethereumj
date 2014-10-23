@@ -13,7 +13,7 @@ import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCKS;
 /**
  * Wrapper around an Ethereum GetBlocks message on the network
  * 
- * @see {@link org.ethereum.net.eth.EthMessageCodes#GET_BLOCKS}
+ * @see org.ethereum.net.eth.EthMessageCodes#GET_BLOCKS
  */
 public class GetBlocksMessage extends EthMessage {
 

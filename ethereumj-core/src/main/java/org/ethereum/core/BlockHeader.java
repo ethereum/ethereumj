@@ -154,7 +154,7 @@ public class BlockHeader {
 	/**
 	 * Verify that block is valid for its difficulty
 	 * 
-	 * @return
+	 * @return boolean
 	 */
 	public boolean validateNonce() {
 		BigInteger max = BigInteger.valueOf(2).pow(256);

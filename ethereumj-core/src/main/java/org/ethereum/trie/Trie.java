@@ -18,7 +18,7 @@ public interface Trie {
 	 * Insert or update a value in the trie for a specified key
 	 * 
 	 * @param key - any length byte array
-	 * @param an rlp encoded byte array of the object to store
+	 * @param value rlp encoded byte array of the object to store
 	 */
     public void update(byte[] key, byte[] value);
     

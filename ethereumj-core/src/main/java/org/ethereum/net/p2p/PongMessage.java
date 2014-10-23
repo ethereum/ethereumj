@@ -6,7 +6,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * Wrapper around an Ethereum Pong message on the network
  * 
- * @see {@link org.ethereum.net.p2p.P2pMessageCodes#PONG}
+ * @see org.ethereum.net.p2p.P2pMessageCodes#PONG
  */
 public class PongMessage extends P2pMessage {
 

@@ -16,7 +16,7 @@ import java.util.List;
 /**
  * Wrapper around an Ethereum HelloMessage on the network
  * 
- * @see {@link org.ethereum.net.p2p.P2pMessageCodes#HELLO}
+ * @see org.ethereum.net.p2p.P2pMessageCodes#HELLO
  */
 public class HelloMessage extends P2pMessage {
 

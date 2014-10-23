@@ -42,9 +42,9 @@ public class ByteUtil {
 
     /**
      * Omitting sign indication byte.
-     * <br/><br/>
+     * <br><br>
      * Instead of {@link org.spongycastle.util.BigIntegers#asUnsignedByteArray(BigInteger)} 
-     * <br/>we use this custom method to avoid an empty array in case of BigInteger.ZERO
+     * <br>we use this custom method to avoid an empty array in case of BigInteger.ZERO
      *
      * @param value - any big integer number. A <code>null</code>-value will return <code>null</code>
      * @return A byte array without a leading zero byte if present in the signed encoding. 
@@ -94,14 +94,15 @@ public class ByteUtil {
     }
     
     /**
-     * Convert a byte-array into a hex String. <br/>
+     * Convert a byte-array into a hex String.<br>
      * Works similar to {@link Hex#toHexString} 
      * but allows for <code>null</code>
      * 
      * @param data - byte-array to convert to a hex-string
-     * @return hex representation of the data.<br/> 
+     * @return hex representation of the data.<br>
      * 		Returns an empty String if the input is <code>null</code>
-     * @see {@link Hex#toHexString}
+     *
+     * @see Hex#toHexString
      */
     public static String toHexString(byte[] data) {
         return data == null ? "" : Hex.toHexString(data);
@@ -109,7 +110,7 @@ public class ByteUtil {
     
     /**
      * Calculate packet length
-     * @param msg
+     * @param msg byte[]
      * @return byte-array with 4 elements
      */
     public static byte[] calcPacketLength(byte[] msg) {
@@ -213,6 +214,8 @@ public class ByteUtil {
 
 	/**
 	 * encode the values and concatenate together
+     * @param args Object
+     * @return byte[]
 	 */
 	public static byte[] encodeDataList(Object... args) {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -253,6 +256,10 @@ public class ByteUtil {
 
     /**
      * increment byte array as a number until max is reached
+     *
+     * @param bytes byte[]
+     *
+     * @return boolean
      */
     public static boolean increment(byte[] bytes) {
         final int startIndex = 0;
@@ -272,7 +279,7 @@ public class ByteUtil {
      * with zeros.
      * 
      * @param value - a BigInteger with a maximum value of 2^256-1
-     * @return Byte array of given size with a copy of the </code>src</code>
+     * @return Byte array of given size with a copy of the <code>src</code>
      */
     public static byte[] copyToArray(BigInteger value) {
 		byte[] src = ByteUtil.bigIntegerToBytes(value);
