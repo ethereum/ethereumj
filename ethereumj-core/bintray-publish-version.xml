@@ -26,9 +26,9 @@
 
     <property name="artifact.groupId" value="org.ethereum"/>
     <property name="artifact.id" value="ethereumj"/>
-    <property name="artifact.version" value="0.7.1"/>
+    <property name="artifact.version" value="0.7.2"/>
     <property name="artifact.path" value="" />
-    <property name="artifact.snapshot" value="snapshot" />
+    <!--<property name="artifact.snapshot" value="snapshot" />-->
 
     <property name="repo.location" value="${user.home}/.m2/repository"/>
     <property name="artifact.group.path" value="${artifact.groupId}"/>

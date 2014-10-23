@@ -46,12 +46,12 @@ public class PeerClient {
     }
 
     public PeerClient(boolean peerDiscoveryMode){
-        super();
+        this();
         this.peerDiscoveryMode = peerDiscoveryMode;
     }
 
     public PeerClient(PeerListener peerListener) {
-        super();
+        this();
     	this.peerListener = peerListener;
     }
 
@@ -63,7 +63,7 @@ public class PeerClient {
         	peerListener.console("Connecting to: " + host + ":" + port);
 
         if (peerDiscoveryMode)
-            p2pHandler = new P2pHandler(peerDiscoveryMode);
+            p2pHandler = new P2pHandler(peerDiscoveryMode, msgQueue);
         else
             p2pHandler = new P2pHandler(peerListener, msgQueue);
         p2pHandler.activate();
@@ -108,11 +108,13 @@ public class PeerClient {
 
         } catch (Exception e) {
         	logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            throw new Error("Disconnnected");
         } finally {
         	workerGroup.shutdownGracefully();
 
         	p2pHandler.killTimers();
 
+/*
             final Set<PeerData> peers =  WorldManager.getInstance().getPeerDiscovery().getPeers();
 
 			synchronized (peers) {
@@ -122,6 +124,7 @@ public class PeerClient {
 						peer.setOnline(false);
 				}
 			}
+*/
         }
     }
 

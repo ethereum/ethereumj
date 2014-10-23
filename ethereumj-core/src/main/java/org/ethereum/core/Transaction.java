@@ -169,7 +169,7 @@ public class Transaction {
 
     public boolean isContractCreation() {
         if (!parsed) rlpParse();
-        return this.receiveAddress == null;
+        return this.receiveAddress == null || this.receiveAddress == ByteUtil.EMPTY_BYTE_ARRAY;
     }
 
     /*********

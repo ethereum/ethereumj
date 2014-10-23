@@ -421,7 +421,6 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             logger.info("tx.data: {}", Hex.toHexString(data));
         }
 
-
         Transaction tx = UIEthereumManager.ethereum.createTransaction(account.getNonce(),
                 gasPrice, gasBI,
                 contractAddress, endowment, data);

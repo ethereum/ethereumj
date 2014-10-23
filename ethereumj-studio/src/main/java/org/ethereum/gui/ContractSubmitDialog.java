@@ -285,6 +285,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         byte[] zeroAddress = null;
 
+//        UIEthereumManager.ethereum.createTransaction();
+
         Transaction tx = new Transaction(nonce, gasPrice, gasValue,
                 zeroAddress, endowment, initByteCode);
 

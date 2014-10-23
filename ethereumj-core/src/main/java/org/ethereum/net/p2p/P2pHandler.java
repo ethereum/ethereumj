@@ -61,17 +61,17 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private boolean peerDiscoveryMode = false;
 
-	public P2pHandler() {
+	public P2pHandler(MessageQueue msgQueue) {
+        this.msgQueue = msgQueue;
 	}
 
-    public P2pHandler(boolean peerDiscoveryMode) {
-        super();
+    public P2pHandler(boolean peerDiscoveryMode, MessageQueue msgQueue) {
+        this(msgQueue);
         this.peerDiscoveryMode = peerDiscoveryMode;
     }
 
 	public P2pHandler(PeerListener peerListener, MessageQueue msgQueue) {
-		this();
-        this.msgQueue = msgQueue;
+		this(msgQueue);
 		this.peerListener = peerListener;
 	}
 
@@ -104,7 +104,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 			case HELLO:
 				msgQueue.receivedMessage(msg);
                 if (!peerDiscoveryMode)
-                setHandshake((HelloMessage) msg, ctx);
+                    setHandshake((HelloMessage) msg, ctx);
+                sendGetPeers();
 				break;
 			case DISCONNECT:
 				msgQueue.receivedMessage(msg);
@@ -160,6 +161,10 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
         WorldManager.getInstance().getPeerDiscovery().addPeers(peersMessage.getPeers());
 	}
+
+    private void sendGetPeers(){
+        msgQueue.sendMessage( StaticMessages.GET_PEERS_MESSAGE );
+    }
 
     private void sendPeers() {
         Set<PeerData> peers = WorldManager.getInstance().getPeerDiscovery().getPeers();

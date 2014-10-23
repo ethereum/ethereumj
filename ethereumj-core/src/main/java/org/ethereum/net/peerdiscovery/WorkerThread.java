@@ -38,7 +38,10 @@ public class WorkerThread implements Runnable {
 		try {
 			clientPeer = new PeerClient(true);
 			clientPeer.connect(peer.getAddress().getHostAddress(), peer.getPort());
-			peer.setOnline(true);
+            peer.setOnline(true);
+            logger.info("Peer is online: [{}] ", peer
+                    .getAddress().getHostAddress());
+
 		} catch (Throwable e) {
 			if (peer.isOnline())
 				logger.info("Peer: [{}] went offline, due to: [{}]", peer

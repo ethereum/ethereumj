@@ -95,7 +95,7 @@ public class AdaptiveMessageIdsTest {
     @Test
     public void test4(){
 
-        P2pHandler p2pHandler = new P2pHandler();
+        P2pHandler p2pHandler = new P2pHandler(null);
 
 		List<Capability> capabilities = Arrays.asList(
 				new Capability(Capability.ETH, EthHandler.VERSION),
@@ -122,7 +122,7 @@ public class AdaptiveMessageIdsTest {
     @Test // Capabilities should be read in alphabetical order
     public void test5(){
 
-        P2pHandler p2pHandler = new P2pHandler();
+        P2pHandler p2pHandler = new P2pHandler(null);
 
 		List<Capability> capabilities = Arrays.asList(
 				new Capability(Capability.SHH, ShhHandler.VERSION),
