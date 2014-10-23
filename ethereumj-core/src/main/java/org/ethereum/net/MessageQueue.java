@@ -99,6 +99,7 @@ public class MessageQueue {
 	}
 
     public void close(){
+        timer.cancel();
         timer.purge();
     }
 }
