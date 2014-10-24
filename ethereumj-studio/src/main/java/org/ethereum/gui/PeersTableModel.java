@@ -176,12 +176,13 @@ public class PeersTableModel extends AbstractTableModel {
         @Override
         public String toString() {
             return "PeerInfo{" +
-                    "location=" + location.city +
+                    "location=" + location.countryName +
+                    ", geo= [ " + location.latitude + "/" + location.longitude + " ]" +
                     ", ip=" + ip +
                     ", connected=" + connected +
                     ", lastAccessed=" + lastAccessed +
-                    '}' + "\n -->" + (handshakeHelloMessage == null ?"":  handshakeHelloMessage.toString())
-                        + "\n -->" + (handshakeStatusMessage == null?"": handshakeStatusMessage.toString());
+                    '}' + "\n -->" + (handshakeHelloMessage == null ?"" :  handshakeHelloMessage.toString())
+                        + "\n -->" + (handshakeStatusMessage == null?"" :  handshakeStatusMessage.toString());
         }
     }
 }
