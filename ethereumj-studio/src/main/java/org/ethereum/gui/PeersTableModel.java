@@ -10,7 +10,10 @@ import javax.swing.table.AbstractTableModel;
 
 
 import org.ethereum.geo.IpGeoDB;
-import org.ethereum.net.peerdiscovery.PeerData;
+
+import org.ethereum.net.eth.StatusMessage;
+import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;
@@ -110,29 +113,37 @@ public class PeersTableModel extends AbstractTableModel {
         synchronized (peerInfoList) {
             peerInfoList.clear();
 
-            final Set<PeerData> peers = UIEthereumManager.ethereum.getPeers();
+            final Set<org.ethereum.net.peerdiscovery.PeerInfo> peers = UIEthereumManager.ethereum.getPeers();
 
             synchronized (peers){
 
-                for (PeerData peer : peers) {
+                for (org.ethereum.net.peerdiscovery.PeerInfo peer : peers) {
                     InetAddress addr = peer.getAddress();
                     Location cr = IpGeoDB.getLocationForIp(addr);
-                    peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getLastCheckTime()));
+                    peerInfoList.add(new PeerInfo(cr, addr, peer.isOnline(), peer.getLastCheckTime(),
+                            peer.getHandshakeHelloMessage(), peer.getStatusMessage()));
                 }
             }
         }
     }
 
-    private class PeerInfo {
+    public PeerInfo getPeerInfo(int index){
+        return peerInfoList.get(index);
+    }
+
+
+    public class PeerInfo {
 
         Location         location;
         InetAddress      ip;
         boolean          connected;
         long lastAccessed = 0;
 
+        HelloMessage handshakeHelloMessage;
+        StatusMessage handshakeStatusMessage;
 
 		private PeerInfo(Location location, InetAddress ip,
-				boolean isConnected, long lastAccessed) {
+				boolean isConnected, long lastAccessed, HelloMessage helloMessage, StatusMessage statusMessage) {
 
             if (location == null)
                 this.location = new Location();
@@ -142,6 +153,8 @@ public class PeersTableModel extends AbstractTableModel {
             this.ip = ip;
             this.connected = isConnected;
             this.lastAccessed = lastAccessed;
+            this.handshakeHelloMessage = helloMessage;
+            this.handshakeStatusMessage = statusMessage;
         }
 
         private Location getLocation() {
@@ -158,6 +171,17 @@ public class PeersTableModel extends AbstractTableModel {
 
         public long getLastAccessed() {
             return lastAccessed;
+        }
+
+        @Override
+        public String toString() {
+            return "PeerInfo{" +
+                    "location=" + location.city +
+                    ", ip=" + ip +
+                    ", connected=" + connected +
+                    ", lastAccessed=" + lastAccessed +
+                    '}' + "\n -->" + (handshakeHelloMessage == null ?"":  handshakeHelloMessage.toString())
+                        + "\n -->" + (handshakeStatusMessage == null?"": handshakeStatusMessage.toString());
         }
     }
 }

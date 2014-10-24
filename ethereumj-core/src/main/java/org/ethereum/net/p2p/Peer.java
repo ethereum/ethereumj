@@ -1,4 +1,4 @@
-package org.ethereum.net.peerdiscovery;
+package org.ethereum.net.p2p;
 
 import org.ethereum.net.client.Capability;
 import org.ethereum.util.RLP;
@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * This class models a peer in the network
  */
-public class PeerData {
+public class Peer {
 
 	private InetAddress address;
 	private int port;
@@ -19,10 +19,7 @@ public class PeerData {
 
 	private List<Capability> capabilities;
 
-	private transient boolean isOnline = false;
-	private transient long lastCheckTime = 0;
-
-	public PeerData(InetAddress ip, int port, String peerId) {
+	public Peer(InetAddress ip, int port, String peerId) {
 		this.address = ip;
 		this.port = port;
 		this.peerId = peerId;
@@ -39,24 +36,6 @@ public class PeerData {
 
 	public String getPeerId() {
 		return peerId == null ? "" : peerId;
-	}
-
-	public boolean isOnline() {
-		if (getCapabilities().size() < 0)
-			return false;
-		return isOnline;
-	}
-
-	public void setOnline(boolean online) {
-		isOnline = online;
-	}
-
-	public long getLastCheckTime() {
-		return lastCheckTime;
-	}
-
-	public void setLastCheckTime(long lastCheckTime) {
-		this.lastCheckTime = lastCheckTime;
 	}
 
 	public List<Capability> getCapabilities() {
@@ -86,7 +65,7 @@ public class PeerData {
 	@Override
 	public boolean equals(Object obj) {
 		if (obj == null) return false;
-		PeerData peerData = (PeerData) obj;
+		Peer peerData = (Peer) obj;
 		return peerData.peerId.equals(this.peerId)
 				|| this.getAddress().equals(peerData.getAddress());
 	}

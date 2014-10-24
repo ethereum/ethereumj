@@ -10,15 +10,15 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.StatusMessage;
+import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
 import org.ethereum.net.p2p.P2pHandler;
-import org.ethereum.net.peerdiscovery.PeerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -68,7 +68,7 @@ public class PeerClient {
             p2pHandler = new P2pHandler(peerListener, msgQueue);
         p2pHandler.activate();
 
-        ethHandler = new EthHandler(msgQueue, peerListener);
+        ethHandler = new EthHandler(msgQueue, peerListener, peerDiscoveryMode);
         shhHandler = new ShhHandler(msgQueue, peerListener);
 
         try {
@@ -143,5 +143,13 @@ public class PeerClient {
         else
             return false;
 
+    }
+
+    public HelloMessage getHelloHandshake(){
+        return p2pHandler.getHandshakeHelloMessage();
+    }
+
+    public StatusMessage getStatusHandshake(){
+        return ethHandler.getHandshakeStatusMessage();
     }
 }

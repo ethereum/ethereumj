@@ -1,5 +1,6 @@
 package org.ethereum.net.eth;
 
+import com.sun.org.apache.xerces.internal.util.Status;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.core.Block;
@@ -51,13 +52,18 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private SyncSatus syncStatus = SyncSatus.INIT;
     private boolean active = false;
+    private StatusMessage handshakeStatusMessage = null;
+
+    private boolean peerDiscovery = true;
+
 
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
 
     //
     private Timer getTxTimer = new Timer("GetTransactionsTimer");
 
-    public EthHandler(MessageQueue msgQueue, PeerListener peerListener) {
+    public EthHandler(MessageQueue msgQueue, PeerListener peerListener, boolean peerDiscovery) {
+        this.peerDiscovery = true;
         this.msgQueue = msgQueue;
     }
 
@@ -156,7 +162,16 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      * @param msg is the StatusMessage
      * @param ctx the ChannelHandlerContext
      */
-    public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) {
+    public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
+
+        this.handshakeStatusMessage = msg;
+        if (peerDiscovery) {
+            msgQueue.sendMessage(new DisconnectMessage(ReasonCode.REQUESTED));
+            killTimers();
+            ctx.close().sync();
+            ctx.disconnect().sync();
+            return;
+        }
 
         Blockchain blockchain = WorldManager.getInstance().getBlockchain();
 
@@ -381,5 +396,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         HASH_RETRIEVING,
         BLOCK_RETRIEVING,
         SYNC_DONE;
+    }
+
+    public StatusMessage getHandshakeStatusMessage(){
+        return handshakeStatusMessage;
     }
 }

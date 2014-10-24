@@ -10,8 +10,9 @@ import java.util.Set;
 
 import org.ethereum.net.p2p.GetPeersMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
+import org.ethereum.net.p2p.Peer;
 import org.ethereum.net.p2p.PeersMessage;
-import org.ethereum.net.peerdiscovery.PeerData;
+import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -51,8 +52,8 @@ public class PeersMessageTest {
 
         assertEquals(2, peersMessage.getPeers().size());
 
-        Iterator<PeerData> it = peersMessage.getPeers().iterator(); it.next();
-        PeerData peer = it.next();
+        Iterator<Peer> it = peersMessage.getPeers().iterator(); it.next();
+        Peer peer = it.next();
 
         assertEquals(P2pMessageCodes.PEERS, peersMessage.getCommand());
         assertEquals("/81.99.225.18", peer.getAddress().toString());
@@ -63,9 +64,9 @@ public class PeersMessageTest {
 
     @Test /*  PeersMessage 2 from constructor */
     public void testPeers_2() throws UnknownHostException {
-    	Set<PeerData> peers = new HashSet<>();
-    	peers.add(new PeerData(InetAddress.getByName("82.217.72.169"), 30303, "585764a3c49a3838c69ad0855abfeb5672f71b072af62082b5679961781100814b8de88a8fbc1da7c73791f88159d73b5d2a13a5579535d603e045c3db5cbb75"));
-    	peers.add(new PeerData(InetAddress.getByName("192.168.1.193"), 30303, ""));
+    	Set<Peer> peers = new HashSet<>();
+    	peers.add(new Peer(InetAddress.getByName("82.217.72.169"), 30303, "585764a3c49a3838c69ad0855abfeb5672f71b072af62082b5679961781100814b8de88a8fbc1da7c73791f88159d73b5d2a13a5579535d603e045c3db5cbb75"));
+    	peers.add(new Peer(InetAddress.getByName("192.168.1.193"), 30303, ""));
         PeersMessage peersMessage = new PeersMessage(peers);
         System.out.println(peersMessage.toString());
 

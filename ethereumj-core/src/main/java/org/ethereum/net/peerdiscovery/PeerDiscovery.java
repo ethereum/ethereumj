@@ -1,5 +1,6 @@
 package org.ethereum.net.peerdiscovery;
 
+import org.ethereum.net.p2p.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +20,7 @@ public class PeerDiscovery {
 
 	private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-	private final Set<PeerData> peers = Collections.synchronizedSet(new HashSet<PeerData>());
+	private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<PeerInfo>());
 	
 	private PeerMonitorThread monitor;
 	private ThreadFactory threadFactory;
@@ -47,10 +48,10 @@ public class PeerDiscovery {
 		monitorThread.start();
 
         // Initialize PeerData
-        List<PeerData> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
+        List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
         peers.addAll(peerDataList);
 
-        for (PeerData peerData : this.peers) {
+        for (PeerInfo peerData : this.peers) {
             executorPool.execute(new WorkerThread(peerData, executorPool));
         }
 
@@ -67,7 +68,7 @@ public class PeerDiscovery {
 		return started.get();
 	}
 	
-    public Set<PeerData> getPeers() {
+    public Set<PeerInfo> getPeers() {
 		return peers;
 	}
 		
@@ -77,26 +78,28 @@ public class PeerDiscovery {
      *
      * @param newPeers to be added to the list of known peers
      */
-    public void addPeers(final Set<PeerData> newPeers) {
+    public void addPeers(Set<Peer> newPeers) {
         synchronized (peers) {
-			for (final PeerData newPeer : newPeers) {
-                if (started.get() && !peers.contains(newPeer)){
-                    startWorker(newPeer);
+			for (final Peer newPeer : newPeers) {
+                PeerInfo peerInfo =
+                        new PeerInfo(newPeer.getAddress(), newPeer.getPort(), newPeer.getPeerId());
+                if (started.get() && !peers.contains(peerInfo )){
+                    startWorker(peerInfo);
                 }
-                peers.add(newPeer);
+                peers.add(peerInfo);
             }
         }
     }
 
-	private void startWorker(PeerData peer) {
+	private void startWorker(PeerInfo peer) {
 		logger.debug("Add new peer for discovery: {}", peer);
 		executorPool.execute(new WorkerThread(peer, executorPool));
 	}
 
-    public List<PeerData> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
+    public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
 
         final List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
-        final List<PeerData> peers = new ArrayList<>();
+        final List<PeerInfo> peers = new ArrayList<>();
 
         for (String ip : ipList){
             String[] addr = ip.trim().split(":");
@@ -107,7 +110,7 @@ public class PeerDiscovery {
                 InetAddress iAddr = InetAddress.getByName(ip_trim);
                 int port = Integer.parseInt(port_trim);
 
-                PeerData peerData = new PeerData(iAddr, port, "");
+                PeerInfo peerData = new PeerInfo(iAddr, port, "");
                 peers.add(peerData);
             } catch (UnknownHostException e) {
                 e.printStackTrace();

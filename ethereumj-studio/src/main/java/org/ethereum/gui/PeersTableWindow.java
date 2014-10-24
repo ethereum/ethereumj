@@ -1,6 +1,10 @@
 package org.ethereum.gui;
 
+
+
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Timer;
@@ -54,6 +58,24 @@ public class PeersTableWindow extends JFrame {
 		// Create a new table instance
 		table = new JTable();
 		table.setModel(new PeersTableModel());
+
+        table.addMouseListener(new MouseAdapter() {
+            public void mousePressed(MouseEvent me) {
+                JTable table =(JTable) me.getSource();
+                Point p = me.getPoint();
+                int row = table.rowAtPoint(p);
+                PeersTableModel model = (PeersTableModel) table.getModel();
+                if (me.getClickCount() == 2) {
+                    final PeersTableModel.PeerInfo peerInfo = model.getPeerInfo(row);
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            new PeerInfoWindow(peerInfo).setVisible(true);
+                        }
+                    });
+                    System.out.println(peerInfo);
+                }
+            }
+        });
 
 		table.setFont(new Font("Courier New", Font.PLAIN, 15));
 		table.setForeground(Color.GRAY);

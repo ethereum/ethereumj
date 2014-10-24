@@ -1,7 +1,6 @@
 package org.ethereum.net.peerdiscovery;
 
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.peerdiscovery.PeerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,12 +14,12 @@ public class WorkerThread implements Runnable {
 
 	private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-	private PeerData peer;
+	private PeerInfo peerInfo;
 	private PeerClient clientPeer;
 	private ThreadPoolExecutor poolExecutor;
 
-	public WorkerThread(PeerData peer, ThreadPoolExecutor poolExecutor) {
-		this.peer = peer;
+	public WorkerThread(PeerInfo peer, ThreadPoolExecutor poolExecutor) {
+		this.peerInfo = peer;
 		this.poolExecutor = poolExecutor;
 	}
 
@@ -37,26 +36,29 @@ public class WorkerThread implements Runnable {
 
 		try {
 			clientPeer = new PeerClient(true);
-			clientPeer.connect(peer.getAddress().getHostAddress(), peer.getPort());
-            peer.setOnline(true);
-            logger.info("Peer is online: [{}] ", peer
-                    .getAddress().getHostAddress());
+			clientPeer.connect(peerInfo.getAddress().getHostAddress(), peerInfo.getPort());
+            peerInfo.setOnline(true);
+
+            peerInfo.setHandshakeHelloMessage(clientPeer.getHelloHandshake());
+            peerInfo.setStatusMessage( clientPeer.getStatusHandshake() );
+
+            logger.info("Peer is online: [{}] ", peerInfo);
 
 		} catch (Throwable e) {
-			if (peer.isOnline())
-				logger.info("Peer: [{}] went offline, due to: [{}]", peer
+			if (peerInfo.isOnline())
+				logger.info("Peer: [{}] went offline, due to: [{}]", peerInfo
 						.getAddress().getHostAddress(), e);
-			peer.setOnline(false);
+			peerInfo.setOnline(false);
 		} finally {
-			logger.info("Peer: " + peer.toString() + " is "
-					+ (peer.isOnline() ? "online" : "offline"));
-			peer.setLastCheckTime(System.currentTimeMillis());
+			logger.info("Peer: " + peerInfo.toString() + " is "
+					+ (peerInfo.isOnline() ? "online" : "offline"));
+			peerInfo.setLastCheckTime(System.currentTimeMillis());
 
 		}
 	}
 
 	@Override
 	public String toString() {
-		return "Worker for: " + this.peer.toString();
+		return "Worker for: " + this.peerInfo.toString();
 	}
 }

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.ethereum.net.p2p.P2pMessage;
-import org.ethereum.net.peerdiscovery.PeerData;
+import org.ethereum.net.p2p.Peer;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -23,13 +23,13 @@ public class PeersMessage extends P2pMessage {
 
 	private boolean parsed = false;
 
-	private Set<PeerData> peers;
+	private Set<Peer> peers;
 
 	public PeersMessage(byte[] payload) {
 		super(payload);
 	}
 
-	public PeersMessage(Set<PeerData> peers) {
+	public PeersMessage(Set<Peer> peers) {
 		this.peers = peers;
 		parsed = true;
 	}
@@ -49,7 +49,7 @@ public class PeersMessage extends P2pMessage {
 				InetAddress address = InetAddress.getByAddress(ipBytes);
 
                 String peerId = peerIdRaw == null ? "" :  Hex.toHexString(peerIdRaw);
-				PeerData peer = new PeerData(address, peerPort, peerId);
+                Peer peer = new Peer(address, peerPort, peerId);
 				peers.add(peer);
 			} catch (UnknownHostException e) {
 				throw new RuntimeException("Malformed ip", e);
@@ -61,7 +61,7 @@ public class PeersMessage extends P2pMessage {
 	private void encode() {
 		byte[][] encodedByteArrays = new byte[this.peers.size() + 1][];
 		encodedByteArrays[0] = RLP.encodeByte(this.getCommand().asByte());
-		List<PeerData> peerList = new ArrayList<>(this.peers);
+		List<Peer> peerList = new ArrayList<>(this.peers);
 		for (int i = 0; i < peerList.size(); i++) {
 			encodedByteArrays[i + 1] = peerList.get(i).getEncoded();
 		}
@@ -74,7 +74,7 @@ public class PeersMessage extends P2pMessage {
 		return encoded;
 	}
 
-	public Set<PeerData> getPeers() {
+	public Set<Peer> getPeers() {
 		if (!parsed) this.parse();
 		return peers;
 	}
@@ -93,7 +93,7 @@ public class PeersMessage extends P2pMessage {
 		if (!parsed) this.parse();
 
 		StringBuffer sb = new StringBuffer();
-		for (PeerData peerData : peers) {
+		for (Peer peerData : peers) {
 			sb.append("\n       ").append(peerData);
 		}
 		return "[" + this.getCommand().name() + sb.toString() + "]";
