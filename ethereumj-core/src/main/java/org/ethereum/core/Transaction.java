@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
-import java.math.BigInteger;
 import java.security.SignatureException;
 
 /**
@@ -25,7 +24,7 @@ import java.security.SignatureException;
  */
 public class Transaction {
 
-	private static Logger logger = LoggerFactory.getLogger(Transaction.class);
+	private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
 	
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;

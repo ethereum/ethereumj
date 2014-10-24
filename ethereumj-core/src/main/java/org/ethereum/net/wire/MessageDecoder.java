@@ -17,8 +17,8 @@ import java.util.List;
  */
 public class MessageDecoder extends ByteToMessageDecoder {
 
-    private Logger loggerWire = LoggerFactory.getLogger("wire");
-    private Logger loggerNet = LoggerFactory.getLogger("net");
+    private static final Logger loggerWire = LoggerFactory.getLogger("wire");
+    private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
 	@Override
 	protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {

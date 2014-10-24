@@ -63,23 +63,16 @@ public class ProgramResult {
         this.repository = repository;
     }
 
-    public void addDeleteAccount(DataWord address){
-
-        if (deleteAccounts == null){
+    public void addDeleteAccount(DataWord address) {
+        if (deleteAccounts == null)
             deleteAccounts = new ArrayList<>();
-        }
-
         deleteAccounts.add(address);
     }
 
-    public void addDeleteAccounts(List<DataWord> accounts){
-
+    public void addDeleteAccounts(List<DataWord> accounts) {
         if (accounts == null) return;
-
-        if (deleteAccounts == null){
+        if (deleteAccounts == null)
             deleteAccounts = new ArrayList<>();
-        }
-
         deleteAccounts.addAll(accounts);
     }
 

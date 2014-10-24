@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -18,8 +19,16 @@ import java.math.BigInteger;
  */
 public class ProgramInvokeFactory {
 
-    private static Logger logger = LoggerFactory.getLogger("VM");
+    private static final Logger logger = LoggerFactory.getLogger("VM");
 
+    /** 
+     * This attribute defines the number of resursive calls allowed in the EVM
+     * Note: For the JVM to reach this level without a StackOverflow exception,
+     * ethereumj may need to be started with a JVM argument to increase 
+     * the stack size. For example: -Xss10m
+     */
+    private static final int MAX_CREATE_CALL_DEPTH = 1024; 
+    
         // Invocation by the wire tx
     public static ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
 
@@ -28,7 +37,7 @@ public class ProgramInvokeFactory {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
-        byte[] address  =  (tx.isContractCreation())? tx.getContractAddress(): tx.getReceiveAddress();
+        byte[] address  =  tx.isContractCreation() ? tx.getContractAddress(): tx.getReceiveAddress();
 
         /***         ORIGIN op       ***/
         // YP: This is the sender of original transaction; it is never a contract.
@@ -53,8 +62,7 @@ public class ProgramInvokeFactory {
         /***     CALLDATALOAD  op   ***/
         /***     CALLDATACOPY  op   ***/
         /***     CALLDATASIZE  op   ***/
-        byte[] data = tx.getData();
-        if (data == null) data = new byte[]{};
+        byte[] data = tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData();
 
         /***    PREVHASH  op  ***/
         byte[] lastHash = lastBlock.getHash();
@@ -122,7 +130,7 @@ public class ProgramInvokeFactory {
     public static ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
                                                     DataWord inValue, DataWord inGas,
                                                     BigInteger balanceInt,  byte[] dataIn,
-                                                    Repository repository, int callDeep) {
+                                                    Repository repository) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
@@ -174,9 +182,14 @@ public class ProgramInvokeFactory {
                     Hex.toHexString(difficulty.getNoLeadZeroesData()),
                     gasLimit.longValue());
         }
+        
+        int newCallDepth = program.invokeData.getCallDeep() + 1;
+        if (newCallDepth >= MAX_CREATE_CALL_DEPTH) {
+        	throw program.new OutOfGasException();
+        }
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, callDeep);
+                repository, newCallDepth);
     }
 }

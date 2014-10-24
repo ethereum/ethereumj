@@ -2,7 +2,6 @@ package org.ethereum.net;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
@@ -22,7 +21,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class BlockQueue {
 
-	private static Logger logger = LoggerFactory.getLogger("blockqueue");
+	private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
 	/** The list of hashes of the heaviest chain on the network, 
 	 * for which this client doesn't have the blocks yet */

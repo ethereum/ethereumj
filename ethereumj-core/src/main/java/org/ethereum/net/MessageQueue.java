@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class MessageQueue {
 
-	private Logger logger = LoggerFactory.getLogger("net");
+	private static final Logger logger = LoggerFactory.getLogger("net");
 
 	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
 	private PeerListener listener;

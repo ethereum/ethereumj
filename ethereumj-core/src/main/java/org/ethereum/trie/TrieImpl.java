@@ -41,7 +41,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class TrieImpl implements Trie {
 
-    private Logger logger = LoggerFactory.getLogger("trie");
+    private static final Logger logger = LoggerFactory.getLogger("trie");
 
     private static byte PAIR_SIZE = 2;
     private static byte LIST_SIZE = 17;

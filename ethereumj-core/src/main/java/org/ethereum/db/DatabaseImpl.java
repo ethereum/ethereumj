@@ -27,7 +27,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class DatabaseImpl implements Database {
 	
-	private static Logger logger = LoggerFactory.getLogger("db");
+	private static final Logger logger = LoggerFactory.getLogger("db");
 	private DB db;
 	private String name;
     
