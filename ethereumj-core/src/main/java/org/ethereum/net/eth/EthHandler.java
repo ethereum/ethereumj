@@ -1,6 +1,5 @@
 package org.ethereum.net.eth;
 
-import com.sun.org.apache.xerces.internal.util.Status;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.core.Block;
@@ -54,16 +53,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private boolean active = false;
     private StatusMessage handshakeStatusMessage = null;
 
-    private boolean peerDiscovery = true;
-
+    private boolean peerDiscoveryMode = false;
 
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
-
-    //
     private Timer getTxTimer = new Timer("GetTransactionsTimer");
 
-    public EthHandler(MessageQueue msgQueue, PeerListener peerListener, boolean peerDiscovery) {
-        this.peerDiscovery = true;
+    public EthHandler(MessageQueue msgQueue, PeerListener peerListener, boolean peerDiscoveryMode) {
+    	this.peerListener = peerListener;
+    	this.peerDiscoveryMode = peerDiscoveryMode;
         this.msgQueue = msgQueue;
     }
 
@@ -165,7 +162,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
         this.handshakeStatusMessage = msg;
-        if (peerDiscovery) {
+        if (peerDiscoveryMode) {
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.REQUESTED));
             killTimers();
             ctx.close().sync();
