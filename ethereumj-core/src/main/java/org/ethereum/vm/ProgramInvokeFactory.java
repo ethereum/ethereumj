@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -36,7 +37,7 @@ public class ProgramInvokeFactory {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
-        byte[] address  =  (tx.isContractCreation())? tx.getContractAddress(): tx.getReceiveAddress();
+        byte[] address  =  tx.isContractCreation() ? tx.getContractAddress(): tx.getReceiveAddress();
 
         /***         ORIGIN op       ***/
         // YP: This is the sender of original transaction; it is never a contract.
@@ -61,8 +62,7 @@ public class ProgramInvokeFactory {
         /***     CALLDATALOAD  op   ***/
         /***     CALLDATACOPY  op   ***/
         /***     CALLDATASIZE  op   ***/
-        byte[] data = tx.getData();
-        if (data == null) data = new byte[]{};
+        byte[] data = tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData();
 
         /***    PREVHASH  op  ***/
         byte[] lastHash = lastBlock.getHash();
@@ -183,12 +183,13 @@ public class ProgramInvokeFactory {
                     gasLimit.longValue());
         }
         
-    	if(program.invokeData.getCallDeep() >= MAX_CREATE_CALL_DEPTH) {
-    		throw program.new OutOfGasException();
-    	}
+        int newCallDepth = program.invokeData.getCallDeep() + 1;
+        if (newCallDepth >= MAX_CREATE_CALL_DEPTH) {
+        	throw program.new OutOfGasException();
+        }
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, program.invokeData.getCallDeep()+1);
+                repository, newCallDepth);
     }
 }

@@ -892,7 +892,6 @@ public class VM {
                     program.stop();
                 }	break;
                 case SUICIDE:{
-                	program.stackRequire(1);
                 	DataWord address =  program.stackPop();
                     program.suicide(address);
                     

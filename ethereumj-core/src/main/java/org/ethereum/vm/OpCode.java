@@ -328,6 +328,11 @@ public enum OpCode {
         return opcode;
     }
     
+    /**
+     * Returns the mininum amount of items required on the stack for this operation
+     * 
+     * @return minimum amount of expected items on the stack
+     */
     public int require() {
     	return require;
     }
