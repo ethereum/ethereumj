@@ -86,14 +86,16 @@ public class PeerInfo {
 	public boolean equals(Object obj) {
 		if (obj == null) return false;
 		PeerInfo peerData = (PeerInfo) obj;
-		return peerData.peerId.equals(this.peerId)
-				|| this.getAddress().equals(peerData.getAddress());
+		return peerData.hashCode() == this.hashCode();
 	}
 
-	@Override
-	public int hashCode() {
-		return -1; // override for equals function
-	}
+
+    @Override
+    public int hashCode() {
+        int result = address.hashCode();
+        result = 31 * result + port;
+        return result;
+    }
 
     public HelloMessage getHandshakeHelloMessage() {
         return handshakeHelloMessage;

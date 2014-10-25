@@ -17,6 +17,7 @@ public class WorkerThread implements Runnable {
 	private PeerInfo peerInfo;
 	private PeerClient clientPeer;
 	private ThreadPoolExecutor poolExecutor;
+    private boolean running = true;
 
 	public WorkerThread(PeerInfo peer, ThreadPoolExecutor poolExecutor) {
 		this.peerInfo = peer;
@@ -26,7 +27,7 @@ public class WorkerThread implements Runnable {
 	@Override
 	public void run() {
 		logger.debug("{} start", Thread.currentThread().getName());
-		processCommand();
+        processCommand();
 		logger.debug("{} end", Thread.currentThread().getName());
 
 		poolExecutor.execute(this);
@@ -43,6 +44,7 @@ public class WorkerThread implements Runnable {
             peerInfo.setStatusMessage( clientPeer.getStatusHandshake() );
 
             logger.info("Peer is online: [{}] ", peerInfo);
+
 
 		} catch (Throwable e) {
 			if (peerInfo.isOnline())

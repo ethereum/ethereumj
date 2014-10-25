@@ -210,7 +210,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 			InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
 			int port = msg.getListenPort();
 			PeerInfo confirmedPeer = new PeerInfo(address, port, msg.getPeerId());
-			confirmedPeer.setOnline(true);
+			confirmedPeer.setOnline(false);
 			confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
 
             //todo calculate the Offsets

@@ -49,7 +49,7 @@ public class PeerDiscovery {
 
         // Initialize PeerData
         List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
-        peers.addAll(peerDataList);
+        addPeers(peerDataList);
 
         for (PeerInfo peerData : this.peers) {
             executorPool.execute(new WorkerThread(peerData, executorPool));
@@ -90,6 +90,13 @@ public class PeerDiscovery {
             }
         }
     }
+
+    public void addPeers(Collection<PeerInfo> newPeers) {
+        synchronized (peers) {
+                peers.addAll(newPeers);
+            }
+    }
+
 
 	private void startWorker(PeerInfo peer) {
 		logger.debug("Add new peer for discovery: {}", peer);
