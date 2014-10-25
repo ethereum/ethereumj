@@ -100,7 +100,6 @@ public class PeerClient {
 
             // Start the client.
             ChannelFuture f = b.connect().sync();
-            WorldManager.getInstance().setActivePeer(this);
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
