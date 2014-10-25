@@ -23,7 +23,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * (such blocks are known as uncles).
  *
  * www.ethereumJ.com
- * @authors: Roman Mandeleil,
+ * @author Roman Mandeleil,
  *           Nick Savers
  * Created on: 20/05/2014 10:44
  */

@@ -24,7 +24,7 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
 
 /**
  * Process the messages between peers with 'eth' capability on the network.
- * <p/>
+ * <p>
  * Peers with 'eth' capability can send/receive:
  * <ul>
  * <li>STATUS				:	Announce their status to the peer</li>

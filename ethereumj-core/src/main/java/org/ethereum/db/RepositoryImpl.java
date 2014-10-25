@@ -36,17 +36,17 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 /**
  *
  ***********************************************************************************
-         Repository
-         |
-             --> AccountState      ---> Trie ---> leveldb (state) /key=address
-                 --> nonce
-                 --> balance
-                 --> stateRoot
-                 --> codeHash
-         |
-             -->  ContractDetails  ---> leveldb(details) /key=address
-                 --> code      ---> sha3(code) // saved into AccountInfo.codeHash
-                 --> storage   ---> Trie // to calculate the AccountInfo.stateRoot
+         Repository<br>
+         |<br>
+             --&gt; AccountState      ---&gt; Trie ---&gt; leveldb (state) /key=address<br>
+                 --&gt; nonce<br>
+                 --&gt; balance<br>
+                 --&gt; stateRoot<br>
+                 --&gt; codeHash<br>
+         |<br>
+             --&gt;  ContractDetails  ---&gt; leveldb(details) /key=address<br>
+                 --&gt; code      ---&gt; sha3(code) // saved into AccountInfo.codeHash<br>
+                 --&gt; storage   ---&gt; Trie // to calculate the AccountInfo.stateRoot<br>
  ***********************************************************************************
  *
  * www.ethereumJ.com
@@ -73,7 +73,7 @@ public class RepositoryImpl implements Repository {
      * Create a new Repository DAO 
      * 		assuming empty db and thus no stateRoot
      * 
-     * @See loadBlockchain() to update the stateRoot
+     * @see #loadBlockchain() to update the stateRoot
      */
     public RepositoryImpl() {
     	this("blockchain", "details", "state");
@@ -147,7 +147,6 @@ public class RepositoryImpl implements Repository {
                     listener.onPreloadedBlock(Genesis.getInstance());
                 }
 
-               	logger.debug("Block #{} -> {}", Genesis.NUMBER, blockchain.getLastBlock().toFlatString());
                	dumpState(Genesis.getInstance(), 0, 0, null);
             } else {
             	logger.debug("Displaying blocks stored in DB sorted on blocknumber");

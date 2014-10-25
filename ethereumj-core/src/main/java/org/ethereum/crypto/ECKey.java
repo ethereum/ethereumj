@@ -65,7 +65,7 @@ import org.spongycastle.util.encoders.Hex;
  * this class so round-tripping preserves state. Unless you're working with old software or doing unusual things, you
  * can usually ignore the compressed/uncompressed distinction.</p>
  *
- * This code is borrowed from the bitcoinj project and altered to fit Ethereum.</br> 
+ * This code is borrowed from the bitcoinj project and altered to fit Ethereum.<br>
  * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey.java">bitcoinj on GitHub</a>
  */
 public class ECKey implements Serializable {
@@ -375,7 +375,7 @@ public class ECKey implements Serializable {
      * Signs the given hash and returns the R and S components as BigIntegers 
      * and put them in ECDSASignature 
      * 
-     * @param rlpData to sign
+     * @param input to sign
      * @return ECDSASignature signature that contains the R and S components
      */
     public ECDSASignature doSign(byte[] input) {
@@ -419,7 +419,7 @@ public class ECKey implements Serializable {
      * containing the public key that was used to sign it. This can then be compared to the expected public key to
      * determine if the signature was correct.
      * 
-     * @param message a piece of human readable text that was signed
+     * @param messageHash a piece of human readable text that was signed
      * @param signatureBase64 The Ethereum-format message signature in base64
      * @throws SignatureException If the public key could not be recovered or if there was a signature format error.
      */

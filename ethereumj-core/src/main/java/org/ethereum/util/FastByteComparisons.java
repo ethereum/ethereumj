@@ -37,6 +37,15 @@ public abstract class FastByteComparisons {
 
   /**
    * Lexicographically compare two byte arrays.
+   *
+   * @param b1 buffer1
+   * @param s1 offset1
+   * @param l1 length1
+   * @param b2 buffer2
+   * @param s2 offset2
+   * @param l2 length2
+   *
+   * @return int
    */
   public static int compareTo(byte[] b1, int s1, int l1, byte[] b2, int s2, int l2) {
     return LexicographicalComparerHolder.BEST_COMPARER.compareTo(

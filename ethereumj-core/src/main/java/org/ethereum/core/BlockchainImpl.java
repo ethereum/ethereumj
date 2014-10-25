@@ -43,7 +43,7 @@ import static org.ethereum.core.Denomination.SZABO;
  * See <a href="https://github.com/ethereum/wiki/wiki/White-Paper#blockchain-and-mining">Ethereum Whitepaper</a>
  *
  * www.ethereumJ.com
- * @authors: Roman Mandeleil,
+ * @author Roman Mandeleil,
  *           Nick Savers
  * Created on: 20/05/2014 10:44
  */

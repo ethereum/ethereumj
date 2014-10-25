@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 13/05/14 19:37
  */
 public class SerpentCompiler {
@@ -197,7 +197,7 @@ public class SerpentCompiler {
      *
      * @param code
      * @param init
-     * @return
+     * @return encoded bytes
      */
     public static byte[] encodeMachineCodeForVMRun(byte[] code, byte[] init) {
 

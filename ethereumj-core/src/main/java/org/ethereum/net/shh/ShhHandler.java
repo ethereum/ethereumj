@@ -11,8 +11,8 @@ import org.slf4j.LoggerFactory;
  * Process the messages between peers with 'shh' capability on the network.
  * 
  * Peers with 'shh' capability can send/receive:
- * <ul>
- * </ul>
+ *
+ *
  */
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 

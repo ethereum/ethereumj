@@ -32,7 +32,7 @@ public class GetBlockHashesMessageTest {
         GetBlockHashesMessage getBlockHashesMessage = new GetBlockHashesMessage(bestHash, 128);
         System.out.println(getBlockHashesMessage);
         
-        String expected = "e413a0455408387e6c5b029b0d51f7d617a4d1dc4895fa6eda09455cc2ee62c08d907e8180";
+        String expected = "e403a0455408387e6c5b029b0d51f7d617a4d1dc4895fa6eda09455cc2ee62c08d907e8180";
     	assertEquals(expected, Hex.toHexString(getBlockHashesMessage.getEncoded()));
     	
         assertEquals(EthMessageCodes.GET_BLOCK_HASHES, getBlockHashesMessage.getCommand());

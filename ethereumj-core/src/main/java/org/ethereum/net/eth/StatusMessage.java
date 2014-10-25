@@ -11,7 +11,7 @@ import static org.ethereum.net.eth.EthMessageCodes.STATUS;
 /**
  * Wrapper around an Ethereum Status message on the network 
  * 
- * @see {@link org.ethereum.net.eth.EthMessageCodes#STATUS}
+ * @see org.ethereum.net.eth.EthMessageCodes#STATUS
  */
 public class StatusMessage extends EthMessage {
 

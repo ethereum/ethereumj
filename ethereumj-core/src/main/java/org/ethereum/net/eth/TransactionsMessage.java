@@ -15,7 +15,7 @@ import java.util.Set;
 /**
  * Wrapper around an Ethereum Transactions message on the network 
  * 
- * @see {@link org.ethereum.net.eth.EthMessageCodes#TRANSACTIONS}
+ * @see org.ethereum.net.eth.EthMessageCodes#TRANSACTIONS
  */
 public class TransactionsMessage extends EthMessage {
 	

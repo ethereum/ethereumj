@@ -10,7 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * Wrapper around an Ethereum GetBlockHashes message on the network
  * 
- * @see {@link org.ethereum.net.eth.EthMessageCodes#GET_BLOCK_HASHES}
+ * @see org.ethereum.net.eth.EthMessageCodes#GET_BLOCK_HASHES
  */
 public class GetBlockHashesMessage extends EthMessage {
 
@@ -40,7 +40,7 @@ public class GetBlockHashesMessage extends EthMessage {
 	}
 
 	private void parse() {
-		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(1);
+		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
 		this.bestHash = paramsList.get(1).getRLPData();
 		byte[] maxBlocksBytes = paramsList.get(2).getRLPData();

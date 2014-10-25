@@ -47,7 +47,7 @@ public class GetBlocksMessageTest {
         GetBlocksMessage getBlocksMessage = new GetBlocksMessage(hashList);
         System.out.println(getBlocksMessage);
         
-        String expected = "f8a615a0497dcbd12fa99ced7b27cda6611f64eb13ab50e20260eec5ee6b7190e7206d54a00959bdfba5e54fcc9370e86b7996fbe32a277bab65c31a0102226f83c4d3e0f2a001a333c156485880776e929e84c26c9778c1e9b4dcb5cd3bff8ad0aeff385df0a0690e13595c9e8e4fa9a621dfed6ad828a6e8e591479af6897c979a83daf73084a0b20f253d2b62609e932c13f3bca59a22913ea5b1e532d8a707976997461ec143";
+        String expected = "f8a605a0497dcbd12fa99ced7b27cda6611f64eb13ab50e20260eec5ee6b7190e7206d54a00959bdfba5e54fcc9370e86b7996fbe32a277bab65c31a0102226f83c4d3e0f2a001a333c156485880776e929e84c26c9778c1e9b4dcb5cd3bff8ad0aeff385df0a0690e13595c9e8e4fa9a621dfed6ad828a6e8e591479af6897c979a83daf73084a0b20f253d2b62609e932c13f3bca59a22913ea5b1e532d8a707976997461ec143";
     	assertEquals(expected, Hex.toHexString(getBlocksMessage.getEncoded()));
     	
         assertEquals(EthMessageCodes.GET_BLOCKS, getBlocksMessage.getCommand());

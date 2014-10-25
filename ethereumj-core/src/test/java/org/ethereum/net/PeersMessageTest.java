@@ -12,7 +12,6 @@ import org.ethereum.net.p2p.GetPeersMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.Peer;
 import org.ethereum.net.p2p.PeersMessage;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 

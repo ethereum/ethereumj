@@ -171,7 +171,7 @@ public class Transaction {
         return this.receiveAddress == null || this.receiveAddress == ByteUtil.EMPTY_BYTE_ARRAY;
     }
 
-    /*********
+    /*
      * Crypto
      */
 

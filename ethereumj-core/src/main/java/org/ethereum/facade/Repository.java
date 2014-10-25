@@ -21,7 +21,7 @@ public interface Repository {
 	/**
 	 * Create a new account in the database
 	 *  
-	 * @param address of the contract
+	 * @param addr of the contract
 	 * @return newly created account state
 	 */
 	public AccountState createAccount(byte[] addr);
@@ -29,7 +29,7 @@ public interface Repository {
 	/**
 	 * Retrieve an account
 	 * 
-	 * @param address of the account
+	 * @param addr of the account
 	 * @return account state as stored in the database
 	 */
     public AccountState getAccountState(byte[] addr);
@@ -37,7 +37,7 @@ public interface Repository {
     /**
      * Deletes the account
      * 
-     * @param address of the account
+     * @param addr of the account
      */
     public void delete(byte[] addr);
     
@@ -52,7 +52,7 @@ public interface Repository {
     /**
      * Get current nonce of a given account
      * 
-     * @param addres of the account
+     * @param addr of the account
      * @return value of the nonce
      */
     public BigInteger getNonce(byte[] addr);
@@ -60,7 +60,7 @@ public interface Repository {
     /**
      * Retrieve contract details for a given account from the database
      * 
-     * @param address of the account
+     * @param addr of the account
      * @return new contract details 
      */
     public ContractDetails getContractDetails(byte[] addr);
@@ -68,7 +68,7 @@ public interface Repository {
     /**
      * Store code associated with an account
      * 
-     * @param address for the account
+     * @param addr for the account
      * @param code that will be associated with this account
      */
     public void saveCode(byte[] addr, byte[] code);
@@ -76,7 +76,7 @@ public interface Repository {
     /**
      * Retrieve the code associated with an account
      * 
-     * @param address of the account
+     * @param addr of the account
      * @return code in byte-array format
      */
     public byte[] getCode(byte[] addr);
@@ -84,7 +84,7 @@ public interface Repository {
     /**
      * Put a value in storage of an account at a given key
      * 
-     * @param address of the account
+     * @param addr of the account
      * @param key of the data to store
      * @param value is the data to store
      */
@@ -93,7 +93,7 @@ public interface Repository {
     /**
      * Retrieve storage value from an account for a given key
      * 
-     * @param address of the account 
+     * @param addr of the account
      * @param key associated with this value
      * @return data in the form of a <code>DataWord</code>
      */
@@ -117,7 +117,7 @@ public interface Repository {
     /**
      * Retrieve balance of an account
      * 
-     * @param address of the account
+     * @param addr of the account
      * @return balance of the account as a <code>BigInteger</code> value
      */
     public BigInteger getBalance(byte[] addr);
@@ -125,7 +125,7 @@ public interface Repository {
     /**
      * Add value to the balance of an account
      * 
-     * @param address of the account
+     * @param addr of the account
      * @param value to be added
      * @return new balance of the account
      */
