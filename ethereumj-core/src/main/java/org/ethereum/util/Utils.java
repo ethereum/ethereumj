@@ -19,7 +19,7 @@ public class Utils {
 
     /**
      * @param hexNum should be in form '0x34fabd34....'
-     * @return
+     * @return String
      */
     public static String hexStringToDecimalString(String hexNum) {
 

@@ -17,7 +17,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * Wrapper around an Ethereum Peers message on the network
  * 
- * @see {@link org.ethereum.net.p2p.P2pMessageCodes#PEERS}
+ * @see org.ethereum.net.p2p.P2pMessageCodes#PEERS
  */
 public class PeersMessage extends P2pMessage {
 

@@ -36,13 +36,13 @@ import java.util.Map;
  * to ensure the hex-string is even in length and thus is representable by a whole number of bytes. 
  *  
  * Examples:
- * > [ 1, 2, 3, 4, 5 ]
+ * &gt; [ 1, 2, 3, 4, 5 ]
  * '\x11\x23\x45'
- * > [ 0, 1, 2, 3, 4, 5 ]
+ * &gt; [ 0, 1, 2, 3, 4, 5 ]
  * '\x00\x01\x23\x45'
- * > [ 0, 15, 1, 12, 11, 8, T ]
+ * &gt; [ 0, 15, 1, 12, 11, 8, T ]
  * '\x20\x0f\x1c\xb8'
- * > [ 15, 1, 12, 11, 8, T ]
+ * &gt; [ 15, 1, 12, 11, 8, T ]
  * '\x3f\x1c\xb8'
  *
  */
@@ -121,6 +121,7 @@ public class CompactEncoder {
 	/**
 	 * Transforms a binary array to hexadecimal format + terminator
 	 *
+     * @param str byte[]
 	 * @return array with each individual nibble adding a terminator at the end 
 	 */
 	public static byte[] binToNibbles(byte[] str) {

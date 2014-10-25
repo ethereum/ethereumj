@@ -14,7 +14,7 @@ import org.ethereum.util.Utils;
 /**
  * Wrapper around an Ethereum BlockHashes message on the network
  *
- * @see {@link org.ethereum.net.eth.EthMessageCodes#BLOCK_HASHES}
+ * @see org.ethereum.net.eth.EthMessageCodes#BLOCK_HASHES
  */
 public class BlockHashesMessage extends EthMessage {
 

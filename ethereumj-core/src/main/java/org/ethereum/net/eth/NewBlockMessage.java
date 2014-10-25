@@ -7,7 +7,7 @@ import org.ethereum.util.RLPList;
 /**
  * Wrapper around an Ethereum Blocks message on the network
  * 
- * @see {@link org.ethereum.net.eth.EthMessageCodes#NEW_BLOCK}
+ * @see org.ethereum.net.eth.EthMessageCodes#NEW_BLOCK
  */
 public class NewBlockMessage extends EthMessage {
 

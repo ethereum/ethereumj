@@ -152,7 +152,7 @@ public class Program {
     
     /**
      * Verifies that the stack is at least <code>stackSize</code>
-     * @param stackSize
+     * @param stackSize int
      * @throws StackTooSmallException If the stack is 
      * 		smaller than <code>stackSize</code>
      */

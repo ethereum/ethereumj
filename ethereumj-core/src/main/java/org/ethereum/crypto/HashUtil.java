@@ -67,7 +67,7 @@ public class HashUtil {
     }
     
     /**
-     * See {@link ByteUtil#doubleDigest(byte[], int, int)}.
+     * @see #doubleDigest(byte[], int, int)
      */
     public static byte[] doubleDigest(byte[] input) {
         return doubleDigest(input, 0, input.length);

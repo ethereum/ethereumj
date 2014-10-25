@@ -10,7 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * Wrapper around an Ethereum GetBlockHashes message on the network
  * 
- * @see {@link org.ethereum.net.eth.EthMessageCodes#GET_BLOCK_HASHES}
+ * @see org.ethereum.net.eth.EthMessageCodes#GET_BLOCK_HASHES
  */
 public class GetBlockHashesMessage extends EthMessage {
 
