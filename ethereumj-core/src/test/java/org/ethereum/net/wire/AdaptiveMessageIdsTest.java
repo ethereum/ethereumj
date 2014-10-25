@@ -20,7 +20,6 @@ import java.util.List;
  * @author: Roman Mandeleil
  * Created on: 15/10/2014 12:34
  */
-
 public class AdaptiveMessageIdsTest {
 
     @Before
@@ -42,7 +41,6 @@ public class AdaptiveMessageIdsTest {
         Assert.assertEquals(5,  P2pMessageCodes.PEERS.asByte());
         Assert.assertEquals(15, P2pMessageCodes.USER.asByte());
     }
-
 
     @Test
     public void test2() {
@@ -71,7 +69,6 @@ public class AdaptiveMessageIdsTest {
         Assert.assertEquals(0x10 + 8, EthMessageCodes.PACKET_COUNT.asByte());
     }
 
-
     @Test
     public void test3(){
 
@@ -91,11 +88,10 @@ public class AdaptiveMessageIdsTest {
         Assert.assertEquals(0x20 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
     }
 
-
     @Test
     public void test4(){
 
-        P2pHandler p2pHandler = new P2pHandler(null);
+        P2pHandler p2pHandler = new P2pHandler();
 
 		List<Capability> capabilities = Arrays.asList(
 				new Capability(Capability.ETH, EthHandler.VERSION),
@@ -122,7 +118,7 @@ public class AdaptiveMessageIdsTest {
     @Test // Capabilities should be read in alphabetical order
     public void test5(){
 
-        P2pHandler p2pHandler = new P2pHandler(null);
+        P2pHandler p2pHandler = new P2pHandler();
 
 		List<Capability> capabilities = Arrays.asList(
 				new Capability(Capability.SHH, ShhHandler.VERSION),
@@ -145,6 +141,4 @@ public class AdaptiveMessageIdsTest {
         Assert.assertEquals(0x19 + 3, ShhMessageCodes.REMOVE_FILTER.asByte());
         Assert.assertEquals(0x19 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
     }
-
-
 }

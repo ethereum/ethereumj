@@ -29,8 +29,8 @@ public class MessageFactory {
                     return StaticMessages.GET_PEERS_MESSAGE;
                 case PEERS:
                     return new PeersMessage(encoded);
-                case USER:
-                    return new UserMessage(encoded);
+                default:
+                	break;
             }
         }
 
@@ -54,8 +54,8 @@ public class MessageFactory {
                     return new BlocksMessage(encoded);
                 case NEW_BLOCK:
                     return new NewBlockMessage(encoded);
-                case PACKET_COUNT:
-                    return new PacketCountMessage(encoded);
+                default:
+                	break;
             }
         }
 

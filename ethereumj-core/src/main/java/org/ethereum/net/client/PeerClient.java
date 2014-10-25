@@ -6,7 +6,6 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
-import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.eth.EthHandler;
@@ -62,10 +61,7 @@ public class PeerClient {
         if (peerListener != null)
         	peerListener.console("Connecting to: " + host + ":" + port);
 
-        if (peerDiscoveryMode)
-            p2pHandler = new P2pHandler(peerDiscoveryMode, msgQueue);
-        else
-            p2pHandler = new P2pHandler(peerListener, msgQueue);
+        p2pHandler = new P2pHandler(msgQueue, peerListener, peerDiscoveryMode);
         p2pHandler.activate();
 
         ethHandler = new EthHandler(msgQueue, peerListener, peerDiscoveryMode);
@@ -136,12 +132,8 @@ public class PeerClient {
 	}
 
     public boolean isSyncDone(){
-
-        if (ethHandler.isActive() && ethHandler.getSyncStatus() == EthHandler.SyncSatus.SYNC_DONE)
-            return true;
-        else
-            return false;
-
+		return ethHandler.isActive()
+				&& ethHandler.getSyncStatus() == EthHandler.SyncSatus.SYNC_DONE;
     }
 
     public HelloMessage getHelloHandshake(){

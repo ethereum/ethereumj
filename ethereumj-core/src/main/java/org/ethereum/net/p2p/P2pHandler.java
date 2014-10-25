@@ -57,18 +57,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private HelloMessage handshakeHelloMessage = null;
 
-	public P2pHandler(MessageQueue msgQueue) {
-        this.msgQueue = msgQueue;
-	}
-
-    public P2pHandler(boolean peerDiscoveryMode, MessageQueue msgQueue) {
-        this(msgQueue);
-        this.peerDiscoveryMode = peerDiscoveryMode;
+    public P2pHandler() {
     }
-
-	public P2pHandler(PeerListener peerListener, MessageQueue msgQueue) {
-		this(msgQueue);
+    
+	public P2pHandler(MessageQueue msgQueue, PeerListener peerListener, boolean peerDiscoveryMode) {
+		this.msgQueue = msgQueue;
 		this.peerListener = peerListener;
+		this.peerDiscoveryMode = peerDiscoveryMode;
 	}
 
 	@Override
@@ -114,7 +109,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 				break;
 			case GET_PEERS:
 				msgQueue.receivedMessage(msg);
-                //sendPeers(); // todo: implement session management for peer request
+                sendPeers(); // todo: implement session management for peer request
 				break;
 			case PEERS:
 				msgQueue.receivedMessage(msg);
@@ -128,19 +123,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                     ctx.disconnect().sync();
                 }
                 break;
-            case USER:
-
-                processUser((UserMessage) msg);
-                break;
 			default:
 				ctx.fireChannelRead(msg);
 				break;
 		}
 	}
-
-
-    public void processUser(UserMessage msg){
-    }
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
