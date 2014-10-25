@@ -28,7 +28,7 @@
     <property name="artifact.id" value="ethereumj"/>
     <property name="artifact.version" value="0.7.2"/>
     <property name="artifact.path" value="" />
-    <!--<property name="artifact.snapshot" value="snapshot" />-->
+    <property name="artifact.snapshot" value="snapshot" />
 
     <property name="repo.location" value="${user.home}/.m2/repository"/>
     <property name="artifact.group.path" value="${artifact.groupId}"/>
@@ -141,6 +141,8 @@
         <urlencode property="encoded.bintray.file.path"
                    value="${bintray.file.path}"
                    override="true"/>
+
+        <echo message="${artifact.full.path}/${artifact.id}-${artifact.version}${artifact.suffix}"/>
 
         <http url="https://api.bintray.com/content/${bintray.subject}/${bintray.repo}/${bintray.package}/${bintray.version}/${encoded.bintray.file.path}${artifact.suffix};publish=1"
               method="PUT"
