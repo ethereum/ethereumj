@@ -407,14 +407,14 @@ public class Program {
         
         //  actual gas subtract
         this.spendGas(msg.getGas().longValue(), "internal call");
-
+        
         Repository trackRepository = result.getRepository().getTrack();
         trackRepository.startTracking();
 
 		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
 				this, new DataWord(contextAddress), msg.getEndowment(),
 				msg.getGas(), contextBalance, data, trackRepository);
-
+		
         ProgramResult result = null;
 
         if (programCode != null && programCode.length != 0) {
@@ -811,11 +811,13 @@ public class Program {
 	}
 
 	@SuppressWarnings("serial")
-	public class OutOfGasException extends RuntimeException {
-	}
+	public class OutOfGasException extends RuntimeException {}
 	
     @SuppressWarnings("serial")
     public class IllegalOperationException extends RuntimeException {}
+    
+    @SuppressWarnings("serial")
+    public class BadJumpDestinationException extends RuntimeException {}
 	
 	@SuppressWarnings("serial")
 	public class StackTooSmallException extends RuntimeException {
@@ -829,5 +831,5 @@ public class Program {
 		public PcOverflowException(String message) {
 			super(message);
 		}
-	}
+	}	
 }

@@ -123,7 +123,6 @@ public class ProgramInvokeFactory {
         return programInvoke;
     }
 
-
     /**
      * This invocation created for contract call contract
      */
@@ -150,8 +149,6 @@ public class ProgramInvokeFactory {
         DataWord gasLimit = program.getGaslimit();
 
         if (logger.isInfoEnabled()) {
-
-
             logger.info("Internal call: \n" +
                             "address={}\n" +
                             "origin={}\n"  +
@@ -174,7 +171,7 @@ public class ProgramInvokeFactory {
                     gasPrice.longValue(),
                     gas.longValue(),
                     callValue.longValue(),
-                    data == null ? "null": Hex.toHexString(data),
+                    data == null ? "": Hex.toHexString(data),
                     Hex.toHexString(lastHash.getData()),
                     Hex.toHexString(coinbase.getLast20Bytes()),
                     timestamp.longValue(),
@@ -184,9 +181,8 @@ public class ProgramInvokeFactory {
         }
         
         int newCallDepth = program.invokeData.getCallDeep() + 1;
-        if (newCallDepth >= MAX_CREATE_CALL_DEPTH) {
+        if (newCallDepth > MAX_CREATE_CALL_DEPTH)
         	throw program.new OutOfGasException();
-        }
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,

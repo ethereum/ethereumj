@@ -3,7 +3,7 @@ package org.ethereum.vm;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.Program.StackTooSmallException;
-import org.ethereum.vm.VM.BadJumpDestinationException;
+import org.ethereum.vm.Program.BadJumpDestinationException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;

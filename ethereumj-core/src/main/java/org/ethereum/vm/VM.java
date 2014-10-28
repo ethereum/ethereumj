@@ -81,11 +81,11 @@ public class VM {
     	
         try {
             OpCode op = OpCode.code(program.getCurrentOp());
-            
             if (op == null)
             	throw program.new IllegalOperationException();
-            
+
             program.setLastOp(op.val());
+            program.stackRequire(op.require());
 
             long oldMemSize = program.getMemSize();
             BigInteger newMemSize = BigInteger.ZERO;
@@ -96,9 +96,7 @@ public class VM {
             long gasCost = GasCost.STEP;
             long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
-            
-            program.stackRequire(op.require());
-            
+                        
     		// Calculate fees and spend gas
             switch (op) {
                 case STOP: case SUICIDE:
@@ -763,7 +761,7 @@ public class VM {
                 	DataWord pos  =  program.stackPop();
                 	int nextPC = pos.intValue(); // possible overflow
                 	if (nextPC != 0 && program.getOp(nextPC-1) != OpCode.JUMPDEST.val())
-        				throw new BadJumpDestinationException();
+        				throw program.new BadJumpDestinationException();
 
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
@@ -778,7 +776,7 @@ public class VM {
                     if (!cond.isZero()) {
                     	int nextPC = pos.intValue(); // possible overflow
                     	if (nextPC != 0 && program.getOp(nextPC-1) != OpCode.JUMPDEST.val())
-            				throw new BadJumpDestinationException();
+            				throw program.new BadJumpDestinationException();
 
                         if (logger.isInfoEnabled())
                             hint = "~> " + nextPC;
@@ -875,7 +873,7 @@ public class VM {
 							op.equals(CALL) ? MsgType.CALL : MsgType.STATELESS,
 							gas, codeAddress, value, inDataOffs, inDataSize,
 							outDataOffs, outDataSize);
-                    program.callToAddress(msg);
+					program.callToAddress(msg);
 
                     program.step();
                 }	break;
@@ -1019,9 +1017,5 @@ public class VM {
 					level, contract, vmCounter, internalSteps, op,
 					gasBefore, gasCost, memWords);    	
     	}
-    }
-
-    @SuppressWarnings("serial")
-    public class BadJumpDestinationException extends RuntimeException {}
-    
+    }    
 }
