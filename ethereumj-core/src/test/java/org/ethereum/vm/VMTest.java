@@ -998,12 +998,12 @@ public class VMTest {
         }
     }
 
-    @Test  // NEG OP
-    public void testNEG_1() {
+    @Test  // BNOT OP
+    public void testBNOT_1() {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("600109"), invoke);
-        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
 
         vm.step(program);
         vm.step(program);
@@ -1011,12 +1011,12 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
-    @Test  // NEG OP
-    public void testNEG_2() {
+    @Test  // BNOT OP
+    public void testBNOT_2() {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("61A00309"), invoke);
-        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5FFD";
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5FFC";
 
         vm.step(program);
         vm.step(program);
@@ -1024,8 +1024,8 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
-    @Test  // NEG OP
-    public void testNEG_3() {
+    @Test  // BNOT OP
+    public void testBNOT_3() {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("61000009"), invoke);
@@ -1037,8 +1037,8 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
-    @Test(expected=StackTooSmallException.class)  // NEG OP
-    public void testNEG_4() {
+    @Test(expected=StackTooSmallException.class)  // BNOT OP
+    public void testBNOT_4() {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("09"), invoke);

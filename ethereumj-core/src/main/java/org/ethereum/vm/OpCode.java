@@ -32,7 +32,7 @@ public enum OpCode {
 	/** (0x08) Exponential operation			*/
 	EXP(0x08,	2),
 	/** (0x09) Negation operation				*/
-	NEG(0x09,	1),
+	BNOT(0x09,	1),
 	/** (0x0a) Less-than comparison				*/
 	LT(0X0a,	2),
 	/** (0x0b) Greater-than comparison			*/

@@ -151,6 +151,11 @@ public class DataWord implements Comparable<DataWord> {
             if (this.data[i] != 0) break;
         }
     }
+    
+    public void bnot() {
+        if (this.isZero()) return;
+        this.data = ByteUtil.copyToArray(MAX_VALUE.subtract(this.value()));
+    }
 
     // By	: Holger
     // From	: http://stackoverflow.com/a/24023466/459349

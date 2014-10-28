@@ -282,9 +282,9 @@ public class VM {
                     program.stackPush(word1);
                     program.step();
                 }	break;
-                case NEG:{
+                case BNOT:{
                 	DataWord word1 = program.stackPop();
-                    word1.negate();
+                    word1.bnot();
 
                     if (logger.isInfoEnabled())
                         hint = "" + word1.value();
