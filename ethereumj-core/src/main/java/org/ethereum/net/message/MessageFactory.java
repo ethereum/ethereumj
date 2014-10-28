@@ -10,8 +10,8 @@ import org.ethereum.util.RLP;
  */
 public class MessageFactory {
 
-	public static Message createMessage(byte[] encoded) {
-		byte code = RLP.getCommandCode(encoded);
+    public static Message createMessage(byte[] encoded) {
+        byte code = RLP.getCommandCode(encoded);
 
         if (P2pMessageCodes.inRange(code)){
 
@@ -29,8 +29,6 @@ public class MessageFactory {
                     return StaticMessages.GET_PEERS_MESSAGE;
                 case PEERS:
                     return new PeersMessage(encoded);
-                default:
-                	break;
             }
         }
 
@@ -54,8 +52,8 @@ public class MessageFactory {
                     return new BlocksMessage(encoded);
                 case NEW_BLOCK:
                     return new NewBlockMessage(encoded);
-                default:
-                	break;
+                case PACKET_COUNT:
+                    return new PacketCountMessage(encoded);
             }
         }
 
@@ -76,7 +74,7 @@ public class MessageFactory {
             }
         }
 
-		throw new IllegalArgumentException("No such message");
+        throw new IllegalArgumentException("No such message");
     }
 
 }
