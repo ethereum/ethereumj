@@ -71,8 +71,9 @@
         <dependency>
             <groupId>org.ethereum</groupId>
             <artifactId>ethereumj</artifactId>
-            <version>0.7.2.20141025.0948</version>
+            <version>0.7.2.20141029.1501</version>
         </dependency>
+
 
 		<dependency>
 			<groupId>com.maxmind.geoip</groupId>
