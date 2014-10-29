@@ -24,7 +24,7 @@ public class GetPeersMessage extends P2pMessage {
 
 	@Override
 	public Class<PeersMessage> getAnswerMessage() {
-		return PeersMessage.class;
+		return null;
 	}
 
 	@Override

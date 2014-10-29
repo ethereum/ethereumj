@@ -56,6 +56,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private boolean peerDiscoveryMode = false;
 
     private HelloMessage handshakeHelloMessage = null;
+    private Set<PeerInfo> lastPeersSent;
 
     public P2pHandler() {
     }
@@ -150,7 +151,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     }
 
     private void sendPeers() {
+
         Set<PeerInfo> peers = WorldManager.getInstance().getPeerDiscovery().getPeers();
+
+        if (lastPeersSent != null && peers.equals(lastPeersSent)){
+            logger.info("No new peers discovered don't answer for GetPeers");
+            return;
+        }
 
         Set<Peer> peerSet = new HashSet<>();
         for (PeerInfo peer : peers){
@@ -158,6 +165,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
 
     	PeersMessage msg = new PeersMessage(peerSet);
+        lastPeersSent = peers;
     	msgQueue.sendMessage(msg);
     }
 
