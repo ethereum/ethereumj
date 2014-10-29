@@ -76,12 +76,13 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener {
 		
         Thread t = new Thread() {
 			public void run() {
-				PeerClient clientPeer = UIEthereumManager.ethereum.getDefaultPeer();
-				clientPeer.setPeerListener(thisConsole);
-				clientPeer.connect(SystemProperties.CONFIG.activePeerIP(),
-						SystemProperties.CONFIG.activePeerPort());
+
+                UIEthereumManager.ethereum.connect(SystemProperties.CONFIG.activePeerIP(),
+                        SystemProperties.CONFIG.activePeerPort());
 			}
 		};
+
+        UIEthereumManager.ethereum.getDefaultPeer().setPeerListener(this);
         t.start();
     }
 

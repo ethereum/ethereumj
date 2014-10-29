@@ -15,7 +15,6 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * www.ethergit.com
  *
  * @author: Roman Mandeleil
  * Created on: 15/10/2014 12:34
