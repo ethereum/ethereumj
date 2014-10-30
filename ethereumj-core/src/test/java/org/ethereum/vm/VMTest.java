@@ -452,32 +452,32 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
-    @Test(expected=RuntimeException.class)  // PUSHN OP mal data
+    @Test // PUSHN OP not enough data
     public void testPUSHN_1() {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("61AA"), invoke);
+        String expected = "000000000000000000000000000000000000000000000000000000000000AA00";
 
-        try {
-            program.fullTrace();
-            vm.step(program);
-        } finally {
-            assertTrue(program.isStopped());
-        }
+        program.fullTrace();
+        vm.step(program);
+
+        assertTrue(program.isStopped());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
-    @Test(expected=RuntimeException.class)  // PUSHN OP mal data
+    @Test // PUSHN OP not enough data
     public void testPUSHN_2() {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("7fAABB"), invoke);
+        String expected = "AABB000000000000000000000000000000000000000000000000000000000000";
 
-        try {
-            program.fullTrace();
-            vm.step(program);
-        } finally {
-            assertTrue(program.isStopped());
-        }
+		program.fullTrace();
+		vm.step(program);
+
+		assertTrue(program.isStopped());
+        assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
     @Test  // AND OP

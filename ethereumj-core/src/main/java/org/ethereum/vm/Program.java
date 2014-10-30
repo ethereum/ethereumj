@@ -114,13 +114,8 @@ public class Program {
     public void setPC(int pc) {
         this.pc = pc;
         
-        if (this.pc == ops.length)
+        if (this.pc >= ops.length)
             stop();
-        
-        if (this.pc > ops.length) {
-            stop();
-            throw new PcOverflowException("pc overflow pc=" + pc);
-        }
     }
 
     public boolean isStopped() {
@@ -142,10 +137,8 @@ public class Program {
 
     public byte[] sweep(int n) {
 
-        if (pc + n > ops.length) {
+        if (pc + n > ops.length)
             stop();
-            throw new PcOverflowException("pc overflow sweep n: " + n + " pc: " + pc);
-        }
 
         byte[] data = Arrays.copyOfRange(ops, pc, pc + n);
         pc += n;
@@ -825,11 +818,4 @@ public class Program {
 			super(message);
 		}
 	}
-	
-	@SuppressWarnings("serial")
-	public class PcOverflowException extends RuntimeException {
-		public PcOverflowException(String message) {
-			super(message);
-		}
-	}	
 }

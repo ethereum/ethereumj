@@ -2,7 +2,6 @@ package org.ethereum.vm;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.vm.Program.OutOfGasException;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -739,11 +738,11 @@ public class VM {
                     DataWord val = program.storageLoad(key);
 
                     if (logger.isInfoEnabled())
-					hint = "key: " + key + " value: " + val;
+                    	hint = "key: " + key + " value: " + val;
 
-                    if (val == null) {
+                    if (val == null)
                         val = key.and(DataWord.ZERO);
-                    }
+
                     program.stackPush(val);
                     program.step();
                 }	break;
@@ -825,7 +824,9 @@ public class VM {
                     int nPush = op.val() - PUSH1.val() + 1;
 
                     byte[] data = program.sweep(nPush);
-                    hint = "" + Hex.toHexString(data);
+
+                    if (logger.isInfoEnabled())
+                    	hint = "" + Hex.toHexString(data);
 
                     program.stackPush(data);
                 }	break;
@@ -913,9 +914,8 @@ public class VM {
 			
 			vmCounter++;
         } catch (RuntimeException e) {
-        	if(e instanceof OutOfGasException)
-               	program.spendAllGas();
-            logger.warn("VM halted", e.getMessage());
+        	logger.warn("VM halted", e.getMessage());
+        	program.spendAllGas();
            	program.stop();
            	throw e;
         } finally {
