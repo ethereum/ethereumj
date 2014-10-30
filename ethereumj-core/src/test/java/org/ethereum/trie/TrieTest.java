@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.util.*;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.db.MockDB;
 import org.json.simple.JSONArray;
@@ -29,7 +30,7 @@ import org.spongycastle.util.encoders.Hex;
 public class TrieTest {
 
     private static String LONG_STRING = "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
-    private static String ROOT_HASH_EMPTY = "";
+    private static String ROOT_HASH_EMPTY = Hex.toHexString(HashUtil.EMPTY_DATA_HASH);
 
     private static String c = "c";
     private static String ca = "ca";

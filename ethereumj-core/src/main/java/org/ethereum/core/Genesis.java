@@ -1,11 +1,10 @@
 package org.ethereum.core;
 
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
+
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -47,7 +46,7 @@ public class Genesis extends Block {
 	private static byte[] zeroHash512 = new byte[64];
 
 	public static byte[] PARENT_HASH = zeroHash256;
-	public static byte[] UNCLES_HASH = ByteUtil.EMTPY_SHA3_RLP_ELEMENT_HASH;
+	public static byte[] UNCLES_HASH = EMPTY_LIST_HASH;
 	public static byte[] COINBASE = zeroHash160;
     public static byte[] LOG_BLOOM = zeroHash512;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
@@ -57,7 +56,7 @@ public class Genesis extends Block {
     public static long   GAS_USED = 0;
     public static long   TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
-    public static byte[] NONCE = HashUtil.sha3(new byte[]{42});
+    public static byte[] NONCE = sha3(new byte[]{42});
     
     private static Block instance;
     

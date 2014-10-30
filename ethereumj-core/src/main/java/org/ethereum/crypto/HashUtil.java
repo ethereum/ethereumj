@@ -17,6 +17,7 @@ public class HashUtil {
     private static final int MAX_ENTRIES = 100; // Should contain most commonly hashed values 
     private static LRUMap<ByteArrayWrapper, byte[]> sha3Cache = new LRUMap<>(0, MAX_ENTRIES);
     public static final byte[] EMPTY_DATA_HASH = Hex.decode("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
+    public static final byte[] EMPTY_LIST_HASH = Hex.decode("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
 
     private static final MessageDigest sha256digest;
     

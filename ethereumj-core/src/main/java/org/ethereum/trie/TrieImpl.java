@@ -11,7 +11,6 @@ import java.util.*;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 import org.slf4j.Logger;
@@ -155,7 +154,7 @@ public class TrieImpl implements Trie {
         if (root == null
                 || (root instanceof byte[] && ((byte[]) root).length == 0)
                 || (root instanceof String && "".equals((String) root))) {
-            return ByteUtil.EMTPY_TRIE_HASH;
+            return HashUtil.EMPTY_DATA_HASH;
         } else if (root instanceof byte[]) {
             return (byte[]) this.getRoot();
         } else {

@@ -1,14 +1,9 @@
 package org.ethereum.core;
 
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.ethereum.util.ByteUtil.EMTPY_SHA3_RLP_ELEMENT_HASH;
-import static org.ethereum.util.ByteUtil.EMTPY_TRIE_HASH;
 
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -35,7 +30,7 @@ public class AccountState {
      * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s . 
      * It shall be understood that σ[a] s is not a ‘physical’ member 
      * of the account and does not contribute to its later serialisation */
-    private byte[] stateRoot = EMTPY_TRIE_HASH;
+    private byte[] stateRoot = EMPTY_DATA_HASH;
     
     /* The hash of the EVM code of this contract—this is the code 
      * that gets executed should this address receive a message call; 
@@ -43,7 +38,7 @@ public class AccountState {
      * after construction. All such code fragments are contained in 
      * the state database under their corresponding hashes for later 
      * retrieval */
-    private byte[] codeHash = EMTPY_SHA3_RLP_ELEMENT_HASH;
+    private byte[] codeHash = EMPTY_DATA_HASH;
 
     public AccountState() {
         this(BigInteger.ZERO, BigInteger.ZERO);
@@ -121,13 +116,9 @@ public class AccountState {
     
     public String toString() {
     	String ret =  "Nonce: " 		+ this.getNonce().toString() 							+ "\n" + 
-    				  "Balance: " 		+ Denomination.toFriendlyString(getBalance()) 			+ "\n";
-    	
-    	if(this.getStateRoot()!= null && !Arrays.areEqual(this.getStateRoot(), EMPTY_BYTE_ARRAY))
-    		ret += "State Root: " 	+ Hex.toHexString(this.getStateRoot()) 	+ "\n";
-    	if(this.getCodeHash() != null && !Arrays.areEqual(this.getCodeHash(), EMPTY_DATA_HASH))
-    		ret += "Code Hash: " 	+ Hex.toHexString(this.getCodeHash());
-    	
+    				  "Balance: " 		+ Denomination.toFriendlyString(getBalance()) 			+ "\n" +
+    				  "State Root: " 	+ Hex.toHexString(this.getStateRoot()) 	+ "\n" +
+    				  "Code Hash: " 	+ Hex.toHexString(this.getCodeHash());
     	return ret;
     }
 }
