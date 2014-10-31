@@ -9,6 +9,8 @@ import java.security.NoSuchAlgorithmException;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
+import org.spongycastle.crypto.Digest;
+import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.util.LRUMap;
 
@@ -34,14 +36,26 @@ public class HashUtil {
     }
 
 	public static byte[] sha3(byte[] input) {
-            ByteArrayWrapper inputByteArray = new ByteArrayWrapper(input);
-            byte[] result = sha3Cache.get(inputByteArray);
-            if(result != null)
-                    return result;
-            result = SHA3Helper.sha3(input);
-            sha3Cache.put(inputByteArray, result);
-            return result; 
+        ByteArrayWrapper inputByteArray = new ByteArrayWrapper(input);
+        byte[] result = sha3Cache.get(inputByteArray);
+        if(result != null)
+            return result;
+        result = SHA3Helper.sha3(input);
+        sha3Cache.put(inputByteArray, result);
+        return result; 
 	}
+	
+    public static byte[] ripemd160(byte[] message) {
+    	Digest digest = new RIPEMD160Digest();
+        if (message != null) {
+	        byte[] resBuf = new byte[digest.getDigestSize()];
+	        digest.update(message, 0, message.length);
+	        digest.doFinal(resBuf, 0);
+	        return resBuf;
+    	}
+    	throw new NullPointerException("Can't hash a NULL value");
+    }
+
 
     /**
      * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations.

@@ -47,7 +47,7 @@ public class SHA3Helper {
 
     private static String sha3String(String message, SHA3Digest digest, boolean bouncyencoder) {
         if (message != null) {
-                return sha3String(Hex.decode(message), digest, bouncyencoder);
+            return sha3String(Hex.decode(message), digest, bouncyencoder);
         }
         throw new NullPointerException("Can't hash a NULL value");
     }
@@ -55,10 +55,10 @@ public class SHA3Helper {
     private static String sha3String(byte[] message, SHA3Digest digest, boolean bouncyencoder) {
         byte[] hash = doSha3(message, digest, bouncyencoder);
         if (bouncyencoder) {
-                return Hex.toHexString(hash);
+            return Hex.toHexString(hash);
         } else {
-                BigInteger bigInt = new BigInteger(1, hash);
-                return bigInt.toString(16);
+            BigInteger bigInt = new BigInteger(1, hash);
+            return bigInt.toString(16);
         }
     }
 
