@@ -41,6 +41,8 @@ public class SystemProperties {
 	private static int      DEFAULT_MAX_BLOCKS_QUEUED = 300;
 	private static String   DEFAULT_PROJECT_VERSION = "";
 	private static String   DEFAULT_HELLO_PHRASE = "Dev";
+    private static Boolean  DEFAULT_VM_TRACE     = false;
+    private static String   DEFAULT_VM_TRACE_DIR = "dmp";
 
     private static List<String> DEFAULT_PROTOCOL_LIST = Arrays.asList("eth", "shh");
 
@@ -219,6 +221,16 @@ public class SystemProperties {
         if (prop.isEmpty()) return DEFAULT_PROTOCOL_LIST;
         String capabilitiesList = prop.getProperty("peer.capabilities");
         return Arrays.asList(capabilitiesList.split(","));
+    }
+
+    public boolean vmTrace(){
+        if (prop.isEmpty()) return DEFAULT_VM_TRACE;
+        return Boolean.parseBoolean(prop.getProperty("vm.structured.trace"));
+    }
+
+    public String vmTraceDir() {
+        if (prop.isEmpty()) return DEFAULT_VM_TRACE_DIR;
+        return prop.getProperty("vm.structured.dir");
     }
 
 	public void print() {

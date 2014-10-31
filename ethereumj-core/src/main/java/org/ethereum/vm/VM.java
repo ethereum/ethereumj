@@ -75,6 +75,9 @@ public class VM {
     public void step(Program program) {
 
         program.fullTrace();
+
+        if (CONFIG.vmTrace())
+            program.saveOpTrace();
     	
         try {
             OpCode op = OpCode.code(program.getCurrentOp());
@@ -917,6 +920,8 @@ public class VM {
             logger.warn("VM halted", e.getMessage());
            	program.stop();
            	throw e;
+        } finally {
+            program.fullTrace();
         }
     }
 
@@ -933,6 +938,7 @@ public class VM {
 
             while(!program.isStopped())
                 this.step(program);
+
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
         }

@@ -6,6 +6,7 @@ import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
+import org.ethereum.vmtrace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -23,6 +24,7 @@ import java.util.*;
 public class TestRunner {
 
     private Logger logger = LoggerFactory.getLogger("JSONTest");
+    private ProgramTrace trace = null;
 
     public List<String> runTestSuite(TestSuite testSuite) {
     	
@@ -97,14 +99,11 @@ public class TestRunner {
 	        /* 4. run VM */
 	        VM vm = new VM();
 	        Program program = new Program(exec.getCode(), programInvoke);
-	
-	        try {
-	            System.out.println("--------  EXEC --------");
-	            while(!program.isStopped())
-	                vm.step(program);
-	        } catch (RuntimeException e) {
-	            program.setRuntimeFailure(e);
-	        }
+	        vm.play(program);
+
+            program.saveProgramTraceToFile(testCase.getName());
+
+            this.trace = program.getProgramTrace();
 	
 	        System.out.println("--------- POST --------");
 	        /* 5. Assert Post values */
@@ -184,14 +183,15 @@ public class TestRunner {
 	
 	                Map<DataWord, DataWord>  testStorage = contractDetails.getStorage();
 	                DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
-	
-	                if (!Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())) {
+
+	                if (actualValue == null ||
+                        !Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())) {
 	
 	                    String output =
 	                            String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
 	                                    Hex.toHexString(storageKey.getData()),
 	                                    Hex.toHexString(expectedStValue),
-	                                    Hex.toHexString(actualValue.getNoLeadZeroesData()));
+	                                    actualValue == null ? "" :   Hex.toHexString(actualValue.getNoLeadZeroesData()));
 	                    logger.info(output);
 	                    results.add(output);
 	                }
@@ -314,5 +314,9 @@ public class TestRunner {
     	} finally {
     		repository.close();
     	}
+    }
+
+    public ProgramTrace getTrace() {
+        return trace;
     }
 }

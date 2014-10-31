@@ -369,6 +369,8 @@ public class BlockchainImpl implements Blockchain {
 
                 if (CONFIG.playVM())
 				    vm.play(program);
+
+                program.saveProgramTraceToFile(Hex.toHexString(tx.getHash()));
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, gasPrice, trackRepository,
 						senderAddress, receiverAddress, coinbase, isContractCreation);

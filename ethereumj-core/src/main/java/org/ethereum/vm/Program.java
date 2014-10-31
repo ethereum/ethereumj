@@ -1,21 +1,28 @@
 package org.ethereum.vm;
 
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.MessageCall.MsgType;
+import org.ethereum.vmtrace.Op;
+import org.ethereum.vmtrace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -35,6 +42,7 @@ public class Program {
     DataWord programAddress;
 
     ProgramResult result = new ProgramResult();
+    ProgramTrace programTrace = new ProgramTrace();
 
     byte[]   ops;
     int      pc = 0;
@@ -414,6 +422,7 @@ public class Program {
             Program program = new Program(programCode, programInvoke);
             vm.play(program);
             result = program.getResult();
+            this.getProgramTrace().merge(program.getProgramTrace());
             this.result.addDeleteAccounts(result.getDeleteAccounts());
         }
         
@@ -704,8 +713,67 @@ public class Program {
 				listener.output(globalOutput.toString());
         }
     }
-    
-    public static String stringify(byte[] code, int index, String result) {    	
+
+    public void saveOpTrace(){
+
+        Op op = new Op();
+        op.setPc(pc);
+
+        op.setOp(ops[pc]);
+        op.saveGas(getGas());
+
+        ContractDetails contractDetails = this.result.getRepository().
+                getContractDetails(this.programAddress.getLast20Bytes());
+        op.saveStorageMap(contractDetails.getStorage());
+        op.saveMemory(memory);
+        op.saveStack(stack);
+
+        programTrace.addOp(op);
+    }
+
+    public void saveProgramTraceToFile(String fileName){
+
+        if (!CONFIG.vmTrace()) return;
+
+        String dir = CONFIG.vmTraceDir() + "/";
+
+        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName + ".json");
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+
+        try {
+
+            dumpFile.getParentFile().mkdirs();
+            dumpFile.createNewFile();
+
+            fw = new FileWriter(dumpFile.getAbsoluteFile());
+            bw = new BufferedWriter(fw);
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
+
+            String originalJson = programTrace.getJsonString();
+            JsonNode tree = objectMapper .readTree(originalJson);
+            String formattedJson = objectMapper.writeValueAsString(tree);
+            bw.write(formattedJson);
+
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (bw != null) bw.close();
+                if (fw != null) fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public ProgramTrace getProgramTrace() {
+        return programTrace;
+    }
+
+    public static String stringify(byte[] code, int index, String result) {
     	if(code == null || code.length == 0)
     		return result;
     	
@@ -721,7 +789,7 @@ public class Program {
 	        	
 	        	int nPush = op.val() - OpCode.PUSH1.val() + 1;
 	        	byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
-	        	result += new BigInteger(data).toString() + ' ';
+	        	result += new BigInteger(1, data).toString() + ' ';
 	        	
 	    		continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
 	        	break;
