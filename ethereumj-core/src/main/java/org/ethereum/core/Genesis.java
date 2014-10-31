@@ -69,8 +69,7 @@ public class Genesis extends Block {
         // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {
-			AccountState acctState = new AccountState();
-			acctState.addToBalance(PREMINE_AMOUNT);
+			AccountState acctState = new AccountState(BigInteger.ZERO, PREMINE_AMOUNT);
 			state.update(Hex.decode(address), acctState.getEncoded());
         }
 

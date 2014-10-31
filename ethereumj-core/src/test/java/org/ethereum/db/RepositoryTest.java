@@ -1,8 +1,8 @@
 package org.ethereum.db;
 
 import org.ethereum.core.AccountState;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Repository;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.junit.*;
 import org.junit.runners.MethodSorters;
@@ -10,7 +10,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import static org.ethereum.util.ByteUtil.EMTPY_SHA3_RLP_ELEMENT_HASH;
 import static org.junit.Assert.*;
 
 /**
@@ -184,7 +183,7 @@ public class RepositoryTest {
             AccountState accountState = repository.getAccountState(addr);
             assertTrue(code0 == null);
             assertNull(code1);
-            assertEquals(EMTPY_SHA3_RLP_ELEMENT_HASH, accountState.getCodeHash());
+            assertArrayEquals(HashUtil.EMPTY_DATA_HASH, accountState.getCodeHash());
         } finally {
             repository.close();
         }

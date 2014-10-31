@@ -53,10 +53,10 @@ public class AccountState {
         this.rlpEncoded = rlpData;
 
 		RLPList items 	= (RLPList) RLP.decode2(rlpEncoded).get(0);
-		this.nonce 		= new BigInteger(1, ((items.get(0).getRLPData()) == null ? new byte[]{0} :
-                                                                                   items.get(0).getRLPData()));
-		this.balance 	= new BigInteger(1, ((items.get(1).getRLPData()) == null ? new byte[]{0} : 
-																					items.get(1).getRLPData()));
+		this.nonce = items.get(0).getRLPData() == null ? BigInteger.ZERO
+				: new BigInteger(1, items.get(0).getRLPData());
+		this.balance = items.get(1).getRLPData() == null ? BigInteger.ZERO
+				: new BigInteger(1, items.get(1).getRLPData());
 		this.stateRoot 	= items.get(2).getRLPData();
 		this.codeHash 	= items.get(3).getRLPData();
     }
