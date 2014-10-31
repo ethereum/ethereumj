@@ -22,12 +22,12 @@ public class ProgramInvokeFactory {
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
     /** 
-     * This attribute defines the number of resursive calls allowed in the EVM
+     * This attribute defines the number of recursive calls allowed in the EVM
      * Note: For the JVM to reach this level without a StackOverflow exception,
      * ethereumj may need to be started with a JVM argument to increase 
      * the stack size. For example: -Xss10m
      */
-    private static final int MAX_CREATE_CALL_DEPTH = 1024; 
+    private static final int MAX_DEPTH = 1024; 
     
         // Invocation by the wire tx
     public static ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
@@ -180,12 +180,11 @@ public class ProgramInvokeFactory {
                     gasLimit.longValue());
         }
         
-        int newCallDepth = program.invokeData.getCallDeep() + 1;
-        if (newCallDepth > MAX_CREATE_CALL_DEPTH)
+        if (program.invokeData.getCallDeep() >= MAX_DEPTH)
         	throw program.new OutOfGasException();
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, newCallDepth);
+                repository, program.invokeData.getCallDeep()+1);
     }
 }

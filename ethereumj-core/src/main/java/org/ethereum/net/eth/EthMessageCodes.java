@@ -8,8 +8,8 @@ import java.util.Map;
  * <br>
  * The codes for these commands are the first byte in every packet.
  * 
- * @see <a href="https://github.com/ethereum/wiki/wiki/Wire-Protocol">
- * https://github.com/ethereum/wiki/wiki/Wire-Protocol</a>
+ * @see <a href="https://github.com/ethereum/wiki/wiki/Ethereum-Wire-Protocol">
+ * https://github.com/ethereum/wiki/wiki/Ethereum-Wire-Protocol</a>
  */
 public enum EthMessageCodes {
 
@@ -19,8 +19,6 @@ public enum EthMessageCodes {
 	 * Inform a peer of it's current ethereum state. This message should be
 	 * send after the initial handshake and prior to any ethereum related messages. */
 	STATUS(0x00),
-
-	/* Ethereum */
 
 	/** [+0x01] Request the peer to send all transactions
 	 * currently in the queue. */
@@ -88,11 +86,7 @@ public enum EthMessageCodes {
     }
 
     public static boolean inRange(byte code){
-
-        if (code >= STATUS.asByte() && code <= PACKET_COUNT.asByte())
-            return true;
-        else
-            return false;
+		return code >= STATUS.asByte() && code <= PACKET_COUNT.asByte();
     }
 
     public static void setOffset(byte offset){

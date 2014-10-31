@@ -166,9 +166,8 @@ public class VM {
             program.spendGas(gasCost, op.name());
             
             // Avoid overflows
-            if(newMemSize.compareTo(MAX_GAS) == 1) {
+            if(newMemSize.compareTo(MAX_GAS) == 1)
             	throw program.new OutOfGasException();
-            }
             
             // memory gas calc
             long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;            
@@ -869,7 +868,7 @@ public class VM {
 								program.getGas().value(),
 								program.invokeData.getCallDeep(), hint);
                     }
-
+                    
 					MessageCall msg = new MessageCall(
 							op.equals(CALL) ? MsgType.CALL : MsgType.STATELESS,
 							gas, codeAddress, value, inDataOffs, inDataSize,

@@ -7,13 +7,13 @@ import java.util.Map;
  * A list of commands for the Ethereum network protocol.
  * <br>
  * The codes for these commands are the first byte in every packet.
- * 
- * @see <a href="https://github.com/ethereum/wiki/wiki/Wire-Protocol">
- * https://github.com/ethereum/wiki/wiki/Wire-Protocol</a>
+ * ÐΞV
+ * @see <a href="https://github.com/ethereum/wiki/wiki/ÐΞVp2p-Wire-Protocol">
+ * https://github.com/ethereum/wiki/wiki/ÐΞVp2p-Wire-Protocol</a>
  */
 public enum P2pMessageCodes {
 
-	/* P2P */
+	/* P2P protocol */
 
 	/** [0x00, P2P_VERSION, CLIEND_ID, CAPS, LISTEN_PORT, CLIENT_ID] <br>
 	 * First packet sent over the connection, and sent once by both sides.
