@@ -484,7 +484,7 @@ public class VMTest {
     public void testAND_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600A600A10"), invoke);
+        program =  new Program(Hex.decode("600A600A16"), invoke);
         String expected = "000000000000000000000000000000000000000000000000000000000000000A";
 
         vm.step(program);
@@ -498,7 +498,7 @@ public class VMTest {
     public void testAND_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60C0600A10"), invoke);
+        program =  new Program(Hex.decode("60C0600A16"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -512,7 +512,7 @@ public class VMTest {
     public void testAND_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60C010"), invoke);
+        program =  new Program(Hex.decode("60C016"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -526,7 +526,7 @@ public class VMTest {
     public void testOR_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60F0600F11"), invoke);
+        program =  new Program(Hex.decode("60F0600F17"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -540,7 +540,7 @@ public class VMTest {
     public void testOR_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60C3603C11"), invoke);
+        program =  new Program(Hex.decode("60C3603C17"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -554,7 +554,7 @@ public class VMTest {
     public void testOR_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60C011"), invoke);
+        program =  new Program(Hex.decode("60C017"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -568,7 +568,7 @@ public class VMTest {
     public void testXOR_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60FF60FF12"), invoke);
+        program =  new Program(Hex.decode("60FF60FF18"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -582,7 +582,7 @@ public class VMTest {
     public void testXOR_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600F60F012"), invoke);
+        program =  new Program(Hex.decode("600F60F018"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -597,7 +597,7 @@ public class VMTest {
     public void testXOR_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60C012"), invoke);
+        program =  new Program(Hex.decode("60C018"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -611,7 +611,7 @@ public class VMTest {
     public void testBYTE_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("65AABBCCDDEEFF601E13"), invoke);
+        program =  new Program(Hex.decode("65AABBCCDDEEFF601E19"), invoke);
         String expected = "00000000000000000000000000000000000000000000000000000000000000EE";
 
         vm.step(program);
@@ -625,7 +625,7 @@ public class VMTest {
     public void testBYTE_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("65AABBCCDDEEFF602013"), invoke);
+        program =  new Program(Hex.decode("65AABBCCDDEEFF602019"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -639,7 +639,7 @@ public class VMTest {
     public void testBYTE_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("65AABBCCDDEE3A601F13"), invoke);
+        program =  new Program(Hex.decode("65AABBCCDDEE3A601F19"), invoke);
         String expected = "000000000000000000000000000000000000000000000000000000000000003A";
 
         vm.step(program);
@@ -654,7 +654,7 @@ public class VMTest {
     public void testBYTE_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("65AABBCCDDEE3A13"), invoke);
+        program =  new Program(Hex.decode("65AABBCCDDEE3A19"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -664,11 +664,11 @@ public class VMTest {
         }
     }
 
-    @Test  // NOT OP
-    public void testNOT_1() {
+    @Test  // ISZERO OP
+    public void testISZERO_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60000F"), invoke);
+        program =  new Program(Hex.decode("600015"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -677,11 +677,11 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
-    @Test  // NOT OP
-    public void testNOT_2() {
+    @Test  // ISZERO OP
+    public void testISZERO_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602A0F"), invoke);
+        program =  new Program(Hex.decode("602A15"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -690,11 +690,11 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase()  );
     }
 
-    @Test(expected=StackTooSmallException.class)  // NOT OP mal data
-    public void testNOT_3() {
+    @Test(expected=StackTooSmallException.class)  // ISZERO OP mal data
+    public void testISZERO_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("0F"), invoke);
+        program =  new Program(Hex.decode("15"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -708,7 +708,7 @@ public class VMTest {
     public void testEQ_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602A602A0E"), invoke);
+        program =  new Program(Hex.decode("602A602A14"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -722,7 +722,7 @@ public class VMTest {
     public void testEQ_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("622A3B4C622A3B4C0E"), invoke);
+        program =  new Program(Hex.decode("622A3B4C622A3B4C14"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -736,7 +736,7 @@ public class VMTest {
     public void testEQ_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("622A3B5C622A3B4C0E"), invoke);
+        program =  new Program(Hex.decode("622A3B5C622A3B4C14"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -750,7 +750,7 @@ public class VMTest {
     public void testEQ_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("622A3B4C0E"), invoke);
+        program =  new Program(Hex.decode("622A3B4C14"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -764,7 +764,7 @@ public class VMTest {
     public void testGT_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600160020B"), invoke);
+        program =  new Program(Hex.decode("6001600211"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -778,7 +778,7 @@ public class VMTest {
     public void testGT_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6001610F000B"), invoke);
+        program =  new Program(Hex.decode("6001610F0011"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -792,7 +792,7 @@ public class VMTest {
     public void testGT_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6301020304610F000B"), invoke);
+        program =  new Program(Hex.decode("6301020304610F0011"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -806,7 +806,7 @@ public class VMTest {
     public void testGT_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("622A3B4C0B"), invoke);
+        program =  new Program(Hex.decode("622A3B4C11"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -820,7 +820,7 @@ public class VMTest {
     public void testSGT_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600160020D"), invoke);
+        program =  new Program(Hex.decode("6001600213"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -836,7 +836,7 @@ public class VMTest {
         VM vm = new VM();
         program =  new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
                                                  "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                                                 "0D"), invoke);
+                                                 "13"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -852,8 +852,8 @@ public class VMTest {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
-                "0D"), invoke);
+                                                "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
+                								"13"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
@@ -869,7 +869,7 @@ public class VMTest {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                                                 "0D"), invoke);
+                                                 "13"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -883,7 +883,7 @@ public class VMTest {
     public void testLT_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600160020A"), invoke);
+        program =  new Program(Hex.decode("6001600210"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -897,7 +897,7 @@ public class VMTest {
     public void testLT_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6001610F000A"), invoke);
+        program =  new Program(Hex.decode("6001610F0010"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -911,7 +911,7 @@ public class VMTest {
     public void testLT_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6301020304610F000A"), invoke);
+        program =  new Program(Hex.decode("6301020304610F0010"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -925,7 +925,7 @@ public class VMTest {
     public void testLT_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("622A3B4C0A"), invoke);
+        program =  new Program(Hex.decode("622A3B4C10"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -939,7 +939,7 @@ public class VMTest {
     public void testSLT_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600160020C"), invoke);
+        program =  new Program(Hex.decode("6001600212"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -955,7 +955,7 @@ public class VMTest {
         VM vm = new VM();
         program =  new Program(Hex.decode("7F000000000000000000000000000000000000000000000000000000000000001E" + //   30
                                                  "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                                                 "0C"), invoke);
+                                                 "12"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
@@ -972,7 +972,7 @@ public class VMTest {
         VM vm = new VM();
         program =  new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
                                                  "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
-                                                 "0C"), invoke);
+                                                 "12"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -988,7 +988,7 @@ public class VMTest {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
-                "0D"), invoke);
+                "12"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -998,11 +998,11 @@ public class VMTest {
         }
     }
 
-    @Test  // BNOT OP
-    public void testBNOT_1() {
+    @Test  // NOT OP
+    public void testNOT_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600109"), invoke);
+        program =  new Program(Hex.decode("60011a"), invoke);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE";
 
         vm.step(program);
@@ -1011,11 +1011,11 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
-    @Test  // BNOT OP
-    public void testBNOT_2() {
+    @Test  // NOT OP
+    public void testNOT_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("61A00309"), invoke);
+        program =  new Program(Hex.decode("61A0031a"), invoke);
         String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5FFC";
 
         vm.step(program);
@@ -1024,11 +1024,11 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.stack.peek().getData()).toUpperCase());
     }
 
-    @Test  // BNOT OP
-    public void testBNOT_3() {
+    @Test  // NOT OP
+    public void testNOT_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("61000009"), invoke);
+        program =  new Program(Hex.decode("6100001a"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1041,7 +1041,7 @@ public class VMTest {
     public void testBNOT_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("09"), invoke);
+        program =  new Program(Hex.decode("1a"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1200,7 +1200,7 @@ public class VMTest {
     public void testMSTORE_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("611234600054"), invoke);
+        program =  new Program(Hex.decode("611234600052"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000001234";
 
         vm.step(program);
@@ -1214,7 +1214,7 @@ public class VMTest {
     public void testMSTORE_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("611234600054615566602054"), invoke);
+        program =  new Program(Hex.decode("611234600052615566602052"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000001234" +
                           "0000000000000000000000000000000000000000000000000000000000005566";
 
@@ -1232,7 +1232,7 @@ public class VMTest {
     public void testMSTORE_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("611234600054615566602054618888600054"), invoke);
+        program =  new Program(Hex.decode("611234600052615566602052618888600052"), invoke);
         String expected = "0000000000000000000000000000000000000000000000000000000000008888" +
                           "0000000000000000000000000000000000000000000000000000000000005566";
 
@@ -1253,7 +1253,7 @@ public class VMTest {
     public void testMSTORE_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("61123460A054"), invoke);
+        program =  new Program(Hex.decode("61123460A052"), invoke);
         String expected = "" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
                 "0000000000000000000000000000000000000000000000000000000000000000" +
@@ -1273,7 +1273,7 @@ public class VMTest {
     public void testMSTORE_5() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("61123454"), invoke);
+        program =  new Program(Hex.decode("61123452"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1286,7 +1286,7 @@ public class VMTest {
     public void testMLOAD_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600053"), invoke);
+        program =  new Program(Hex.decode("600051"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
@@ -1301,7 +1301,7 @@ public class VMTest {
     public void testMLOAD_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602253"), invoke);
+        program =  new Program(Hex.decode("602251"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                           "0000000000000000000000000000000000000000000000000000000000000000" +
                           "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1319,7 +1319,7 @@ public class VMTest {
     public void testMLOAD_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602053"), invoke);
+        program =  new Program(Hex.decode("602051"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                             "0000000000000000000000000000000000000000000000000000000000000000";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
@@ -1335,7 +1335,7 @@ public class VMTest {
     public void testMLOAD_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("611234602054602053"), invoke);
+        program =  new Program(Hex.decode("611234602052602051"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                             "0000000000000000000000000000000000000000000000000000000000001234";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000001234";
@@ -1354,7 +1354,7 @@ public class VMTest {
     public void testMLOAD_5() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("611234602054601F53"), invoke);
+        program =  new Program(Hex.decode("611234602052601F51"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                             "0000000000000000000000000000000000000000000000000000000000001234";
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000012";
@@ -1373,7 +1373,7 @@ public class VMTest {
     public void testMLOAD_6() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("53"), invoke);
+        program =  new Program(Hex.decode("51"), invoke);
         try {
             vm.step(program);
         } finally {
@@ -1385,7 +1385,7 @@ public class VMTest {
     public void testMSTORE8_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6011600055"), invoke);
+        program =  new Program(Hex.decode("6011600053"), invoke);
         String m_expected = "1100000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1400,7 +1400,7 @@ public class VMTest {
     public void testMSTORE8_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6022600155"), invoke);
+        program =  new Program(Hex.decode("6022600153"), invoke);
         String m_expected = "0022000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1414,7 +1414,7 @@ public class VMTest {
     public void testMSTORE8_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6022602155"), invoke);
+        program =  new Program(Hex.decode("6022602153"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
                             "0022000000000000000000000000000000000000000000000000000000000000";
 
@@ -1429,7 +1429,7 @@ public class VMTest {
     public void testMSTORE8_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602255"), invoke);
+        program =  new Program(Hex.decode("602253"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1443,7 +1443,7 @@ public class VMTest {
 
         VM vm = new VM();
 
-        program =  new Program(Hex.decode("602260AA57"), invoke);
+        program =  new Program(Hex.decode("602260AA55"), invoke);
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000AA";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1462,7 +1462,7 @@ public class VMTest {
 
         VM vm = new VM();
 
-        program =  new Program(Hex.decode("602260AA57602260BB57"), invoke);
+        program =  new Program(Hex.decode("602260AA55602260BB55"), invoke);
         String s_expected_key = "00000000000000000000000000000000000000000000000000000000000000BB";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000022";
 
@@ -1484,7 +1484,7 @@ public class VMTest {
     public void testSSTORE_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602257"), invoke);
+        program =  new Program(Hex.decode("602255"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1497,7 +1497,7 @@ public class VMTest {
     public void testSLOAD_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60AA56"), invoke);
+        program =  new Program(Hex.decode("60AA54"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1510,7 +1510,7 @@ public class VMTest {
     public void testSLOAD_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602260AA5760AA56"), invoke);
+        program =  new Program(Hex.decode("602260AA5560AA54"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000022";
 
         vm.step(program);
@@ -1526,7 +1526,7 @@ public class VMTest {
     public void testSLOAD_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602260AA57603360CC5760CC56"), invoke);
+        program =  new Program(Hex.decode("602260AA55603360CC5560CC54"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000033";
 
         vm.step(program);
@@ -1557,7 +1557,7 @@ public class VMTest {
     public void testPC_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("5A"), invoke);
+        program =  new Program(Hex.decode("58"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1570,7 +1570,7 @@ public class VMTest {
     public void testPC_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602260AA5760AA565A"), invoke);
+        program =  new Program(Hex.decode("602260AA5260AA5458"), invoke);
         String s_expected = "0000000000000000000000000000000000000000000000000000000000000008";
 
         vm.step(program);
@@ -1587,7 +1587,7 @@ public class VMTest {
     public void testJUMP_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60AA60BB600E5860CC60DD60EE5D60FF"), invoke);
+        program =  new Program(Hex.decode("60AA60BB600E5660CC60DD60EE5B60FF"), invoke);
         String s_expected = "00000000000000000000000000000000000000000000000000000000000000FF";
 
         vm.step(program);
@@ -1603,7 +1603,7 @@ public class VMTest {
     public void testJUMP_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600C5860CC60DD60EE60FF"), invoke);
+        program =  new Program(Hex.decode("600C5660CC60DD60EE60FF"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1616,7 +1616,7 @@ public class VMTest {
     public void testJUMPI_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60016006595D60CC"), invoke);
+        program =  new Program(Hex.decode("60016006575B60CC"), invoke);
         String s_expected = "00000000000000000000000000000000000000000000000000000000000000CC";
 
         vm.step(program);
@@ -1632,7 +1632,7 @@ public class VMTest {
     public void testJUMPI_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("630000000060445960CC60DD"), invoke);
+        program =  new Program(Hex.decode("630000000060445760CC60DD"), invoke);
         String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000000DD";
         String s_expected_2 = "00000000000000000000000000000000000000000000000000000000000000CC";
 
@@ -1653,7 +1653,7 @@ public class VMTest {
     public void testJUMPI_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600159"), invoke);
+        program =  new Program(Hex.decode("600157"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1666,7 +1666,7 @@ public class VMTest {
     public void testJUMPI_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6001602259"), invoke);
+        program =  new Program(Hex.decode("6001602257"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1680,7 +1680,7 @@ public class VMTest {
     public void testJUMPDEST_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("602360085860015d600257"), invoke);
+        program =  new Program(Hex.decode("602360085660015b600255"), invoke);
         
         String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
@@ -1702,7 +1702,7 @@ public class VMTest {
     public void testJUMPDEST_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60236001600a5960015d600257"), invoke);
+        program =  new Program(Hex.decode("60236001600a5760015b600255"), invoke);
         
         String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
@@ -1782,7 +1782,7 @@ public class VMTest {
     @Test // ADDMOD OP mal
     public void testADDMOD_1() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("60026002600314"), invoke);
+        program =  new Program(Hex.decode("60026002600308"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -1798,7 +1798,7 @@ public class VMTest {
     @Test // ADDMOD OP
     public void testADDMOD_2() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("6110006002611002146000"), invoke);
+        program =  new Program(Hex.decode("6110006002611002086000"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000004";
 
         vm.step(program);
@@ -1814,7 +1814,7 @@ public class VMTest {
     @Test // ADDMOD OP
     public void testADDMOD_3() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("61100265123456789009600214"), invoke);
+        program =  new Program(Hex.decode("61100265123456789009600208"), invoke);
         String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000093B";
 
         vm.step(program);
@@ -1830,7 +1830,7 @@ public class VMTest {
     @Test(expected=StackTooSmallException.class) // ADDMOD OP mal
     public void testADDMOD_4() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("61123414"), invoke);
+        program =  new Program(Hex.decode("61123408"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -1900,7 +1900,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_1() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("60036002600415"), invoke);
+        program =  new Program(Hex.decode("60036002600409"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000002";
 
         vm.step(program);
@@ -1915,7 +1915,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_2() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("622222226003600415"), invoke);
+        program =  new Program(Hex.decode("622222226003600409"), invoke);
         String s_expected_1 = "000000000000000000000000000000000000000000000000000000000000000C";
 
         vm.step(program);
@@ -1930,7 +1930,7 @@ public class VMTest {
     @Test // MULMOD OP
     public void testMULMOD_3() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("62222222623333336244444415"), invoke);
+        program =  new Program(Hex.decode("62222222623333336244444409"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -1945,7 +1945,7 @@ public class VMTest {
     @Test(expected=StackTooSmallException.class) // MULMOD OP mal
     public void testMULMOD_4() {
         VM vm = new VM();
-        program =  new Program(Hex.decode("600115"), invoke);
+        program =  new Program(Hex.decode("600109"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -2165,7 +2165,7 @@ public class VMTest {
     public void testMSIZE_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("5B"), invoke);
+        program =  new Program(Hex.decode("59"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2178,7 +2178,7 @@ public class VMTest {
     public void testMSIZE_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60206030545B"), invoke);
+        program =  new Program(Hex.decode("602060305259"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000060";
 
         vm.step(program);
@@ -2212,7 +2212,7 @@ public class VMTest {
     public void testEXP_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6003600208"), invoke);
+        program =  new Program(Hex.decode("600360020a"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000008";
 
         vm.step(program);
@@ -2227,7 +2227,7 @@ public class VMTest {
     public void testEXP_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60006212345608"), invoke);
+        program =  new Program(Hex.decode("6000621234560a"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         vm.step(program);
@@ -2242,7 +2242,7 @@ public class VMTest {
     public void testEXP_3() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6212345608"), invoke);
+        program =  new Program(Hex.decode("621234560a"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -2255,7 +2255,7 @@ public class VMTest {
     public void testRETURN_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("61123460005460206000F2"), invoke);
+        program =  new Program(Hex.decode("61123460005260206000F2"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000001234";
 
         vm.step(program);
@@ -2274,7 +2274,7 @@ public class VMTest {
     public void testRETURN_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6112346000546020601FF2"), invoke);
+        program =  new Program(Hex.decode("6112346000526020601FF2"), invoke);
         String s_expected_1 = "3400000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2293,7 +2293,7 @@ public class VMTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005460206000F2"),
+                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206000F2"),
                         invoke);
         String s_expected_1 = "A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1";
 
@@ -2314,7 +2314,7 @@ public class VMTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005460206010F2"),
+                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206010F2"),
                         invoke);
         String s_expected_1 = "E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B100000000000000000000000000000000";
 

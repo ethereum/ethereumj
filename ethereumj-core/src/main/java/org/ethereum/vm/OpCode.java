@@ -9,65 +9,67 @@ import java.util.Map;
  * - Appendix G. Virtual Machine Specification
  */
 public enum OpCode {
-	
-    /** Halts execution (0x00) 					*/
-	STOP(0x00,	0),
-	
-	/*	Arithmetic Operations	*/
-	
-	/** (0x01) Addition operation				*/
-	ADD(0x01,	2),
-	/** (0x02) Multiplication operation			*/
-	MUL(0x02,	2),
-	/** (0x03) Subtraction operations			*/
-	SUB(0x03,	2),
-	/** (0x04) Integer division operation		*/
-	DIV(0x04,	2),
-	/** (0x05) Signed integer division operation*/
-	SDIV(0x05,	2),
-	/** (0x06) Modulo remainder operation		*/
-	MOD(0x06,	2),
-	/** (0x07) Signed modulo remainder operation*/
-	SMOD(0x07,	2),
-	/** (0x08) Exponential operation			*/
-	EXP(0x08,	2),
-	/** (0x09) Negation operation				*/
-	BNOT(0x09,	1),
-	/** (0x0a) Less-than comparison				*/
-	LT(0X0a,	2),
-	/** (0x0b) Greater-than comparison			*/
-    GT(0X0b,	2),
-    /** (0x0c) Signed less-than comparison		*/
-    SLT(0X0c,	2),
-    /** (0x0d) Signed greater-than comparison	*/
-    SGT(0X0d,	2),
-    /** (0x0e) Equality comparison				*/
-	EQ(0X0e,	2),
-	/** (0x0f) Simple not operator				*/
-	NOT(0X0f,	1),
 
-	/*	Bitwise Logic Operations	*/
-	
-	/** (0x10) Bitwise AND operation 			*/
-	AND(0x10,	2),
-	/** (0x11) Bitwise OR operation 			*/
-	OR(0x11,	2),
-	/** (0x12) Bitwise XOR operation			*/
-	XOR(0x12,	2),
-	/** (0x13) Retrieve single byte from word 	*/
-	BYTE(0x13,	2),
-	/** (0x14) Addition combined with modulo 
+    /** Halts execution (0x00) 					*/
+	STOP(0x00,	 0),
+
+	/*	Arithmetic Operations	*/
+
+	/** (0x01) Addition operation				*/
+	ADD(0x01, 2),
+	/** (0x02) Multiplication operation			*/
+	MUL(0x02, 2),
+	/** (0x03) Subtraction operations			*/
+	SUB(0x03, 2),
+	/** (0x04) Integer division operation		*/
+	DIV(0x04, 2),
+	/** (0x05) Signed integer division operation*/
+	SDIV(0x05, 2),
+	/** (0x06) Modulo remainder operation		*/
+	MOD(0x06, 2),
+	/** (0x07) Signed modulo remainder operation*/
+	SMOD(0x07, 2),
+	/** (0x08) Addition combined with modulo 
 	 * remainder operation */
-	ADDMOD(0x14, 3),
-	/** (0x15) Multiplication combined with modulo 
+	ADDMOD(0x08, 3),
+	/** (0x09) Multiplication combined with modulo 
 	 * remainder operation */
-	MULMOD(0x15, 3),
-	
+	MULMOD(0x09, 3),
+	/** (0x0a) Exponential operation			*/
+	EXP(0x0a, 2),
+	/** (0x0b) Extend length of signed integer	*/
+	SIGNEXTEND(0x0b, 2),
+
+	/*	Bitwise Logic & Comparison Operations	*/
+
+	/** (0x10) Less-than comparison				*/
+	LT(0X10, 2),
+	/** (0x11) Greater-than comparison			*/
+    GT(0X11, 2),
+    /** (0x12) Signed less-than comparison		*/
+    SLT(0X12, 2),
+    /** (0x13) Signed greater-than comparison	*/
+    SGT(0X13, 2),
+    /** (0x14) Equality comparison				*/
+	EQ(0X14, 2),
+	/** (0x15) Negation operation				*/
+	ISZERO(0x15, 1),
+	/** (0x16) Bitwise AND operation 			*/
+	AND(0x16, 2),
+	/** (0x17) Bitwise OR operation 			*/
+	OR(0x17, 2),
+	/** (0x18) Bitwise XOR operation			*/
+	XOR(0x18, 2),
+	/** (0x19) Retrieve single byte from word 	*/
+	BYTE(0x19, 2),
+	/** (0x1a) Bitwise NOT operationr			*/
+	NOT(0x1a, 1),	
+
 	/*	Cryptographic Operations	*/
-	
+
 	/** (0x20) Compute SHA3-256 hash			*/
 	SHA3(0x20,	2),
-	
+
 	/*	Environmental Information	*/
 
 	/** (0x30)  Get address of currently 
@@ -108,9 +110,8 @@ public enum OpCode {
 	 * environment to memory with given offset	*/
 	EXTCODECOPY(0x3c, 4),
 
-
 	/*	Block Information	*/
-	
+
 	/** (0x40) Get hash of most recent 
 	 * complete block							*/
 	PREVHASH(0x40, 0),
@@ -124,37 +125,37 @@ public enum OpCode {
 	DIFFICULTY(0x44, 0),
 	/** (0x45) Get the block’s gas limit		*/
 	GASLIMIT(0x45, 0),
-	
+
 	/*	Memory, Storage and Flow Operations	*/
 
 	/** (0x50) Remove item from stack			*/
 	POP(0x50,	1),
-	/** (0x53) Load word from memory			*/
-	MLOAD(0x53, 1),
-	/** (0x54) Save word to memory				*/
-	MSTORE(0x54, 2),
-	/** (0x55) Save byte to memory				*/
-	MSTORE8(0x55, 2),
-	/** (0x56) Load word from storage			*/
-	SLOAD(0x56, 1),
-	/** (0x57) Save word to storage				*/
-	SSTORE(0x57, 2),
-	/** (0x58) Alter the program counter		*/
-	JUMP(0x58, 1),
-	/** (0x59) Conditionally alter the program 
+	/** (0x51) Load word from memory			*/
+	MLOAD(0x51, 1),
+	/** (0x52) Save word to memory				*/
+	MSTORE(0x52, 2),
+	/** (0x53) Save byte to memory				*/
+	MSTORE8(0x53, 2),
+	/** (0x54) Load word from storage			*/
+	SLOAD(0x54, 1),
+	/** (0x55) Save word to storage				*/
+	SSTORE(0x55, 2),
+	/** (0x56) Alter the program counter		*/
+	JUMP(0x56, 1),
+	/** (0x57) Conditionally alter the program 
 	 * counter									*/
-	JUMPI(0x59,	2),
-	/** (0x5a) Get the program counter			*/
-	PC(0x5a, 	0),
-	/** (0x5b) Get the size of active memory	*/
-	MSIZE(0x5b, 0),
-	/** (0x5c) Get the amount of available gas	*/
-	GAS(0x5c, 	0),
-	/** (0x5d) */
-	JUMPDEST(0x5d, 0),
-	
+	JUMPI(0x57,	2),
+	/** (0x58) Get the program counter			*/
+	PC(0x58, 0),
+	/** (0x59) Get the size of active memory	*/
+	MSIZE(0x59, 0),
+	/** (0x5a) Get the amount of available gas	*/
+	GAS(0x5a, 0),
+	/** (0x5b) */
+	JUMPDEST(0x5b, 0),
+
 	/*	Push Operations	*/
-	
+
 	/** (0x60) Place 1-byte item on stack		*/
 	PUSH1(0x60, 0),
 	/** (0x61) Place 2-byte item on stack		*/
@@ -220,9 +221,9 @@ public enum OpCode {
 	/** (0x7f) Place 32-byte (full word) 
 	 * item on stack							*/
 	PUSH32(0x7f, 0),
-	
+
 	/*	Duplicate Nth item from the stack	*/
-	
+
 	/** (0x80) Duplicate 1st item on stack		*/
 	DUP1(0x80, 1),
 	/** (0x81) Duplicate 2nd item on stack		*/
@@ -255,9 +256,9 @@ public enum OpCode {
 	DUP15(0x8e, 15),
 	/** (0x8f) Duplicate 16th item on stack		*/
 	DUP16(0x8f, 16),
-	
+
 	/*	Swap the Nth item from the stack with the top	*/
-	
+
 	/** (0x90) Exchange 2nd item from stack with the top */
 	SWAP1(0x90, 2),
 	/** (0x91) Exchange 3rd item from stack with the top */
@@ -290,9 +291,9 @@ public enum OpCode {
 	SWAP15(0x9e, 16),
 	/** (0x9f) Exchange 17th item from stack with the top */
 	SWAP16(0x9f, 17),
-	
+
 	/*	System operations	*/
-	
+
 	/** (0xf0) Create a new account with associated code	*/
 	CREATE(0xf0, 3),   //       [in_size] [in_offs] [gas_val] CREATE
 	/** (cxf1) Message-call into an account 				*/
@@ -305,7 +306,7 @@ public enum OpCode {
 	/** (0xff) Halt execution and register account for 
 	 * later deletion */
 	SUICIDE(0xff, 1);
-	
+
 	private byte opcode;
 	private int require;
     

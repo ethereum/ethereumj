@@ -345,7 +345,7 @@ public class VMCustomTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("60016000556001600020"), invoke);
+                new Program(Hex.decode("60016000536001600020"), invoke);
         String s_expected_1 = "5FE7F977E71DBA2EA1A68E21057BEEBB9BE2AC30C6410AA38D4F3FBE41DCFFD2";
 
         vm.step(program);
@@ -364,7 +364,7 @@ public class VMCustomTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("6102016000546002601E20"), invoke);
+                new Program(Hex.decode("6102016000526002601E20"), invoke);
         String s_expected_1 = "114A3FE82A0219FCC31ABD15617966A125F12B0FD3409105FC83B487A9D82DE4";
 
         vm.step(program);
@@ -383,7 +383,7 @@ public class VMCustomTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("610201600054600220"), invoke);
+                new Program(Hex.decode("610201600052600220"), invoke);
         try {
             vm.step(program);
             vm.step(program);
@@ -484,7 +484,7 @@ public class VMCustomTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("5C"), invoke);
+                new Program(Hex.decode("5A"), invoke);
         String s_expected_1 = "00000000000000000000000000000000000000000000000000000000000F423F";
 
         vm.step(program);
@@ -511,7 +511,7 @@ public class VMCustomTest {
     public void testINVALID_1() {
 
         VM vm = new VM();
-        program = new Program(Hex.decode("6001516002"), invoke);
+        program = new Program(Hex.decode("60012F6002"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
 
         try {

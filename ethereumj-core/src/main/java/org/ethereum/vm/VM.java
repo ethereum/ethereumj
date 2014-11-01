@@ -280,7 +280,7 @@ public class VM {
                     program.stackPush(word1);
                     program.step();
                 }	break;
-                case BNOT:{
+                case NOT:{
                 	DataWord word1 = program.stackPop();
                     word1.bnot();
 
@@ -374,7 +374,7 @@ public class VM {
                     program.stackPush(word1);
                     program.step();
                 }	break;
-                case NOT: {
+                case ISZERO: {
                 	DataWord word1 = program.stackPop();
                     if (word1.isZero()) {
                         word1.getData()[31] = 1;

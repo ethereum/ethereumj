@@ -47,7 +47,7 @@ public class VMComplexTest {
         // Set contract into Database
         String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         String contractAddr = "77045e71a7a2c50903d88e564cd72fab11e82051";
-        String code         = "6103e75660005460006000530b0f630000004c596001600053036103e757600060006000600060007377045e71a7a2c50903d88e564cd72fab11e820516008600a5c0402f1630000004c585d00";
+        String code         = "6103e75460005260006000511115630000004c576001600051036103e755600060006000600060007377045e71a7a2c50903d88e564cd72fab11e820516008600a5a0402f1630000004c565b00";
 
         byte[] contractAddrB = Hex.decode(contractAddr);
         byte[] callerAddrB = Hex.decode(callerAddr);
@@ -124,8 +124,8 @@ public class VMComplexTest {
         String contractA_addr = "77045e71a7a2c50903d88e564cd72fab11e82051";
         String contractB_addr = "83c5541a6c8d2dbad642f385d8d06ca9b6c731ee";
 
-        String code_a = "60006020023560005460016020023560205460005360005760205360015700";
-        String code_b = "6000601f5560e05b60e05b54600060c05b015560605b6020015b80602001600b9054806040016016905480606001602190546080905460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054";
+        String code_a = "60006020023560005260016020023560205260005160005560205160015500";
+        String code_b = "6000601f5360e05960e05952600060c05901536060596020015980602001600b9052806040016016905280606001602190526080905260007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200151600052";
 
         byte[] caller_addr_bytes = Hex.decode(callerAddr);
 
@@ -221,8 +221,8 @@ public class VMComplexTest {
         byte[] contractA_addr_bytes = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
         byte[] contractB_addr_bytes = Hex.decode("83c5541a6c8d2dbad642f385d8d06ca9b6c731ee");
 
-        byte[] codeA = Hex.decode("600b60005460166020546021604054602c6060546037608054604260a05460c06000f2");
-        byte[] codeB = Hex.decode("6000601f5560e05b60e05b54600060c05b015560605b6020015b80602001600b9054806040016016905480606001602190546080905460007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200153600054");
+        byte[] codeA = Hex.decode("600b60005260166020526021604052602c6060526037608052604260a05260c06000f2");
+        byte[] codeB = Hex.decode("6000601f5360e05960e05952600060c05901536060596020015980602001600b9052806040016016905280606001602190526080905260007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200151600052");
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
@@ -367,8 +367,8 @@ public class VMComplexTest {
     	byte[] contractA_addr_bytes = Hex.decode("945304eb96065b2a98b57a48a06ae28d285a71b5");
     	byte[] contractB_addr_bytes = Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6");
 
-    	byte[] codeA = Hex.decode("600035560f6009590060203560003557");
-        byte[] codeB = Hex.decode("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6000547faaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa6020546000604060406000601773945304eb96065b2a98b57a48a06ae28d285a71b5620f4240f3600057");
+    	byte[] codeA = Hex.decode("60003554156009570060203560003555");
+        byte[] codeB = Hex.decode("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6000527faaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa6020526000604060406000601773945304eb96065b2a98b57a48a06ae28d285a71b5620f4240f3600055");
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
