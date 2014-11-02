@@ -132,6 +132,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        active = false;
 		this.killTimers();
 	}
 

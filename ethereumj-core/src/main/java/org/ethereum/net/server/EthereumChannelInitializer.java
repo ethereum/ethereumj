@@ -29,7 +29,11 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChannel> {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
+    private PeerServer peerServer;
 
+    public EthereumChannelInitializer(PeerServer peerServer) {
+        this.peerServer = peerServer;
+    }
 
     public void initChannel(NioSocketChannel ch) throws Exception {
 
@@ -63,6 +67,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
         ch.config().setOption(ChannelOption.SO_RCVBUF, 32368);
 
+        peerServer.addChannel(new Channel(msgQueue, p2pHandler, ethHandler, shhHandler));
 
         // todo: check if have or not active peer if not set this one
     }

@@ -145,6 +145,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         logger.debug("handlerRemoved: kill timers in EthHandler");
+        active = false;
         this.killTimers();
     }
 

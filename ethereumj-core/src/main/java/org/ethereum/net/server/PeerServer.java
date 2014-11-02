@@ -9,8 +9,11 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
 import org.ethereum.net.PeerListener;
+import org.ethereum.net.p2p.HelloMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -29,7 +32,11 @@ public class PeerServer {
 
     private PeerListener peerListener;
 
+    Timer inactivesCollector = new Timer("inactivesCollector");
+
     private boolean peerDiscoveryMode = false;
+
+    List<Channel> channels = Collections.synchronizedList(new ArrayList<Channel>());
 
     public PeerServer() {
     }
@@ -40,6 +47,23 @@ public class PeerServer {
     }
 
     public void start(int port) {
+
+
+        inactivesCollector.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+
+                Iterator<Channel> iter = channels.iterator();
+                while(iter.hasNext()){
+                    Channel channel = iter.next();
+                    if(!channel.p2pHandler.isActive()){
+
+                        iter.remove();
+                        logger.info("Channel removed: {}", channel.p2pHandler.getHandshakeHelloMessage());
+                    }
+                }
+            }
+        }, 2000, 5000);
+
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -59,7 +83,7 @@ public class PeerServer {
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerConnectionTimeout());
 
             b.handler(new LoggingHandler());
-            b.childHandler(new EthereumChannelInitializer());
+            b.childHandler(new EthereumChannelInitializer(this));
 
             // Start the client.
             logger.info("Listening for incoming connections, port: [{}] ", port);
@@ -71,7 +95,7 @@ public class PeerServer {
 
         } catch (Exception e) {
         	logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
-            throw new Error("Disconnnected");
+            throw new Error("Server Disconnnected");
         } finally {
         	workerGroup.shutdownGracefully();
 
@@ -82,6 +106,9 @@ public class PeerServer {
         this.peerListener = peerListener;
     }
 
+    synchronized public void addChannel(Channel channel){
+        channels.add(channel);
+    }
 
 
 }

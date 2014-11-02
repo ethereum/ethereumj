@@ -63,6 +63,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        active = false;
     	logger.debug("handlerRemoved: ... ");
     }
 
