@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.util.ByteUtil;
@@ -35,5 +37,10 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
         out.writeBytes(StaticMessages.SYNC_TOKEN);
         out.writeBytes(ByteUtil.calcPacketLength(encoded));
         out.writeBytes(encoded);
+
+        EthereumListener ethereumListener = WorldManager.getInstance().getListener();
+        if (ethereumListener != null) {
+            ethereumListener.onSendMessage(msg);
+        }
     }
 }

@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.slf4j.Logger;
@@ -40,6 +42,11 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
 		out.add(msg);
         in.markReaderIndex();
+
+        EthereumListener ethereumListener = WorldManager.getInstance().getListener();
+        if (ethereumListener != null) {
+            ethereumListener.onRecvMessage(msg);
+        }
     }
 	
 	private boolean isValidEthereumPacket(ByteBuf in) {
