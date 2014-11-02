@@ -28,7 +28,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class PeerClient {
 
-    private static final Logger logger = LoggerFactory.getLogger("wire");
+    private static final Logger logger = LoggerFactory.getLogger("net");
 
     private PeerListener peerListener;
     private P2pHandler p2pHandler;

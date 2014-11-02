@@ -1,5 +1,8 @@
 package org.ethereum.core;
 
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -61,7 +64,7 @@ public class BlockchainImpl implements Blockchain {
     
     // keep the index of the chain for
     // convenient usage, <block_number, block_hash>
-    private final Map<Long, byte[]> blockCache = new HashMap<>();
+    private final BidiMap<Long, ByteArrayWrapper> blockCache = new DualTreeBidiMap<>();
 	
     private final BlockQueue blockQueue = new BlockQueue();
     private boolean syncDoneCalled = false;
@@ -93,6 +96,36 @@ public class BlockchainImpl implements Blockchain {
     public Block getBlockByNumber(long blockNr) {
     	return repository.getBlock(blockNr);
 	}
+
+    @Override
+    public Block getBlockByHash(byte[] hash){
+
+        Long index = blockCache.inverseBidiMap().get(new ByteArrayWrapper(hash));
+        if (index == null) return null; // don't have such hash
+
+        return repository.getBlock(index);
+    }
+
+    @Override
+    public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty){
+
+        Long startIndex = blockCache.inverseBidiMap().get(new ByteArrayWrapper( hash ));
+        if (startIndex == null) return null; // strange but no such hashes in our chain
+        --startIndex;
+
+        Long endIndex = startIndex - qty;
+        if (endIndex < 0) endIndex = 0L;
+
+        Vector<byte[]> result = new Vector<>();
+        for (Long i = startIndex; i >= endIndex; --i){
+
+            ByteArrayWrapper baw = blockCache.get(i);
+            result.add(baw.getData());
+        }
+
+        return result;
+    }
+
 
     @Override
     public void add(Block block) {
@@ -222,7 +255,7 @@ public class BlockchainImpl implements Blockchain {
         }
     	
 		this.repository.saveBlock(block);
-		this.blockCache.put(block.getNumber(), block.getHash());
+		this.blockCache.put(block.getNumber(), new ByteArrayWrapper(block.getHash()));
 		this.setLastBlock(block);
 		
         if (logger.isDebugEnabled())
@@ -460,7 +493,7 @@ public class BlockchainImpl implements Blockchain {
     }
     
 	@Override
-    public Map<Long, byte[]> getBlockCache() {
+    public Map<Long, ByteArrayWrapper> getBlockCache() {
     	return this.blockCache;
     }
     
@@ -489,6 +522,6 @@ public class BlockchainImpl implements Blockchain {
 		if (this.totalDifficulty == null)
 			this.totalDifficulty = block.getCumulativeDifficulty();
 		else
-			this.totalDifficulty.add(block.getCumulativeDifficulty());
+			this.totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
 	}
 }

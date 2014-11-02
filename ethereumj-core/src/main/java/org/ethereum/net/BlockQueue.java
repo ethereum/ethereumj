@@ -6,6 +6,7 @@ import org.ethereum.core.Block;
 import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -74,7 +75,8 @@ public class BlockQueue {
 
 		Block lastReceivedBlock = blockList.get(0);
 		if (lastReceivedBlock.getNumber() != getLastBlock().getNumber() + 1){
-            logger.error("Block download out of sync");
+            logger.error("Block download out of sync: lastBlock.index: [{}], receivedBlock.index: [{}]",
+                    getLastBlock().getNumber(), lastReceivedBlock.getNumber());
             return;
         }
 
@@ -94,7 +96,8 @@ public class BlockQueue {
     public void addBlock(Block block){
 
         if (block.getNumber() != getLastBlock().getNumber() + 1){
-            logger.error("Block download out of sync");
+            logger.error("Block download out of sync: lastBlock.index: [{}], receivedBlock.index: [{}]",
+                    getLastBlock().getNumber(), block.getNumber());
             return;
         }
 
@@ -143,6 +146,10 @@ public class BlockQueue {
 
 	public void addHash(byte[] hash) {
 		blockHashQueue.addLast(hash);
+
+        if (logger.isTraceEnabled()){
+            logger.trace("Adding hash to a hashQueue: [{}]" , Hex.toHexString(hash));
+        }
 	}
 
     public void addNewBlockHash(byte[] hash){

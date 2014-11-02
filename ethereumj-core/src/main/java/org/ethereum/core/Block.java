@@ -170,7 +170,7 @@ public class Block {
         if (!parsed) parseRLP();
 		BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
         for (BlockHeader uncle : uncleList) {
-			calcDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
+            calcDifficulty = calcDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
 		}
         return calcDifficulty;
     }

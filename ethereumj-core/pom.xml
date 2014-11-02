@@ -4,7 +4,7 @@
 	<groupId>org.ethereum</groupId>
 	<artifactId>ethereumj</artifactId>
 	<packaging>jar</packaging>
-	<version>0.7.2</version>
+	<version>0.7.6</version>
 	<name>EthereumJ</name>
 	<url>http://www.ethereumj.org</url>
 
@@ -170,6 +170,13 @@
             <artifactId>jackson-databind</artifactId>
             <version>2.2.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-collections4</artifactId>
+            <version>4.0</version>
+        </dependency>
+
 
 
     </dependencies>

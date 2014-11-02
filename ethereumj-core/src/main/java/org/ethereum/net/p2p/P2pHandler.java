@@ -140,6 +140,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         logger.error(cause.getCause().toString());
         super.exceptionCaught(ctx, cause);
         ctx.close();
+        killTimers();
     }
         
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
@@ -271,6 +272,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         msgQueue.close();
 
     }
+
+
 
 
 }

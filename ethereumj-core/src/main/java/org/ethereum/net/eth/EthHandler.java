@@ -103,7 +103,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 break;
             case GET_BLOCK_HASHES:
                 msgQueue.receivedMessage(msg);
-//				sendBlockHashes();
+                processGetBlockHashes((GetBlockHashesMessage) msg);
                 break;
             case BLOCK_HASHES:
                 msgQueue.receivedMessage(msg);
@@ -111,7 +111,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 break;
             case GET_BLOCKS:
                 msgQueue.receivedMessage(msg);
-//				sendBlocks();
+                processGetBlocks( (GetBlocksMessage) msg  );
                 break;
             case BLOCKS:
                 msgQueue.receivedMessage(msg);
@@ -182,7 +182,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         else {
             BlockQueue chainQueue = blockchain.getQueue();
             BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
-            BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
+            BigInteger highestKnownTotalDifficulty = blockchain.getTotalDifficulty();
             if (highestKnownTotalDifficulty == null
                     || peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
                 hashRetrievalLock = this.peerId;
@@ -190,8 +190,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 chainQueue.setBestHash(msg.getBestHash());
                 syncStatus = SyncSatus.HASH_RETRIEVING;
                 sendGetBlockHashes();
-            } else
-                startGetBlockTimer();
+            } else{
+                logger.info(" *** The chain sync process fully complete ***");
+                syncStatus = SyncSatus.SYNC_DONE;
+            }
         }
     }
 
@@ -217,6 +219,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 chainQueue.addHash(foundHash);    // store unknown hashes in queue until known hash is found
             }
             else {
+
+                logger.trace("Catch up with the hashes until: {[]}", foundHash);
                 // if known hash is found, ignore the rest
                 startGetBlockTimer(); // start getting blocks from hash queue
                 return;
@@ -333,13 +337,30 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         msgQueue.sendMessage(msg);
     }
 
-    private void sendBlocks() {
-        // TODO: Send blocks
+    private void processGetBlockHashes(GetBlockHashesMessage msg) {
+
+        Blockchain blockchain = WorldManager.getInstance().getBlockchain();
+        List<byte[]> hashes = blockchain.getListOfHashesStartFrom(msg.getBestHash(), msg.getMaxBlocks());
+
+        BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
+        msgQueue.sendMessage(msgHashes);
     }
 
-    private void sendBlockHashes() {
-        // TODO: Send block hashes
+    private void processGetBlocks(GetBlocksMessage msg) {
+
+        List<byte[]> hashes = msg.getBlockHashes();
+        Blockchain blockchain = WorldManager.getInstance().getBlockchain();
+
+        Vector<Block> blocks = new Vector<>();
+        for (byte[] hash : hashes){
+            Block block =  blockchain.getBlockByHash(hash);
+            blocks.add(block);
+        }
+
+        BlocksMessage bm = new BlocksMessage(blocks);
+        msgQueue.sendMessage(bm);
     }
+
 
     private void startTxTimer() {
         getTxTimer.scheduleAtFixedRate(new TimerTask() {
