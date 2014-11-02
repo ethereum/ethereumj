@@ -276,9 +276,19 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             return;
         }
 
+
         // here is post sync process
         logger.info("New block received: block.index [{}]", newBlockMessage.getBlock().getNumber());
         WorldManager.getInstance().clearPendingTransactions(newBlockMessage.getBlock().getTransactionsList());
+
+        long gap = newBlockMessage.getBlock().getNumber() - blockchain.getQueue().getLastBlock().getNumber();
+        if (gap > 1){
+            logger.error("Gap in the chain, go out of sync");
+            this.syncStatus = SyncSatus.HASH_RETRIEVING;
+            blockchain.getQueue().addHash(newBlock.getHash());
+            sendGetBlockHashes();
+        }
+
         blockchain.getQueue().addBlock(newBlockMessage.getBlock());
         blockchain.getQueue().logHashQueueSize();
     }
@@ -373,6 +383,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void startGetBlockTimer() {
         syncStatus = SyncSatus.BLOCK_RETRIEVING;
+        getBlocksTimer = new Timer("GetBlocksTimer");
         getBlocksTimer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 BlockQueue blockQueue = WorldManager.getInstance().getBlockchain().getQueue();
