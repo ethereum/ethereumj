@@ -155,7 +155,7 @@ public class TrieImpl implements Trie {
         if (root == null
                 || (root instanceof byte[] && ((byte[]) root).length == 0)
                 || (root instanceof String && "".equals((String) root))) {
-            return ByteUtil.EMPTY_BYTE_ARRAY;
+            return ByteUtil.EMTPY_TRIE_HASH;
         } else if (root instanceof byte[]) {
             return (byte[]) this.getRoot();
         } else {

@@ -15,6 +15,7 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -38,7 +39,7 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
  */
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    public final static byte VERSION = 0x24;
+    public final static byte VERSION = 0x26;
     public final static byte NETWORK_ID = 0x0;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
@@ -184,8 +185,13 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             BlockQueue chainQueue = blockchain.getQueue();
             BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
             BigInteger highestKnownTotalDifficulty = blockchain.getTotalDifficulty();
-            if (highestKnownTotalDifficulty == null
-                    || peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
+            if ( highestKnownTotalDifficulty == null ||
+                 peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
+
+                logger.info(" Their chain is better: total difficulty : {} vs {}",
+                        peerTotalDifficulty.toString(),
+                        highestKnownTotalDifficulty == null ? "0" : highestKnownTotalDifficulty.toString());
+
                 hashRetrievalLock = this.peerId;
                 chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
                 chainQueue.setBestHash(msg.getBestHash());

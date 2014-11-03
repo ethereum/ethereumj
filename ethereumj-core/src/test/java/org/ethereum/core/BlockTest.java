@@ -6,12 +6,17 @@ import org.ethereum.manager.WorldManager;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
 public class BlockTest {
+
+        private static final Logger logger = LoggerFactory.getLogger("test");
+
 
     @BeforeClass
     public static void setUp() {
@@ -25,8 +30,8 @@ public class BlockTest {
     }
 
 	// https://ethereum.etherpad.mozilla.org/12
-	private String PoC7_GENESIS_HEX_RLP_ENCODED = "f88bf887a0000000000000000000000000000000000000000000000000000000000000000080940000000000000000000000000000000000000000a008bf6a98374f333b84e7d063d607696ac7cbbd409bd20fbe6a741c2dfc0eb28580830200008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
-	private String PoC7_GENESIS_HEX_HASH = "9f0eb5da696ede7b44b22a8ef3a998f19e422195fdc9a8b3c82457858d310d6c";
+	private String PoC7_GENESIS_HEX_RLP_ENCODED = "f9012ff9012aa00000000000000000000000000000000000000000000000000000000000000000a0c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470940000000000000000000000000000000000000000a0c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718ca056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b84000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000830200008080830f4240808080a004994f67dc55b09e814ab7ffc8df3686b4afb2bb53e60eae97ef043fe03fb829c0c0";
+	private String PoC7_GENESIS_HEX_HASH = "19039f385f269fae48d497fba579d7079c761cec5643ec1096e98bdda4ffcf00";
 
 	String block_2 = "f8b5f8b1a0cf4b25b08b39350304fe12a16e4216c01a426f8f3dbf0d392b5b45"
 				   + "8ffb6a399da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a1"
@@ -69,7 +74,8 @@ public class BlockTest {
     public void testGenesisFromNew() {
         /*	From: https://ethereum.etherpad.mozilla.org/11		
           	Genesis block is: 
-             		( 
+             		(
+             		    todo: update it
              			B32(0, 0, ...), 
         				B32(sha3(B())), 
         				B20(0, 0, ...), 
@@ -86,6 +92,8 @@ public class BlockTest {
         			)
          */
     	Block genesis = Genesis.getInstance();
+        logger.info("genesis hash: [{}]", Hex.toHexString(genesis.getHash()));
+        logger.info("genesis rlp: [{}]", Hex.toHexString(genesis.getEncoded()));
         assertEquals(PoC7_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
     	assertEquals(PoC7_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
     }

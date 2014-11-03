@@ -1,8 +1,11 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -30,45 +33,48 @@ public class Genesis extends Block {
 	
     private static String[] premine = new String[] {
             "51ba59315b3a95761d0863b05ccc7a7f54703d99",
-            "e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
-            "b9c015918bdaba24b4ff057a92a3873d6eb201be",		// # (V)
-            "6c386a4b26f73c802f34673f7248bb118f97424a",		// # (HH)
-            "cd2a3d9f938e13cd947ec05abc7fe734df8dd826",     // # (R)
-            "2ef47100e0787b915105fd5e3f4ff6752079d5cb", 	// # (M)
             "e6716f9544a56c530d868e4bfbacb172315bdead",		// # (J)
+            "b9c015918bdaba24b4ff057a92a3873d6eb201be",		// # (V)
             "1a26338f0d905e295fccb71fa9ea849ffa12aaf4",		// # (A)
+            "2ef47100e0787b915105fd5e3f4ff6752079d5cb", 	// # (M)
+            "cd2a3d9f938e13cd947ec05abc7fe734df8dd826",     // # (R)
+            "6c386a4b26f73c802f34673f7248bb118f97424a",		// # (HH)
+            "e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
     };
 
 	private static byte[] zeroHash256 = new byte[32];
 	private static byte[] zeroHash160 = new byte[20];
+	private static byte[] zeroHash512 = new byte[64];
 
 	public static byte[] PARENT_HASH = zeroHash256;
-	public static byte[] UNCLES_HASH = new byte[0];
+	public static byte[] UNCLES_HASH = ByteUtil.EMTPY_SHA3_RLP_ELEMENT_HASH;
 	public static byte[] COINBASE = zeroHash160;
+    public static byte[] LOG_BLOOM = zeroHash512;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
-    public static long NUMBER = 0;
-    public static long MIN_GAS_PRICE = 0;
-    public static long GAS_LIMIT = 1000000;
-    public static long GAS_USED = 0;
-    public static long TIMESTAMP = 0;
+    public static long   NUMBER = 0;
+    public static long   MIN_GAS_PRICE = 0;
+    public static long   GAS_LIMIT = 1000000;
+    public static long   GAS_USED = 0;
+    public static long   TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
     public static byte[] NONCE = HashUtil.sha3(new byte[]{42});
     
     private static Block instance;
     
 	private Genesis() {
-		super(PARENT_HASH, UNCLES_HASH, COINBASE, DIFFICULTY,
+		super(PARENT_HASH, UNCLES_HASH, COINBASE, LOG_BLOOM, DIFFICULTY,
 				NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED, TIMESTAMP,
 				EXTRA_DATA, NONCE, null, null);
 		
 		Trie state = new TrieImpl(null);
-        // The proof-of-concept series include a development premine, making the state root hash
+        // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {
 			AccountState acctState = new AccountState();
 			acctState.addToBalance(PREMINE_AMOUNT);
 			state.update(Hex.decode(address), acctState.getEncoded());
         }
+
 		setStateRoot(state.getRootHash());
     }
 	

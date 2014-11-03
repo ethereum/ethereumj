@@ -55,7 +55,7 @@ public class MinerTest {
 		long gasLimit = 969216;
 		long gasUsed = 0;
 		long timestamp = 1401421088;
-		Block newBlock = new Block(parentHash, unclesHash, coinbase,
+		Block newBlock = new Block(parentHash, unclesHash, coinbase, null,
 				difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,
 				null, nonce, null, null);
 		// Setting stateRoot manually, because don't have state available.

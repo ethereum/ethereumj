@@ -14,7 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 
 public class StateTest {
 
-	private static final String GENESIS_STATE_ROOT = "08bf6a98374f333b84e7d063d607696ac7cbbd409bd20fbe6a741c2dfc0eb285";
+	private static final String GENESIS_STATE_ROOT = "c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718c";
 	
     @Test
     public void testGenesisAccounts() {

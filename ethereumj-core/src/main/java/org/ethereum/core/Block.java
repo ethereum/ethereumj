@@ -61,11 +61,11 @@ public class Block {
         this.parsed = false;
     }
     
-	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
+	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
 			byte[] difficulty, long number, long minGasPrice, long gasLimit,
 			long gasUsed, long timestamp, byte[] extraData, byte[] nonce,
 			List<Transaction> transactionsList, List<BlockHeader> uncleList) {
-		this.header = new BlockHeader(parentHash, unclesHash, coinbase,
+		this.header = new BlockHeader(parentHash, unclesHash, coinbase, logsBloom,
 				difficulty, number, minGasPrice, gasLimit, gasUsed,
 				timestamp, extraData, nonce);
 
@@ -241,7 +241,7 @@ public class Block {
         if (!parsed) parseRLP();
 
         toStringBuff.setLength(0);
-        toStringBuff.append(Hex.toHexString(this.rlpEncoded)).append("\n");
+        toStringBuff.append(Hex.toHexString(this.getEncoded())).append("\n");
         toStringBuff.append("BlockData [\n");
         toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
@@ -310,6 +310,7 @@ public class Block {
                 new TransactionReceipt(tx, pstTxState.getRLPData(), cummGas.getRLPData());
             this.addTxReceipt(i, txReceipt);
         }
+
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
         if(!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
 			logger.error("Added tx receipts don't match the given txsStateRoot");

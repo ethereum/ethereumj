@@ -6,12 +6,16 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.ethereum.crypto.SHA3Helper;
+import org.ethereum.trie.TrieImpl;
 import org.spongycastle.util.encoders.Hex;
 
 public class ByteUtil {
 
 	public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
-	
+    public static final byte[] EMTPY_SHA3_RLP_ELEMENT_HASH = SHA3Helper.sha3("");
+    public static final byte[] EMTPY_TRIE_HASH = SHA3Helper.sha3(RLP.encodeElement(ByteUtil.EMPTY_BYTE_ARRAY));
+
     /**
      * Creates a copy of bytes and appends b to the end of it
      */

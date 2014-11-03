@@ -6,13 +6,10 @@ import static org.ethereum.util.ByteUtil.*;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
-import org.ethereum.util.Utils;
+import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Block header is a value object containing 
@@ -34,11 +31,19 @@ public class BlockHeader {
      * after all transactions are executed and finalisations applied */
     private byte[] stateRoot;
     /* The SHA3 256-bit hash of the root node of the trie structure 
-     * populated with each transaction recipe in the transaction recipes
+     * populated with each transaction in the transaction
      * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_reciepe)]
      * of the block */
     private byte[] txTrieRoot;
-    /* A scalar value corresponding to the difficulty level of this block. 
+    /* The SHA3 256-bit hash of the root node of the trie structure
+     * populated with each transaction recipe in the transaction recipes
+     * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_reciepe)]
+     * of the block */
+    private byte[] recieptTrieRoot;
+
+    /*todo: comment it when you know what the fuck it is*/
+    private byte[] logsBloom;
+    /* A scalar value corresponding to the difficulty level of this block.
      * This can be calculated from the previous block’s difficulty level 
      * and the timestamp */
     private byte[] difficulty;
@@ -71,15 +76,20 @@ public class BlockHeader {
         
         this.txTrieRoot     = ((RLPItem) rlpHeader.get(4)).getRLPData();
         if(this.txTrieRoot == null)
-        	this.txTrieRoot = EMPTY_BYTE_ARRAY;
-        
-        this.difficulty     = ((RLPItem) rlpHeader.get(5)).getRLPData();
+        	this.txTrieRoot = EMTPY_SHA3_RLP_ELEMENT_HASH;
+
+        this.recieptTrieRoot     = ((RLPItem) rlpHeader.get(5)).getRLPData();
+        if(this.recieptTrieRoot == null)
+            this.recieptTrieRoot = EMTPY_SHA3_RLP_ELEMENT_HASH;
+
+        this.logsBloom      = ((RLPItem) rlpHeader.get(6)).getRLPData();
+        this.difficulty     = ((RLPItem) rlpHeader.get(7)).getRLPData();
  
-        byte[] nrBytes      = ((RLPItem) rlpHeader.get(6)).getRLPData();
-        byte[] gpBytes      = ((RLPItem) rlpHeader.get(7)).getRLPData();
-        byte[] glBytes      = ((RLPItem) rlpHeader.get(8)).getRLPData();
-        byte[] guBytes      = ((RLPItem) rlpHeader.get(9)).getRLPData();
-        byte[] tsBytes      = ((RLPItem) rlpHeader.get(10)).getRLPData();
+        byte[] nrBytes      = ((RLPItem) rlpHeader.get(8)).getRLPData();
+        byte[] gpBytes      = ((RLPItem) rlpHeader.get(9)).getRLPData();
+        byte[] glBytes      = ((RLPItem) rlpHeader.get(10)).getRLPData();
+        byte[] guBytes      = ((RLPItem) rlpHeader.get(11)).getRLPData();
+        byte[] tsBytes      = ((RLPItem) rlpHeader.get(12)).getRLPData();
         
         this.number 		= nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
         this.minGasPrice 	= gpBytes == null ? 0 : (new BigInteger(1, gpBytes)).longValue();
@@ -87,16 +97,18 @@ public class BlockHeader {
         this.gasUsed 		= guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
         this.timestamp      = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
         
-        this.extraData       = ((RLPItem) rlpHeader.get(11)).getRLPData();
-        this.nonce           = ((RLPItem) rlpHeader.get(12)).getRLPData();
+        this.extraData       = ((RLPItem) rlpHeader.get(13)).getRLPData();
+        this.nonce           = ((RLPItem) rlpHeader.get(14)).getRLPData();
     }
     
 	public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
-			byte[] difficulty, long number, long minGasPrice, long gasLimit,
-			long gasUsed, long timestamp, byte[] extraData, byte[] nonce) {
+                       byte[]  logsBloom, byte[] difficulty, long number,
+                       long minGasPrice, long gasLimit, long gasUsed, long timestamp,
+                       byte[] extraData, byte[] nonce) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
         this.coinbase = coinbase;
+        this.logsBloom = logsBloom;
         this.difficulty = difficulty;
         this.number = number;
         this.minGasPrice = minGasPrice;
@@ -204,7 +216,13 @@ public class BlockHeader {
 	public void setTxTrieRoot(byte[] txTrieRoot) {
 		this.txTrieRoot = txTrieRoot;
 	}
-	public byte[] getDifficulty() {
+    public byte[] getRecieptTrieRoot() {
+        return recieptTrieRoot;
+    }
+    public void setRecieptTrieRoot(byte[] recieptTrieRoot) {
+        this.recieptTrieRoot = recieptTrieRoot;
+    }
+    public byte[] getDifficulty() {
 		return difficulty;
 	}
 	public void setDifficulty(byte[] difficulty) {
@@ -263,10 +281,25 @@ public class BlockHeader {
 	
 	public byte[] getEncoded(boolean withNonce) {
         byte[] parentHash		= RLP.encodeElement(this.parentHash);
+
         byte[] unclesHash		= RLP.encodeElement(this.unclesHash);
         byte[] coinbase			= RLP.encodeElement(this.coinbase);
+
         byte[] stateRoot		= RLP.encodeElement(this.stateRoot);
-        byte[] txTrieRoot		= RLP.encodeElement(this.txTrieRoot);
+
+        if (this.txTrieRoot == null)
+            this.txTrieRoot = ByteUtil.EMTPY_TRIE_HASH;
+
+        byte[] txTrieRoot	= RLP.encodeElement(this.txTrieRoot);
+
+
+        if (this.recieptTrieRoot == null)
+            this.recieptTrieRoot = ByteUtil.EMTPY_TRIE_HASH;
+
+        byte[] recieptTrieRoot	= RLP.encodeElement(this.txTrieRoot);
+
+
+        byte[] logsBloom        = RLP.encodeElement(this.logsBloom);
         byte[] difficulty		= RLP.encodeElement(this.difficulty);
         byte[] number			= RLP.encodeBigInteger(BigInteger.valueOf(this.number));
         byte[] minGasPrice		= RLP.encodeBigInteger(BigInteger.valueOf(this.minGasPrice));
@@ -277,11 +310,11 @@ public class BlockHeader {
         if(withNonce) {
         	byte[] nonce			= RLP.encodeElement(this.nonce);
         	return RLP.encodeList(parentHash, unclesHash, coinbase,
-    				stateRoot, txTrieRoot, difficulty, number,
+    				stateRoot, txTrieRoot, recieptTrieRoot, logsBloom, difficulty, number,
     				minGasPrice, gasLimit, gasUsed, timestamp, extraData, nonce);
         } else {
         	return RLP.encodeList(parentHash, unclesHash, coinbase,
-    				stateRoot, txTrieRoot, difficulty, number,
+    				stateRoot, txTrieRoot, recieptTrieRoot, logsBloom, difficulty, number,
     				minGasPrice, gasLimit, gasUsed, timestamp, extraData);
         }
 	}
@@ -296,6 +329,7 @@ public class BlockHeader {
         toStringBuff.append("  coinbase=" + toHexString(coinbase)).append("\n");
         toStringBuff.append("  stateRoot=" 		+ toHexString(stateRoot)).append("\n");
         toStringBuff.append("  txTrieHash=" 	+ toHexString(txTrieRoot)).append("\n");
+        toStringBuff.append("  reciptsTrieHash=" 	+ toHexString(recieptTrieRoot)).append("\n");
         toStringBuff.append("  difficulty=" 	+ toHexString(difficulty)).append("\n");
         toStringBuff.append("  number=" 		+ number).append("\n");
         toStringBuff.append("  minGasPrice=" 	+ minGasPrice).append("\n");
