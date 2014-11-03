@@ -6,8 +6,6 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
-import org.ethereum.crypto.SHA3Helper;
-import org.ethereum.trie.TrieImpl;
 import org.spongycastle.util.encoders.Hex;
 
 public class ByteUtil {

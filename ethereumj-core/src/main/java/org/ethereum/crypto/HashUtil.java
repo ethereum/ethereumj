@@ -6,8 +6,9 @@ import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
 import org.spongycastle.crypto.Digest;
@@ -19,8 +20,9 @@ public class HashUtil {
 
     private static final int MAX_ENTRIES = 100; // Should contain most commonly hashed values 
     private static LRUMap<ByteArrayWrapper, byte[]> sha3Cache = new LRUMap<>(0, MAX_ENTRIES);
-    public static final byte[] EMPTY_DATA_HASH = SHA3Helper.sha3("");
-    public static final byte[] EMTPY_TRIE_HASH = SHA3Helper.sha3(RLP.encodeElement(ByteUtil.EMPTY_BYTE_ARRAY));
+    public static final byte[] EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
+    public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList());
+    public static final byte[] EMPTY_TRIE_HASH = sha3(RLP.encodeElement(EMPTY_BYTE_ARRAY));
 
     private static final MessageDigest sha256digest;
     

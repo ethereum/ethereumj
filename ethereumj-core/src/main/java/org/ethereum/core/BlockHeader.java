@@ -2,17 +2,14 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.ethereum.crypto.HashUtil.EMTPY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.*;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * Block header is a value object containing 
@@ -80,11 +77,11 @@ public class BlockHeader {
         
         this.txTrieRoot     = ((RLPItem) rlpHeader.get(4)).getRLPData();
         if(this.txTrieRoot == null)
-        	this.txTrieRoot = EMTPY_TRIE_HASH;
+        	this.txTrieRoot = EMPTY_TRIE_HASH;
 
         this.recieptTrieRoot     = ((RLPItem) rlpHeader.get(5)).getRLPData();
         if(this.recieptTrieRoot == null)
-            this.recieptTrieRoot = EMPTY_DATA_HASH;
+            this.recieptTrieRoot = EMPTY_TRIE_HASH;
 
         this.logsBloom      = ((RLPItem) rlpHeader.get(6)).getRLPData();
         this.difficulty     = ((RLPItem) rlpHeader.get(7)).getRLPData();
@@ -292,10 +289,10 @@ public class BlockHeader {
 
         byte[] stateRoot		= RLP.encodeElement(this.stateRoot);
 
-        if (txTrieRoot == null) this.txTrieRoot = EMTPY_TRIE_HASH;
+        if (txTrieRoot == null) this.txTrieRoot = EMPTY_TRIE_HASH;
         byte[] txTrieRoot	    = RLP.encodeElement(this.txTrieRoot);
 
-        if (recieptTrieRoot == null) this.recieptTrieRoot = EMTPY_TRIE_HASH;
+        if (recieptTrieRoot == null) this.recieptTrieRoot = EMPTY_TRIE_HASH;
         byte[] recieptTrieRoot	= RLP.encodeElement(this.recieptTrieRoot);
 
         byte[] logsBloom        = RLP.encodeElement(this.logsBloom);

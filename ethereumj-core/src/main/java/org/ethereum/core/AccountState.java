@@ -1,13 +1,10 @@
 package org.ethereum.core;
 
-import static org.ethereum.crypto.HashUtil.EMTPY_TRIE_HASH;
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -34,7 +31,7 @@ public class AccountState {
      * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s . 
      * It shall be understood that σ[a] s is not a ‘physical’ member 
      * of the account and does not contribute to its later serialisation */
-    private byte[] stateRoot = EMTPY_TRIE_HASH;
+    private byte[] stateRoot = EMPTY_TRIE_HASH;
     
     /* The hash of the EVM code of this contract—this is the code 
      * that gets executed should this address receive a message call; 
@@ -57,10 +54,10 @@ public class AccountState {
         this.rlpEncoded = rlpData;
 
 		RLPList items 	= (RLPList) RLP.decode2(rlpEncoded).get(0);
-		this.nonce 		= new BigInteger(1, ((items.get(0).getRLPData()) == null ? new byte[]{0} :
-                                                                                   items.get(0).getRLPData()));
-		this.balance 	= new BigInteger(1, ((items.get(1).getRLPData()) == null ? new byte[]{0} : 
-																					items.get(1).getRLPData()));
+		this.nonce = items.get(0).getRLPData() == null ? BigInteger.ZERO
+				: new BigInteger(1, items.get(0).getRLPData());
+		this.balance = items.get(1).getRLPData() == null ? BigInteger.ZERO
+				: new BigInteger(1, items.get(1).getRLPData());
 		this.stateRoot 	= items.get(2).getRLPData();
 		this.codeHash 	= items.get(3).getRLPData();
     }
@@ -120,13 +117,9 @@ public class AccountState {
     
     public String toString() {
     	String ret =  "Nonce: " 		+ this.getNonce().toString() 							+ "\n" + 
-    				  "Balance: " 		+ Denomination.toFriendlyString(getBalance()) 			+ "\n";
-    	
-    	if(this.getStateRoot()!= null && !Arrays.areEqual(this.getStateRoot(), EMPTY_BYTE_ARRAY))
-    		ret += "State Root: " 	+ Hex.toHexString(this.getStateRoot()) 	+ "\n";
-    	if(this.getCodeHash() != null && !Arrays.areEqual(this.getCodeHash(), EMPTY_DATA_HASH))
-    		ret += "Code Hash: " 	+ Hex.toHexString(this.getCodeHash());
-    	
+    				  "Balance: " 		+ Denomination.toFriendlyString(getBalance()) 			+ "\n" +
+    				  "State Root: " 	+ Hex.toHexString(this.getStateRoot()) 	+ "\n" +
+    				  "Code Hash: " 	+ Hex.toHexString(this.getCodeHash());
     	return ret;
     }
 }

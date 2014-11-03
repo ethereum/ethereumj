@@ -1,17 +1,13 @@
 package org.ethereum.core;
 
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.crypto.SHA3Helper;
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
+import static org.ethereum.crypto.HashUtil.sha3;
 
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.HashUtil.*;
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * The genesis block is the first block in the chain and has fixed values according to 
@@ -50,7 +46,7 @@ public class Genesis extends Block {
 	private static byte[] zeroHash512 = new byte[64];
 
 	public static byte[] PARENT_HASH = zeroHash256;
-	public static byte[] UNCLES_HASH = EMPTY_DATA_HASH;
+	public static byte[] UNCLES_HASH = EMPTY_LIST_HASH;
 	public static byte[] COINBASE = zeroHash160;
     public static byte[] LOG_BLOOM = zeroHash512;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
@@ -73,8 +69,7 @@ public class Genesis extends Block {
         // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
 		for (String address : premine) {
-			AccountState acctState = new AccountState();
-			acctState.addToBalance(PREMINE_AMOUNT);
+			AccountState acctState = new AccountState(BigInteger.ZERO, PREMINE_AMOUNT);
 			state.update(Hex.decode(address), acctState.getEncoded());
         }
 

@@ -1,7 +1,7 @@
 package org.ethereum.trie;
 
 import static java.util.Arrays.copyOfRange;
-import static org.ethereum.crypto.HashUtil.EMTPY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.matchingNibbleLength;
 import static org.ethereum.util.CompactEncoder.binToNibbles;
 import static org.ethereum.util.CompactEncoder.packNibbles;
@@ -12,7 +12,6 @@ import java.util.*;
 
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Value;
 import org.iq80.leveldb.DB;
 import org.slf4j.Logger;
@@ -156,7 +155,7 @@ public class TrieImpl implements Trie {
         if (root == null
                 || (root instanceof byte[] && ((byte[]) root).length == 0)
                 || (root instanceof String && "".equals((String) root))) {
-            return EMTPY_TRIE_HASH;
+            return EMPTY_TRIE_HASH;
         } else if (root instanceof byte[]) {
             return (byte[]) this.getRoot();
         } else {
