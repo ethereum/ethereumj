@@ -63,7 +63,7 @@ public class MessageFactory {
             switch (receivedCommand) {
                 case STATUS:
                     break;
-                case MESSAGES:
+                case MESSAGE:
                     break;
                 case ADD_FILTER:
                     break;
