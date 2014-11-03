@@ -14,7 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 
 public class StateTest {
 
-	private static final String GENESIS_STATE_ROOT = "477fd4d3a3bae60913bbb0cbffbc1aae5c57a60f6351f9ed702d97378f851fc6";
+	private static final String GENESIS_STATE_ROOT = "c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718c";
 	
     @Test
     public void testGenesisAccounts() {
@@ -94,7 +94,7 @@ public class StateTest {
         // 4) calc the root
 
         Trie trie = generateGenesisState();
-        String expected = "e9d7cff80ac451f10a5212b0e8bb6070d0c2214b9d4943794269be78b13d1fb4";
+        String expected = "6ae5f47b0cc54ca33b4a46537f6cf6673f9138e876f3ac5a33dde173efe28236";
 
         // Get and update sender in world state
         byte[] cowAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");

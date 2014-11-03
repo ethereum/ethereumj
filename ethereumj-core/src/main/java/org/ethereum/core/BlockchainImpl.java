@@ -195,17 +195,11 @@ public class BlockchainImpl implements Blockchain {
 
 		int i = 0;
 		long totalGasUsed = 0;
-		for (TransactionReceipt txr : block.getTxReceiptList()) {
+		for (Transaction tx : block.getTransactionsList()) {
 			stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
-			totalGasUsed += applyTransaction(block, txr.getTransaction());
+			totalGasUsed += applyTransaction(block, tx);
 			if(block.getNumber() >= CONFIG.traceStartBlock())
-				repository.dumpState(block, totalGasUsed, i++, txr.getTransaction().getHash());
-			if(!Arrays.equals(this.repository.getWorldState().getRootHash(), txr.getPostTxState())) {
-				stateLogger.warn("TX: STATE CONFLICT {}..: {}", Hex.toHexString(txr.getTransaction().getHash()).substring(0, 8),
-						Hex.toHexString(this.repository.getWorldState().getRootHash()));
-//            	repository.close();
-//            	System.exit(-1); // Don't continue
-            }
+				repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 		}
 		
 		this.addReward(block);

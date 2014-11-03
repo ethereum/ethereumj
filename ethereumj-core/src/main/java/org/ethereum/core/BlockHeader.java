@@ -2,14 +2,17 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+import static org.ethereum.crypto.HashUtil.EMTPY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.*;
-import static org.ethereum.crypto.HashUtil.*;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Block header is a value object containing 
@@ -77,7 +80,7 @@ public class BlockHeader {
         
         this.txTrieRoot     = ((RLPItem) rlpHeader.get(4)).getRLPData();
         if(this.txTrieRoot == null)
-        	this.txTrieRoot = EMPTY_DATA_HASH;
+        	this.txTrieRoot = EMTPY_TRIE_HASH;
 
         this.recieptTrieRoot     = ((RLPItem) rlpHeader.get(5)).getRLPData();
         if(this.recieptTrieRoot == null)
@@ -289,10 +292,10 @@ public class BlockHeader {
 
         byte[] stateRoot		= RLP.encodeElement(this.stateRoot);
 
-        if (txTrieRoot == null) this.txTrieRoot = EMPTY_DATA_HASH;
+        if (txTrieRoot == null) this.txTrieRoot = EMTPY_TRIE_HASH;
         byte[] txTrieRoot	    = RLP.encodeElement(this.txTrieRoot);
 
-        if (recieptTrieRoot == null) this.recieptTrieRoot = EMPTY_DATA_HASH;
+        if (recieptTrieRoot == null) this.recieptTrieRoot = EMTPY_TRIE_HASH;
         byte[] recieptTrieRoot	= RLP.encodeElement(this.recieptTrieRoot);
 
         byte[] logsBloom        = RLP.encodeElement(this.logsBloom);
@@ -353,24 +356,5 @@ public class BlockHeader {
         toStringBuff.append("  nonce=" 			+ toHexString(nonce)).append("");
         return toStringBuff.toString();
 	}
-
-    public String toStylishString() {
-
-        toStringBuff.setLength(0);
-        toStringBuff.append(", <font color=\"${attribute_color}\"> parentHash</font>=" + toHexString(parentHash)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> unclesHash</font>=" + toHexString(unclesHash)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> coinbase</font>=" + toHexString(coinbase)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> stateRoot</font>=" 		+ toHexString(stateRoot)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> txTrieHash</font>=" 	+ toHexString(txTrieRoot)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> difficulty</font>=" 	+ toHexString(difficulty)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> number</font>=" 		+ number).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> minGasPrice</font>=" 	+ minGasPrice).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> gasLimit</font>=" 		+ gasLimit).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> gasUsed</font>=" 		+ gasUsed).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> timestamp</font>=" 		+ timestamp + " (" + Utils.longToDateTime(timestamp) + ")").append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> extraData</font>=" 		+ toHexString(extraData)).append("<br/>");
-        toStringBuff.append(", <font color=\"${attribute_color}\"> nonce</font>=" 			+ toHexString(nonce)).append("<br/>");
-        return toStringBuff.toString();
-    }
 
 }

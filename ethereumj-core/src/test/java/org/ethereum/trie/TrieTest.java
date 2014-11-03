@@ -1,5 +1,6 @@
 package org.ethereum.trie;
 
+import static org.ethereum.crypto.HashUtil.EMTPY_TRIE_HASH;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -18,6 +19,7 @@ import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.db.MockDB;
+import org.ethereum.util.ByteUtil;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -30,7 +32,7 @@ import org.spongycastle.util.encoders.Hex;
 public class TrieTest {
 
     private static String LONG_STRING = "1234567890abcdefghijklmnopqrstuvwxxzABCEFGHIJKLMNOPQRSTUVWXYZ";
-    private static String ROOT_HASH_EMPTY = Hex.toHexString(HashUtil.EMPTY_DATA_HASH);
+    private static String ROOT_HASH_EMPTY = Hex.toHexString(EMTPY_TRIE_HASH);
 
     private static String c = "c";
     private static String ca = "ca";
