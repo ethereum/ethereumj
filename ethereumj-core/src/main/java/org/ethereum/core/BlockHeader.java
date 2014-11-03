@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import static org.ethereum.util.ByteUtil.*;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.*;
 import org.spongycastle.util.Arrays;
@@ -69,6 +70,7 @@ public class BlockHeader {
     private byte[] nonce;
     
     public BlockHeader(RLPList rlpHeader) {
+
         this.parentHash     = ((RLPItem) rlpHeader.get(0)).getRLPData();
         this.unclesHash     = ((RLPItem) rlpHeader.get(1)).getRLPData();
         this.coinbase       = ((RLPItem) rlpHeader.get(2)).getRLPData();
@@ -99,6 +101,7 @@ public class BlockHeader {
         
         this.extraData       = ((RLPItem) rlpHeader.get(13)).getRLPData();
         this.nonce           = ((RLPItem) rlpHeader.get(14)).getRLPData();
+
     }
     
 	public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
@@ -287,17 +290,11 @@ public class BlockHeader {
 
         byte[] stateRoot		= RLP.encodeElement(this.stateRoot);
 
-        if (this.txTrieRoot == null)
-            this.txTrieRoot = ByteUtil.EMTPY_TRIE_HASH;
+        if (txTrieRoot == null) this.txTrieRoot = ByteUtil.EMTPY_TRIE_HASH;
+        byte[] txTrieRoot	    = RLP.encodeElement(this.txTrieRoot);
 
-        byte[] txTrieRoot	= RLP.encodeElement(this.txTrieRoot);
-
-
-        if (this.recieptTrieRoot == null)
-            this.recieptTrieRoot = ByteUtil.EMTPY_TRIE_HASH;
-
-        byte[] recieptTrieRoot	= RLP.encodeElement(this.txTrieRoot);
-
+        if (recieptTrieRoot == null) this.recieptTrieRoot = ByteUtil.EMTPY_TRIE_HASH;
+        byte[] recieptTrieRoot	= RLP.encodeElement(this.recieptTrieRoot);
 
         byte[] logsBloom        = RLP.encodeElement(this.logsBloom);
         byte[] difficulty		= RLP.encodeElement(this.difficulty);

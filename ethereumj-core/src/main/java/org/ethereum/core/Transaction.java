@@ -213,21 +213,6 @@ public class Transaction {
                 "]";
     }
 
-    public String toStylishString() {
-        if (!parsed) rlpParse();
-        return " <font color=\"${sub_header_color}\"> TransactionData </font>[" +  "<font color=\"${attribute_color}\"> hash</font>=" + ByteUtil.toHexString(hash) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> nonce</font>=" + ByteUtil.toHexString(nonce) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> gasPrice</font>=" + ByteUtil.toHexString(gasPrice) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> gas</font>=" + ByteUtil.toHexString(gasLimit) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> receiveAddress</font>=" + ByteUtil.toHexString(receiveAddress) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> value</font>=" + ByteUtil.toHexString(value) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> data</font>=" + ByteUtil.toHexString(data) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> signatureV</font>=" + signature.v + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> signatureR</font>=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r)) + "<br/>" +
-                "->  , <font color=\"${attribute_color}\"> signatureS</font>=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) + "<br/>" +
-                " ]";
-    }
-
     /**
      *  For signatures you have to keep also
      *  RLP of the transaction without any signature data

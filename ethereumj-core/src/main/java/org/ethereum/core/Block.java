@@ -92,8 +92,8 @@ public class Block {
         this.header = new BlockHeader(header);
         
         // Parse Transactions
-        RLPList txReceipts = (RLPList) block.get(1);
-        this.parseTxs(this.header.getTxTrieRoot(), txReceipts);
+        RLPList txTransactions = (RLPList) block.get(1);
+        this.parseTxs(this.header.getTxTrieRoot(), txTransactions);
 
         // Parse Uncles
         RLPList uncleBlocks = (RLPList) block.get(2);
@@ -272,43 +272,14 @@ public class Block {
         return toStringBuff.toString();
     }
 
-    public String toStylishString(){
 
-        if (!parsed) parseRLP();
-
-        toStringBuff.setLength(0);
-        toStringBuff.append("<font color=\"${header_color}\"> BlockData </font> [");
-        toStringBuff.append("<font color=\"${attribute_color}\">hash</font>=" +
-                ByteUtil.toHexString(this.getHash())).append("<br/>");
-        toStringBuff.append(header.toStylishString());
-
-        for (TransactionReceipt tx : getTxReceiptList()) {
-            toStringBuff.append("<br/>");
-            toStringBuff.append(tx.toStylishString());
-            toStringBuff.append("<br/>");
-        }
-
-        toStringBuff.append("]");
-        return toStringBuff.toString();
-
-    }
-    
-    private void parseTxs(byte[] expectedRoot, RLPList txReceipts) {
+    private void parseTxs(byte[] expectedRoot, RLPList txTransactions) {
 
         this.txsState = new TrieImpl(null);
-        for (int i = 0; i < txReceipts.size(); i++) {
-        	RLPElement rlpTxReceipt = txReceipts.get(i);
-            RLPElement txData = ((RLPList)rlpTxReceipt).get(0);
-            
-            // YP 4.3.1
-            RLPElement pstTxState = ((RLPList)rlpTxReceipt).get(1);
-            RLPElement cummGas    = ((RLPList)rlpTxReceipt).get(2);
-
-            Transaction tx = new Transaction(txData.getRLPData());
-            this.transactionsList.add(tx);
-            TransactionReceipt txReceipt =
-                new TransactionReceipt(tx, pstTxState.getRLPData(), cummGas.getRLPData());
-            this.addTxReceipt(i, txReceipt);
+        for (int i = 0; i < txTransactions.size(); i++) {
+        	RLPElement transactionRaw = txTransactions.get(i);
+            this.transactionsList.add(new Transaction(transactionRaw.getRLPData()));
+            this.txsState.update(RLP.encodeInt(i) , transactionRaw.getRLPData());
         }
 
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
@@ -316,23 +287,7 @@ public class Block {
 			logger.error("Added tx receipts don't match the given txsStateRoot");
     }
     
-    private void addTxReceipt(int counter, TransactionReceipt txReceipt) {
-        this.txReceiptList.add(txReceipt);
-        this.txsState.update(RLP.encodeInt(counter), txReceipt.getEncoded());
-        
-        /* Figure out type of tx
-         * 1. Contract creation
-         * 		- perform code
-         * 		- create state object
-         * 		- add contract body to DB, 
-         * 2. Contract call			
-         * 		- perform code
-         * 		- update state object
-         * 3. Account to account	- 
-         * 		- update state object
-         */
-    }
-    
+
 	/**
 	 * This mechanism enforces a homeostasis in terms of the time between blocks; 
 	 * a smaller period between the last two blocks results in an increase in the 

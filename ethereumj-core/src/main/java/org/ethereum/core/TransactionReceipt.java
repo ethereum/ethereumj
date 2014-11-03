@@ -8,6 +8,10 @@ import org.spongycastle.util.encoders.Hex;
  * comprising the transaction, together with the post-transaction state, 
  * and the cumulative gas used in the block containing the transaction receipt 
  * as of immediately after the transaction has happened,
+ *
+ *    ** not todo: the transaction receipt was removed from the game but don't remove it
+ *                 as it will be used in the very near future.
+ *
  */
 public class TransactionReceipt {
 
@@ -51,15 +55,6 @@ public class TransactionReceipt {
                 "\n   " + transaction +
                 "\n  , postTxState=" + Hex.toHexString(postTxState) +
                 "\n  , cumulativeGas=" + Hex.toHexString(cumulativeGas) +
-                ']';
-    }
-
-
-    public String toStylishString() {
-        return "<font color=\"${sub_header_color}\"> TransactionReceipt</font>[" +
-                "<br/>   " + transaction.toStylishString() +
-                "<br/>  , <font color=\"${attribute_color}\">postTxState</font>=" + Hex.toHexString(postTxState) +
-                "<br/>  , <font color=\"${attribute_color}\">cumulativeGas</font>=" + Hex.toHexString(cumulativeGas) +
                 ']';
     }
 
