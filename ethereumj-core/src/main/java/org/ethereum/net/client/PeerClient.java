@@ -125,11 +125,28 @@ public class PeerClient {
 
     public void setPeerListener(PeerListener peerListener) {
         this.peerListener = peerListener;
+
+        if (p2pHandler != null)
+            p2pHandler.setPeerListener(peerListener);
+
+        if (ethHandler != null)
+            ethHandler.setPeerListener(peerListener);
+
+        if (shhHandler != null)
+            shhHandler.setPeerListener(peerListener);
     }
 
 	public P2pHandler getP2pHandler() {
 		return p2pHandler;
 	}
+
+    public EthHandler getEthHandler() {
+        return ethHandler;
+    }
+
+    public ShhHandler getShhHandler() {
+        return shhHandler;
+    }
 
     public boolean isSyncDone(){
 		return ethHandler.isActive()

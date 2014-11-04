@@ -113,8 +113,12 @@ public class EthereumImpl implements Ethereum {
     @Override
     public void connect(String ip, int port) {
 		logger.info("Connecting to: {}:{}", ip, port);
-		PeerClient peerClient = new PeerClient();
+
+        PeerClient peerClient = WorldManager.getInstance().getActivePeer();
+        if (peerClient == null)
+		    peerClient = new PeerClient();
         WorldManager.getInstance().setActivePeer(peerClient);
+
         peerClient.connect(ip, port);
     }
 

@@ -2,6 +2,8 @@ package org.ethereum.net;
 
 import io.netty.channel.ChannelHandlerContext;
 
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +88,9 @@ public class MessageQueue {
 			// TODO: retry logic || messageRoundtrip.hasToRetry()){
 
 			Message msg = messageRoundtrip.getMsg();
+
+            EthereumListener listener = WorldManager.getInstance().getListener();
+            if (listener != null) listener.onSendMessage(msg);
 
 			ctx.writeAndFlush(msg);
 

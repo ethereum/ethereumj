@@ -12,6 +12,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
@@ -77,6 +78,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public void activate(){
         logger.info("P2P protocol activated");
+        if (peerListener != null)
+            peerListener.console("P2P protocol activated");
+
         active = true;
     }
 
@@ -91,6 +95,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("P2PHandler invoke: [{}]", msg.getCommand());
+
+        if (peerListener != null)
+            peerListener.console(String.format( "P2PHandler invoke: [%s]", msg.getCommand()));
 
 		switch (msg.getCommand()) {
 			case HELLO:
@@ -275,6 +282,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     }
 
 
-
-
+    public void setPeerListener(PeerListener peerListener) {
+        this.peerListener = peerListener;
+    }
 }

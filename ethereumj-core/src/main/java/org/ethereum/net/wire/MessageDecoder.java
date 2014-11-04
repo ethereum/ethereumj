@@ -4,6 +4,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.slf4j.Logger;
@@ -37,6 +39,9 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
 		if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
+
+        EthereumListener listener = WorldManager.getInstance().getListener();
+        if (listener != null) listener.onRecvMessage(msg);
 
 		out.add(msg);
         in.markReaderIndex();

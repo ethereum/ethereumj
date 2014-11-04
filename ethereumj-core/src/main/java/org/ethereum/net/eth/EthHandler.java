@@ -5,6 +5,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Blockchain;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
@@ -67,6 +68,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void activate(){
         logger.info("ETH protocol activated");
+        if (peerListener != null)
+            peerListener.console("ETH protocol activated");
+
         active = true;
         sendStatus();
     }
@@ -82,6 +86,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         if (EthMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("EthHandler invoke: [{}]", msg.getCommand());
+
+        if (peerListener != null)
+            peerListener.console(String.format("EthHandler invoke: [%s]", msg.getCommand()));
 
         switch (msg.getCommand()) {
             case STATUS:
@@ -425,6 +432,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void setPeerId(String peerId){
         this.peerId = peerId;
+    }
+
+    public void setPeerListener(PeerListener peerListener) {
+        this.peerListener = peerListener;
     }
 
     public enum SyncSatus{
