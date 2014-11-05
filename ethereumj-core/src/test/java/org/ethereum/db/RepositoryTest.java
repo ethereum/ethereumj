@@ -1,7 +1,6 @@
 package org.ethereum.db;
 
 import org.ethereum.core.AccountState;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
 import org.junit.FixMethodOrder;
@@ -185,7 +184,7 @@ public class RepositoryTest {
             AccountState accountState = repository.getAccountState(addr);
             assertTrue(code0 == null);
             assertNull(code1);
-            assertEquals(EMPTY_DATA_HASH, accountState.getCodeHash());
+            assertArrayEquals(EMPTY_DATA_HASH, accountState.getCodeHash());
         } finally {
             repository.close();
         }
