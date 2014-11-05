@@ -278,7 +278,7 @@ public class DataWord implements Comparable<DataWord> {
 
         return true;
     }
-
+    
     @Override
     public int hashCode() {
         return java.util.Arrays.hashCode(data);
@@ -293,4 +293,13 @@ public class DataWord implements Comparable<DataWord> {
         // Convert result into -1, 0 or 1 as is the convention
         return (int) Math.signum(result);
     }
+
+	public void signExtend(byte k) {
+		if (k > 31)
+			throw new IndexOutOfBoundsException();
+		byte mask = this.sValue().testBit((k * 8) + 7) ? (byte) 0xff : 0;
+		for (int i = 31; i > k; i--) {
+			this.data[31 - i] = mask;
+		}
+	}
 }

@@ -134,6 +134,88 @@ public class DataWordTest {
 		System.out.println(result2);
 	}
 	
+	@Test
+	public void testSignExtend1() {
+
+		DataWord x = new DataWord(Hex.decode("f2"));
+		byte k = 0;
+		String expected = "fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff2";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
+
+	@Test
+	public void testSignExtend2() {
+		DataWord x = new DataWord(Hex.decode("f2"));
+		byte k = 1;
+		String expected = "00000000000000000000000000000000000000000000000000000000000000f2";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
+
+	@Test
+	public void testSignExtend3() {
+
+		byte k = 1;
+		DataWord x = new DataWord(Hex.decode("0f00ab"));
+		String expected = "00000000000000000000000000000000000000000000000000000000000000ab";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
+
+	@Test
+	public void testSignExtend4() {
+
+		byte k = 1;
+		DataWord x = new DataWord(Hex.decode("ffff"));
+		String expected = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
+
+	@Test
+	public void testSignExtend5() {
+
+		byte k = 3;
+		DataWord x = new DataWord(Hex.decode("ffffffff"));
+		String expected = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
+
+	@Test
+	public void testSignExtend6() {
+
+		byte k = 3;
+		DataWord x = new DataWord(Hex.decode("ab02345678"));
+		String expected = "0000000000000000000000000000000000000000000000000000000002345678";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
+
+	@Test
+	public void testSignExtend7() {
+
+		byte k = 3;
+		DataWord x = new DataWord(Hex.decode("ab82345678"));
+		String expected = "ffffffffffffffffffffffffffffffffffffffffffffffffffffffff82345678";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
 	
 	public static BigInteger pow(BigInteger x, BigInteger y) {
 		if (y.compareTo(BigInteger.ZERO) < 0)

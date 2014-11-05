@@ -280,6 +280,19 @@ public class VM {
                     program.stackPush(word1);
                     program.step();
                 }	break;
+                case SIGNEXTEND: {
+                    DataWord word1 = program.stackPop();
+                    BigInteger k = word1.value();
+
+                    if (k.compareTo(_32_) < 0) {
+                        DataWord word2 = program.stackPop();
+                        if (logger.isInfoEnabled())
+                            hint = word1 + "  " + word2.value();
+                        word2.signExtend(k.byteValue());
+                        program.stackPush(word2);
+                    }
+                    program.step();
+                }   break;
                 case NOT:{
                 	DataWord word1 = program.stackPop();
                     word1.bnot();
