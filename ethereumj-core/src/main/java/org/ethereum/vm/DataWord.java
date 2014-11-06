@@ -295,7 +295,7 @@ public class DataWord implements Comparable<DataWord> {
     }
 
 	public void signExtend(byte k) {
-		if (k > 31)
+		if (0 > k || k > 31)
 			throw new IndexOutOfBoundsException();
 		byte mask = this.sValue().testBit((k * 8) + 7) ? (byte) 0xff : 0;
 		for (int i = 31; i > k; i--) {

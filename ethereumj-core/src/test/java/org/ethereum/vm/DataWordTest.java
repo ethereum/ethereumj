@@ -216,6 +216,36 @@ public class DataWordTest {
 		System.out.println(x.toString());
 		assertEquals(expected, x.toString());
 	}
+
+	@Test
+	public void testSignExtend8() {
+
+		byte k = 30;
+		DataWord x = new DataWord(Hex.decode("ff34567882345678823456788234567882345678823456788234567882345678"));
+		String expected = "0034567882345678823456788234567882345678823456788234567882345678";
+
+		x.signExtend(k);
+		System.out.println(x.toString());
+		assertEquals(expected, x.toString());
+	}
+
+	@Test(expected=IndexOutOfBoundsException.class)
+	public void testSignExtendException1() {
+
+		byte k = -1;
+		DataWord x = new DataWord();
+
+		x.signExtend(k); // should throw an exception
+	}
+	
+	@Test(expected=IndexOutOfBoundsException.class)
+	public void testSignExtendException2() {
+
+		byte k = 32;
+		DataWord x = new DataWord();
+
+		x.signExtend(k); // should throw an exception
+	}
 	
 	public static BigInteger pow(BigInteger x, BigInteger y) {
 		if (y.compareTo(BigInteger.ZERO) < 0)
