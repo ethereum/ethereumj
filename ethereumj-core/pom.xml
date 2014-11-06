@@ -4,7 +4,7 @@
 	<groupId>org.ethereum</groupId>
 	<artifactId>ethereumj</artifactId>
 	<packaging>jar</packaging>
-	<version>0.7.8</version>
+	<version>0.7.9</version>
 	<name>EthereumJ</name>
 	<url>http://www.ethereumj.org</url>
 
