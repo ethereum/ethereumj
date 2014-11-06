@@ -40,7 +40,7 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
  */
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    public final static byte VERSION = 0x26;
+    public final static byte VERSION = 39;
     public final static byte NETWORK_ID = 0x0;
 
     private final static Logger logger = LoggerFactory.getLogger("net");

@@ -42,7 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
-	public final static byte VERSION = 0x2;
+	public final static byte VERSION = 2;
 	
 	private final static Logger logger = LoggerFactory.getLogger("net");
 
