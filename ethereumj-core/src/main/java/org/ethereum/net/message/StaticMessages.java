@@ -41,7 +41,7 @@ public class StaticMessages {
 		List<Capability> capabilities = Arrays.asList(
 				new Capability(Capability.ETH, EthHandler.VERSION),
 				new Capability(Capability.SHH, ShhHandler.VERSION));
-		int listenPort = 30303;
+		int listenPort = 333;
 
 		return new HelloMessage(p2pVersion, helloAnnouncement, 
 				capabilities, listenPort, PEER_ID);

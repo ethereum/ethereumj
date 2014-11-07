@@ -6,6 +6,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.PeerListener;
 import org.ethereum.net.eth.EthHandler;
@@ -106,20 +107,14 @@ public class PeerClient {
             throw new Error("Disconnnected");
         } finally {
         	workerGroup.shutdownGracefully();
-
         	p2pHandler.killTimers();
 
-/*
-            final Set<PeerData> peers =  WorldManager.getInstance().getPeerDiscovery().getPeers();
+            if (!peerDiscoveryMode){
+                if (WorldManager.getInstance().getListener() != null)
+                    WorldManager.getInstance().getListener().
+                            onPeerDisconnect(host, port);
+            }
 
-			synchronized (peers) {
-				for (PeerData peer : peers) {
-					if (host.equals(peer.getAddress().getHostAddress())
-							&& port == peer.getPort())
-						peer.setOnline(false);
-				}
-			}
-*/
         }
     }
 

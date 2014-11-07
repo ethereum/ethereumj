@@ -51,6 +51,11 @@ public class DisconnectMessage extends P2pMessage {
 		return encoded;
 	}
 
+    @Override
+    public P2pMessageCodes getCommand(){
+        return P2pMessageCodes.DISCONNECT;
+    }
+
 	@Override
 	public Class<?> getAnswerMessage() {
 		return null;
