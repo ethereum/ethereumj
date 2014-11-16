@@ -5,6 +5,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.ethereum.facade.Blockchain;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
@@ -14,6 +16,11 @@ import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
@@ -25,51 +32,55 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 01/11/2014 10:58
  */
-
+@Component
 public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChannel> {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
-    private PeerServer peerServer;
 
-    public EthereumChannelInitializer(PeerServer peerServer) {
-        this.peerServer = peerServer;
+    @Autowired
+    private ApplicationContext ctx;
+
+    @Autowired
+    Blockchain blockchain;
+
+    @Autowired
+    ChannelManager channelManager;
+
+    @Autowired
+    MessageDecoder messageDecoder;
+
+    @Autowired
+    MessageEncoder messageEncoder;
+
+    @Autowired
+    WorldManager worldManager;
+
+    public EthereumChannelInitializer() {
     }
 
     public void initChannel(NioSocketChannel ch) throws Exception {
 
-        MessageQueue msgQueue;
-        P2pHandler p2pHandler;
-        EthHandler ethHandler;
-        ShhHandler shhHandler;
+        logger.info("Open connection, channel: {}", ch.toString());
 
-        msgQueue = new MessageQueue(null);
+        Channel channel = ctx.getBean(Channel.class);
+        channel.init();
 
-        logger.info("Incoming connection from: {}", ch.toString());
-
-        ch.remoteAddress();
-
-        p2pHandler = new P2pHandler(msgQueue, null, false);
-        p2pHandler.activate();
-
-        ethHandler = new EthHandler(msgQueue, null, false);
-        shhHandler = new ShhHandler(msgQueue, null);
-
+        channelManager.addChannel(channel);
+        channel.getP2pHandler().activate();
 
         ch.pipeline().addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-        ch.pipeline().addLast("out encoder", new MessageEncoder());
-        ch.pipeline().addLast("in  encoder", new MessageDecoder());
-        ch.pipeline().addLast(Capability.P2P, p2pHandler);
-        ch.pipeline().addLast(Capability.ETH, ethHandler);
-        ch.pipeline().addLast(Capability.SHH, shhHandler);
+        ch.pipeline().addLast("out encoder", messageEncoder);
+        ch.pipeline().addLast("in  encoder", messageDecoder);
+        ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());
+        ch.pipeline().addLast(Capability.ETH, channel.getEthHandler());
+        ch.pipeline().addLast(Capability.SHH, channel.getShhHandler());
 
         // limit the size of receiving buffer to 1024
         ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
         ch.config().setOption(ChannelOption.SO_RCVBUF, 32368);
+        ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
 
-        peerServer.addChannel(new Channel(msgQueue, p2pHandler, ethHandler, shhHandler));
-
-        // todo: check if have or not active peer if not set this one
     }
 
 }

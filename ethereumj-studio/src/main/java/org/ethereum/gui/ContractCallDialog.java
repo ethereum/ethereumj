@@ -331,7 +331,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         Transaction tx = createTransaction();
         if (tx == null) return;
 
-        Block lastBlock = UIEthereumManager.ethereum.getBlockchain().getLastBlock();
+        Block lastBlock = UIEthereumManager.ethereum.getBlockchain().getBestBlock();
         ProgramPlayDialog.createAndShowGUI(programCode, tx, lastBlock);
     }
 
@@ -404,7 +404,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
 
         byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-        byte[] nonce = account.getNonce() == BigInteger.ZERO ? null : account.getNonce().toByteArray();
+
+        BigInteger nonce = account.getNonce();
         BigInteger gasPrice = new BigInteger("10000000000000");
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
@@ -413,7 +414,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
         if (logger.isInfoEnabled()) {
             logger.info("Contract call:");
-            logger.info("tx.nonce: {}", nonce == null ? "null" : Hex.toHexString(nonce));
+            logger.info("tx.nonce: {}", nonce == null ? "null" : nonce.toString());
             logger.info("tx.gasPrice: {}", Hex.toHexString(BigIntegers.asUnsignedByteArray( gasPrice )));
             logger.info("tx.gasValue: {}", Hex.toHexString(gasValue));
             logger.info("tx.address: {}", Hex.toHexString(contractAddress));
@@ -421,7 +422,8 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             logger.info("tx.data: {}", Hex.toHexString(data));
         }
 
-        Transaction tx = UIEthereumManager.ethereum.createTransaction(account.getNonce(),
+        Transaction tx = UIEthereumManager.ethereum.createTransaction(
+                nonce,
                 gasPrice, gasBI,
                 contractAddress, endowment, data);
 
@@ -448,8 +450,11 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
 		@Override
 		public String toString() {
-			String addressShort = Utils.getAddressShortString(account.getEcKey().getAddress());
-			String valueShort = Utils.getValueShortString(account.getBalance());
+			String addressShort =
+                    Utils.getAddressShortString(account.getEcKey().getAddress());
+
+            String valueShort = "0";
+
 			String result = String.format(" By: [%s] %s", addressShort,
 					valueShort);
 			return result;

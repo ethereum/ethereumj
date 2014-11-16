@@ -9,8 +9,8 @@ import java.awt.event.WindowEvent;
 import javax.swing.*;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.net.PeerListener;
-import org.ethereum.net.client.PeerClient;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
@@ -25,7 +25,7 @@ import org.fife.ui.rtextarea.RTextScrollPane;
  * Project Home: http://fifesoft.com/rsyntaxtextarea<br>
  * Downloads: https://sourceforge.net/projects/rsyntaxtextarea
  */
-public class ConnectionConsoleWindow extends JFrame implements PeerListener {
+public class ConnectionConsoleWindow extends JFrame {
 
     private static final long serialVersionUID = 1L;
 
@@ -70,10 +70,10 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener {
 //        setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setLocation(802, 460);
-        
+
         if (CONFIG.peerDiscovery())
             UIEthereumManager.ethereum.startPeerDiscovery();
-		
+
         Thread t = new Thread() {
 			public void run() {
 
@@ -82,22 +82,23 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener {
 			}
 		};
 
-        UIEthereumManager.ethereum.getDefaultPeer().setPeerListener(this);
+        UIEthereumManager.ethereum.addListener(new EthereumListenerAdapter(){
+            @Override
+            public void trace(final String output) {
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        textArea.append(output);
+                        textArea.append("\n");
+
+                        if (autoScroll)
+                            textArea.setCaretPosition(textArea.getText().length());
+                    }
+                });
+            }
+        });
         t.start();
     }
 
-	@Override
-	public void console(final String output) {
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				textArea.append(output);
-				textArea.append("\n");
-
-                if (autoScroll)
-                    textArea.setCaretPosition(textArea.getText().length());
-			}
-		});
-	}
 
     private void changeStyleProgrammatically() {
 
@@ -150,4 +151,8 @@ public class ConnectionConsoleWindow extends JFrame implements PeerListener {
 			}
 		});
 	}
+
+
 }
+
+

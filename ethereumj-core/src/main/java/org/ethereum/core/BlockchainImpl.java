@@ -2,17 +2,23 @@ package org.ethereum.core;
 
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
+import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.AdvancedDeviceUtils;
+import org.ethereum.util.FastByteComparisons;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -45,12 +51,16 @@ import static org.ethereum.core.Denomination.SZABO;
  * </ol>
  * See <a href="https://github.com/ethereum/wiki/wiki/White-Paper#blockchain-and-mining">Ethereum Whitepaper</a>
  *
- * www.ethereumJ.com
+ * www.etherJ.com
  * @author Roman Mandeleil,
  *           Nick Savers
  * Created on: 20/05/2014 10:44
  */
+@Component
 public class BlockchainImpl implements Blockchain {
+
+    /* A scalar value equal to the mininum limit of gas expenditure per block */
+    private static long MIN_GAS_LIMIT = 125000L;
 
 	private static final Logger logger = LoggerFactory.getLogger("blockchain");
 	private static final Logger stateLogger = LoggerFactory.getLogger("state");
@@ -58,17 +68,33 @@ public class BlockchainImpl implements Blockchain {
 	// to avoid using minGasPrice=0 from Genesis for the wallet
 	private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
+    @Autowired
 	private Repository repository;
-    private Block lastBlock;
-    private BigInteger totalDifficulty;
-    
-    // keep the index of the chain for
-    // convenient usage, <block_number, block_hash>
-    private final BidiMap<Long, ByteArrayWrapper> blockCache = new DualTreeBidiMap<>();
-	
-    private final BlockQueue blockQueue = new BlockQueue();
+
+    @Autowired
+    private BlockStore blockStore;
+
+    private Block bestBlock;
+    private BigInteger totalDifficulty = BigInteger.ZERO;
+
+    @Autowired
+    private WorldManager worldManager;
+
+    @Autowired
+    private BlockQueue blockQueue;
+
+    @Autowired
+    private ChannelManager channelManager;
+
     private boolean syncDoneCalled = false;
 
+    @Autowired
+    ProgramInvokeFactory programInvokeFactory;
+
+    private List<Chain> altChains = new ArrayList<>();
+    private List<Block> garbage = new ArrayList<>();
+
+    public BlockchainImpl(){}
 	public BlockchainImpl(Repository repository) {
 		this.repository = repository;
 	}
@@ -76,54 +102,101 @@ public class BlockchainImpl implements Blockchain {
 	@Override
     public long getGasPrice() {
         // In case of the genesis block we don't want to rely on the min gas price
-        return lastBlock.isGenesis() ? lastBlock.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
+        return bestBlock.isGenesis() ? bestBlock.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
     }
 
     @Override
-    public byte[] getLatestBlockHash() {
-        if (blockCache.isEmpty())
-            return Genesis.getInstance().getHash();
-        else
-            return getLastBlock().getHash();
+    public byte[] getBestBlockHash() {
+        return getBestBlock().getHash();
     }
     
     @Override
-    public int getSize() {
-        return blockCache.size();
+    public long getSize() {
+        return bestBlock.getNumber() + 1;
     }
 
     @Override
     public Block getBlockByNumber(long blockNr) {
-    	return repository.getBlock(blockNr);
+    	return blockStore.getBlockByNumber(blockNr);
 	}
 
     @Override
     public Block getBlockByHash(byte[] hash){
-
-        Long index = blockCache.inverseBidiMap().get(new ByteArrayWrapper(hash));
-        if (index == null) return null; // don't have such hash
-
-        return repository.getBlock(index);
+        return blockStore.getBlockByHash(hash);
     }
 
     @Override
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty){
+        return blockStore.getListOfHashesStartFrom(hash, qty);
+    }
 
-        Long startIndex = blockCache.inverseBidiMap().get(new ByteArrayWrapper( hash ));
-        if (startIndex == null) return null; // strange but no such hashes in our chain
-        --startIndex;
 
-        Long endIndex = startIndex - qty;
-        if (endIndex < 0) endIndex = 0L;
+    public void tryToConnect(Block block){
 
-        Vector<byte[]> result = new Vector<>();
-        for (Long i = startIndex; i >= endIndex; --i){
-
-            ByteArrayWrapper baw = blockCache.get(i);
-            result.add(baw.getData());
+        if (blockStore.getBlockByHash(block.getHash()) != null){
+            // retry of well known block
+            return;
         }
 
-        return result;
+
+        // The simple case got the block
+        // to connect to the main chain
+        if (bestBlock.isParentOf(block)){
+            add(block);
+            return;
+        }
+
+        // case when one of the alt chain probably
+        // going to connect this block
+        if (!hasParentOnTheChain(block)){
+
+            Iterator<Chain> iterAltChains = altChains.iterator();
+            boolean connected = false;
+            while (iterAltChains.hasNext() && !connected){
+
+                Chain chain = iterAltChains.next();
+                connected = chain.tryToConnect(block);
+                if (connected &&
+                    chain.getTotalDifficulty().subtract(totalDifficulty).longValue() > 5000){
+
+
+                    // todo: replay the alt on the main chain
+                }
+            }
+            if (connected) return;
+        }
+
+        // The uncle block case: it is
+        // start of alt chain: different
+        // version of block we already
+        // got on the main chain
+        long gap = bestBlock.getNumber() - block.getNumber();
+        if (hasParentOnTheChain(block) && gap <=0){
+
+            logger.info("created alt chain by block.hash: [{}] ", block.getShortHash());
+            Chain chain = new Chain();
+            chain.setTotalDifficulty(totalDifficulty);
+            chain.tryToConnect(block);
+            altChains.add(chain);
+            return;
+        }
+
+
+        // provisional, by the garbage will be
+        // defined how to deal with it in the
+        // future.
+        garbage.add(block);
+
+        // if there is too much garbage ask for re-sync
+        if (garbage.size() > 20){
+            blockQueue.clear();
+            totalDifficulty = BigInteger.ZERO;
+            bestBlock = Genesis.getInstance();
+            this.repository.close();
+            this.repository = new RepositoryImpl();
+            garbage.clear();
+            altChains.clear();
+        }
     }
 
 
@@ -133,20 +206,10 @@ public class BlockchainImpl implements Blockchain {
 		if (block == null)
 			return;
 
-        // if it is the first block to add
-        // make sure the parent is genesis
-		if (blockCache.isEmpty()
-				&& !Arrays.equals(Genesis.getInstance().getHash(),
-						block.getParentHash())) {
-			return;
-		}
-        // if there are some blocks already keep chain continuity
-        if (!blockCache.isEmpty()) {
-            String hashLast = Hex.toHexString(getLastBlock().getHash());
-            String blockParentHash = Hex.toHexString(block.getParentHash());
-            if (!hashLast.equals(blockParentHash)) return;
-        }
-        
+        // keep chain continuity
+        if (!Arrays.equals(getBestBlock().getHash(),
+                           block.getParentHash())) return;
+
         if (block.getNumber() >= CONFIG.traceStartBlock() && CONFIG.traceStartBlock() != -1) {
             AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
         }
@@ -154,32 +217,96 @@ public class BlockchainImpl implements Blockchain {
         this.processBlock(block);
         
         // Remove all wallet transactions as they already approved by the net
-        WorldManager.getInstance().getWallet().removeTransactions(block.getTransactionsList());
+        worldManager.getWallet().removeTransactions(block.getTransactionsList());
 
-        EthereumListener listener = WorldManager.getInstance().getListener();
-        if (listener != null)
-            listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
+        EthereumListener listener = worldManager.getListener();
+        listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
 
-        EthereumListener ethereumListener =  WorldManager.getInstance().getListener();
-        if (ethereumListener != null){
-            ethereumListener.onBlock(block);
+        EthereumListener ethereumListener =  worldManager.getListener();
+        ethereumListener.onBlock(block);
 
-            if (blockQueue.size() == 0 &&
-                !syncDoneCalled &&
-                WorldManager.getInstance().getActivePeer().isSyncDone()){
-                syncDoneCalled = true;
-                ethereumListener.onSyncDone();
-            }
+        if (blockQueue.size() == 0 &&
+            !syncDoneCalled &&
+            channelManager.isAllSync()){
+
+            logger.info("Sync done");
+            syncDoneCalled = true;
+            ethereumListener.onSyncDone();
         }
     }
-    
+
+
+    public Block getParent(BlockHeader header){
+
+        return blockStore.getBlockByHash(header.getParentHash());
+    }
+
+    /**
+     * Calculate GasLimit
+     * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (25)
+     * @return long value of the gasLimit
+     */
+    public long calcGasLimit(BlockHeader header) {
+        if (header.isGenesis())
+            return Genesis.GAS_LIMIT;
+        else {
+            Block parent = getParent(header);
+            return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
+        }
+    }
+
+
+    public boolean isValid(BlockHeader header) {
+        boolean isValid = false;
+        // verify difficulty meets requirements
+        isValid = header.getDifficulty() == header.calcDifficulty();
+        // verify gasLimit meets requirements
+        isValid = isValid && header.getGasLimit() == calcGasLimit(header);
+        // verify timestamp meets requirements
+        isValid = isValid && header.getTimestamp() > getParent(header).getTimestamp();
+        // verify extraData doesn't exceed 1024 bytes
+        isValid = isValid && header.getExtraData() == null || header.getExtraData().length <= 1024;
+        return isValid;
+    }
+
+
+    /**
+     * This mechanism enforces a homeostasis in terms of the time between blocks;
+     * a smaller period between the last two blocks results in an increase in the
+     * difficulty level and thus additional computation required, lengthening the
+     * likely next period. Conversely, if the period is too large, the difficulty,
+     * and expected time to the next block, is reduced.
+     */
+    private boolean isValid(Block block){
+
+        boolean isValid = true;
+        if (isValid) return (isValid); // todo get back to the real header validation
+
+        if(!block.isGenesis()) {
+            isValid = isValid(block.getHeader());
+
+            for (BlockHeader uncle : block.getUncleList()) {
+                // - They are valid headers (not necessarily valid blocks)
+                isValid = isValid(uncle);
+                // - Their parent is a kth generation ancestor for k in {2, 3, 4, 5, 6, 7}
+                long generationGap = block.getNumber() - getParent(uncle).getNumber();
+                isValid = generationGap > 1 && generationGap < 8;
+                // - They were not uncles of the kth generation ancestor for k in {1, 2, 3, 4, 5, 6}
+                generationGap = block.getNumber() - uncle.getNumber();
+                isValid = generationGap > 0 && generationGap < 7;
+            }
+        }
+        if(!isValid)
+            logger.warn("WARNING: Invalid - {}", this);
+        return isValid;
+
+    }
+
     private void processBlock(Block block) {    	
-    	if(block.isValid()) {
+    	if(isValid(block)) {
             if (!block.isGenesis()) {
                 if (!CONFIG.blockChainOnly()) {
-
-                    Wallet wallet = WorldManager.getInstance().getWallet();
-
+                    Wallet wallet = worldManager.getWallet();
                     wallet.addTransactions(block.getTransactionsList());
                 	this.applyBlock(block);
                     wallet.processBlock(block);
@@ -240,18 +367,19 @@ public class BlockchainImpl implements Blockchain {
         /* Debug check to see if the state is still as expected */
         if(logger.isWarnEnabled()) {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
-            String worldStateRootHash = Hex.toHexString(WorldManager.getInstance().getRepository().getWorldState().getRootHash());
+            String worldStateRootHash = Hex.toHexString(worldManager.getRepository().getWorldState().getRootHash());
             if(!blockStateRootHash.equals(worldStateRootHash)){
+
             	stateLogger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
 //                repository.close();
 //                System.exit(-1); // Don't add block
             }
         }
-    	
-		this.repository.saveBlock(block);
-		this.blockCache.put(block.getNumber(), new ByteArrayWrapper(block.getHash()));
-		this.setLastBlock(block);
-		
+
+        blockStore.saveBlock(block);
+		this.setBestBlock(block);
+        repository.getWorldState().sync();
+
         if (logger.isDebugEnabled())
 			logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
         if (block.getNumber() % 100 == 0)
@@ -386,10 +514,10 @@ public class BlockchainImpl implements Blockchain {
 								Hex.toHexString(receiverAddress));
 				}
 				
-				Block currBlock =  (block == null) ? this.getLastBlock() : block;
+				Block currBlock =  (block == null) ? this.getBestBlock() : block;
 
-				ProgramInvoke programInvoke = ProgramInvokeFactory
-						.createProgramInvoke(tx, currBlock, trackRepository);
+				ProgramInvoke programInvoke =
+                        programInvokeFactory.createProgramInvoke(tx, currBlock, trackRepository);
 				
 				VM vm = new VM();
 				Program program = new Program(code, programInvoke);
@@ -480,25 +608,42 @@ public class BlockchainImpl implements Blockchain {
             repository.delete(address.getNoLeadZeroesData());
         }
 	}
-	
+
+    public boolean hasParentOnTheChain(Block block){
+        return getParent(block.getHeader()) != null;
+    }
+
+    @Override
+    public List<Chain> getAltChains(){
+        return altChains;
+    }
+
+    @Override
+    public List<Block> getGarbage(){
+        return garbage;
+    }
+
+
 	@Override
 	public BlockQueue getQueue() {
         return blockQueue;
     }
-    
-	@Override
-    public Map<Long, ByteArrayWrapper> getBlockCache() {
-    	return this.blockCache;
-    }
-    
-    @Override
-	public Block getLastBlock() {
-		return lastBlock;
-	}
 
-	@Override
-    public void setLastBlock(Block block) {
-    	this.lastBlock = block;
+    @Override
+    public void setBestBlock(Block block) {
+        bestBlock = block;
+    }
+
+    @Override
+    public Block getBestBlock() {
+        return bestBlock;
+    }
+
+    @Override
+    public void reset(){
+        blockStore.reset();
+        altChains = new ArrayList<>();
+        garbage = new ArrayList<>();
     }
 
     @Override
@@ -513,9 +658,11 @@ public class BlockchainImpl implements Blockchain {
 
 	@Override
 	public void updateTotalDifficulty(Block block) {
-		if (this.totalDifficulty == null)
-			this.totalDifficulty = block.getCumulativeDifficulty();
-		else
-			this.totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
+	    this.totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
 	}
+
+    @Override
+    public void setTotalDifficulty(BigInteger totalDifficulty) {
+        this.totalDifficulty = totalDifficulty;
+    }
 }

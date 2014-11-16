@@ -1,14 +1,14 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPList;
+import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.Arrays;
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -106,28 +106,30 @@ public class Block {
         this.parsed = true;
     }
 
+    public BlockHeader getHeader(){
+        if (!parsed) parseRLP();
+        return this.header;
+    }
+
     public byte[] getHash() {
         if (!parsed) parseRLP();
        	return HashUtil.sha3(this.header.getEncoded());
     }
 
-    public Block getParent() {
-		return this.header.getParent();
-	}
-    
+
 	public byte[] calcDifficulty() {
 		if (!parsed) parseRLP();
 		return this.header.calcDifficulty();
 	}
 
-	public long calcGasLimit() {
-		if (!parsed) parseRLP();
-		return this.header.calcGasLimit();
-	}
-	
 	public boolean validateNonce() {
 		if (!parsed) parseRLP();
-		return this.header.validateNonce();
+        BigInteger max = BigInteger.valueOf(2).pow(256);
+        byte[] target = BigIntegers.asUnsignedByteArray(32, max.divide(new BigInteger(1, this.getDifficulty())));
+        byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
+        byte[] concat = Arrays.concatenate(hash, this.getNonce());
+        byte[] result = HashUtil.sha3(concat);
+        return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
 	}
 
     
@@ -159,6 +161,11 @@ public class Block {
     public byte[] getTxTrieRoot() {
         if (!parsed) parseRLP();
         return this.header.getTxTrieRoot();
+    }
+
+    public byte[] getLogBloom(){
+        if (!parsed) parseRLP();
+        return this.header.getLogsBloom();
     }
 
     public byte[] getDifficulty() {
@@ -242,7 +249,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append(Hex.toHexString(this.getEncoded())).append("\n");
-        toStringBuff.append("BlockData [\n");
+        toStringBuff.append("BlockData [ ");
         toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
         
@@ -250,6 +257,13 @@ public class Block {
             toStringBuff.append("\n");
             toStringBuff.append(txReceipt.toString());
         }
+
+        toStringBuff.append("\nUncles [\n");
+        for (BlockHeader uncle : getUncleList()){
+            toStringBuff.append(uncle.toString());
+            toStringBuff.append("\n");
+        }
+        toStringBuff.append("]");
         toStringBuff.append("\n]");
 
         return toStringBuff.toString();
@@ -286,46 +300,46 @@ public class Block {
         if(!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
 			logger.error("Added tx receipts don't match the given txsStateRoot");
     }
-    
 
-	/**
-	 * This mechanism enforces a homeostasis in terms of the time between blocks; 
-	 * a smaller period between the last two blocks results in an increase in the 
-	 * difficulty level and thus additional computation required, lengthening the 
-	 * likely next period. Conversely, if the period is too large, the difficulty, 
-	 * and expected time to the next block, is reduced.
-	 */
-    public boolean isValid() {
-    	boolean isValid = false;
-
-    	if(!this.isGenesis()) {
-    		isValid = this.header.isValid();
-	    	
-	    	for (BlockHeader uncle : uncleList) {
-	    		// - They are valid headers (not necessarily valid blocks)
-	    		isValid = uncle.isValid();
-	    		// - Their parent is a kth generation ancestor for k in {2, 3, 4, 5, 6, 7}
-	    		long generationGap = this.getNumber() - uncle.getParent().getNumber();
-	    		isValid = generationGap > 1 && generationGap < 8;
-	    		// - They were not uncles of the kth generation ancestor for k in {1, 2, 3, 4, 5, 6}			
-	    		generationGap = this.getNumber() - uncle.getNumber();
-	    		isValid = generationGap > 0 && generationGap < 7;
-	    	}
-    	}
-    	if(!isValid)
-    		logger.warn("WARNING: Invalid - {}", this);
-    	return isValid;
+    /**
+     * check if param block is son of this block
+     * @param block - possible a son of this
+     * @return - true if this block is parent of param block
+     */
+    public boolean isParentOf(Block block){
+        return Arrays.areEqual(this.getHash(), block.getParentHash());
     }
-    
+
 	public boolean isGenesis() {
 		return this.header.isGenesis();
 	}
+
+    public boolean isEqual(Block block){
+        return Arrays.areEqual(this.getHash(), block.getHash());
+    }
+
+    private byte[] getUnclesEncoded(){
+
+        byte[][] unclesEncoded = new byte[uncleList.size()][];
+        int i = 0;
+        for( BlockHeader uncle : uncleList ){
+            unclesEncoded[i] = uncle.getEncoded();
+            ++i;
+        }
+        return RLP.encodeList(unclesEncoded);
+    }
+
+    public void addUncle(BlockHeader uncle){
+        uncleList.add(uncle);
+        this.getHeader().setUnclesHash(  SHA3Helper.sha3( getUnclesEncoded() ));
+        rlpEncoded = null;
+    }
 	
 	public byte[] getEncoded() {
 		if(rlpEncoded == null) {
 			byte[] header = this.header.getEncoded();
 			byte[] transactions = RLP.encodeList();
-			byte[] uncles = RLP.encodeList();
+			byte[] uncles = getUnclesEncoded();
 			this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
 		}
 		return rlpEncoded;
@@ -334,9 +348,11 @@ public class Block {
 	public byte[] getEncodedWithoutNonce() {
 		if (!parsed) parseRLP();
 		byte[] header = this.header.getEncodedWithoutNonce();
-        byte[] transactions = RLP.encodeList();
-        byte[] uncles = RLP.encodeList();
-        
-        return RLP.encodeList(header, transactions, uncles);
+        return header;
 	}
+
+    public String getShortHash(){
+        if (!parsed) parseRLP();
+        return Hex.toHexString(getHash()).substring(0, 6);
+    }
 }

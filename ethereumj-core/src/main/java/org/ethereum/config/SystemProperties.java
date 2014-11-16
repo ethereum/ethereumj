@@ -8,6 +8,7 @@ import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * Utility class to retrieve property values from the system.properties files
@@ -43,12 +44,14 @@ public class SystemProperties {
 	private static String   DEFAULT_HELLO_PHRASE = "Dev";
     private static Boolean  DEFAULT_VM_TRACE     = false;
     private static String   DEFAULT_VM_TRACE_DIR = "dmp";
+    private static int      DEFAULT_PEER_LISTEN_PORT = 30303;
 
     private static List<String> DEFAULT_PROTOCOL_LIST = Arrays.asList("eth", "shh");
 
 	public static SystemProperties CONFIG = new SystemProperties();
 	private Properties prop = new Properties();
 	private InputStream input = null;
+
 
 	public SystemProperties() {
 
@@ -114,15 +117,27 @@ public class SystemProperties {
 		return Boolean.parseBoolean(prop.getProperty("database.reset"));
 	}
 
+    public void setDatabaseReset(Boolean reset){
+        prop.setProperty("database.reset", reset.toString());
+    }
+
 	public String activePeerIP() {
 		if (prop.isEmpty()) return DEFAULT_ACTIVE_PEER_IP;
 		return prop.getProperty("peer.active.ip");
 	}
 
+    public void setActivePeerIP(String host){
+        prop.setProperty("peer.active.ip", host.toString());
+    }
+
 	public int activePeerPort() {
 		if (prop.isEmpty()) return DEFAULT_ACTIVE_PORT;
 		return Integer.parseInt(prop.getProperty("peer.active.port"));
 	}
+
+    public void setActivePeerPort(Integer port){
+        prop.setProperty("peer.active.port", port.toString());
+    }
 
 	public String samplesDir() {
 		if (prop.isEmpty()) return DEFAULT_SAMPLES_DIR;
@@ -168,6 +183,10 @@ public class SystemProperties {
 		if (prop.isEmpty()) return DEFAULT_DATABASE_DIR;
 		return prop.getProperty("database.dir");
 	}
+
+    public void setDataBaseDir(String dataBaseDir){
+        prop.setProperty("database.dir", dataBaseDir);
+    }
 
 	public Boolean dumpCleanOnRestart() {
 		if (prop.isEmpty()) return DEFAULT_DUMP_CLEAN_ON_RESTART;
@@ -231,6 +250,15 @@ public class SystemProperties {
     public String vmTraceDir() {
         if (prop.isEmpty()) return DEFAULT_VM_TRACE_DIR;
         return prop.getProperty("vm.structured.dir");
+    }
+
+    public int listenPort(){
+        if (prop.isEmpty()) return DEFAULT_PEER_LISTEN_PORT;
+        return Integer.parseInt(prop.getProperty("peer.listen.port"));
+    }
+
+    public void setListenPort(Integer port){
+        prop.setProperty("peer.listen.port", port.toString());
     }
 
 	public void print() {

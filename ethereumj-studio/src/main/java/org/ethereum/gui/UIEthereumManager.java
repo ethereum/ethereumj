@@ -1,6 +1,7 @@
 package org.ethereum.gui;
 
 import org.ethereum.facade.Ethereum;
+import org.ethereum.facade.EthereumFactory;
 import org.ethereum.facade.EthereumImpl;
 
 /**
@@ -11,5 +12,5 @@ import org.ethereum.facade.EthereumImpl;
  */
 
 public class UIEthereumManager {
-    public static Ethereum ethereum = new EthereumImpl();
+    public static Ethereum ethereum = EthereumFactory.createEthereum();
 }

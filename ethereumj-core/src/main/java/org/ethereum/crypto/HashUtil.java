@@ -45,7 +45,7 @@ public class HashUtil {
             return result;
         result = SHA3Helper.sha3(input);
         sha3Cache.put(inputByteArray, result);
-        return result; 
+        return result;
 	}
 	
     public static byte[] ripemd160(byte[] message) {

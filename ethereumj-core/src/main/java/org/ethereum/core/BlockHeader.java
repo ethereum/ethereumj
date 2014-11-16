@@ -1,15 +1,15 @@
 package org.ethereum.core;
 
+import org.ethereum.crypto.HashUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
+import org.ethereum.util.Utils;
+
 import java.math.BigInteger;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.util.ByteUtil.*;
-
-import org.ethereum.crypto.HashUtil;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.util.*;
-import org.spongycastle.util.Arrays;
-import org.spongycastle.util.BigIntegers;
+import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
  * Block header is a value object containing 
@@ -17,9 +17,7 @@ import org.spongycastle.util.BigIntegers;
  */
 public class BlockHeader {
 	
-	/* A scalar value equal to the mininum limit of gas expenditure per block */
-	private static long MIN_GAS_LIMIT = 125000L;
-	
+
     /* The SHA3 256-bit hash of the parent block, in its entirety */
 	private  byte[] parentHash;
     /* The SHA3 256-bit hash of the uncles list portion of this block */
@@ -119,22 +117,10 @@ public class BlockHeader {
         this.timestamp = timestamp;
         this.extraData = extraData;
         this.nonce = nonce;
+        this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
     }
 	
-	public boolean isValid() {
-		boolean isValid = false;
-    	// verify difficulty meets requirements
-    	isValid = this.getDifficulty() == this.calcDifficulty();
-    	isValid = this.validateNonce();
-    	// verify gasLimit meets requirements
-    	isValid = this.getGasLimit() == this.calcGasLimit();
-    	// verify timestamp meets requirements
-    	isValid = this.getTimestamp() > this.getParent().getTimestamp();
-    	// verify extraData doesn't exceed 1024 bytes
-    	isValid = this.getExtraData() == null || this.getExtraData().length <= 1024;
-    	return isValid;
-	}
-    
+
 	/**
 	 * Calculate Difficulty 
 	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
@@ -143,50 +129,21 @@ public class BlockHeader {
 	public byte[] calcDifficulty() {
 		if (this.isGenesis())
 			return Genesis.DIFFICULTY;
-		else {
-			Block parent = this.getParent();
-			long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
-			long newDifficulty = this.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
-			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
+		else { //todo find the right way to calc difficulty
+//			Block parent = this.getParent();
+//			long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
+//			long newDifficulty = this.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
+//			return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
+            return this.getDifficulty();
 		}
 	}
 
-	/**
-	 * Calculate GasLimit 
-	 * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (25)
-	 * @return long value of the gasLimit
-	 */
-	public long calcGasLimit() {
-		if (this.isGenesis())
-			return Genesis.GAS_LIMIT;
-		else {
-			Block parent = this.getParent();
-			return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
-		}
-	}
-	
-	/**
-	 * Verify that block is valid for its difficulty
-	 * 
-	 * @return boolean
-	 */
-	public boolean validateNonce() {
-		BigInteger max = BigInteger.valueOf(2).pow(256);
-		byte[] target = BigIntegers.asUnsignedByteArray(32,
-				max.divide(new BigInteger(1, this.getDifficulty())));
-		byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
-		byte[] concat = Arrays.concatenate(hash, this.getNonce());
-		byte[] result = HashUtil.sha3(concat);
-		return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
-	}
+
+
 
 	public boolean isGenesis() {
 		return this.getNumber() == Genesis.NUMBER;
 	}
-	
-    public Block getParent() {
-		return WorldManager.getInstance().getBlockchain().getBlockByNumber(this.getNumber() - 1);
-    }
 
 	public byte[] getParentHash() {
 		return parentHash;
@@ -221,6 +178,7 @@ public class BlockHeader {
     public byte[] getRecieptTrieRoot() {
         return recieptTrieRoot;
     }
+    public byte[] getLogsBloom() {return logsBloom;}
     public void setRecieptTrieRoot(byte[] recieptTrieRoot) {
         this.recieptTrieRoot = recieptTrieRoot;
     }
@@ -314,7 +272,9 @@ public class BlockHeader {
     				minGasPrice, gasLimit, gasUsed, timestamp, extraData);
         }
 	}
-	
+
+
+
 	private StringBuffer toStringBuff = new StringBuffer();
 	
 	public String toString() {

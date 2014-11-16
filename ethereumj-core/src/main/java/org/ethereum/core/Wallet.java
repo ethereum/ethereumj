@@ -2,10 +2,14 @@ package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.submit.WalletTransaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 import org.w3c.dom.*;
 import org.xml.sax.SAXException;
 
@@ -21,21 +25,18 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Wallet handles the management of accounts with addresses and private keys.
  * New accounts can be generated and added to the wallet and existing accounts can be queried.
  */
+@Component
 public class Wallet {
 
 	private Logger logger = LoggerFactory.getLogger("wallet");
-	
+
     // TODO: a) the values I need to keep for address state is balance & nonce & ECKey
     // TODO: b) keep it to be easy accessed by the toAddress()
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
@@ -48,9 +49,19 @@ public class Wallet {
     private Map<String, Account> rows = new HashMap<>();
     private long high;
 
+    @Autowired
+    private WorldManager worldManager;
+
+    @Autowired
+    private ApplicationContext context;
+
     private List<WalletListener> listeners = new ArrayList<>();
 
     private Map<ByteArrayWrapper, Transaction> transactionMap = new HashMap<>();
+
+    public void setWorldManager(WorldManager worldManager) {
+        this.worldManager = worldManager;
+    }
 
     public void addNewAccount() {
         Account account = new Account();
@@ -60,7 +71,8 @@ public class Wallet {
     }
 
     public void importKey(byte[] privKey) {
-        Account account = new Account(ECKey.fromPrivate(privKey));
+        Account account = context.getBean(Account.class);
+        account.init(ECKey.fromPrivate(privKey));
         String address = Hex.toHexString(account.getEcKey().getAddress());
         rows.put(address, account);
         notifyListeners();
@@ -74,15 +86,11 @@ public class Wallet {
         return rows.values();
     }
 
-    public AccountState getAccountState(byte[] addressBytes) {
-        String address = Hex.toHexString(addressBytes);
+    public AccountState getAccountState(byte[] address) {
+        AccountState accountState =
+                worldManager.getRepository().getAccountState(address);
 
-        return rows.get(address).getAccountState();
-    }
-
-    public BigInteger getBalance(byte[] addressBytes) {
-        String address = Hex.toHexString(addressBytes);
-        return rows.get(address).getBalance();
+        return accountState;
     }
 
     public BigInteger totalBalance() {
@@ -328,6 +336,11 @@ public class Wallet {
 
     public interface WalletListener{
         public void valueChanged();
+    }
+
+    public BigInteger getBalance(byte[] addressBytes) {
+        String address = Hex.toHexString(addressBytes);
+        return rows.get(address).getBalance();
     }
 
     public long getHigh() {

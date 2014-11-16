@@ -114,8 +114,7 @@ public class PeersTableWindow extends JFrame {
             }
         }, 1000, 1000);
 
-        if (CONFIG.peerDiscovery())
-            UIEthereumManager.ethereum.startPeerDiscovery();
+        UIEthereumManager.ethereum.startPeerDiscovery();
     }
 
 	public void addCloseAction() {

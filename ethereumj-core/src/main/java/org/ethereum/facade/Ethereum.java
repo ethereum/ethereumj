@@ -124,6 +124,8 @@ public interface Ethereum {
      */
     public Repository getRepository();
 
+
+    public void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
 

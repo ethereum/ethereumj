@@ -1,9 +1,14 @@
 package org.ethereum.net.server;
 
+import org.ethereum.core.Block;
+import org.ethereum.core.Transaction;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.shh.ShhHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * www.etherj.com
@@ -11,21 +16,62 @@ import org.ethereum.net.shh.ShhHandler;
  * @author: Roman Mandeleil
  * Created on: 01/11/2014 17:01
  */
-
+@Component
+@Scope("prototype")
 public class Channel {
 
+    @Autowired
+    ChannelManager channelManager;
+
+    @Autowired
     MessageQueue msgQueue;
+
+    @Autowired
     P2pHandler p2pHandler;
+
+    @Autowired
     EthHandler ethHandler;
+
+    @Autowired
     ShhHandler shhHandler;
 
 
-    public Channel(MessageQueue msgQueue, P2pHandler p2pHandler, EthHandler ethHandler, ShhHandler shhHandler) {
-        this.msgQueue = msgQueue;
-        this.p2pHandler = p2pHandler;
-        this.ethHandler = ethHandler;
-        this.shhHandler = shhHandler;
+    public Channel() {
     }
 
-    
+    public void init(){
+        p2pHandler.setMsgQueue(msgQueue);
+        ethHandler.setMsgQueue(msgQueue);
+        shhHandler.setMsgQueue(msgQueue);
+    }
+
+    public P2pHandler getP2pHandler() {
+        return p2pHandler;
+    }
+
+    public EthHandler getEthHandler() {
+        return ethHandler;
+    }
+
+    public ShhHandler getShhHandler() {
+        return shhHandler;
+    }
+
+    public void sendTransaction(Transaction tx){
+        ethHandler.sendTransaction(tx);
+    }
+
+    public void sendBlock(Block block){
+
+        // 1. check by best block send or not to send
+        // ethHandler.sendBlock(block);
+
+    }
+
+    public boolean isSync(){
+        return ethHandler.getSyncStatus() == EthHandler.SyncSatus.SYNC_DONE;
+    }
+
+
+
 }

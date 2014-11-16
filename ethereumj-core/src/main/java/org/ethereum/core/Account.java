@@ -6,10 +6,16 @@ import java.util.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 /**
  * Representation of an actual account or contract
  */
+@Component
+@Scope("prototype")
 public class Account  {
 
 	private ECKey ecKey;
@@ -18,15 +24,59 @@ public class Account  {
     private Set<Transaction> pendingTransactions =
             Collections.synchronizedSet(new HashSet<Transaction>());
 
+    @Autowired
+    WorldManager worldManager;
+
 	public Account() {
-		this.ecKey = new ECKey(Utils.getRandom());
-        address = this.ecKey.getAddress();
 	}
-	
-	public Account(ECKey ecKey) {
+
+    public void init(){
+        this.ecKey = new ECKey(Utils.getRandom());
+        address = this.ecKey.getAddress();
+    }
+
+	public void init(ECKey ecKey) {
 		this.ecKey = ecKey;
         address = this.ecKey.getAddress();
 	}
+
+    public BigInteger getNonce(){
+        AccountState accountState =
+                worldManager.getRepository().getAccountState(getAddress());
+
+        return accountState.getNonce();
+    }
+
+    public BigInteger getBalance(){
+
+        AccountState accountState =
+                worldManager.getRepository().getAccountState(this.getAddress());
+
+        BigInteger balance = BigInteger.ZERO;
+
+        if (accountState != null)
+            balance = accountState.getBalance();
+
+        synchronized (getPendingTransactins()){
+            if (!getPendingTransactins().isEmpty()){
+
+                for (Transaction tx : getPendingTransactins()){
+                    if (Arrays.equals(getAddress(), tx.getSender())){
+                        balance = balance.subtract(new BigInteger(1, tx.getValue()));
+                    }
+
+                    if (Arrays.equals(getAddress(), tx.getReceiveAddress())){
+                        balance = balance.add(new BigInteger(1, tx.getValue()));
+                    }
+                }
+                // todo: calculate the fee for pending
+            }
+        }
+
+
+        return balance;
+    }
+
 
     public ECKey getEcKey() {
         return ecKey;
@@ -40,64 +90,6 @@ public class Account  {
 		this.address = address;
 	}
 
-    public AccountState getAccountState(){
-        AccountState accountState =
-                WorldManager.getInstance().getRepository().getAccountState(this.address);
-
-        return accountState;
-    }
-
-    public BigInteger getBalance() {
-
-        AccountState accountState =
-                WorldManager.getInstance().getRepository().getAccountState(this.address);
-
-        BigInteger balance = BigInteger.ZERO;
-
-        if (accountState != null)
-            balance = accountState.getBalance();
-
-        synchronized (pendingTransactions){
-            if (!pendingTransactions.isEmpty()){
-
-                for (Transaction tx : pendingTransactions){
-                    if (Arrays.equals(this.address, tx.getSender())){
-                        balance = balance.subtract(new BigInteger(1, tx.getValue()));
-                    }
-
-                    if (Arrays.equals(this.address, tx.getReceiveAddress())){
-                        balance = balance.add(new BigInteger(1, tx.getValue()));
-                    }
-                }
-                // todo: calculate the fee for pending
-            }
-        }
-        return balance;
-    }
-
-    public BigInteger getNonce() {
-
-        AccountState accountState =
-            WorldManager.getInstance().getRepository().getAccountState(this.address);
-
-        BigInteger nonce = BigInteger.ZERO;
-
-        if (accountState != null)
-            nonce =  accountState.getNonce();
-
-        synchronized (pendingTransactions){
-            if (!pendingTransactions.isEmpty()){
-
-                for (Transaction tx : pendingTransactions){
-                    if (Arrays.equals(this.address, tx.getSender())){
-                        nonce = nonce.add(BigInteger.ONE);
-                    }
-                }
-            }
-        }
-        return nonce;
-    }
-    
     public Set<Transaction> getPendingTransactins() {
     	return this.pendingTransactions;
     }

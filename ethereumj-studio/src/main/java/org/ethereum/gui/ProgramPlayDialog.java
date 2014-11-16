@@ -36,8 +36,8 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     }
     
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
-		this(code, ProgramInvokeFactory.createProgramInvoke(tx, lastBlock, 
-				WorldManager.getInstance().getRepository()));
+//		this(code, ProgramInvokeFactory.createProgramInvoke(tx, lastBlock,
+//                UIEthereumManager.ethereum.getRepository()));
     }
     
     public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke) {

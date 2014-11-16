@@ -29,7 +29,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     public ProgramInvokeMockImpl() {
-        this.repository = new RepositoryImpl("blockchainMoc", "detailsMoc", "stateMoc");
+        this.repository = new RepositoryImpl("detailsMoc", "stateMoc");
         this.repository.createAccount(ownerAddress);
         
         this.repository.createAccount(contractAddress);

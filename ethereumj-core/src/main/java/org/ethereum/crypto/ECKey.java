@@ -123,7 +123,7 @@ public class ECKey implements Serializable {
         pub = CURVE.getCurve().decodePoint(pubParams.getQ().getEncoded(true));
     }
 
-    protected ECKey(@Nullable BigInteger priv, ECPoint pub) {
+    public ECKey(@Nullable BigInteger priv, ECPoint pub) {
         this.priv = priv;
         if(pub == null)
         	throw new IllegalArgumentException("Public key may not be null");

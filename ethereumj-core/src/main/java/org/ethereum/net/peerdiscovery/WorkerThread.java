@@ -3,6 +3,10 @@ package org.ethereum.net.peerdiscovery;
 import org.ethereum.net.client.PeerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -10,19 +14,26 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author Roman Mandeleil 
  * Created on: 22/05/2014 09:26
  */
+@Component
+@Scope("prototype")
 public class WorkerThread implements Runnable {
 
 	private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
 	private PeerInfo peerInfo;
-	private PeerClient clientPeer;
 	private ThreadPoolExecutor poolExecutor;
     private boolean running = true;
 
-	public WorkerThread(PeerInfo peer, ThreadPoolExecutor poolExecutor) {
-		this.peerInfo = peer;
-		this.poolExecutor = poolExecutor;
+    @Autowired
+    ApplicationContext ctx;
+
+	public WorkerThread() {
 	}
+
+    public void init(PeerInfo peer, ThreadPoolExecutor poolExecutor){
+        this.peerInfo = peer;
+        this.poolExecutor = poolExecutor;
+    }
 
 	@Override
 	public void run() {
@@ -30,18 +41,20 @@ public class WorkerThread implements Runnable {
         processCommand();
 		logger.debug("{} end", Thread.currentThread().getName());
 
+        sleep(1000);
 		poolExecutor.execute(this);
 	}
 
 	private void processCommand() {
 
 		try {
-			clientPeer = new PeerClient(true);
-			clientPeer.connect(peerInfo.getAddress().getHostAddress(), peerInfo.getPort());
+
+            DiscoveryChannel discoveryChannel = ctx.getBean(DiscoveryChannel.class);
+            discoveryChannel.connect(peerInfo.getAddress().getHostAddress(), peerInfo.getPort());
             peerInfo.setOnline(true);
 
-            peerInfo.setHandshakeHelloMessage(clientPeer.getHelloHandshake());
-            peerInfo.setStatusMessage( clientPeer.getStatusHandshake() );
+            peerInfo.setHandshakeHelloMessage(discoveryChannel.getHelloHandshake());
+            peerInfo.setStatusMessage( discoveryChannel.getStatusHandshake() );
 
             logger.info("Peer is online: [{}] ", peerInfo);
 
@@ -58,6 +71,16 @@ public class WorkerThread implements Runnable {
 
 		}
 	}
+
+    private void sleep(long milliseconds){
+
+        try {
+            Thread.sleep(milliseconds);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
 
 	@Override
 	public String toString() {

@@ -34,6 +34,7 @@ import javax.swing.table.AbstractTableModel;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
@@ -124,7 +125,8 @@ public class StateExplorerWindow extends JFrame {
 			public void mouseClicked(MouseEvent e) {
 				byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
 				if(addr != null) {
-					byte[] code = WorldManager.getInstance().getRepository().getCode(addr);
+                    Repository repository = UIEthereumManager.ethereum.getRepository();
+					byte[] code = repository.getCode(addr);
 					if(code != null)
 						ProgramPlayDialog.createAndShowGUI(code, null, null);
 				}
@@ -207,20 +209,21 @@ public class StateExplorerWindow extends JFrame {
 		// 1) print account address
 		ret = "Account: " + Hex.toHexString(account) + "\n";
 		
-		//2) print state 
-		AccountState state = WorldManager.getInstance().getRepository().getAccountState(account);
+		//2) print state
+        Repository repository = UIEthereumManager.ethereum.getRepository();
+		AccountState state = repository.getAccountState(account);
 		if(state != null)
 			ret += state.toString() + "\n";
 		
 		//3) print storage
-		ContractDetails contractDetails = WorldManager.getInstance().getRepository().getContractDetails(account);
+		ContractDetails contractDetails = repository.getContractDetails(account);
 		if(contractDetails != null) {
 			Map<DataWord, DataWord> accountStorage = contractDetails.getStorage();
 			dataModel.setData(accountStorage);
 		}
 		
 		//4) code print
-		byte[] code = WorldManager.getInstance().getRepository().getCode(account);
+		byte[] code = repository.getCode(account);
 		if(code != null) {
 			ret += "\n\nCode:\n";
 			ret += Program.stringify(code, 0, "");

@@ -2,12 +2,15 @@ package org.ethereum.vm;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 
@@ -17,9 +20,13 @@ import java.math.BigInteger;
  * @author: Roman Mandeleil
  * Created on: 08/06/2014 09:59
  */
+@Component
 public class ProgramInvokeFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("VM");
+
+    @Autowired
+    private Blockchain blockchain;
 
     /** 
      * This attribute defines the number of recursive calls allowed in the EVM
@@ -30,10 +37,10 @@ public class ProgramInvokeFactory {
     private static final int MAX_DEPTH = 1024; 
     
         // Invocation by the wire tx
-    public static ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
 
         // https://ethereum.etherpad.mozilla.org/26
-        Block lastBlock = WorldManager.getInstance().getBlockchain().getLastBlock();
+        Block lastBlock = blockchain.getBestBlock();
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.

@@ -2,6 +2,7 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
@@ -149,9 +150,9 @@ public class BlockChainTable extends JFrame implements ActionListener {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                if (WorldManager.getInstance().getBlockchain().getSize() - 1 < lastFindIndex) return;
+                if (UIEthereumManager.ethereum.getBlockchain().getSize() - 1 < lastFindIndex) return;
 
-                Block block = WorldManager.getInstance().getBlockchain().getBlockByNumber(lastFindIndex);
+                Block block = UIEthereumManager.ethereum.getBlockchain().getBlockByNumber(lastFindIndex);
                 StringSelection selection = new StringSelection(block.toString());
                 Clipboard system = Toolkit.getDefaultToolkit().getSystemClipboard();
                 system.setContents(selection, selection);
@@ -162,7 +163,7 @@ public class BlockChainTable extends JFrame implements ActionListener {
             public void run() {
                 running = true;
                 while (running) {
-                    blocksCount.setText("" + WorldManager.getInstance().getBlockchain().getSize());
+                    blocksCount.setText("" + UIEthereumManager.ethereum.getBlockchain().getSize());
                     try {
                         sleep(BLOCK_CHECK_INTERVAL);
                     } catch (InterruptedException e) {
@@ -182,11 +183,11 @@ public class BlockChainTable extends JFrame implements ActionListener {
                 blockNum--;
             }
         } else if ("nextBlock".equals(e.getActionCommand())) {
-            if (blockNum < WorldManager.getInstance().getBlockchain().getSize() - 1) {
+            if (blockNum < UIEthereumManager.ethereum.getBlockchain().getSize() - 1) {
                 blockNum++;
             }
         } else if ("lastBlock".equals(e.getActionCommand())) {
-            blockNum = WorldManager.getInstance().getBlockchain().getSize() - 1;
+            blockNum = UIEthereumManager.ethereum.getBlockchain().getSize() - 1;
         } else if ("findPrev".equals(e.getActionCommand())) {
             if (findText.getText().length() > 0) {
                 if (textToFind.equals(findText.getText())) {
@@ -226,8 +227,8 @@ public class BlockChainTable extends JFrame implements ActionListener {
 
     private long findBlock(String textToFind, long blockNum, boolean forward) {
         if (forward) {
-            for (long i = blockNum + 1; i < WorldManager.getInstance().getBlockchain().getSize(); i++) {
-                Block block = WorldManager.getInstance().getBlockchain().getBlockByNumber(i);
+            for (long i = blockNum + 1; i < UIEthereumManager.ethereum.getBlockchain().getSize(); i++) {
+                Block block = UIEthereumManager.ethereum.getBlockchain().getBlockByNumber(i);
                 if (block.toString().toLowerCase().contains(textToFind.toLowerCase())) {
                     foundBlocks.add(i);
                     lastFindIndex = foundBlocks.size() - 1;
@@ -236,7 +237,7 @@ public class BlockChainTable extends JFrame implements ActionListener {
             }
         } else {
             for (long i = blockNum - 1; i >= 0; i--) {
-                Block block = WorldManager.getInstance().getBlockchain().getBlockByNumber(i);
+                Block block = UIEthereumManager.ethereum.getBlockchain().getBlockByNumber(i);
                 if (block.toString().toLowerCase().contains(textToFind.toLowerCase())) {
                     foundBlocks.add(0, i);
                     lastFindIndex = 0;
@@ -626,11 +627,12 @@ public class BlockChainTable extends JFrame implements ActionListener {
     private void fillBlock(final BlockChainTable blockchainTable) {
         if (blockNumberText.getText().length() == 0) return;
 
+        Blockchain blockchain = UIEthereumManager.ethereum.getBlockchain();
         long blockNum = Long.parseLong(blockNumberText.getText());
-        if (blockNum > WorldManager.getInstance().getBlockchain().getSize() - 1) {
-            blockNum = WorldManager.getInstance().getBlockchain().getSize() - 1;
+        if (blockNum > blockchain.getSize() - 1) {
+            blockNum = blockchain.getSize() - 1;
         }
-        Block block = WorldManager.getInstance().getBlockchain().getBlockByNumber(blockNum);
+        Block block = blockchain.getBlockByNumber(blockNum);
         blockN.setText("" + block.getNumber());
         highlightText(blockN);
         minGasPrice.setText("" + block.getMinGasPrice());

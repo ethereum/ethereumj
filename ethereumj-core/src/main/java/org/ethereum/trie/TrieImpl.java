@@ -466,6 +466,11 @@ public class TrieImpl implements Trie {
         logger.info("Garbage collection time: [{}ms]", System.currentTimeMillis() - startTime);
     }
 
+    public void printFootPrint(){
+
+        this.getCache().getNodes();
+    }
+
     private void scanTree(byte[] hash, ScanAction scanAction) {
 
         Value node = this.getCache().get(hash);

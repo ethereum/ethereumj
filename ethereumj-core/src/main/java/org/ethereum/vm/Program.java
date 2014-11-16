@@ -234,7 +234,7 @@ public class Program {
      * @param offset the memory address offset
      * @param size the number of bytes to allocate
      */
-    protected void allocateMemory(int offset, int size) {
+    public void allocateMemory(int offset, int size) {
 
         int memSize = memory != null ? memory.limit() : 0;
 		double newMemSize = Math.max(memSize, size != 0 ? 
@@ -244,6 +244,7 @@ public class Program {
         	tmpMem.put(memory.array(), 0, memory.limit());
         memory = tmpMem;
     }
+
 
     public void suicide(DataWord obtainer) {
 
@@ -818,4 +819,21 @@ public class Program {
 			super(message);
 		}
 	}
+
+    /**
+     * used mostly for testing reasons
+     */
+    public ByteBuffer getMemory(){
+        return memory;
+    }
+
+    /**
+     * used mostly for testing reasons
+     */
+    public void initMem(ByteBuffer memory){
+        this.memory = memory;
+    }
+
+
+
 }

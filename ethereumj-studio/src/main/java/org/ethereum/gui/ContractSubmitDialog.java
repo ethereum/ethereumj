@@ -101,7 +101,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                         }
                         contractAddrInput.setText(Hex.toHexString(tx.getContractAddress()));
 
-                        Block lastBlock = UIEthereumManager.ethereum.getBlockchain().getLastBlock();
+                        Block lastBlock = UIEthereumManager.ethereum.getBlockchain().getBestBlock();
                         ProgramPlayDialog.createAndShowGUI(tx.getData(), tx, lastBlock);
                     }}
         );
@@ -276,7 +276,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
 
         byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-        byte[] nonce = account.getNonce() == BigInteger.ZERO ? null : account.getNonce().toByteArray();
+        BigInteger nonce = UIEthereumManager.ethereum.getRepository().getNonce(account.getAddress());
         byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
@@ -287,7 +287,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
 //        UIEthereumManager.ethereum.createTransaction();
 
-        Transaction tx = new Transaction(nonce, gasPrice, gasValue,
+        Transaction tx = new Transaction(BigIntegers.asUnsignedByteArray(nonce),
+                gasPrice, gasValue,
                 zeroAddress, endowment, initByteCode);
 
         tx.sign(senderPrivKey);
@@ -298,7 +299,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
     private boolean validInput() {
 
         Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
-        BigInteger currentBalance = account.getBalance();
+        BigInteger currentBalance =
+                UIEthereumManager.ethereum.getRepository().getBalance(account.getAddress());
 
         long currGasPrice = UIEthereumManager.ethereum.getBlockchain().getGasPrice();
         BigInteger gasPrice = BigInteger.valueOf(currGasPrice);
@@ -333,8 +335,11 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         @Override
         public String toString() {
+
             String addressShort = Utils.getAddressShortString(account.getEcKey().getAddress());
-            String valueShort   = Utils.getValueShortString(account.getBalance());
+            String valueShort   = Utils.getValueShortString(
+                    UIEthereumManager.ethereum.getRepository().getBalance(account.getAddress())
+            );
 
 			String result = String.format(" By: [%s] %s", addressShort, valueShort);
             return result;

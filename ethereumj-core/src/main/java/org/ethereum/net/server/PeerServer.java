@@ -8,12 +8,11 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LoggingHandler;
-import org.ethereum.net.PeerListener;
-import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -26,50 +25,31 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 01/11/2014 10:11
  */
+@Component
 public class PeerServer {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    private PeerListener peerListener;
+    @Autowired
+    public ChannelManager channelManager;
 
-    Timer inactivesCollector = new Timer("inactivesCollector");
+    @Autowired
+    public EthereumChannelInitializer ethereumChannelInitializer;
 
-    private boolean peerDiscoveryMode = false;
-
-    List<Channel> channels = Collections.synchronizedList(new ArrayList<Channel>());
+    @Autowired
+    WorldManager worldManger;
 
     public PeerServer() {
     }
 
-    public PeerServer(PeerListener peerListener) {
-        this();
-    	this.peerListener = peerListener;
-    }
 
     public void start(int port) {
-
-
-        inactivesCollector.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-
-                Iterator<Channel> iter = channels.iterator();
-                while(iter.hasNext()){
-                    Channel channel = iter.next();
-                    if(!channel.p2pHandler.isActive()){
-
-                        iter.remove();
-                        logger.info("Channel removed: {}", channel.p2pHandler.getHandshakeHelloMessage());
-                    }
-                }
-            }
-        }, 2000, 5000);
 
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-        if (peerListener != null)
-        	peerListener.console("Listening on port " + port);
+        worldManger.getListener().trace("Listening on port " + port);
 
 
         try {
@@ -83,7 +63,7 @@ public class PeerServer {
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerConnectionTimeout());
 
             b.handler(new LoggingHandler());
-            b.childHandler(new EthereumChannelInitializer(this));
+            b.childHandler(ethereumChannelInitializer);
 
             // Start the client.
             logger.info("Listening for incoming connections, port: [{}] ", port);
@@ -101,14 +81,5 @@ public class PeerServer {
 
         }
     }
-
-    public void setPeerListener(PeerListener peerListener) {
-        this.peerListener = peerListener;
-    }
-
-    synchronized public void addChannel(Channel channel){
-        channels.add(channel);
-    }
-
 
 }

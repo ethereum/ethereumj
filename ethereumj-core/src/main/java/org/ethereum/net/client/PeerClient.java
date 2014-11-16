@@ -1,25 +1,22 @@
 package org.ethereum.net.client;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.DefaultMessageSizeEstimator;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.MessageQueue;
-import org.ethereum.net.PeerListener;
-import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.shh.ShhHandler;
-import org.ethereum.net.wire.MessageDecoder;
-import org.ethereum.net.wire.MessageEncoder;
-import org.ethereum.net.p2p.P2pHandler;
+import org.ethereum.net.server.ChannelManager;
+import org.ethereum.net.server.EthereumChannelInitializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -27,46 +24,27 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * This class creates the connection to an remote address using the Netty framework
  * @see <a href="http://netty.io">http://netty.io</a>
  */
+@Component
+@Scope("prototype")
 public class PeerClient {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    private PeerListener peerListener;
-    private P2pHandler p2pHandler;
-
-    private MessageQueue msgQueue;
-
-    private EthHandler ethHandler;
-    private ShhHandler shhHandler;
-
     private boolean peerDiscoveryMode = false;
 
-    public PeerClient() {
-        msgQueue = new MessageQueue(peerListener);
-    }
+    @Autowired
+    WorldManager worldManager;
 
-    public PeerClient(boolean peerDiscoveryMode){
-        this();
-        this.peerDiscoveryMode = peerDiscoveryMode;
-    }
+    @Autowired
+    public ChannelManager channelManager;
 
-    public PeerClient(PeerListener peerListener) {
-        this();
-    	this.peerListener = peerListener;
-    }
+    @Autowired
+    public EthereumChannelInitializer ethereumChannelInitializer;
 
     public void connect(String host, int port) {
 
     	EventLoopGroup workerGroup = new NioEventLoopGroup();
-
-        if (peerListener != null)
-        	peerListener.console("Connecting to: " + host + ":" + port);
-
-        p2pHandler = new P2pHandler(msgQueue, peerListener, peerDiscoveryMode);
-        p2pHandler.activate();
-
-        ethHandler = new EthHandler(msgQueue, peerListener, peerDiscoveryMode);
-        shhHandler = new ShhHandler(msgQueue, peerListener);
+        worldManager.getListener().trace("Connecting to: " + host + ":" + port);
 
         try {
             Bootstrap b = new Bootstrap();
@@ -78,22 +56,7 @@ public class PeerClient {
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerConnectionTimeout());
             b.remoteAddress(host, port);
             
-            b.handler(new ChannelInitializer<NioSocketChannel>() {
-                @Override
-                public void initChannel(NioSocketChannel ch) throws Exception {
-					ch.pipeline().addLast("readTimeoutHandler",
-							new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-					ch.pipeline().addLast("out encoder", new MessageEncoder());
-					ch.pipeline().addLast("in  encoder", new MessageDecoder());
-					ch.pipeline().addLast(Capability.P2P , p2pHandler);
-					ch.pipeline().addLast(Capability.ETH, ethHandler);
-					ch.pipeline().addLast(Capability.SHH, shhHandler);
-
-                    // limit the size of receiving buffer to 1024
-                    ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
-                    ch.config().setOption(ChannelOption.SO_RCVBUF, 32368);
-                }
-            });
+            b.handler(ethereumChannelInitializer);
 
             // Start the client.
             ChannelFuture f = b.connect().sync();
@@ -107,52 +70,7 @@ public class PeerClient {
             throw new Error("Disconnnected");
         } finally {
         	workerGroup.shutdownGracefully();
-        	p2pHandler.killTimers();
-
-            if (!peerDiscoveryMode){
-                if (WorldManager.getInstance().getListener() != null)
-                    WorldManager.getInstance().getListener().
-                            onPeerDisconnect(host, port);
-            }
-
         }
     }
 
-    public void setPeerListener(PeerListener peerListener) {
-        this.peerListener = peerListener;
-
-        if (p2pHandler != null)
-            p2pHandler.setPeerListener(peerListener);
-
-        if (ethHandler != null)
-            ethHandler.setPeerListener(peerListener);
-
-        if (shhHandler != null)
-            shhHandler.setPeerListener(peerListener);
-    }
-
-	public P2pHandler getP2pHandler() {
-		return p2pHandler;
-	}
-
-    public EthHandler getEthHandler() {
-        return ethHandler;
-    }
-
-    public ShhHandler getShhHandler() {
-        return shhHandler;
-    }
-
-    public boolean isSyncDone(){
-		return ethHandler.isActive()
-				&& ethHandler.getSyncStatus() == EthHandler.SyncSatus.SYNC_DONE;
-    }
-
-    public HelloMessage getHelloHandshake(){
-        return p2pHandler.getHandshakeHelloMessage();
-    }
-
-    public StatusMessage getStatusHandshake(){
-        return ethHandler.getHandshakeStatusMessage();
-    }
 }

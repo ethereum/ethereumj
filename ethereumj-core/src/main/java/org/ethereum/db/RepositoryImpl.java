@@ -1,28 +1,24 @@
 package org.ethereum.db;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.trie.TrackTrie;
-import org.ethereum.trie.TrieImpl;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.springframework.stereotype.Component;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -54,6 +50,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author: Roman Mandeleil
  * Created on: 23/06/2014 23:01
  */
+@Component
 public class RepositoryImpl implements Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
@@ -65,7 +62,6 @@ public class RepositoryImpl implements Repository {
     // TODO: Listeners listeners
     // TODO: cash impl
 
-    private DatabaseImpl chainDB 	= null;
     private DatabaseImpl detailsDB 	= null;
     private DatabaseImpl stateDB 	= null;
     
@@ -73,14 +69,12 @@ public class RepositoryImpl implements Repository {
      * Create a new Repository DAO 
      * 		assuming empty db and thus no stateRoot
      * 
-     * @see #loadBlockchain() to update the stateRoot
      */
     public RepositoryImpl() {
-    	this("blockchain", "details", "state");
+    	this("details", "state");
     }
     
-    public RepositoryImpl(String blockChainDbName, String detailsDbName, String stateDbName) {
-    	chainDB 			= new DatabaseImpl(blockChainDbName);
+    public RepositoryImpl(String detailsDbName, String stateDbName) {
         detailsDB     		= new DatabaseImpl(detailsDbName);
         contractDetailsDB 	= new TrackDatabase(detailsDB);
         stateDB 			= new DatabaseImpl(stateDbName);
@@ -116,81 +110,11 @@ public class RepositoryImpl implements Repository {
         accountStateDB.rollbackTrack();
         contractDetailsDB.rollbackTrack();
     }
-    
-    public Block getBlock(long blockNr) {
-        byte[] raw = chainDB.get(ByteUtil.longToBytes(blockNr));
-        if (raw == null) return null;
-    	return new Block(raw);
+
+    @Override
+    public boolean isClosed() {
+        return stateDB == null;
     }
-    
-    public void saveBlock(Block block) {
-    	this.chainDB.put(ByteUtil.longToBytes(block.getNumber()), block.getEncoded());
-
-//        this.worldState.cleanCacheGarbage();
-    	this.worldState.sync();
-    }
-	
-	public Blockchain loadBlockchain() {
-		Blockchain blockchain = WorldManager.getInstance().getBlockchain();
-		DBIterator iterator = chainDB.iterator();
-		try {
-			if (!iterator.hasNext()) {
-                logger.info("DB is empty - adding Genesis");
-                for (String address : Genesis.getPremine()) {
-            		this.createAccount(Hex.decode(address));
-            		this.addBalance   (Hex.decode(address), Genesis.PREMINE_AMOUNT);
-				}
-                blockchain.storeBlock(Genesis.getInstance());
-
-                EthereumListener listener =  WorldManager.getInstance().getListener();
-                if (listener != null){
-                    listener.onPreloadedBlock(Genesis.getInstance());
-                }
-
-               	dumpState(Genesis.getInstance(), 0, 0, null);
-            } else {
-            	logger.debug("Displaying blocks stored in DB sorted on blocknumber");
-
-            	for (iterator.seekToFirst(); iterator.hasNext();) {
-            		Block block = new Block(iterator.next().getValue());
-            		blockchain.getBlockCache().put(block.getNumber(), new ByteArrayWrapper(block.getHash()));
-            		blockchain.setLastBlock(block);
-            		blockchain.updateTotalDifficulty(block);
-                    EthereumListener listener =  WorldManager.getInstance().getListener();
-                    if (listener != null){
-                        listener.onPreloadedBlock(block);
-                    }
-    	            logger.debug("Block #{} -> {}", block.getNumber(), block.toFlatString());
-            	}
-				logger.info("*** Loaded up to block [{}] with stateRoot [{}]", 
-						blockchain.getLastBlock().getNumber(), 
-						Hex.toHexString(blockchain.getLastBlock().getStateRoot()));
-            }
-		} finally {
-			// Make sure you close the iterator to avoid resource leaks.
-			try {
-				iterator.close();
-			} catch (IOException e) {
-				logger.error(e.getMessage(), e);
-			}
-		}
-
-        if (CONFIG.rootHashStart() != null){
-
-            // update world state by dummy hash
-            byte[] rootHash = Hex.decode(CONFIG.rootHashStart());
-            logger.info("Loading root hash from property file: [{}]", CONFIG.rootHashStart());
-            this.worldState.setRoot(rootHash);
-
-        } else{
-
-            // Update world state to latest loaded block from db
-            this.worldState.setRoot(blockchain.getLastBlock().getStateRoot());
-        }
-
-		return blockchain;
-	}
-	
 
     public AccountState createAccount(byte[] addr) {
 
@@ -375,6 +299,8 @@ public class RepositoryImpl implements Repository {
 
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
 
+        dumpTrie(block);
+
 		if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
 			return;
 
@@ -467,10 +393,6 @@ public class RepositoryImpl implements Repository {
     	return detailsDB.iterator();
     }
 
-    public boolean isClosed(){
-        return chainDB == null;
-    }
-
     public void close() {
         if (this.detailsDB != null){
             detailsDB.close();
@@ -480,10 +402,6 @@ public class RepositoryImpl implements Repository {
             stateDB.close();
             stateDB = null;
         }
-        if (this.chainDB != null){
-            chainDB.close();
-            chainDB = null;
-        }
     }
 
     private void validateAddress(byte[] addr) {
@@ -491,6 +409,15 @@ public class RepositoryImpl implements Repository {
 			logger.error("Can't create address {} because is null or length != 20", ByteUtil.toHexString(addr));
 			throw new IllegalArgumentException("Address must be a byte-array of length 20");
 		}
+    }
+
+    public void reset(){
+        close();
+        detailsDB     		= new DatabaseImpl("details");
+        contractDetailsDB 	= new TrackDatabase(detailsDB);
+        stateDB 			= new DatabaseImpl("state");
+        worldState 			= new TrieImpl(stateDB.getDb());
+        accountStateDB 		= new TrackTrie(worldState);
     }
 }
 

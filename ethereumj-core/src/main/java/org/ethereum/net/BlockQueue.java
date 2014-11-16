@@ -3,10 +3,12 @@ package org.ethereum.net;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 import org.ethereum.core.Block;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.facade.Blockchain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
@@ -20,6 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author Roman Mandeleil 
  * Created on: 27/07/2014 11:28
  */
+@Component
 public class BlockQueue {
 
 	private static final Logger logger = LoggerFactory.getLogger("blockqueue");
@@ -33,11 +36,14 @@ public class BlockQueue {
 	
 	/** Highest known total difficulty, representing the heaviest chain on the network */
     private BigInteger highestTotalDifficulty;
-    
+
     /** Last block in the queue to be processed */
 	private Block lastBlock;
 
 	private Timer timer = new Timer("BlockQueueTimer");
+
+    @Autowired
+    Blockchain blockchain;
 
 	public BlockQueue() {
 		timer.scheduleAtFixedRate(new TimerTask() {
@@ -54,11 +60,14 @@ public class BlockQueue {
 		if (blockReceivedQueue.isEmpty())
 			return;
 		
-		logger.debug("BlockQueue size: {}", blockReceivedQueue.size());
-		Block block = blockReceivedQueue.poll();
+		logger.info("BlockQueue size: {}", blockReceivedQueue.size());
+        while(!blockReceivedQueue.isEmpty()){
+            Block block = blockReceivedQueue.poll();
 
-        logger.info("Processing block index: {}", block.getNumber());
-		WorldManager.getInstance().getBlockchain().add(block);
+            logger.info("Processing block index: {}", block.getNumber());
+            blockchain.add(block);
+        }
+
 	}
 
 	/**
@@ -73,17 +82,10 @@ public class BlockQueue {
 	 */
 	public void addBlocks(List<Block> blockList) {
 
-		Block lastReceivedBlock = blockList.get(0);
-		if (lastReceivedBlock.getNumber() != getLastBlock().getNumber() + 1){
-            logger.error("Block download out of sync: lastBlock.index: [{}], receivedBlock.index: [{}]",
-                    getLastBlock().getNumber(), lastReceivedBlock.getNumber());
-            return;
-        }
-
         blockReceivedQueue.addAll(blockList);
         lastBlock = blockList.get(blockList.size() - 1);
 
-		logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]" ,
+		logger.info("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]" ,
 				blockReceivedQueue.size(),
                 lastBlock.getNumber());
 	}
@@ -94,12 +96,6 @@ public class BlockQueue {
      * @param block - new block
      */
     public void addBlock(Block block){
-
-        if (block.getNumber() != getLastBlock().getNumber() + 1){
-            logger.error("Block download out of sync: lastBlock.index: [{}], receivedBlock.index: [{}]",
-                    getLastBlock().getNumber(), block.getNumber());
-            return;
-        }
 
         blockReceivedQueue.add(block);
         lastBlock = block;
@@ -119,7 +115,7 @@ public class BlockQueue {
 	 */
 	public Block getLastBlock() {
 		if (blockReceivedQueue.isEmpty())
-			return WorldManager.getInstance().getBlockchain().getLastBlock();
+			return blockchain.getBestBlock();
 		return lastBlock;
 	}
 
@@ -172,7 +168,7 @@ public class BlockQueue {
     // a bit ugly but really gives
     // good result
     public void logHashQueueSize(){
-        logger.trace("Block hashes list size: [{}]", blockHashQueue.size());
+        logger.info("Block hashes list size: [{}]", blockHashQueue.size());
     }
 
 	private class BlockByIndexComparator implements Comparator<Block> {
@@ -208,6 +204,11 @@ public class BlockQueue {
 	public int size() {
 		return blockReceivedQueue.size();
 	}
+
+    public void clear(){
+        this.blockHashQueue.clear();
+        this.blockReceivedQueue.clear();
+    }
 
 	/**
 	 * Cancel and purge the timer-thread that 

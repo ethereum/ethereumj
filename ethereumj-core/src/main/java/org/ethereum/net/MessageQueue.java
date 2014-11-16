@@ -7,6 +7,9 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -26,18 +29,20 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  *
  * @author Roman Mandeleil
  */
+@Component
+@Scope("prototype")
 public class MessageQueue {
 
 	private static final Logger logger = LoggerFactory.getLogger("net");
 
 	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
-	private PeerListener listener;
 	private ChannelHandlerContext ctx = null;
 	private final Timer timer = new Timer("MessageQueue");
 
-	public MessageQueue(PeerListener listener) {
-		this.listener = listener;
-	}
+    @Autowired
+    WorldManager worldManager;
+
+    public MessageQueue(){}
 
     public void activate(ChannelHandlerContext ctx){
         this.ctx = ctx;
@@ -54,8 +59,7 @@ public class MessageQueue {
 
 	public void receivedMessage(Message msg) throws InterruptedException {
 
-		if (listener != null)
-			listener.console("[Recv: " + msg + "]");
+        worldManager.getListener().trace("[Recv: " + msg + "]");
 
 		if (messageQueue.peek() != null) {
 			MessageRoundtrip messageRoundtrip = messageQueue.peek();
@@ -89,8 +93,8 @@ public class MessageQueue {
 
 			Message msg = messageRoundtrip.getMsg();
 
-            EthereumListener listener = WorldManager.getInstance().getListener();
-            if (listener != null) listener.onSendMessage(msg);
+            EthereumListener listener = worldManager.getListener();
+            listener.onSendMessage(msg);
 
 			ctx.writeAndFlush(msg);
 

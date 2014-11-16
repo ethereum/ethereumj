@@ -4,19 +4,29 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
+import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
@@ -24,13 +34,33 @@ import org.slf4j.LoggerFactory;
  * @author: Roman Mandeleil
  * Created on: 27/07/2014 09:12
  */
-
+@Component
 public class EthereumImpl implements Ethereum {
 
     private static final Logger logger = LoggerFactory.getLogger("facade");
 
+    @Autowired
+    WorldManager worldManager;
+
+    @Autowired
+    PeerServer peerServer;
+
+    @Autowired
+    ApplicationContext ctx;
+
     public EthereumImpl() {
-        WorldManager.getInstance().loadBlockchain();
+    }
+
+    @PostConstruct
+    public void init(){
+        worldManager.loadBlockchain();
+        if (CONFIG.listenPort() > 0){
+            Executors.newSingleThreadExecutor().submit(
+                    new Runnable() { public void run() {
+                        peerServer.start(CONFIG.listenPort());
+                    }}
+            );
+        }
     }
 
     /**
@@ -55,14 +85,12 @@ public class EthereumImpl implements Ethereum {
     public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeers)  {
         logger.info("Looking for online peers...");
 
-        final EthereumListener listener = WorldManager.getInstance().getListener();
-        if (listener != null) {
-            listener.trace("Looking for online peer");
-        }
+        final EthereumListener listener = worldManager.getListener();
+        listener.trace("Looking for online peer");
 
-        WorldManager.getInstance().startPeerDiscovery();
+        worldManager.startPeerDiscovery();
 
-        final Set<PeerInfo> peers = WorldManager.getInstance().getPeerDiscovery().getPeers();
+        final Set<PeerInfo> peers = worldManager.getPeerDiscovery().getPeers();
         synchronized (peers) {
             for (PeerInfo peer : peers) { // it blocks until a peer is available.
 				if (peer.isOnline() && !excludePeers.contains(peer)) {
@@ -92,17 +120,17 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public Set<PeerInfo> getPeers() {
-        return WorldManager.getInstance().getPeerDiscovery().getPeers();
+        return worldManager.getPeerDiscovery().getPeers();
     }
 
     @Override
     public void startPeerDiscovery(){
-        WorldManager.getInstance().startPeerDiscovery();
+        worldManager.startPeerDiscovery();
     }
 
     @Override
     public void stopPeerDiscovery() {
-        WorldManager.getInstance().stopPeerDiscovery();
+        worldManager.stopPeerDiscovery();
     }
 
     @Override
@@ -114,49 +142,49 @@ public class EthereumImpl implements Ethereum {
     public void connect(String ip, int port) {
 		logger.info("Connecting to: {}:{}", ip, port);
 
-        PeerClient peerClient = WorldManager.getInstance().getActivePeer();
+        PeerClient peerClient = worldManager.getActivePeer();
         if (peerClient == null)
-		    peerClient = new PeerClient();
-        WorldManager.getInstance().setActivePeer(peerClient);
+		    peerClient = ctx.getBean(PeerClient.class);
+        worldManager.setActivePeer(peerClient);
 
         peerClient.connect(ip, port);
     }
 
     @Override
     public Blockchain getBlockchain() {
-        return WorldManager.getInstance().getBlockchain();
+        return worldManager.getBlockchain();
     }
 
     @Override
     public void addListener(EthereumListener listener) {
-        WorldManager.getInstance().addListener(listener);
+        worldManager.addListener(listener);
     }
 
     @Override
     public boolean isBlockchainLoading() {
-        return WorldManager.getInstance().isBlockchainLoading();
+        return worldManager.isBlockchainLoading();
     }
 
     @Override
     public void close() {
-        WorldManager.getInstance().close();
+        worldManager.close();
     }
 
     @Override
     public PeerClient getDefaultPeer(){
 
-        PeerClient peer = WorldManager.getInstance().getActivePeer();
+        PeerClient peer = worldManager.getActivePeer();
         if (peer == null){
 
             peer = new PeerClient();
-            WorldManager.getInstance().setActivePeer(peer);
+            worldManager.setActivePeer(peer);
         }
         return peer;
     }
 
     @Override
     public boolean isConnected() {
-        return WorldManager.getInstance().getActivePeer() != null;
+        return worldManager.getActivePeer() != null;
     }
 
     @Override
@@ -181,7 +209,7 @@ public class EthereumImpl implements Ethereum {
     @Override
     public Future<Transaction> submitTransaction(Transaction transaction){
 
-        TransactionTask transactionTask = new TransactionTask(transaction);
+        TransactionTask transactionTask = new TransactionTask(transaction, worldManager);
         Future<Transaction> future = TransactionExecutor.instance.submitTransaction(transactionTask);
 
         return future;
@@ -190,13 +218,15 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public Wallet getWallet(){
-        return WorldManager.getInstance().getWallet();
+        return worldManager.getWallet();
     }
 
 
     @Override
     public Repository getRepository(){
-        return WorldManager.getInstance().getRepository();
+        return worldManager.getRepository();
     }
+
+
 
 }

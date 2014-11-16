@@ -3,6 +3,9 @@ package org.ethereum.net.peerdiscovery;
 import org.ethereum.net.p2p.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -16,6 +19,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author Roman Mandeleil
  * Created on: 22/05/2014 09:10
  */
+@Component
 public class PeerDiscovery {
 
 	private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
@@ -26,6 +30,10 @@ public class PeerDiscovery {
 	private ThreadFactory threadFactory;
 	private ThreadPoolExecutor executorPool;
 	private RejectedExecutionHandler rejectionHandler;
+
+    @Autowired
+    private ApplicationContext ctx;
+
 
 	private final AtomicBoolean started = new AtomicBoolean(false);
 
@@ -43,7 +51,7 @@ public class PeerDiscovery {
 						1000), threadFactory, rejectionHandler);
 
 		// start the monitoring thread
-		monitor = new PeerMonitorThread(executorPool, 1);
+		monitor = new PeerMonitorThread(executorPool, 1, this);
 		Thread monitorThread = new Thread(monitor);
 		monitorThread.start();
 
@@ -52,7 +60,9 @@ public class PeerDiscovery {
         addPeers(peerDataList);
 
         for (PeerInfo peerData : this.peers) {
-            executorPool.execute(new WorkerThread(peerData, executorPool));
+            WorkerThread workerThread = ctx.getBean(WorkerThread.class);
+            workerThread.init(peerData, executorPool);
+            executorPool.execute(workerThread);
         }
 
 		started.set(true);
@@ -97,10 +107,12 @@ public class PeerDiscovery {
             }
     }
 
+	private void startWorker(PeerInfo peerInfo) {
 
-	private void startWorker(PeerInfo peer) {
-		logger.debug("Add new peer for discovery: {}", peer);
-		executorPool.execute(new WorkerThread(peer, executorPool));
+		logger.debug("Add new peer for discovery: {}", peerInfo);
+        WorkerThread workerThread = ctx.getBean(WorkerThread.class);
+        workerThread.init(peerInfo, executorPool);
+        executorPool.execute(workerThread);
 	}
 
     public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){

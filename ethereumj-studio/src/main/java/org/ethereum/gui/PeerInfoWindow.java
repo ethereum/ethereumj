@@ -1,15 +1,13 @@
 package org.ethereum.gui;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.net.PeerListener;
-import org.ethereum.net.client.PeerClient;
-import org.fife.ui.rsyntaxtextarea.*;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 

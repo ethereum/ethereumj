@@ -2,6 +2,7 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Account;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.Wallet;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.BigIntegers;
@@ -112,15 +113,18 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 					return;
 				}
 
+
 				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
-				byte[] nonce = PayOutDialog.this.account.getNonce() == BigInteger.ZERO ? null :
-                        ByteUtil.bigIntegerToBytes( PayOutDialog.this.account.getNonce() );
+
+                BigInteger nonce = account.getNonce();
 
                 byte[] gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockchain().getGasPrice()).toByteArray();
 
-				Transaction tx = new Transaction(nonce, gasPrice, BigIntegers
-						.asUnsignedByteArray(fee), address, BigIntegers
-						.asUnsignedByteArray(value), null);
+				Transaction tx = new Transaction(
+                        BigIntegers.asUnsignedByteArray(nonce),
+                         gasPrice,
+                        BigIntegers.asUnsignedByteArray(fee), address,
+                        BigIntegers.asUnsignedByteArray(value), null);
 
 				try {
 					tx.sign(senderPrivKey);
@@ -193,6 +197,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
             alertStatusMsg("Should specify numeric value for a fee");
             return false;
         }
+
 
         // check if the tx is affordable
         BigInteger ammountValue = new BigInteger(amountText);
@@ -268,10 +273,5 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         });
     }
 
-    public static void main(String args[]) {
-        Account account = new Account();
-        PayOutDialog pod = new PayOutDialog(null,  account);
-        pod.setVisible(true);
-    }
 }
 

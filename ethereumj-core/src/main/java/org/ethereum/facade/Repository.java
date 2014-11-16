@@ -5,7 +5,11 @@ import java.math.BigInteger;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.db.ContractDetails;
+import org.ethereum.db.DatabaseImpl;
+import org.ethereum.db.TrackDatabase;
+import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
 
@@ -99,21 +103,7 @@ public interface Repository {
      */
     public DataWord getStorageValue(byte[] addr, DataWord key);
     
-    /**
-     * Save block and post state in the database
-     *     
-     * @param block the <code>Block</code> to store
-     */
-    public void saveBlock(Block block);
 
-    /**
-     * Retrieve block from the blockchain
-     * 
-     * @param blockNr number of block in the blockchain
-     * @return Block containing header, uncles and transactions
-     */
-    public Block getBlock(long blockNr);
-    
     /**
      * Retrieve balance of an account
      * 
@@ -145,13 +135,7 @@ public interface Repository {
      */
     public Trie getWorldState();
     
-    /**
-     * Load the blockchain into cache memory
-     * 
-     * @return the <code>Blockchain</code> object
-     */
-    public Blockchain loadBlockchain();
-    
+
     /**
      * Dump the full state of the current repository into a file with JSON format
      * It contains all the contracts/account, their attributes and 
@@ -198,4 +182,10 @@ public interface Repository {
      * Close the database
      */
     public void close();
+
+    /**
+     * Reset
+     */
+    public void reset();
+
 }

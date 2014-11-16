@@ -1,22 +1,30 @@
 package org.ethereum.manager;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
-import java.util.*;
-
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.Wallet;
+import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerWrapper;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
+import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.math.BigInteger;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.
@@ -24,43 +32,39 @@ import org.spongycastle.util.encoders.Hex;
  * @author Roman Mandeleil 
  * Created on: 01/06/2014 10:44
  */
+@Component
 public class WorldManager {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
+    @Autowired
 	private Blockchain blockchain;
+
+    @Autowired
 	private Repository repository;
+
+    @Autowired
 	private Wallet wallet;
 
+    @Autowired
     private PeerClient activePeer;
+
+    @Autowired
     private PeerDiscovery peerDiscovery;
+
+    @Autowired
+    private BlockStore blockStore;
+
+    @Autowired
+    private ChannelManager channelManager;
     
     private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
     
-    private EthereumListener listener;
+    private EthereumListener listener = new EthereumListenerWrapper();
     
-	private static final class WorldManagerHolder {
-		private static final WorldManager instance = new WorldManager();
-		static {
-			instance.init();
-		}
-	}
-    
-	private WorldManager() {
-		this.repository = new RepositoryImpl();
-		this.blockchain = new BlockchainImpl(repository);
-        this.peerDiscovery = new PeerDiscovery();
-	}
-
-    // used for testing
-    public void reset() {
-        this.repository = new RepositoryImpl();
-        this.blockchain = new BlockchainImpl(repository);
-    }
-
+    @PostConstruct
     public void init() {
-    	this.wallet = new Wallet();
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
         wallet.importKey(cowAddr);
 
@@ -69,12 +73,9 @@ public class WorldManager {
         wallet.importKey(cbAddr);
     }
 	
-	public static WorldManager getInstance() {
-		return WorldManagerHolder.instance;
-	}
-    
     public void addListener(EthereumListener listener) {
-        this.listener = listener;
+        logger.info("Ethereum listener added");
+        ((EthereumListenerWrapper)this.listener).addListener(listener);
     }
 
     public void startPeerDiscovery() {
@@ -103,6 +104,10 @@ public class WorldManager {
         }
     }
 
+    public ChannelManager getChannelManager(){
+        return channelManager;
+    }
+
     public PeerDiscovery getPeerDiscovery() {
     	return peerDiscovery;
     }
@@ -123,10 +128,6 @@ public class WorldManager {
 		return blockchain;
 	}
 	
-	public void loadBlockchain() {
-		this.blockchain = repository.loadBlockchain();
-	}
-
 	public Wallet getWallet() {
 		return wallet;
 	}
@@ -147,6 +148,56 @@ public class WorldManager {
         return blockchain.getQueue().size() > 2;
     }
 
+    public void loadBlockchain() {
+
+        Block bestBlock = blockStore.getBestBlock();
+        if (bestBlock == null) {
+            logger.info("DB is empty - adding Genesis");
+            for (String address : Genesis.getPremine()) {
+                repository.createAccount(Hex.decode(address));
+                repository.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
+            }
+            blockchain.storeBlock(Genesis.getInstance());
+            blockchain.setBestBlock(Genesis.getInstance());
+            blockchain.setTotalDifficulty(BigInteger.ZERO);
+
+            repository.dumpState(Genesis.getInstance(), 0, 0, null);
+        } else {
+
+            blockchain.setBestBlock(bestBlock);
+
+            BigInteger totalDifficulty = blockStore.getTotalDifficulty();
+            blockchain.setTotalDifficulty(totalDifficulty);
+
+            logger.info("*** Loaded up to block [{}] totalDifficulty [{}] with stateRoot [{}]",
+                    blockchain.getBestBlock().getNumber(),
+                    blockchain.getTotalDifficulty().toString(),
+                    Hex.toHexString(blockchain.getBestBlock().getStateRoot()));
+        }
+
+
+        if (CONFIG.rootHashStart() != null){
+
+            // update world state by dummy hash
+            byte[] rootHash = Hex.decode(CONFIG.rootHashStart());
+            logger.info("Loading root hash from property file: [{}]", CONFIG.rootHashStart());
+            this.repository.getWorldState().setRoot(rootHash);
+
+        } else{
+
+            // Update world state to latest loaded block from db
+            this.repository.getWorldState().setRoot(blockchain.getBestBlock().getStateRoot());
+        }
+    }
+
+    public void reset(){
+        repository.reset();
+        blockchain.reset();
+        loadBlockchain();
+    }
+
+
+    @PreDestroy
     public void close() {
         stopPeerDiscovery();
         repository.close();
