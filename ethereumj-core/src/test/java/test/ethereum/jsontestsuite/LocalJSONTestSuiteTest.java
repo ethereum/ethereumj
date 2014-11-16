@@ -46,15 +46,15 @@ public class LocalJSONTestSuiteTest {
                 new AccountState(Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6"),
                         accountJSONObj);
 
-        Assert.assertEquals(expectedNonce, Hex.toHexString(state.nonce));
-        Assert.assertEquals(expectedBalance, Hex.toHexString(state.balance));
-        Assert.assertEquals(expectedCode, Hex.toHexString(state.code));
+        Assert.assertEquals(expectedNonce, Hex.toHexString(state.getNonce()));
+        Assert.assertEquals(expectedBalance, Hex.toHexString(state.getBalance()));
+        Assert.assertEquals(expectedCode, Hex.toHexString(state.getCode()));
 
-        Assert.assertTrue(state.storage.keySet().contains(expectedKey1));
-        Assert.assertTrue(state.storage.keySet().contains(expectedKey2));
+        Assert.assertTrue(state.getStorage().keySet().contains(expectedKey1));
+        Assert.assertTrue(state.getStorage().keySet().contains(expectedKey2));
 
-        Assert.assertTrue(state.storage.values().contains(expectedVal1));
-        Assert.assertTrue(state.storage.values().contains(expectedVal2));
+        Assert.assertTrue(state.getStorage().values().contains(expectedVal1));
+        Assert.assertTrue(state.getStorage().values().contains(expectedVal2));
     }
 
 
