@@ -68,10 +68,10 @@ public class ForkTest {
 
         BlockchainImpl blockchain = (BlockchainImpl)worldManager.getBlockchain();
 
-        URL massiveUpload_1 = ClassLoader
+        URL scenario1 = ClassLoader
                 .getSystemResource("fork/scenario1.dmp");
 
-        File file = new File(massiveUpload_1.toURI());
+        File file = new File(scenario1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
         for(String blockRLP : strData){
@@ -96,10 +96,10 @@ public class ForkTest {
         BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
 
 
-        URL massiveUpload_1 = ClassLoader
+        URL scenario2 = ClassLoader
                 .getSystemResource("fork/scenario2.dmp");
 
-        File file = new File(massiveUpload_1.toURI());
+        File file = new File(scenario2.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
         for(String blockRLP : strData){

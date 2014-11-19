@@ -297,17 +297,16 @@ public class Program {
         result.getRepository().addBalance(senderAddress, endowment.negate());
         BigInteger newBalance = result.getRepository().addBalance(newAddress, endowment);
 
-        Repository trackRepository = result.getRepository().getTrack();
-        trackRepository.startTracking();
-        
+        Repository track = result.getRepository().startTracking();
+
         // [3] UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        trackRepository.increaseNonce(senderAddress);
+        track.increaseNonce(senderAddress);
 
         // [5] COOK THE INVOKE AND EXECUTE
 		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
 				this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
-				newBalance, null, trackRepository);
+				newBalance, null, track);
 		
         ProgramResult result = null;
         
@@ -324,15 +323,15 @@ public class Program {
                 result.getException() instanceof Program.OutOfGasException) {
             logger.info("contract run halted by OutOfGas: new contract init ={}" , Hex.toHexString(newAddress));
 
-            trackRepository.rollback();
+            track.rollback();
             stackPushZero();
             return;
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code    = result.getHReturn().array();
-        trackRepository.saveCode(newAddress, code);
-        trackRepository.commit();
+        track.saveCode(newAddress, code);
+        track.commit();
         
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
@@ -402,9 +401,7 @@ public class Program {
         //  actual gas subtract
         this.spendGas(msg.getGas().longValue(), "internal call");
         
-        Repository trackRepository = result.getRepository().getTrack();
-        trackRepository.startTracking();
-
+        Repository trackRepository = result.getRepository().startTracking();
 		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
 				this, new DataWord(contextAddress), msg.getEndowment(),
 				msg.getGas(), contextBalance, data, trackRepository);

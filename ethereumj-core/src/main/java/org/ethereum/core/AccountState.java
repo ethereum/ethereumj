@@ -1,13 +1,13 @@
 package org.ethereum.core;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 public class AccountState {
 
@@ -41,6 +41,10 @@ public class AccountState {
      * retrieval */
     private byte[] codeHash = EMPTY_DATA_HASH;
 
+    private boolean dirty   = false;
+    private boolean deleted = false;
+
+
     public AccountState() {
         this(BigInteger.ZERO, BigInteger.ZERO);
     }
@@ -66,6 +70,10 @@ public class AccountState {
         return nonce;
     }
 
+    public void setNonce(BigInteger nonce) {
+        this.nonce = nonce;
+    }
+
     public byte[] getStateRoot() {
         return stateRoot;
     }
@@ -73,11 +81,13 @@ public class AccountState {
     public void setStateRoot(byte[] stateRoot) {
         rlpEncoded = null;
         this.stateRoot = stateRoot;
+        setDirty(true);
     }
 
     public void incrementNonce() {
         rlpEncoded = null;
         this.nonce = nonce.add(BigInteger.ONE);
+        setDirty(true);
     }
 
     public byte[] getCodeHash() {
@@ -96,12 +106,14 @@ public class AccountState {
     public BigInteger addToBalance(BigInteger value) {
         if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.add(value);
+        setDirty(true);
         return this.balance;
     }
 
 	public void subFromBalance(BigInteger value) {
         if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.subtract(value);
+        setDirty(true);
 	}
     
     public byte[] getEncoded() {
@@ -114,7 +126,34 @@ public class AccountState {
 		}
 		return rlpEncoded;
     }
-    
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public AccountState clone(){
+        AccountState accountState = new AccountState();
+
+        accountState.addToBalance(this.getBalance());
+        accountState.setNonce(this.getNonce());
+        accountState.setCodeHash(this.getCodeHash());
+        accountState.setStateRoot(this.getStateRoot());
+
+        return accountState;
+    }
+
     public String toString() {
     	String ret =  "Nonce: " 		+ this.getNonce().toString() 							+ "\n" + 
     				  "Balance: " 		+ Denomination.toFriendlyString(getBalance()) 			+ "\n" +

@@ -70,18 +70,18 @@ public class TestContext {
 
         System.setProperty("hsqldb.reconfig_logging", "false");
 
-
         String url =
-                String.format("jdbc:hsqldb:file:./%s/blockchain/blockchain.db;" +
-                                "create=%s;hsqldb.default_table_type=cached",
+            String.format("jdbc:hsqldb:file:./%s/blockchain/blockchain.db;" +
+                            "create=%s;hsqldb.default_table_type=cached",
 
-                        SystemProperties.CONFIG.databaseDir(),
-                        SystemProperties.CONFIG.databaseReset());
+                    SystemProperties.CONFIG.databaseDir(),
+                    SystemProperties.CONFIG.databaseReset());
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.hsqldb.jdbcDriver");
         ds.setUrl(url);
         ds.setUsername("sa");
+
 
         return ds;
     }

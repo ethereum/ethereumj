@@ -89,11 +89,19 @@ public class DatabaseImpl implements Database {
 	
 	@Override
 	public void put(byte[] key, byte[] value) {
+
+        if(logger.isDebugEnabled())
+            logger.debug("put: key: [{}], value: [{}]",
+                    Hex.toHexString(key),
+                    Hex.toHexString(value));
 		db.put(key, value);
 	}
 	
 	@Override
 	public void delete(byte[] key) {
+        if(logger.isDebugEnabled())
+            logger.debug("delete: key: [{}]");
+
 		db.delete(key);
 	}
 	

@@ -510,4 +510,12 @@ public class TrieImpl implements Trie {
     public interface ScanAction {
         public void doOnNode(byte[] hash, Value node);
     }
+
+    public boolean validate(){
+
+        if (cache.get(getRootHash()) != null)
+            return true;
+        else
+            return false;
+    }
 }

@@ -6,6 +6,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
+import org.ethereum.db.ByteArrayWrapper;
 import org.spongycastle.util.encoders.Hex;
 
 public class ByteUtil {
@@ -286,5 +287,10 @@ public class ByteUtil {
     	byte[] dest = ByteBuffer.allocate(32).array();
     	System.arraycopy(src, 0, dest, dest.length - src.length, src.length);
     	return dest;
+    }
+
+
+    public static ByteArrayWrapper wrap(byte[] data){
+        return new ByteArrayWrapper(data);
     }
 }

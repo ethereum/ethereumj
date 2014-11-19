@@ -5,16 +5,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Repository;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
-import org.ethereum.trie.TrackTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
+import org.iq80.leveldb.WriteBatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -25,90 +23,60 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.crypto.SHA3Helper.*;
 
 /**
- *
- ***********************************************************************************
-         Repository<br>
-         |<br>
-             --&gt; AccountState      ---&gt; Trie ---&gt; leveldb (state) /key=address<br>
-                 --&gt; nonce<br>
-                 --&gt; balance<br>
-                 --&gt; stateRoot<br>
-                 --&gt; codeHash<br>
-         |<br>
-             --&gt;  ContractDetails  ---&gt; leveldb(details) /key=address<br>
-                 --&gt; code      ---&gt; sha3(code) // saved into AccountInfo.codeHash<br>
-                 --&gt; storage   ---&gt; Trie // to calculate the AccountInfo.stateRoot<br>
- ***********************************************************************************
- *
- * www.ethereumJ.com
+ * www.etherj.com
  *
  * @author: Roman Mandeleil
- * Created on: 23/06/2014 23:01
+ * Created on: 17/11/2014 21:15
  */
 @Component
 public class RepositoryImpl implements Repository {
 
+    final static String DETAILS_DB = "details";
+    final static String STATE_DB = "state";
+
     private static final Logger logger = LoggerFactory.getLogger("repository");
 
     private Trie 			worldState;
-    private TrackTrie     	accountStateDB;
-    private TrackDatabase 	contractDetailsDB;
-
-    // TODO: Listeners listeners
-    // TODO: cash impl
 
     private DatabaseImpl detailsDB 	= null;
     private DatabaseImpl stateDB 	= null;
-    
-    /**
-     * Create a new Repository DAO 
-     * 		assuming empty db and thus no stateRoot
-     * 
-     */
+
     public RepositoryImpl() {
-    	this("details", "state");
+        this(DETAILS_DB, STATE_DB);
     }
-    
+
     public RepositoryImpl(String detailsDbName, String stateDbName) {
-        detailsDB     		= new DatabaseImpl(detailsDbName);
-        contractDetailsDB 	= new TrackDatabase(detailsDB);
-        stateDB 			= new DatabaseImpl(stateDbName);
-        worldState 			= new TrieImpl(stateDB.getDb());
-        accountStateDB 		= new TrackTrie(worldState);
+        detailsDB   = new DatabaseImpl(detailsDbName);
+        stateDB 	= new DatabaseImpl(stateDbName);
+        worldState 	= new TrieImpl(stateDB.getDb());
     }
 
-    private RepositoryImpl(TrackTrie accountStateDB, TrackDatabase contractDetailsDB) {
-        this.accountStateDB = accountStateDB;
-        this.contractDetailsDB = contractDetailsDB;
+
+    @Override
+    public void reset() {
+        close();
+        detailsDB   = new DatabaseImpl(DETAILS_DB);
+        stateDB 	= new DatabaseImpl(STATE_DB);
+        worldState 	= new TrieImpl(stateDB.getDb());
     }
 
-    public Repository getTrack() {
-        TrackTrie     trackState   = new TrackTrie(accountStateDB);
-        TrackDatabase trackDetails = new TrackDatabase(contractDetailsDB);
-        return new RepositoryImpl(trackState, trackDetails);
-    }
-
-    public void startTracking() {
-        logger.debug("start tracking");
-        accountStateDB.startTrack();
-        contractDetailsDB.startTrack();
-    }
-
-    public void commit() {
-        logger.debug("commit changes");
-        accountStateDB.commitTrack();
-        contractDetailsDB.commitTrack();
-    }
-
-    public void rollback() {
-        logger.debug("rollback changes");
-        accountStateDB.rollbackTrack();
-        contractDetailsDB.rollbackTrack();
+    @Override
+    public void close() {
+        if (this.detailsDB != null){
+            detailsDB.close();
+            detailsDB = null;
+        }
+        if (this.stateDB != null){
+            stateDB.close();
+            stateDB = null;
+        }
     }
 
     @Override
@@ -116,210 +84,95 @@ public class RepositoryImpl implements Repository {
         return stateDB == null;
     }
 
-    public AccountState createAccount(byte[] addr) {
+    @Override
+    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
+                            HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
 
-        logger.trace("createAccount: [{}]", Hex.toHexString(addr)) ;
-    	this.validateAddress(addr);
-    	    	
-        // 1. Save AccountState
-        AccountState state =  new AccountState();
-        accountStateDB.update(addr, state.getEncoded());
-        
-        ContractDetails details = new ContractDetails();
-        contractDetailsDB.put(addr, details.getEncoded());
-        
-        if (logger.isDebugEnabled())
-            logger.debug("New account created: [{}]", Hex.toHexString(addr));
+        WriteBatch writeBatch = detailsDB.getDb().createWriteBatch();
+        for (ByteArrayWrapper hash : detailsCache.keySet()) {
 
-        return state;
-    }
-    
-    public Trie getWorldState() {
-    	return worldState;
-    }
+            ContractDetails contractDetails = detailsCache.get(hash);
 
-    public AccountState getAccountState(byte[] addr) {
+            if (contractDetails.isDeleted())
+               writeBatch.delete(hash.getData());
+            else{
+                if (contractDetails.isDirty())
+                         writeBatch.put(hash.getData(), contractDetails.getEncoded());
+            }
 
-        if (logger.isDebugEnabled())
-            logger.debug("Get account state for: [{}]", Hex.toHexString(addr));
+            if (contractDetails.isDirty() || contractDetails.isDeleted()){
 
-    	this.validateAddress(addr);
+                AccountState accountState = stateCache.get(hash);
+                accountState.setStateRoot(contractDetails.getStorageHash());
+                accountState.setCodeHash(sha3(contractDetails.getCode()));
+            }
 
-        byte[] accountStateRLP = accountStateDB.get(addr);
+            contractDetails.setDeleted(false);
+            contractDetails.setDirty(false);
+        }
+        detailsDB.getDb().write(writeBatch);
 
-        if (logger.isDebugEnabled())
-            logger.debug("Found account state RLP: [{}]", Hex.toHexString(accountStateRLP));
+        for (ByteArrayWrapper hash : detailsCache.keySet()) {
 
-        if (accountStateRLP == null || accountStateRLP.length == 0)
-            return null;
+            AccountState accountState = stateCache.get(hash);
 
-        AccountState state =  new AccountState(accountStateRLP);
-        return state;
-    }
+            if (accountState.isDeleted())
+                worldState.delete(hash.getData());
+            else{
+                if (accountState.isDirty())
+                    worldState.update(hash.getData(), accountState.getEncoded());
+            }
 
-	public ContractDetails getContractDetails(byte[] addr) {
-
-		this.validateAddress(addr);
-
-        if (logger.isDebugEnabled())
-            logger.debug("Get contract details for: [{}]", Hex.toHexString(addr));
-
-        byte[] accountDetailsRLP = contractDetailsDB.get(addr);
-        
-        if (accountDetailsRLP == null)
-        	return null;
-        	        			
-        if (logger.isDebugEnabled())
-            logger.debug("Found contract details RLP: [{}]", Hex.toHexString(accountDetailsRLP));
-
-		ContractDetails details = new ContractDetails(accountDetailsRLP);
-		return details;
-	}
-
-	public BigInteger addBalance(byte[] addr, BigInteger value) {
-    	
-		AccountState state = getAccountState(addr);
-
-        if (state == null)
-            state = createAccount(addr);
-        
-		BigInteger newBalance = state.addToBalance(value);
-
-		if (logger.isDebugEnabled())
-			logger.debug("Changing balance: \n account:\t [{}]\n new balance:\t [{}]\n delta:\t\t [{}]",
-					Hex.toHexString(addr), newBalance.toString(), value);
-
-		accountStateDB.update(addr, state.getEncoded());
-		return newBalance;
-	}
-
-    public BigInteger getBalance(byte[] addr) {
-        AccountState state = getAccountState(addr);
-        if (state == null) return BigInteger.ZERO;
-        return state.getBalance();
+            accountState.setDeleted(false);
+            accountState.setDirty(false);
+        }
+        worldState.sync();
     }
 
-    public BigInteger getNonce(byte[] addr) {
-        AccountState state = getAccountState(addr);
-        if (state == null) return BigInteger.ZERO;
-        return state.getNonce();
+    @Override
+    public void rollback() {
+        throw  new UnsupportedOperationException();
     }
 
-    public BigInteger increaseNonce(byte[] addr) {
-        AccountState state = getAccountState(addr);
-        if (state == null) return BigInteger.ZERO;
-        state.incrementNonce();
-
-        if (logger.isDebugEnabled())
-            logger.debug("Increment nonce:\n account:\t [{}]\n new nonce:\t [{}]",
-                    Hex.toHexString(addr), state.getNonce().longValue());
-
-        accountStateDB.update(addr, state.getEncoded());
-        return state.getNonce();
+    @Override
+    public void commit() {
+        throw  new UnsupportedOperationException();
     }
 
-	public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-
-        if (key == null) return;
-        AccountState      state = getAccountState(addr);
-        ContractDetails   details = getContractDetails(addr);
-
-        if (state == null || details == null) return;
-        details.put(key, value);
-
-        byte[] storageHash = details.getStorageHash();
-        state.setStateRoot(storageHash);
-
-        if (logger.isDebugEnabled())
-            logger.debug("Storage key/value saved:\n account:\t [{}]\n key:\t\t [{}]\n value:\t\t [{}]\n new hash:\t [{}]",
-                    Hex.toHexString(addr),
-                    Hex.toHexString(key.getNoLeadZeroesData()),
-                    Hex.toHexString(value.getNoLeadZeroesData()),
-                    Hex.toHexString(storageHash));
-
-        accountStateDB.update(addr, state.getEncoded());
-        contractDetailsDB.put(addr, details.getEncoded());
+    @Override
+    public void syncToRoot(byte[] root) {
+        worldState.setRoot(root);
     }
 
-    public DataWord getStorageValue(byte[] addr, DataWord key) {
-
-        if (key == null) return null;
-
-        AccountState state = getAccountState(addr);
-        if (state == null) return null;
-
-        ContractDetails details = getContractDetails(addr);
-        DataWord value = details.get(key);
-
-        return value;
+    @Override
+    public Repository startTracking() {
+        return new RepositoryTrack(this);
     }
 
-    public byte[] getCode(byte[] addr) {
-        ContractDetails details = getContractDetails(addr);
-        if (details == null) return null;
-        return details.getCode();
-    }
-
-    public void saveCode(byte[] addr, byte[] code) {
-    	
-    	if (code == null) return;
-        AccountState state = getAccountState(addr);
-        if (state == null) return;
-        
-        if (logger.isDebugEnabled())
-            logger.debug("Saving code: \n address:\t [{}], \n code:\t\t [{}]",
-                    Hex.toHexString(addr),
-                    Hex.toHexString(code));
-
-        ContractDetails details = getContractDetails(addr);
-        details.setCode(code);
-
-        byte[] codeHash = HashUtil.sha3(code);
-        state.setCodeHash(codeHash);
-
-        accountStateDB.update(addr, state.getEncoded());
-        contractDetailsDB.put(addr, details.getEncoded());
-        
-        if (logger.isDebugEnabled())
-            logger.debug("Code saved: \n accountstate:\t [{}]\n codeHash:\t [{}]\n details RLP:\t [{}]",
-                    Hex.toHexString(state.getEncoded()),
-                    Hex.toHexString(codeHash),
-                    Hex.toHexString(details.getEncoded()));
-    }
-
-    public void delete(byte[] addr) {
-    	this.validateAddress(addr);
-        accountStateDB.delete(addr);
-        contractDetailsDB.delete(addr);
-    }
-
-    public List<ByteArrayWrapper> dumpKeys() {
-        return stateDB.dumpKeys();
-    }
-
+    @Override
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
-
         dumpTrie(block);
 
-		if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
-			return;
+        if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
+            return;
 
         // todo: dump block header and the relevant tx
 
         if (block.getNumber() == 0 && txNumber == 0)
             if (CONFIG.dumpCleanOnRestart()) {
-                try {FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
+                try {
+                    FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
             }
 
         String dir = CONFIG.dumpDir() + "/";
 
         String fileName = "";
         if (txHash != null)
-			fileName = String.format("%07d_%d_%s.dmp", block.getNumber(), txNumber,
-					Hex.toHexString(txHash).substring(0, 8));
-		else {
-			fileName = String.format("%07d_c.dmp", block.getNumber());
-		}
+            fileName = String.format("%07d_%d_%s.dmp", block.getNumber(), txNumber,
+                    Hex.toHexString(txHash).substring(0, 8));
+        else {
+            fileName = String.format("%07d_c.dmp", block.getNumber());
+        }
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
         FileWriter fw = null;
@@ -333,28 +186,28 @@ public class RepositoryImpl implements Repository {
             bw = new BufferedWriter(fw);
 
             List<ByteArrayWrapper> keys = this.detailsDB.dumpKeys();
-            
+
             JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
             ObjectNode blockNode = jsonFactory.objectNode();
+
             JSONHelper.dumpBlock(blockNode, block, gasUsed,
-                    this.getWorldState().getRootHash(),
+                    this.getRoot(),
                     keys, this);
-            
+
             EtherObjectMapper mapper = new EtherObjectMapper();
             bw.write(mapper.writeValueAsString(blockNode));
 
         } catch (IOException e) {
-        	logger.error(e.getMessage(), e);
+            logger.error(e.getMessage(), e);
         } finally {
             try {
-				if (bw != null) bw.close();
-				if (fw != null) fw.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+                if (bw != null) bw.close();
+                if (fw != null) fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
-
 
     public void dumpTrie(Block block){
 
@@ -367,7 +220,7 @@ public class RepositoryImpl implements Repository {
         FileWriter fw = null;
         BufferedWriter bw = null;
 
-        String dump = this.getWorldState().getTrieDump();
+        String dump = this.worldState.getTrieDump();
 
         try {
 
@@ -389,35 +242,156 @@ public class RepositoryImpl implements Repository {
         }
     }
 
+
+    @Override
     public DBIterator getAccountsIterator() {
-    	return detailsDB.iterator();
+        return detailsDB.iterator();
     }
 
-    public void close() {
-        if (this.detailsDB != null){
-            detailsDB.close();
-            detailsDB = null;
+    @Override
+    public BigInteger addBalance(byte[] addr, BigInteger value) {
+
+        AccountState account = getAccountState(addr);
+
+        if (account == null)
+            account = createAccount(addr);
+
+        BigInteger result = account.addToBalance(value);
+        worldState.update(addr, account.getEncoded());
+
+        return result;
+    }
+
+    @Override
+    public BigInteger getBalance(byte[] addr) {
+
+        AccountState account = getAccountState(addr);
+
+        if (account == null)
+            return BigInteger.ZERO;
+
+        return account.getBalance();
+    }
+
+    @Override
+    public DataWord getStorageValue(byte[] addr, DataWord key) {
+
+        ContractDetails details =  getContractDetails(addr);
+
+        if (details == null)
+            return null;
+
+        return details.get(key);
+    }
+
+    @Override
+    public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
+
+        ContractDetails details =  getContractDetails(addr);
+
+        if (details == null){
+            createAccount(addr);
+            details =  getContractDetails(addr);
         }
-        if (this.stateDB != null){
-            stateDB.close();
-            stateDB = null;
+
+        details.put(key, value);
+        detailsDB.put(addr, details.getEncoded());
+    }
+
+    @Override
+    public byte[] getCode(byte[] addr) {
+
+        ContractDetails details =  getContractDetails(addr);
+
+        if (details == null)
+            return null;
+
+        return details.getCode();
+    }
+
+    @Override
+    public void saveCode(byte[] addr, byte[] code) {
+        ContractDetails details =  getContractDetails(addr);
+
+        if (details == null){
+            createAccount(addr);
+            details =  getContractDetails(addr);
         }
+
+        details.setCode(code);
+        detailsDB.put(addr, details.getEncoded());
     }
 
-    private void validateAddress(byte[] addr) {
-		 if (addr == null || addr.length < 20) {
-			logger.error("Can't create address {} because is null or length != 20", ByteUtil.toHexString(addr));
-			throw new IllegalArgumentException("Address must be a byte-array of length 20");
-		}
+
+    @Override
+    public BigInteger getNonce(byte[] addr) {
+
+        AccountState account = getAccountState(addr);
+
+        if (account == null)
+            account = createAccount(addr);
+
+        return account.getNonce();
     }
 
-    public void reset(){
-        close();
-        detailsDB     		= new DatabaseImpl("details");
-        contractDetailsDB 	= new TrackDatabase(detailsDB);
-        stateDB 			= new DatabaseImpl("state");
-        worldState 			= new TrieImpl(stateDB.getDb());
-        accountStateDB 		= new TrackTrie(worldState);
+    @Override
+    public BigInteger increaseNonce(byte[] addr) {
+
+        AccountState account = getAccountState(addr);
+
+        if (account == null)
+            account = createAccount(addr);
+
+        account.incrementNonce();
+        worldState.update(addr, account.getEncoded());
+
+        return account.getNonce();
+    }
+
+    @Override
+    public void delete(byte[] addr) {
+        worldState.delete(addr);
+        detailsDB.delete(addr);
+    }
+
+    @Override
+    public ContractDetails getContractDetails(byte[] addr) {
+
+        ContractDetails result = null;
+        byte[] detailsData = detailsDB.get(addr);
+
+        if (detailsData != null)
+            result = new ContractDetails(detailsData);
+
+        return result;
+    }
+
+    @Override
+    public AccountState getAccountState(byte[] addr) {
+
+        AccountState result = null;
+        byte[] accountData = worldState.get(addr);
+
+        if (accountData.length != 0)
+            result = new AccountState(accountData);
+
+        return result;
+    }
+
+    @Override
+    public AccountState createAccount(byte[] addr) {
+
+        AccountState accountState = new AccountState();
+        worldState.update(addr, accountState.getEncoded());
+
+        ContractDetails contractDetails = new ContractDetails();
+        detailsDB.put(addr, contractDetails.getEncoded());
+
+        return accountState;
+    }
+
+    @Override
+    public byte[] getRoot() {
+        return worldState.getRootHash();
     }
 }
-

@@ -73,7 +73,6 @@ public class EthereumFactory {
 
         System.setProperty("hsqldb.reconfig_logging", "false");
 
-
         String url =
             String.format("jdbc:hsqldb:file:./%s/blockchain/blockchain.db;" +
                             "create=%s;hsqldb.default_table_type=cached",
@@ -85,6 +84,7 @@ public class EthereumFactory {
         ds.setDriverClassName("org.hsqldb.jdbcDriver");
         ds.setUrl(url);
         ds.setUsername("sa");
+
 
         return ds;
     }

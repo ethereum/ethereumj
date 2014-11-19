@@ -21,8 +21,16 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 import test.ethereum.TestContext;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
 
+import static org.junit.Assert.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -181,6 +189,84 @@ public class BlockTest {
     	logger.info("Block#1 actual gasLimit [{}] ", actualGasLimit);
         logger.info("Block#1 calculated gasLimit [{}] ", calcGasLimit);
     	assertEquals(actualGasLimit, calcGasLimit);
+    }
+
+    @Test
+    public void testScenario1() throws URISyntaxException, IOException {
+
+        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+
+        URL scenario1 = ClassLoader
+                .getSystemResource("blockload/scenario1.dmp");
+
+        File file = new File(scenario1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        byte[] root = Genesis.getInstance().getStateRoot();
+        for(String blockRLP : strData){
+            Block block = new Block(
+                    Hex.decode(blockRLP));
+            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            blockchain.tryToConnect(block);
+            root = block.getStateRoot();
+        }
+
+        logger.info("asserting root state is: {}", Hex.toHexString( root ));
+
+        //expected root: 13a5e615365c86438d98df5a2ca5bf1173ab4ea33be808fde7b94e47e9534549
+        assertArrayEquals(root, worldManager.getRepository().getRoot());
+    }
+
+    @Test
+    public void testScenario2() throws URISyntaxException, IOException {
+
+        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+
+        URL scenario1 = ClassLoader
+                .getSystemResource("blockload/scenario2.dmp");
+
+        File file = new File(scenario1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        byte[] root = Genesis.getInstance().getStateRoot();
+        for(String blockRLP : strData){
+            Block block = new Block(
+                    Hex.decode(blockRLP));
+            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            blockchain.tryToConnect(block);
+            root = block.getStateRoot();
+        }
+
+        logger.info("asserting root state is: {}", Hex.toHexString( root ));
+
+        //expected root: 8bbff862199ccf5411c9505598eeba3d76b51e4d391ac1189903b0fcbdd3733b
+        assertArrayEquals(root, worldManager.getRepository().getRoot());
+    }
+
+    @Test
+    public void testScenario3() throws URISyntaxException, IOException {
+
+        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+
+        URL scenario1 = ClassLoader
+                .getSystemResource("blockload/scenario3.dmp");
+
+        File file = new File(scenario1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        byte[] root = Genesis.getInstance().getStateRoot();
+        for(String blockRLP : strData){
+            Block block = new Block(
+                    Hex.decode(blockRLP));
+            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            blockchain.tryToConnect(block);
+            root = block.getStateRoot();
+        }
+
+        logger.info("asserting root state is: {}", Hex.toHexString( root ));
+
+        //expected root: 8bbff862199ccf5411c9505598eeba3d76b51e4d391ac1189903b0fcbdd3733b
+        assertArrayEquals(root, worldManager.getRepository().getRoot());
     }
 
     @Test

@@ -1,10 +1,7 @@
 package org.ethereum.core;
 
-import org.apache.commons.collections4.BidiMap;
-import org.apache.commons.collections4.bidimap.DualTreeBidiMap;
+import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -12,7 +9,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.AdvancedDeviceUtils;
-import org.ethereum.util.FastByteComparisons;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,11 +17,19 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain, 
@@ -70,6 +75,7 @@ public class BlockchainImpl implements Blockchain {
 
     @Autowired
 	private Repository repository;
+    private Repository track;
 
     @Autowired
     private BlockStore blockStore;
@@ -94,11 +100,6 @@ public class BlockchainImpl implements Blockchain {
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
 
-    public BlockchainImpl(){}
-	public BlockchainImpl(Repository repository) {
-		this.repository = repository;
-	}
-	
 	@Override
     public long getGasPrice() {
         // In case of the genesis block we don't want to rely on the min gas price
@@ -133,11 +134,16 @@ public class BlockchainImpl implements Blockchain {
 
     public void tryToConnect(Block block){
 
+        recordBlock(block);
+
+        if (logger.isDebugEnabled())
+            logger.debug("Try connect block: {}",
+                    Hex.toHexString(block.getEncoded()));
+
         if (blockStore.getBlockByHash(block.getHash()) != null){
             // retry of well known block
             return;
         }
-
 
         // The simple case got the block
         // to connect to the main chain
@@ -189,13 +195,7 @@ public class BlockchainImpl implements Blockchain {
 
         // if there is too much garbage ask for re-sync
         if (garbage.size() > 20){
-            blockQueue.clear();
-            totalDifficulty = BigInteger.ZERO;
-            bestBlock = Genesis.getInstance();
-            this.repository.close();
-            this.repository = new RepositoryImpl();
-            garbage.clear();
-            altChains.clear();
+            worldManager.reset();
         }
     }
 
@@ -203,6 +203,7 @@ public class BlockchainImpl implements Blockchain {
     @Override
     public void add(Block block) {
 
+        track = repository.startTracking();
 		if (block == null)
 			return;
 
@@ -215,7 +216,8 @@ public class BlockchainImpl implements Blockchain {
         }
 
         this.processBlock(block);
-        
+        track.commit();
+
         // Remove all wallet transactions as they already approved by the net
         worldManager.getWallet().removeTransactions(block.getTransactionsList());
 
@@ -328,10 +330,12 @@ public class BlockchainImpl implements Blockchain {
 			if(block.getNumber() >= CONFIG.traceStartBlock())
 				repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 		}
-		
+
 		this.addReward(block);
-		this.updateTotalDifficulty(block);
-		
+        this.updateTotalDifficulty(block);
+
+        track.commit();
+
         if(block.getNumber() >= CONFIG.traceStartBlock())
         	repository.dumpState(block, totalGasUsed, 0, null);
 	}
@@ -343,22 +347,19 @@ public class BlockchainImpl implements Blockchain {
 	 * @param block object containing the header and uncles
 	 */
 	private void addReward(Block block) {
-		// Create coinbase if doesn't exist yet
-		if (repository.getAccountState(block.getCoinbase()) == null)
-			repository.createAccount(block.getCoinbase());
-		
+
 		// Add standard block reward
 		BigInteger totalBlockReward = Block.BLOCK_REWARD;
 		
 		// Add extra rewards based on number of uncles		
 		if(block.getUncleList().size() > 0) {
 			for (BlockHeader uncle : block.getUncleList()) {
-				repository.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
+				track.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
 			}
 			totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD
 					.multiply(BigInteger.valueOf(block.getUncleList().size())));
 		}
-		repository.addBalance(block.getCoinbase(), totalBlockReward);
+        track.addBalance(block.getCoinbase(), totalBlockReward);
 	}
     
 	@Override
@@ -367,18 +368,20 @@ public class BlockchainImpl implements Blockchain {
         /* Debug check to see if the state is still as expected */
         if(logger.isWarnEnabled()) {
             String blockStateRootHash = Hex.toHexString(block.getStateRoot());
-            String worldStateRootHash = Hex.toHexString(worldManager.getRepository().getWorldState().getRootHash());
+            String worldStateRootHash = Hex.toHexString(repository.getRoot());
             if(!blockStateRootHash.equals(worldStateRootHash)){
 
             	stateLogger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-//                repository.close();
-//                System.exit(-1); // Don't add block
+
+                // in case of rollback hard move the root
+//                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
+//                repository.syncToRoot(parentBlock.getStateRoot());
+                // todo: after the rollback happens other block should be requested
             }
         }
 
         blockStore.saveBlock(block);
 		this.setBestBlock(block);
-        repository.getWorldState().sync();
 
         if (logger.isDebugEnabled())
 			logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
@@ -397,20 +400,17 @@ public class BlockchainImpl implements Blockchain {
      */
 	public long applyTransaction(Block block, Transaction tx) {
 
+        logger.info("applyTransaction: [{}]", Hex.toHexString(tx.getHash()));
+
 		byte[] coinbase = block.getCoinbase();
 
 		// VALIDATE THE SENDER
 		byte[] senderAddress = tx.getSender();
-		AccountState senderAccount = repository.getAccountState(senderAddress);
-		if (senderAccount == null) {
-			if (stateLogger.isWarnEnabled())
-				stateLogger.warn("No such address: {}",
-						Hex.toHexString(senderAddress));
-			return 0;
-		}
+//		AccountState senderAccount = repository.getAccountState(senderAddress);
+        logger.info("tx.sender: [{}]", Hex.toHexString(tx.getSender()));
 
 		// VALIDATE THE NONCE
-		BigInteger nonce = senderAccount.getNonce();
+		BigInteger nonce = track.getNonce(senderAddress);
 		BigInteger txNonce = new BigInteger(1, tx.getNonce());
 		if (nonce.compareTo(txNonce) != 0) {
 			if (stateLogger.isWarnEnabled())
@@ -420,7 +420,8 @@ public class BlockchainImpl implements Blockchain {
 		}
 		
 		// UPDATE THE NONCE
-		repository.increaseNonce(senderAddress);
+		track.increaseNonce(senderAddress);
+        logger.info("increased tx.nonce to: [{}]", track.getNonce(senderAddress));
 
 		// FIND OUT THE TRANSACTION TYPE
 		byte[] receiverAddress, code = null;
@@ -430,31 +431,25 @@ public class BlockchainImpl implements Blockchain {
 			code = tx.getData(); // init code
 		} else {
 			receiverAddress = tx.getReceiveAddress();
-			if (repository.getAccountState(receiverAddress) == null) {
-				repository.createAccount(receiverAddress);
-				if (stateLogger.isDebugEnabled())
-					stateLogger.debug("new receiver account created address={}",
-							Hex.toHexString(receiverAddress));
-			} else {
-				code = repository.getCode(receiverAddress);
-				if (code != null) {
-					if (stateLogger.isDebugEnabled())
-						stateLogger.debug("calling for existing contract: address={}",
-								Hex.toHexString(receiverAddress));
-				}
-			}
+            code = track.getCode(receiverAddress);
+            if (code != EMPTY_BYTE_ARRAY) {
+                if (stateLogger.isDebugEnabled())
+                    stateLogger.debug("calling for existing contract: address={}",
+                            Hex.toHexString(receiverAddress));
+            }
 		}
 		
 		// THE SIMPLE VALUE/BALANCE CHANGE
 		boolean isValueTx = tx.getValue() != null;
 		if (isValueTx) {
 			BigInteger txValue = new BigInteger(1, tx.getValue());
-			if (senderAccount.getBalance().compareTo(txValue) >= 0) {
-				senderAccount.subFromBalance(txValue); // balance will be read again below
-				repository.addBalance(senderAddress, txValue.negate());
+			if (track.getBalance(senderAddress).compareTo(txValue) >= 0) {
+
+                track.addBalance(receiverAddress, txValue); // balance will be read again below
+                track.addBalance(senderAddress, txValue.negate());
 				
-				if(!isContractCreation) // adding to new contract could be reverted
-					repository.addBalance(receiverAddress, txValue);
+//				if(!isContractCreation) // adding to new contract could be reverted
+//                    track.addBalance(receiverAddress, txValue); todo: find out what is that ?
 				
 				if (stateLogger.isDebugEnabled())
 					stateLogger.debug("Update value balance \n "
@@ -469,22 +464,23 @@ public class BlockchainImpl implements Blockchain {
 	    // TODO: performance improve multiply without BigInteger
 		BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
 		BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
+        logger.info("Gas price limited to [{} wei]", gasDebit.toString());
 	
 		// Debit the actual total gas value from the sender
 		// the purchased gas will be available for 
 		// the contract in the execution state, 
 		// it can be retrieved using GAS op
 		if (gasDebit.signum() == 1) {
-			if (senderAccount.getBalance().compareTo(gasDebit) == -1) {
+			if (track.getBalance(senderAddress).compareTo(gasDebit) == -1) {
 				logger.debug("No gas to start the execution: sender={}",
 						Hex.toHexString(senderAddress));
 				return 0;
 			}
-			repository.addBalance(senderAddress, gasDebit.negate());
-            
+			track.addBalance(senderAddress, gasDebit.negate());
+
             // The coinbase get the gas cost
             if (coinbase != null)
-                repository.addBalance(coinbase, gasDebit);
+                track.addBalance(coinbase, gasDebit);
 
 			if (stateLogger.isDebugEnabled())
 				stateLogger.debug(
@@ -495,19 +491,19 @@ public class BlockchainImpl implements Blockchain {
 				
 		// CREATE AND/OR EXECUTE CONTRACT
 		long gasUsed = 0;
-		if (isContractCreation || code != null) {
+		if (isContractCreation || code != EMPTY_BYTE_ARRAY) {
 	
 			// START TRACKING FOR REVERT CHANGES OPTION
-			Repository trackRepository = repository.getTrack();
-			trackRepository.startTracking();
+			Repository trackTx = track.startTracking();
+            logger.info("Start tracking VM run");
 			try {
 				
 				// CREATE NEW CONTRACT ADDRESS AND ADD TX VALUE
 				if(isContractCreation) {
 					if (isValueTx) // adding to balance also creates the account
-						trackRepository.addBalance(receiverAddress, new BigInteger(1, tx.getValue()));
+                        trackTx.addBalance(receiverAddress, new BigInteger(1, tx.getValue()));
 					else
-						trackRepository.createAccount(receiverAddress);
+                        trackTx.createAccount(receiverAddress);
 					
 					if(stateLogger.isDebugEnabled())
 						stateLogger.debug("new contract created address={}",
@@ -517,7 +513,7 @@ public class BlockchainImpl implements Blockchain {
 				Block currBlock =  (block == null) ? this.getBestBlock() : block;
 
 				ProgramInvoke programInvoke =
-                        programInvokeFactory.createProgramInvoke(tx, currBlock, trackRepository);
+                        programInvokeFactory.createProgramInvoke(tx, currBlock, trackTx);
 				
 				VM vm = new VM();
 				Program program = new Program(code, programInvoke);
@@ -527,15 +523,15 @@ public class BlockchainImpl implements Blockchain {
 
                 program.saveProgramTraceToFile(Hex.toHexString(tx.getHash()));
 				ProgramResult result = program.getResult();
-				applyProgramResult(result, gasDebit, gasPrice, trackRepository,
+				applyProgramResult(result, gasDebit, gasPrice, trackTx,
 						senderAddress, receiverAddress, coinbase, isContractCreation);
 				gasUsed = result.getGasUsed();
 
 			} catch (RuntimeException e) {
-				trackRepository.rollback();
+                trackTx.rollback();
 				return new BigInteger(1, tx.getGasLimit()).longValue();
 			}
-			trackRepository.commit();
+            trackTx.commit();
 		} else {
 			// REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TXDATA)
 			long dataCost = tx.getData() == null ? 0: tx.getData().length * GasCost.TXDATA;
@@ -543,8 +539,8 @@ public class BlockchainImpl implements Blockchain {
 			
 			BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));
 			if (refund.signum() > 0) {
-				repository.addBalance(senderAddress, refund);
-				repository.addBalance(coinbase, refund.negate());
+				track.addBalance(senderAddress, refund);
+                track.addBalance(coinbase, refund.negate());
 			}
 		}
 		return gasUsed;
@@ -665,4 +661,53 @@ public class BlockchainImpl implements Blockchain {
     public void setTotalDifficulty(BigInteger totalDifficulty) {
         this.totalDifficulty = totalDifficulty;
     }
+
+    private void recordBlock(Block block){
+
+        if (!CONFIG.recordBlocks()) return;
+
+        if (bestBlock.isGenesis()){
+            try {FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
+        }
+
+        String dir = CONFIG.dumpDir() + "/";
+
+        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + "_blocks_rec.txt");
+        FileWriter fw = null;
+        BufferedWriter bw = null;
+
+        try {
+
+            dumpFile.getParentFile().mkdirs();
+            if (!dumpFile.exists()) dumpFile.createNewFile();
+
+            fw = new FileWriter(dumpFile.getAbsoluteFile(), true);
+            bw = new BufferedWriter(fw);
+
+            if (bestBlock.isGenesis()){
+                bw.write(Hex.toHexString(bestBlock.getEncoded()));
+                bw.write("\n");
+            }
+
+            bw.write(Hex.toHexString(block.getEncoded()));
+            bw.write("\n");
+
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        } finally {
+            try {
+                if (bw != null) bw.close();
+                if (fw != null) fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+
+
+
+
+    }
+
+
 }

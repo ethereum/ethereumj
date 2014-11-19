@@ -54,4 +54,7 @@ public interface Trie {
     public void undo();
     
     public String getTrieDump();
+
+    public boolean validate();
+
 }

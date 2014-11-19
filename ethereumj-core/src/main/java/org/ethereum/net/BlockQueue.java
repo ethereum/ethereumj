@@ -65,7 +65,7 @@ public class BlockQueue {
             Block block = blockReceivedQueue.poll();
 
             logger.info("Processing block index: {}", block.getNumber());
-            blockchain.add(block);
+            blockchain.tryToConnect(block);
         }
 
 	}

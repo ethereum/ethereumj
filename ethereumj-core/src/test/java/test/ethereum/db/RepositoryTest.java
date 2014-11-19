@@ -1,350 +1,559 @@
 package test.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.core.AccountState;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.core.Genesis;
 import org.ethereum.facade.Repository;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.vm.DataWord;
-import org.junit.After;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
-import test.ethereum.TestContext;
 
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
- * www.ethereumJ.com
+ * www.etherj.com
  *
  * @author: Roman Mandeleil
- * Created on: 23/06/2014 23:52
+ * Created on: 17/11/2014 23:08
  */
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(loader=AnnotationConfigContextLoader.class)
 public class RepositoryTest {
 
-    private static final Logger logger = LoggerFactory.getLogger("test");
+
+    @Test
+    public void test1(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        repository.increaseNonce(cow);
+        repository.increaseNonce(horse);
+
+        assertEquals(BigInteger.ONE, repository.getNonce(cow));
+        assertEquals(BigInteger.ONE, repository.getNonce(horse));
+
+        repository.close();
+    }
 
 
-    @Configuration
-    @ComponentScan(basePackages = "org.ethereum")
-    static class ContextConfiguration extends TestContext {
-        static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+    @Test
+    public void test2(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        repository.addBalance(cow, BigInteger.TEN);
+        repository.addBalance(horse, BigInteger.ONE);
+
+        assertEquals(BigInteger.TEN, repository.getBalance(cow));
+        assertEquals(BigInteger.ONE, repository.getBalance(horse));
+
+        repository.close();
+    }
+
+
+    @Test
+    public void test3(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        byte[] cowCode = Hex.decode("A1A2A3");
+        byte[] horseCode = Hex.decode("B1B2B3");
+
+        repository.saveCode(cow, cowCode);
+        repository.saveCode(horse, horseCode);
+
+        assertArrayEquals(cowCode, repository.getCode(cow));
+        assertArrayEquals(horseCode, repository.getCode(horse));
+
+        repository.close();
+    }
+
+    @Test
+    public void test4(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        byte[] cowKey =   Hex.decode("A1A2A3");
+        byte[] cowValue = Hex.decode("A4A5A6");
+
+        byte[] horseKey = Hex.decode("B1B2B3");
+        byte[] horseValue = Hex.decode("B4B5B6");
+
+        repository.addStorageRow(cow,   new DataWord(cowKey), new DataWord(cowValue));
+        repository.addStorageRow(horse, new DataWord(horseKey), new DataWord(horseValue));
+
+        assertEquals(new DataWord(cowValue), repository.getStorageValue(cow, new DataWord(cowKey)));
+        assertEquals(new DataWord(horseValue), repository.getStorageValue(horse, new DataWord(horseKey)));
+
+        repository.close();
+    }
+
+
+    @Test
+    public void test5(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        track.increaseNonce(cow); track.increaseNonce(cow); track.increaseNonce(cow);
+        track.increaseNonce(cow); track.increaseNonce(cow); track.increaseNonce(cow);
+        track.increaseNonce(cow); track.increaseNonce(cow); track.increaseNonce(cow);
+        track.increaseNonce(cow);
+
+        track.increaseNonce(horse);
+
+        track.commit();
+
+        assertEquals(BigInteger.TEN, repository.getNonce(cow));
+        assertEquals(BigInteger.ONE, repository.getNonce(horse));
+
+        repository.close();
+    }
+
+    @Test
+    public void test6(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        track.increaseNonce(cow); track.increaseNonce(cow); track.increaseNonce(cow);
+        track.increaseNonce(cow); track.increaseNonce(cow); track.increaseNonce(cow);
+        track.increaseNonce(cow); track.increaseNonce(cow); track.increaseNonce(cow);
+        track.increaseNonce(cow);
+
+        track.increaseNonce(horse);
+
+        assertEquals(BigInteger.TEN, track.getNonce(cow));
+        assertEquals(BigInteger.ONE, track.getNonce(horse));
+
+        track.rollback();
+
+        assertEquals(BigInteger.ZERO, repository.getNonce(cow));
+        assertEquals(BigInteger.ZERO, repository.getNonce(horse));
+
+        repository.close();
+    }
+
+    @Test
+    public void test7(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        track.addBalance(cow,   BigInteger.TEN);
+        track.addBalance(horse, BigInteger.ONE);
+
+        assertEquals(BigInteger.TEN, track.getBalance(cow));
+        assertEquals(BigInteger.ONE, track.getBalance(horse));
+
+        track.commit();
+
+        assertEquals(BigInteger.TEN, repository.getBalance(cow));
+        assertEquals(BigInteger.ONE, repository.getBalance(horse));
+
+        repository.close();
+    }
+
+
+    @Test
+    public void test8(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        track.addBalance(cow,   BigInteger.TEN);
+        track.addBalance(horse, BigInteger.ONE);
+
+        assertEquals(BigInteger.TEN, track.getBalance(cow));
+        assertEquals(BigInteger.ONE, track.getBalance(horse));
+
+        track.rollback();
+
+        assertEquals(BigInteger.ZERO, repository.getBalance(cow));
+        assertEquals(BigInteger.ZERO, repository.getBalance(horse));
+
+        repository.close();
+    }
+
+    @Test
+    public void test9(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        DataWord cowKey   =   new DataWord(Hex.decode("A1A2A3"));
+        DataWord cowValue =   new DataWord(Hex.decode("A4A5A6"));
+
+        DataWord horseKey   = new DataWord(Hex.decode("B1B2B3"));
+        DataWord horseValue = new DataWord(Hex.decode("B4B5B6"));
+
+        track.addStorageRow(cow,   cowKey, cowValue);
+        track.addStorageRow(horse, horseKey, horseValue);
+
+        assertEquals(cowValue,   track.getStorageValue(cow, cowKey));
+        assertEquals(horseValue, track.getStorageValue(horse, horseKey));
+
+        track.commit();
+
+        assertEquals(cowValue,   repository.getStorageValue(cow, cowKey));
+        assertEquals(horseValue, repository.getStorageValue(horse, horseKey));
+
+        repository.close();
+    }
+
+    @Test
+    public void test10(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        DataWord cowKey   =   new DataWord(Hex.decode("A1A2A3"));
+        DataWord cowValue =   new DataWord(Hex.decode("A4A5A6"));
+
+        DataWord horseKey   = new DataWord(Hex.decode("B1B2B3"));
+        DataWord horseValue = new DataWord(Hex.decode("B4B5B6"));
+
+        track.addStorageRow(cow,   cowKey, cowValue);
+        track.addStorageRow(horse, horseKey, horseValue);
+
+        assertEquals(cowValue,   track.getStorageValue(cow, cowKey));
+        assertEquals(horseValue, track.getStorageValue(horse, horseKey));
+
+        track.rollback();
+
+        assertEquals(null, repository.getStorageValue(cow, cowKey));
+        assertEquals(null, repository.getStorageValue(horse, horseKey));
+
+        repository.close();
+    }
+
+
+    @Test
+    public void test11(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        byte[] cowCode   = Hex.decode("A1A2A3");
+        byte[] horseCode = Hex.decode("B1B2B3");
+
+        track.saveCode(cow,   cowCode);
+        track.saveCode(horse, horseCode);
+
+        assertArrayEquals(cowCode,   track.getCode(cow));
+        assertArrayEquals(horseCode, track.getCode(horse));
+
+        track.commit();
+
+        assertArrayEquals(cowCode,   repository.getCode(cow));
+        assertArrayEquals(horseCode, repository.getCode(horse));
+
+        repository.close();
+    }
+
+
+    @Test
+    public void test12(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        byte[] cowCode   = Hex.decode("A1A2A3");
+        byte[] horseCode = Hex.decode("B1B2B3");
+
+        track.saveCode(cow,   cowCode);
+        track.saveCode(horse, horseCode);
+
+        assertArrayEquals(cowCode,   track.getCode(cow));
+        assertArrayEquals(horseCode, track.getCode(horse));
+
+        track.rollback();
+
+        assertArrayEquals(null,   repository.getCode(cow));
+        assertArrayEquals(null,   repository.getCode(horse));
+
+        repository.close();
+    }
+
+    @Test  // Let's upload genesis pre-mine just like in the real world
+    public void test13(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+        Repository track = repository.startTracking();
+
+        for (String address : Genesis.getPremine()) {
+            track.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
         }
+
+        track.commit();
+
+        assertArrayEquals(Genesis.getInstance().getStateRoot(),   repository.getRoot());
+
+        repository.close();
     }
 
-    @Autowired
-    WorldManager worldManager;
 
-    @After
-    public void doReset(){
-        worldManager.reset();
+    @Test
+    public void test14(){
+
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
+
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+        final BigInteger ELEVEN = BigInteger.TEN.add(BigInteger.ONE);
+
+
+        // changes level_1
+        Repository track1 = repository.startTracking();
+        track1.addBalance(cow,   BigInteger.TEN);
+        track1.addBalance(horse, BigInteger.ONE);
+
+        assertEquals(BigInteger.TEN, track1.getBalance(cow));
+        assertEquals(BigInteger.ONE, track1.getBalance(horse));
+
+
+        // changes level_2
+        Repository track2 = track1.startTracking();
+        track2.addBalance(cow,   BigInteger.ONE);
+        track2.addBalance(horse, BigInteger.TEN);
+
+        assertEquals(ELEVEN, track2.getBalance(cow));
+        assertEquals(ELEVEN, track2.getBalance(horse));
+
+        track2.commit();
+        track1.commit();
+
+        assertEquals(ELEVEN, repository.getBalance(cow));
+        assertEquals(ELEVEN, repository.getBalance(horse));
+
+        repository.close();
     }
 
 
-    @Test // create account, get account
-	public void test1() {
+    @Test
+    public void test15(){
 
-		String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = worldManager.getRepository();
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
 
-        AccountState createdState = repository.createAccount(Hex.decode(addr));
-        AccountState fetchedState = repository.getAccountState(Hex.decode(addr));
-        assertEquals(createdState.getEncoded(), fetchedState.getEncoded());
-	}
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+        final BigInteger ELEVEN = BigInteger.TEN.add(BigInteger.ONE);
 
 
-    @Test  // increase nonce
-    public void test2() {
+        // changes level_1
+        Repository track1 = repository.startTracking();
+        track1.addBalance(cow,   BigInteger.TEN);
+        track1.addBalance(horse, BigInteger.ONE);
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = worldManager.getRepository();
+        assertEquals(BigInteger.TEN, track1.getBalance(cow));
+        assertEquals(BigInteger.ONE, track1.getBalance(horse));
 
-        BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
+        // changes level_2
+        Repository track2 = track1.startTracking();
+        track2.addBalance(cow,   BigInteger.ONE);
+        track2.addBalance(horse, BigInteger.TEN);
 
-        repository.createAccount(Hex.decode(addr));
-        BigInteger nonce1 = repository.getNonce(Hex.decode(addr));
+        assertEquals(ELEVEN, track2.getBalance(cow));
+        assertEquals(ELEVEN, track2.getBalance(horse));
 
-        repository.increaseNonce(Hex.decode(addr));
-        BigInteger nonce2 = repository.getNonce(Hex.decode(addr));
+        track2.rollback();
+        track1.commit();
 
-        assertEquals(0, nonce0.intValue());
-        assertEquals(0, nonce1.intValue());
-        assertEquals(1, nonce2.intValue());
+        assertEquals(BigInteger.TEN, repository.getBalance(cow));
+        assertEquals(BigInteger.ONE, repository.getBalance(horse));
+
+        repository.close();
     }
 
-    @Test  // increase nonce
-    public void test3() {
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = worldManager.getRepository();
+    @Test
+    public void test16(){
 
-        BigInteger nonce0 = repository.getNonce(Hex.decode(addr));
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
 
-        repository.createAccount(Hex.decode(addr));
-        BigInteger nonce1 = repository.getNonce(Hex.decode(addr));
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
-        repository.increaseNonce(Hex.decode(addr));
-        repository.increaseNonce(Hex.decode(addr));
-        repository.increaseNonce(Hex.decode(addr));
-        BigInteger nonce2 = repository.getNonce(Hex.decode(addr));
+        byte[] cowKey1 =   "key-c-1".getBytes();
+        byte[] cowValue1 = "val-c-1".getBytes();
 
-        assertEquals(0, nonce0.intValue());
-        assertEquals(0, nonce1.intValue());
-        assertEquals(3, nonce2.intValue());
+        byte[] horseKey1   = "key-h-1".getBytes();
+        byte[] horseValue1 = "val-h-1".getBytes();
+
+        byte[] cowKey2 =   "key-c-2".getBytes();
+        byte[] cowValue2 = "val-c-2".getBytes();
+
+        byte[] horseKey2   = "key-h-2".getBytes();
+        byte[] horseValue2 = "val-h-2".getBytes();
+
+        // changes level_1
+        Repository track1 = repository.startTracking();
+        track1.addStorageRow(cow,   new DataWord(cowKey1),   new DataWord(cowValue1));
+        track1.addStorageRow(horse, new DataWord(horseKey1), new DataWord(horseValue1));
+
+        assertEquals(new DataWord(cowValue1),   track1.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
+
+        // changes level_2
+        Repository track2 = track1.startTracking();
+        track2.addStorageRow(cow,   new DataWord(cowKey2),   new DataWord(cowValue2));
+        track2.addStorageRow(horse, new DataWord(horseKey2), new DataWord(horseValue2));
+
+        assertEquals(new DataWord(cowValue1),   track2.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), track2.getStorageValue(horse, new DataWord(horseKey1)));
+
+        assertEquals(new DataWord(cowValue2),   track2.getStorageValue(cow, new DataWord(cowKey2)));
+        assertEquals(new DataWord(horseValue2), track2.getStorageValue(horse, new DataWord(horseKey2)));
+
+        track2.commit();
+        // leaving level_2
+
+        assertEquals(new DataWord(cowValue1),   track1.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
+
+        assertEquals(new DataWord(cowValue2),   track1.getStorageValue(cow, new DataWord(cowKey2)));
+        assertEquals(new DataWord(horseValue2), track1.getStorageValue(horse, new DataWord(horseKey2)));
+
+
+        track1.commit();
+        // leaving level_1
+
+        assertEquals(new DataWord(cowValue1),   repository.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), repository.getStorageValue(horse, new DataWord(horseKey1)));
+
+        assertEquals(new DataWord(cowValue2),   repository.getStorageValue(cow, new DataWord(cowKey2)));
+        assertEquals(new DataWord(horseValue2), repository.getStorageValue(horse, new DataWord(horseKey2)));
+
+        repository.close();
     }
 
-    @Test  // change balance
-    public void test4() {
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = worldManager.getRepository();
+    @Test
+    public void test17(){
 
-        BigInteger balance0 = repository.getBalance(Hex.decode(addr));
+        SystemProperties.CONFIG.setDataBaseDir("test_db/"+ RepositoryTest.class);
+        Repository repository = new RepositoryImpl();
 
-        repository.createAccount(Hex.decode(addr));
-        BigInteger balance1 = repository.getBalance(Hex.decode(addr));
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+        final BigInteger ELEVEN = BigInteger.TEN.add(BigInteger.ONE);
 
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(300));
-        BigInteger balance2 = repository.getBalance(Hex.decode(addr));
+        byte[] cowKey1 =   "key-c-1".getBytes();
+        byte[] cowValue1 = "val-c-1".getBytes();
 
-        assertEquals(0, balance0.intValue());
-        assertEquals(0,   balance1.intValue());
-        assertEquals(300, balance2.intValue());
+        byte[] horseKey1   = "key-h-1".getBytes();
+        byte[] horseValue1 = "val-h-1".getBytes();
+
+        byte[] cowKey2 =   "key-c-2".getBytes();
+        byte[] cowValue2 = "val-c-2".getBytes();
+
+        byte[] horseKey2   = "key-h-2".getBytes();
+        byte[] horseValue2 = "val-h-2".getBytes();
+
+        // changes level_1
+        Repository track1 = repository.startTracking();
+        track1.addStorageRow(cow,   new DataWord(cowKey1),   new DataWord(cowValue1));
+        track1.addStorageRow(horse, new DataWord(horseKey1), new DataWord(horseValue1));
+
+        assertEquals(new DataWord(cowValue1),   track1.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
+
+        // changes level_2
+        Repository track2 = track1.startTracking();
+        track2.addStorageRow(cow,   new DataWord(cowKey2),   new DataWord(cowValue2));
+        track2.addStorageRow(horse, new DataWord(horseKey2), new DataWord(horseValue2));
+
+        assertEquals(new DataWord(cowValue1),   track2.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), track2.getStorageValue(horse, new DataWord(horseKey1)));
+
+        assertEquals(new DataWord(cowValue2),   track2.getStorageValue(cow, new DataWord(cowKey2)));
+        assertEquals(new DataWord(horseValue2), track2.getStorageValue(horse, new DataWord(horseKey2)));
+
+        track2.rollback();
+        // leaving level_2
+
+        assertEquals(new DataWord(cowValue1),   track1.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
+
+        assertNull(track1.getStorageValue(cow,   new DataWord(cowKey2)));
+        assertNull(track1.getStorageValue(horse, new DataWord(horseKey2)));
+
+
+        track1.commit();
+        // leaving level_1
+
+        assertEquals(new DataWord(cowValue1),   repository.getStorageValue(cow, new DataWord(cowKey1)));
+        assertEquals(new DataWord(horseValue1), repository.getStorageValue(horse, new DataWord(horseKey1)));
+
+        assertNull(repository.getStorageValue(cow, new DataWord(cowKey2)));
+        assertNull(repository.getStorageValue(horse, new DataWord(horseKey2)));
+
+
+        repository.close();
     }
 
-    @Test  // change balance
-    public void test5() {
 
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = worldManager.getRepository();
+    @Test
+    public void test18(){
 
-        BigInteger balance0 = repository.getBalance(Hex.decode(addr));
-
-        repository.createAccount(Hex.decode(addr));
-        BigInteger balance1 = repository.getBalance(Hex.decode(addr));
-
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(300));
-        BigInteger balance2 = repository.getBalance(Hex.decode(addr));
-
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(-150));
-        BigInteger balance3 = repository.getBalance(Hex.decode(addr));
-
-        assertEquals(0, balance0.intValue());
-        assertEquals(0,   balance1.intValue());
-        assertEquals(300, balance2.intValue());
-        assertEquals(150, balance3.intValue());
     }
 
-    @Test  // get/set code
-    public void test6() {
-
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        Repository repository = worldManager.getRepository();
-
-        byte[] code = repository.getCode(Hex.decode(addr));
-        assertTrue(code == null);
-    }
-
-    @Test  // get/set code
-    public void test7() {
-
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        String codeString = "7f60c860005461012c602054000000000000000000000000000000000000000000600060206000f200";
-        String codeHash = "8f0d7fc8cc6fdd688fa58ae9256310069f5659ed2a8a3af994d80350fbf1e798";
-
-        Repository repository = worldManager.getRepository();
-
-        byte[] code0 = repository.getCode(Hex.decode(addr));
-        repository.createAccount(Hex.decode(addr));
-        repository.saveCode(Hex.decode(addr), Hex.decode(codeString));
-        byte[] code1 = repository.getCode(Hex.decode(addr));
-        AccountState accountState = repository.getAccountState(Hex.decode(addr));
-
-        assertTrue(code0 == null);
-        assertEquals(codeString, Hex.toHexString(code1));
-        assertEquals(codeHash, Hex.toHexString(accountState.getCodeHash()));
-    }
-
-    @Test  // get/set code
-    public void test8() {
-
-        byte[] addr = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-        Repository repository = worldManager.getRepository();
-
-        byte[] code0 = repository.getCode(addr);
-        repository.createAccount(addr);
-        byte[] code1 = repository.getCode(addr);
-        AccountState accountState = repository.getAccountState(addr);
-        assertTrue(code0 == null);
-        assertNull(code1);
-        assertArrayEquals(EMPTY_DATA_HASH, accountState.getCodeHash());
-    }
-
-    @Test // storage set/get
-    public void test9() {
-
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        byte[] keyBytes = Hex.decode("c5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470");
-        DataWord key = new DataWord(keyBytes);
-
-        Repository repository = worldManager.getRepository();
-
-        DataWord value = repository.getStorageValue(Hex.decode(addr), key);
-        assertNull(value);
-    }
-
-    @Test // storage set/get
-    public void test10() {
-
-        byte[] addr = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-        byte[] code = Hex.decode("00");
-        Repository repository = worldManager.getRepository();
-
-        repository.createAccount(addr);
-        repository.saveCode(addr, code);
-        byte[] keyBytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-        DataWord key = new DataWord(keyBytes);
-        byte[] valueBytes = Hex.decode("0F4240");
-        DataWord value = new DataWord(valueBytes);
-        repository.addStorageRow(addr, key, value);
-        DataWord fetchedValue = repository.getStorageValue(addr, key);
-        assertEquals(value, fetchedValue);
-    }
-
-    @Test // storage set/get
-    public void test11() {
-
-        byte[] addr = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-        byte[] code = Hex.decode("00");
-        String expectedStorageHash = "a737c40a4aa895fb9eb464536c376ee7c2c08eb733c8fd2353fcc62dc734f075";
-
-        Repository repository = worldManager.getRepository();
-
-        repository.createAccount(addr);
-        repository.saveCode(addr, code);
-
-        byte[] keyBytes = Hex.decode("03E8");
-        DataWord key1 = new DataWord(keyBytes);
-
-        keyBytes = Hex.decode("03E9");
-        DataWord key2 = new DataWord(keyBytes);
-
-        keyBytes = Hex.decode("03F0");
-        DataWord key3 = new DataWord(keyBytes);
-
-        byte[] valueBytes = Hex.decode("0F4240");
-        DataWord value1 = new DataWord(valueBytes);
-
-        valueBytes = Hex.decode("0F4241");
-        DataWord value2 = new DataWord(valueBytes);
-
-        valueBytes = Hex.decode("0F4242");
-        DataWord value3 = new DataWord(valueBytes);
-
-        repository.addStorageRow(addr, key1, value1);
-        repository.addStorageRow(addr, key2, value2);
-        repository.addStorageRow(addr, key3, value3);
-
-        DataWord fetchedValue1 = repository.getStorageValue(addr, key1);
-        DataWord fetchedValue2 = repository.getStorageValue(addr, key2);
-        DataWord fetchedValue3 = repository.getStorageValue(addr, key3);
-
-        AccountState accountState = repository.getAccountState(addr);
-        String stateRoot = Hex.toHexString(accountState.getStateRoot());
-
-        assertEquals(value1, fetchedValue1);
-        assertEquals(value2, fetchedValue2);
-        assertEquals(value3, fetchedValue3);
-        assertEquals(expectedStorageHash, stateRoot);
-    }
-
-    @Test // commit/rollback
-    public void test12() {
-
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        long expectedBalance = 333;
-
-        Repository origRepository = worldManager.getRepository();
-
-        Repository repository = origRepository.getTrack();
-        repository.startTracking();
-
-        repository.createAccount(Hex.decode(addr));
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(expectedBalance));
-
-        repository.commit();
-
-        BigInteger balance =  repository.getBalance(Hex.decode(addr));
-
-        assertEquals(expectedBalance, balance.longValue());
-    }
-
-    @Test // commit/rollback
-    public void test13() {
-
-        String addr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        long expectedBalance_1 = 55500;
-        long expectedBalance_2 = 0;
-
-        Repository origRepository = worldManager.getRepository();
-        Repository repository = origRepository.getTrack();
-        repository.startTracking();
-
-        repository.createAccount(Hex.decode(addr));
-        repository.addBalance(Hex.decode(addr), BigInteger.valueOf(55500));
-
-        BigInteger balance =  repository.getBalance(Hex.decode(addr));
-        assertEquals(expectedBalance_1, balance.longValue());
-        repository.rollback();
-
-        balance =  repository.getBalance(Hex.decode(addr));
-        assertEquals(expectedBalance_2, balance.longValue());
-    }
-
-    @Test // commit/rollback
-    public void test14() {
-
-        String addr_1 = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
-        String addr_2 = "77045e71a7a2c50903d88e564cd72fab11e82051";
-        String codeString = "7f60c860005461012c602054000000000000000000000000000000000000000000600060206000f200";
-
-        long expectedBalance = 55500;
-
-        Repository origRepository = worldManager.getRepository();
-        Repository repository = origRepository.getTrack();
-
-        repository.createAccount(Hex.decode(addr_1));
-        repository.addBalance(Hex.decode(addr_1), BigInteger.valueOf(expectedBalance));
-        repository.startTracking();
-
-        repository.createAccount(Hex.decode(addr_2));
-        repository.saveCode(Hex.decode(addr_2), Hex.decode(codeString));
-        repository.addStorageRow(Hex.decode(addr_2), new DataWord(101), new DataWord(1000001));
-        repository.addStorageRow(Hex.decode(addr_2), new DataWord(102), new DataWord(1000002));
-        repository.addStorageRow(Hex.decode(addr_2), new DataWord(103), new DataWord(1000003));
-        repository.rollback();
-
-        BigInteger balance =  repository.getBalance(Hex.decode(addr_1));
-        assertEquals(expectedBalance, balance.longValue());
-
-        DataWord value = repository.getStorageValue(Hex.decode(addr_2), new DataWord(101));
-        assertNull(value);
-    }
 }

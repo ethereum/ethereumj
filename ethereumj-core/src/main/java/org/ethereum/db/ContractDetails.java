@@ -8,10 +8,7 @@ import java.util.Map;
 
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
+import org.ethereum.util.*;
 import org.ethereum.vm.DataWord;
 
 /**
@@ -25,7 +22,10 @@ public class ContractDetails {
     private List<DataWord> storageKeys   = new ArrayList<>();
     private List<DataWord> storageValues = new ArrayList<>();
 
-    private byte[] code;
+    private byte[] code = ByteUtil.EMPTY_BYTE_ARRAY;
+
+    private boolean dirty   = true;
+    private boolean deleted = false;
 
     private Trie storageTrie = new TrieImpl(null);
 
@@ -61,6 +61,7 @@ public class ContractDetails {
             storageValues.add(value);
         }
 
+        this.setDirty(true);
         this.rlpEncoded = null;
 	}
 
@@ -82,6 +83,7 @@ public class ContractDetails {
 
     public void setCode(byte[] code) {
         this.code = code;
+        this.setDirty(true);
         this.rlpEncoded = null;
     }
 
@@ -125,9 +127,26 @@ public class ContractDetails {
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
 		}
 
-		this.code = code.getRLPData();
+		this.code = (code.getRLPData() == null) ? ByteUtil.EMPTY_BYTE_ARRAY : code.getRLPData();
 		this.rlpEncoded = rlpCode;
 	}
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public boolean isDirty() {
+        return dirty;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
 
 	public byte[] getEncoded() {
 
@@ -162,6 +181,22 @@ public class ContractDetails {
 			storage.put(storageKeys.get(i), storageValues.get(i));
 		}
         return Collections.unmodifiableMap(storage);
+    }
+
+    public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
+        this.storageKeys = storageKeys;
+        this.storageValues = storageValues;
+    }
+
+
+    public ContractDetails clone(){
+
+        ContractDetails contractDetails = new ContractDetails();
+
+        contractDetails.setCode(this.getCode());
+        contractDetails.setStorage(new ArrayList<DataWord>(this.storageKeys)  ,
+                                   new ArrayList<DataWord>(this.storageValues));
+        return contractDetails;
     }
 
 }

@@ -1,20 +1,17 @@
 package org.ethereum.facade;
 
-import java.math.BigInteger;
-
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.DatabaseImpl;
-import org.ethereum.db.TrackDatabase;
-import org.ethereum.trie.TrackTrie;
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
 import org.ethereum.vm.DataWord;
 import org.iq80.leveldb.DBIterator;
 
+import java.math.BigInteger;
+import java.util.HashMap;
+
 /**
- * www.ethereumJ.com
+ * www.etherj.com
  *
  * @author: Roman Mandeleil
  * Created on: 08/09/2014 10:25
@@ -93,7 +90,8 @@ public interface Repository {
      * @param value is the data to store
      */
     public void addStorageRow(byte[] addr, DataWord key, DataWord value);
-    
+
+
     /**
      * Retrieve storage value from an account for a given key
      * 
@@ -127,14 +125,7 @@ public interface Repository {
      * @return an iterator over the accounts in this database in proper sequence
      */
     public DBIterator getAccountsIterator();
-    
-    /**
-     * Return the current state as the Trie data structure
-     * 
-     * @return the <code>Trie</code> representing the entire current state
-     */
-    public Trie getWorldState();
-    
+
 
     /**
      * Dump the full state of the current repository into a file with JSON format
@@ -146,19 +137,14 @@ public interface Repository {
      * @param txHash is the hash of the given transaction. 
      * 		If null, the block state post coinbase reward is dumped.
      */
-    public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash);  
-   
+    public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash);
+
     /**
-     *  Start tracking the database changes 
+     * Save a snapshot and start tracking future changes
+     *
+     * @return the tracker repository
      */
-    public void startTracking();
-    
-    /**
-     * Return a repository snapshot of the current state
-     * 
-     * @return the repository in its current state
-     */
-    public Repository getTrack();
+    public Repository startTracking();
 
     /**
      * Store all the temporary changes made 
@@ -171,6 +157,13 @@ public interface Repository {
      * to a snapshot of the repository
      */
     public void rollback();
+
+    /**
+     * Return to one of the previous snapshots
+     * by moving the root.
+     * @param root - new root
+     */
+    public void syncToRoot(byte[] root);
     
     /**
      * Check to see if the current repository has an open connection to the database
@@ -187,5 +180,11 @@ public interface Repository {
      * Reset
      */
     public void reset();
+
+    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
+                            HashMap<ByteArrayWrapper, ContractDetails> contractDetailes);
+
+
+    public byte[] getRoot();
 
 }

@@ -58,6 +58,8 @@ public class Transaction {
      * (including public key recovery bits) */
     private ECDSASignature signature;
 
+    private byte[] sendAddress;
+
     /* Tx in encoded form */
     private byte[] rlpEncoded;
     private byte[] rlpRaw;
@@ -107,6 +109,9 @@ public class Transaction {
             byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
             byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
+
+
+
         } else {
             logger.debug("RLP encoded tx is not signed!");
         }
@@ -182,8 +187,11 @@ public class Transaction {
 
     public byte[] getSender() {
 		try {
-			ECKey key = ECKey.signatureToKey(getHash(), getSignature().toBase64());
-			return key.getAddress();
+            if (sendAddress == null) {
+                ECKey key = ECKey.signatureToKey(getHash(), getSignature().toBase64());
+                sendAddress = key.getAddress();
+            }
+			return sendAddress;
 		} catch (SignatureException e) {
 			logger.error(e.getMessage(), e);
 		}

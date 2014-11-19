@@ -157,11 +157,15 @@ public class WorldManager {
                 repository.createAccount(Hex.decode(address));
                 repository.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
             }
-            blockchain.storeBlock(Genesis.getInstance());
+
+            blockStore.saveBlock(Genesis.getInstance());
+
             blockchain.setBestBlock(Genesis.getInstance());
             blockchain.setTotalDifficulty(BigInteger.ZERO);
 
             repository.dumpState(Genesis.getInstance(), 0, 0, null);
+
+            logger.info("Genesis block loaded");
         } else {
 
             blockchain.setBestBlock(bestBlock);
@@ -181,16 +185,25 @@ public class WorldManager {
             // update world state by dummy hash
             byte[] rootHash = Hex.decode(CONFIG.rootHashStart());
             logger.info("Loading root hash from property file: [{}]", CONFIG.rootHashStart());
-            this.repository.getWorldState().setRoot(rootHash);
+            this.repository.syncToRoot(rootHash);
 
         } else{
 
             // Update world state to latest loaded block from db
-            this.repository.getWorldState().setRoot(blockchain.getBestBlock().getStateRoot());
+            this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
         }
+
+/* todo: return it when there is no state conflicts on the chain
+        boolean dbValid = this.repository.getWorldState().validate() || bestBlock.isGenesis();
+        if (!dbValid){
+            logger.error("The DB is not valid for that blockchain");
+            System.exit(-1); //  todo: reset the repository and blockchain
+        }
+*/
     }
 
     public void reset(){
+        logger.info("Resetting blockchain ");
         repository.reset();
         blockchain.reset();
         loadBlockchain();

@@ -425,7 +425,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 }
                 sendGetBlocks();
             }
-        }, 1000, 300);
+        }, 300, 10);
     }
 
     private void stopGetBlocksTimer() {

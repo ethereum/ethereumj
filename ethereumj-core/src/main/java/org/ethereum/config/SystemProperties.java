@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
  */
 public class SystemProperties {
 
-	private static Logger logger = LoggerFactory.getLogger(SystemProperties.class);
+	private static Logger logger = LoggerFactory.getLogger("general");
 
 	private static int      DEFAULT_TX_APPROVE_TIMEOUT = 10;
 	private static String   DEFAULT_DISCOVERY_PEER_LIST = "poc-7.ethdev.com:30303";
@@ -29,6 +29,7 @@ public class SystemProperties {
 	private static int      DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
 	private static Boolean  DEFAULT_DB_RESET = false;
 	private static Boolean  DEFAULT_DUMP_FULL = false;
+	private static Boolean  DEFAULT_RECORD_BLOCKS = false;
 	private static String   DEFAULT_DUMP_DIR = "dmp";
 	private static String   DEFAULT_DUMP_STYLE = "standard+";
 	private static Integer  DEFAULT_VMTRACE_BLOCK = 0;
@@ -61,6 +62,7 @@ public class SystemProperties {
 			File file = new File(fileName);
 
 			if (file.exists()) {
+                logger.info("config loaded from {}", fileName);
 				input = new FileInputStream(file);
 			} else {
 				fileName = "system.properties";
@@ -158,6 +160,12 @@ public class SystemProperties {
 		if (prop.isEmpty()) return DEFAULT_TRACE_STARTBLOCK;
 		return Integer.parseInt(prop.getProperty("trace.startblock"));
 	}
+
+    public Boolean recordBlocks() {
+        if (prop.isEmpty()) return DEFAULT_RECORD_BLOCKS;
+        return Boolean.parseBoolean(prop.getProperty("record.blocks"));
+    }
+
 
 	public Boolean dumpFull() {
 		if (prop.isEmpty()) return DEFAULT_DUMP_FULL;
