@@ -73,8 +73,6 @@ public class VM {
 	
     public void step(Program program) {
 
-        program.fullTrace();
-
         if (CONFIG.vmTrace())
             program.saveOpTrace();
     	
@@ -160,6 +158,16 @@ public class VM {
         			gasCost = GasCost.CREATE;
         			newMemSize = memNeeded(stack.get(stack.size()-2), stack.get(stack.size()-3));
         			break;
+                case LOG0: case LOG1: case LOG2: case LOG3: case LOG4:
+
+                    int nTopics = op.val() - OpCode.LOG0.val();
+                    newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-2));
+                    gasCost = GasCost.LOG_GAS +
+                              GasCost.LOG_TOPIC_GAS * nTopics +
+                              GasCost.LOG_DATA_GAS  * stack.get(stack.size()-2).longValue();
+
+                    break;
+
                 default:
                     break;
             }
@@ -716,6 +724,32 @@ public class VM {
         			stack.set(stack.size() - 1, stack.get(stack.size() - n));
         			stack.set(stack.size() - n, word_1);
         			program.step();
+
+                }	break;
+                case LOG0: case LOG1: case LOG2: case LOG3: case LOG4:{
+
+                    DataWord address = program.programAddress;
+
+                    DataWord memStart = stack.pop();
+                    DataWord memOffset = stack.pop();
+
+                    int nTopics = op.val() - OpCode.LOG0.val();
+
+                    List<byte[]> topics = new ArrayList<>();
+                    for (int i = 0; i < nTopics; ++i){
+                        DataWord topic = stack.pop();
+                        topics.add(topic.getData());
+                    }
+
+                    ByteBuffer data = program.memoryChunk(memStart, memOffset);
+
+                    LogInfo logInfo =
+                            new LogInfo(address.getLast20Bytes(), topics, data.array());
+
+                    if (logger.isInfoEnabled())
+                        hint = logInfo.toString();
+
+                    program.getResult().addLogInfo(logInfo);
 
                 }	break;
                 case MLOAD:{

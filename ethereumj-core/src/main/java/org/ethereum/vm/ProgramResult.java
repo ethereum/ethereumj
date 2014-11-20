@@ -17,6 +17,7 @@ public class ProgramResult {
     private ByteBuffer  hReturn = null;
     private RuntimeException exception;
     private List<DataWord> deleteAccounts;
+    private List<LogInfo> logInfoList;
 
     private Repository repository = null;
 
@@ -67,6 +68,20 @@ public class ProgramResult {
         if (deleteAccounts == null)
             deleteAccounts = new ArrayList<>();
         deleteAccounts.add(address);
+    }
+
+    public void addLogInfo(LogInfo logInfo){
+        if (this.logInfoList == null) logInfoList = new ArrayList<>();
+        this.logInfoList.add(logInfo);
+    }
+
+    public void addLogInfos(List<LogInfo> logInfos){
+        if (this.logInfoList == null) logInfoList = new ArrayList<>();
+        this.logInfoList.addAll(logInfos);
+    }
+
+    public List<LogInfo> getLogInfoList() {
+        return logInfoList;
     }
 
     public void addDeleteAccounts(List<DataWord> accounts) {

@@ -316,6 +316,7 @@ public class Program {
             vm.play(program);
             result = program.getResult();
             this.result.addDeleteAccounts(result.getDeleteAccounts());
+            this.result.addLogInfos(result.getLogInfoList());
         }
         
         if (result != null && 
@@ -415,6 +416,7 @@ public class Program {
             result = program.getResult();
             this.getProgramTrace().merge(program.getProgramTrace());
             this.result.addDeleteAccounts(result.getDeleteAccounts());
+            this.result.addLogInfos(result.getLogInfoList());
         }
         
         if (result != null &&

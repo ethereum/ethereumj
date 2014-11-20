@@ -321,5 +321,16 @@ public class ProgramMemoryTest {
 		int size = 16;
 		program.allocateMemory(offset, size);
 		assertEquals(32,program.getMemSize());
-	}	
+	}
+
+    @Test
+    public void testInitialInsert() {
+
+
+        // todo: fix the array out of bound here
+        int offset = 32;
+        int size = 00;
+        program.memorySave(32, 0, new byte[0]);
+        assertEquals(32,program.getMemSize());
+    }
 }

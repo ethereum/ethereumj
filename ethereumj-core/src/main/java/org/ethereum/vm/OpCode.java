@@ -292,6 +292,13 @@ public enum OpCode {
 	/** (0x9f) Exchange 17th item from stack with the top */
 	SWAP16(0x9f, 17),
 
+    /** (0xa[n]) log some data for some addres with 0..n tags [addr [tag0..tagn] data]  */
+    LOG0(0xa0, 2),
+    LOG1(0xa1, 3),
+    LOG2(0xa2, 4),
+    LOG3(0xa3, 5),
+    LOG4(0xa4, 6),
+
 	/*	System operations	*/
 
 	/** (0xf0) Create a new account with associated code	*/

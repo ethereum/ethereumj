@@ -12,6 +12,8 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -1210,6 +1212,125 @@ public class VMTest {
 
         assertEquals(expected, Hex.toHexString(program.getMemory().array()));
     }
+
+
+    @Test // LOG0 OP
+    public void tesLog0(){
+
+        VM vm = new VM();
+        program =  new Program(Hex.decode("61123460005260206000A0"), invoke);
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        List<LogInfo> logInfoList =  program.getResult().getLogInfoList();
+        LogInfo logInfo = logInfoList.get(0);
+
+        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(logInfo.getAddress()));
+        assertEquals(0, logInfo.getTopics().size());
+        assertEquals("0000000000000000000000000000000000000000000000000000000000001234", Hex.toHexString(logInfo.getData()));
+    }
+
+    @Test // LOG1 OP
+    public void tesLog1(){
+
+        VM vm = new VM();
+        program =  new Program(Hex.decode("61123460005261999960206000A1"), invoke);
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        List<LogInfo> logInfoList =  program.getResult().getLogInfoList();
+        LogInfo logInfo = logInfoList.get(0);
+
+        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(logInfo.getAddress()));
+        assertEquals(1, logInfo.getTopics().size());
+        assertEquals("0000000000000000000000000000000000000000000000000000000000001234", Hex.toHexString(logInfo.getData()));
+    }
+
+    @Test // LOG2 OP
+    public void tesLog2(){
+
+        VM vm = new VM();
+        program =  new Program(Hex.decode("61123460005261999961666660206000A2"), invoke);
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        List<LogInfo> logInfoList =  program.getResult().getLogInfoList();
+        LogInfo logInfo = logInfoList.get(0);
+
+        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(logInfo.getAddress()));
+        assertEquals(2, logInfo.getTopics().size());
+        assertEquals("0000000000000000000000000000000000000000000000000000000000001234", Hex.toHexString(logInfo.getData()));
+    }
+
+    @Test // LOG3 OP
+    public void tesLog3(){
+
+        VM vm = new VM();
+        program =  new Program(Hex.decode("61123460005261999961666661333360206000A3"), invoke);
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        List<LogInfo> logInfoList =  program.getResult().getLogInfoList();
+        LogInfo logInfo = logInfoList.get(0);
+
+        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(logInfo.getAddress()));
+        assertEquals(3, logInfo.getTopics().size());
+        assertEquals("0000000000000000000000000000000000000000000000000000000000001234", Hex.toHexString(logInfo.getData()));
+    }
+
+
+    @Test // LOG4 OP
+    public void tesLog4(){
+
+        VM vm = new VM();
+        program =  new Program(Hex.decode("61123460005261999961666661333361555560206000A4"), invoke);
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        List<LogInfo> logInfoList =  program.getResult().getLogInfoList();
+        LogInfo logInfo = logInfoList.get(0);
+
+        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(logInfo.getAddress()));
+        assertEquals(4, logInfo.getTopics().size());
+        assertEquals("0000000000000000000000000000000000000000000000000000000000001234", Hex.toHexString(logInfo.getData()));
+    }
+
+
 
     @Test // MSTORE OP
     public void testMSTORE_2() {
