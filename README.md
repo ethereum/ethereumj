@@ -1,3 +1,5 @@
+[![ScreenShot](http://i.imgur.com/lJw1Tui.jpg)]
+
 
 # Welcome to ethereumj 
 [![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/ethereum/ethereumj?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -12,7 +14,7 @@ This repository currently contains:
  * [core](ethereumj-core): the core library which can be included into your own Java project.
  * [studio](ethereumj-studio): a simple graphic interface for Ethereum functionality and set of showcases for core usage. 
 
-For an early peek, have a look at this [video](https://youtu.be/D5ok7jh7AOg)
+For an early peek, have a looki at this [video](https://youtu.be/D5ok7jh7AOg)
 
 # Todo
 
