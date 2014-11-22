@@ -1,24 +1,18 @@
 
-# Welcome to ethereumj 
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/ethereum/ethereumj?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-[![Build Status](https://travis-ci.org/ethereum/ethereumj.svg?branch=master)](https://travis-ci.org/ethereum/ethereumj) [![Coverage Status](https://coveralls.io/repos/ethereum/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereum/ethereumj?branch=master)
-[![Stories in Progress](https://badge.waffle.io/ethereum/ethereumj.png?title=In%20Progress&label=in_progress)](https://waffle.io/ethereum/ethereumj)
-
+# Welcome to ethereumj ETHToys on Top
 # Goals
 
 The ethereumj library is a Java implementation of the Ethereum protocol.
+The main goal of ETHToys on Top is to make ethereums interface so easy your grandmother could use it.
+Building off the ethereumj-studio platform as the foundation.
 
 This repository currently contains: 
- * [core](ethereumj-core): the core library which can be included into your own Java project.
- * [studio](ethereumj-studio): a simple graphic interface for Ethereum functionality and set of showcases for core usage. 
-
-For an early peek, have a look at this [video](https://youtu.be/D5ok7jh7AOg)
+ * [core](ethereumj-core): unchanged from [ethereumj-core](https://github.com/ethereum/ethereumj/tree/master/ethereumj-core).(Possible changes later)
+ * [studio](ethereumj-studio): a simple graphic interface for Ethereum functionality and set of showcases for core usage.(soon to be re-named "Studio EToT" or "JMist")
 
 # Todo
 
 The Ethereum protocol is currenty heavily in development, thus so is this implementation.
-You can find a todo-list right [here](TODO.md) and the [milestone schedule](https://github.com/ethereum/ethereumj/milestones). 
-For questions you can reach us in #ethereumj on Freenode.
  
 # Documentation
 
