@@ -179,6 +179,12 @@ public class RepositoryTrack implements Repository {
 
 
     @Override
+    public void flush(){
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
     public void commit() {
         logger.debug("commit changes");
         repository.updateBatch(cacheAccounts, cacheDetails);

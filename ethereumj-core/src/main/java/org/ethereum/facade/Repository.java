@@ -146,6 +146,9 @@ public interface Repository {
      */
     public Repository startTracking();
 
+    public void flush();
+
+
     /**
      * Store all the temporary changes made 
      * to the repository in the actual database

@@ -126,8 +126,13 @@ public class RepositoryImpl implements Repository {
             accountState.setDeleted(false);
             accountState.setDirty(false);
         }
+    }
+
+    @Override
+    public void flush(){
         worldState.sync();
     }
+
 
     @Override
     public void rollback() {

@@ -34,32 +34,6 @@ public class StateTest {
         assertEquals(GENESIS_STATE_ROOT, Hex.toHexString(trie.getRootHash()));
     }
 
-    @Test  // right way to calc tx trie hash
-    public void testCalculatePostTxState() {
-
-        /*    txTrieHash */
-        String expected = "a77691cf47bec9021d3f027fc8ef2d51b758b600a79967154354b8e37108896f";
-        Transaction tx = new Transaction(
-                new byte[]{},
-                Hex.decode("09184E72A000"),
-                Hex.decode("03E8"),
-                Hex.decode("0000000000000000000000000000000000000000"),
-                Hex.decode("03e8"),
-                Hex.decode("60016000546006601160003960066000f261778e600054")
-        );
-        byte[] cowPrivKey = Hex.decode("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4");
-        tx.sign(cowPrivKey);
-
-        byte[] postTxState = Hex.decode("7fa5bd00f6e03b5a5718560f1e25179b227167585a3c3da06a48f554365fb527");
-        byte[] cumGas      = Hex.decode("0272");
-
-        TransactionReceipt tr = new TransactionReceipt(tx, postTxState, cumGas);
-
-        Trie trie = new TrieImpl(new MockDB());
-        trie.update(RLP.encodeInt(0), tr.getEncoded());
-        String txTrieRoot = Hex.toHexString(trie.getRootHash());
-        assertEquals(expected, txTrieRoot);
-    }
 
     @Test  // calc state after applying first tx on genesis
     public void test2() {

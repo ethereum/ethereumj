@@ -1,7 +1,10 @@
 package org.ethereum.vm;
 
+import org.ethereum.core.BlockHeader;
+import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,12 +18,15 @@ import java.util.List;
 public class LogInfo {
 
     byte[] address;
-    List<byte[]> topics;
+    List<byte[]> topics = new ArrayList<>();
     byte[] data;
+
+    /* Log info in encoded form */
+    private byte[] rlpEncoded;
 
     public LogInfo(byte[] address, List<byte[]> topics, byte[] data) {
         this.address = address;
-        this.topics = topics;
+        this.topics = (topics == null) ? new ArrayList<byte[]>() : topics;
         this.data = data;
     }
 
@@ -34,6 +40,26 @@ public class LogInfo {
 
     public byte[] getData() {
         return data;
+    }
+
+    /*  [address, [topic, topic ...] data] */
+    public byte[] getEncoded() {
+
+
+        byte[] addressEncoded   = RLP.encodeElement(this.address);
+
+        byte[][] topicsEncoded = null;
+        if (topics != null){
+            topicsEncoded = new byte[topics.size()][];
+            int i = 0;
+            for( byte[] topic : topics ){
+                topicsEncoded[i] = topic;
+                ++i;
+            }
+        }
+
+        byte[] dataEncoded = RLP.encodeElement(data);
+        return RLP.encodeList(addressEncoded, RLP.encodeList(topicsEncoded), dataEncoded);
     }
 
     @Override

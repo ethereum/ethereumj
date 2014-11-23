@@ -217,6 +217,8 @@ public class BlockchainImpl implements Blockchain {
 
         this.processBlock(block);
         track.commit();
+        repository.flush(); // saving to the disc
+
 
         // Remove all wallet transactions as they already approved by the net
         worldManager.getWallet().removeTransactions(block.getTransactionsList());
@@ -326,9 +328,21 @@ public class BlockchainImpl implements Blockchain {
 		long totalGasUsed = 0;
 		for (Transaction tx : block.getTransactionsList()) {
 			stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
-			totalGasUsed += applyTransaction(block, tx);
-			if(block.getNumber() >= CONFIG.traceStartBlock())
-				repository.dumpState(block, totalGasUsed, i++, tx.getHash());
+
+            TransactionReceipt receipt = applyTransaction(block, tx);
+			totalGasUsed += receipt.getCumulativeGasLong();
+            receipt.setCumulativeGas(totalGasUsed);
+
+            track.commit();
+            receipt.setPostTxState(repository.getRoot());
+
+            if(block.getNumber() >= CONFIG.traceStartBlock())
+                repository.dumpState(block, totalGasUsed, i++, tx.getHash());
+
+            // todo: (!!!). save the receipt
+            // todo: cache all the receipts and
+            // todo: save them to the disc together
+            // todo: with the block afterwards
 		}
 
 		this.addReward(block);
@@ -398,9 +412,11 @@ public class BlockchainImpl implements Blockchain {
      * @param tx - the transaction to be applied
      * @return gasUsed - the total amount of gas used for this transaction.
      */
-	public long applyTransaction(Block block, Transaction tx) {
+	public TransactionReceipt applyTransaction(Block block, Transaction tx) {
 
         logger.info("applyTransaction: [{}]", Hex.toHexString(tx.getHash()));
+
+        TransactionReceipt receipt = new TransactionReceipt();
 
 		byte[] coinbase = block.getCoinbase();
 
@@ -416,7 +432,9 @@ public class BlockchainImpl implements Blockchain {
 			if (stateLogger.isWarnEnabled())
 				stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
 						nonce, txNonce);
-			return 0;
+
+            receipt.setCumulativeGas(0);
+			return receipt;
 		}
 		
 		// UPDATE THE NONCE
@@ -474,7 +492,9 @@ public class BlockchainImpl implements Blockchain {
 			if (track.getBalance(senderAddress).compareTo(gasDebit) == -1) {
 				logger.debug("No gas to start the execution: sender={}",
 						Hex.toHexString(senderAddress));
-				return 0;
+
+                receipt.setCumulativeGas(0);
+				return receipt;
 			}
 			track.addBalance(senderAddress, gasDebit.negate());
 
@@ -529,7 +549,9 @@ public class BlockchainImpl implements Blockchain {
 
 			} catch (RuntimeException e) {
                 trackTx.rollback();
-				return new BigInteger(1, tx.getGasLimit()).longValue();
+
+                receipt.setCumulativeGas(tx.getGasLimit());
+                return receipt;
 			}
             trackTx.commit();
 		} else {
@@ -543,7 +565,9 @@ public class BlockchainImpl implements Blockchain {
                 track.addBalance(coinbase, refund.negate());
 			}
 		}
-		return gasUsed;
+
+        receipt.setCumulativeGas(gasUsed);
+		return receipt;
 	}
 	
 	/**

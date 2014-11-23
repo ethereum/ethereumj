@@ -16,6 +16,7 @@ import java.util.List;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * Recursive Length Prefix (RLP) encoding. 
@@ -865,9 +866,14 @@ public class RLP {
 
     public static byte[] encodeList(byte[]... elements) {
 
+        if (elements == null){
+            return new byte[] {(byte)OFFSET_SHORT_LIST };
+        }
+
         int totalLength = 0;
-        for (int i = 0; i < elements.length; ++i) {
-            totalLength += elements[i].length;
+        for (int i = 0;
+             elements != null && i < elements.length; ++i) {
+             totalLength += elements[i].length;
         }
 
         byte[] data;
