@@ -130,6 +130,7 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void flush(){
+        logger.info("flush to disk");
         worldState.sync();
     }
 
