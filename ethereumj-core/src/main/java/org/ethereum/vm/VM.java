@@ -176,7 +176,7 @@ public class VM {
 
                     DataWord exp = stack.get(stack.size()-2);
                     int bytesOccupied = exp.bytesOccupied();
-                    gasCost =  (bytesOccupied == 0) ? 0 :  GasCost.EXP_GAS +  GasCost.EXP_BYTE_GAS * bytesOccupied;
+                    gasCost =  GasCost.EXP_GAS +  GasCost.EXP_BYTE_GAS * bytesOccupied;
                     break;
                 default:
                     break;

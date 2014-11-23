@@ -99,7 +99,8 @@ public class TestRunner {
 	        /* 4. run VM */
 	        VM vm = new VM();
 	        Program program = new Program(exec.getCode(), programInvoke);
-	        vm.play(program);
+	        while(!program.isStopped())
+	        	vm.step(program);
 
             program.saveProgramTraceToFile(testCase.getName());
 

@@ -11,10 +11,9 @@ import org.junit.runners.MethodSorters;
 public class GitHubVMTest {
 
     @Test // testing full suite
-    @Ignore
     public void testArithmeticFromGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmArithmeticTest.json");
+    	String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
@@ -22,7 +21,7 @@ public class GitHubVMTest {
     @Ignore
     public void testBitwiseLogicOperationFromGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmBitwiseLogicOperationTest.json");
+    	String json = JSONReader.loadJSON("VMTests/vmBitwiseLogicOperationTest.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
