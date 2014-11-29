@@ -52,7 +52,7 @@ public class Genesis extends Block {
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long   NUMBER = 0;
     public static long   MIN_GAS_PRICE = 0;
-    public static long   GAS_LIMIT = 1000000;
+    public static long   GAS_LIMIT = 0;
     public static long   GAS_USED = 0;
     public static long   TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
@@ -62,7 +62,7 @@ public class Genesis extends Block {
     
 	private Genesis() {
 		super(PARENT_HASH, UNCLES_HASH, COINBASE, LOG_BLOOM, DIFFICULTY,
-				NUMBER, MIN_GAS_PRICE, GAS_LIMIT, GAS_USED, TIMESTAMP,
+				NUMBER, GAS_LIMIT, GAS_USED, TIMESTAMP,
 				EXTRA_DATA, NONCE, null, null);
 		
 		Trie state = new TrieImpl(null);

@@ -40,7 +40,6 @@ public class Block {
 	private BlockHeader header;
 	
     /* Transactions */
-    private List<TransactionReceipt> txReceiptList = new CopyOnWriteArrayList<>() ;
 	private List<Transaction> transactionsList = new CopyOnWriteArrayList<>();
 	
 	/* Uncles */
@@ -62,11 +61,11 @@ public class Block {
     }
     
 	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-			byte[] difficulty, long number, long minGasPrice, long gasLimit,
+			byte[] difficulty, long number, long gasLimit,
 			long gasUsed, long timestamp, byte[] extraData, byte[] nonce,
 			List<Transaction> transactionsList, List<BlockHeader> uncleList) {
 		this.header = new BlockHeader(parentHash, unclesHash, coinbase, logsBloom,
-				difficulty, number, minGasPrice, gasLimit, gasUsed,
+				difficulty, number,  gasLimit, gasUsed,
 				timestamp, extraData, nonce);
 
 		this.transactionsList = transactionsList;
@@ -192,11 +191,6 @@ public class Block {
 		return this.header.getNumber();
 	}
 
-	public long getMinGasPrice() {
-		if (!parsed) parseRLP();
-		return this.header.getMinGasPrice();
-	}
-
 	public long getGasLimit() {
 		if (!parsed) parseRLP();
 		return this.header.getGasLimit();
@@ -227,11 +221,6 @@ public class Block {
         return transactionsList;
     }
 
-    public List<TransactionReceipt> getTxReceiptList() {
-        if (!parsed) parseRLP();
-        return txReceiptList;
-    }
-
     public List<BlockHeader> getUncleList() {
         if (!parsed) parseRLP();
         return uncleList;
@@ -252,11 +241,6 @@ public class Block {
         toStringBuff.append("BlockData [ ");
         toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("\n");
         toStringBuff.append(header.toString());
-        
-        for (TransactionReceipt txReceipt : getTxReceiptList()) {
-            toStringBuff.append("\n");
-            toStringBuff.append(txReceipt.toString());
-        }
 
         toStringBuff.append("\nUncles [\n");
         for (BlockHeader uncle : getUncleList()){

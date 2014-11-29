@@ -148,7 +148,7 @@ public class MinerThread implements Runnable {
 //       }
 
         Block newBlock = new Block(lastBlock.getHash(), lastBlock.getUnclesHash(), coinbase, lastBlock.getLogBloom(),
-                difficulty , lastBlock.getNumber() + 1, lastBlock.getMinGasPrice(),
+                difficulty , lastBlock.getNumber() + 1,
                 lastBlock.getGasLimit(), lastBlock.getGasUsed(), System.currentTimeMillis() / 1000,
                 null, null,  null, null);
 

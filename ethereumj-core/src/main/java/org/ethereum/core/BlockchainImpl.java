@@ -100,12 +100,6 @@ public class BlockchainImpl implements Blockchain {
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
 
-	@Override
-    public long getGasPrice() {
-        // In case of the genesis block we don't want to rely on the min gas price
-        return bestBlock.isGenesis() ? bestBlock.getMinGasPrice() : INITIAL_MIN_GAS_PRICE;
-    }
-
     @Override
     public byte[] getBestBlockHash() {
         return getBestBlock().getHash();
@@ -540,6 +534,9 @@ public class BlockchainImpl implements Blockchain {
 
                 if (CONFIG.playVM())
 				    vm.play(program);
+
+                // todo: recepit save logs
+                // todo: receipt calc and save blooms
 
                 program.saveProgramTraceToFile(Hex.toHexString(tx.getHash()));
 				ProgramResult result = program.getResult();

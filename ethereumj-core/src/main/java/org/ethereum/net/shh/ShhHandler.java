@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
-	public final static byte VERSION = 2;
+	public final static byte VERSION = 1;
     private MessageQueue msgQueue = null;
 
     private boolean active = false;

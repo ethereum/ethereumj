@@ -19,7 +19,6 @@ public interface Blockchain  {
     public void tryToConnect(Block block);
     public void storeBlock(Block block);
     public Block getBlockByNumber(long blockNr);
-    public long getGasPrice();
     public void setBestBlock(Block block);
     public Block getBestBlock();
     public BlockQueue getQueue();

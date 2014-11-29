@@ -105,14 +105,14 @@ public class MinerTest {
             byte[] stateRoot = Hex.decode("50188ab86bdf164ac90eb2835a04a8930aae5393c3a2ef1166fb95028f9456b8");
 
             Block newBlock = new Block(parentHash, unclesHash, coinbase, null,
-                    difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,
+                    difficulty, number, gasLimit, gasUsed, timestamp,
                     null, nonce,  null, null);
             // Setting stateRoot manually, because don't have state available.
             return newBlock;
         } else{
 
             Block newBlock = new Block(lastBlock.getHash(), lastBlock.getUnclesHash(), lastBlock.getCoinbase(), null,
-                    lastBlock.getDifficulty(), lastBlock.getNumber() + 1, lastBlock.getMinGasPrice(),
+                    lastBlock.getDifficulty(), lastBlock.getNumber() + 1,
                     lastBlock.getGasLimit(), lastBlock.getGasUsed(), lastBlock.getTimestamp(),
                     null, null, null, null);
 
