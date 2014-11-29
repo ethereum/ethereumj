@@ -51,8 +51,7 @@ public class Genesis extends Block {
     public static byte[] LOG_BLOOM = zeroHash512;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long   NUMBER = 0;
-    public static long   MIN_GAS_PRICE = 0;
-    public static long   GAS_LIMIT = 0;
+    public static long   GAS_LIMIT = 1000000;
     public static long   GAS_USED = 0;
     public static long   TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
