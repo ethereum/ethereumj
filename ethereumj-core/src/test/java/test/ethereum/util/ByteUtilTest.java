@@ -208,4 +208,35 @@ public class ByteUtilTest {
 			System.out.println(System.currentTimeMillis() - start2 + "ms to reach: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(4, counter2)));
 		}
 	}
+
+
+    @Test
+    public void firstNonZeroByte_1() {
+
+        byte[] data = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000");
+        int result = ByteUtil.firstNonZeroByte(data);
+
+        assertEquals(-1, result);
+    }
+
+    @Test
+    public void firstNonZeroByte_2() {
+
+        byte[] data = Hex.decode("0000000000000000000000000000000000000000000000000000000000332211");
+        int result = ByteUtil.firstNonZeroByte(data);
+
+        assertEquals(29, result);
+    }
+
+    @Test
+    public void firstNonZeroByte_3() {
+
+        byte[] data = Hex.decode("2211009988776655443322110099887766554433221100998877665544332211");
+        int result = ByteUtil.firstNonZeroByte(data);
+
+        assertEquals(0, result);
+    }
+
+
+
 }

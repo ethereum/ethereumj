@@ -150,6 +150,7 @@ public class AccountState {
         accountState.setNonce(this.getNonce());
         accountState.setCodeHash(this.getCodeHash());
         accountState.setStateRoot(this.getStateRoot());
+        accountState.setDirty(false);
 
         return accountState;
     }

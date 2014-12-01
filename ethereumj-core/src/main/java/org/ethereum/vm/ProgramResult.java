@@ -76,6 +76,7 @@ public class ProgramResult {
     }
 
     public void addLogInfos(List<LogInfo> logInfos){
+        if (logInfos == null) return;
         if (this.logInfoList == null) logInfoList = new ArrayList<>();
         this.logInfoList.addAll(logInfos);
     }

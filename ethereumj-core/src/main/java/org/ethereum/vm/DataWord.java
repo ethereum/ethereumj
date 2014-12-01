@@ -302,4 +302,10 @@ public class DataWord implements Comparable<DataWord> {
 			this.data[31 - i] = mask;
 		}
 	}
+
+    public int bytesOccupied(){
+        int firstNonZero = ByteUtil.firstNonZeroByte(data);
+        if (firstNonZero == -1) return 0;
+        return 31 - firstNonZero + 1;
+    }
 }

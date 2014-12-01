@@ -19,8 +19,9 @@ public interface ProgramInvoke {
     public DataWord getDataSize();
     public DataWord getDataValue(DataWord indexData);
     public byte[]   getDataCopy(DataWord offsetData, DataWord lengthData);
+    public int countNonZeroData();
 
-    public DataWord getPrevHash();
+        public DataWord getPrevHash();
     public DataWord getCoinbase();
     public DataWord getTimestamp();
     public DataWord getNumber();

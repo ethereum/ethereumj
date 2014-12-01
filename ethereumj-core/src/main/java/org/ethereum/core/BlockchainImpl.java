@@ -9,7 +9,6 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.AdvancedDeviceUtils;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -321,14 +320,17 @@ public class BlockchainImpl implements Blockchain {
 		int i = 0;
 		long totalGasUsed = 0;
 		for (Transaction tx : block.getTransactionsList()) {
-			stateLogger.debug("apply block: [{}] tx: [{}] ", block.getNumber(), i);
+			stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             TransactionReceipt receipt = applyTransaction(block, tx);
 			totalGasUsed += receipt.getCumulativeGasLong();
             receipt.setCumulativeGas(totalGasUsed);
 
             track.commit();
+
             receipt.setPostTxState(repository.getRoot());
+            stateLogger.info("executed block: [{}] tx: [{}] \n  state: [{}]", block.getNumber(), i,
+                    Hex.toHexString(repository.getRoot()));
 
             if(block.getNumber() >= CONFIG.traceStartBlock())
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
@@ -552,8 +554,8 @@ public class BlockchainImpl implements Blockchain {
 			}
             trackTx.commit();
 		} else {
-			// REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TXDATA)
-			long dataCost = tx.getData() == null ? 0: tx.getData().length * GasCost.TXDATA;
+			// REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TX_NO_ZERO_DATA)
+			long dataCost = tx.getData() == null ? 0: tx.getData().length * GasCost.TX_NO_ZERO_DATA;
 			gasUsed = GasCost.TRANSACTION + dataCost;
 			
 			BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));

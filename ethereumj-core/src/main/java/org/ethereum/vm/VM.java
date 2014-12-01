@@ -86,6 +86,7 @@ public class VM {
 
             long oldMemSize = program.getMemSize();
             BigInteger newMemSize = BigInteger.ZERO;
+            long       copySize   = 0;
             Stack<DataWord> stack = program.getStack();
 
             String hint = "";
@@ -104,11 +105,12 @@ public class VM {
         			DataWord newValue = stack.get(stack.size()-2);
                     DataWord oldValue =  program.storageLoad(stack.peek());
                     if (oldValue == null && !newValue.isZero())
-                    	gasCost = GasCost.SSTORE * 2;
+                    	gasCost = GasCost.SSTORE;
                     else if (oldValue != null && newValue.isZero())
-                        gasCost = GasCost.SSTORE * 0;
+                        // todo: GASREFUND counter policy
+                        System.currentTimeMillis();
                     else
-                        gasCost = GasCost.SSTORE;
+                        gasCost = GasCost.RESET_SSTORE;
         			break;
                 case SLOAD:
                     gasCost = GasCost.SLOAD;
@@ -135,12 +137,15 @@ public class VM {
         			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-2));
         			break;
         		case CALLDATACOPY:
+                    copySize = stack.get(stack.size()-3).longValue();
         			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-3));
         			break;
         		case CODECOPY:
+                    copySize = stack.get(stack.size()-3).longValue();
         			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-3));
         			break;
         		case EXTCODECOPY:
+                    copySize = stack.get(stack.size()-4).longValue();
         			newMemSize = memNeeded(stack.get(stack.size()-2), stack.get(stack.size()-4));
         			break;
         		case CALL: case CALLCODE:
@@ -167,7 +172,12 @@ public class VM {
                               GasCost.LOG_DATA_GAS  * stack.get(stack.size()-2).longValue();
 
                     break;
+                case EXP:
 
+                    DataWord exp = stack.get(stack.size()-2);
+                    int bytesOccupied = exp.bytesOccupied();
+                    gasCost =  (bytesOccupied == 0) ? 0 :  GasCost.EXP_GAS +  GasCost.EXP_BYTE_GAS * bytesOccupied;
+                    break;
                 default:
                     break;
             }
@@ -176,7 +186,7 @@ public class VM {
             // Avoid overflows
             if(newMemSize.compareTo(MAX_GAS) == 1)
             	throw program.new OutOfGasException();
-            
+
             // memory gas calc
             long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;            
 	        if (memoryUsage > oldMemSize) {
@@ -185,6 +195,12 @@ public class VM {
 				program.spendGas(memGas, op.name() + " (memory usage)");
 				gasCost += memGas;
 	        }
+
+            if (copySize > 0){
+                long copyGas = GasCost.COPY_GAS * (copySize + 31) / 32;
+                gasCost += copyGas;
+                program.spendGas(copyGas, op.name() + " (copy usage)");
+            }
 
 			// Log debugging line for VM
     		if(program.getNumber().intValue() == CONFIG.dumpBlock())
@@ -750,7 +766,7 @@ public class VM {
                         hint = logInfo.toString();
 
                     program.getResult().addLogInfo(logInfo);
-
+                    program.step();
                 }	break;
                 case MLOAD:{
                 	DataWord addr =  program.stackPop();
@@ -820,8 +836,11 @@ public class VM {
                     
                     if (!cond.isZero()) {
                     	int nextPC = pos.intValue(); // possible overflow
-                    	if (nextPC != 0 && program.getOp(nextPC-1) != OpCode.JUMPDEST.val())
+                    	if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
             				throw program.new BadJumpDestinationException();
+
+                        // todo: in case destination is not JUMPDEST, check if prev was strict push
+                        // todo: in EP: (ii) If a jump is preceded by a push, no jumpdest required;
 
                         if (logger.isInfoEnabled())
                             hint = "~> " + nextPC;
@@ -977,7 +996,12 @@ public class VM {
             // charged by CALL op
             if (program.invokeData.byTransaction()) {
                 program.spendGas(GasCost.TRANSACTION, "TRANSACTION");
-                program.spendGas(GasCost.TXDATA * program.invokeData.getDataSize().intValue(), "DATA");
+                int dataSize = program.invokeData.getDataSize().intValue();
+                int nonZeroesVals = program.invokeData.countNonZeroData();
+                int zeroVals = dataSize - nonZeroesVals;
+
+                program.spendGas(GasCost.TX_NO_ZERO_DATA * nonZeroesVals, "DATA");
+                program.spendGas(GasCost.TX_ZERO_DATA * zeroVals, "DATA");
             }
 
             while(!program.isStopped())

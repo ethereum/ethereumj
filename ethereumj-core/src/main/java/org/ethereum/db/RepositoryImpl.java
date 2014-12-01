@@ -88,16 +88,15 @@ public class RepositoryImpl implements Repository {
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
                             HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
 
-        WriteBatch writeBatch = detailsDB.getDb().createWriteBatch();
         for (ByteArrayWrapper hash : detailsCache.keySet()) {
 
             ContractDetails contractDetails = detailsCache.get(hash);
 
             if (contractDetails.isDeleted())
-               writeBatch.delete(hash.getData());
+               detailsDB.delete(hash.getData());
             else{
                 if (contractDetails.isDirty())
-                         writeBatch.put(hash.getData(), contractDetails.getEncoded());
+                         detailsDB.put(hash.getData(), contractDetails.getEncoded());
             }
 
             if (contractDetails.isDirty() || contractDetails.isDeleted()){
@@ -110,7 +109,6 @@ public class RepositoryImpl implements Repository {
             contractDetails.setDeleted(false);
             contractDetails.setDirty(false);
         }
-        detailsDB.getDb().write(writeBatch);
 
         for (ByteArrayWrapper hash : detailsCache.keySet()) {
 
@@ -119,8 +117,18 @@ public class RepositoryImpl implements Repository {
             if (accountState.isDeleted())
                 worldState.delete(hash.getData());
             else{
-                if (accountState.isDirty())
+                if (accountState.isDirty()){
                     worldState.update(hash.getData(), accountState.getEncoded());
+
+                    if (logger.isDebugEnabled()){
+
+                        logger.debug("update: [{}],nonce: [{}] balance: [{}]",
+                                Hex.toHexString(hash.getData()),
+                                accountState.getNonce(),
+                                accountState.getBalance());
+                    }
+
+                }
             }
 
             accountState.setDeleted(false);

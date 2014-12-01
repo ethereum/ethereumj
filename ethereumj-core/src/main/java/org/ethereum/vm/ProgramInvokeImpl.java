@@ -31,8 +31,8 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     private boolean byTestingSuite = false;
     private int callDeep = 0;
 
-    public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
-                             DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
+    public ProgramInvokeImpl(DataWord address,  DataWord origin,   DataWord caller, DataWord balance,
+                             DataWord gasPrice, DataWord gas,      DataWord callValue, byte[] msgData,
                              DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord difficulty,
                              DataWord gaslimit, Repository repository, int callDeep) {
 
@@ -180,6 +180,18 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         System.arraycopy(msgData, offset, data, 0, length);
 
         return data;
+    }
+
+
+    @Override
+    public int countNonZeroData(){
+
+        int counter = 0;
+        for (int i = 0; i < msgData.length; ++i){
+
+            if (msgData[i] != 0) ++counter;
+        }
+        return counter;
     }
 
     /*     PREVHASH op    */

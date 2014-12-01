@@ -255,6 +255,34 @@ public class BlockTest {
     }
 
     @Test
+    public void testScenario4() throws URISyntaxException, IOException {
+
+        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+
+        URL scenario1 = ClassLoader
+                .getSystemResource("blockload/scenario4.dmp");
+
+        File file = new File(scenario1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        byte[] root = Genesis.getInstance().getStateRoot();
+        for(String blockRLP : strData){
+            Block block = new Block(
+                    Hex.decode(blockRLP));
+            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            blockchain.tryToConnect(block);
+            root = block.getStateRoot();
+        }
+
+        logger.info("asserting root state is: {}", Hex.toHexString( root ));
+
+        //expected root: dedd258f4cee2d1b45f137a2a74a2052e14a6d7fe1b1184be0a6adcec6a1d1d3
+        assertEquals(Hex.toHexString(root),
+                     Hex.toHexString(worldManager.getRepository().getRoot()));
+    }
+
+
+    @Test
     @Ignore
     public void testUncleValidGenerationGap() {
     	// TODO

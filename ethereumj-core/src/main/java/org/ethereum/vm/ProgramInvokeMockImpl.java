@@ -147,6 +147,18 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     @Override
+    public int countNonZeroData(){
+
+        int counter = 0;
+        for (int i = 0; i < msgData.length; ++i){
+
+            if (msgData[i] != 0) ++counter;
+        }
+        return counter;
+    }
+
+
+    @Override
     public DataWord getCoinbase() {
         byte[] coinBase = Hex.decode("E559DE5527492BCB42EC68D07DF0742A98EC3F1E");
         return new DataWord(coinBase);

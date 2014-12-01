@@ -1738,9 +1738,10 @@ public class VMTest {
     public void testJUMPI_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60016006575B60CC"), invoke);
+        program =  new Program(Hex.decode("60016005575B60CC"), invoke);
         String s_expected = "00000000000000000000000000000000000000000000000000000000000000CC";
 
+        vm.step(program);
         vm.step(program);
         vm.step(program);
         vm.step(program);
@@ -1824,7 +1825,7 @@ public class VMTest {
     public void testJUMPDEST_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("60236001600a5760015b600255"), invoke);
+        program =  new Program(Hex.decode("6023600160095760015b600255"), invoke);
         
         String s_expected_key = "0000000000000000000000000000000000000000000000000000000000000002";
         String s_expected_val = "0000000000000000000000000000000000000000000000000000000000000023";
@@ -1835,7 +1836,8 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
         vm.step(program);
-            	
+        vm.step(program);
+
         DataWord key = new DataWord(Hex.decode(s_expected_key));
         DataWord val = program.getResult().getRepository().getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(), key);
     	
@@ -2342,7 +2344,10 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stackPop();
+        long gas = program.getResult().getGasUsed();
+
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+        assertEquals(4, gas);
     }
 
     @Test // EXP OP
@@ -2357,11 +2362,33 @@ public class VMTest {
         vm.step(program);
 
         DataWord item1 = program.stackPop();
+        long gas = program.getResult().getGasUsed();
+
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+        assertEquals(2, gas);
     }
 
-    @Test(expected=StackTooSmallException.class) // EXP OP mal
+    @Test // EXP OP
     public void testEXP_3() {
+
+        VM vm = new VM();
+        program =  new Program(Hex.decode("61112260010a"), invoke);
+        String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000000001";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        DataWord item1 = program.stackPop();
+        long gas = program.getResult().getGasUsed();
+
+        assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
+        assertEquals(5, gas);
+    }
+
+
+    @Test(expected=StackTooSmallException.class) // EXP OP mal
+    public void testEXP_4() {
 
         VM vm = new VM();
         program =  new Program(Hex.decode("621234560a"), invoke);
@@ -2465,7 +2492,9 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        long gas = program.getResult().getGasUsed();
         assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(6, gas);
     }
 
     @Test // CODECOPY OP
@@ -2482,7 +2511,9 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
+        long gas = program.getResult().getGasUsed();
         assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(10 , gas);
     }
 
     @Test // CODECOPY OP

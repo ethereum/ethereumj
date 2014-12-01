@@ -231,12 +231,24 @@ public class ByteUtil {
 		return baos.toByteArray();
 	}
 
+    public static int firstNonZeroByte(byte[] data){
+        int firstNonZero = -1;
+        int i = 0;
+        for (; i < data.length; ++i) {
+            if (data[i] != 0) {
+                firstNonZero = i;
+                break;
+            }
+        }
+        return firstNonZero;
+    }
+
 	public static byte[] stripLeadingZeroes(byte[] data) {
 
 		if (data == null)
 			return null;
 
-		int firstNonZero = 0;
+		int firstNonZero = firstNonZeroByte(data);
 		int i = 0;
 		for (; i < data.length; ++i) {
 			if (data[i] != 0) {

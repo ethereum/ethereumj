@@ -126,10 +126,12 @@ public class RepositoryTrack implements Repository {
             accountState = createAccount(addr);
         }
 
-        logger.trace("adding to balance addr: [{}], balance: [{}], delta: [{}]", Hex.toHexString(addr),
-                accountState.getBalance(), value);
+        BigInteger newBalance = accountState.addToBalance(value);
 
-        return accountState.addToBalance(value);
+        logger.trace("adding to balance addr: [{}], balance: [{}], delta: [{}]", Hex.toHexString(addr),
+                newBalance, value);
+
+        return newBalance;
     }
 
     @Override
@@ -188,6 +190,8 @@ public class RepositoryTrack implements Repository {
     public void commit() {
         logger.debug("commit changes");
         repository.updateBatch(cacheAccounts, cacheDetails);
+        cacheAccounts.clear();
+        cacheDetails.clear();
     }
 
 
