@@ -61,10 +61,10 @@ public class Channel {
         ethHandler.sendTransaction(tx);
     }
 
-    public void sendBlock(Block block){
+    public void sendNewBlock(Block block){
 
         // 1. check by best block send or not to send
-        // ethHandler.sendBlock(block);
+        ethHandler.sendNewBlock(block);
 
     }
 

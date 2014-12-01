@@ -45,8 +45,11 @@ public class ChannelManager {
     }
 
 
-    public void sendBlock(){
+    public void sendNewBlock(Block block){
         // 1. Go over all channels and send the block
+        for (Channel channel : channels){
+            channel.sendNewBlock(block);
+        }
     }
 
     public void addChannel(Channel channel){

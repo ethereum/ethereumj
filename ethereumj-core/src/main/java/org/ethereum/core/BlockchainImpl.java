@@ -516,10 +516,7 @@ public class BlockchainImpl implements Blockchain {
 				
 				// CREATE NEW CONTRACT ADDRESS AND ADD TX VALUE
 				if(isContractCreation) {
-					if (isValueTx) // adding to balance also creates the account
-                        trackTx.addBalance(receiverAddress, new BigInteger(1, tx.getValue()));
-					else
-                        trackTx.createAccount(receiverAddress);
+                    trackTx.addBalance(receiverAddress, BigInteger.ZERO); // also creates account
 					
 					if(stateLogger.isDebugEnabled())
 						stateLogger.debug("new contract created address={}",

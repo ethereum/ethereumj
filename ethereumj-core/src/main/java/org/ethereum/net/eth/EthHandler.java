@@ -67,6 +67,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     @Autowired
     private WorldManager worldManager;
+    private List<byte[]> sentHashes;
 
     public EthHandler(){
         this.peerDiscoveryMode = false;
@@ -232,7 +233,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         // or peer doesn't have the best hash anymore
         if (receivedHashes.isEmpty()
                 || !this.peerId.equals(hashRetrievalLock)) {
-            startGetBlockTimer(); // start getting blocks from hash queue
+            sendGetBlocks(); // start getting blocks from hash queue
             return;
         }
 
@@ -247,7 +248,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
                 logger.trace("Catch up with the hashes until: {[]}", foundHash);
                 // if known hash is found, ignore the rest
-                startGetBlockTimer(); // start getting blocks from hash queue
+                sendGetBlocks(); // start getting blocks from hash queue
                 return;
             }
         }
@@ -260,18 +261,26 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         List<Block> blockList = blocksMessage.getBlocks();
 
-        if (blockList.isEmpty()) return;
-        blockchain.getQueue().addBlocks(blockList);
-        blockchain.getQueue().logHashQueueSize();
+        // check if you got less blocks than you asked
+        if (blockList.size() < sentHashes.size()){
+            for (int i = 0; i < blockList.size(); ++i)
+                sentHashes.remove(0);
 
-        // If we got less blocks then we could get,
-        // it the correct indication that we are in sync we
-        // the chain from here there will be NEW_BLOCK only
-        // message expectation
-        if (blockList.size() < CONFIG.maxBlocksAsk()) {
+            logger.info("Got less blocks: [{}], return [{}] hashes to the queue",
+                    blockList.size(), sentHashes.size());
+            blockchain.getQueue().returnHashes(sentHashes);
+        }
+
+        if (blockchain.getQueue().isHashesEmpty()) {
             logger.info(" The peer sync process fully complete");
             syncStatus = SyncSatus.SYNC_DONE;
-            stopGetBlocksTimer();
+            blockchain.getQueue().addBlocks(blockList);
+            blockchain.getQueue().logHashQueueSize();
+        } else{
+            if (blockList.isEmpty()) return;
+            blockchain.getQueue().addBlocks(blockList);
+            blockchain.getQueue().logHashQueueSize();
+            sendGetBlocks();
         }
     }
 
@@ -350,6 +359,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         msgQueue.sendMessage(msg);
     }
 
+    public void sendNewBlock(Block block){
+        NewBlockMessage msg = new NewBlockMessage(block, block.getDifficulty());
+        msgQueue.sendMessage(msg);
+    }
+
     private void sendGetTransactions() {
         msgQueue.sendMessage(GET_TRANSACTIONS_MESSAGE);
     }
@@ -366,9 +380,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         if (queue.size() > CONFIG.maxBlocksQueued()) return;
 
         // retrieve list of block hashes from queue
+        // save them locally in case the remote peer
+        // will return less blocks than requested.
         List<byte[]> hashes = queue.getHashes();
+        this.sentHashes = hashes;
+
         if (hashes.isEmpty()) {
-            stopGetBlocksTimer();
             return;
         }
 
@@ -413,20 +430,20 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }, 2000, 10000);
     }
 
-    public void startGetBlockTimer() {
-        syncStatus = SyncSatus.BLOCK_RETRIEVING;
-        getBlocksTimer = new Timer("GetBlocksTimer");
-        getBlocksTimer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                BlockQueue blockQueue = blockchain.getQueue();
-                if (blockQueue.size() > CONFIG.maxBlocksQueued()) {
-                    logger.trace("Blocks queue too big temporary postpone blocks request");
-                    return;
-                }
-                sendGetBlocks();
-            }
-        }, 300, 10);
-    }
+//    public void startGetBlockTimer() {
+//        syncStatus = SyncSatus.BLOCK_RETRIEVING;
+//        getBlocksTimer = new Timer("GetBlocksTimer");
+//        getBlocksTimer.scheduleAtFixedRate(new TimerTask() {
+//            public void run() {
+//                BlockQueue blockQueue = blockchain.getQueue();
+//                if (blockQueue.size() > CONFIG.maxBlocksQueued()) {
+//                    logger.trace("Blocks queue too big temporary postpone blocks request");
+//                    return;
+//                }
+//                sendGetBlocks();
+//            }
+//        }, 300, 10);
+//    }
 
     private void stopGetBlocksTimer() {
         getBlocksTimer.cancel();

@@ -148,6 +148,13 @@ public class BlockQueue {
         }
 	}
 
+    public void returnHashes(List<byte[]> hashes){
+
+        ListIterator iterator =  hashes.listIterator(hashes.size());
+        while(iterator.hasPrevious())
+            blockHashQueue.addLast((byte[])iterator.previous());
+    }
+
     public void addNewBlockHash(byte[] hash){
         blockHashQueue.addFirst(hash);
     }
@@ -158,6 +165,7 @@ public class BlockQueue {
 	 * @return A list of hashes for which blocks need to be retrieved.
 	 */
 	public List<byte[]> getHashes() {
+
 		List<byte[]> hashes = new ArrayList<>();
 		while (!blockHashQueue.isEmpty() && hashes.size() < CONFIG.maxBlocksAsk()) {
 				hashes.add(blockHashQueue.removeLast());
@@ -204,6 +212,10 @@ public class BlockQueue {
 	public int size() {
 		return blockReceivedQueue.size();
 	}
+
+    public boolean isHashesEmpty(){
+        return blockHashQueue.size() == 0;
+    }
 
     public void clear(){
         this.blockHashQueue.clear();

@@ -85,6 +85,10 @@ public class Miner {
 		
 		while(ByteUtil.increment(testNonce) && !stop) {
 
+            if (testNonce[31] == 0 && testNonce[30] == 0){
+                System.out.println("mining: " + new BigInteger(1, testNonce));
+            }
+
             if (testNonce[31] == 0)
                 sleep();
 			concat = Arrays.concatenate(hash, testNonce);
