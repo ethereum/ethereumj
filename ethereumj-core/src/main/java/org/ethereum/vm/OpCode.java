@@ -60,10 +60,10 @@ public enum OpCode {
 	OR(0x17, 2),
 	/** (0x18) Bitwise XOR operation			*/
 	XOR(0x18, 2),
-	/** (0x19) Retrieve single byte from word 	*/
-	BYTE(0x19, 2),
 	/** (0x1a) Bitwise NOT operationr			*/
-	NOT(0x1a, 1),	
+	NOT(0x19, 1),	
+	/** (0x19) Retrieve single byte from word 	*/
+	BYTE(0x1a, 2),
 
 	/*	Cryptographic Operations	*/
 

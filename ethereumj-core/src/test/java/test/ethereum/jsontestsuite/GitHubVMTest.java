@@ -18,7 +18,6 @@ public class GitHubVMTest {
     }
     
     @Test // testing full suite
-    @Ignore
     public void testBitwiseLogicOperationFromGitHub() throws ParseException {
 
     	String json = JSONReader.loadJSON("VMTests/vmBitwiseLogicOperationTest.json");
