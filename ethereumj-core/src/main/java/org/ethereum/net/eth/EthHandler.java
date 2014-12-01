@@ -377,7 +377,17 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     // Parallel download blocks based on hashQueue
     private void sendGetBlocks() {
         BlockQueue queue = blockchain.getQueue();
-        if (queue.size() > CONFIG.maxBlocksQueued()) return;
+        if (queue.size() > CONFIG.maxBlocksQueued()){
+
+            logger.info("postpone asking for blocks: queue: {}", queue.size());
+            getBlocksTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    sendGetBlocks();
+                }
+            }, 100);
+            return;
+        }
 
         // retrieve list of block hashes from queue
         // save them locally in case the remote peer
