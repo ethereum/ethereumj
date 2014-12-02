@@ -43,6 +43,7 @@ public class GitHubVMTest {
     }
     
     @Test // testing full suite
+    @Ignore
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
 
     	String json = JSONReader.loadJSON("vmtests/vmIOandFlowOperationsTest.json");
@@ -67,9 +68,16 @@ public class GitHubVMTest {
     
     @Test // testing full suite
     @Ignore
-    public void testSystemOperationsFromGitHub() throws ParseException {
+    public void testVMGitHub() throws ParseException {
 
-        String json = JSONReader.loadJSON("vmtests/vmSystemOperationsTest.json");
-        GitHubJSONTestSuite.runGitHubJsonTest(json);
+    	String json = JSONReader.loadJSON("vmtests/vmtests.json");
+    	GitHubJSONTestSuite.runGitHubJsonTest(json);
+    }
+    
+    @Test // testing full suite
+    public void testVMLogGitHub() throws ParseException {
+
+    	String json = JSONReader.loadJSON("vmtests/vmLogTest.json");
+    	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
 }

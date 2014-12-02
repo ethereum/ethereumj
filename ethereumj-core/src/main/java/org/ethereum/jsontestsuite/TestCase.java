@@ -23,6 +23,9 @@ public class TestCase {
 
     //            "env": { ... },
     private Env env;
+    
+    //
+    private Logs logs;
 
     //            "exec": { ... },
     private Exec exec;
@@ -61,6 +64,11 @@ public class TestCase {
             JSONArray  callCreates = new JSONArray();
             if(testCaseJSONObj.containsKey("callcreates"))
             	callCreates = (JSONArray)testCaseJSONObj.get("callcreates");
+            
+            JSONObject logsJSON = new JSONObject();
+            if(testCaseJSONObj.containsKey("logs"))
+            	logsJSON = (JSONObject)testCaseJSONObj.get("logs");
+            logs = new Logs(logsJSON);
 
             String  gasString = "0";
             if(testCaseJSONObj.containsKey("gas"))
@@ -113,6 +121,10 @@ public class TestCase {
 
     public Exec getExec() {
         return exec;
+    }
+    
+    public Logs getLogs() {
+    	return logs;
     }
 
     public byte[] getGas() {

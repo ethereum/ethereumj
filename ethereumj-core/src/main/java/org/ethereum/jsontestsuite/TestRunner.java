@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryImpl;
@@ -69,6 +70,7 @@ public class TestRunner {
 	        /* 2. Create ProgramInvoke - Env/Exec */
 	        Env  env  = testCase.getEnv();
 	        Exec exec = testCase.getExec();
+	        Logs logs = testCase.getLogs();
 	
 	        byte[] address     = exec.getAddress();
 	        byte[] origin      = exec.getOrigin();
@@ -222,6 +224,31 @@ public class TestRunner {
     	                    logger.info(output);
     	                    results.add(output);
     	                }
+    	            }
+    	            
+    	            /* asset logs */
+    	            List<LogInfo> logResult = program.getResult().getLogInfoList();
+    	            Iterator<byte[]> itr = logs.getLogsRLPSHA3KeyIterator();
+    	            while(itr.hasNext()) {
+    	            	byte[] expectedLogKey = itr.next();
+    	            	System.out.println("Expected key " + Hex.toHexString(expectedLogKey));
+    	            	LogInfo expectedLogInfo = logs.getLogBySHA3Key(expectedLogKey);
+    	            	
+    	            	boolean found = false;
+    	            	for(LogInfo resultLogInfo:logResult) {
+        	            	byte[] rlpHash = HashUtil.sha3(resultLogInfo.getEncoded());
+        	            	System.out.println("returned key " + Hex.toHexString(rlpHash));
+        	            	if(Arrays.equals(expectedLogKey, rlpHash)) {
+        	            		found = true;
+        	            	}        	            	
+        	            }
+    	            	
+    	            	if(!found) {
+    	            		String output =
+    	                            String.format("Expected log [ %s ] was not found", expectedLogInfo.toString());
+    	                    logger.info(output);
+    	                    results.add(output);
+    	            	}
     	            }
     	        }
     	
