@@ -821,9 +821,11 @@ public class VM {
                 case JUMP:{
                 	DataWord pos  =  program.stackPop();
                 	int nextPC = pos.intValue(); // possible overflow
-                	if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
-        				throw program.new BadJumpDestinationException();
-
+                	if(program.getPreviouslyExecutedOp() < OpCode.PUSH1.val() || program.getPreviouslyExecutedOp() > OpCode.PUSH32.val()) {
+                		if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
+            				throw program.new BadJumpDestinationException();
+                	}
+                	
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
 
@@ -836,8 +838,10 @@ public class VM {
                     
                     if (!cond.isZero()) {
                     	int nextPC = pos.intValue(); // possible overflow
-                    	if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
-            				throw program.new BadJumpDestinationException();
+                    	if(program.getPreviouslyExecutedOp() < OpCode.PUSH1.val() || program.getPreviouslyExecutedOp() > OpCode.PUSH32.val()) {
+                    		if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
+                				throw program.new BadJumpDestinationException();
+                    	}
 
                         // todo: in case destination is not JUMPDEST, check if prev was strict push
                         // todo: in EP: (ii) If a jump is preceded by a push, no jumpdest required;
@@ -971,6 +975,8 @@ public class VM {
                 	break;
             }
             
+            program.setPreviouslyExecutedOp(op.val());
+            
 			if (logger.isInfoEnabled() && !op.equals(CALL)
 					&& !op.equals(CREATE))
 				logger.info(logString, stepBefore, String.format("%-12s",
@@ -1003,7 +1009,7 @@ public class VM {
                 program.spendGas(GasCost.TX_NO_ZERO_DATA * nonZeroesVals, "DATA");
                 program.spendGas(GasCost.TX_ZERO_DATA * zeroVals, "DATA");
             }
-
+            
             while(!program.isStopped())
                 this.step(program);
 

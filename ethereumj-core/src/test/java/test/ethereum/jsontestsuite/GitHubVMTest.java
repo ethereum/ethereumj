@@ -11,6 +11,7 @@ import org.junit.runners.MethodSorters;
 public class GitHubVMTest {
 
     @Test // testing full suite
+    @Ignore
     public void testArithmeticFromGitHub() throws ParseException {
 
     	String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
@@ -18,6 +19,7 @@ public class GitHubVMTest {
     }
     
     @Test // testing full suite
+    @Ignore
     public void testBitwiseLogicOperationFromGitHub() throws ParseException {
 
     	String json = JSONReader.loadJSON("VMTests/vmBitwiseLogicOperationTest.json");
@@ -41,7 +43,6 @@ public class GitHubVMTest {
     }
     
     @Test // testing full suite
-    @Ignore
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
 
     	String json = JSONReader.loadJSON("vmtests/vmIOandFlowOperationsTest.json");

@@ -47,6 +47,7 @@ public class Program {
     byte[]   ops;
     int      pc = 0;
     byte     lastOp = 0;
+    byte 	 previouslyExecutedOp = 0;
     boolean  stopped = false;
 
     ProgramInvoke invokeData;
@@ -76,10 +77,30 @@ public class Program {
         return ops[pc];
     }
 
+    /**
+     * Last Op can only be set publicly (no getLastOp method), is used for logging
+     * @param op
+     */
     public void setLastOp(byte op) {
         this.lastOp = op;
     }
-
+    
+    /**
+     * Should be set only after the OP is fully executed
+     * @param op
+     */
+    public void setPreviouslyExecutedOp(byte op) {
+    	this.previouslyExecutedOp = op;
+    }
+    
+    /**
+     * returns the last fully executed OP
+     * @return
+     */
+    public byte getPreviouslyExecutedOp() {
+    	return this.previouslyExecutedOp;
+    }
+    
     public void stackPush(byte[] data) {
         DataWord stackWord = new DataWord(data);
         stack.push(stackWord);
