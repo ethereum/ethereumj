@@ -78,6 +78,8 @@ public class DataWord implements Comparable<DataWord> {
      */
     public int intValue() {
     	BigDecimal tmpValue = new BigDecimal(this.value());
+    	if(this.bytesOccupied() > 4)
+    		return Integer.MAX_VALUE;
     	return tmpValue.intValueExact();
     }
     

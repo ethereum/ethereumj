@@ -46,6 +46,9 @@ public class SystemProperties {
     private static Boolean  DEFAULT_VM_TRACE     = false;
     private static String   DEFAULT_VM_TRACE_DIR = "dmp";
     private static int      DEFAULT_PEER_LISTEN_PORT = 30303;
+    
+    /* Testing */
+    private static Boolean  DEFAULT_VMTEST_LOAD_LOCAL = false;
 
     private static List<String> DEFAULT_PROTOCOL_LIST = Arrays.asList("eth", "shh");
 
@@ -278,6 +281,16 @@ public class SystemProperties {
 				logger.info("Key: " + key + ", Value: " + value);
 		}
 	}
+	
+	/*
+	 * 
+	 * Testing
+	 * 
+	 */
+	public boolean vmTestLoadLocal() {
+        if (prop.isEmpty() || !prop.containsKey("GitHubTests.VMTest.loadLocal")) return DEFAULT_VMTEST_LOAD_LOCAL;
+        return Boolean.parseBoolean(prop.getProperty("GitHubTests.VMTest.loadLocal"));
+    }
 	
 	public static void main(String args[]) {
 		SystemProperties systemProperties = new SystemProperties();
