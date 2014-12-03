@@ -63,6 +63,11 @@
 			<artifactId>core</artifactId>
 			<version>${spongycastle.version}</version>
 		</dependency>
+        <dependency>
+            <groupId>com.madgag.spongycastle</groupId>
+            <artifactId>prov</artifactId>
+            <version>${spongycastle.version}</version>
+        </dependency>
 		<dependency>
 		    <groupId>org.iq80.leveldb</groupId>
 		    <artifactId>leveldb</artifactId>
