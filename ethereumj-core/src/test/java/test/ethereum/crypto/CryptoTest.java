@@ -33,6 +33,7 @@ public class CryptoTest {
         assertEquals("89b44e4d3c81ede05d0f5de8d1a68f754d73d997", Hex.toHexString(addr));
     }
 
+
     @Test
     public void test4() {
         byte[] cowBytes = HashUtil.sha3("cow".getBytes());
@@ -91,4 +92,12 @@ public class CryptoTest {
         System.out.println(new BigInteger(Hex.decode("3913517ebd3c0c65000000")));
         System.out.println(Utils.getValueShortString(new BigInteger("69000000000000000000000000")));
     }
+
+    @Test
+    public void test10() {
+        BigInteger privKey = new BigInteger("74ef8a796480dda87b4bc550b94c408ad386af0f65926a392136286784d63858", 16);
+        byte[] addr = ECKey.fromPrivate(privKey).getAddress();
+        assertEquals("ba73facb4f8291f09f27f90fe1213537b910065e", Hex.toHexString(addr));
+    }
+
 }
