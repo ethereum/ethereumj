@@ -10,8 +10,7 @@ import org.junit.runners.MethodSorters;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {
 
-    @Test // testing full suite
-    @Ignore
+    @Test
     public void testArithmeticFromGitHub() throws ParseException {
 
     	String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
@@ -19,7 +18,6 @@ public class GitHubVMTest {
     }
     
     @Test // testing full suite
-    @Ignore
     public void testBitwiseLogicOperationFromGitHub() throws ParseException {
 
     	String json = JSONReader.loadJSON("VMTests/vmBitwiseLogicOperationTest.json");
@@ -27,57 +25,51 @@ public class GitHubVMTest {
     }
     
     @Test // testing full suite
-    @Ignore
     public void testBlockInfoFromGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmBlockInfoTest.json");
+    	String json = JSONReader.loadJSON("VMTests/vmBlockInfoTest.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
     @Test // testing full suite
-    @Ignore
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmEnvironmentalInfoTest.json");
+    	String json = JSONReader.loadJSON("VMTests/vmEnvironmentalInfoTest.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
     @Test // testing full suite
-    @Ignore
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmIOandFlowOperationsTest.json");
+    	String json = JSONReader.loadJSON("VMTests/vmIOandFlowOperationsTest.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
     @Test // testing full suite
-    @Ignore
     public void testPushDupSwapFromGitHub() throws ParseException {
 
-        String json = JSONReader.loadJSON("vmtests/vmPushDupSwapTest.json");
+        String json = JSONReader.loadJSON("VMTests/vmPushDupSwapTest.json");
         GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
     @Test // testing full suite
-    @Ignore
     public void testShaFromGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmSha3Test.json");
+    	String json = JSONReader.loadJSON("VMTests/vmSha3Test.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
     @Test // testing full suite
-    @Ignore
     public void testVMGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmtests.json");
+    	String json = JSONReader.loadJSON("VMTests/vmtests.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
     
     @Test // testing full suite
     public void testVMLogGitHub() throws ParseException {
 
-    	String json = JSONReader.loadJSON("vmtests/vmLogTest.json");
+    	String json = JSONReader.loadJSON("VMTests/vmLogTest.json");
     	GitHubJSONTestSuite.runGitHubJsonTest(json);
     }
 }

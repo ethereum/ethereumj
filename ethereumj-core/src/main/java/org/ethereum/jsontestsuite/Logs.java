@@ -49,7 +49,7 @@ public class Logs {
 			return logs.get(k);
 		return null;
 	}
-	public Iterator<byte[]> getLogsRLPSHA3KeyIterator() {
+	public Iterator<byte[]> getLogsBloomKeyIterator() {
 		return logs.keySet().iterator();
 	}
 }
