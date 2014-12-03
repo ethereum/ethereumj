@@ -20,6 +20,7 @@ public class  Bloom {
 
 
     public Bloom(byte[] data){
+        this.data = data;
     }
 
     public static Bloom create(byte[] toBloom) {
