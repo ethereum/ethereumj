@@ -44,4 +44,14 @@ public class BloomTest {
     }
 
 
+    @Test
+    public void test4(){
+
+        byte[] key = SHA3Helper.sha3(Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6"));
+
+        Bloom bloom = Bloom.create(key);
+        System.out.println(bloom);
+
+    }
+
 }

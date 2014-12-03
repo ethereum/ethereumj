@@ -3,10 +3,13 @@ package org.ethereum.net.server;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -25,7 +28,16 @@ public class ChannelManager {
 
     Map<ByteArrayWrapper, Block> blockCache = new HashMap<>();
 
+    @Autowired
+    WorldManager worldManager;
+
     public ChannelManager() {
+    }
+
+
+    @PostConstruct
+    public void init(){
+        scheduleChannelCollector();
     }
 
     public void recvTransaction(){
@@ -78,6 +90,10 @@ public class ChannelManager {
                         iter.remove();
                         logger.info("Channel removed: {}", channel.p2pHandler.getHandshakeHelloMessage());
                     }
+                }
+
+                if (channels.size() == 0){
+                    worldManager.getListener().onNoConnections();
                 }
             }
         }, 2000, 5000);

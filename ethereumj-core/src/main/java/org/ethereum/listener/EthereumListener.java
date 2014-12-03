@@ -22,4 +22,5 @@ public interface EthereumListener {
     public void onPeerDisconnect(String host, long port);
     public void onPendingTransactionsReceived(Set<Transaction> transactions);
     public void onSyncDone();
+    public void onNoConnections();
 }

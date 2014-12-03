@@ -170,7 +170,7 @@ public class BlockchainImpl implements Blockchain {
         // version of block we already
         // got on the main chain
         long gap = bestBlock.getNumber() - block.getNumber();
-        if (hasParentOnTheChain(block) && gap <=0){
+        if (hasParentOnTheChain(block) && gap >=0){
 
             logger.info("created alt chain by block.hash: [{}] ", block.getShortHash());
             Chain chain = new Chain();

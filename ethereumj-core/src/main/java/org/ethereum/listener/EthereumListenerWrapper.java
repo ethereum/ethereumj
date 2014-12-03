@@ -61,6 +61,13 @@ public class EthereumListenerWrapper implements EthereumListener{
             listener.onSyncDone();
     }
 
+
+    @Override
+    public void onNoConnections(){
+        if (listener != null)
+            listener.onNoConnections();
+    }
+
     public void addListener(EthereumListener listener){
         if (listener != null)
             this.listener = listener;

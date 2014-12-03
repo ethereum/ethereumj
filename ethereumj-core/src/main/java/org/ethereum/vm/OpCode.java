@@ -305,12 +305,12 @@ public enum OpCode {
 	CREATE(0xf0, 3),   //       [in_size] [in_offs] [gas_val] CREATE
 	/** (cxf1) Message-call into an account 				*/
 	CALL(0xf1, 7),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr] [gas] CALL
-	/** (0xf2) Halt execution returning output data			*/
-	RETURN(0xf2, 2),
-	/** (0xf3) Calls self, but grabbing the code from the 
+	/** (0xf2) Calls self, but grabbing the code from the
 	 * TO argument instead of from one's own address 		*/
-	CALLCODE(0xf3, 7),
-	/** (0xff) Halt execution and register account for 
+	CALLCODE(0xf2, 7),
+    /** (0xf3) Halt execution returning output data			*/
+    RETURN(0xf3, 2),
+	/** (0xff) Halt execution and register account for
 	 * later deletion */
 	SUICIDE(0xff, 1);
 

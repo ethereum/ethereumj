@@ -67,12 +67,6 @@ public class Miner {
 		byte[] target = BigIntegers.asUnsignedByteArray(32,
 				max.divide(new BigInteger(1, difficulty)));
 
-//        return timestamp >= _parent.timestamp + 5 ? _parent.difficulty - (_parent.difficulty >> 10) : (_parent.difficulty + (_parent.difficulty >> 10));
-        BigInteger bi = new BigInteger(newBlock.getDifficulty());
-        BigInteger delta = bi.shiftRight(10);
-        newBlock.getHeader().setDifficulty( BigIntegers.asUnsignedByteArray( bi.subtract(delta) ));
-
-//        return max<u256>(125000, (_parent.gasLimit * (1024 - 1) + (_parent.gasUsed * 6 / 5)) / 1024);
 
         long newGasLimit = Math.max(125000,
                 (newBlock.getGasLimit() * (1024 - 1) + (newBlock.getGasUsed() * 6 / 5)) / 1024);

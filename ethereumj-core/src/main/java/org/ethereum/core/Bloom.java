@@ -13,7 +13,7 @@ import org.spongycastle.util.encoders.Hex;
 
 public class  Bloom {
 
-    byte[] data = new byte[512];
+    byte[] data = new byte[64];
 
 
     public Bloom(byte[] data){
@@ -25,7 +25,7 @@ public class  Bloom {
         int mov2 = (toBloom[2] & 1) * 256 + (toBloom[3] & 255);
         int mov3 = (toBloom[4] & 1) * 256 + (toBloom[5] & 255);
 
-        byte[] data = new byte[512];
+        byte[] data = new byte[64];
         Bloom bloom = new Bloom(data);
 
         bloom.setBit(mov1, 1);
@@ -44,7 +44,7 @@ public class  Bloom {
 
     public void setBit(int pos, int val) {
 
-        if (data.length - 1 < pos )
+        if (data.length *  8 < pos )
             throw new Error("outside bloom limit, pos: " + pos);
 
         int posByte  = (pos - 1) / 8;

@@ -40,4 +40,9 @@ public class EthereumListenerAdapter implements EthereumListener {
     public void onSyncDone() {
 
     }
+
+    @Override
+    public void onNoConnections(){
+
+    }
 }

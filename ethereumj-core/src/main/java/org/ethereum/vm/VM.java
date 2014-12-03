@@ -821,7 +821,7 @@ public class VM {
                 case JUMP:{
                 	DataWord pos  =  program.stackPop();
                 	int nextPC = pos.intValue(); // possible overflow
-                	if (nextPC != 0 && program.getOp(nextPC-1) != OpCode.JUMPDEST.val())
+                	if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
         				throw program.new BadJumpDestinationException();
 
                     if (logger.isInfoEnabled())

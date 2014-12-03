@@ -2404,7 +2404,7 @@ public class VMTest {
     public void testRETURN_1() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("61123460005260206000F2"), invoke);
+        program =  new Program(Hex.decode("61123460005260206000F3"), invoke);
         String s_expected_1 = "0000000000000000000000000000000000000000000000000000000000001234";
 
         vm.step(program);
@@ -2423,7 +2423,7 @@ public class VMTest {
     public void testRETURN_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6112346000526020601FF2"), invoke);
+        program =  new Program(Hex.decode("6112346000526020601FF3"), invoke);
         String s_expected_1 = "3400000000000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
@@ -2442,7 +2442,7 @@ public class VMTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206000F2"),
+                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206000F3"),
                         invoke);
         String s_expected_1 = "A0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B1";
 
@@ -2463,7 +2463,7 @@ public class VMTest {
 
         VM vm = new VM();
         program = 
-                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206010F2"),
+                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206010F3"),
                         invoke);
         String s_expected_1 = "E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B100000000000000000000000000000000";
 
