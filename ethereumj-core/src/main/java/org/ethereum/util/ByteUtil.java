@@ -311,9 +311,9 @@ public class ByteUtil {
         if ( (data.length * 8) - 1 < pos )
             throw new Error("outside byte array limit, pos: " + pos);
 
-        int posByte  = (pos) / 8;
+        int posByte  = data.length - 1 - (pos) / 8;
         int posBit   = (pos) % 8;
-        byte setter  = (byte)(1 << (7 - posBit));
+        byte setter  = (byte)(1 << (posBit));
         byte toBeSet = data[posByte];
         byte result;
         if(val == 1)
@@ -330,9 +330,9 @@ public class ByteUtil {
         if ((data.length * 8) - 1 < pos )
             throw new Error("outside byte array limit, pos: " + pos);
 
-        int  posByte = pos / 8;
+        int  posByte = data.length - 1 - pos / 8;
         int  posBit = pos % 8;
         byte dataByte = data[posByte];
-        return Math.min(1, (dataByte & (1 << (7 - posBit))));
+        return Math.min(1, (dataByte & (1 << (posBit))));
     }
 }
