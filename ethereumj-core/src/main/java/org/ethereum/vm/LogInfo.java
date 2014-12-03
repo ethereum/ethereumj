@@ -1,9 +1,12 @@
 package org.ethereum.vm;
 
 import org.ethereum.core.BlockHeader;
+import org.ethereum.core.Bloom;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -60,6 +63,15 @@ public class LogInfo {
 
         byte[] dataEncoded = RLP.encodeElement(data);
         return RLP.encodeList(addressEncoded, RLP.encodeList(topicsEncoded), dataEncoded);
+    }
+
+    public Bloom getBloom() {
+        Bloom ret = Bloom.create(HashUtil.sha3(address));
+        for(byte[] topic:topics) {
+            ret.or(Bloom.create(HashUtil.sha3(topic)));
+        }
+
+        return ret;
     }
 
     @Override

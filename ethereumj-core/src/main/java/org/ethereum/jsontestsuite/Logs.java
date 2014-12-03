@@ -44,7 +44,7 @@ public class Logs {
 	 * @param k
 	 * @return
 	 */
-	public LogInfo getLogBySHA3Key(byte[] k) {
+	public LogInfo getLogBloom(byte[] k) {
 		if(logs.containsKey(k))
 			return logs.get(k);
 		return null;

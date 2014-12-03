@@ -4,6 +4,8 @@ import static org.junit.Assert.*;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
@@ -237,6 +239,78 @@ public class ByteUtilTest {
         assertEquals(0, result);
     }
 
+	@Test
+	public void setBitTest() {
+		/*
+			Set on
+		 */
+		byte[] data = ByteBuffer.allocate(4).putInt(0).array();
+		int posBit = 24;
+		int expected = 128;
+		int result = -1;
+		byte[] ret = ByteUtil.setBit(data, posBit, 1);
+		result = ByteUtil.byteArrayToInt(ret);
+		assertTrue(expected == result);
 
+		posBit = 25;
+		expected = 192;
+		ret = ByteUtil.setBit(data, posBit, 1);
+		result = ByteUtil.byteArrayToInt(ret);
+		assertTrue(expected == result);
 
+		posBit = 2;
+		expected = 536871104;
+		ret = ByteUtil.setBit(data, posBit, 1);
+		result = ByteUtil.byteArrayToInt(ret);
+		assertTrue(expected == result);
+
+		/*
+			Set off
+		 */
+		posBit = 24;
+		expected = 536870976;
+		ret = ByteUtil.setBit(data, posBit, 0);
+		result = ByteUtil.byteArrayToInt(ret);
+		assertTrue(expected == result);
+
+		posBit = 25;
+		expected = 536870912;
+		ret = ByteUtil.setBit(data, posBit, 0);
+		result = ByteUtil.byteArrayToInt(ret);
+		assertTrue(expected == result);
+
+		posBit = 2;
+		expected = 0;
+		ret = ByteUtil.setBit(data, posBit, 0);
+		result = ByteUtil.byteArrayToInt(ret);
+		assertTrue(expected == result);
+	}
+
+	@Test
+	public void getBitTest() {
+		byte[] data = ByteBuffer.allocate(4).putInt(0).array();
+		ByteUtil.setBit(data, 24, 1);
+		ByteUtil.setBit(data, 25, 1);
+		ByteUtil.setBit(data, 2, 1);
+
+		List<Integer> found = new ArrayList<Integer>();
+		for(int i=0; i < (data.length * 8); i++) {
+			int res = ByteUtil.getBit(data, i);
+			if(res == 1)
+				if(i != 24 && i != 25 && i != 2)
+					assertTrue(false);
+				else
+					found.add(i);
+			else {
+				if(i == 24 || i == 25 || i == 2)
+					assertTrue(false);
+			}
+		}
+
+		if(found.size() != 3)
+			assertTrue(false);
+		assertTrue(found.get(0) == 2);
+		assertTrue(found.get(1) == 24);
+		assertTrue(found.get(2) == 25);
+	}
 }

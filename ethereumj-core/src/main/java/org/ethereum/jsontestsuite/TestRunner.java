@@ -232,20 +232,20 @@ public class TestRunner {
     	            while(itr.hasNext()) {
     	            	byte[] expectedLogKey = itr.next();
     	            	System.out.println("Expected key " + Hex.toHexString(expectedLogKey));
-    	            	LogInfo expectedLogInfo = logs.getLogBySHA3Key(expectedLogKey);
+    	            	LogInfo expectedLogInfo = logs.getLogBloom(expectedLogKey);
     	            	
     	            	boolean found = false;
     	            	for(LogInfo resultLogInfo:logResult) {
-        	            	byte[] rlpHash = HashUtil.sha3(resultLogInfo.getEncoded());
-        	            	System.out.println("returned key " + Hex.toHexString(rlpHash));
-        	            	if(Arrays.equals(expectedLogKey, rlpHash)) {
+        	            	byte[] resultKey = resultLogInfo.getBloom().getData();
+        	            	System.out.println("returned key " + Hex.toHexString(resultKey));
+        	            	if(Arrays.equals(expectedLogKey, resultKey)) {
         	            		found = true;
         	            	}        	            	
         	            }
     	            	
     	            	if(!found) {
     	            		String output =
-    	                            String.format("Expected log [ %s ] was not found", expectedLogInfo.toString());
+    	                            String.format("Expected log [ %s ]", expectedLogInfo.toString());
     	                    logger.info(output);
     	                    results.add(output);
     	            	}
