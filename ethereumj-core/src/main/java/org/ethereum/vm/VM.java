@@ -754,7 +754,7 @@ public class VM {
                     List<DataWord> topics = new ArrayList<DataWord>();
                     for (int i = 0; i < nTopics; ++i){
                         DataWord topic = stack.pop();
-                        if(!topics.contains(topic))
+//                        if(!topics.contains(topic))
                             topics.add(topic);
                     }
 
