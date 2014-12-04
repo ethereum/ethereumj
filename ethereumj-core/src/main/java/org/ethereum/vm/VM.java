@@ -751,10 +751,10 @@ public class VM {
 
                     int nTopics = op.val() - OpCode.LOG0.val();
 
-                    List<byte[]> topics = new ArrayList<>();
+                    List<DataWord> topics = new ArrayList<DataWord>();
                     for (int i = 0; i < nTopics; ++i){
                         DataWord topic = stack.pop();
-                        topics.add(topic.getData());
+                        topics.add(topic);
                     }
 
                     ByteBuffer data = program.memoryChunk(memStart, memOffset);
