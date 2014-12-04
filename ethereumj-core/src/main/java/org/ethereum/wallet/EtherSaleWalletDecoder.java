@@ -1,10 +1,8 @@
 package org.ethereum.wallet;
 
-import org.spongycastle.crypto.BufferedBlockCipher;
-import org.spongycastle.crypto.CipherParameters;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.crypto.PBEParametersGenerator;
+import org.spongycastle.crypto.*;
 import org.spongycastle.crypto.digests.SHA256Digest;
+import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.crypto.engines.AESEngine;
 import org.spongycastle.crypto.generators.PKCS5S2ParametersGenerator;
 import org.spongycastle.crypto.modes.CBCBlockCipher;
@@ -13,9 +11,7 @@ import org.spongycastle.crypto.paddings.PKCS7Padding;
 import org.spongycastle.crypto.paddings.PaddedBufferedBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
-import org.spongycastle.jcajce.provider.digest.SHA3;
 
-import java.security.MessageDigest;
 import java.util.Arrays;
 
 
@@ -48,8 +44,11 @@ public class EtherSaleWalletDecoder {
     }
 
     private byte[] hashSeed(final byte[] seed) {
-        MessageDigest md = new SHA3.Digest256();
-        return md.digest(seed);
+        ExtendedDigest md = new SHA3Digest(256);
+        md.update(seed, 0, seed.length);
+        byte[] result = new byte[md.getDigestSize()];
+        md.doFinal(result, 0);
+        return result;
     }
 
     protected byte[] decryptSeed(byte[] pbkdf2PasswordHash, byte[] encseedBytesWithIV) throws InvalidCipherTextException {
@@ -65,8 +64,7 @@ public class EtherSaleWalletDecoder {
 
         // setup AES cipher in CBC mode with PKCS7 padding
         BlockCipherPadding padding = new PKCS7Padding();
-        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(
-                new CBCBlockCipher(new AESEngine()), padding);
+        BufferedBlockCipher cipher = new PaddedBufferedBlockCipher(new CBCBlockCipher(new AESEngine()), padding);
         cipher.reset();
         cipher.init(false, params);
 
