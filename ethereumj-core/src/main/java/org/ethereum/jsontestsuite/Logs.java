@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -26,12 +27,12 @@ public class Logs {
 			
 			byte[] address = Hex.decode((String)values.get("address"));
 			byte[] data = Hex.decode(((String)values.get("data")).substring(2));
-			List<byte[]> topics = new ArrayList<byte[]>();
+			List<DataWord> topics = new ArrayList<DataWord>();
 			
 			JSONArray jTopics = (JSONArray)values.get("topics");
 			for(Object t: jTopics.toArray()) {
 				byte[] topic = Hex.decode(((String)t));
-				topics.add(topic);
+				topics.add(new DataWord(topic));
 			}
 			
 			LogInfo li = new LogInfo(address, topics, data);

@@ -21,15 +21,15 @@ import java.util.List;
 public class LogInfo {
 
     byte[] address;
-    List<byte[]> topics = new ArrayList<>();
+    List<DataWord> topics = new ArrayList<DataWord>();
     byte[] data;
 
     /* Log info in encoded form */
     private byte[] rlpEncoded;
 
-    public LogInfo(byte[] address, List<byte[]> topics, byte[] data) {
+    public LogInfo(byte[] address, List<DataWord> topics, byte[] data) {
         this.address = address;
-        this.topics = (topics == null) ? new ArrayList<byte[]>() : topics;
+        this.topics = (topics == null) ? new ArrayList<DataWord>() : topics;
         this.data = data;
     }
 
@@ -37,7 +37,7 @@ public class LogInfo {
         return address;
     }
 
-    public List<byte[]> getTopics() {
+    public List<DataWord> getTopics() {
         return topics;
     }
 
@@ -55,8 +55,9 @@ public class LogInfo {
         if (topics != null){
             topicsEncoded = new byte[topics.size()][];
             int i = 0;
-            for( byte[] topic : topics ){
-                topicsEncoded[i] = topic;
+            for( DataWord topic : topics ){
+                byte[] topicData = topic.getData();
+                topicsEncoded[i] = topicData;
                 ++i;
             }
         }
@@ -67,8 +68,9 @@ public class LogInfo {
 
     public Bloom getBloom() {
         Bloom ret = Bloom.create(HashUtil.sha3(address));
-        for(byte[] topic:topics) {
-            ret.or(Bloom.create(HashUtil.sha3(topic)));
+        for(DataWord topic:topics) {
+            byte[] topicData = topic.getData();
+            ret.or(Bloom.create(HashUtil.sha3(topicData)));
         }
 
         return ret;
@@ -80,8 +82,8 @@ public class LogInfo {
         StringBuffer topicsStr = new StringBuffer();
         topicsStr.append("[");
 
-        for (byte[] topic: topics){
-            String topicStr = Hex.toHexString(topic);
+        for (DataWord topic: topics){
+            String topicStr = Hex.toHexString(topic.getData());
             topicsStr.append(topicStr).append(" ");
         }
         topicsStr.append("]");

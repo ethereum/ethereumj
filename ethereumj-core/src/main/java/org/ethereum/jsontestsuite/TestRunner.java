@@ -232,13 +232,15 @@ public class TestRunner {
     	            	byte[] expectedLogKey = itr.next();
     	            	System.out.println("Expected key " + Hex.toHexString(expectedLogKey));
     	            	LogInfo expectedLogInfo = logs.getLogBloom(expectedLogKey);
-    	            	
+						LogInfo foundLogInfo = null;
     	            	boolean found = false;
     	            	for(LogInfo resultLogInfo:logResult) {
         	            	byte[] resultKey = resultLogInfo.getBloom().getData();
         	            	System.out.println("returned key " + Hex.toHexString(resultKey));
         	            	if(Arrays.equals(expectedLogKey, resultKey)) {
         	            		found = true;
+								foundLogInfo = resultLogInfo;
+								break;
         	            	}        	            	
         	            }
     	            	
@@ -248,6 +250,43 @@ public class TestRunner {
     	                    logger.info(output);
     	                    results.add(output);
     	            	}
+						else {
+							if(!Arrays.equals(expectedLogInfo.getAddress(), foundLogInfo.getAddress())) {
+								String output =
+										String.format("Expected address [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getAddress()), Hex.toHexString(foundLogInfo.getAddress()));
+								logger.info(output);
+								results.add(output);
+							}
+
+							if(!Arrays.equals(expectedLogInfo.getData(), foundLogInfo.getData())) {
+								String output =
+										String.format("Expected data [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getData()), Hex.toHexString(foundLogInfo.getData()));
+								logger.info(output);
+								results.add(output);
+							}
+
+							if(expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
+								String output =
+										String.format("Expected number of topics [ %d ], found [ %d ]", expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
+								logger.info(output);
+								results.add(output);
+							}
+							else {
+								int i=0;
+								for(DataWord topic: expectedLogInfo.getTopics()) {
+									byte[] foundTopic = foundLogInfo.getTopics().get(i).getData();
+
+									if(!Arrays.equals(topic.getData(), foundTopic)) {
+										String output =
+												String.format("Expected topic [ %s ], found [ %s ]", Hex.toHexString(topic.getData()), Hex.toHexString(foundTopic));
+										logger.info(output);
+										results.add(output);
+									}
+
+									i++;
+								}
+							}
+						}
     	            }
     	        }
     	
