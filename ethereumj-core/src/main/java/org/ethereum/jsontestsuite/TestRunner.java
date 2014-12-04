@@ -49,7 +49,9 @@ public class TestRunner {
     	Repository repository = new RepositoryImpl();
     	
     	try {
-	    	System.out.println("\nRunning test case: " + testCase.getName());
+	    	System.out.println("\n***");
+	    	System.out.println(" Running test case: [" + testCase.getName() + "]") ;
+	    	System.out.println("***\n");
 	        List<String> results = new ArrayList<>();
 	        
 	        System.out.println("--------- PRE ---------");

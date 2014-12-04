@@ -56,28 +56,38 @@ public class RepositoryTrack implements Repository {
         AccountState accountState = cacheAccounts.get(wrap(addr));
 
         if (accountState == null){
-            accountState = repository.getAccountState(addr);
-
-            if (accountState == null){
-
-                accountState = createAccount(addr);
-            } else {
-
-                accountState = accountState.clone();
-                cacheAccounts.put(wrap(addr), accountState);
-
-                ContractDetails contractDetails = repository.getContractDetails(addr);
-                cacheDetails.put(wrap(addr), contractDetails.clone());
-            }
+            repository.loadAccount(addr, cacheAccounts, cacheDetails);
+            accountState = cacheAccounts.get(wrap(addr));
         }
         return accountState;
     }
 
     @Override
     public ContractDetails getContractDetails(byte[] addr) {
-        getAccountState(addr);
+
         ContractDetails contractDetails = cacheDetails.get(wrap(addr));
+
+        if (contractDetails == null){
+            repository.loadAccount(addr, cacheAccounts, cacheDetails);
+            contractDetails = cacheDetails.get(wrap(addr));
+        }
+
         return contractDetails;
+    }
+
+    @Override
+    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+                               HashMap<ByteArrayWrapper, ContractDetails> cacheDetails){
+
+        AccountState    accountState    = this.cacheAccounts.get(wrap(addr));
+        ContractDetails contractDetails = this.cacheDetails.get(wrap(addr));
+
+        if (accountState == null){
+            repository.loadAccount(addr, cacheAccounts, cacheDetails);
+        } else {
+            cacheAccounts.put(wrap(addr), accountState.clone());
+            cacheDetails.put(wrap(addr), contractDetails.clone());
+        }
     }
 
 

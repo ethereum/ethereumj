@@ -47,12 +47,6 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     ChannelManager channelManager;
 
     @Autowired
-    MessageDecoder messageDecoder;
-
-    @Autowired
-    MessageEncoder messageEncoder;
-
-    @Autowired
     WorldManager worldManager;
 
     public EthereumChannelInitializer() {
@@ -70,8 +64,8 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
         ch.pipeline().addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-        ch.pipeline().addLast("out encoder", messageEncoder);
-        ch.pipeline().addLast("in  encoder", messageDecoder);
+        ch.pipeline().addLast("out encoder", channel.getMessageEncoder());
+        ch.pipeline().addLast("in  encoder", channel.getMessageDecoder());
         ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());
         ch.pipeline().addLast(Capability.ETH, channel.getEthHandler());
         ch.pipeline().addLast(Capability.SHH, channel.getShhHandler());

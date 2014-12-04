@@ -130,8 +130,9 @@ public class BlockchainImpl implements Blockchain {
         recordBlock(block);
 
         if (logger.isDebugEnabled())
-            logger.debug("Try connect block: {}",
-                    Hex.toHexString(block.getEncoded()));
+            logger.debug("Try connect block hash: {}, number: {}",
+                    Hex.toHexString(block.getHash()).substring(0, 6),
+                    block.getNumber());
 
         if (blockStore.getBlockByHash(block.getHash()) != null){
             // retry of well known block
@@ -212,6 +213,9 @@ public class BlockchainImpl implements Blockchain {
         track.commit();
         repository.flush(); // saving to the disc
 
+        stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
+                block.getNumber(),
+                Hex.toHexString(repository.getRoot()));
 
         // Remove all wallet transactions as they already approved by the net
         worldManager.getWallet().removeTransactions(block.getTransactionsList());
@@ -329,7 +333,7 @@ public class BlockchainImpl implements Blockchain {
             track.commit();
 
             receipt.setPostTxState(repository.getRoot());
-            stateLogger.info("executed block: [{}] tx: [{}] \n  state: [{}]", block.getNumber(), i,
+            stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(repository.getRoot()));
 
             if(block.getNumber() >= CONFIG.traceStartBlock())
@@ -579,8 +583,7 @@ public class BlockchainImpl implements Blockchain {
 			BigInteger gasPrice, Repository repository, byte[] senderAddress,
 			byte[] contractAddress, byte[] coinbase, boolean initResults) {
 
-		if (result.getException() != null
-				&& result.getException() instanceof Program.OutOfGasException) {
+		if (result.getException() != null) {
 			stateLogger.debug("contract run halted by OutOfGas: contract={}",
 					Hex.toHexString(contractAddress));
 			throw result.getException();

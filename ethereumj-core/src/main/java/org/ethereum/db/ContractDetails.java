@@ -24,7 +24,7 @@ public class ContractDetails {
 
     private byte[] code = ByteUtil.EMPTY_BYTE_ARRAY;
 
-    private boolean dirty   = true;
+    private boolean dirty   = false;
     private boolean deleted = false;
 
     private Trie storageTrie = new TrieImpl(null);

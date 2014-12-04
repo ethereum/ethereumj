@@ -28,6 +28,7 @@ import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.SHA3Helper.*;
+import static org.ethereum.util.ByteUtil.wrap;
 
 /**
  * www.etherj.com
@@ -88,40 +89,39 @@ public class RepositoryImpl implements Repository {
     public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
                             HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
 
-        for (ByteArrayWrapper hash : detailsCache.keySet()) {
-
-            ContractDetails contractDetails = detailsCache.get(hash);
-
-            if (contractDetails.isDeleted())
-               detailsDB.delete(hash.getData());
-            else{
-                if (contractDetails.isDirty())
-                         detailsDB.put(hash.getData(), contractDetails.getEncoded());
-            }
-
-            if (contractDetails.isDirty() || contractDetails.isDeleted()){
-
-                AccountState accountState = stateCache.get(hash);
-                accountState.setStateRoot(contractDetails.getStorageHash());
-                accountState.setCodeHash(sha3(contractDetails.getCode()));
-            }
-
-            contractDetails.setDeleted(false);
-            contractDetails.setDirty(false);
-        }
-
-        for (ByteArrayWrapper hash : detailsCache.keySet()) {
+        for (ByteArrayWrapper hash : stateCache.keySet()) {
 
             AccountState accountState = stateCache.get(hash);
+            ContractDetails contractDetails = detailsCache.get(hash);
 
-            if (accountState.isDeleted())
+            if (accountState.isDeleted()){
                 worldState.delete(hash.getData());
-            else{
-                if (accountState.isDirty()){
+                detailsDB.delete(hash.getData());
+
+                logger.debug("delete: [{}]",
+                        Hex.toHexString(hash.getData()));
+
+            } else{
+
+                if (contractDetails.isDirty()){
+                    detailsDB.put(hash.getData(), contractDetails.getEncoded());
+                    accountState.setStateRoot(contractDetails.getStorageHash());
+                    accountState.setCodeHash(sha3(contractDetails.getCode()));
+                    worldState.update(hash.getData(), accountState.getEncoded());
+                    if (logger.isDebugEnabled()){
+                        logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
+                                Hex.toHexString(hash.getData()),
+                                accountState.getNonce(),
+                                accountState.getBalance(),
+                                contractDetails.getStorage());
+                    }
+
+                }
+
+                if (!contractDetails.isDirty() && accountState.isDirty()){
                     worldState.update(hash.getData(), accountState.getEncoded());
 
                     if (logger.isDebugEnabled()){
-
                         logger.debug("update: [{}],nonce: [{}] balance: [{}]",
                                 Hex.toHexString(hash.getData()),
                                 accountState.getNonce(),
@@ -131,8 +131,8 @@ public class RepositoryImpl implements Repository {
                 }
             }
 
-            accountState.setDeleted(false);
-            accountState.setDirty(false);
+            detailsCache.remove(hash.getData());
+            stateCache.remove(hash.getData());
         }
     }
 
@@ -402,6 +402,28 @@ public class RepositoryImpl implements Repository {
         detailsDB.put(addr, contractDetails.getEncoded());
 
         return accountState;
+    }
+
+    @Override
+    public void loadAccount(byte[] addr,
+                            HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+                            HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
+
+        AccountState    account =  getAccountState(addr);
+        ContractDetails details =  getContractDetails(addr);
+
+        if (account == null)
+            account = new AccountState();
+        else
+            account = account.clone();
+
+        if (details == null)
+            details = new ContractDetails();
+        else
+            details = details.clone();
+
+        cacheAccounts.put(wrap(addr), account);
+        cacheDetails.put(wrap(addr), details);
     }
 
     @Override

@@ -190,4 +190,6 @@ public interface Repository {
 
     public byte[] getRoot();
 
+    void  loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+                     HashMap<ByteArrayWrapper, ContractDetails> cacheDetails);
 }

@@ -2,9 +2,11 @@ package test.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Genesis;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Repository;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.vm.DataWord;
+import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
@@ -493,67 +495,26 @@ public class RepositoryTest {
         Repository repository = new RepositoryImpl();
 
         byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
-        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
-        final BigInteger ELEVEN = BigInteger.TEN.add(BigInteger.ONE);
 
         byte[] cowKey1 =   "key-c-1".getBytes();
         byte[] cowValue1 = "val-c-1".getBytes();
 
-        byte[] horseKey1   = "key-h-1".getBytes();
-        byte[] horseValue1 = "val-h-1".getBytes();
-
-        byte[] cowKey2 =   "key-c-2".getBytes();
-        byte[] cowValue2 = "val-c-2".getBytes();
-
-        byte[] horseKey2   = "key-h-2".getBytes();
-        byte[] horseValue2 = "val-h-2".getBytes();
-
         // changes level_1
         Repository track1 = repository.startTracking();
-        track1.addStorageRow(cow,   new DataWord(cowKey1),   new DataWord(cowValue1));
-        track1.addStorageRow(horse, new DataWord(horseKey1), new DataWord(horseValue1));
-
-        assertEquals(new DataWord(cowValue1),   track1.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
 
         // changes level_2
         Repository track2 = track1.startTracking();
-        track2.addStorageRow(cow,   new DataWord(cowKey2),   new DataWord(cowValue2));
-        track2.addStorageRow(horse, new DataWord(horseKey2), new DataWord(horseValue2));
-
+        track2.addStorageRow(cow,   new DataWord(cowKey1),   new DataWord(cowValue1));
         assertEquals(new DataWord(cowValue1),   track2.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), track2.getStorageValue(horse, new DataWord(horseKey1)));
-
-        assertEquals(new DataWord(cowValue2),   track2.getStorageValue(cow, new DataWord(cowKey2)));
-        assertEquals(new DataWord(horseValue2), track2.getStorageValue(horse, new DataWord(horseKey2)));
-
         track2.rollback();
         // leaving level_2
-
-        assertEquals(new DataWord(cowValue1),   track1.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), track1.getStorageValue(horse, new DataWord(horseKey1)));
-
-        assertNull(track1.getStorageValue(cow,   new DataWord(cowKey2)));
-        assertNull(track1.getStorageValue(horse, new DataWord(horseKey2)));
-
 
         track1.commit();
         // leaving level_1
 
-        assertEquals(new DataWord(cowValue1),   repository.getStorageValue(cow, new DataWord(cowKey1)));
-        assertEquals(new DataWord(horseValue1), repository.getStorageValue(horse, new DataWord(horseKey1)));
-
-        assertNull(repository.getStorageValue(cow, new DataWord(cowKey2)));
-        assertNull(repository.getStorageValue(horse, new DataWord(horseKey2)));
-
-
+        Assert.assertEquals( Hex.toHexString(HashUtil.EMPTY_TRIE_HASH), Hex.toHexString(repository.getRoot()) );
         repository.close();
     }
 
-
-    @Test
-    public void test18(){
-
-    }
 
 }

@@ -178,7 +178,7 @@ public class BlockTest {
 
 
     @Test
-    public void testScenario5() throws URISyntaxException, IOException {
+    public void testScenario1() throws URISyntaxException, IOException {
 
         BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
 
@@ -199,7 +199,7 @@ public class BlockTest {
 
         logger.info("asserting root state is: {}", Hex.toHexString( root ));
 
-        //expected root: dedd258f4cee2d1b45f137a2a74a2052e14a6d7fe1b1184be0a6adcec6a1d1d3
+        //expected root: fb8be59e6420892916e3967c60adfdf48836af040db0072ca411d7aaf5663804
         assertEquals(Hex.toHexString(root),
                 Hex.toHexString(worldManager.getRepository().getRoot()));
     }
