@@ -985,7 +985,7 @@ public class VM {
 			
 			vmCounter++;
         } catch (RuntimeException e) {
-        	logger.warn("VM halted", e.getMessage());
+        	logger.warn("VM halted: [{}]", e.toString());
         	program.spendAllGas();
            	program.stop();
            	throw e;

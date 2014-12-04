@@ -1,6 +1,5 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryImpl;
@@ -228,7 +227,7 @@ public class TestRunner {
     	            
     	            /* asset logs */
     	            List<LogInfo> logResult = program.getResult().getLogInfoList();
-    	            Iterator<byte[]> itr = logs.getLogsRLPSHA3KeyIterator();
+    	            Iterator<byte[]> itr = logs.getLogsBloomKeyIterator();
     	            while(itr.hasNext()) {
     	            	byte[] expectedLogKey = itr.next();
     	            	System.out.println("Expected key " + Hex.toHexString(expectedLogKey));

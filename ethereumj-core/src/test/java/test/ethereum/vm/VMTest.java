@@ -1725,8 +1725,10 @@ public class VMTest {
     public void testJUMP_2() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("600C5660CC60DD60EE60FF"), invoke);
+        program =  new Program(Hex.decode("600C600C905660CC60DD60EE60FF"), invoke);
         try {
+            vm.step(program);
+            vm.step(program);
             vm.step(program);
             vm.step(program);
         } finally {
@@ -1789,8 +1791,10 @@ public class VMTest {
     public void testJUMPI_4() {
 
         VM vm = new VM();
-        program =  new Program(Hex.decode("6001602257"), invoke);
+        program =  new Program(Hex.decode("60016022909057"), invoke);
         try {
+            vm.step(program);
+            vm.step(program);
             vm.step(program);
             vm.step(program);
             vm.step(program);
@@ -2365,7 +2369,7 @@ public class VMTest {
         long gas = program.getResult().getGasUsed();
 
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
-        assertEquals(2, gas);
+        assertEquals(3, gas);
     }
 
     @Test // EXP OP
