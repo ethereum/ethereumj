@@ -115,6 +115,12 @@ public class BlockchainImpl implements Blockchain {
 	}
 
     @Override
+    public TransactionReceipt getTransactionReceiptByHash(byte[] hash){
+
+       return blockStore.getTransactionReceiptByHash(hash);
+    }
+
+    @Override
     public Block getBlockByHash(byte[] hash){
         return blockStore.getBlockByHash(hash);
     }
@@ -210,12 +216,13 @@ public class BlockchainImpl implements Blockchain {
         }
 
         this.processBlock(block);
-        track.commit();
-        repository.flush(); // saving to the disc
-
         stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
                 block.getNumber(),
                 Hex.toHexString(repository.getRoot()));
+
+        track.commit();
+        repository.flush(); // saving to the disc
+
 
         // Remove all wallet transactions as they already approved by the net
         worldManager.getWallet().removeTransactions(block.getTransactionsList());
@@ -303,46 +310,53 @@ public class BlockchainImpl implements Blockchain {
 
     }
 
-    private void processBlock(Block block) {    	
+    private void processBlock(Block block) {
+
+        List<TransactionReceipt> receipts = new ArrayList<>();
     	if(isValid(block)) {
             if (!block.isGenesis()) {
                 if (!CONFIG.blockChainOnly()) {
                     Wallet wallet = worldManager.getWallet();
                     wallet.addTransactions(block.getTransactionsList());
-                	this.applyBlock(block);
+                    receipts = this.applyBlock(block);
                     wallet.processBlock(block);
                 }
             }
-            this.storeBlock(block);
+            this.storeBlock(block, receipts);
     	} else {
     		logger.warn("Invalid block with nr: {}", block.getNumber());
     	}
     }
     
-	private void applyBlock(Block block) {
+	private List<TransactionReceipt> applyBlock(Block block) {
 
-		int i = 0;
+		int i = 1;
 		long totalGasUsed = 0;
+        List<TransactionReceipt> reciepts = new ArrayList<>();
+
 		for (Transaction tx : block.getTransactionsList()) {
 			stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             TransactionReceipt receipt = applyTransaction(block, tx);
 			totalGasUsed += receipt.getCumulativeGasLong();
-            receipt.setCumulativeGas(totalGasUsed);
 
             track.commit();
-
+            receipt.setCumulativeGas(totalGasUsed);
             receipt.setPostTxState(repository.getRoot());
+            receipt.setTransaction(tx);
+
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(repository.getRoot()));
+
+            stateLogger.info("[{}] ", receipt.toString());
+
+            if (stateLogger.isInfoEnabled())
+                stateLogger.info("tx[{}].receipt: [{}] ",i, Hex.toHexString(receipt.getEncoded()));
 
             if(block.getNumber() >= CONFIG.traceStartBlock())
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
-            // todo: (!!!). save the receipt
-            // todo: cache all the receipts and
-            // todo: save them to the disc together
-            // todo: with the block afterwards
+            reciepts.add(receipt);
 		}
 
 		this.addReward(block);
@@ -352,10 +366,12 @@ public class BlockchainImpl implements Blockchain {
 
         if(block.getNumber() >= CONFIG.traceStartBlock())
         	repository.dumpState(block, totalGasUsed, 0, null);
+
+        return reciepts;
 	}
 
 	/**
-	 * Add reward to block- and every uncle coinbase 
+	 * Add reward to block- and every uncle coinbase
 	 * assuming the entire block is valid.
 	 * 
 	 * @param block object containing the header and uncles
@@ -377,7 +393,7 @@ public class BlockchainImpl implements Blockchain {
 	}
     
 	@Override
-    public void storeBlock(Block block) {
+    public void storeBlock(Block block, List<TransactionReceipt> receipts) {
 
         /* Debug check to see if the state is still as expected */
         if(logger.isWarnEnabled()) {
@@ -394,7 +410,7 @@ public class BlockchainImpl implements Blockchain {
             }
         }
 
-        blockStore.saveBlock(block);
+        blockStore.saveBlock(block, receipts);
 		this.setBestBlock(block);
 
         if (logger.isDebugEnabled())
@@ -538,18 +554,18 @@ public class BlockchainImpl implements Blockchain {
                 if (CONFIG.playVM())
 				    vm.play(program);
 
-                // todo: recepit save logs
-                // todo: receipt calc and save blooms
-
                 program.saveProgramTraceToFile(Hex.toHexString(tx.getHash()));
 				ProgramResult result = program.getResult();
 				applyProgramResult(result, gasDebit, gasPrice, trackTx,
 						senderAddress, receiverAddress, coinbase, isContractCreation);
 				gasUsed = result.getGasUsed();
 
+                List<LogInfo> logs = result.getLogInfoList();
+                receipt.setLogInfoList(logs);
+
+
 			} catch (RuntimeException e) {
                 trackTx.rollback();
-
                 receipt.setCumulativeGas(tx.getGasLimit());
                 return receipt;
 			}

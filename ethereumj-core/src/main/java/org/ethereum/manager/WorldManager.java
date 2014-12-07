@@ -19,10 +19,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -158,7 +155,7 @@ public class WorldManager {
                 repository.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
             }
 
-            blockStore.saveBlock(Genesis.getInstance());
+            blockStore.saveBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>());
 
             blockchain.setBestBlock(Genesis.getInstance());
             blockchain.setTotalDifficulty(BigInteger.ZERO);

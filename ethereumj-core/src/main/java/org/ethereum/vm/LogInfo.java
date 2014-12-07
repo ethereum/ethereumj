@@ -4,6 +4,9 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Bloom;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
@@ -20,17 +23,38 @@ import java.util.List;
 
 public class LogInfo {
 
-    byte[] address;
+    byte[] address = new byte[]{};
     List<DataWord> topics = new ArrayList<DataWord>();
-    byte[] data;
+    byte[] data = new byte[]{};
 
     /* Log info in encoded form */
     private byte[] rlpEncoded;
 
+    public LogInfo(byte[] rlp){
+
+        RLPList params  = RLP.decode2(rlp);
+        RLPList logInfo = (RLPList) params.get(0);
+
+        RLPItem address = (RLPItem)logInfo.get(0);
+        RLPList topics  = (RLPList)logInfo.get(1);
+        RLPItem data    = (RLPItem)logInfo.get(2);
+
+        this.address = address.getRLPData() != null ? address.getRLPData() : new byte[]{};
+        this.data    =  data.getRLPData()   != null ? data.getRLPData() : new byte[]{};
+
+        for (int i = 0; i < topics.size(); ++i){
+
+            byte[] topic = topics.get(i).getRLPData();
+            this.topics.add(new DataWord(topic));
+        }
+
+        rlpEncoded = rlp;
+    }
+
     public LogInfo(byte[] address, List<DataWord> topics, byte[] data) {
-        this.address = address;
-        this.topics = (topics == null) ? new ArrayList<DataWord>() : topics;
-        this.data = data;
+        this.address = (address != null)  ? address : new byte[]{} ;
+        this.topics  = (topics != null)   ? topics : new ArrayList<DataWord>();
+        this.data    = (data != null)     ? data : new byte[]{} ;
     }
 
     public byte[] getAddress() {
@@ -48,7 +72,6 @@ public class LogInfo {
     /*  [address, [topic, topic ...] data] */
     public byte[] getEncoded() {
 
-
         byte[] addressEncoded   = RLP.encodeElement(this.address);
 
         byte[][] topicsEncoded = null;
@@ -57,7 +80,7 @@ public class LogInfo {
             int i = 0;
             for( DataWord topic : topics ){
                 byte[] topicData = topic.getData();
-                topicsEncoded[i] = topicData;
+                topicsEncoded[i] = RLP.encodeElement(topicData);
                 ++i;
             }
         }
@@ -72,7 +95,6 @@ public class LogInfo {
             byte[] topicData = topic.getData();
             ret.or(Bloom.create(HashUtil.sha3(topicData)));
         }
-
         return ret;
     }
 

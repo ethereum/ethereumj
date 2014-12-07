@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.TransactionReceipt;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -79,10 +80,19 @@ public class BlockStore {
 
 
     @Transactional
-    public void saveBlock(Block block) {
+    public void saveBlock(Block block, List<TransactionReceipt> receipts) {
 
         BlockVO blockVO =  new BlockVO(block.getNumber(), block.getHash(),
                 block.getEncoded(), block.getCumulativeDifficulty());
+
+        for (TransactionReceipt receipt : receipts){
+
+            byte[] hash = receipt.getTransaction().getHash();
+            byte[] rlp = receipt.getEncoded();
+
+            TransactionReceiptVO transactionReceiptVO = new TransactionReceiptVO(hash, rlp);
+            sessionFactory.getCurrentSession().persist(transactionReceiptVO);
+        }
 
         sessionFactory.getCurrentSession().persist(blockVO);
     }
@@ -131,5 +141,18 @@ public class BlockStore {
     public void reset() {
         sessionFactory.getCurrentSession().
               createQuery("delete from BlockVO").executeUpdate();
+    }
+
+    public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
+
+        List result = sessionFactory.getCurrentSession().
+                createQuery("from TransactionReceiptVO where hash = :hash").
+                setParameter("hash", hash).list();
+
+        if (result.size() == 0) return null;
+        TransactionReceiptVO vo = (TransactionReceiptVO)result.get(0);
+
+        return new TransactionReceipt(vo.rlp);
+
     }
 }

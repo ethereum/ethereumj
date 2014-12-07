@@ -1,6 +1,8 @@
 package org.ethereum.facade;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.shh.ShhHandler;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,6 +100,9 @@ public class EthereumFactory {
 
 
     public static Ethereum createEthereum(){
+
+        logger.info("capability eth version: [{}]", EthHandler.VERSION);
+        logger.info("capability shh version: [{}]", ShhHandler.VERSION);
 
         if (context == null){
             context = new AnnotationConfigApplicationContext(EthereumFactory.class);
