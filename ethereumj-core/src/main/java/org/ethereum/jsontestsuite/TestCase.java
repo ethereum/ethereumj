@@ -65,9 +65,9 @@ public class TestCase {
             if(testCaseJSONObj.containsKey("callcreates"))
             	callCreates = (JSONArray)testCaseJSONObj.get("callcreates");
             
-            JSONObject logsJSON = new JSONObject();
+            JSONArray logsJSON = new JSONArray();
             if(testCaseJSONObj.containsKey("logs"))
-            	logsJSON = (JSONObject)testCaseJSONObj.get("logs");
+            	logsJSON = (JSONArray)testCaseJSONObj.get("logs");
             logs = new Logs(logsJSON);
 
             String  gasString = "0";

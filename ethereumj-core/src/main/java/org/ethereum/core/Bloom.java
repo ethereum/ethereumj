@@ -4,6 +4,7 @@ import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  * www.etherj.com
@@ -53,5 +54,22 @@ public class  Bloom {
     @Override
     public String toString() {
         return Hex.toHexString(data);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Bloom bloom = (Bloom) o;
+
+        if (!Arrays.equals(data, bloom.data)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        return data != null ? Arrays.hashCode(data) : 0;
     }
 }

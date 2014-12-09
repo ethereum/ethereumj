@@ -229,24 +229,18 @@ public class TestRunner {
     	            
     	            /* asset logs */
     	            List<LogInfo> logResult = program.getResult().getLogInfoList();
-    	            Iterator<byte[]> itr = logs.getLogsBloomKeyIterator();
-    	            while(itr.hasNext()) {
-    	            	byte[] expectedLogKey = itr.next();
-    	            	System.out.println("Expected key " + Hex.toHexString(expectedLogKey));
-    	            	LogInfo expectedLogInfo = logs.getLogBloom(expectedLogKey);
-						LogInfo foundLogInfo = null;
-    	            	boolean found = false;
-    	            	for(LogInfo resultLogInfo:logResult) {
-        	            	byte[] resultKey = resultLogInfo.getBloom().getData();
-        	            	System.out.println("returned key " + Hex.toHexString(resultKey));
-        	            	if(Arrays.equals(expectedLogKey, resultKey)) {
-        	            		found = true;
-								foundLogInfo = resultLogInfo;
-								break;
-        	            	}        	            	
-        	            }
-    	            	
-    	            	if(!found) {
+
+    	            Iterator<LogInfo> postLogs = logs.getIterator();
+                    int i = 0;
+    	            while(postLogs.hasNext()) {
+
+                        LogInfo expectedLogInfo = postLogs.next();
+
+                        LogInfo foundLogInfo = null;
+                        if (logResult.size() > i)
+                            foundLogInfo  = logResult.get(i);
+
+                        if(foundLogInfo == null) {
     	            		String output =
     	                            String.format("Expected log [ %s ]", expectedLogInfo.toString());
     	                    logger.info(output);
@@ -267,6 +261,15 @@ public class TestRunner {
 								results.add(output);
 							}
 
+                            if(!expectedLogInfo.getBloom().equals(foundLogInfo.getBloom())) {
+                                String output =
+                                        String.format("Expected bloom [ %s ], found [ %s ]",
+                                                Hex.toHexString(expectedLogInfo.getBloom().getData()),
+                                                Hex.toHexString(foundLogInfo.getBloom().getData()));
+                                logger.info(output);
+                                results.add(output);
+                            }
+
 							if(expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
 								String output =
 										String.format("Expected number of topics [ %d ], found [ %d ]", expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
@@ -274,9 +277,9 @@ public class TestRunner {
 								results.add(output);
 							}
 							else {
-								int i=0;
+								int j=0;
 								for(DataWord topic: expectedLogInfo.getTopics()) {
-									byte[] foundTopic = foundLogInfo.getTopics().get(i).getData();
+									byte[] foundTopic = foundLogInfo.getTopics().get(j).getData();
 
 									if(!Arrays.equals(topic.getData(), foundTopic)) {
 										String output =
@@ -285,10 +288,12 @@ public class TestRunner {
 										results.add(output);
 									}
 
-									i++;
+									++j;
 								}
 							}
 						}
+
+                        ++i;
     	            }
     	        }
     	

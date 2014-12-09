@@ -14,43 +14,31 @@ import org.json.simple.JSONObject;
 import org.spongycastle.util.encoders.Hex;
 
 public class Logs {
-	Map<byte[], LogInfo> logs;
+	List<LogInfo> logs = new ArrayList<>();
 	
-	public Logs(JSONObject jLogs) {
-		logs = new HashMap<byte[], LogInfo>();
-		
-		Set keys = jLogs.keySet();
-		for(Object k: keys.toArray()) {
-			byte[] key = Hex.decode((String)k);
-			
-			JSONObject values = (JSONObject)jLogs.get(k);
-			
-			byte[] address = Hex.decode((String)values.get("address"));
-			byte[] data = Hex.decode(((String)values.get("data")).substring(2));
-			List<DataWord> topics = new ArrayList<DataWord>();
-			
-			JSONArray jTopics = (JSONArray)values.get("topics");
-			for(Object t: jTopics.toArray()) {
-				byte[] topic = Hex.decode(((String)t));
-				topics.add(new DataWord(topic));
-			}
-			
-			LogInfo li = new LogInfo(address, topics, data);
-			logs.put(key, li);
-		}
+	public Logs(JSONArray jLogs) {
+
+        for (int i = 0; i < jLogs.size(); ++i){
+
+            JSONObject jLog = (JSONObject)jLogs.get(i);
+            byte[] address = Hex.decode((String)jLog.get("address"));
+            byte[] data =    Hex.decode(((String)jLog.get("data")).substring(2));
+
+            List<DataWord> topics = new ArrayList<>();
+
+            JSONArray jTopics = (JSONArray)jLog.get("topics");
+            for(Object t: jTopics.toArray()) {
+                byte[] topic = Hex.decode(((String)t));
+                topics.add(new DataWord(topic));
+            }
+
+            LogInfo li = new LogInfo(address, topics, data);
+            logs.add(li);
+        }
 	}
-	
-	/**
-	 * returns null if {@link org.ethereum.vm.LogInfo LogInfo} object was not found for the given key
-	 * @param k
-	 * @return
-	 */
-	public LogInfo getLogBloom(byte[] k) {
-		if(logs.containsKey(k))
-			return logs.get(k);
-		return null;
-	}
-	public Iterator<byte[]> getLogsBloomKeyIterator() {
-		return logs.keySet().iterator();
-	}
+
+
+    public Iterator<LogInfo> getIterator(){
+        return logs.iterator();
+    }
 }
