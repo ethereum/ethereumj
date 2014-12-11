@@ -67,7 +67,6 @@ public class PeerClient {
 
         } catch (Exception e) {
         	logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
-            throw new Error("Disconnnected");
         } finally {
         	workerGroup.shutdownGracefully();
         }

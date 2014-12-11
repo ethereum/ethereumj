@@ -85,6 +85,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     @Override
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        active = true;
         msgQueue.activate(ctx);
 		// Send HELLO once when channel connection has been established
 		msgQueue.sendMessage(HELLO_MESSAGE);
@@ -97,8 +98,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
         logger.info("P2P protocol activated");
         worldManager.getListener().trace("P2P protocol activated");
-
-        active = true;
     }
 
     public boolean isActive(){
@@ -155,6 +154,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
 	@Override
 	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        logger.info("channel inactive: ", ctx.toString());
         active = false;
 		this.killTimers();
 	}
@@ -163,6 +163,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error(cause.getCause().toString());
         super.exceptionCaught(ctx, cause);
+        active = false;
         ctx.close();
         killTimers();
     }
@@ -220,8 +221,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                                 (ShhHandler)ctx.pipeline().get(Capability.SHH);
                         shhHandler.activate();
                     }
-
-
 					capInCommon.add(capability);
 				}
 			}
@@ -284,8 +283,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 if (tearDown) cancel();
-
-
                 msgQueue.sendMessage(PING_MESSAGE);
             }
         }, 2000, 5000);
