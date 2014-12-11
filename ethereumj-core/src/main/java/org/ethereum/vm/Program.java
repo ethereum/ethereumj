@@ -343,7 +343,10 @@ public class Program {
         if (result != null && 
         		result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException) {
-            logger.info("contract run halted by OutOfGas: new contract init ={}" , Hex.toHexString(newAddress));
+            logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
+                    Hex.toHexString(newAddress),
+                    result.getException());
+
 
             track.rollback();
             stackPushZero();
@@ -443,7 +446,10 @@ public class Program {
         if (result != null &&
 	            result.getException() != null &&
 	            result.getException() instanceof Program.OutOfGasException) {
-            gasLogger.info("contract run halted by OutOfGas: contract={}" , Hex.toHexString(contextAddress));
+            gasLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
+                    Hex.toHexString(contextAddress),
+                    result.getException());
+
 
             trackRepository.rollback();
             stackPushZero();

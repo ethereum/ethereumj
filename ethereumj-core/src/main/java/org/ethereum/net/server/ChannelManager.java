@@ -111,4 +111,8 @@ public class ChannelManager {
         }
         bestChannel.ethSync();
     }
+
+    public List<Channel> getChannels() {
+        return channels;
+    }
 }

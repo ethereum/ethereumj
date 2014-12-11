@@ -5,6 +5,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.server.ChannelManager;
@@ -95,6 +96,9 @@ public class BlockchainImpl implements Blockchain {
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
+
+    @Autowired
+    private AdminInfo adminInfo;
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -381,6 +385,7 @@ public class BlockchainImpl implements Blockchain {
             if(!blockStateRootHash.equals(worldStateRootHash)){
 
             	stateLogger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+                adminInfo.lostConsensus();
 
                 // in case of rollback hard move the root
 //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
@@ -583,8 +588,9 @@ public class BlockchainImpl implements Blockchain {
 			byte[] contractAddress, byte[] coinbase, boolean initResults) {
 
 		if (result.getException() != null) {
-			stateLogger.debug("contract run halted by OutOfGas: contract={}",
-					Hex.toHexString(contractAddress));
+			stateLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
+					Hex.toHexString(contractAddress),
+                    result.getException());
 			throw result.getException();
 		}
 

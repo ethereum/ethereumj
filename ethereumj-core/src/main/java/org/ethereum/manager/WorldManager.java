@@ -54,6 +54,9 @@ public class WorldManager {
 
     @Autowired
     private ChannelManager channelManager;
+
+    @Autowired
+    private AdminInfo adminInfo;
     
     private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 

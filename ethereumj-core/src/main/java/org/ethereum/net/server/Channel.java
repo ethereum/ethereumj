@@ -46,6 +46,7 @@ public class Channel {
     MessageEncoder messageEncoder;
 
 
+    private long startupTS;
 
 
     public Channel() {
@@ -55,6 +56,8 @@ public class Channel {
         p2pHandler.setMsgQueue(msgQueue);
         ethHandler.setMsgQueue(msgQueue);
         shhHandler.setMsgQueue(msgQueue);
+
+        startupTS = System.currentTimeMillis();
     }
 
     public P2pHandler getP2pHandler() {
@@ -101,4 +104,7 @@ public class Channel {
         ethHandler.doSync();
     }
 
+    public long getStartupTS() {
+        return startupTS;
+    }
 }

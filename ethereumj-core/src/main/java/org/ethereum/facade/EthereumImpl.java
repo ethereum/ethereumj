@@ -11,9 +11,11 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
+import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
@@ -41,6 +43,12 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     WorldManager worldManager;
+
+    @Autowired
+    AdminInfo adminInfo;
+
+    @Autowired
+    ChannelManager channelManager;
 
     @Autowired
     PeerServer peerServer;
@@ -227,6 +235,13 @@ public class EthereumImpl implements Ethereum {
         return worldManager.getRepository();
     }
 
+    @Override
+    public AdminInfo getAdminInfo() {
+        return adminInfo;
+    }
 
-
+    @Override
+    public ChannelManager getChannelManager() {
+        return channelManager;
+    }
 }
