@@ -11,7 +11,8 @@ import org.spongycastle.util.encoders.Hex;
 
 public class ByteUtil {
 
-	public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    public static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    public static final byte[] ZERO_BYTE_ARRAY = new byte[]{0};
 
     /**
      * Creates a copy of bytes and appends b to the end of it

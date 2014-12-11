@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.*;
+import org.ethereum.net.p2p.PingMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ public class MessageQueue {
 
     @Autowired
     WorldManager worldManager;
+    boolean hasPing = false;
 
     public MessageQueue(){}
 
@@ -54,6 +56,12 @@ public class MessageQueue {
     }
 
 	public void sendMessage(Message msg) {
+
+        if (msg instanceof PingMessage && hasPing)
+            return;
+        if (msg instanceof PingMessage && !hasPing)
+            hasPing = true;
+
 		messageQueue.add(new MessageRoundtrip(msg));
 	}
 
@@ -64,6 +72,8 @@ public class MessageQueue {
 		if (messageQueue.peek() != null) {
 			MessageRoundtrip messageRoundtrip = messageQueue.peek();
 			Message waitingMessage = messageRoundtrip.getMsg();
+
+            if (waitingMessage instanceof PingMessage) hasPing = false;
 
 			if (waitingMessage.getAnswerMessage() != null
 					&& msg.getClass() == waitingMessage.getAnswerMessage()) {

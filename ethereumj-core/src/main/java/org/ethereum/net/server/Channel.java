@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
+
 /**
  * www.etherj.com
  *
@@ -91,5 +93,12 @@ public class Channel {
     }
 
 
+    public BigInteger getTotalDifficulty(){
+        return ethHandler.getTotalDifficulty();
+    }
+
+    public void ethSync(){
+        ethHandler.doSync();
+    }
 
 }

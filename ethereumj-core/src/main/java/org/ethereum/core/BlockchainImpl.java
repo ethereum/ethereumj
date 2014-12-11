@@ -152,51 +152,30 @@ public class BlockchainImpl implements Blockchain {
             return;
         }
 
-        // case when one of the alt chain probably
-        // going to connect this block
-        if (!hasParentOnTheChain(block)){
+        if (!hasParentOnTheChain(block) && block.getNumber() > bestBlock.getNumber()){
 
-            Iterator<Chain> iterAltChains = altChains.iterator();
-            boolean connected = false;
-            while (iterAltChains.hasNext() && !connected){
+            logger.info("*** Blockchain will rollback and resynchronise now ");
 
-                Chain chain = iterAltChains.next();
-                connected = chain.tryToConnect(block);
-                if (connected &&
-                    chain.getTotalDifficulty().subtract(totalDifficulty).longValue() > 5000){
+            long rollbackIdx = bestBlock.getNumber() - 30;
+            if (rollbackIdx <= 0) rollbackIdx = bestBlock.getNumber() - bestBlock.getNumber() / 10;
 
+            Block rollbackBlock = blockStore.getBlockByNumber(rollbackIdx);
+            repository.syncToRoot(rollbackBlock.getStateRoot());
 
-                    // todo: replay the alt on the main chain
-                }
-            }
-            if (connected) return;
-        }
+            BigInteger deltaTD = blockStore.getTotalDifficultySince(rollbackBlock.getNumber());
+            totalDifficulty = totalDifficulty.subtract(deltaTD);
+            bestBlock = rollbackBlock;
 
-        // The uncle block case: it is
-        // start of alt chain: different
-        // version of block we already
-        // got on the main chain
-        long gap = bestBlock.getNumber() - block.getNumber();
-        if (hasParentOnTheChain(block) && gap >=0){
+            blockStore.deleteBlocksSince(rollbackBlock.getNumber());
 
-            logger.info("created alt chain by block.hash: [{}] ", block.getShortHash());
-            Chain chain = new Chain();
-            chain.setTotalDifficulty(totalDifficulty);
-            chain.tryToConnect(block);
-            altChains.add(chain);
+            channelManager.ethSync();
             return;
         }
-
 
         // provisional, by the garbage will be
         // defined how to deal with it in the
         // future.
         garbage.add(block);
-
-        // if there is too much garbage ask for re-sync
-        if (garbage.size() > 20){
-            worldManager.reset();
-        }
     }
 
 
@@ -466,6 +445,9 @@ public class BlockchainImpl implements Blockchain {
 		} else {
 			receiverAddress = tx.getReceiveAddress();
             code = track.getCode(receiverAddress);
+
+            // on invocation the contract is created event if doesn't exist.
+            track.addBalance(receiverAddress, BigInteger.ZERO);
             if (code != EMPTY_BYTE_ARRAY) {
                 if (stateLogger.isDebugEnabled())
                     stateLogger.debug("calling for existing contract: address={}",
@@ -475,8 +457,8 @@ public class BlockchainImpl implements Blockchain {
 		
 		// THE SIMPLE VALUE/BALANCE CHANGE
 		boolean isValueTx = tx.getValue() != null;
-		if (isValueTx) {
-			BigInteger txValue = new BigInteger(1, tx.getValue());
+        BigInteger txValue = new BigInteger(1, tx.getValue());
+        if (isValueTx && !isContractCreation) {
 			if (track.getBalance(senderAddress).compareTo(txValue) >= 0) {
 
                 track.addBalance(receiverAddress, txValue); // balance will be read again below
@@ -495,7 +477,6 @@ public class BlockchainImpl implements Blockchain {
 		}
 
 		// GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
-	    // TODO: performance improve multiply without BigInteger
 		BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
 		BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
         logger.info("Gas price limited to [{} wei]", gasDebit.toString());
@@ -531,13 +512,16 @@ public class BlockchainImpl implements Blockchain {
 	
 			// START TRACKING FOR REVERT CHANGES OPTION
 			Repository trackTx = track.startTracking();
+            trackTx.addBalance(receiverAddress, BigInteger.ZERO); // the contract created for anycase but SUICIDE call
+
+            trackTx.addBalance(receiverAddress, txValue);
+            track.addBalance(senderAddress, txValue.negate()); // will not be reverted
+
             logger.info("Start tracking VM run");
 			try {
-				
+
 				// CREATE NEW CONTRACT ADDRESS AND ADD TX VALUE
 				if(isContractCreation) {
-                    trackTx.addBalance(receiverAddress, BigInteger.ZERO); // also creates account
-					
 					if(stateLogger.isDebugEnabled())
 						stateLogger.debug("new contract created address={}",
 								Hex.toHexString(receiverAddress));
@@ -562,7 +546,6 @@ public class BlockchainImpl implements Blockchain {
 
                 List<LogInfo> logs = result.getLogInfoList();
                 receipt.setLogInfoList(logs);
-
 
 			} catch (RuntimeException e) {
                 trackTx.rollback();

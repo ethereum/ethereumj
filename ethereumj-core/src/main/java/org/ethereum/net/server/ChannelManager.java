@@ -98,4 +98,17 @@ public class ChannelManager {
             }
         }, 2000, 5000);
     }
+
+    public void ethSync() {
+
+        Channel bestChannel = channels.get(0);
+        for (Channel channel : channels){
+
+            if (bestChannel.getTotalDifficulty().
+                    compareTo(channel.getTotalDifficulty()) < 0  ){
+                bestChannel = channel;
+            }
+        }
+        bestChannel.ethSync();
+    }
 }

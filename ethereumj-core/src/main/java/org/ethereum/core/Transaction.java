@@ -12,7 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
+import java.math.BigInteger;
 import java.security.SignatureException;
+
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 
 /**
  * A transaction (formally, T) is a single cryptographically 
@@ -109,9 +113,6 @@ public class Transaction {
             byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
             byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
-
-
-
         } else {
             logger.debug("RLP encoded tx is not signed!");
         }
@@ -125,20 +126,26 @@ public class Transaction {
 
     public byte[] getHash() {
         if (!parsed) rlpParse();
+        byte[] plainMsg = this.getEncoded();
+        return HashUtil.sha3(plainMsg);
+    }
+
+    public byte[] getRawHash() {
+        if (!parsed) rlpParse();
         byte[] plainMsg = this.getEncodedRaw();
         return HashUtil.sha3(plainMsg);
     }
 
+
     public byte[] getNonce() {
         if (!parsed) rlpParse();
 
-        if (nonce == null) return new byte[]{0};
-        return nonce;
+        return nonce == null ? ZERO_BYTE_ARRAY : nonce  ;
     }
 
     public byte[] getValue() {
         if (!parsed) rlpParse();
-        return value;
+        return value == null ? ZERO_BYTE_ARRAY : value;
     }
 
     public byte[] getReceiveAddress() {
@@ -181,14 +188,14 @@ public class Transaction {
      */
 
     public ECKey getKey() {
-        byte[] hash = this.getHash();
+        byte[] hash = this.getRawHash();
         return ECKey.recoverFromSignature(signature.v, signature, hash, true);
     }
 
     public byte[] getSender() {
 		try {
             if (sendAddress == null) {
-                ECKey key = ECKey.signatureToKey(getHash(), getSignature().toBase64());
+                ECKey key = ECKey.signatureToKey(getRawHash(), getSignature().toBase64());
                 sendAddress = key.getAddress();
             }
 			return sendAddress;
@@ -199,7 +206,7 @@ public class Transaction {
     }
 
     public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
-        byte[] hash = this.getHash();
+        byte[] hash = this.getRawHash();
         ECKey key = ECKey.fromPrivate(privKeyBytes).decompress();
         this.signature = key.sign(hash);
         this.rlpEncoded = null;
@@ -272,9 +279,9 @@ public class Transaction {
             r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
             s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
         } else {
-        	v = RLP.encodeElement(new byte[0]);
-        	r = RLP.encodeElement(new byte[0]);
-        	s = RLP.encodeElement(new byte[0]);
+        	v = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+        	r = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+        	s = RLP.encodeElement(EMPTY_BYTE_ARRAY);
         }
 
 		this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,

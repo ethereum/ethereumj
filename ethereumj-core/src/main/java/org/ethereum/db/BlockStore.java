@@ -78,6 +78,15 @@ public class BlockStore {
         return hashes;
     }
 
+    @Transactional
+    public void deleteBlocksSince(long number){
+
+        sessionFactory.getCurrentSession().
+                createQuery("delete from BlockVO where number > :number").
+                setParameter("number", number).
+                executeUpdate();
+    }
+
 
     @Transactional
     public void saveBlock(Block block, List<TransactionReceipt> receipts) {
@@ -95,6 +104,17 @@ public class BlockStore {
         }
 
         sessionFactory.getCurrentSession().persist(blockVO);
+    }
+
+    @Transactional(readOnly = true)
+    public BigInteger getTotalDifficultySince(long number){
+
+        BigInteger result = (BigInteger)sessionFactory.getCurrentSession().
+                createQuery("select sum(cummulativeDifficulty) from BlockVO where number > :number").
+                setParameter("number", number).
+                uniqueResult();
+
+        return result;
     }
 
 

@@ -126,7 +126,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 				break;
 			case PING:
 				msgQueue.receivedMessage(msg);
-				msgQueue.sendMessage(PONG_MESSAGE);
+                ctx.writeAndFlush(PONG_MESSAGE);
 				break;
 			case PONG:
 				msgQueue.receivedMessage(msg);
@@ -284,6 +284,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 if (tearDown) cancel();
+
+
                 msgQueue.sendMessage(PING_MESSAGE);
             }
         }, 2000, 5000);

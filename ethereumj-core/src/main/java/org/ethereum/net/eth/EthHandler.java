@@ -3,6 +3,7 @@ package org.ethereum.net.eth;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
@@ -57,6 +58,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private boolean active = false;
     private StatusMessage handshakeStatusMessage = null;
 
+    private BigInteger totalDifficulty = Genesis.getInstance().getCumulativeDifficulty();
+
     private boolean peerDiscoveryMode = false;
 
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
@@ -68,6 +71,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     @Autowired
     private WorldManager worldManager;
     private List<byte[]> sentHashes;
+    private Block lastBlock = Genesis.getInstance();
 
     public EthHandler(){
         this.peerDiscoveryMode = false;
@@ -261,6 +265,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         List<Block> blockList = blocksMessage.getBlocks();
 
+        if (!blockList.isEmpty())
+            lastBlock = blockList.get(blockList.size()-1);
+
         // check if you got less blocks than you asked
         if (blockList.size() < sentHashes.size()){
             for (int i = 0; i < blockList.size(); ++i)
@@ -282,6 +289,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             blockchain.getQueue().logHashQueueSize();
             sendGetBlocks();
         }
+
+        for (Block block : blockList){
+            totalDifficulty.add(block.getCumulativeDifficulty());
+        }
     }
 
 
@@ -292,11 +303,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void procesNewBlock(NewBlockMessage newBlockMessage){
 
         Block newBlock = newBlockMessage.getBlock();
+        this.lastBlock = newBlock;
 
         // If the hashes still being downloaded ignore the NEW_BLOCKs
         // that block hash will be retrieved by the others and letter the block itself
         if (syncStatus == SyncSatus.INIT || syncStatus == SyncSatus.HASH_RETRIEVING) {
-            logger.debug("Sync status INIT or HASH_RETREIVING ignore new block.index: [{}]", newBlock.getNumber());
+            logger.debug("Sync status INIT or HASH_RETREIVING adding to hashes new block.index: [{}]",
+                    newBlock.getNumber());
+            blockchain.getQueue().addNewBlockHash(newBlock.getHash());
             return;
         }
 
@@ -312,32 +326,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         // here is post sync process
         logger.info("New block received: block.index [{}]", newBlock.getNumber());
 
-/*
-        if (blockchain.hasParentOnTheChain(newBlock) && gap <=0){
-            //todo: here we create an alternative chain.
-            return;
-        }
-
-        if (!blockchain.hasParentOnTheChain(newBlock)){
-            //todo: here we check if one of alt chains is connecting this guy
-            return;
-        }
-
-        if (blockchain.hasParentOnTheChain(newBlock) && gap > 1){
-            logger.error("Gap in the chain, go out of sync");
-            this.syncStatus = SyncSatus.HASH_RETRIEVING;
-            blockchain.getQueue().addHash(newBlock.getHash());
-            sendGetBlockHashes();
-            return;
-        }
-*/
-
         // adding block to the queue
         // there will be decided how to
         // connect it to the chain
         blockchain.getQueue().addBlock(newBlockMessage.getBlock());
         blockchain.getQueue().logHashQueueSize();
-
+        totalDifficulty = new BigInteger(1, newBlockMessage.getDifficulty());
     }
 
     private void sendStatus(){
@@ -489,11 +483,15 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         SYNC_DONE;
     }
 
-    public void doSync(){
+    public void setBestHash(byte[] hash){
+        blockchain.getQueue().addHash(hash);
+    }
 
+    public void doSync(){
         logger.info("Sync force activated");
-        syncStatus = SyncSatus.INIT;
-        sendStatus();
+        syncStatus = SyncSatus.HASH_RETRIEVING;
+        setBestHash(lastBlock.getHash());
+        sendGetBlockHashes();
     }
 
     public StatusMessage getHandshakeStatusMessage(){
@@ -506,5 +504,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
         this.peerDiscoveryMode = peerDiscoveryMode;
+    }
+
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty;
     }
 }

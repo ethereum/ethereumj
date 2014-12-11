@@ -204,6 +204,34 @@ public class BlockTest {
                 Hex.toHexString(worldManager.getRepository().getRoot()));
     }
 
+    @Test
+    public void testScenario2() throws URISyntaxException, IOException {
+
+        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+
+        URL scenario1 = ClassLoader
+                .getSystemResource("blockload/scenario2.dmp");
+
+        File file = new File(scenario1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+
+        byte[] root = Genesis.getInstance().getStateRoot();
+        for(String blockRLP : strData){
+            Block block = new Block(
+                    Hex.decode(blockRLP));
+            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            blockchain.tryToConnect(block);
+            root = block.getStateRoot();
+        }
+
+        logger.info("asserting root state is: {}", Hex.toHexString( root ));
+
+        //expected root: a5e2a18bdbc4ab97775f44852382ff5585b948ccb15b1d69f0abb71e2d8f727d
+        assertEquals(Hex.toHexString(root),
+                Hex.toHexString(worldManager.getRepository().getRoot()));
+    }
+
+
 
 
     @Test
