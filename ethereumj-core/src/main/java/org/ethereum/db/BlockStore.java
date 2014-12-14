@@ -67,8 +67,9 @@ public class BlockStore {
         if (block == null) return hashes;
 
         List<byte[]> result = sessionFactory.getCurrentSession().
-                createQuery("from BlockVO.hash where number >= :number").
+                createQuery("select hash from BlockVO where number <= :number and number >= :limit order by number desc").
                 setParameter("number", block.getNumber()).
+                setParameter("limit", block.getNumber() - qty).
                 setMaxResults(qty).list();
 
         for (byte[] h : result){
