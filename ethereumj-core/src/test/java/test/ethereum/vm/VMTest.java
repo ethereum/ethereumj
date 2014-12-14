@@ -25,7 +25,7 @@ import static org.junit.Assert.*;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMTest {
 	
-	private ProgramInvoke invoke;
+	private ProgramInvokeMockImpl invoke;
 	private Program program;
 	
 	@Before
@@ -2481,6 +2481,53 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
         assertTrue(program.isStopped());
     }
+
+    @Test // RETURN OP
+    public void testRETURN_5() {
+
+        invoke.setGas(300);
+
+        VM vm = new VM();
+        program =
+                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206010F3"),
+                        invoke);
+        String s_expected_1 = "E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B100000000000000000000000000000000";
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
+        assertEquals(132, program.getGas().longValue());
+        assertTrue(program.isStopped());
+    }
+
+    @Test // RETURN OP
+    public void testRETURN_6() {
+
+        invoke.setGas(100);
+
+        VM vm = new VM();
+        program =
+                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206010F3"),
+                        invoke);
+
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+        vm.step(program);
+
+        assertArrayEquals("".getBytes(), program.getResult().getHReturn().array());
+        assertEquals(92, program.getGas().longValue());
+        assertTrue(program.isStopped());
+    }
+
+
 
 
     @Test // CODECOPY OP

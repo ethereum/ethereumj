@@ -88,6 +88,10 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(gasLimit);
     }
 
+    public void setGas(long gasLimit){
+        this.gasLimit = gasLimit;
+    }
+
     /*          CALLVALUE op    */
     public DataWord getCallValue() {
         byte[] balance = Hex.decode("0DE0B6B3A7640000");

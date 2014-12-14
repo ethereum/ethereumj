@@ -955,7 +955,12 @@ public class VM {
                     DataWord size     =  program.stackPop();
 
                     ByteBuffer hReturn = program.memoryChunk(offset, size);
-                    program.setHReturn(hReturn);
+                    if (hReturn.array().length * 5 <= program.getGas().longValue()){
+                        program.spendGas(hReturn.array().length * 5, op.name());
+                        program.setHReturn(hReturn);
+                    } else {
+                        program.setHReturn(ByteBuffer.wrap(new byte[]{}));
+                    }
 
                     if (logger.isInfoEnabled())
                         hint = "data: " + Hex.toHexString(hReturn.array())
