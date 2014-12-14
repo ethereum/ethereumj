@@ -135,6 +135,13 @@ public class VM {
         		case SHA3:
         			gasCost = GasCost.SHA3;
         			newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-2));
+
+                    DataWord size = stack.get(stack.size()-2);
+                    long chunkUsed = (size.longValue() + 31) / 32;
+                    gasCost += chunkUsed * GasCost.SHA3;
+
+                    //todo: calc how much bytes for sha3(): sha3 / 32 * 10
+
         			break;
         		case CALLDATACOPY:
                     copySize = stack.get(stack.size()-3).longValue();
