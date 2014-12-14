@@ -14,6 +14,8 @@ public class GasCost {
     public static int BALANCE = 20;
     /** Cost 10 gas */
     public static int SHA3 = 10;
+    /** Cost 10 gas */
+    public static int SHA3_WORD = 10;
     /** Cost 20 gas */
     public static int SLOAD = 20;
 	/** Cost 0 gas */
