@@ -92,6 +92,8 @@ public class Transaction {
         if(receiveAddress == null) {
             this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
         }
+
+        getEncoded();
         parsed = true;
     }
 
@@ -143,6 +145,11 @@ public class Transaction {
         return nonce == null ? ZERO_BYTE_ARRAY : nonce  ;
     }
 
+    public boolean isValueTx() {
+        if (!parsed) rlpParse();
+        return value != null ;
+    }
+
     public byte[] getValue() {
         if (!parsed) rlpParse();
         return value == null ? ZERO_BYTE_ARRAY : value;
@@ -155,7 +162,7 @@ public class Transaction {
 
     public byte[] getGasPrice() {
         if (!parsed) rlpParse();
-        return gasPrice;
+        return gasPrice== null ? ZERO_BYTE_ARRAY : gasPrice  ;
     }
 
     public byte[] getGasLimit() {
@@ -222,9 +229,9 @@ public class Transaction {
                 ", receiveAddress=" + ByteUtil.toHexString(receiveAddress) +
                 ", value=" + ByteUtil.toHexString(value) +
                 ", data=" + ByteUtil.toHexString(data) +
-                ", signatureV=" + signature.v +
-                ", signatureR=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r)) +
-                ", signatureS=" + ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s)) +
+                ", signatureV=" + (signature == null ? "" : signature.v) +
+                ", signatureR=" + (signature == null ? "" : ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.r))) +
+                ", signatureS=" + (signature == null ? "" : ByteUtil.toHexString(BigIntegers.asUnsignedByteArray(signature.s))) +
                 "]";
     }
 
@@ -286,6 +293,9 @@ public class Transaction {
 
 		this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,
 				receiveAddress, value, data, v, r, s);
+
+        this.hash  = this.getHash();
+
         return rlpEncoded;
     }
 

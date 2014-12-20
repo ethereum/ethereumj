@@ -1,8 +1,11 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.RepositoryDummy;
+import org.ethereum.db.RepositoryTrack;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
@@ -14,6 +17,9 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.wrap;
+
 /**
  * www.ethereumJ.com
  *
@@ -23,7 +29,7 @@ import java.util.*;
 
 public class TestRunner {
 
-    private Logger logger = LoggerFactory.getLogger("JSONTest");
+    private Logger logger = LoggerFactory.getLogger("TCK-Test");
     private ProgramTrace trace = null;
 
     public List<String> runTestSuite(TestSuite testSuite) {
@@ -43,36 +49,102 @@ public class TestRunner {
         return resultCollector;
     }
 
+    public List<String> runTestCase(StateTestCase testCase) {
+
+        List<String> results = null;
+        logger.info("\n***");
+        logger.info(" Running test case: [" + testCase.getName() + "]") ;
+        logger.info("***\n");
+        results = new ArrayList<>();
+
+        logger.info("--------- PRE ---------");
+        RepositoryDummy repository = loadRepository(testCase.getPre());
+
+        logger.info("loaded repository");
+
+        org.ethereum.core.Transaction tx =  createTransaction(testCase.getTransaction());
+        logger.info("transaction: {}", tx.toString());
+
+        byte[] secretKey = testCase.getTransaction().secretKey;
+        logger.info("sign tx with: {}", Hex.toHexString(secretKey));
+        tx.sign(secretKey);
+
+        BlockchainImpl blockchain = new BlockchainImpl();
+        blockchain.setRepository(repository);
+
+        byte[] coinbase = testCase.getEnv().getCurrentCoinbase();
+        ProgramInvokeFactory invokeFactory = new TestProgramInvokeFactory(testCase.getEnv());
+
+        blockchain.setProgramInvokeFactory(invokeFactory);
+        blockchain.startTracking();
+
+        Repository track = repository.startTracking();
+        TransactionExecutor executor = new TransactionExecutor(tx, coinbase, track,
+                invokeFactory, null);
+        executor.execute();
+        track.commit();
+
+        logger.info("compare results");
+
+        // todo: perform logs comparision
+        List<LogInfo> logs = executor.getResult().getLogInfoList();
+        List<String> logResults = testCase.getLogs().compareToReal(logs);
+        results.addAll(logResults);
+
+        Set<ByteArrayWrapper> fullAddressSet =  repository.getFullAddressSet();
+        int repoSize = 0;
+        for (ByteArrayWrapper addrWrapped : fullAddressSet){
+
+            byte[] addr = addrWrapped.getData();
+
+            org.ethereum.core.AccountState accountState = repository.getAccountState(addr);
+            ContractDetails contractDetails = repository.getContractDetails(addr);
+
+            logger.info("{} \n{} \n{}", Hex.toHexString(addr),
+                    accountState.toString(), contractDetails.toString() );
+            logger.info("");
+
+            AccountState expectedAccountState = testCase.getPost().get(wrap(addr));
+            if (expectedAccountState == null){
+                String formatedString = String.format("Unexpected account state: address: %s", Hex.toHexString(addr));
+                results.add(formatedString);
+                continue;
+            }
+
+            List<String> result = expectedAccountState.compareToReal(accountState, contractDetails);
+            results.addAll(result);
+
+            ++repoSize;
+        }
+
+        int postRepoSize = testCase.getPost().size();
+
+        if (postRepoSize > repoSize){
+            results.add("ERROR: Post repository contains more accounts than executed repository ");
+        }
+
+        return results;
+    }
 
     public List<String> runTestCase(TestCase testCase) {
 
-    	Repository repository = new RepositoryImpl();
-    	
+        logger.info("\n***");
+        logger.info(" Running test case: [" + testCase.getName() + "]") ;
+        logger.info("***\n");
+        List<String> results = new ArrayList<>();
+
+
+        logger.info("--------- PRE ---------");
+        RepositoryDummy repository = loadRepository(testCase.getPre());
+
     	try {
-	    	System.out.println("\n***");
-	    	System.out.println(" Running test case: [" + testCase.getName() + "]") ;
-	    	System.out.println("***\n");
-	        List<String> results = new ArrayList<>();
-	        
-	        System.out.println("--------- PRE ---------");
-	        /* 1. Store pre-exist accounts - Pre */
-	        for (ByteArrayWrapper key : testCase.getPre().keySet()) {
-	
-	            AccountState accountState = testCase.getPre().get(key);
-	
-	            repository.createAccount(key.getData());
-	            repository.saveCode(key.getData(), accountState.getCode());
-	            repository.addBalance(key.getData(), new BigInteger(accountState.getBalance()));
-	
-	            for (long i = 0; i < accountState.getNonceLong(); ++i)
-	                repository.increaseNonce(key.getData());
-	        }
-	
+
+
 	        /* 2. Create ProgramInvoke - Env/Exec */
 	        Env  env  = testCase.getEnv();
 	        Exec exec = testCase.getExec();
 	        Logs logs = testCase.getLogs();
-	
+
 	        byte[] address     = exec.getAddress();
 	        byte[] origin      = exec.getOrigin();
 	        byte[] caller      = exec.getCaller();
@@ -87,17 +159,17 @@ public class TestRunner {
 	        long number        = new BigInteger(env.getCurrentNumber()).longValue();
 	        byte[] difficulty  = env.getCurrentDifficlty();
 	        long gaslimit      = new BigInteger(env.getCurrentGasLimit()).longValue();
-	
+
 	        // Origin and caller need to exist in order to be able to execute
 	        if(repository.getAccountState(origin) == null)
 	        	repository.createAccount(origin);
 	        if(repository.getAccountState(caller) == null)
 	        	repository.createAccount(caller);
-	        
+
 	        ProgramInvoke programInvoke = new ProgramInvokeImpl(address, origin, caller, balance,
 	                gasPrice, gas, callValue, msgData, lastHash, coinbase,
 	                timestamp, number, difficulty, gaslimit, repository, true);
-	
+
 	        /* 3. Create Program - exec.code */
 	        /* 4. run VM */
 	        VM vm = new VM();
@@ -113,7 +185,7 @@ public class TestRunner {
 	        	e = ex;
 	        }
             program.saveProgramTraceToFile(testCase.getName());
-            
+
             if(testCase.getPost().size() == 0) {
             	if(vmDidThrowAnEception != true) {
             		String output =
@@ -132,22 +204,22 @@ public class TestRunner {
             		results.add(output);
             		return results;
             	}
-            	
+
             	this.trace = program.getProgramTrace();
-            	
+
     	        System.out.println("--------- POST --------");
     	        /* 5. Assert Post values */
     	        for (ByteArrayWrapper key : testCase.getPost().keySet()) {
-    	
+
     	            AccountState accountState = testCase.getPost().get(key);
-    	
+
     	            long       expectedNonce     = accountState.getNonceLong();
     	            BigInteger expectedBalance   = accountState.getBigIntegerBalance();
     	            byte[]     expectedCode      = accountState.getCode();
-    	
+
     	            boolean accountExist = (null != repository.getAccountState(key.getData()));
     	            if (!accountExist) {
-    	
+
     	                String output =
     	                        String.format("The expected account does not exist. key: [ %s ]",
     	                                Hex.toHexString(key.getData()));
@@ -155,32 +227,32 @@ public class TestRunner {
     	                results.add(output);
     	                continue;
     	            }
-    	
+
     	            long       actualNonce   = repository.getNonce(key.getData()).longValue();
     	            BigInteger actualBalance = repository.getBalance(key.getData());
     	            byte[]     actualCode    = repository.getCode(key.getData());
     	            if (actualCode == null) actualCode = "".getBytes();
-    	
+
     	            if (expectedNonce != actualNonce) {
-    	
+
     	                String output =
     	                        String.format("The nonce result is different. key: [ %s ],  expectedNonce: [ %d ] is actualNonce: [ %d ] ",
     	                                Hex.toHexString(key.getData()), expectedNonce, actualNonce);
     	                logger.info(output);
     	                results.add(output);
     	            }
-    	
+
     	            if (!expectedBalance.equals(actualBalance)) {
-    	
+
     	                String output =
     	                        String.format("The balance result is different. key: [ %s ],  expectedBalance: [ %s ] is actualBalance: [ %s ] ",
     	                                Hex.toHexString(key.getData()), expectedBalance.toString(), actualBalance.toString());
     	                logger.info(output);
     	                results.add(output);
     	            }
-    	
+
     	            if (!Arrays.equals(expectedCode, actualCode)) {
-    	
+
     	                String output =
     	                        String.format("The code result is different. account: [ %s ],  expectedCode: [ %s ] is actualCode: [ %s ] ",
     	                                Hex.toHexString(key.getData()),
@@ -189,18 +261,18 @@ public class TestRunner {
     	                logger.info(output);
     	                results.add(output);
     	            }
-    	
+
     	            // assert storage
-    	            Map<ByteArrayWrapper, ByteArrayWrapper> storage = accountState.getStorage();
-    	            for (ByteArrayWrapper storageKey : storage.keySet()) {
-    	
+    	            Map<DataWord, DataWord> storage = accountState.getStorage();
+    	            for (DataWord storageKey : storage.keySet()) {
+
     	                byte[] expectedStValue = storage.get(storageKey).getData();
-    	
+
     	                ContractDetails contractDetails =
     	                        program.getResult().getRepository().getContractDetails(accountState.getAddress());
-    	
+
     	                if (contractDetails == null) {
-    	
+
     	                    String output =
     	                            String.format("Storage raw doesn't exist: key [ %s ], expectedValue: [ %s ]",
     	                                    Hex.toHexString(storageKey.getData()),
@@ -210,13 +282,13 @@ public class TestRunner {
     	                    results.add(output);
     	                    continue;
     	                }
-    	
+
     	                Map<DataWord, DataWord>  testStorage = contractDetails.getStorage();
     	                DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
 
     	                if (actualValue == null ||
                             !Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())) {
-    	
+
     	                    String output =
     	                            String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
     	                                    Hex.toHexString(storageKey.getData()),
@@ -226,7 +298,7 @@ public class TestRunner {
     	                    results.add(output);
     	                }
     	            }
-    	            
+
     	            /* asset logs */
     	            List<LogInfo> logResult = program.getResult().getLogInfoList();
 
@@ -296,26 +368,26 @@ public class TestRunner {
                         ++i;
     	            }
     	        }
-    	
+
     	        // TODO: assert that you have no extra accounts in the repository
     	        // TODO:  -> basically the deleted by suicide should be deleted
     	        // TODO:  -> and no unexpected created
-    	
+
     	        List<org.ethereum.vm.CallCreate> resultCallCreates  =
     	                program.getResult().getCallCreateList();
-    	
+
     	        // assert call creates
     	        for (int i = 0; i < testCase.getCallCreateList().size(); ++i) {
-    	
+
     	            org.ethereum.vm.CallCreate resultCallCreate = null;
     	            if (resultCallCreates != null && resultCallCreates.size() > i) {
     	                resultCallCreate = resultCallCreates.get(i);
     	            }
-    	
+
     	            CallCreate expectedCallCreate = testCase.getCallCreateList().get(i);
-    	
+
     	            if (resultCallCreate == null && expectedCallCreate != null) {
-    	
+
     	                String output =
     	                        String.format("Missing call/create invoke: to: [ %s ], data: [ %s ], gas: [ %s ], value: [ %s ]",
     	                                Hex.toHexString(expectedCallCreate.getDestination()),
@@ -324,15 +396,15 @@ public class TestRunner {
     	                                Hex.toHexString(expectedCallCreate.getValue()));
     	                logger.info(output);
     	                results.add(output);
-    	
+
     	                continue;
     	            }
-    	
+
     	            boolean assertDestination = Arrays.equals(
     	            		expectedCallCreate.getDestination(),
     	                    resultCallCreate.getDestination());
     	            if (!assertDestination) {
-    	
+
     	                String output =
     	                        String.format("Call/Create destination is different. Expected: [ %s ], result: [ %s ]",
     	                                Hex.toHexString(expectedCallCreate.getDestination()),
@@ -340,12 +412,12 @@ public class TestRunner {
     	                logger.info(output);
     	                results.add(output);
     	            }
-    	
+
     	            boolean assertData = Arrays.equals(
     	            		expectedCallCreate.getData(),
     	                    resultCallCreate.getData());
     	            if (!assertData) {
-    	
+
     	                String output =
     	                        String.format("Call/Create data is different. Expected: [ %s ], result: [ %s ]",
     	                                Hex.toHexString(expectedCallCreate.getData()),
@@ -353,7 +425,7 @@ public class TestRunner {
     	                logger.info(output);
     	                results.add(output);
     	            }
-    	
+
     	            boolean assertGasLimit = Arrays.equals(
     	            		expectedCallCreate.getGasLimit(),
     	                    resultCallCreate.getGasLimit());
@@ -365,7 +437,7 @@ public class TestRunner {
     	                logger.info(output);
     	                results.add(output);
     	            }
-    	
+
     	            boolean assertValue = Arrays.equals(
     	            		expectedCallCreate.getValue(),
     	                    resultCallCreate.getValue());
@@ -378,16 +450,16 @@ public class TestRunner {
     	                results.add(output);
     	            }
     	        }
-    	
+
     	        // assert out
     	        byte[] expectedHReturn = testCase.getOut();
-    	        byte[] actualHReturn = ByteUtil.EMPTY_BYTE_ARRAY;
+    	        byte[] actualHReturn = EMPTY_BYTE_ARRAY;
     	        if (program.getResult().getHReturn() != null) {
     	            actualHReturn = program.getResult().getHReturn().array();
     	        }
-    	
+
     	        if (!Arrays.equals(expectedHReturn, actualHReturn)) {
-    	
+
     	            String output =
     	                    String.format("HReturn is different. Expected hReturn: [ %s ], actual hReturn: [ %s ]",
     	                            Hex.toHexString(expectedHReturn),
@@ -395,13 +467,13 @@ public class TestRunner {
     	            logger.info(output);
     	            results.add(output);
     	        }
-    	
+
     	        // assert gas
     	        BigInteger expectedGas = new BigInteger(testCase.getGas());
     	        BigInteger actualGas = new BigInteger(gas).subtract(BigInteger.valueOf(program.getResult().getGasUsed()));
-    	
+
     	        if (!expectedGas.equals(actualGas)) {
-    	
+
     	            String output =
     	                    String.format("Gas remaining is different. Expected gas remaining: [ %s ], actual gas remaining: [ %s ]",
     	                            expectedGas.toString() ,
@@ -413,12 +485,53 @@ public class TestRunner {
     	         * end of if(testCase.getPost().size() == 0)
     	         */
             }
-            
+
 	        return results;
     	} finally {
     		repository.close();
     	}
     }
+
+    public org.ethereum.core.Transaction createTransaction(Transaction tx){
+
+        byte[] nonceBytes    =  ByteUtil.longToBytes(tx.nonce);
+        byte[] gasPriceBytes =  ByteUtil.longToBytes(tx.gasPrice);
+        byte[] gasBytes      =  ByteUtil.longToBytes(tx.gasLimit);
+        byte[] valueBytes    =  ByteUtil.longToBytes(tx.value);
+        byte[] toAddr        =  tx.getTo();
+        byte[] data          =  tx.getData();
+
+        org.ethereum.core.Transaction transaction = new org.ethereum.core.Transaction(
+                nonceBytes, gasPriceBytes, gasBytes,
+                toAddr, valueBytes, data);
+
+        return transaction;
+    }
+
+    public RepositoryDummy loadRepository(Map<ByteArrayWrapper, AccountState> pre){
+
+
+        RepositoryDummy track = new RepositoryDummy();
+
+	        /* 1. Store pre-exist accounts - Pre */
+        for (ByteArrayWrapper key : pre.keySet()) {
+
+            AccountState accountState = pre.get(key);
+            byte[] addr = key.getData();
+
+            track.addBalance(addr, new BigInteger(1, accountState.getBalance()));
+            track.setNonce(key.getData(), new BigInteger(1, accountState.getNonce()));
+
+            track.saveCode(addr, accountState.getCode());
+
+            for (DataWord storageKey : accountState.getStorage().keySet()){
+                track.addStorageRow(addr, storageKey, accountState.getStorage().get(storageKey));
+            }
+        }
+
+        return track;
+    }
+
 
     public ProgramTrace getTrace() {
         return trace;

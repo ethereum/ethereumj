@@ -7,6 +7,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 import org.ethereum.vm.MessageCall.MsgType;
 
@@ -106,10 +107,13 @@ public class VM {
                     DataWord oldValue =  program.storageLoad(stack.peek());
                     if (oldValue == null && !newValue.isZero())
                     	gasCost = GasCost.SSTORE;
-                    else if (oldValue != null && newValue.isZero())
+                    else if (oldValue != null && newValue.isZero()) {
                         // todo: GASREFUND counter policy
-                        System.currentTimeMillis();
-                    else
+
+                        // refund step cost policy.
+                        program.futureRefundGas( GasCost.REFUND_SSTORE );
+                        gasCost = 0;
+                    } else
                         gasCost = GasCost.RESET_SSTORE;
         			break;
                 case SLOAD:
@@ -170,10 +174,16 @@ public class VM {
 
                     int nTopics = op.val() - OpCode.LOG0.val();
                     newMemSize = memNeeded(stack.peek(), stack.get(stack.size()-2));
+
+                    BigInteger dataSize = stack.get(stack.size() - 2).value();
+                    BigInteger dataCost = dataSize.multiply(BigInteger.valueOf(GasCost.LOG_DATA_GAS));
+                    if (program.getGas().value().compareTo(dataCost) < 0){
+                        throw program.new OutOfGasException();
+                    }
+
                     gasCost = GasCost.LOG_GAS +
                               GasCost.LOG_TOPIC_GAS * nTopics +
                               GasCost.LOG_DATA_GAS  * stack.get(stack.size()-2).longValue();
-
                     break;
                 case EXP:
 
@@ -632,18 +642,22 @@ public class VM {
                 	BigInteger codeOffsetData = program.stackPop().value();
                 	BigInteger lengthData     = program.stackPop().value();
 
-                	if (fullCode == null
-							|| BigInteger.valueOf(fullCode.length).compareTo(
-									codeOffsetData.add(lengthData)) < 0) {
+/*
+                    todo: find out what to do where params are exits the actual code
+                	if (fullCode == null ||
+                        BigInteger.valueOf(fullCode.length).
+                                compareTo(
+									codeOffsetData.add(lengthData)) > 0) {
                         program.stop();
                         break;
                     }
+*/
 
                     int length     = lengthData.intValue();
                     int codeOffset = codeOffsetData.intValue();
 
-                    byte[] codeCopy = new byte[length];
-                    System.arraycopy(fullCode, codeOffset, codeCopy, 0, length);
+                    byte[] codeCopy = new byte[fullCode.length - codeOffset];
+                    System.arraycopy(fullCode, codeOffset, codeCopy, 0, fullCode.length - codeOffset);
 
                     if (logger.isInfoEnabled())
                         hint = "code: " + Hex.toHexString(codeCopy);

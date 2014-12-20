@@ -156,10 +156,10 @@ public class AccountState {
     }
 
     public String toString() {
-    	String ret =  "Nonce: " 		+ this.getNonce().toString() 							+ "\n" + 
-    				  "Balance: " 		+ Denomination.toFriendlyString(getBalance()) 			+ "\n" +
-    				  "State Root: " 	+ Hex.toHexString(this.getStateRoot()) 	+ "\n" +
-    				  "Code Hash: " 	+ Hex.toHexString(this.getCodeHash());
+    	String ret =  "  Nonce: " 		+ this.getNonce().toString() 							+ "\n" +
+    				  "  Balance: " 		+ getBalance() 			+ "\n" +
+    				  "  State Root: " 	+ Hex.toHexString(this.getStateRoot()) 	+ "\n" +
+    				  "  Code Hash: " 	+ Hex.toHexString(this.getCodeHash());
     	return ret;
     }
 }

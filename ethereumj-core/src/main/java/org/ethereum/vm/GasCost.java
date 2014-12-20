@@ -26,6 +26,8 @@ public class GasCost {
 	public static int SSTORE = 300;
     /** Cost 100 gas */
     public static int RESET_SSTORE = 100;
+    /** Cost 100 gas */
+    public static int REFUND_SSTORE = 100;
 	/** Cost 100 gas */
 	public static int CREATE = 100;
 	/** Cost 20 gas */

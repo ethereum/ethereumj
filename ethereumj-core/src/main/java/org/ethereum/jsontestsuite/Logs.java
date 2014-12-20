@@ -41,4 +41,68 @@ public class Logs {
     public Iterator<LogInfo> getIterator(){
         return logs.iterator();
     }
+
+
+    public List<String> compareToReal(List<LogInfo> logs){
+
+        List<String> results = new ArrayList<>();
+
+        int i = 0;
+        for (LogInfo postLog : this.logs){
+
+            LogInfo realLog = logs.get(i);
+
+            String postAddress = Hex.toHexString(postLog.getAddress());
+            String realAddress = Hex.toHexString(realLog.getAddress());
+
+            if (!postAddress.equals(realAddress)){
+
+                String formatedString = String.format("Log: %s: has unexpected address, expected address: %s found address: %s",
+                        i, postAddress, realAddress);
+                results.add(formatedString);
+            }
+
+            String postData = Hex.toHexString(postLog.getData());
+            String realData = Hex.toHexString(realLog.getData());
+
+            if (!postData.equals(realData)){
+
+                String formatedString = String.format("Log: %s: has unexpected data, expected data: %s found data: %s",
+                        i, postData, realData);
+                results.add(formatedString);
+            }
+
+            String postBloom = Hex.toHexString(postLog.getBloom().getData());
+            String realBloom = Hex.toHexString(realLog.getBloom().getData());
+
+            if (!postData.equals(realData)){
+
+                String formatedString = String.format("Log: %s: has unexpected bloom, expected bloom: %s found bloom: %s",
+                        i, postBloom, realBloom);
+                results.add(formatedString);
+            }
+
+            List<DataWord> postTopics = postLog.getTopics();
+            List<DataWord> realTopics = realLog.getTopics();
+
+            int j = 0;
+            for (DataWord postTopic : postTopics){
+
+                DataWord realTopic = realTopics.get(j);
+
+                if (!postTopic.equals(realTopic)){
+
+                    String formatedString = String.format("Log: %s: has unexpected topic: %s, expected topic: %s found topic: %s",
+                            i, j, postTopic, realTopic);
+                    results.add(formatedString);
+                }
+                ++j;
+            }
+
+            ++i;
+        }
+
+        return results;
+    }
+
 }

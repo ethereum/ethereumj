@@ -13,6 +13,7 @@ import org.ethereum.vmtrace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -33,7 +34,9 @@ public class Program {
 	
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger gasLogger = LoggerFactory.getLogger("gas");
-    
+
+    ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
+
     private int invokeHash;
     private ProgramListener listener;
 
@@ -181,7 +184,7 @@ public class Program {
     public void stackRequire(int stackSize) {
 		if (stack.size() < stackSize) {
 			throw new StackTooSmallException("Expected: " + stackSize
-					+ ", found" + stack.size());
+					+ ", found: " + stack.size());
 		}
     }
 
@@ -318,14 +321,14 @@ public class Program {
         result.getRepository().addBalance(senderAddress, endowment.negate());
         BigInteger newBalance = result.getRepository().addBalance(newAddress, endowment);
 
-        Repository track = result.getRepository().startTracking();
-
         // [3] UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        track.increaseNonce(senderAddress);
+        result.getRepository().increaseNonce(senderAddress);
+
+        Repository track = result.getRepository().startTracking();
 
         // [5] COOK THE INVOKE AND EXECUTE
-		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
+		ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
 				this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
 				newBalance, null, track);
 		
@@ -427,7 +430,7 @@ public class Program {
         this.spendGas(msg.getGas().longValue(), "internal call");
         
         Repository trackRepository = result.getRepository().startTracking();
-		ProgramInvoke programInvoke = ProgramInvokeFactory.createProgramInvoke(
+		ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
 				this, new DataWord(contextAddress), msg.getEndowment(),
 				msg.getGas(), contextBalance, data, trackRepository);
 		
@@ -505,6 +508,10 @@ public class Program {
     public void refundGas(long gasValue, String cause) {
         gasLogger.info("[{}] Refund for cause: [{}], gas: [{}]", invokeHash, cause, gasValue);
         result.refundGas(gasValue);
+    }
+
+    public void futureRefundGas(long gasValue) {
+        result.futureRefundGas(gasValue);
     }
 
     public void storageSave(DataWord word1, DataWord word2) {

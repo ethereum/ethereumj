@@ -11,6 +11,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.HashMap;
+import java.util.Set;
 
 import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.wrap;
@@ -26,11 +27,14 @@ public class RepositoryTrack implements Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
 
-
     HashMap<ByteArrayWrapper, AccountState>    cacheAccounts = new HashMap<>();
     HashMap<ByteArrayWrapper, ContractDetails> cacheDetails  = new HashMap<>();
 
     Repository repository;
+
+    public RepositoryTrack(){
+        this.repository = new RepositoryDummy();
+    }
 
     public RepositoryTrack(Repository repository) {
         this.repository = repository;
@@ -116,6 +120,23 @@ public class RepositoryTrack implements Repository {
         return accountState.getNonce();
     }
 
+    public BigInteger setNonce(byte[] addr, BigInteger bigInteger) {
+        AccountState accountState = getAccountState(addr);
+
+        if (accountState == null)
+            accountState = createAccount(addr);
+
+        BigInteger saveNonce = accountState.getNonce();
+        accountState.setNonce(bigInteger);
+
+        logger.trace("increase nonce addr: [{}], from: [{}], to: [{}]", Hex.toHexString(addr),
+                saveNonce, accountState.getNonce());
+
+        return accountState.getNonce();
+
+    }
+
+
     @Override
     public BigInteger getNonce(byte[] addr) {
         AccountState accountState = getAccountState(addr);
@@ -175,6 +196,10 @@ public class RepositoryTrack implements Repository {
     @Override
     public DBIterator getAccountsIterator() {
         throw new UnsupportedOperationException();
+    }
+
+    public Set<ByteArrayWrapper> getFullAddressSet(){
+        return cacheAccounts.keySet();
     }
 
 

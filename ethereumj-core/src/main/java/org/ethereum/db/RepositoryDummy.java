@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.SHA3Helper.sha3;
@@ -35,58 +37,34 @@ import static org.ethereum.util.ByteUtil.wrap;
  * @author: Roman Mandeleil
  * Created on: 17/11/2014 21:15
  */
-@Component
-public class RepositoryImpl implements Repository {
-
-    final static String DETAILS_DB = "details";
-    final static String STATE_DB = "state";
+public class RepositoryDummy implements Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
-
-    private Trie 			worldState;
-
-    private DatabaseImpl detailsDB 	= null;
-    private DatabaseImpl stateDB 	= null;
-
-    public RepositoryImpl() {
-        this(DETAILS_DB, STATE_DB);
-    }
-
-    public RepositoryImpl(String detailsDbName, String stateDbName) {
-        detailsDB   = new DatabaseImpl(detailsDbName);
-        stateDB 	= new DatabaseImpl(stateDbName);
-        worldState 	= new TrieImpl(stateDB.getDb());
-    }
+    private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
+    private Map<ByteArrayWrapper, ContractDetails> detailsDB  = new HashMap<>() ;
 
 
     @Override
     public void reset() {
-        close();
-        detailsDB   = new DatabaseImpl(DETAILS_DB);
-        stateDB 	= new DatabaseImpl(STATE_DB);
-        worldState 	= new TrieImpl(stateDB.getDb());
+
+        worldState.clear();
+        detailsDB.clear();
     }
 
     @Override
     public void close() {
-        if (this.detailsDB != null){
-            detailsDB.close();
-            detailsDB = null;
-        }
-        if (this.stateDB != null){
-            stateDB.close();
-            stateDB = null;
-        }
+        throw  new UnsupportedOperationException();
     }
 
     @Override
     public boolean isClosed() {
-        return stateDB == null;
+        throw  new UnsupportedOperationException();
     }
 
+
     @Override
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache,
-                            HashMap<ByteArrayWrapper, ContractDetails> detailsCache) {
+    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> stateCache, HashMap<ByteArrayWrapper,
+            ContractDetails> detailsCache) {
 
         for (ByteArrayWrapper hash : stateCache.keySet()) {
 
@@ -94,8 +72,8 @@ public class RepositoryImpl implements Repository {
             ContractDetails contractDetails = detailsCache.get(hash);
 
             if (accountState.isDeleted()){
-                worldState.delete(hash.getData());
-                detailsDB.delete(hash.getData());
+                worldState.remove( hash ) ;
+                detailsDB.remove( hash );
 
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
@@ -103,10 +81,10 @@ public class RepositoryImpl implements Repository {
             } else{
 
                 if (accountState.isDirty() ||  contractDetails.isDirty()){
-                    detailsDB.put(hash.getData(), contractDetails.getEncoded());
+                    detailsDB.put( hash,  contractDetails);
                     accountState.setStateRoot(contractDetails.getStorageHash());
                     accountState.setCodeHash(sha3(contractDetails.getCode()));
-                    worldState.update(hash.getData(), accountState.getEncoded());
+                    worldState.put( hash, accountState);
                     if (logger.isDebugEnabled()){
                         logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
                                 Hex.toHexString(hash.getData()),
@@ -118,19 +96,18 @@ public class RepositoryImpl implements Repository {
                 }
 
             }
-
         }
 
         stateCache.clear();
         detailsCache.clear();
+
     }
+
 
     @Override
-    public void flush(){
-        logger.info("flush to disk");
-        worldState.sync();
+    public void flush() {
+        throw  new UnsupportedOperationException();
     }
-
 
     @Override
     public void rollback() {
@@ -142,9 +119,10 @@ public class RepositoryImpl implements Repository {
         throw  new UnsupportedOperationException();
     }
 
+
     @Override
     public void syncToRoot(byte[] root) {
-        worldState.setRoot(root);
+        throw  new UnsupportedOperationException();
     }
 
     @Override
@@ -154,120 +132,34 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash) {
-        dumpTrie(block);
 
-        if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
-            return;
-
-        // todo: dump block header and the relevant tx
-
-        if (block.getNumber() == 0 && txNumber == 0)
-            if (CONFIG.dumpCleanOnRestart()) {
-                try {
-                    FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
-            }
-
-        String dir = CONFIG.dumpDir() + "/";
-
-        String fileName = "";
-        if (txHash != null)
-            fileName = String.format("%07d_%d_%s.dmp", block.getNumber(), txNumber,
-                    Hex.toHexString(txHash).substring(0, 8));
-        else {
-            fileName = String.format("%07d_c.dmp", block.getNumber());
-        }
-
-        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-        try {
-
-            dumpFile.getParentFile().mkdirs();
-            dumpFile.createNewFile();
-
-            fw = new FileWriter(dumpFile.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
-
-            List<ByteArrayWrapper> keys = this.detailsDB.dumpKeys();
-
-            JsonNodeFactory jsonFactory = new JsonNodeFactory(false);
-            ObjectNode blockNode = jsonFactory.objectNode();
-
-            JSONHelper.dumpBlock(blockNode, block, gasUsed,
-                    this.getRoot(),
-                    keys, this);
-
-            EtherObjectMapper mapper = new EtherObjectMapper();
-            bw.write(mapper.writeValueAsString(blockNode));
-
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (bw != null) bw.close();
-                if (fw != null) fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
-
-    public void dumpTrie(Block block){
-
-        if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
-            return;
-
-        String fileName = String.format("%07d_trie.dmp", block.getNumber());
-        String dir = CONFIG.dumpDir() + "/";
-        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName);
-        FileWriter fw = null;
-        BufferedWriter bw = null;
-
-        String dump = this.worldState.getTrieDump();
-
-        try {
-
-            dumpFile.getParentFile().mkdirs();
-            dumpFile.createNewFile();
-
-            fw = new FileWriter(dumpFile.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
-
-            bw.write(dump);
-
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (bw != null)bw.close();
-                if (fw != null)fw.close();
-            } catch (IOException e) {e.printStackTrace();}
-        }
-    }
-
 
     @Override
     public DBIterator getAccountsIterator() {
-        return detailsDB.iterator();
+        return null;
     }
+
+    public Set<ByteArrayWrapper> getFullAddressSet(){
+        return worldState.keySet();
+    }
+
 
     @Override
     public BigInteger addBalance(byte[] addr, BigInteger value) {
-
         AccountState account = getAccountState(addr);
 
         if (account == null)
             account = createAccount(addr);
 
         BigInteger result = account.addToBalance(value);
-        worldState.update(addr, account.getEncoded());
+        worldState.put(wrap(addr), account);
 
         return result;
     }
 
     @Override
     public BigInteger getBalance(byte[] addr) {
-
         AccountState account = getAccountState(addr);
 
         if (account == null)
@@ -278,7 +170,6 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public DataWord getStorageValue(byte[] addr, DataWord key) {
-
         ContractDetails details =  getContractDetails(addr);
 
         if (details == null)
@@ -289,7 +180,6 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-
         ContractDetails details =  getContractDetails(addr);
 
         if (details == null){
@@ -298,12 +188,11 @@ public class RepositoryImpl implements Repository {
         }
 
         details.put(key, value);
-        detailsDB.put(addr, details.getEncoded());
+        detailsDB.put(wrap(addr), details);
     }
 
     @Override
     public byte[] getCode(byte[] addr) {
-
         ContractDetails details =  getContractDetails(addr);
 
         if (details == null)
@@ -311,6 +200,7 @@ public class RepositoryImpl implements Repository {
 
         return details.getCode();
     }
+
 
     @Override
     public void saveCode(byte[] addr, byte[] code) {
@@ -322,13 +212,11 @@ public class RepositoryImpl implements Repository {
         }
 
         details.setCode(code);
-        detailsDB.put(addr, details.getEncoded());
+        detailsDB.put(wrap( addr ), details);
     }
-
 
     @Override
     public BigInteger getNonce(byte[] addr) {
-
         AccountState account = getAccountState(addr);
 
         if (account == null)
@@ -339,14 +227,13 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public BigInteger increaseNonce(byte[] addr) {
-
         AccountState account = getAccountState(addr);
 
         if (account == null)
             account = createAccount(addr);
 
         account.incrementNonce();
-        worldState.update(addr, account.getEncoded());
+        worldState.put(wrap(addr), account);
 
         return account.getNonce();
     }
@@ -359,60 +246,48 @@ public class RepositoryImpl implements Repository {
             account = createAccount(addr);
 
         account.setNonce(nonce);
-        worldState.update(addr, account.getEncoded());
+        worldState.put(wrap(addr), account);
 
         return account.getNonce();
     }
 
 
-
-
     @Override
     public void delete(byte[] addr) {
-        worldState.delete(addr);
-        detailsDB.delete(addr);
+        worldState.remove(wrap(addr));
+        detailsDB.remove(wrap(addr));
     }
 
     @Override
     public ContractDetails getContractDetails(byte[] addr) {
 
-        ContractDetails result = null;
-        byte[] detailsData = detailsDB.get(addr);
-
-        if (detailsData != null)
-            result = new ContractDetails(detailsData);
-
-        return result;
+        return detailsDB.get(wrap(addr));
     }
+
 
     @Override
     public AccountState getAccountState(byte[] addr) {
-
-        AccountState result = null;
-        byte[] accountData = worldState.get(addr);
-
-        if (accountData.length != 0)
-            result = new AccountState(accountData);
-
-        return result;
+        return worldState.get(wrap(addr));
     }
 
     @Override
     public AccountState createAccount(byte[] addr) {
-
         AccountState accountState = new AccountState();
-        worldState.update(addr, accountState.getEncoded());
+        worldState.put(wrap(addr), accountState);
 
         ContractDetails contractDetails = new ContractDetails();
-        detailsDB.put(addr, contractDetails.getEncoded());
+        detailsDB.put(wrap(addr), contractDetails);
 
         return accountState;
     }
 
     @Override
-    public void loadAccount(byte[] addr,
-                            HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
-                            HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
+    public byte[] getRoot() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
 
         AccountState    account =  getAccountState(addr);
         ContractDetails details =  getContractDetails(addr);
@@ -429,10 +304,5 @@ public class RepositoryImpl implements Repository {
 
         cacheAccounts.put(wrap(addr), account);
         cacheDetails.put(wrap(addr), details);
-    }
-
-    @Override
-    public byte[] getRoot() {
-        return worldState.getRootHash();
     }
 }

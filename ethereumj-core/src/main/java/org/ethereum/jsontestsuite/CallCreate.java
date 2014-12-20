@@ -7,7 +7,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 /**
- * www.ethereumJ.com
+ * www.etherj.com
  *
  * @author: Roman Mandeleil
  * Created on: 28/06/2014 10:25

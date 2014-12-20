@@ -3,6 +3,7 @@ package org.ethereum.listener;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.message.Message;
+import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
@@ -12,7 +13,7 @@ import java.util.Set;
  * @author: Roman Mandeleil
  * Created on: 12/11/2014 08:34
  */
-
+@Component(value="EthereumListener")
 public class EthereumListenerWrapper implements EthereumListener{
 
     EthereumListener listener;

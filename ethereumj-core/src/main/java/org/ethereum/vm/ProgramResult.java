@@ -18,6 +18,7 @@ public class ProgramResult {
     private RuntimeException exception;
     private List<DataWord> deleteAccounts;
     private List<LogInfo> logInfoList;
+    private long futureRefund = 0;
 
     private Repository repository = null;
 
@@ -105,4 +106,12 @@ public class ProgramResult {
 			callCreateList = new ArrayList<>();
 		callCreateList.add(new CallCreate(data, destination, gasLimit, value));
 	}
+
+    public void futureRefundGas(long gasValue) {
+        futureRefund += gasValue;
+    }
+
+    public long getFutureRefund(){
+        return futureRefund;
+    }
 }

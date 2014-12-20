@@ -138,6 +138,21 @@ public class ByteUtil {
 			return 0;
 		return new BigInteger(1, b).intValue();
 	}
+
+    /**
+     * Cast hex encoded value from byte[] to int
+     *
+     * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
+     *
+     * @param b array contains the values
+     * @return unsigned positive long value.
+     */
+    public static long byteArrayToLong(byte[] b) {
+        if (b == null || b.length == 0)
+            return 0;
+        return new BigInteger(1, b).longValue();
+    }
+
 	
     /**
      * Turn nibbles to a pretty looking output string

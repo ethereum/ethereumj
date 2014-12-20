@@ -10,6 +10,7 @@ import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.*;
 import org.ethereum.vm.DataWord;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author: Roman Mandeleil
@@ -188,6 +189,23 @@ public class ContractDetails {
         this.storageValues = storageValues;
     }
 
+    public void setStorage(Map<DataWord, DataWord> storage) {
+
+        List<DataWord> keys = new ArrayList<>();
+        keys.addAll(storageKeys);
+
+        List<DataWord> values = new ArrayList<>();
+        for (DataWord key : keys){
+
+            DataWord value = storage.get(key);
+            values.add(value);
+        }
+
+        this.storageKeys = keys;
+        this.storageValues = values;
+    }
+
+
 
     public ContractDetails clone(){
 
@@ -197,6 +215,14 @@ public class ContractDetails {
         contractDetails.setStorage(new ArrayList<DataWord>(this.storageKeys)  ,
                                    new ArrayList<DataWord>(this.storageValues));
         return contractDetails;
+    }
+
+    public String toString(){
+
+        String ret = "  Code: " + Hex.toHexString(code) + "\n";
+        ret += "  Storage: " + getStorage().toString();
+
+        return ret;
     }
 
 }

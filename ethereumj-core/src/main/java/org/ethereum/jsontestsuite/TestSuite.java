@@ -21,9 +21,7 @@ public class TestSuite {
         for (Object key: testCaseJSONObj.keySet()){
 
             Object testCaseJSON = testCaseJSONObj.get(key);
-            
             TestCase testCase = new TestCase(key.toString(), (JSONObject) testCaseJSON);
-
             testList.add(testCase);
         }
     }

@@ -60,8 +60,8 @@ public class WorldManager {
     
     private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
-    
-    private EthereumListener listener = new EthereumListenerWrapper();
+    @Autowired
+    private EthereumListener listener;
     
     @PostConstruct
     public void init() {
