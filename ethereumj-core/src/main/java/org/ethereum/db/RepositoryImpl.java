@@ -410,6 +410,11 @@ public class RepositoryImpl implements Repository {
     }
 
     @Override
+    public boolean isExist(byte[] addr) {
+        return getAccountState(addr) != null;
+    }
+
+    @Override
     public void loadAccount(byte[] addr,
                             HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                             HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {

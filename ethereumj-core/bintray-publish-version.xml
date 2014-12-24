@@ -16,6 +16,12 @@
 
       (*) if [artifact.snapshot] is set the deploy will add timestamp to the package
 
+
+      delete api with bash:
+
+        curl -X DELETE https://api.bintray.com/packages/ethereum/maven/org.ethereum/versions/0.7.14.20141224.1153 &
+
+
 -->
 
 
@@ -26,7 +32,7 @@
 
     <property name="artifact.groupId" value="org.ethereum"/>
     <property name="artifact.id" value="ethereumj"/>
-    <property name="artifact.version" value="0.7.9"/>
+    <property name="artifact.version" value="0.7.14"/>
     <property name="artifact.path" value="" />
     <property name="artifact.snapshot" value="snapshot" />
 
@@ -144,7 +150,7 @@
 
         <echo message="${artifact.full.path}/${artifact.id}-${artifact.version}${artifact.suffix}"/>
 
-        <http url="https://api.bintray.com/content/${bintray.subject}/${bintray.repo}/${bintray.package}/${bintray.version}/${encoded.bintray.file.path}${artifact.suffix};publish=1"
+        <http url="https://api.bintray.com/content/${bintray.subject}/${bintray.repo}/${bintray.package}/${bintray.version}/${encoded.bintray.file.path}${artifact.suffix};publish=1;override=1"
               method="PUT"
               printrequest="false"
               printrequestheaders="true"

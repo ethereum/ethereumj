@@ -209,8 +209,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             BlockQueue chainQueue = blockchain.getQueue();
             BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
             BigInteger highestKnownTotalDifficulty = blockchain.getTotalDifficulty();
-            if ( highestKnownTotalDifficulty == null ||
-                 peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0) {
+
+            boolean synced=
+                FastByteComparisons.compareTo(msg.getBestHash(), 0, 32, blockchain.getBestBlockHash(), 0, 32) == 0;
+
+            if ( !synced && (highestKnownTotalDifficulty == null ||
+                 peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0)) {
 
                 logger.info(" Their chain is better: total difficulty : {} vs {}",
                         peerTotalDifficulty.toString(),

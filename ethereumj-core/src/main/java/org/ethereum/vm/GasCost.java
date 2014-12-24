@@ -30,7 +30,9 @@ public class GasCost {
     public static int REFUND_SSTORE = 100;
 	/** Cost 100 gas */
 	public static int CREATE = 100;
-	/** Cost 20 gas */
+    /** Cost 1 gas */
+    public static int CREATE_DATA_BYTE = 5;
+    /** Cost 20 gas */
 	public static int CALL = 20;
 	/** Cost 1 gas */
 	public static int MEMORY = 1;

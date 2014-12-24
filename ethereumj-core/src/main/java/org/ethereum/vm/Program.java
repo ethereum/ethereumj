@@ -24,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * www.ethereumJ.com
@@ -57,7 +58,7 @@ public class Program {
 
 	public Program(byte[] ops, ProgramInvoke invokeData) {
 		
-	    if (ops == null) ops = ByteUtil.EMPTY_BYTE_ARRAY;
+	    if (ops == null) ops = EMPTY_BYTE_ARRAY;
 	    this.ops = ops;
 	    
 	    if (invokeData != null) {
@@ -358,9 +359,19 @@ public class Program {
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code    = result.getHReturn().array();
-        track.saveCode(newAddress, code);
+
+        long storageCost = code.length * GasCost.CREATE_DATA_BYTE;
+        long afterSpend = invokeData.getGas().longValue() - storageCost - result.getGasUsed();
+        if (afterSpend < 0){
+            track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
+        } else {
+
+            result.spendGas(code.length * GasCost.CREATE_DATA_BYTE);
+            track.saveCode(newAddress, code);
+        }
+
         track.commit();
-        
+
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
         
@@ -529,7 +540,11 @@ public class Program {
     }
     
     public byte[] getCodeAt(DataWord address) {
-    	return invokeData.getRepository().getCode(address.getLast20Bytes());
+
+        byte[] code = invokeData.getRepository().getCode(address.getLast20Bytes());
+        if (code == null) code = ByteUtil.EMPTY_BYTE_ARRAY;
+
+    	return code;
     }
 
     public DataWord getOwnerAddress() {
@@ -583,7 +598,7 @@ public class Program {
     }
 
     public byte[] getDataCopy(DataWord offset, DataWord length) {
-        if (invokeData == null) return ByteUtil.EMPTY_BYTE_ARRAY;
+        if (invokeData == null) return EMPTY_BYTE_ARRAY;
         return invokeData.getDataCopy(offset, length);
     }
 
@@ -743,6 +758,8 @@ public class Program {
 
     public void saveOpTrace(){
 
+        if (pc >= ops.length) return;
+
         Op op = new Op();
         op.setPc(pc);
 
@@ -762,7 +779,7 @@ public class Program {
 
         if (!CONFIG.vmTrace()) return;
 
-        String dir = CONFIG.vmTraceDir() + "/";
+        String dir = CONFIG.databaseDir() + "/" + CONFIG.vmTraceDir() + "/";
 
         File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + fileName + ".json");
         FileWriter fw = null;

@@ -1,5 +1,6 @@
 package test.ethereum.vm;
 
+import junit.framework.Assert;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
@@ -2482,53 +2483,6 @@ public class VMTest {
         assertTrue(program.isStopped());
     }
 
-    @Test // RETURN OP
-    public void testRETURN_5() {
-
-        invoke.setGas(300);
-
-        VM vm = new VM();
-        program =
-                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206010F3"),
-                        invoke);
-        String s_expected_1 = "E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B100000000000000000000000000000000";
-
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-
-        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
-        assertEquals(132, program.getGas().longValue());
-        assertTrue(program.isStopped());
-    }
-
-    @Test // RETURN OP
-    public void testRETURN_6() {
-
-        invoke.setGas(100);
-
-        VM vm = new VM();
-        program =
-                new Program(Hex.decode("7FA0B0C0D0E0F0A1B1C1D1E1F1A2B2C2D2E2F2A3B3C3D3E3F3A4B4C4D4E4F4A1B160005260206010F3"),
-                        invoke);
-
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-
-        assertArrayEquals("".getBytes(), program.getResult().getHReturn().array());
-        assertEquals(92, program.getGas().longValue());
-        assertTrue(program.isStopped());
-    }
-
-
-
 
     @Test // CODECOPY OP
     public void testCODECOPY_1() {
@@ -2570,6 +2524,10 @@ public class VMTest {
     @Test // CODECOPY OP
     public void testCODECOPY_3() {
 
+        // cost for that:
+        // 94 - data copied
+        // 95 - new bytes allocated
+
         VM vm = new VM();
         program = 
                 new Program(Hex.decode("605E60076000396000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
@@ -2580,7 +2538,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertTrue(program.isStopped());
+        assertEquals( 10, program.getResult().getGasUsed() );
     }
 
     @Test // CODECOPY OP
@@ -2596,12 +2554,8 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertTrue(program.isStopped());
+        assertEquals( 10, program.getResult().getGasUsed() );
     }
-
-//    DataWord memOffsetData
-//    DataWord codeOffsetData
-//    DataWord lengthData
 
 
     @Test // CODECOPY OP
@@ -2685,34 +2639,19 @@ public class VMTest {
                 new Program(Hex.decode("605E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e75660005460005360200235"),
                         invoke);
 
+        String m_expected_1 = "6000605F556014600054601E60205463ABCDDCBA6040545B51602001600A5254516040016014525451606001601E5254516080016028525460A052546016604860003960166000F26000603F556103E756600054600053602002350000000000";
+
         vm.step(program);
         vm.step(program);
         vm.step(program);
         vm.step(program);
         vm.step(program);
-        
-        assertTrue(program.isStopped());
+
+        assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
     }
 
     @Test // EXTCODECOPY OP
     public void testEXTCODECOPY_4() {
-
-        VM vm = new VM();
-        program = 
-                new Program(Hex.decode("605E6007600073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
-                        invoke);
-
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-        vm.step(program);
-
-        assertTrue(program.isStopped());
-    }
-
-    @Test // EXTCODECOPY OP
-    public void testEXTCODECOPY_5() {
         VM vm = new VM();
         program = 
                 new Program(Hex.decode("611234600054615566602054603E6000602073471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C6000605f556014600054601e60205463abcddcba6040545b51602001600a5254516040016014525451606001601e5254516080016028525460a052546016604860003960166000f26000603f556103e756600054600053602002351234"),
@@ -2735,7 +2674,7 @@ public class VMTest {
 
 
     @Test(expected=StackTooSmallException.class) // EXTCODECOPY OP mal
-    public void testEXTCODECOPY_6() {
+    public void testEXTCODECOPY_5() {
         VM vm = new VM();
         program = 
                 new Program(Hex.decode("605E600773471FD3AD3E9EEADEEC4608B92D16CE6B500704CC3C"),

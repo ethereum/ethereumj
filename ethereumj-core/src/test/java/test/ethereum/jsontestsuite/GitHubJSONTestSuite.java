@@ -3,6 +3,7 @@ package test.ethereum.jsontestsuite;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.ethereum.jsontestsuite.*;
 import org.json.simple.JSONObject;
@@ -77,6 +78,40 @@ public class GitHubJSONTestSuite {
 
         Assert.assertTrue(result.isEmpty());
     }
+
+    protected static void runGitHubJsonStateTest(String json, Set<String> exclude) throws ParseException {
+        Assume.assumeFalse("Online test is not available", json.equals(""));
+
+        JSONParser parser = new JSONParser();
+        JSONObject testSuiteObj = (JSONObject)parser.parse(json);
+
+        StateTestSuite testSuite = new StateTestSuite(testSuiteObj);
+        Collection<StateTestCase> testCollection =  testSuite.getAllTests();
+
+        for(StateTestCase testCase : testSuite.getAllTests()){
+
+            String prefix = "    ";
+            if (exclude.contains(testCase.getName())) prefix = "[X] ";
+
+            logger.info(prefix + testCase.getName());
+        }
+
+        for (StateTestCase testCase : testCollection){
+
+            if (exclude.contains(testCase.getName())) continue;
+            TestRunner runner = new TestRunner();
+            List<String> result = runner.runTestCase(testCase);
+
+            if (!result.isEmpty()){
+                for (String single : result){
+                    logger.info(single);
+                }
+            }
+
+            Assert.assertTrue(result.isEmpty());
+        }
+    }
+
 
     protected static void runGitHubJsonStateTest(String json) throws ParseException {
         Assume.assumeFalse("Online test is not available", json.equals(""));

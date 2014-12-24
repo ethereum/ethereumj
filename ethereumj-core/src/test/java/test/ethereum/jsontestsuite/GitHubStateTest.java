@@ -6,6 +6,9 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
@@ -13,11 +16,22 @@ public class GitHubStateTest {
     public void stSingleTest() throws ParseException {
 
     	String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
-    	GitHubJSONTestSuite.runGitHubJsonStateTest(json, "CallRecursiveBombLog");
+    	GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createNameRegistrator");
     }
 
     @Test
-    public void stExample() throws ParseException {
+    public void runWithExcludedTest() throws ParseException {
+
+        Set<String> excluded = new HashSet<>();
+        excluded.add("createNameRegistratorValueTooHigh");
+
+        String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
+        GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
+    }
+
+
+    @Test
+    public void stExample() throws ParseException {  // [V]
 
         String json = JSONReader.loadJSON("StateTests/stExample.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
@@ -60,7 +74,7 @@ public class GitHubStateTest {
 
 
     @Test
-    public void stSpecialTest() throws ParseException {
+    public void stSpecialTest() throws ParseException { // [V]
 
         String json = JSONReader.loadJSON("StateTests/stSpecialTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);

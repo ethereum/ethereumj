@@ -145,6 +145,12 @@ public class BlockchainImpl implements Blockchain {
                     block.getNumber());
 
         if (blockStore.getBlockByHash(block.getHash()) != null){
+
+            if (logger.isDebugEnabled())
+                logger.debug("Block already exist hash: {}, number: {}",
+                        Hex.toHexString(block.getHash()).substring(0, 6),
+                        block.getNumber());
+
             // retry of well known block
             return;
         }
@@ -318,7 +324,7 @@ public class BlockchainImpl implements Blockchain {
 			stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(), track,
-                    programInvokeFactory, bestBlock);
+                    programInvokeFactory, block);
             executor.execute();
 
             TransactionReceipt receipt = executor.getReceipt();
@@ -385,7 +391,7 @@ public class BlockchainImpl implements Blockchain {
             String worldStateRootHash = Hex.toHexString(repository.getRoot());
             if(!blockStateRootHash.equals(worldStateRootHash)){
 
-            	stateLogger.warn("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+            	stateLogger.info("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
                 adminInfo.lostConsensus();
 
                 // in case of rollback hard move the root

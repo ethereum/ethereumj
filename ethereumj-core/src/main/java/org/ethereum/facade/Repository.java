@@ -26,6 +26,14 @@ public interface Repository {
 	 * @return newly created account state
 	 */
 	public AccountState createAccount(byte[] addr);
+
+
+    /**
+     * @param addr - account to check
+     * @return - true if account exist,
+     *           false otherwise
+     */
+    public boolean isExist(byte[] addr);
 	
 	/**
 	 * Retrieve an account

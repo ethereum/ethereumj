@@ -67,6 +67,22 @@ public class RepositoryTrack implements Repository {
     }
 
     @Override
+    public boolean isExist(byte[] addr) {
+
+        boolean exist = false;
+        AccountState accountState = cacheAccounts.get(wrap(addr));
+        if (accountState != null && !accountState.isDeleted()) exist = true;
+
+        if (accountState == null){
+            accountState = repository.getAccountState(addr);
+            if (accountState != null && !accountState.isDeleted()) exist = true;
+        }
+
+        return exist;
+    }
+
+
+    @Override
     public ContractDetails getContractDetails(byte[] addr) {
 
         ContractDetails contractDetails = cacheDetails.get(wrap(addr));

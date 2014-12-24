@@ -281,6 +281,12 @@ public class RepositoryDummy implements Repository {
         return accountState;
     }
 
+
+    @Override
+    public boolean isExist(byte[] addr) {
+        return getAccountState(addr) != null;
+    }
+
     @Override
     public byte[] getRoot() {
         throw new UnsupportedOperationException();

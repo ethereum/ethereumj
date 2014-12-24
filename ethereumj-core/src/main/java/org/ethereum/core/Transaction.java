@@ -147,7 +147,7 @@ public class Transaction {
 
     public boolean isValueTx() {
         if (!parsed) rlpParse();
-        return value != null ;
+        return value != null;
     }
 
     public byte[] getValue() {
@@ -169,6 +169,25 @@ public class Transaction {
         if (!parsed) rlpParse();
         return gasLimit;
     }
+
+    public long nonZeroDataBytes(){
+        if (data == null) return 0;
+        int counter = 0;
+        for (int i = 0; i < data.length; ++i){
+            if (data[i] != 0) ++counter;
+        }
+        return counter;
+    }
+
+    public long zeroDataBytes(){
+        if (data == null) return 0;
+        int counter = 0;
+        for (int i = 0; i < data.length; ++i){
+            if (data[i] == 0) ++counter;
+        }
+        return counter;
+    }
+
 
     public byte[] getData() {
         if (!parsed) rlpParse();

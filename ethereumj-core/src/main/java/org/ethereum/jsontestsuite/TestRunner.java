@@ -488,7 +488,7 @@ public class TestRunner {
 
 	        return results;
     	} finally {
-    		repository.close();
+//    		repository.close();
     	}
     }
 

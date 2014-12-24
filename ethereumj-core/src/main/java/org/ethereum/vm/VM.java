@@ -5,6 +5,7 @@ import org.ethereum.db.ContractDetails;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
@@ -548,7 +549,7 @@ public class VM {
                     if (logger.isInfoEnabled())
 						hint = "address: "
 								+ Hex.toHexString(address.getLast20Bytes())
-								+ " balance: " + balance.longValue();
+								+ " balance: " + balance.toString();
 
                     program.stackPush(balance);
                     program.step();
@@ -630,39 +631,34 @@ public class VM {
                     program.step();
                 }	break;              
                 case CODECOPY: case EXTCODECOPY: {
-                    byte[] fullCode;
+
+                    byte[] fullCode = ByteUtil.EMPTY_BYTE_ARRAY;
                     if (op == OpCode.CODECOPY)
                 		fullCode = program.getCode();
-                	else {
+
+                    if (op == OpCode.EXTCODECOPY) {
                     	DataWord address = program.stackPop();
                     	fullCode = program.getCodeAt(address);
                 	}
 
-                	DataWord memOffsetData    = program.stackPop();
-                	BigInteger codeOffsetData = program.stackPop().value();
-                	BigInteger lengthData     = program.stackPop().value();
+                	int memOffset  = program.stackPop().intValue();
+                	int codeOffset = program.stackPop().intValue();
+                	int lengthData = program.stackPop().intValue();
 
-/*
-                    todo: find out what to do where params are exits the actual code
-                	if (fullCode == null ||
-                        BigInteger.valueOf(fullCode.length).
-                                compareTo(
-									codeOffsetData.add(lengthData)) > 0) {
-                        program.stop();
-                        break;
-                    }
-*/
+                    int sizeToBeCopied =
+                        codeOffset + lengthData > fullCode.length ?
+                            (fullCode.length < codeOffset ? 0 : fullCode.length - codeOffset)
+                          : lengthData;
 
-                    int length     = lengthData.intValue();
-                    int codeOffset = codeOffsetData.intValue();
+                    byte[] codeCopy = new byte[lengthData];
 
-                    byte[] codeCopy = new byte[fullCode.length - codeOffset];
-                    System.arraycopy(fullCode, codeOffset, codeCopy, 0, fullCode.length - codeOffset);
+                    if (codeOffset < fullCode.length)
+                        System.arraycopy(fullCode, codeOffset, codeCopy, 0, sizeToBeCopied);
 
                     if (logger.isInfoEnabled())
                         hint = "code: " + Hex.toHexString(codeCopy);
 
-                    program.memorySave(memOffsetData.intValue(), codeCopy);
+                    program.memorySave(memOffset, codeCopy);
                     program.step();
                 }	break;
                 case GASPRICE:{
@@ -969,12 +965,7 @@ public class VM {
                     DataWord size     =  program.stackPop();
 
                     ByteBuffer hReturn = program.memoryChunk(offset, size);
-                    if (hReturn.array().length * 5 <= program.getGas().longValue()){
-                        program.spendGas(hReturn.array().length * 5, op.name());
-                        program.setHReturn(hReturn);
-                    } else {
-                        program.setHReturn(ByteBuffer.wrap(new byte[]{}));
-                    }
+                    program.setHReturn(hReturn);
 
                     if (logger.isInfoEnabled())
                         hint = "data: " + Hex.toHexString(hReturn.array())

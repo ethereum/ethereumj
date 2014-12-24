@@ -31,20 +31,30 @@ public class TransactionExecutor {
 
     private TransactionReceipt receipt;
     private ProgramResult result;
-    private Block bestBlock;
+    private Block currentBlock;
 
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
-                               ProgramInvokeFactory programInvokeFactory, Block bestBlock) {
+                               ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
         this.tx = tx;
         this.coinbase  = coinbase;
         this.track = track;
         this.programInvokeFactory = programInvokeFactory;
-        this.bestBlock = bestBlock;
+        this.currentBlock = currentBlock;
     }
 
+/* jeff:
+    execution happens like this:
+    create account, transfer value (if any), create a snapshot,
+    run INIT code, if err, rollback to snapshot, if success set return value.
+*/
+
+//        https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L55
+
+
     public void execute(){
+
 
         logger.info("applyTransaction: [{}]", Hex.toHexString(tx.getHash()));
 
@@ -70,17 +80,20 @@ public class TransactionExecutor {
 
 
         // FIND OUT THE TRANSACTION TYPE
-        byte[] receiverAddress, code = null;
+        byte[] receiverAddress = null;
+        byte[] code = EMPTY_BYTE_ARRAY;
         boolean isContractCreation = tx.isContractCreation();
         if (isContractCreation) {
             receiverAddress = tx.getContractAddress();
             code = tx.getData(); // init code
+
+            // on CREATE the contract is created event if it will rollback
+            track.addBalance(receiverAddress, BigInteger.ZERO);
+
         } else {
             receiverAddress = tx.getReceiveAddress();
             code = track.getCode(receiverAddress);
 
-            // on invocation the contract is created event if doesn't exist.
-            track.addBalance(receiverAddress, BigInteger.ZERO);
             if (code != EMPTY_BYTE_ARRAY) {
                 if (stateLogger.isDebugEnabled())
                     stateLogger.debug("calling for existing contract: address={}",
@@ -110,25 +123,23 @@ public class TransactionExecutor {
 
         // THE SIMPLE VALUE/BALANCE CHANGE
         BigInteger txValue = new BigInteger(1, tx.getValue());
-        if (tx.isValueTx()) {
-            if (track.getBalance(senderAddress).compareTo(txValue) >= 0) {
+        if (track.getBalance(senderAddress).compareTo(txValue) >= 0) {
 
-                track.addBalance(receiverAddress, txValue); // balance will be read again below
-                track.addBalance(senderAddress, txValue.negate());
+            track.addBalance(receiverAddress, txValue); // balance will be read again below
+            track.addBalance(senderAddress, txValue.negate());
 
-                if (stateLogger.isDebugEnabled())
-                    stateLogger.debug("Update value balance \n "
-                                    + "sender={}, receiver={}, value={}",
-                            Hex.toHexString(senderAddress),
-                            Hex.toHexString(receiverAddress),
-                            new BigInteger(tx.getValue()));
-            }
+            if (stateLogger.isDebugEnabled())
+                stateLogger.debug("Update value balance \n "
+                                + "sender={}, receiver={}, value={}",
+                        Hex.toHexString(senderAddress),
+                        Hex.toHexString(receiverAddress),
+                        new BigInteger(tx.getValue()));
         }
 
 
         // UPDATE THE NONCE
         track.increaseNonce(senderAddress);
-        logger.info("increased tx.nonce to: [{}]", track.getNonce(senderAddress));
+        logger.info("increased nonce to: [{}], addr: [{}]", track.getNonce(senderAddress), Hex.toHexString(senderAddress));
 
         // CHARGE FOR GAS
         track.addBalance(senderAddress, gasDebit.negate());
@@ -162,7 +173,7 @@ public class TransactionExecutor {
                 }
 
                 ProgramInvoke programInvoke =
-                        programInvokeFactory.createProgramInvoke(tx, bestBlock, trackTx);
+                        programInvokeFactory.createProgramInvoke(tx, currentBlock, trackTx);
 
                 VM vm = new VM();
                 Program program = new Program(code, programInvoke);
@@ -174,7 +185,7 @@ public class TransactionExecutor {
                 result = program.getResult();
                 applyProgramResult(result, gasDebit, gasPrice, trackTx,
                         senderAddress, receiverAddress, coinbase, isContractCreation);
-                gasUsed = result.getGasUsed();
+
 
                 List<LogInfo> logs = result.getLogInfoList();
                 receipt.setLogInfoList(logs);
@@ -188,7 +199,9 @@ public class TransactionExecutor {
             trackTx.commit();
         } else {
             // REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TX_NO_ZERO_DATA)
-            long dataCost = tx.getData() == null ? 0: tx.getData().length * GasCost.TX_NO_ZERO_DATA;
+            long dataCost = tx.getData() == null ? 0:
+                    tx.nonZeroDataBytes() * GasCost.TX_NO_ZERO_DATA +
+                    tx.zeroDataBytes()    * GasCost.TX_ZERO_DATA;
             gasUsed = GasCost.TRANSACTION + dataCost;
 
             BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));
@@ -270,6 +283,18 @@ public class TransactionExecutor {
                             .debug("saving code of the contract to the db:\n contract={} code={}",
                                     Hex.toHexString(contractAddress),
                                     Hex.toHexString(bodyCode));
+
+                BigInteger storageCost =  gasPrice.multiply( BigInteger.valueOf( bodyCode.length * GasCost.CREATE_DATA_BYTE)  );
+                BigInteger balance = repository.getBalance(senderAddress);
+
+                // check if can be charged for the contract data save
+                if (storageCost.compareTo(balance) > 1){
+                    bodyCode = EMPTY_BYTE_ARRAY;
+                } else {
+                    repository.addBalance(coinbase, storageCost);
+                    repository.addBalance(senderAddress, storageCost.negate());
+                }
+
                 repository.saveCode(contractAddress, bodyCode);
             }
         }

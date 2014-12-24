@@ -72,8 +72,10 @@ public class ContractDetails {
 			return null;
 
 		int foundIndex = storageKeys.indexOf(key);
-		if (foundIndex != -1)
-			return storageValues.get(foundIndex);
+		if (foundIndex != -1) {
+            DataWord value = storageValues.get(foundIndex);
+            return value.clone();
+        }
 		else
 			return null;
 	}
