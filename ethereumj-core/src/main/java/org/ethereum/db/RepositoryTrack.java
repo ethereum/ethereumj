@@ -69,16 +69,12 @@ public class RepositoryTrack implements Repository {
     @Override
     public boolean isExist(byte[] addr) {
 
-        boolean exist = false;
         AccountState accountState = cacheAccounts.get(wrap(addr));
-        if (accountState != null && !accountState.isDeleted()) exist = true;
+        if (accountState != null) return !accountState.isDeleted();
 
-        if (accountState == null){
-            accountState = repository.getAccountState(addr);
-            if (accountState != null && !accountState.isDeleted()) exist = true;
-        }
+        accountState = repository.getAccountState(addr);
+        return accountState != null && !accountState.isDeleted();
 
-        return exist;
     }
 
 
