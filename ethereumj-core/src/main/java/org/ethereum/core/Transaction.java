@@ -6,13 +6,10 @@ import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
-
-import java.math.BigInteger;
 import java.security.SignatureException;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -102,24 +99,23 @@ public class Transaction {
         RLPList decodedTxList = RLP.decode2(rlpEncoded);
         RLPList transaction =  (RLPList) decodedTxList.get(0);
 
-        this.nonce =          ((RLPItem) transaction.get(0)).getRLPData();
-        this.gasPrice =       ((RLPItem) transaction.get(1)).getRLPData();
-        this.gasLimit =       ((RLPItem) transaction.get(2)).getRLPData();
-        this.receiveAddress = ((RLPItem) transaction.get(3)).getRLPData();
-        this.value =          ((RLPItem) transaction.get(4)).getRLPData();
-
-        this.data =     ((RLPItem) transaction.get(5)).getRLPData();
+        this.nonce =          transaction.get(0).getRLPData();
+        this.gasPrice =       transaction.get(1).getRLPData();
+        this.gasLimit =       transaction.get(2).getRLPData();
+        this.receiveAddress = transaction.get(3).getRLPData();
+        this.value =          transaction.get(4).getRLPData();
+        this.data =           transaction.get(5).getRLPData();
         // only parse signature in case tx is signed
-        if(((RLPItem) transaction.get(6)).getRLPData() != null) {
-            byte v =		((RLPItem) transaction.get(6)).getRLPData()[0];
-            byte[] r =		((RLPItem) transaction.get(7)).getRLPData();
-            byte[] s =		((RLPItem) transaction.get(8)).getRLPData();
+        if(transaction.get(6).getRLPData() != null) {
+            byte v =		transaction.get(6).getRLPData()[0];
+            byte[] r =		transaction.get(7).getRLPData();
+            byte[] s =		transaction.get(8).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
         } else {
             logger.debug("RLP encoded tx is not signed!");
         }
         this.parsed = true;
-        this.hash  = this.getHash();
+        this.hash  = getHash();
     }
 
     public boolean isParsed() {
@@ -142,7 +138,7 @@ public class Transaction {
     public byte[] getNonce() {
         if (!parsed) rlpParse();
 
-        return nonce == null ? ZERO_BYTE_ARRAY : nonce  ;
+        return nonce == null ? ZERO_BYTE_ARRAY : nonce;
     }
 
     public boolean isValueTx() {
@@ -162,7 +158,7 @@ public class Transaction {
 
     public byte[] getGasPrice() {
         if (!parsed) rlpParse();
-        return gasPrice== null ? ZERO_BYTE_ARRAY : gasPrice  ;
+        return gasPrice== null ? ZERO_BYTE_ARRAY : gasPrice;
     }
 
     public byte[] getGasLimit() {
@@ -173,8 +169,8 @@ public class Transaction {
     public long nonZeroDataBytes(){
         if (data == null) return 0;
         int counter = 0;
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] != 0) ++counter;
+        for (final byte aData : data) {
+            if (aData != 0) ++counter;
         }
         return counter;
     }
@@ -182,8 +178,8 @@ public class Transaction {
     public long zeroDataBytes(){
         if (data == null) return 0;
         int counter = 0;
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] == 0) ++counter;
+        for (final byte aData : data) {
+            if (aData == 0) ++counter;
         }
         return counter;
     }
@@ -214,7 +210,7 @@ public class Transaction {
      */
 
     public ECKey getKey() {
-        byte[] hash = this.getRawHash();
+        byte[] hash = getRawHash();
         return ECKey.recoverFromSignature(signature.v, signature, hash, true);
     }
 
@@ -276,7 +272,7 @@ public class Transaction {
         byte[] value 				= RLP.encodeElement(this.value);
         byte[] data 				= RLP.encodeElement(this.data);
 
-		this.rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
+		rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
 				value, data);
         return rlpRaw;
     }
