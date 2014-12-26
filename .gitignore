@@ -23,13 +23,11 @@ build
 log/
 target/
 
-# Output #
-*/logs
-*/dmp
-*/database
-*/null
-*/gen
-*/src/main/java/sample
+# Output
+ethereumj-*.zip
+database
+logs
+test_db
 
 # Mac
 .DS_Store
