@@ -15,16 +15,19 @@ version = '0.7.15-SNAPSHOT'
 
 mainClassName = 'org.ethereum.Start'
 
-compileJava.dependsOn antlr4
+ext.generatedSrcDir = file('src/gen/java')
 
-sourceSets.main.java.srcDirs += antlr4.output
+sourceSets.main.java.srcDirs += generatedSrcDir
+
+antlr4 {
+  extraArgs = ['-package', 'org.ethereum.serpent']
+  output = file("${generatedSrcDir}/org/ethereum/serpent")
+}
+
+compileJava.dependsOn antlr4
 
 configurations {
    compile.extendsFrom antlr4
-}
-
-antlr4 {
-  extraArgs=['-package', 'org.ethereum.serpent']
 }
 
 ext {

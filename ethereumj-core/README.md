@@ -26,6 +26,12 @@ Run `./gradlew build`.
  - run `./gradlew run`, or
  - build a standalone executable jar with `./gradlew shadow` and execute the `-all` jar in `build/libs` using `java -jar [jarfile]`.
 
+#### Import sources into IntelliJ IDEA
+
+Use IDEA 14 or better and import project based on Gradle sources.
+
+Note that in order to build the project without errors in IDEA, you will need to run `gradle antlr4` manually.
+
 #### Publish ethereumj-core builds
 
 _TODO: integrate bintray gradle plugin_
