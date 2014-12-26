@@ -1,6 +1,5 @@
 package org.ethereum.core;
 
-import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
@@ -15,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -473,10 +473,7 @@ public class BlockchainImpl implements Blockchain {
         if (!CONFIG.recordBlocks()) return;
 
         if (bestBlock.isGenesis()) {
-            try {
-                FileUtils.deleteDirectory(CONFIG.dumpDir());
-            } catch (IOException e) {
-            }
+            FileSystemUtils.deleteRecursively(new File(CONFIG.dumpDir()));
         }
 
         String dir = CONFIG.dumpDir() + "/";

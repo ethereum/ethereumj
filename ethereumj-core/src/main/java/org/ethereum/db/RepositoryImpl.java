@@ -2,7 +2,6 @@ package org.ethereum.db;
 
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.facade.Repository;
@@ -16,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -161,10 +161,7 @@ public class RepositoryImpl implements Repository {
 
         if (block.getNumber() == 0 && txNumber == 0)
             if (CONFIG.dumpCleanOnRestart()) {
-                try {
-                    FileUtils.deleteDirectory(CONFIG.dumpDir());
-                } catch (IOException e) {
-                }
+                FileSystemUtils.deleteRecursively(new File(CONFIG.dumpDir()));
             }
 
         String dir = CONFIG.dumpDir() + "/";
