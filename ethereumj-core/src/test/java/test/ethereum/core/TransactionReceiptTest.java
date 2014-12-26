@@ -11,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 05/12/2014 16:26
  */
 

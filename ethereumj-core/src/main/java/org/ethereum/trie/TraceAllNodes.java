@@ -6,7 +6,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 29/08/2014 10:46
  */
 

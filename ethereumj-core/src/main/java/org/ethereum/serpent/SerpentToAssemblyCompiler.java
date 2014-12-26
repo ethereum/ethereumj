@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 05/05/14 13:41
  */
 public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {

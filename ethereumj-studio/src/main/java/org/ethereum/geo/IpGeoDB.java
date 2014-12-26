@@ -12,7 +12,7 @@ import java.net.URL;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 24/04/14 20:11
  */
 public class IpGeoDB {   // change

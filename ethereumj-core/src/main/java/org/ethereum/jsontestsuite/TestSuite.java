@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 10/07/2014 09:46
  */
 

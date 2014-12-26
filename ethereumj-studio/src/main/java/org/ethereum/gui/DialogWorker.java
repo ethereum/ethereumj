@@ -15,7 +15,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 26/05/2014 12:27
  */
 public class DialogWorker extends SwingWorker<Transaction, Object> {

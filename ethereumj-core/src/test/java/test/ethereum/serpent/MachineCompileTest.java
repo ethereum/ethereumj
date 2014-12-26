@@ -9,7 +9,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 28/05/2014 20:05
  */
 public class MachineCompileTest {

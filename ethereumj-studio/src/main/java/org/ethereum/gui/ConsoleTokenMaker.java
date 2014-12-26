@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 24/04/14 11:52
  */
 public class ConsoleTokenMaker extends AbstractTokenMaker {

@@ -24,8 +24,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * www.ethereumJ.com
  *
- * @author Roman Mandeleil,
- *           Nick Savers
+ * @author Roman Mandeleil
+ * @author Nick Savers
  * Created on: 20/05/2014 10:44
  */
 public class Block {

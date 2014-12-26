@@ -9,7 +9,7 @@ import java.math.BigInteger;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 28/06/2014 10:25
  */
 

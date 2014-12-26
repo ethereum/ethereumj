@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 12/11/2014 08:34
  */
 @Component(value = "EthereumListener")

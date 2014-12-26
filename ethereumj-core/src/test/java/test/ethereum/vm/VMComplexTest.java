@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 16/06/2014 10:37
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

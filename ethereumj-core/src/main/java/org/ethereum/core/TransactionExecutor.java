@@ -15,7 +15,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 /**
  * www.ethergit.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 19/12/2014 12:56
  */
 

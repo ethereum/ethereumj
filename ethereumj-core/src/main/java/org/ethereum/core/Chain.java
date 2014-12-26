@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 09/11/2014 09:31
  */
 

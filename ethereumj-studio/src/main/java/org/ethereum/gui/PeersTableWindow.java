@@ -18,7 +18,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 25/04/14 07:11
  */
 public class PeersTableWindow extends JFrame {

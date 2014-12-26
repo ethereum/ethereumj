@@ -7,7 +7,7 @@ import org.ethereum.facade.EthereumImpl;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 01/09/2014 19:43
  */
 

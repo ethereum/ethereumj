@@ -23,7 +23,7 @@ import java.util.Properties;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 13/11/2014 11:22
  */
 @Configuration

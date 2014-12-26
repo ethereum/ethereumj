@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
  *
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 01/06/2014 10:45
  */
 public class DataWord implements Comparable<DataWord> {

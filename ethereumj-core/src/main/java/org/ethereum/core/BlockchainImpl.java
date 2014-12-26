@@ -55,8 +55,8 @@ import static org.ethereum.core.Denomination.SZABO;
  *
  * www.etherJ.com
  *
- * @author Roman Mandeleil,
- *           Nick Savers
+ * @author Roman Mandeleil
+ * @author Nick Savers
  * Created on: 20/05/2014 10:44
  */
 @Component

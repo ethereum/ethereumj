@@ -7,7 +7,7 @@ import javax.annotation.PostConstruct;
 /**
  * www.ethergit.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 11/12/2014 11:24
  */
 @Component

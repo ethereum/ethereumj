@@ -10,7 +10,7 @@ import org.junit.Test;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 13/05/14 10:07
  */
 public class SerpentCompileTest {

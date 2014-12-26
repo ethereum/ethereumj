@@ -9,7 +9,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 25/07/2014 13:01
  */
 

@@ -21,7 +21,7 @@ import javax.swing.*;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
 class PayOutDialog extends JDialog implements MessageAwareDialog {

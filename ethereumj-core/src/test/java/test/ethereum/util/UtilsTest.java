@@ -12,7 +12,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 17/05/14 15:38
  */
 public class UtilsTest {

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertNull;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 17/11/2014 23:08
  */
 

@@ -11,7 +11,7 @@ import java.math.BigInteger;
 /**
  * www.ethergit.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 19/12/2014 12:22
  */
 

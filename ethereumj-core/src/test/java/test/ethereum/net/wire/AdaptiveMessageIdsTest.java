@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 15/10/2014 12:34
  */
 public class AdaptiveMessageIdsTest {

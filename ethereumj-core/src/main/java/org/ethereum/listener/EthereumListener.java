@@ -9,7 +9,7 @@ import java.util.Set;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 27/07/2014 11:20
  */
 

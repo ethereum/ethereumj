@@ -22,7 +22,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  *
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 01/11/2014 10:11
  */
 @Component

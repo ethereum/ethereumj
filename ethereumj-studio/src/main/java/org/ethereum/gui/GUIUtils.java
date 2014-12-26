@@ -13,7 +13,7 @@ import java.awt.*;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 23/05/2014 13:51
  */
 public class GUIUtils {

@@ -35,7 +35,7 @@ import static junit.framework.TestCase.assertEquals;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 09/11/2014 23:35
  */
 

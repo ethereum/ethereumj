@@ -13,7 +13,7 @@ import java.util.Map;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 15/12/2014 12:24
  */
 

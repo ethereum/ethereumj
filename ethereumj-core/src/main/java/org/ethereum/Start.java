@@ -8,7 +8,7 @@ import org.ethereum.facade.EthereumFactory;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 14/11/2014 07:39
  */
 

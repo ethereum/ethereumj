@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 28/06/2014 10:22
  */
 

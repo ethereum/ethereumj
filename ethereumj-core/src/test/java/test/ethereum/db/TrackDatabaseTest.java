@@ -18,7 +18,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 11/06/2014 14:54
  */
 public class TrackDatabaseTest {

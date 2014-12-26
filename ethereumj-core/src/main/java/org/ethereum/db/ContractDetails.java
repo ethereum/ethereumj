@@ -13,7 +13,7 @@ import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 24/06/2014 00:12
  */
 public class ContractDetails {

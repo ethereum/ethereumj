@@ -59,7 +59,7 @@ import static org.ethereum.vm.OpCode.PUSH1;
  *
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 01/06/2014 10:44
  */
 public class VM {

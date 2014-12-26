@@ -7,7 +7,7 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * www.ethergit.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 15/12/2014 12:41
  */
 

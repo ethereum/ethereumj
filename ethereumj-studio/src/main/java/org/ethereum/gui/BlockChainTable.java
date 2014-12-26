@@ -20,7 +20,7 @@ import java.util.ArrayList;
 /**
  * www.ethereumJ.com
  *
- * @author: Adrian Benko
+ * @author Adrian Benko
  * Created on: 27/08/14 18:22
  */
 public class BlockChainTable extends JFrame implements ActionListener {

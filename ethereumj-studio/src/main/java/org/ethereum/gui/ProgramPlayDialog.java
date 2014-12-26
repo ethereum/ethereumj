@@ -19,7 +19,7 @@ import java.util.List;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 02/06/2014 16:58
  */
 

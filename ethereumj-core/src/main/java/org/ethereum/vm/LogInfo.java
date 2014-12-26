@@ -17,7 +17,7 @@ import java.util.List;
 /**
  * www.etherj.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 19/11/2014 22:03
  */
 

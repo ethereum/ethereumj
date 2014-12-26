@@ -17,7 +17,7 @@ import java.math.BigInteger;
 /**
  * www.ethereumJ.com
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 08/06/2014 09:59
  */
 @Component("ProgramInvokeFactory")
