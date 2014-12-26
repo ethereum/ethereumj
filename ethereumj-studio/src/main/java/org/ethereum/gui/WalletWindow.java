@@ -12,8 +12,6 @@ import java.awt.event.WindowEvent;
 import java.net.URL;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 17.05.14
  */

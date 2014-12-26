@@ -7,12 +7,9 @@ import org.ethereum.facade.Repository;
 import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 19.12.2014
  */
-
 public interface ProgramInvokeFactory {
 
     public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository);

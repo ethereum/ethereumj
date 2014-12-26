@@ -7,12 +7,10 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * www.etherj.com
+ * See http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html.
  *
  * @author Roman Mandeleil
  * @since 20.11.2014
- *
- * http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html
  */
 
 public class Bloom {

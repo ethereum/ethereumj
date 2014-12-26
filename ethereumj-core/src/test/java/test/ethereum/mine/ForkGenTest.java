@@ -8,12 +8,9 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 09.11.2014
  */
-
 public class ForkGenTest {
 
 

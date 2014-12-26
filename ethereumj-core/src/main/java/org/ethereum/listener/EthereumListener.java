@@ -7,12 +7,9 @@ import org.ethereum.net.message.Message;
 import java.util.Set;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 27.07.2014
  */
-
 public interface EthereumListener {
 
     public void trace(String output);

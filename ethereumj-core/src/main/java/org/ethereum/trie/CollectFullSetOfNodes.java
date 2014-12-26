@@ -6,12 +6,9 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 29.08.2014
  */
-
 public class CollectFullSetOfNodes implements TrieImpl.ScanAction {
     Set<byte[]> nodes = new HashSet<>();
 

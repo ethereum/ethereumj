@@ -21,12 +21,9 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 02.07.2014
  */
-
 public class TestRunner {
 
     private Logger logger = LoggerFactory.getLogger("TCK-Test");

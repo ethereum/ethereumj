@@ -11,12 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 15.12.2014
  */
-
 public class StateTestCase {
 
     private String name = "";

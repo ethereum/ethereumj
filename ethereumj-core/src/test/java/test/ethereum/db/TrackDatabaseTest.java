@@ -16,8 +16,6 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 11.06.2014
  */

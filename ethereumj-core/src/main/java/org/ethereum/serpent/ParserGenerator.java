@@ -5,8 +5,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 25.04.14
  */

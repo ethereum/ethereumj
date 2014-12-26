@@ -13,8 +13,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 05.05.14
  */

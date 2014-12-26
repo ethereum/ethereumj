@@ -22,7 +22,7 @@ import org.ethereum.util.Value;
  *                            N     N
  *                           / \   / \
  *                          L   L L   L
- *  *
+ *
  * Also, we add another conceptual change: internal nodes can no longer
  * have values, only leaves with no children of their own can; however,
  * since to be fully generic we want the key/value store to be able
@@ -38,8 +38,6 @@ import org.ethereum.util.Value;
  * in a persistent lookup table when you create a node with length &gt;= 32,
  * but if the node is shorter than that then you do not need to store anything
  * when length &lt; 32 for the obvious reason that the function f(x) = x is reversible.
- *
- * www.ethereumJ.com
  *
  * @author Nick Savers
  * @since 20.05.2014

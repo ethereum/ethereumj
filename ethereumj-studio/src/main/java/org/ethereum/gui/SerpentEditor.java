@@ -19,8 +19,6 @@ import java.util.regex.Pattern;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 24.04.14
  */

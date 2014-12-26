@@ -6,12 +6,9 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-
 public class Env {
 
     private byte[] currentCoinbase;

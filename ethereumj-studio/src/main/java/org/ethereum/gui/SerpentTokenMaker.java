@@ -6,8 +6,6 @@ import org.ethereum.vm.OpCode;
 import org.fife.ui.rsyntaxtextarea.*;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 24.04.14
  */

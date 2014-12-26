@@ -10,8 +10,6 @@ import java.net.InetAddress;
 import java.net.URL;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 24.04.14
  */

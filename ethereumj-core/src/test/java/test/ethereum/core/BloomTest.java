@@ -6,12 +6,9 @@ import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 20.11.2014
  */
-
 public class BloomTest {
 
 

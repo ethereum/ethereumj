@@ -30,8 +30,6 @@ import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 17.11.2014
  */

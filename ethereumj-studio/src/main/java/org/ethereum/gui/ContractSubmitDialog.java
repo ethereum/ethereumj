@@ -18,8 +18,6 @@ import java.net.URL;
 import java.util.Collection;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 18.05.14
  */

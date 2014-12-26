@@ -11,12 +11,9 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-
 public class TestCase {
 
     private String name = "";

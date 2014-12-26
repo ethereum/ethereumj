@@ -3,8 +3,6 @@ package org.ethereum.vm;
 import org.ethereum.facade.Repository;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 03.06.2014
  */

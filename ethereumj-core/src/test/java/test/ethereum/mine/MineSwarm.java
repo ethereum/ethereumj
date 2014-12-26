@@ -11,12 +11,9 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 08.11.2014
  */
-
 public class MineSwarm {
 
     public AtomicBoolean started = new AtomicBoolean(false);

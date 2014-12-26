@@ -19,8 +19,6 @@ import java.util.regex.Pattern;
 import javax.swing.*;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 18.05.14
  */

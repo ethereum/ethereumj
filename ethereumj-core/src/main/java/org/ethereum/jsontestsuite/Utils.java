@@ -5,14 +5,10 @@ import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.ethergit.com
- *
  * @author Roman Mandeleil
  * @since 15.12.2014
  */
-
 public class Utils {
-
 
     public static byte[] parseData(String data) {
         if (data == null) return ByteUtil.EMPTY_BYTE_ARRAY;

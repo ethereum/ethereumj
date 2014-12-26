@@ -12,12 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 09.11.2014
  */
-
 public class Chain {
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");

@@ -22,8 +22,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * to have a parent equal to the present block’s parent’s parent
  * (such blocks are known as uncles).
  *
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @author Nick Savers
  * @since 20.05.2014

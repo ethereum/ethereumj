@@ -7,8 +7,6 @@ import org.ethereum.facade.Repository;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 03.06.2014
  */

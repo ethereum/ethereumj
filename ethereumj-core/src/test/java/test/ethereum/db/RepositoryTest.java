@@ -19,12 +19,9 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 17.11.2014
  */
-
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class RepositoryTest {
 

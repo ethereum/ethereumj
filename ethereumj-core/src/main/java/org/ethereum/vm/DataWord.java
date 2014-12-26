@@ -13,8 +13,6 @@ import java.nio.ByteBuffer;
  * DataWord is the 32-byte array representation of a 256-bit number
  * Calculations can be done on this word with other DataWords
  *
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 01.06.2014
  */

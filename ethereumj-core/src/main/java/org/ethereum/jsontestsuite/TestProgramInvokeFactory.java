@@ -9,12 +9,9 @@ import org.ethereum.vm.*;
 import java.math.BigInteger;
 
 /**
- * www.ethergit.com
- *
  * @author Roman Mandeleil
  * @since 19.12.2014
  */
-
 public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
     Env env;

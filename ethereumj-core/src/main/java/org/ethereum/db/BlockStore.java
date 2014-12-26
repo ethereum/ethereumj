@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 12.11.2014
  */

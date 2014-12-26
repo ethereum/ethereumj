@@ -8,8 +8,6 @@ import javax.swing.text.Highlighter;
 import java.awt.*;
 
 /**
- * www.ethereumJ.com
- *
  * @author Adrian Benko
  * @since 27.08.14
  */

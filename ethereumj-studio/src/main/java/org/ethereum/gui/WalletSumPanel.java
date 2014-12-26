@@ -13,8 +13,6 @@ import java.math.BigInteger;
 import java.net.URL;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 17.05.14
  */

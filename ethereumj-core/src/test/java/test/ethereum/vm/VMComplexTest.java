@@ -18,8 +18,6 @@ import java.math.BigInteger;
 import static org.junit.Assert.assertEquals;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 16.06.2014
  */

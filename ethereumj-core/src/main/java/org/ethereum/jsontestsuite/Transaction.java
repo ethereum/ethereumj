@@ -10,12 +10,9 @@ import java.util.Arrays;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-
 public class Transaction {
 
     byte[] data;

@@ -36,8 +36,6 @@ import java.util.*;
  *      }
  *  }
  *
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 26.06.2014
  */

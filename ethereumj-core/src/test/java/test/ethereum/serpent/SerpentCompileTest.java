@@ -8,8 +8,6 @@ import org.ethereum.serpent.*;
 import org.junit.Test;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 13.05.14
  */

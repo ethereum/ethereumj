@@ -7,12 +7,9 @@ import java.net.URL;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 25.07.2014
  */
-
 public class AdvancedDeviceUtils {
 
     public static void adjustDetailedTracing(long blockNum) {

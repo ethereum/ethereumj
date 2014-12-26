@@ -8,8 +8,6 @@ import org.slf4j.LoggerFactory;
 
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 24.04.14
  */

@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.Map;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 03.06.2014
  */

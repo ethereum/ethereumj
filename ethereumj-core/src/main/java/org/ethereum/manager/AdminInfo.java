@@ -5,8 +5,6 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
 /**
- * www.ethergit.com
- *
  * @author Roman Mandeleil
  * @since 11.12.2014
  */

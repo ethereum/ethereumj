@@ -3,8 +3,6 @@ package org.ethereum.util;
 import java.util.ArrayList;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 21.04.14
  */

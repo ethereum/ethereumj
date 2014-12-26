@@ -31,8 +31,6 @@ import javax.annotation.PostConstruct;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 27.07.2014
  */

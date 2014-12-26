@@ -13,8 +13,6 @@ import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 11.11.2014
  */

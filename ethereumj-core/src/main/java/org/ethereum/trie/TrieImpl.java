@@ -35,8 +35,6 @@ import org.spongycastle.util.encoders.Hex;
  *
  * <b>Note:</b> the data isn't persisted unless `sync` is explicitly called.
  *
- * www.ethereumJ.com
- *
  * @author Nick Savers
  * @since 20.05.2014
  */

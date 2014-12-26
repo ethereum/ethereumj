@@ -10,12 +10,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 28.10.2014
  */
-
 public class ProgramTrace {
 
     byte[] txHash;

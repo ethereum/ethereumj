@@ -10,8 +10,6 @@ import org.iq80.leveldb.DB;
 import org.iq80.leveldb.WriteBatch;
 
 /**
- * www.ethereumJ.com
- *
  * @author Nick Savers
  * @since 20.05.2014
  */

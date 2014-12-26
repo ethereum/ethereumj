@@ -15,8 +15,6 @@ import java.sql.SQLException;
 import java.util.Properties;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 16.11.2014
  */

@@ -12,12 +12,9 @@ import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-
 public class AccountState {
 
     byte[] address;

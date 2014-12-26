@@ -7,8 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 07.06.2014
  */

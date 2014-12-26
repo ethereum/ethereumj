@@ -17,10 +17,8 @@ import org.springframework.stereotype.Component;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * This class establish a listener for incoming connections
- * @see <a href="http://netty.io">http://netty.io</a>
- *
- * www.etherj.com
+ * This class establishes a listener for incoming connections.
+ * See <a href="http://netty.io">http://netty.io</a>.
  *
  * @author Roman Mandeleil
  * @since 01.11.2014

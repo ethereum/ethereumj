@@ -15,8 +15,6 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 01.11.2014
  */

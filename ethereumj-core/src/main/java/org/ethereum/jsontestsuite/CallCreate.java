@@ -7,12 +7,9 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-
 public class CallCreate {
 
     byte[] data;

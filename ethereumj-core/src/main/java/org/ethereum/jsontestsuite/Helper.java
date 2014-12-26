@@ -12,8 +12,6 @@ import java.math.BigInteger;
 import java.util.regex.Pattern;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 28.06.2014
  */

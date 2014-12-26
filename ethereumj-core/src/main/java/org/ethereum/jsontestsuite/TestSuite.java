@@ -6,12 +6,9 @@ import org.json.simple.parser.ParseException;
 import java.util.*;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 10.07.2014
  */
-
 public class TestSuite {
 
     List<TestCase> testList = new ArrayList<>();

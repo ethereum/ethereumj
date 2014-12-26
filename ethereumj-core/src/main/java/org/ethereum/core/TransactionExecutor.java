@@ -13,12 +13,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
- * www.ethergit.com
- *
  * @author Roman Mandeleil
  * @since 19.12.2014
  */
-
 public class TransactionExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger("execute");

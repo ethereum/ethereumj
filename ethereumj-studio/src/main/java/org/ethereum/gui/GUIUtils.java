@@ -11,8 +11,6 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 23.05.2014
  */

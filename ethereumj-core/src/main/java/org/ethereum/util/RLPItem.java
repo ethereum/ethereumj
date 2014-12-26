@@ -1,9 +1,6 @@
 package org.ethereum.util;
 
-
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 21.04.14
  */

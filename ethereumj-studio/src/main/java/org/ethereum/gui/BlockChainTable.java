@@ -18,8 +18,6 @@ import java.awt.event.*;
 import java.util.ArrayList;
 
 /**
- * www.ethereumJ.com
- *
  * @author Adrian Benko
  * @since 27.08.14
  */

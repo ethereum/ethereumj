@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 import java.util.Set;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 12.11.2014
  */

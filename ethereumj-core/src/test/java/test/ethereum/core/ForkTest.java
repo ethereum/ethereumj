@@ -33,12 +33,9 @@ import java.util.List;
 import static junit.framework.TestCase.assertEquals;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 09.11.2014
  */
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

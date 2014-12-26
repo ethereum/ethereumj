@@ -27,8 +27,6 @@ import java.util.concurrent.TimeUnit;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 01.11.2014
  */

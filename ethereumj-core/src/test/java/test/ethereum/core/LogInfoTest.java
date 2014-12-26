@@ -10,12 +10,9 @@ import org.spongycastle.util.encoders.Hex;
 import static org.junit.Assert.*;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 05.12.2014
  */
-
 public class LogInfoTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");

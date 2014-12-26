@@ -27,8 +27,6 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 01.06.2014
  */

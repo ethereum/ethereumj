@@ -8,12 +8,9 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 10.07.2014
  */
-
 public class StateTestSuite {
 
     private Logger logger = LoggerFactory.getLogger("TCK-Test");

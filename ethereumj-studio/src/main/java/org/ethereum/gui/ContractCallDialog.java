@@ -27,8 +27,6 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 18.05.14
  */

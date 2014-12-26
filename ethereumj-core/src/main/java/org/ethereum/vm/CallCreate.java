@@ -1,12 +1,9 @@
 package org.ethereum.vm;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 03.07.2014
  */
-
 public class CallCreate {
 
     byte[] data;

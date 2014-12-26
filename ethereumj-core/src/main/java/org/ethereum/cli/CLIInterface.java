@@ -8,8 +8,6 @@ import org.springframework.stereotype.Component;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 13.11.2014
  */

@@ -29,8 +29,6 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 17.05.14
  */

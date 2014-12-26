@@ -15,8 +15,6 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 30.04.14
  */

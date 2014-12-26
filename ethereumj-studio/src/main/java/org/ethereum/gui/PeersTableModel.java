@@ -19,8 +19,6 @@ import org.ethereum.util.Utils;
 import com.maxmind.geoip.Location;
 
 /**
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 25.04.14
  */

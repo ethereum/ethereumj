@@ -15,12 +15,9 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 19.11.2014
  */
-
 public class LogInfo {
 
     byte[] address = new byte[]{};

@@ -21,8 +21,6 @@ import java.util.*;
  *    'stack': ['15', '15', '14', '0'],
  *   }
  *
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 28.10.2014
  */

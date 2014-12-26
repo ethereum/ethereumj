@@ -44,8 +44,6 @@ import org.spongycastle.util.encoders.Hex;
  *
  * See: https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP
  *
- * www.ethereumJ.com
- *
  * @author Roman Mandeleil
  * @since 01.04.2014
  */

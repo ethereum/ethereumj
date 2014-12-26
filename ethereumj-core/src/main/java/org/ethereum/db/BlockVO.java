@@ -7,8 +7,6 @@ import javax.persistence.Table;
 import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
  * @author Roman Mandeleil
  * @since 14.11.2014
  */
