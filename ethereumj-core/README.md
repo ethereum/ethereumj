@@ -32,6 +32,10 @@ Use IDEA 14 or better and import project based on Gradle sources.
 
 Note that in order to build the project without errors in IDEA, you will need to run `gradle antlr4` manually.
 
+#### Install artifacts into your local `~/.m2` repository
+
+Run `./gradlew install`.
+
 #### Publish ethereumj-core builds
 
 _TODO: integrate bintray gradle plugin_
