@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  */
 @RunWith(Suite.class)
 @SuiteClasses({
-    GitHubVMTest.class,
+        GitHubVMTest.class,
 })
 public class GitHubJSONTestSuite {
 
@@ -36,12 +36,12 @@ public class GitHubJSONTestSuite {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject)parser.parse(json);
+        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
 
         TestSuite testSuite = new TestSuite(testSuiteObj);
         Iterator<TestCase> testIterator = testSuite.iterator();
 
-        while (testIterator.hasNext()){
+        while (testIterator.hasNext()) {
 
             TestCase testCase = testIterator.next();
 
@@ -55,11 +55,11 @@ public class GitHubJSONTestSuite {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject)parser.parse(json);
+        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
 
         StateTestSuite testSuite = new StateTestSuite(testSuiteObj);
 
-        for(StateTestCase testCase : testSuite.getAllTests()){
+        for (StateTestCase testCase : testSuite.getAllTests()) {
             if (testCase.getName().equals(testName))
                 logger.info(" => " + testCase.getName());
             else
@@ -70,8 +70,8 @@ public class GitHubJSONTestSuite {
         TestRunner runner = new TestRunner();
         List<String> result = runner.runTestCase(testCase);
 
-        if (!result.isEmpty()){
-            for (String single : result){
+        if (!result.isEmpty()) {
+            for (String single : result) {
                 logger.info(single);
             }
         }
@@ -83,12 +83,12 @@ public class GitHubJSONTestSuite {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject)parser.parse(json);
+        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
 
         StateTestSuite testSuite = new StateTestSuite(testSuiteObj);
-        Collection<StateTestCase> testCollection =  testSuite.getAllTests();
+        Collection<StateTestCase> testCollection = testSuite.getAllTests();
 
-        for(StateTestCase testCase : testSuite.getAllTests()){
+        for (StateTestCase testCase : testSuite.getAllTests()) {
 
             String prefix = "    ";
             if (exclude.contains(testCase.getName())) prefix = "[X] ";
@@ -96,14 +96,14 @@ public class GitHubJSONTestSuite {
             logger.info(prefix + testCase.getName());
         }
 
-        for (StateTestCase testCase : testCollection){
+        for (StateTestCase testCase : testCollection) {
 
             if (exclude.contains(testCase.getName())) continue;
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
 
-            if (!result.isEmpty()){
-                for (String single : result){
+            if (!result.isEmpty()) {
+                for (String single : result) {
                     logger.info(single);
                 }
             }
@@ -117,19 +117,19 @@ public class GitHubJSONTestSuite {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject)parser.parse(json);
+        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
 
         StateTestSuite testSuite = new StateTestSuite(testSuiteObj);
-        Collection<StateTestCase> testCollection =  testSuite.getAllTests();
+        Collection<StateTestCase> testCollection = testSuite.getAllTests();
 
 
-        for (StateTestCase testCase : testCollection){
+        for (StateTestCase testCase : testCollection) {
 
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
 
-            if (!result.isEmpty()){
-                for (String single : result){
+            if (!result.isEmpty()) {
+                for (String single : result) {
                     logger.info(single);
                 }
             }

@@ -19,12 +19,12 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public class Transaction {
 
     byte[] data;
-    long   gasLimit;
-    long   gasPrice;
-    long   nonce;
+    long gasLimit;
+    long gasPrice;
+    long nonce;
     byte[] secretKey;
     byte[] to;
-    long   value;
+    long value;
 
 /* e.g.
     "transaction" : {
@@ -40,22 +40,22 @@ public class Transaction {
 
     public Transaction(JSONObject callCreateJSON) {
 
-        String dataStr        = callCreateJSON.get("data").toString();
-        String gasLimitStr    = callCreateJSON.get("gasLimit").toString();
-        String gasPriceStr    = callCreateJSON.get("gasPrice").toString();
-        String nonceStr       = callCreateJSON.get("nonce").toString();
-        String secretKeyStr   = callCreateJSON.get("secretKey").toString();
-        String toStr          = callCreateJSON.get("to").toString();
-        String valueStr       = callCreateJSON.get("value").toString();
+        String dataStr = callCreateJSON.get("data").toString();
+        String gasLimitStr = callCreateJSON.get("gasLimit").toString();
+        String gasPriceStr = callCreateJSON.get("gasPrice").toString();
+        String nonceStr = callCreateJSON.get("nonce").toString();
+        String secretKeyStr = callCreateJSON.get("secretKey").toString();
+        String toStr = callCreateJSON.get("to").toString();
+        String valueStr = callCreateJSON.get("value").toString();
 
 
-        this.data      = Utils.parseData(dataStr);
-        this.gasLimit  = Utils.parseLong(gasLimitStr);
-        this.gasPrice  = Utils.parseLong(gasPriceStr);
-        this.nonce     = Utils.parseLong(nonceStr);
+        this.data = Utils.parseData(dataStr);
+        this.gasLimit = Utils.parseLong(gasLimitStr);
+        this.gasPrice = Utils.parseLong(gasPriceStr);
+        this.nonce = Utils.parseLong(nonceStr);
         this.secretKey = Utils.parseData(secretKeyStr);
-        this.to        = Utils.parseData(toStr);
-        this.value     = Utils.parseLong(valueStr);
+        this.to = Utils.parseData(toStr);
+        this.value = Utils.parseLong(valueStr);
     }
 
     public byte[] getData() {

@@ -16,6 +16,7 @@ import java.awt.event.WindowEvent;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 30/04/14 06:29
  */
@@ -24,7 +25,7 @@ public class ToolBar extends JFrame {
     private Logger introLogger = LoggerFactory.getLogger("Intro");
 
     private ConnectionConsoleWindow connectionConsoleWindow = null;
-    private PeersTableWindow mainFrame  = null;
+    private PeersTableWindow mainFrame = null;
     private BlockChainTable blockchainWindow = null;
     private WalletWindow walletWindow = null;
     private SerpentEditor serpentEditor = null;
@@ -139,13 +140,13 @@ public class ToolBar extends JFrame {
                 if (e.getStateChange() == ItemEvent.SELECTED) {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
-                        if (connectionConsoleWindow == null)
-                            connectionConsoleWindow =  new ConnectionConsoleWindow(ToolBar.this);
-                        connectionConsoleWindow.setVisible(true);
+                            if (connectionConsoleWindow == null)
+                                connectionConsoleWindow = new ConnectionConsoleWindow(ToolBar.this);
+                            connectionConsoleWindow.setVisible(true);
                         }
                     });
                 } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        connectionConsoleWindow.setVisible(false);
+                    connectionConsoleWindow.setVisible(false);
                 }
             }
         });
@@ -165,12 +166,12 @@ public class ToolBar extends JFrame {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             if (mainFrame == null)
-                                mainFrame   = new PeersTableWindow(ToolBar.this);
-                            mainFrame.setVisible( true );
+                                mainFrame = new PeersTableWindow(ToolBar.this);
+                            mainFrame.setVisible(true);
                         }
                     });
                 } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                    mainFrame.setVisible( false );
+                    mainFrame.setVisible(false);
                 }
             }
         });

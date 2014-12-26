@@ -9,10 +9,11 @@ package org.ethereum.net.message;
 public abstract class Message {
 
     protected boolean parsed;
-    protected byte[]  encoded;
+    protected byte[] encoded;
     protected byte code;
 
-    public Message() {}
+    public Message() {
+    }
 
     public Message(byte[] encoded) {
         this.encoded = encoded;

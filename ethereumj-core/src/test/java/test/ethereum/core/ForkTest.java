@@ -40,7 +40,7 @@ import static junit.framework.TestCase.assertEquals;
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(loader=AnnotationConfigContextLoader.class)
+@ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class ForkTest {
 
@@ -50,7 +50,7 @@ public class ForkTest {
     @ComponentScan(basePackages = "org.ethereum")
     static class ContextConfiguration extends TestContext {
         static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/"+ ForkTest.class);
+            SystemProperties.CONFIG.setDataBaseDir("test_db/" + ForkTest.class);
         }
     }
 
@@ -58,7 +58,7 @@ public class ForkTest {
     WorldManager worldManager;
 
     @After
-    public void doReset(){
+    public void doReset() {
         worldManager.reset();
     }
 
@@ -66,7 +66,7 @@ public class ForkTest {
     @Test
     public void fork1() throws URISyntaxException, IOException {
 
-        BlockchainImpl blockchain = (BlockchainImpl)worldManager.getBlockchain();
+        BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
 
         URL scenario1 = ClassLoader
                 .getSystemResource("fork/scenario1.dmp");
@@ -74,20 +74,20 @@ public class ForkTest {
         File file = new File(scenario1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
-        for(String blockRLP : strData){
+        for (String blockRLP : strData) {
             Block block = new Block(
                     Hex.decode(blockRLP));
-            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            logger.info("sending block.hash: {}", Hex.toHexString(block.getHash()));
             blockchain.tryToConnect(block);
         }
 
         List<Chain> altChains = blockchain.getAltChains();
-        List<Block> garbage   = blockchain.getGarbage();
+        List<Block> garbage = blockchain.getGarbage();
 
-        assertEquals(1,  altChains.size());
+        assertEquals(1, altChains.size());
         assertEquals(13, altChains.get(0).getSize());
         assertEquals(20, blockchain.getSize());
-        assertEquals(0,  garbage.size());
+        assertEquals(0, garbage.size());
     }
 
     @Test
@@ -102,28 +102,27 @@ public class ForkTest {
         File file = new File(scenario2.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
-        for(String blockRLP : strData){
+        for (String blockRLP : strData) {
             Block block = new Block(
                     Hex.decode(blockRLP));
-            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            logger.info("sending block.hash: {}", Hex.toHexString(block.getHash()));
             blockchain.tryToConnect(block);
         }
 
         List<Chain> altChains = blockchain.getAltChains();
-        List<Block> garbage   = blockchain.getGarbage();
+        List<Block> garbage = blockchain.getGarbage();
 
-        assertEquals(2,  altChains.size());
+        assertEquals(2, altChains.size());
 //        assertEquals(13, altChains.get(0).getSize());
         assertEquals(new BigInteger("13238272"), altChains.get(0).getTotalDifficulty());
         assertEquals(new BigInteger("13369344"), altChains.get(1).getTotalDifficulty());
 
-        assertEquals(new BigInteger("13238272"), blockchain.getTotalDifficulty() );
+        assertEquals(new BigInteger("13238272"), blockchain.getTotalDifficulty());
         assertEquals(100, blockchain.getSize());
-        assertEquals(0,  garbage.size());
+        assertEquals(0, garbage.size());
 
         System.out.println();
     }
-
 
 
 }

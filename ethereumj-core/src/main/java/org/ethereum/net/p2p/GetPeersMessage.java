@@ -9,7 +9,9 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class GetPeersMessage extends P2pMessage {
 
-    /** GetPeers message is always a the same single command payload */
+    /**
+     * GetPeers message is always a the same single command payload
+     */
     private final static byte[] FIXED_PAYLOAD = Hex.decode("C104");
 
     @Override
@@ -18,7 +20,7 @@ public class GetPeersMessage extends P2pMessage {
     }
 
     @Override
-    public P2pMessageCodes getCommand(){
+    public P2pMessageCodes getCommand() {
         return P2pMessageCodes.GET_PEERS;
     }
 

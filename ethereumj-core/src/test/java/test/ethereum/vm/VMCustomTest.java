@@ -19,6 +19,7 @@ import static org.junit.Assert.*;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 01/06/2014 11:05
  */
@@ -33,7 +34,7 @@ public class VMCustomTest {
     public void setup() {
         byte[] ownerAddress = Hex.decode("77045E71A7A2C50903D88E564CD72FAB11E82051");
         byte[] msgData = Hex.decode("00000000000000000000000000000000000000000000000000000000000000A1" +
-                                    "00000000000000000000000000000000000000000000000000000000000000B1");
+                "00000000000000000000000000000000000000000000000000000000000000B1");
 
         invoke = new ProgramInvokeMockImpl(msgData);
         invoke.setOwnerAddress(ownerAddress);
@@ -138,7 +139,7 @@ public class VMCustomTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
-    @Test(expected=RuntimeException.class) // CALLDATALOAD OP mal
+    @Test(expected = RuntimeException.class) // CALLDATALOAD OP mal
     public void testCALLDATALOAD_6() {
 
         VM vm = new VM();
@@ -174,7 +175,7 @@ public class VMCustomTest {
         program =
                 new Program(Hex.decode("60406000600037"), invoke);
         String m_expected = "00000000000000000000000000000000000000000000000000000000000000A1" +
-                            "00000000000000000000000000000000000000000000000000000000000000B1";
+                "00000000000000000000000000000000000000000000000000000000000000B1";
 
         vm.step(program);
         vm.step(program);
@@ -192,7 +193,7 @@ public class VMCustomTest {
         program =
                 new Program(Hex.decode("60406004600037"), invoke);
         String m_expected = "000000000000000000000000000000000000000000000000000000A100000000" +
-                            "000000000000000000000000000000000000000000000000000000B100000000";
+                "000000000000000000000000000000000000000000000000000000B100000000";
 
         vm.step(program);
         vm.step(program);
@@ -210,8 +211,8 @@ public class VMCustomTest {
         program =
                 new Program(Hex.decode("60406000600437"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
-                            "000000A100000000000000000000000000000000000000000000000000000000" +
-                            "000000B100000000000000000000000000000000000000000000000000000000";
+                "000000A100000000000000000000000000000000000000000000000000000000" +
+                "000000B100000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
         vm.step(program);
@@ -228,8 +229,8 @@ public class VMCustomTest {
         program =
                 new Program(Hex.decode("60406000600437"), invoke);
         String m_expected = "0000000000000000000000000000000000000000000000000000000000000000" +
-                            "000000A100000000000000000000000000000000000000000000000000000000" +
-                            "000000B100000000000000000000000000000000000000000000000000000000";
+                "000000A100000000000000000000000000000000000000000000000000000000" +
+                "000000B100000000000000000000000000000000000000000000000000000000";
 
         vm.step(program);
         vm.step(program);
@@ -240,7 +241,7 @@ public class VMCustomTest {
     }
 
 
-    @Test(expected=StackTooSmallException.class) // CALLDATACOPY OP mal
+    @Test(expected = StackTooSmallException.class) // CALLDATACOPY OP mal
     public void testCALLDATACOPY_6() {
 
         VM vm = new VM();
@@ -256,7 +257,7 @@ public class VMCustomTest {
         }
     }
 
-    @Test(expected=OutOfGasException.class) // CALLDATACOPY OP mal
+    @Test(expected = OutOfGasException.class) // CALLDATACOPY OP mal
     public void testCALLDATACOPY_7() {
 
         VM vm = new VM();
@@ -382,7 +383,7 @@ public class VMCustomTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
-    @Test(expected=StackTooSmallException.class) // SHA3 OP mal
+    @Test(expected = StackTooSmallException.class) // SHA3 OP mal
     public void testSHA3_3() {
 
         VM vm = new VM();
@@ -511,7 +512,7 @@ public class VMCustomTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
-    @Test(expected=Program.IllegalOperationException.class) // INVALID OP
+    @Test(expected = Program.IllegalOperationException.class) // INVALID OP
     public void testINVALID_1() {
 
         VM vm = new VM();
@@ -562,4 +563,4 @@ public class VMCustomTest {
  RETURN   f2   (1)
  61778e600054
 
-*/
+ */

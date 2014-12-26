@@ -27,10 +27,10 @@ public class StaticMessages {
 
     public static final String PEER_ID = Hex.toHexString(HashUtil.randomPeerId());
 
-    public final static PingMessage PING_MESSAGE                        = new PingMessage();
-    public final static PongMessage PONG_MESSAGE                        = new PongMessage();
-    public final static HelloMessage HELLO_MESSAGE                      = generateHelloMessage();
-    public final static GetPeersMessage GET_PEERS_MESSAGE               = new GetPeersMessage();
+    public final static PingMessage PING_MESSAGE = new PingMessage();
+    public final static PongMessage PONG_MESSAGE = new PongMessage();
+    public final static HelloMessage HELLO_MESSAGE = generateHelloMessage();
+    public final static GetPeersMessage GET_PEERS_MESSAGE = new GetPeersMessage();
     public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
 
     public static final byte[] SYNC_TOKEN = Hex.decode("22400891");

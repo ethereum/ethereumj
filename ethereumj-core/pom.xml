@@ -1,5 +1,5 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.ethereum</groupId>
     <artifactId>ethereumj</artifactId>
@@ -8,14 +8,14 @@
     <name>EthereumJ</name>
     <url>http://www.ethereumj.org</url>
 
-<!--
- * Install jar with sources to the local maven repository
- mvn install -Dmaven.test.skip=true
+    <!--
+     * Install jar with sources to the local maven repository
+     mvn install -Dmaven.test.skip=true
 
- * To generate source for ANTLR parser/lexer
- mvn antlr4:antlr4
+     * To generate source for ANTLR parser/lexer
+     mvn antlr4:antlr4
 
--->
+    -->
 
     <developers>
         <developer>
@@ -70,9 +70,9 @@
         </dependency>
         <!-- Added Cedarsoft for DeepEquals function  -->
         <dependency>
-          <groupId>com.cedarsoftware</groupId>
-          <artifactId>java-util</artifactId>
-          <version>1.8.0</version>
+            <groupId>com.cedarsoftware</groupId>
+            <artifactId>java-util</artifactId>
+            <version>1.8.0</version>
         </dependency>
         <!-- For Serpent compile -->
         <dependency>
@@ -347,7 +347,7 @@
                 </configuration>
             </plugin>
 
-<!--
+            <!--
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <version>1.3</version>
@@ -367,8 +367,7 @@
                     </execution>
                 </executions>
             </plugin>
--->
-
+            -->
 
             <plugin>
                 <groupId>org.antlr</groupId>
@@ -400,9 +399,8 @@
             </plugin>
 
 
-
         </plugins>
-         <pluginManagement>
+        <pluginManagement>
             <plugins>
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
                 <plugin>

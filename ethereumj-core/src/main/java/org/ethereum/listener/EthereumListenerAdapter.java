@@ -42,7 +42,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onNoConnections(){
+    public void onNoConnections() {
 
     }
 }

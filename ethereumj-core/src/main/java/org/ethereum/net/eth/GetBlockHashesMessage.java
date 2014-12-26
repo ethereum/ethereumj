@@ -14,11 +14,15 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class GetBlockHashesMessage extends EthMessage {
 
-    /** The newest block hash from which to start sending older hashes */
+    /**
+     * The newest block hash from which to start sending older hashes
+     */
     private byte[] bestHash;
 
-    /** The maximum number of blocks to return.
-     * <b>Note:</b> the peer could return fewer. */
+    /**
+     * The maximum number of blocks to return.
+     * <b>Note:</b> the peer could return fewer.
+     */
     private int maxBlocks;
 
     public GetBlockHashesMessage(byte[] encoded) {
@@ -51,7 +55,7 @@ public class GetBlockHashesMessage extends EthMessage {
 
     @Override
     public byte[] getEncoded() {
-        if(encoded == null) encode();
+        if (encoded == null) encode();
         return encoded;
     }
 
@@ -72,7 +76,7 @@ public class GetBlockHashesMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.GET_BLOCK_HASHES;
     }
 

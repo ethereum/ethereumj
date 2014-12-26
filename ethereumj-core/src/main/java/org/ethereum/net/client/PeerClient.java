@@ -22,6 +22,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * This class creates the connection to an remote address using the Netty framework
+ *
  * @see <a href="http://netty.io">http://netty.io</a>
  */
 @Component

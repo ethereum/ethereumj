@@ -41,7 +41,7 @@ public class RepositoryDummy implements Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
-    private Map<ByteArrayWrapper, ContractDetails> detailsDB  = new HashMap<>() ;
+    private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
 
 
     @Override
@@ -53,12 +53,12 @@ public class RepositoryDummy implements Repository {
 
     @Override
     public void close() {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean isClosed() {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
 
@@ -71,21 +71,21 @@ public class RepositoryDummy implements Repository {
             AccountState accountState = stateCache.get(hash);
             ContractDetails contractDetails = detailsCache.get(hash);
 
-            if (accountState.isDeleted()){
-                worldState.remove( hash ) ;
-                detailsDB.remove( hash );
+            if (accountState.isDeleted()) {
+                worldState.remove(hash);
+                detailsDB.remove(hash);
 
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
 
-            } else{
+            } else {
 
-                if (accountState.isDirty() ||  contractDetails.isDirty()){
-                    detailsDB.put( hash,  contractDetails);
+                if (accountState.isDirty() || contractDetails.isDirty()) {
+                    detailsDB.put(hash, contractDetails);
                     accountState.setStateRoot(contractDetails.getStorageHash());
                     accountState.setCodeHash(sha3(contractDetails.getCode()));
-                    worldState.put( hash, accountState);
-                    if (logger.isDebugEnabled()){
+                    worldState.put(hash, accountState);
+                    if (logger.isDebugEnabled()) {
                         logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
                                 Hex.toHexString(hash.getData()),
                                 accountState.getNonce(),
@@ -106,23 +106,23 @@ public class RepositoryDummy implements Repository {
 
     @Override
     public void flush() {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void rollback() {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void commit() {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
 
     @Override
     public void syncToRoot(byte[] root) {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -140,7 +140,7 @@ public class RepositoryDummy implements Repository {
         return null;
     }
 
-    public Set<ByteArrayWrapper> getFullAddressSet(){
+    public Set<ByteArrayWrapper> getFullAddressSet() {
         return worldState.keySet();
     }
 
@@ -170,7 +170,7 @@ public class RepositoryDummy implements Repository {
 
     @Override
     public DataWord getStorageValue(byte[] addr, DataWord key) {
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
         if (details == null)
             return null;
@@ -180,11 +180,11 @@ public class RepositoryDummy implements Repository {
 
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
-        if (details == null){
+        if (details == null) {
             createAccount(addr);
-            details =  getContractDetails(addr);
+            details = getContractDetails(addr);
         }
 
         details.put(key, value);
@@ -193,7 +193,7 @@ public class RepositoryDummy implements Repository {
 
     @Override
     public byte[] getCode(byte[] addr) {
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
         if (details == null)
             return null;
@@ -204,15 +204,15 @@ public class RepositoryDummy implements Repository {
 
     @Override
     public void saveCode(byte[] addr, byte[] code) {
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
-        if (details == null){
+        if (details == null) {
             createAccount(addr);
-            details =  getContractDetails(addr);
+            details = getContractDetails(addr);
         }
 
         details.setCode(code);
-        detailsDB.put(wrap( addr ), details);
+        detailsDB.put(wrap(addr), details);
     }
 
     @Override
@@ -295,8 +295,8 @@ public class RepositoryDummy implements Repository {
     @Override
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
 
-        AccountState    account =  getAccountState(addr);
-        ContractDetails details =  getContractDetails(addr);
+        AccountState account = getAccountState(addr);
+        ContractDetails details = getContractDetails(addr);
 
         if (account == null)
             account = new AccountState();

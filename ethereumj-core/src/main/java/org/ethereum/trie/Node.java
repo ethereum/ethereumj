@@ -6,9 +6,9 @@ import org.ethereum.util.Value;
 /**
  * A Node in a Merkle Patricia Tree is one of the following:
  *
- *  - NULL (represented as the empty string)
- *  - A two-item array [ key, value ] (1 key for 2-item array)
- *  - A 17-item array [ v0 ... v15, vt ] (16 keys for 17-item array)
+ * - NULL (represented as the empty string)
+ * - A two-item array [ key, value ] (1 key for 2-item array)
+ * - A 17-item array [ v0 ... v15, vt ] (16 keys for 17-item array)
  *
  * The idea is that in the event that there is a long path of nodes
  * each with only one element, we shortcut the descent by setting up
@@ -40,6 +40,7 @@ import org.ethereum.util.Value;
  * when length &lt; 32 for the obvious reason that the function f(x) = x is reversible.
  *
  * www.ethereumJ.com
+ *
  * @author Nick Savers
  * Created on: 20/05/2014 10:44
  */

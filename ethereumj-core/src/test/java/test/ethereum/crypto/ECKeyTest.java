@@ -64,7 +64,7 @@ public class ECKeyTest {
         assertArrayEquals(pubKey, key.getPubKey());
     }
 
-    @Test(expected=IllegalArgumentException.class)
+    @Test(expected = IllegalArgumentException.class)
     public void testPrivatePublicKeyBytesNoArg() {
         new ECKey(null, null);
         fail("Expecting an IllegalArgumentException for using only null-parameters");
@@ -196,26 +196,32 @@ public class ECKeyTest {
     @Test
     public void testIsPubKeyCanonicalCorect() {
         // Test correct prefix 4, right length 65
-        byte[] canonicalPubkey1 = new byte[65]; canonicalPubkey1[0] = 0x04;
+        byte[] canonicalPubkey1 = new byte[65];
+        canonicalPubkey1[0] = 0x04;
         assertTrue(ECKey.isPubKeyCanonical(canonicalPubkey1));
         // Test correct prefix 2, right length 33
-        byte[] canonicalPubkey2 = new byte[33]; canonicalPubkey2[0] = 0x02;
+        byte[] canonicalPubkey2 = new byte[33];
+        canonicalPubkey2[0] = 0x02;
         assertTrue(ECKey.isPubKeyCanonical(canonicalPubkey2));
         // Test correct prefix 3, right length 33
-        byte[] canonicalPubkey3 = new byte[33]; canonicalPubkey3[0] = 0x03;
+        byte[] canonicalPubkey3 = new byte[33];
+        canonicalPubkey3[0] = 0x03;
         assertTrue(ECKey.isPubKeyCanonical(canonicalPubkey3));
     }
 
     @Test
     public void testIsPubKeyCanonicalWrongLength() {
         // Test correct prefix 4, but wrong length !65
-        byte[] nonCanonicalPubkey1 = new byte[64]; nonCanonicalPubkey1[0] = 0x04;
+        byte[] nonCanonicalPubkey1 = new byte[64];
+        nonCanonicalPubkey1[0] = 0x04;
         assertFalse(ECKey.isPubKeyCanonical(nonCanonicalPubkey1));
         // Test correct prefix 2, but wrong length !33
-        byte[] nonCanonicalPubkey2 = new byte[32]; nonCanonicalPubkey2[0] = 0x02;
+        byte[] nonCanonicalPubkey2 = new byte[32];
+        nonCanonicalPubkey2[0] = 0x02;
         assertFalse(ECKey.isPubKeyCanonical(nonCanonicalPubkey2));
         // Test correct prefix 3, but wrong length !33
-        byte[] nonCanonicalPubkey3 = new byte[32]; nonCanonicalPubkey3[0] = 0x03;
+        byte[] nonCanonicalPubkey3 = new byte[32];
+        nonCanonicalPubkey3[0] = 0x03;
         assertFalse(ECKey.isPubKeyCanonical(nonCanonicalPubkey3));
     }
 

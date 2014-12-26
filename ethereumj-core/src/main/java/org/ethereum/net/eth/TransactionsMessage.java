@@ -72,7 +72,7 @@ public class TransactionsMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.TRANSACTIONS;
     }
 
@@ -82,11 +82,11 @@ public class TransactionsMessage extends EthMessage {
     }
 
     public String toString() {
-        if(!parsed) parse();
+        if (!parsed) parse();
         StringBuffer sb = new StringBuffer();
         for (Transaction transaction : transactions)
             sb.append("\n   ").append(transaction);
         return "[" + this.getCommand().name() + " num:"
-                + transactions.size() +  " " + sb.toString() + "]";
+                + transactions.size() + " " + sb.toString() + "]";
     }
 }

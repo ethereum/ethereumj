@@ -50,6 +50,7 @@ public class Utils {
     }
 
     static BigInteger _1000_ = new BigInteger("1000");
+
     public static String getValueShortString(BigInteger number) {
         BigInteger result = number;
         int pow = 0;
@@ -68,10 +69,13 @@ public class Utils {
      */
     public static byte[] addressStringToBytes(String hex) {
         byte[] addr = null;
-        try { addr = Hex.decode(hex); }
-        catch(DecoderException addressIsNotValid) { return null; }
+        try {
+            addr = Hex.decode(hex);
+        } catch (DecoderException addressIsNotValid) {
+            return null;
+        }
 
-        if(isValidAddress(addr))
+        if (isValidAddress(addr))
             return addr;
         return null;
     }
@@ -102,6 +106,7 @@ public class Utils {
     }
 
     public static double JAVA_VERSION = getJavaVersion();
+
     static double getJavaVersion() {
         String version = System.getProperty("java.version");
 
@@ -109,10 +114,10 @@ public class Utils {
         if (version.equals("0")) return 0;
 
         int pos = 0, count = 0;
-        for ( ; pos<version.length() && count < 2; pos ++) {
-            if (version.charAt(pos) == '.') count ++;
+        for (; pos < version.length() && count < 2; pos++) {
+            if (version.charAt(pos) == '.') count++;
         }
-        return Double.parseDouble (version.substring (0, pos - 1));
+        return Double.parseDouble(version.substring(0, pos - 1));
     }
 
     public static StringBuffer getHashlistShort(List<byte[]> blockHashes) {
@@ -122,7 +127,7 @@ public class Utils {
         if (blockHashes.isEmpty()) return sb.append("[]");
 
         String firstHash = Hex.toHexString(blockHashes.get(0));
-        String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size()-1));
+        String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size() - 1));
         return sb.append(" ").append(firstHash).append("...").append(lastHash);
     }
 

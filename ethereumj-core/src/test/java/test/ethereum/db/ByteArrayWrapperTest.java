@@ -114,7 +114,7 @@ public class ByteArrayWrapperTest {
     public void testEqualsPerformance() {
         boolean testEnabled = false;
 
-        if(testEnabled) {
+        if (testEnabled) {
             final int ITERATIONS = 10000000;
             long start1 = System.currentTimeMillis();
             for (int i = 0; i < ITERATIONS; i++) {

@@ -30,10 +30,10 @@ public class TrackDatabase implements Database {
     }
 
     public void commitTrack() {
-        for(ByteArrayWrapper key : changes.keySet()) {
+        for (ByteArrayWrapper key : changes.keySet()) {
             db.put(key.getData(), changes.get(key));
         }
-        for(ByteArrayWrapper key : deletes) {
+        for (ByteArrayWrapper key : deletes) {
             db.delete(key.getData());
         }
         changes = null;
@@ -57,7 +57,7 @@ public class TrackDatabase implements Database {
     }
 
     public byte[] get(byte[] key) {
-        if(trackingChanges) {
+        if (trackingChanges) {
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             if (deletes.contains(wKey)) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
@@ -65,7 +65,9 @@ public class TrackDatabase implements Database {
         return db.get(key);
     }
 
-    /** Delete object (key) from db **/
+    /**
+     * Delete object (key) from db *
+     */
     public void delete(byte[] key) {
         if (trackingChanges) {
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
@@ -76,7 +78,7 @@ public class TrackDatabase implements Database {
     }
 
     @Override
-    public void close(){
+    public void close() {
         db.close();
     }
 }

@@ -15,6 +15,7 @@ public class TransactionExecutor {
     static {
         instance = new TransactionExecutor();
     }
+
     public static TransactionExecutor instance;
     private ExecutorService executor = Executors.newFixedThreadPool(1);
 

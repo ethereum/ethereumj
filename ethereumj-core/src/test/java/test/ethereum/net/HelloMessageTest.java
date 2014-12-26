@@ -32,7 +32,7 @@ public class HelloMessageTest {
         assertEquals(P2pMessageCodes.HELLO, helloMessage.getCommand());
         assertEquals(2, helloMessage.getP2PVersion());
         assertEquals("Ethereum(++)/v0.7.9/Release/Linux/g++", helloMessage.getClientId());
-        assertEquals(2,   helloMessage.getCapabilities().size());
+        assertEquals(2, helloMessage.getCapabilities().size());
         assertEquals(992, helloMessage.getListenPort());
         assertEquals(
             "1fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a77f9b86eb14669fe7a8a46a2dd1b7d070b94e463f4ecd5b337c8b4d31bbf8dd5646",

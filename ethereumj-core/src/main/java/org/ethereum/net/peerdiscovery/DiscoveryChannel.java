@@ -30,6 +30,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * This class creates the connection to an remote address using the Netty framework
+ *
  * @see <a href="http://netty.io">http://netty.io</a>
  */
 @Component
@@ -93,7 +94,7 @@ public class DiscoveryChannel {
 
             b.handler(
 
-                    new ChannelInitializer<NioSocketChannel>(){
+                    new ChannelInitializer<NioSocketChannel>() {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
 
@@ -128,7 +129,7 @@ public class DiscoveryChannel {
         } finally {
             workerGroup.shutdownGracefully();
 
-            if (!peerDiscoveryMode){
+            if (!peerDiscoveryMode) {
 //                EthereumListener listener =  WorldManager.getInstance().getListener();
 //                listener.onPeerDisconnect(host, port);
             }
@@ -136,12 +137,11 @@ public class DiscoveryChannel {
         }
     }
 
-    public HelloMessage getHelloHandshake(){
+    public HelloMessage getHelloHandshake() {
         return p2pHandler.getHandshakeHelloMessage();
     }
 
-    public StatusMessage getStatusHandshake()
-    {
+    public StatusMessage getStatusHandshake() {
         return ethHandler.getHandshakeStatusMessage();
     }
 }

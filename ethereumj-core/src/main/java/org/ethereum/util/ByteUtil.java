@@ -68,7 +68,7 @@ public class ByteUtil {
 
     /**
      * Returns the amount of nibbles that match each other from 0 ...
-     *  amount will never be larger than smallest input
+     * amount will never be larger than smallest input
      *
      * @param a - first input
      * @param b - second input
@@ -112,16 +112,17 @@ public class ByteUtil {
 
     /**
      * Calculate packet length
+     *
      * @param msg byte[]
      * @return byte-array with 4 elements
      */
     public static byte[] calcPacketLength(byte[] msg) {
         int msgLen = msg.length;
         byte[] len = {
-                (byte)((msgLen >> 24) & 0xFF),
-                (byte)((msgLen >> 16) & 0xFF),
-                (byte)((msgLen >>  8) & 0xFF),
-                (byte)((msgLen      ) & 0xFF)};
+                (byte) ((msgLen >> 24) & 0xFF),
+                (byte) ((msgLen >> 16) & 0xFF),
+                (byte) ((msgLen >> 8) & 0xFF),
+                (byte) ((msgLen) & 0xFF)};
         return len;
     }
 
@@ -157,13 +158,13 @@ public class ByteUtil {
     /**
      * Turn nibbles to a pretty looking output string
      *
-     *  Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
+     * Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
      *
      * @param nibbles - getting byte of data [ 04 ] and turning
      *                  it to a '\x04' representation
      * @return pretty string of nibbles
      */
-    public static String nibblesToPrettyString(byte[] nibbles){
+    public static String nibblesToPrettyString(byte[] nibbles) {
         StringBuffer buffer = new StringBuffer();
         for (byte nibble : nibbles) {
             String nibleString = oneByteToHexString(nibble);
@@ -190,7 +191,7 @@ public class ByteUtil {
         BigInteger bInt = new BigInteger(val);
         int bytes = 0;
 
-        while(!bInt.equals(BigInteger.ZERO)) {
+        while (!bInt.equals(BigInteger.ZERO)) {
             bInt = bInt.shiftRight(8);
             ++bytes;
         }
@@ -231,6 +232,7 @@ public class ByteUtil {
 
     /**
      * encode the values and concatenate together
+     *
      * @param args Object
      * @return byte[]
      */
@@ -247,7 +249,7 @@ public class ByteUtil {
         return baos.toByteArray();
     }
 
-    public static int firstNonZeroByte(byte[] data){
+    public static int firstNonZeroByte(byte[] data) {
         int firstNonZero = -1;
         int i = 0;
         for (; i < data.length; ++i) {
@@ -287,13 +289,12 @@ public class ByteUtil {
      * increment byte array as a number until max is reached
      *
      * @param bytes byte[]
-     *
      * @return boolean
      */
     public static boolean increment(byte[] bytes) {
         final int startIndex = 0;
         int i;
-        for (i = bytes.length-1; i >= startIndex; i--) {
+        for (i = bytes.length - 1; i >= startIndex; i--) {
             bytes[i]++;
             if (bytes[i] != 0)
                 break;
@@ -318,24 +319,24 @@ public class ByteUtil {
     }
 
 
-    public static ByteArrayWrapper wrap(byte[] data){
+    public static ByteArrayWrapper wrap(byte[] data) {
         return new ByteArrayWrapper(data);
     }
 
     public static byte[] setBit(byte[] data, int pos, int val) {
 
-        if ( (data.length * 8) - 1 < pos )
+        if ((data.length * 8) - 1 < pos)
             throw new Error("outside byte array limit, pos: " + pos);
 
-        int posByte  = data.length - 1 - (pos) / 8;
-        int posBit   = (pos) % 8;
-        byte setter  = (byte)(1 << (posBit));
+        int posByte = data.length - 1 - (pos) / 8;
+        int posBit = (pos) % 8;
+        byte setter = (byte) (1 << (posBit));
         byte toBeSet = data[posByte];
         byte result;
-        if(val == 1)
-            result = (byte)(toBeSet | setter);
+        if (val == 1)
+            result = (byte) (toBeSet | setter);
         else
-            result = (byte)(toBeSet & ~setter);
+            result = (byte) (toBeSet & ~setter);
 
         data[posByte] = result;
         return data;
@@ -343,11 +344,11 @@ public class ByteUtil {
 
     public static int getBit(byte[] data, int pos) {
 
-        if ((data.length * 8) - 1 < pos )
+        if ((data.length * 8) - 1 < pos)
             throw new Error("outside byte array limit, pos: " + pos);
 
-        int  posByte = data.length - 1 - pos / 8;
-        int  posBit = pos % 8;
+        int posByte = data.length - 1 - pos / 8;
+        int posBit = pos % 8;
         byte dataByte = data[posByte];
         return Math.min(1, (dataByte & (1 << (posBit))));
     }

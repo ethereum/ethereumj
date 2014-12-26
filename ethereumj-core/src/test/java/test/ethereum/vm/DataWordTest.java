@@ -14,11 +14,11 @@ public class DataWordTest {
     public void testAddPerformance() {
         boolean enabled = false;
 
-        if(enabled) {
-            byte[] one = new byte[] { 0x01, 0x31, 0x54, 0x41, 0x01, 0x31, 0x54,
+        if (enabled) {
+            byte[] one = new byte[]{0x01, 0x31, 0x54, 0x41, 0x01, 0x31, 0x54,
                     0x41, 0x01, 0x31, 0x54, 0x41, 0x01, 0x31, 0x54, 0x41, 0x01,
                     0x31, 0x54, 0x41, 0x01, 0x31, 0x54, 0x41, 0x01, 0x31, 0x54,
-                    0x41, 0x01, 0x31, 0x54, 0x41 }; // Random value
+                    0x41, 0x01, 0x31, 0x54, 0x41}; // Random value
 
             int ITERATIONS = 10000000;
 
@@ -230,7 +230,7 @@ public class DataWordTest {
         assertEquals(expected, x.toString());
     }
 
-    @Test(expected=IndexOutOfBoundsException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void testSignExtendException1() {
 
         byte k = -1;
@@ -239,7 +239,7 @@ public class DataWordTest {
         x.signExtend(k); // should throw an exception
     }
 
-    @Test(expected=IndexOutOfBoundsException.class)
+    @Test(expected = IndexOutOfBoundsException.class)
     public void testSignExtendException2() {
 
         byte k = 32;

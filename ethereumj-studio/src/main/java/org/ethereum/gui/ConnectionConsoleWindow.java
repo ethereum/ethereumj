@@ -82,7 +82,7 @@ public class ConnectionConsoleWindow extends JFrame {
             }
         };
 
-        UIEthereumManager.ethereum.addListener(new EthereumListenerAdapter(){
+        UIEthereumManager.ethereum.addListener(new EthereumListenerAdapter() {
             @Override
             public void trace(final String output) {
                 SwingUtilities.invokeLater(new Runnable() {

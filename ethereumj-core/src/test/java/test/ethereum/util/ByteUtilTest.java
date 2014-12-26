@@ -54,8 +54,8 @@ public class ByteUtilTest {
 
     @Test
     public void testCalcPacketLength() {
-        byte[] test = new byte[] { 0x0f, 0x10, 0x43 };
-        byte[] expected = new byte[] { 0x00, 0x00, 0x00, 0x03 };
+        byte[] test = new byte[]{0x0f, 0x10, 0x43};
+        byte[] expected = new byte[]{0x00, 0x00, 0x00, 0x03};
         assertArrayEquals(expected, ByteUtil.calcPacketLength(test));
     }
 
@@ -96,9 +96,9 @@ public class ByteUtilTest {
 
     @Test
     public void testStripLeadingZeroes() {
-        byte[] test1 = new byte[] { 0x00, 0x01 };
-        byte[] test2 = new byte[] { 0x00, 0x00, 0x01 };
-        byte[] expected = new byte[] { 0x01 };
+        byte[] test1 = new byte[]{0x00, 0x01};
+        byte[] test2 = new byte[]{0x00, 0x00, 0x01};
+        byte[] expected = new byte[]{0x01};
         assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test1));
         assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test2));
     }
@@ -106,16 +106,17 @@ public class ByteUtilTest {
     @Test
     public void testMatchingNibbleLength1() {
         // a larger than b
-        byte[] a = new byte[] { 0x00, 0x01 };
-        byte[] b = new byte[] { 0x00 };
+        byte[] a = new byte[]{0x00, 0x01};
+        byte[] b = new byte[]{0x00};
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(1, result);
     }
+
     @Test
     public void testMatchingNibbleLength2() {
         // b larger than a
-        byte[] a  = new byte[] { 0x00 };
-        byte[] b  = new byte[] { 0x00, 0x01 };
+        byte[] a = new byte[]{0x00};
+        byte[] b = new byte[]{0x00, 0x01};
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(1, result);
     }
@@ -123,8 +124,8 @@ public class ByteUtilTest {
     @Test
     public void testMatchingNibbleLength3() {
         // a and b the same length equal
-        byte[] a = new byte[] { 0x00 };
-        byte[] b = new byte[] { 0x00 };
+        byte[] a = new byte[]{0x00};
+        byte[] b = new byte[]{0x00};
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(1, result);
     }
@@ -132,38 +133,38 @@ public class ByteUtilTest {
     @Test
     public void testMatchingNibbleLength4() {
         // a and b the same length not equal
-        byte[] a = new byte[] { 0x01 };
-        byte[] b = new byte[] { 0x00 };
+        byte[] a = new byte[]{0x01};
+        byte[] b = new byte[]{0x00};
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(0, result);
     }
 
     @Test
-    public void testNiceNiblesOutput_1(){
+    public void testNiceNiblesOutput_1() {
         byte[] test = {7, 0, 7, 5, 7, 0, 7, 0, 7, 9};
         String result = "\\x07\\x00\\x07\\x05\\x07\\x00\\x07\\x00\\x07\\x09";
         assertEquals(result, ByteUtil.nibblesToPrettyString(test));
     }
 
     @Test
-    public void testNiceNiblesOutput_2(){
+    public void testNiceNiblesOutput_2() {
         byte[] test = {7, 0, 7, 0xf, 7, 0, 0xa, 0, 7, 9};
         String result = "\\x07\\x00\\x07\\x0f\\x07\\x00\\x0a\\x00\\x07\\x09";
         assertEquals(result, ByteUtil.nibblesToPrettyString(test));
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testMatchingNibbleLength5() {
         // a == null
         byte[] a = null;
-        byte[] b = new byte[] { 0x00 };
+        byte[] b = new byte[]{0x00};
         ByteUtil.matchingNibbleLength(a, b);
     }
 
-    @Test(expected=NullPointerException.class)
+    @Test(expected = NullPointerException.class)
     public void testMatchingNibbleLength6() {
         // b == null
-        byte[] a = new byte[] { 0x00 };
+        byte[] a = new byte[]{0x00};
         byte[] b = null;
         ByteUtil.matchingNibbleLength(a, b);
     }
@@ -172,7 +173,7 @@ public class ByteUtilTest {
     public void testMatchingNibbleLength7() {
         // a or b is empty
         byte[] a = new byte[0];
-        byte[] b = new byte[] { 0x00 };
+        byte[] b = new byte[]{0x00};
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(0, result);
     }
@@ -188,12 +189,12 @@ public class ByteUtilTest {
     public void testIncrementPerformance() {
         boolean testEnabled = false;
 
-        if(testEnabled) {
+        if (testEnabled) {
             byte[] counter1 = new byte[4];
             byte[] max = ByteBuffer.allocate(4).putInt(Integer.MAX_VALUE).array();
             long start1 = System.currentTimeMillis();
-            while(ByteUtil.increment(counter1)) {
-                if(FastByteComparisons.compareTo(counter1, 0, 4, max, 0, 4) == 0) {
+            while (ByteUtil.increment(counter1)) {
+                if (FastByteComparisons.compareTo(counter1, 0, 4, max, 0, 4) == 0) {
                     break;
                 }
             }
@@ -201,8 +202,8 @@ public class ByteUtilTest {
 
             BigInteger counter2 = BigInteger.ZERO;
             long start2 = System.currentTimeMillis();
-            while(true) {
-                if(counter2.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) == 0) {
+            while (true) {
+                if (counter2.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) == 0) {
                     break;
                 }
                 counter2 = counter2.add(BigInteger.ONE);
@@ -294,20 +295,20 @@ public class ByteUtilTest {
         ByteUtil.setBit(data, 2, 1);
 
         List<Integer> found = new ArrayList<Integer>();
-        for(int i=0; i < (data.length * 8); i++) {
+        for (int i = 0; i < (data.length * 8); i++) {
             int res = ByteUtil.getBit(data, i);
-            if(res == 1)
-                if(i != 24 && i != 25 && i != 2)
+            if (res == 1)
+                if (i != 24 && i != 25 && i != 2)
                     assertTrue(false);
                 else
                     found.add(i);
             else {
-                if(i == 24 || i == 25 || i == 2)
+                if (i == 24 || i == 25 || i == 2)
                     assertTrue(false);
             }
         }
 
-        if(found.size() != 3)
+        if (found.size() != 3)
             assertTrue(false);
         assertTrue(found.get(0) == 2);
         assertTrue(found.get(1) == 24);

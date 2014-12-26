@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Scope("prototype")
-public class Account  {
+public class Account {
 
     private ECKey ecKey;
     private byte[] address;
@@ -30,7 +30,7 @@ public class Account  {
     public Account() {
     }
 
-    public void init(){
+    public void init() {
         this.ecKey = new ECKey(Utils.getRandom());
         address = this.ecKey.getAddress();
     }
@@ -40,14 +40,14 @@ public class Account  {
         address = this.ecKey.getAddress();
     }
 
-    public BigInteger getNonce(){
+    public BigInteger getNonce() {
         AccountState accountState =
                 worldManager.getRepository().getAccountState(getAddress());
 
         return accountState.getNonce();
     }
 
-    public BigInteger getBalance(){
+    public BigInteger getBalance() {
 
         AccountState accountState =
                 worldManager.getRepository().getAccountState(this.getAddress());
@@ -57,15 +57,15 @@ public class Account  {
         if (accountState != null)
             balance = accountState.getBalance();
 
-        synchronized (getPendingTransactins()){
-            if (!getPendingTransactins().isEmpty()){
+        synchronized (getPendingTransactins()) {
+            if (!getPendingTransactins().isEmpty()) {
 
-                for (Transaction tx : getPendingTransactins()){
-                    if (Arrays.equals(getAddress(), tx.getSender())){
+                for (Transaction tx : getPendingTransactins()) {
+                    if (Arrays.equals(getAddress(), tx.getSender())) {
                         balance = balance.subtract(new BigInteger(1, tx.getValue()));
                     }
 
-                    if (Arrays.equals(getAddress(), tx.getReceiveAddress())){
+                    if (Arrays.equals(getAddress(), tx.getReceiveAddress())) {
                         balance = balance.add(new BigInteger(1, tx.getValue()));
                     }
                 }
@@ -94,14 +94,14 @@ public class Account  {
         return this.pendingTransactions;
     }
 
-    public void addPendingTransaction(Transaction transaction){
-        synchronized (pendingTransactions){
+    public void addPendingTransaction(Transaction transaction) {
+        synchronized (pendingTransactions) {
             pendingTransactions.add(transaction);
         }
     }
 
-    public void clearAllPendingTransactions(){
-        synchronized (pendingTransactions){
+    public void clearAllPendingTransactions() {
+        synchronized (pendingTransactions) {
             pendingTransactions.clear();
         }
     }

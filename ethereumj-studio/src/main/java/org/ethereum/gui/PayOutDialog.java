@@ -20,6 +20,7 @@ import javax.swing.*;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
@@ -122,7 +123,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
                 Transaction tx = new Transaction(
                         BigIntegers.asUnsignedByteArray(nonce),
-                         gasPrice,
+                        gasPrice,
                         BigIntegers.asUnsignedByteArray(fee), address,
                         BigIntegers.asUnsignedByteArray(value), null);
 
@@ -149,7 +150,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
     private boolean validInput() {
 
-        if (UIEthereumManager.ethereum.isBlockchainLoading()){
+        if (UIEthereumManager.ethereum.isBlockchainLoading()) {
             alertStatusMsg("No transaction is allowed during block chain downloading.");
             return false;
         }
@@ -236,10 +237,10 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
         SwingUtilities.invokeLater(new Runnable() {
-              public void run() {
-                  setSize(500, 255);
-                  setVisible(true);
-              }
+            public void run() {
+                setSize(500, 255);
+                setVisible(true);
+            }
         });
 
 

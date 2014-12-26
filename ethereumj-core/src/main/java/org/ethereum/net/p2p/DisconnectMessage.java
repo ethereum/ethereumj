@@ -52,7 +52,7 @@ public class DisconnectMessage extends P2pMessage {
     }
 
     @Override
-    public P2pMessageCodes getCommand(){
+    public P2pMessageCodes getCommand() {
         return P2pMessageCodes.DISCONNECT;
     }
 

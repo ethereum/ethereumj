@@ -36,63 +36,63 @@ public class ChannelManager {
 
 
     @PostConstruct
-    public void init(){
+    public void init() {
         scheduleChannelCollector();
     }
 
-    public void recvTransaction(){
+    public void recvTransaction() {
         // ???
     }
 
 
-    public void recvBlock(){ // todo:
+    public void recvBlock() { // todo:
         // 1. Check in the cache if the hash exist
         // 2. Exist: go and send it to the queue
     }
 
-    public void sendTransaction(Transaction tx){
-        for (Channel channel : channels){
+    public void sendTransaction(Transaction tx) {
+        for (Channel channel : channels) {
             channel.sendTransaction(tx);
         }
     }
 
 
-    public void sendNewBlock(Block block){
+    public void sendNewBlock(Block block) {
         // 1. Go over all channels and send the block
-        for (Channel channel : channels){
+        for (Channel channel : channels) {
             channel.sendNewBlock(block);
         }
     }
 
-    public void addChannel(Channel channel){
-        synchronized (channels){
+    public void addChannel(Channel channel) {
+        synchronized (channels) {
             channels.add(channel);
         }
     }
 
-    public boolean isAllSync(){
+    public boolean isAllSync() {
 
         boolean result = true;
-        for (Channel channel : channels){
+        for (Channel channel : channels) {
             result &= channel.isSync();
         }
 
         return result;
     }
 
-    public void scheduleChannelCollector(){
+    public void scheduleChannelCollector() {
         inactivesCollector.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 Iterator<Channel> iter = channels.iterator();
-                while(iter.hasNext()){
+                while (iter.hasNext()) {
                     Channel channel = iter.next();
-                    if(!channel.p2pHandler.isActive()){
+                    if (!channel.p2pHandler.isActive()) {
                         iter.remove();
                         logger.info("Channel removed: {}", channel.p2pHandler.getHandshakeHelloMessage());
                     }
                 }
 
-                if (channels.size() == 0){
+                if (channels.size() == 0) {
                     worldManager.getListener().onNoConnections();
                 }
             }
@@ -102,10 +102,10 @@ public class ChannelManager {
     public void ethSync() {
 
         Channel bestChannel = channels.get(0);
-        for (Channel channel : channels){
+        for (Channel channel : channels) {
 
             if (bestChannel.getTotalDifficulty().
-                    compareTo(channel.getTotalDifficulty()) < 0  ){
+                    compareTo(channel.getTotalDifficulty()) < 0) {
                 bestChannel = channel;
             }
         }

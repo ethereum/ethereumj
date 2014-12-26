@@ -93,9 +93,9 @@ public class StateExplorerWindow extends JFrame {
             public void itemStateChanged(ItemEvent e) {
                 SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
-                       if(accountsListWindow == null)
-                           accountsListWindow = new AccountsListWindow();
-                       accountsListWindow.setVisible(true);
+                        if (accountsListWindow == null)
+                            accountsListWindow = new AccountsListWindow();
+                        accountsListWindow.setVisible(true);
                     }
                 });
             }
@@ -109,25 +109,25 @@ public class StateExplorerWindow extends JFrame {
 
         JButton btnSearch = new JButton("Search");
         horizontalBox.add(btnSearch);
-        btnSearch.addMouseListener(new MouseAdapter(){
+        btnSearch.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
-                if(addr != null)
+                if (addr != null)
                     searchAccount(addr);
             }
         });
 
         btnPlayCode = new JButton("Play Code");
         horizontalBox.add(btnPlayCode);
-        btnPlayCode.addMouseListener(new MouseAdapter(){
+        btnPlayCode.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
-                if(addr != null) {
+                if (addr != null) {
                     Repository repository = UIEthereumManager.ethereum.getRepository();
                     byte[] code = repository.getCode(addr);
-                    if(code != null)
+                    if (code != null)
                         ProgramPlayDialog.createAndShowGUI(code, null, null);
                 }
             }
@@ -195,16 +195,16 @@ public class StateExplorerWindow extends JFrame {
 
 
         JScrollPane scrollPane = new JScrollPane(tblStateDataTable);
-        scrollPane.setPreferredSize(new Dimension(600,200));
+        scrollPane.setPreferredSize(new Dimension(600, 200));
         panel.add(scrollPane);
     }
 
-    private void searchAccount(byte[] add){
+    private void searchAccount(byte[] add) {
         txaPrinter.clean();
         txaPrinter.println(accountDetailsString(add, dataModel));
     }
 
-    private String accountDetailsString(byte[] account, StateDataTableModel dataModel){
+    private String accountDetailsString(byte[] account, StateDataTableModel dataModel) {
         String ret = "";
         // 1) print account address
         ret = "Account: " + Hex.toHexString(account) + "\n";
@@ -212,19 +212,19 @@ public class StateExplorerWindow extends JFrame {
         //2) print state
         Repository repository = UIEthereumManager.ethereum.getRepository();
         AccountState state = repository.getAccountState(account);
-        if(state != null)
+        if (state != null)
             ret += state.toString() + "\n";
 
         //3) print storage
         ContractDetails contractDetails = repository.getContractDetails(account);
-        if(contractDetails != null) {
+        if (contractDetails != null) {
             Map<DataWord, DataWord> accountStorage = contractDetails.getStorage();
             dataModel.setData(accountStorage);
         }
 
         //4) code print
         byte[] code = repository.getCode(account);
-        if(code != null) {
+        if (code != null) {
             ret += "\n\nCode:\n";
             ret += Program.stringify(code, 0, "");
         }
@@ -237,9 +237,10 @@ public class StateExplorerWindow extends JFrame {
         Map<DataWord, DataWord> data;
         DataEncodingType keyEncodingType = DataEncodingType.HEX;
         DataEncodingType valueEncodingType = DataEncodingType.HEX;
-        String[] columns = new String[]{ "Key", "Value"};
+        String[] columns = new String[]{"Key", "Value"};
 
-        public StateDataTableModel() { }
+        public StateDataTableModel() {
+        }
 
         public StateDataTableModel(Map<DataWord, DataWord> initData) {
             setData(initData);
@@ -251,12 +252,12 @@ public class StateExplorerWindow extends JFrame {
         }
 
         public void setKeyEncoding(DataEncodingType type) {
-            keyEncodingType  = type;
+            keyEncodingType = type;
             fireTableDataChanged();
         }
 
         public void setValueEncoding(DataEncodingType type) {
-            valueEncodingType  = type;
+            valueEncodingType = type;
             fireTableDataChanged();
         }
 
@@ -267,7 +268,7 @@ public class StateExplorerWindow extends JFrame {
 
         @Override
         public int getRowCount() {
-            return data == null? 0:data.size();
+            return data == null ? 0 : data.size();
         }
 
         @Override
@@ -279,42 +280,41 @@ public class StateExplorerWindow extends JFrame {
         public Object getValueAt(int rowIndex, int columnIndex) {
             DataWord key = (DataWord) this.data.keySet().toArray()[rowIndex];
 
-            if(columnIndex == 0) {
+            if (columnIndex == 0) {
                 return getDataWithEncoding(key.getData(), keyEncodingType);
-            }
-            else {
+            } else {
                 DataWord value = this.data.get(key);
                 return getDataWithEncoding(value.getData(), valueEncodingType);
             }
         }
 
         private String getDataWithEncoding(byte[] data, DataEncodingType enc) {
-            switch(enc) {
-            case STRING:
-                return new String(data);
-            case HEX:
-                return Hex.toHexString(data);
-            case NUMBER:
-                return new BigInteger(data).toString();
+            switch (enc) {
+                case STRING:
+                    return new String(data);
+                case HEX:
+                    return Hex.toHexString(data);
+                case NUMBER:
+                    return new BigInteger(data).toString();
             }
 
             return data.toString();
         }
     }
 
-    private enum DataEncodingType{
+    private enum DataEncodingType {
         STRING,
         HEX,
         NUMBER;
 
         static public DataEncodingType getTypeFromString(String value) {
-            switch(value){
-            case "String":
-                return STRING;
-            case "Hex":
-                return HEX;
-            case "Number":
-                return NUMBER;
+            switch (value) {
+                case "String":
+                    return STRING;
+                case "Hex":
+                    return HEX;
+                case "Number":
+                    return NUMBER;
             }
             return STRING;
         }

@@ -13,8 +13,8 @@ import java.util.Set;
  * @author: Roman Mandeleil
  * Created on: 12/11/2014 08:34
  */
-@Component(value="EthereumListener")
-public class EthereumListenerWrapper implements EthereumListener{
+@Component(value = "EthereumListener")
+public class EthereumListenerWrapper implements EthereumListener {
 
     EthereumListener listener;
 
@@ -64,12 +64,12 @@ public class EthereumListenerWrapper implements EthereumListener{
 
 
     @Override
-    public void onNoConnections(){
+    public void onNoConnections() {
         if (listener != null)
             listener.onNoConnections();
     }
 
-    public void addListener(EthereumListener listener){
+    public void addListener(EthereumListener listener) {
         if (listener != null)
             this.listener = listener;
     }

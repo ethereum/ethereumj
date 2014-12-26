@@ -147,8 +147,8 @@ public class TrieTest {
         trie.update(cat, dog);
         assertEquals(dog, new String(trie.get(cat)));
 
-        trie.update(cat, dog+"1");
-        assertEquals(dog+"1", new String(trie.get(cat)));
+        trie.update(cat, dog + "1");
+        assertEquals(dog + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -156,8 +156,8 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update(cat, LONG_STRING);
         assertEquals(LONG_STRING, new String(trie.get(cat)));
-        trie.update(cat, LONG_STRING+"1");
-        assertEquals(LONG_STRING+"1", new String(trie.get(cat)));
+        trie.update(cat, LONG_STRING + "1");
+        assertEquals(LONG_STRING + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -167,8 +167,8 @@ public class TrieTest {
         trie.update(cat, dog);
         assertEquals(dog, new String(trie.get(cat)));
 
-        trie.update(cat, LONG_STRING+"1");
-        assertEquals(LONG_STRING+"1", new String(trie.get(cat)));
+        trie.update(cat, LONG_STRING + "1");
+        assertEquals(LONG_STRING + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -178,8 +178,8 @@ public class TrieTest {
         trie.update(cat, LONG_STRING);
         assertEquals(LONG_STRING, new String(trie.get(cat)));
 
-        trie.update(cat, dog+"1");
-        assertEquals(dog+"1", new String(trie.get(cat)));
+        trie.update(cat, dog + "1");
+        assertEquals(dog + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -528,7 +528,7 @@ public class TrieTest {
     public void testMasiveUpdate(){
         boolean massiveUpdateTestEnabled = false;
 
-        if(massiveUpdateTestEnabled) {
+        if (massiveUpdateTestEnabled) {
             List<String> randomWords = Arrays.asList(randomDictionary.split(","));
             HashMap<String, String> testerMap = new HashMap<>();
 
@@ -536,7 +536,7 @@ public class TrieTest {
             Random generator = new Random();
 
             // Random insertion
-            for (int i = 0; i < 100000; ++i ){
+            for (int i = 0; i < 100000; ++i) {
 
                 int randomIndex1 = generator.nextInt(randomWords.size());
                 int randomIndex2 = generator.nextInt(randomWords.size());
@@ -549,7 +549,7 @@ public class TrieTest {
             }
 
             int half = testerMap.size() / 2;
-            for (int r = 0; r < half; ++r){
+            for (int r = 0; r < half; ++r) {
 
                 int randomIndex = generator.nextInt(randomWords.size());
                 String word1 = randomWords.get(randomIndex).trim();
@@ -563,7 +563,7 @@ public class TrieTest {
 
             // Assert the result now
             Iterator<String> keys = testerMap.keySet().iterator();
-            while (keys.hasNext()){
+            while (keys.hasNext()) {
 
                 String mapWord1 = keys.next();
                 String mapWord2 = testerMap.get(mapWord1);
@@ -590,9 +590,9 @@ public class TrieTest {
         // 1. load the data from massive-upload.dmp
         //    which includes deletes/upadtes (5000 operations)
         TrieImpl trieSingle = new TrieImpl(mockDb_2);
-        for (int i = 0; i < strData.size() ; ++i){
+        for (int i = 0; i < strData.size(); ++i) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = strData.get(i).split("=");
 
             if (keyVal[0].equals("*"))
                 trieSingle.delete(keyVal[1].trim());
@@ -611,9 +611,9 @@ public class TrieTest {
         // 3. the rest of the data loaded with part of the trie not in the cache
         TrieImpl trie = new TrieImpl(mockDb);
 
-        for (int i = 0; i < 2000; ++i){
+        for (int i = 0; i < 2000; ++i) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = strData.get(i).split("=");
 
             if (keyVal[0].equals("*"))
                 trie.delete(keyVal[1].trim());
@@ -626,9 +626,9 @@ public class TrieTest {
 
         TrieImpl trie2 = new TrieImpl(mockDb, trie.getRootHash());
 
-        for (int i = 2000; i < strData.size(); ++i){
+        for (int i = 2000; i < strData.size(); ++i) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = strData.get(i).split("=");
 
             if (keyVal[0].equals("*"))
                 trie2.delete(keyVal[1].trim());
@@ -636,17 +636,17 @@ public class TrieTest {
                 trie2.update(keyVal[0].trim(), keyVal[1].trim());
         }
 
-        System.out.println("root_2:  => " + Hex.toHexString( trie2.getRootHash()));
+        System.out.println("root_2:  => " + Hex.toHexString(trie2.getRootHash()));
 
         assertEquals(trieSingle.getRootHash(), trie2.getRootHash());
 
     }
 
     @Test  //  tests saving keys to the file  //
-    public void testMasiveUpdateFromDB(){
+    public void testMasiveUpdateFromDB() {
         boolean massiveUpdateFromDBEnabled = false;
 
-        if(massiveUpdateFromDBEnabled) {
+        if (massiveUpdateFromDBEnabled) {
             List<String> randomWords = Arrays.asList(randomDictionary.split(","));
             Map<String, String> testerMap = new HashMap<>();
 
@@ -654,7 +654,7 @@ public class TrieTest {
             Random generator = new Random();
 
             // Random insertion
-            for (int i = 0; i < 50000; ++i ){
+            for (int i = 0; i < 50000; ++i) {
 
                 int randomIndex1 = generator.nextInt(randomWords.size());
                 int randomIndex2 = generator.nextInt(randomWords.size());
@@ -671,7 +671,7 @@ public class TrieTest {
 
             // Assert the result now
             Iterator<String> keys = testerMap.keySet().iterator();
-            while (keys.hasNext()){
+            while (keys.hasNext()) {
 
                 String mapWord1 = keys.next();
                 String mapWord2 = testerMap.get(mapWord1);
@@ -684,7 +684,7 @@ public class TrieTest {
 
             // Assert the result now
             keys = testerMap.keySet().iterator();
-            while (keys.hasNext()){
+            while (keys.hasNext()) {
 
                 String mapWord1 = keys.next();
                 String mapWord2 = testerMap.get(mapWord1);
@@ -710,9 +710,9 @@ public class TrieTest {
         List<byte[]> roots = new ArrayList<>();
         Map<String, String> trieDumps = new HashMap<>();
 
-        for (int i = 0; i < 100; ++i){
+        for (int i = 0; i < 100; ++i) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = strData.get(i).split("=");
 
             if (keyVal[0].equals("*"))
                 trieSingle.delete(keyVal[1].trim());
@@ -722,17 +722,17 @@ public class TrieTest {
             byte[] hash = trieSingle.getRootHash();
             roots.add(hash);
 
-            String key =  Hex.toHexString(hash);
+            String key = Hex.toHexString(hash);
             String dump = trieSingle.getTrieDump();
             trieDumps.put(key, dump);
         }
 
         // compare all 100 rollback dumps and
         // the originaly saved dumps
-        for (int i = 1; i < roots.size(); ++i){
+        for (int i = 1; i < roots.size(); ++i) {
 
             byte[] root = roots.get(i);
-            logger.info("rollback over root : {}", Hex.toHexString(root) );
+            logger.info("rollback over root : {}", Hex.toHexString(root));
 
             trieSingle.setRoot(root);
             String currDump = trieSingle.getTrieDump();
@@ -763,7 +763,7 @@ public class TrieTest {
 */
 
     @Test
-    public void storageHashCalc_1(){
+    public void storageHashCalc_1() {
 
         byte[] key1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
         byte[] key2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
@@ -801,13 +801,13 @@ public class TrieTest {
         String testSrc = new String(testData);
 
         JSONParser parser = new JSONParser();
-        JSONArray dbDumpJSONArray = (JSONArray)parser.parse(testSrc);
+        JSONArray dbDumpJSONArray = (JSONArray) parser.parse(testSrc);
 
         DatabaseImpl db = new DatabaseImpl("testState");
 
-        for (int i = 0; i < dbDumpJSONArray.size(); ++i){
+        for (int i = 0; i < dbDumpJSONArray.size(); ++i) {
 
-            JSONObject obj = (JSONObject)dbDumpJSONArray.get(i);
+            JSONObject obj = (JSONObject) dbDumpJSONArray.get(i);
             byte[] key = Hex.decode(obj.get("key").toString());
             byte[] val = Hex.decode(obj.get("val").toString());
 
@@ -840,10 +840,9 @@ public class TrieTest {
     }
 
 
-
     @Test // update the trie with blog key/val
           // each time dump the entire trie
-    public void testSample_1(){
+    public void testSample_1() {
 
         TrieImpl trie = new TrieImpl(mockDb);
 

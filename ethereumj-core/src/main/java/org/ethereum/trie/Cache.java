@@ -11,6 +11,7 @@ import org.iq80.leveldb.WriteBatch;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Nick Savers
  * Created on: 20/05/2014 10:44
  */
@@ -92,7 +93,7 @@ public class Cache {
     public void undo() {
         Iterator<Map.Entry<ByteArrayWrapper, Node>> iter = this.nodes.entrySet().iterator();
         while (iter.hasNext()) {
-            if(iter.next().getValue().isDirty()) {
+            if (iter.next().getValue().isDirty()) {
                 iter.remove();
             }
         }
@@ -115,11 +116,11 @@ public class Cache {
         return db;
     }
 
-    public String cacheDump(){
+    public String cacheDump() {
 
         StringBuffer cacheDump = new StringBuffer();
 
-        for (ByteArrayWrapper key : nodes.keySet()){
+        for (ByteArrayWrapper key : nodes.keySet()) {
 
             Node node = nodes.get(key);
 

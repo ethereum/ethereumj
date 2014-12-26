@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 /**
- *  Data to for one program step to save.
+ * Data to for one program step to save.
  *
  *   {
  *    'op': 'CODECOPY'
@@ -29,11 +29,11 @@ import java.util.*;
 
 public class Op {
 
-    byte     op;
-    int      pc;
+    byte op;
+    int pc;
     DataWord gas;
     Map<String, String> storage;
-    byte[]   memory;
+    byte[] memory;
     List<String> stack;
 
     public void setOp(byte op) {
@@ -60,7 +60,7 @@ public class Op {
         }
     }
 
-    public void saveMemory(ByteBuffer memory){
+    public void saveMemory(ByteBuffer memory) {
         if (memory != null)
             this.memory = Arrays.copyOf(memory.array(), memory.array().length);
     }
@@ -69,12 +69,12 @@ public class Op {
 
         this.stack = new ArrayList<>();
 
-        for(DataWord element : stack){
+        for (DataWord element : stack) {
             this.stack.add(0, Hex.toHexString(element.getNoLeadZeroesData()));
         }
     }
 
-    public String toString(){
+    public String toString() {
 
         Map<Object, Object> jsonData = new LinkedHashMap<>();
 
@@ -83,7 +83,7 @@ public class Op {
         jsonData.put("gas", gas.value().toString());
         jsonData.put("stack", stack);
         jsonData.put("memory", memory == null ? "" : Hex.toHexString(memory));
-        jsonData.put("storage", new JSONObject(storage)  );
+        jsonData.put("storage", new JSONObject(storage));
 
         return JSONValue.toJSONString(jsonData);
     }

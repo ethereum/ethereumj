@@ -20,7 +20,7 @@ import java.util.List;
  * Created on: 12/11/2014 17:16
  */
 @Repository
-@Transactional(propagation= Propagation.SUPPORTS)
+@Transactional(propagation = Propagation.SUPPORTS)
 public class BlockStore {
 
     @Autowired
@@ -35,10 +35,10 @@ public class BlockStore {
 
         List result = sessionFactory.getCurrentSession().
                 createQuery("from BlockVO where number = :number").
-                    setParameter("number", blockNumber).list();
+                setParameter("number", blockNumber).list();
 
         if (result.size() == 0) return null;
-        BlockVO vo = (BlockVO)result.get(0);
+        BlockVO vo = (BlockVO) result.get(0);
 
         return new Block(vo.rlp);
     }
@@ -51,7 +51,7 @@ public class BlockStore {
                 setParameter("hash", hash).list();
 
         if (result.size() == 0) return null;
-        BlockVO vo = (BlockVO)result.get(0);
+        BlockVO vo = (BlockVO) result.get(0);
 
         return new Block(vo.rlp);
     }
@@ -72,7 +72,7 @@ public class BlockStore {
                 setParameter("limit", block.getNumber() - qty).
                 setMaxResults(qty).list();
 
-        for (byte[] h : result){
+        for (byte[] h : result) {
             hashes.add(h);
         }
 
@@ -80,7 +80,7 @@ public class BlockStore {
     }
 
     @Transactional
-    public void deleteBlocksSince(long number){
+    public void deleteBlocksSince(long number) {
 
         sessionFactory.getCurrentSession().
                 createQuery("delete from BlockVO where number > :number").
@@ -92,10 +92,10 @@ public class BlockStore {
     @Transactional
     public void saveBlock(Block block, List<TransactionReceipt> receipts) {
 
-        BlockVO blockVO =  new BlockVO(block.getNumber(), block.getHash(),
+        BlockVO blockVO = new BlockVO(block.getNumber(), block.getHash(),
                 block.getEncoded(), block.getCumulativeDifficulty());
 
-        for (TransactionReceipt receipt : receipts){
+        for (TransactionReceipt receipt : receipts) {
 
             byte[] hash = receipt.getTransaction().getHash();
             byte[] rlp = receipt.getEncoded();
@@ -108,9 +108,9 @@ public class BlockStore {
     }
 
     @Transactional(readOnly = true)
-    public BigInteger getTotalDifficultySince(long number){
+    public BigInteger getTotalDifficultySince(long number) {
 
-        BigInteger result = (BigInteger)sessionFactory.getCurrentSession().
+        BigInteger result = (BigInteger) sessionFactory.getCurrentSession().
                 createQuery("select sum(cummulativeDifficulty) from BlockVO where number > :number").
                 setParameter("number", number).
                 uniqueResult();
@@ -120,9 +120,9 @@ public class BlockStore {
 
 
     @Transactional(readOnly = true)
-    public BigInteger getTotalDifficulty(){
+    public BigInteger getTotalDifficulty() {
 
-        BigInteger result = (BigInteger)sessionFactory.getCurrentSession().
+        BigInteger result = (BigInteger) sessionFactory.getCurrentSession().
                 createQuery("select sum(cummulativeDifficulty) from BlockVO").uniqueResult();
 
         return result;
@@ -130,15 +130,15 @@ public class BlockStore {
 
 
     @Transactional(readOnly = true)
-    public Block getBestBlock(){
+    public Block getBestBlock() {
 
         Long bestNumber = (Long)
                 sessionFactory.getCurrentSession().createQuery("select max(number) from BlockVO").uniqueResult();
         List result = sessionFactory.getCurrentSession().
-                createQuery("from BlockVO where number = :number").setParameter("number", bestNumber) .list();
+                createQuery("from BlockVO where number = :number").setParameter("number", bestNumber).list();
 
         if (result.isEmpty()) return null;
-        BlockVO vo = (BlockVO)result.get(0);
+        BlockVO vo = (BlockVO) result.get(0);
 
         return new Block(vo.rlp);
     }
@@ -151,7 +151,7 @@ public class BlockStore {
                 createQuery("from BlockVO").list();
 
         ArrayList<Block> blocks = new ArrayList<>();
-        for (BlockVO blockVO : (List<BlockVO>)result){
+        for (BlockVO blockVO : (List<BlockVO>) result) {
             blocks.add(new Block(blockVO.getRlp()));
         }
 
@@ -161,7 +161,7 @@ public class BlockStore {
     @Transactional
     public void reset() {
         sessionFactory.getCurrentSession().
-              createQuery("delete from BlockVO").executeUpdate();
+                createQuery("delete from BlockVO").executeUpdate();
     }
 
     public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
@@ -171,7 +171,7 @@ public class BlockStore {
                 setParameter("hash", hash).list();
 
         if (result.size() == 0) return null;
-        TransactionReceiptVO vo = (TransactionReceiptVO)result.get(0);
+        TransactionReceiptVO vo = (TransactionReceiptVO) result.get(0);
 
         return new TransactionReceipt(vo.rlp);
 

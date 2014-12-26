@@ -51,7 +51,8 @@ public class EtherSaleWalletDecoder {
         return result;
     }
 
-    protected byte[] decryptSeed(byte[] pbkdf2PasswordHash, byte[] encseedBytesWithIV) throws InvalidCipherTextException {
+    protected byte[] decryptSeed(byte[] pbkdf2PasswordHash, byte[] encseedBytesWithIV) throws
+            InvalidCipherTextException {
 
         // first 16 bytes are the IV (0-15)
         byte[] ivBytes = Arrays.copyOf(encseedBytesWithIV, IV_LENGTH);

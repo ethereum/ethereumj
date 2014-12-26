@@ -15,11 +15,11 @@ import java.math.BigInteger;
  * Created on: 19/12/2014 12:22
  */
 
-public class TestProgramInvokeFactory implements ProgramInvokeFactory{
+public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
     Env env;
 
-    TestProgramInvokeFactory(Env env){
+    TestProgramInvokeFactory(Env env) {
         this.env = env;
     }
 
@@ -36,15 +36,15 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory{
     }
 
 
-    private ProgramInvoke generalInvoke(Transaction tx, Repository repository){
+    private ProgramInvoke generalInvoke(Transaction tx, Repository repository) {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
-        byte[] address  =  tx.isContractCreation() ? tx.getContractAddress(): tx.getReceiveAddress();
+        byte[] address = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
 
         /***         ORIGIN op       ***/
         // YP: This is the sender of original transaction; it is never a contract.
-        byte[] origin  = tx.getSender();
+        byte[] origin = tx.getSender();
 
         /***         CALLER op       ***/
         // YP: This is the address of the account that is directly responsible for this execution.
@@ -80,10 +80,10 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory{
         long number = ByteUtil.byteArrayToLong(env.getCurrentNumber());
 
         /*** DIFFICULTY  op  ***/
-        byte[] difficulty =  env.getCurrentDifficlty();
+        byte[] difficulty = env.getCurrentDifficlty();
 
         /*** GASLIMIT op ***/
-        long gaslimit = ByteUtil.byteArrayToLong( env.getCurrentGasLimit() );
+        long gaslimit = ByteUtil.byteArrayToLong(env.getCurrentGasLimit());
 
         return new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, data, lastHash, coinbase,

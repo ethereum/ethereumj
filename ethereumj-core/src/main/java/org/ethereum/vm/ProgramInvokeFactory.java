@@ -16,10 +16,11 @@ import java.math.BigInteger;
 public interface ProgramInvokeFactory {
 
     public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository);
+
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
-                                                    DataWord inValue, DataWord inGas,
-                                                    BigInteger balanceInt,  byte[] dataIn,
-                                                    Repository repository);
+                                             DataWord inValue, DataWord inGas,
+                                             BigInteger balanceInt, byte[] dataIn,
+                                             Repository repository);
 
 
 }

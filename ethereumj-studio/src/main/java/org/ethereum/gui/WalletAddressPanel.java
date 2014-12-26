@@ -18,10 +18,11 @@ import java.net.URL;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 17/05/14 12:32
  */
-public class WalletAddressPanel extends JPanel{
+public class WalletAddressPanel extends JPanel {
 
     public WalletAddressPanel(final Account account) {
 
@@ -68,7 +69,7 @@ public class WalletAddressPanel extends JPanel{
             public void mouseClicked(MouseEvent e) {
 
                 PayOutDialog payOutDialog =
-                        new PayOutDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
+                        new PayOutDialog((Frame) SwingUtilities.getAncestorOfClass(JFrame.class,
                                 walletAddressPanel), account);
             }
         });

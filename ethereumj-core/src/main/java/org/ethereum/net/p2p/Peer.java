@@ -47,7 +47,7 @@ public class Peer {
         byte[] port = RLP.encodeInt(this.port);
         byte[] peerId = RLP.encodeElement(Hex.decode(this.peerId));
         byte[][] encodedCaps = new byte[this.capabilities.size()][];
-        for (int i = 0; i < this.capabilities.size()*2; i++) {
+        for (int i = 0; i < this.capabilities.size() * 2; i++) {
             encodedCaps[i] = RLP.encodeString(this.capabilities.get(i).getName());
             encodedCaps[i] = RLP.encodeByte(this.capabilities.get(i).getVersion());
         }

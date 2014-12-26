@@ -786,7 +786,8 @@ public class BlockChainTable extends JFrame implements ActionListener {
         c.insets = new Insets(0, 10, 0, 0);
         transactionPanel.add(valueLabel, c);
 
-        JTextField value = new JTextField(transaction.getValue() != null ? ByteUtil.toHexString(transaction.getValue()) : "");
+        JTextField value = new JTextField(transaction.getValue() != null ? ByteUtil.toHexString(transaction.getValue
+                ()) : "");
         highlightText(value);
         value.setEditable(false);
         value.setBorder(null);
@@ -826,7 +827,8 @@ public class BlockChainTable extends JFrame implements ActionListener {
 
         });
         data.setFont(plain);
-        if (findText.getText().length() > 0 && ByteUtil.toHexString(transaction.getData()).contains(findText.getText())) {
+        if (findText.getText().length() > 0 && ByteUtil.toHexString(transaction.getData()).contains(findText.getText
+                ())) {
             data.setBackground(HILIT_COLOR);
         }
         c.gridx = 3;

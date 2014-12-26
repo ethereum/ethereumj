@@ -20,16 +20,26 @@ import java.util.List;
  */
 public class HelloMessage extends P2pMessage {
 
-    /** The implemented version of the P2P protocol. */
+    /**
+     * The implemented version of the P2P protocol.
+     */
     private byte p2pVersion;
-    /** The underlying client. A user-readable string. */
+    /**
+     * The underlying client. A user-readable string.
+     */
     private String clientId;
-    /** A peer-network capability code, readable ASCII and 3 letters.
-     * Currently only "eth", "shh" and "bzz" are known. */
+    /**
+     * A peer-network capability code, readable ASCII and 3 letters.
+     * Currently only "eth", "shh" and "bzz" are known.
+     */
     private List<Capability> capabilities;
-    /** The port on which the peer is listening for an incoming connection */
+    /**
+     * The port on which the peer is listening for an incoming connection
+     */
     private int listenPort;
-    /** The identity and public key of the peer */
+    /**
+     * The identity and public key of the peer
+     */
     private String peerId;
 
     public HelloMessage(byte[] encoded) {
@@ -62,8 +72,8 @@ public class HelloMessage extends P2pMessage {
         this.capabilities = new ArrayList<>();
         for (int i = 0; i < capabilityList.size(); i++) {
 
-            RLPElement capId = ((RLPList)capabilityList.get(i)).get(0);
-            RLPElement capVersion = ((RLPList)capabilityList.get(i)).get(1);
+            RLPElement capId = ((RLPList) capabilityList.get(i)).get(0);
+            RLPElement capVersion = ((RLPList) capabilityList.get(i)).get(1);
 
             String name = new String(capId.getRLPData());
             byte version = capVersion.getRLPData() == null ? 0 : capVersion.getRLPData()[0];
@@ -89,7 +99,7 @@ public class HelloMessage extends P2pMessage {
             Capability capability = this.capabilities.get(i);
             capabilities[i] = RLP.encodeList(
                     RLP.encodeElement(capability.getName().getBytes()),
-                    RLP.encodeElement(new byte[] {capability.getVersion() }));
+                    RLP.encodeElement(new byte[]{capability.getVersion()}));
         }
         byte[] capabilityList = RLP.encodeList(capabilities);
         byte[] peerPort = RLP.encodeInt(this.listenPort);
@@ -131,7 +141,7 @@ public class HelloMessage extends P2pMessage {
     }
 
     @Override
-    public P2pMessageCodes getCommand(){
+    public P2pMessageCodes getCommand() {
         return P2pMessageCodes.HELLO;
     }
 

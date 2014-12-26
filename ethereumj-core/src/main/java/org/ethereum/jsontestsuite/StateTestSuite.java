@@ -21,7 +21,7 @@ public class StateTestSuite {
 
     public StateTestSuite(JSONObject testCaseJSONObj) throws ParseException {
 
-        for (Object key: testCaseJSONObj.keySet()){
+        for (Object key : testCaseJSONObj.keySet()) {
 
             Object testCaseJSON = testCaseJSONObj.get(key);
 
@@ -31,19 +31,17 @@ public class StateTestSuite {
         }
     }
 
-    public StateTestCase getTestCase(String name){
+    public StateTestCase getTestCase(String name) {
 
         StateTestCase testCase = testCases.get(name);
         if (testCase == null) throw new NullPointerException("Test cases doesn't exist: " + name);
 
-        return  testCase;
+        return testCase;
     }
 
-    public Collection<StateTestCase> getAllTests(){
+    public Collection<StateTestCase> getAllTests() {
         return testCases.values();
     }
-
-
 
 
 }

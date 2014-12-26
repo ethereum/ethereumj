@@ -96,7 +96,5 @@ public class GitHubStateTest {
     }
 
 
-
-
 }
 

@@ -14,8 +14,6 @@ import org.springframework.stereotype.Component;
  * Process the messages between peers with 'shh' capability on the network.
  *
  * Peers with 'shh' capability can send/receive:
- *
- *
  */
 @Component
 @Scope("prototype")
@@ -31,7 +29,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     @Autowired
     WorldManager worldManager;
 
-    public ShhHandler(){
+    public ShhHandler() {
     }
 
     public ShhHandler(MessageQueue msgQueue) {
@@ -46,7 +44,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("ShhHandler invoke: [{}]", msg.getCommand());
 
-        worldManager.getListener().trace(String.format( "ShhHandler invoke: [%s]", msg.getCommand()));
+        worldManager.getListener().trace(String.format("ShhHandler invoke: [%s]", msg.getCommand()));
 
         switch (msg.getCommand()) {
             case STATUS:
@@ -77,7 +75,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         logger.debug("handlerRemoved: ... ");
     }
 
-    public void activate(){
+    public void activate() {
         logger.info("SHH protocol activated");
         worldManager.getListener().trace("SHH protocol activated");
         this.active = true;

@@ -20,7 +20,7 @@ public class CollectFullSetOfNodes implements TrieImpl.ScanAction {
         nodes.add(hash);
     }
 
-    public Set<byte[]> getCollectedHashes(){
+    public Set<byte[]> getCollectedHashes() {
         return nodes;
     }
 }

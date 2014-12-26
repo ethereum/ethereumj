@@ -19,7 +19,7 @@ public class BlockVO {
     @Id
     byte[] hash;
 
-    Long   number;
+    Long number;
 
     @Lob
     byte[] rlp;
@@ -31,8 +31,8 @@ public class BlockVO {
 
     public BlockVO(Long number, byte[] hash, byte[] rlp, BigInteger cummulativeDifficulty) {
         this.number = number;
-        this.hash   = hash;
-        this.rlp    = rlp;
+        this.hash = hash;
+        this.rlp = rlp;
         this.cummulativeDifficulty = cummulativeDifficulty;
     }
 

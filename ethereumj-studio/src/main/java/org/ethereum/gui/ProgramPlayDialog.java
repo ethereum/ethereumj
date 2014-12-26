@@ -18,6 +18,7 @@ import java.util.List;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 02/06/2014 16:58
  */
@@ -51,7 +52,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         program.fullTrace();
         vm.play(program);
 
-        if(programInvoke.getRepository() != null)
+        if (programInvoke.getRepository() != null)
             programInvoke.getRepository().rollback();
 
         doGUI();
@@ -114,8 +115,8 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
     @Override
     public void stateChanged(ChangeEvent e) {
-        JSlider source = (JSlider)e.getSource();
-        int step = (int)source.getValue();
+        JSlider source = (JSlider) e.getSource();
+        int step = (int) source.getValue();
 
         int i = source.getValue();
         String out = outputList.get(i);
@@ -134,7 +135,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         final ProgramPlayDialog ppd;
         if (tx != null)
             ppd = new ProgramPlayDialog(runCode, tx, lastBlock);
-        else{
+        else {
             ppd = new ProgramPlayDialog(runCode);
         }
 
@@ -176,7 +177,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         outputList.add(out);
     }
 
-    public static void main(String []args) {
+    public static void main(String[] args) {
 
         /* Turn off metal's use of bold fonts */
         UIManager.put("swing.boldMetal", Boolean.FALSE);
@@ -184,7 +185,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         //Schedule a job for the event-dispatching thread:
         //creating and showing this application's GUI.
 
-        String asmCode ="11 0 MSTORE 22 32 MSTORE 33 64 MSTORE 44 96 MSTORE 55 128 MSTORE 66 160 MSTORE 192 0 RETURN";
+        String asmCode = "11 0 MSTORE 22 32 MSTORE 33 64 MSTORE 44 96 MSTORE 55 128 MSTORE 66 160 MSTORE 192 0 RETURN";
 //        final byte[] code = SerpentCompiler.compileAssemblyToMachine(asmCode);
 
         final byte[] code = Hex.decode("7f4e616d65526567000000000000000000000000000000000000000000000000003057307f4e616d6552656700000000000000000000000000000000000000000000000000573360455760415160566000396000f20036602259604556330e0f600f5933ff33560f601e5960003356576000335700604158600035560f602b590033560f60365960003356573360003557600035335700");

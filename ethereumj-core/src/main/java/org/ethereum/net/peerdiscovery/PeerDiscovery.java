@@ -93,7 +93,7 @@ public class PeerDiscovery {
             for (final Peer newPeer : newPeers) {
                 PeerInfo peerInfo =
                         new PeerInfo(newPeer.getAddress(), newPeer.getPort(), newPeer.getPeerId());
-                if (started.get() && !peers.contains(peerInfo )){
+                if (started.get() && !peers.contains(peerInfo)) {
                     startWorker(peerInfo);
                 }
                 peers.add(peerInfo);
@@ -103,8 +103,8 @@ public class PeerDiscovery {
 
     public void addPeers(Collection<PeerInfo> newPeers) {
         synchronized (peers) {
-                peers.addAll(newPeers);
-            }
+            peers.addAll(newPeers);
+        }
     }
 
     private void startWorker(PeerInfo peerInfo) {
@@ -115,12 +115,12 @@ public class PeerDiscovery {
         executorPool.execute(workerThread);
     }
 
-    public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
+    public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
 
-        final List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
+        final List<String> ipList = Arrays.asList(peerDiscoveryIpList.split(","));
         final List<PeerInfo> peers = new ArrayList<>();
 
-        for (String ip : ipList){
+        for (String ip : ipList) {
             String[] addr = ip.trim().split(":");
             String ip_trim = addr[0];
             String port_trim = addr[1];

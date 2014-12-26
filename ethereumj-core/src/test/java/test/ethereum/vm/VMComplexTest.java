@@ -49,9 +49,10 @@ public class VMComplexTest {
         DataWord value1 = new DataWord(3);
 
         // Set contract into Database
-        String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+        String callerAddr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
         String contractAddr = "77045e71a7a2c50903d88e564cd72fab11e82051";
-        String code         = "6103e75460005260006000511115630000004c576001600051036103e755600060006000600060007377045e71a7a2c50903d88e564cd72fab11e820516008600a5a0402f1630000004c565b00";
+        String code =
+                "6103e75460005260006000511115630000004c576001600051036103e755600060006000600060007377045e71a7a2c50903d88e564cd72fab11e820516008600a5a0402f1630000004c565b00";
 
         byte[] contractAddrB = Hex.decode(contractAddr);
         byte[] callerAddrB = Hex.decode(callerAddr);
@@ -61,7 +62,7 @@ public class VMComplexTest {
         AccountState accountState = new AccountState();
         accountState.setCodeHash(codeKey);
 
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractAddrB);
         Repository repository = pi.getRepository();
 
@@ -77,7 +78,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while(!program.isStopped())
+            while (!program.isStopped())
                 vm.step(program);
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
@@ -123,7 +124,7 @@ public class VMComplexTest {
         long expectedVal_2 = 22;
 
         // Set contract into Database
-        String callerAddr   = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
+        String callerAddr = "cd2a3d9f938e13cd947ec05abc7fe734df8dd826";
 
         String contractA_addr = "77045e71a7a2c50903d88e564cd72fab11e82051";
         String contractB_addr = "83c5541a6c8d2dbad642f385d8d06ca9b6c731ee";
@@ -139,7 +140,7 @@ public class VMComplexTest {
         byte[] contractB_addr_bytes = Hex.decode(contractB_addr);
         byte[] codeB = Hex.decode(code_b);
 
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
         Repository repository = pi.getRepository();
 
@@ -160,7 +161,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while(!program.isStopped())
+            while (!program.isStopped())
                 vm.step(program);
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
@@ -228,9 +229,9 @@ public class VMComplexTest {
         byte[] codeA = Hex.decode("600b60005260166020526021604052602c6060526037608052604260a05260c06000f2");
         byte[] codeB = Hex.decode("6000601f5360e05960e05952600060c05901536060596020015980602001600b9052806040016016905280606001602190526080905260007377045e71a7a2c50903d88e564cd72fab11e820516103e8f1602060000260a00160200151600052");
 
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
-        Repository repository  = pi.getRepository();
+        Repository repository = pi.getRepository();
         repository.createAccount(contractA_addr_bytes);
         repository.saveCode(contractA_addr_bytes, codeA);
 
@@ -247,7 +248,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while(!program.isStopped())
+            while (!program.isStopped())
                 vm.step(program);
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
@@ -304,11 +305,11 @@ public class VMComplexTest {
         byte[] contractA_addr_bytes = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
 
         byte[] codeA = Hex.decode("7f7f60c860005461012c602054000000000000" +
-                        "00000000000000000000000000006000547e60" +
-                        "005460206000f2000000000000000000000000" +
-                        "0000000000000000000000602054602960006064f0");
+                "00000000000000000000000000006000547e60" +
+                "005460206000f2000000000000000000000000" +
+                "0000000000000000000000602054602960006064f0");
 
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractA_addr_bytes);
 
         Repository repository = pi.getRepository();
@@ -374,11 +375,11 @@ public class VMComplexTest {
         byte[] codeA = Hex.decode("60003554156009570060203560003555");
         byte[] codeB = Hex.decode("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6000527faaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa6020526000604060406000601773945304eb96065b2a98b57a48a06ae28d285a71b5620f4240f3600055");
 
-        ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
+        ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
         pi.setGasLimit(10000000000000l);
 
-        Repository repository  = pi.getRepository();
+        Repository repository = pi.getRepository();
         repository.createAccount(contractA_addr_bytes);
         repository.saveCode(contractA_addr_bytes, codeA);
         repository.addBalance(contractA_addr_bytes, BigInteger.valueOf(23));
@@ -397,7 +398,7 @@ public class VMComplexTest {
         Program program = new Program(codeB, pi);
 
         try {
-            while(!program.isStopped())
+            while (!program.isStopped())
                 vm.step(program);
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);

@@ -18,17 +18,17 @@ public class Logs {
 
     public Logs(JSONArray jLogs) {
 
-        for (int i = 0; i < jLogs.size(); ++i){
+        for (int i = 0; i < jLogs.size(); ++i) {
 
-            JSONObject jLog = (JSONObject)jLogs.get(i);
-            byte[] address = Hex.decode((String)jLog.get("address"));
-            byte[] data =    Hex.decode(((String)jLog.get("data")).substring(2));
+            JSONObject jLog = (JSONObject) jLogs.get(i);
+            byte[] address = Hex.decode((String) jLog.get("address"));
+            byte[] data = Hex.decode(((String) jLog.get("data")).substring(2));
 
             List<DataWord> topics = new ArrayList<>();
 
-            JSONArray jTopics = (JSONArray)jLog.get("topics");
-            for(Object t: jTopics.toArray()) {
-                byte[] topic = Hex.decode(((String)t));
+            JSONArray jTopics = (JSONArray) jLog.get("topics");
+            for (Object t : jTopics.toArray()) {
+                byte[] topic = Hex.decode(((String) t));
                 topics.add(new DataWord(topic));
             }
 
@@ -38,24 +38,24 @@ public class Logs {
     }
 
 
-    public Iterator<LogInfo> getIterator(){
+    public Iterator<LogInfo> getIterator() {
         return logs.iterator();
     }
 
 
-    public List<String> compareToReal(List<LogInfo> logs){
+    public List<String> compareToReal(List<LogInfo> logs) {
 
         List<String> results = new ArrayList<>();
 
         int i = 0;
-        for (LogInfo postLog : this.logs){
+        for (LogInfo postLog : this.logs) {
 
             LogInfo realLog = logs.get(i);
 
             String postAddress = Hex.toHexString(postLog.getAddress());
             String realAddress = Hex.toHexString(realLog.getAddress());
 
-            if (!postAddress.equals(realAddress)){
+            if (!postAddress.equals(realAddress)) {
 
                 String formatedString = String.format("Log: %s: has unexpected address, expected address: %s found address: %s",
                         i, postAddress, realAddress);
@@ -65,7 +65,7 @@ public class Logs {
             String postData = Hex.toHexString(postLog.getData());
             String realData = Hex.toHexString(realLog.getData());
 
-            if (!postData.equals(realData)){
+            if (!postData.equals(realData)) {
 
                 String formatedString = String.format("Log: %s: has unexpected data, expected data: %s found data: %s",
                         i, postData, realData);
@@ -86,11 +86,11 @@ public class Logs {
             List<DataWord> realTopics = realLog.getTopics();
 
             int j = 0;
-            for (DataWord postTopic : postTopics){
+            for (DataWord postTopic : postTopics) {
 
                 DataWord realTopic = realTopics.get(j);
 
-                if (!postTopic.equals(realTopic)){
+                if (!postTopic.equals(realTopic)) {
 
                     String formatedString = String.format("Log: %s: has unexpected topic: %s, expected topic: %s found topic: %s",
                             i, j, postTopic, realTopic);

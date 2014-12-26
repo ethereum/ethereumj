@@ -22,10 +22,10 @@ public class RlpTestData {
     public static String test05 = "dog";
     public static String result05 = "83646f67";
 
-    public static String[] test06 = new String[] { "cat", "dog" };
+    public static String[] test06 = new String[]{"cat", "dog"};
     public static String result06 = "c88363617483646f67";
 
-    public static String[] test07 = new String[] { "dog", "god", "cat" };
+    public static String[] test07 = new String[]{"dog", "god", "cat"};
     public static String result07 = "cc83646f6783676f6483636174";
 
     public static int test08 = 1;
@@ -46,14 +46,14 @@ public class RlpTestData {
     public static BigInteger test13 = new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639936");
     public static String result13 = "a1010000000000000000000000000000000000000000000000000000000000000000";
 
-    public static Object[] test14 = new Object[] { 1, 2, new Object[] {} };
+    public static Object[] test14 = new Object[]{1, 2, new Object[]{}};
     public static String result14 = "c30102c0";
-    public static Object[] expected14 = new Object[] { new byte[] { 1 }, new byte[] { 2 }, new Object[] {} };
+    public static Object[] expected14 = new Object[]{new byte[]{1}, new byte[]{2}, new Object[]{}};
 
-    public static Object[] test15 = new Object[] { new Object[] { new Object[] {}, new Object[] {} }, new Object[] {} };
+    public static Object[] test15 = new Object[]{new Object[]{new Object[]{}, new Object[]{}}, new Object[]{}};
     public static String result15 = "c4c2c0c0c0";
 
-    public static Object[] test16 = new Object[] { "zw", new Object[] { 4 }, "wz" };
+    public static Object[] test16 = new Object[]{"zw", new Object[]{4}, "wz"};
     public static String result16 = "c8827a77c10482777a";
     public static Object[] expected16 = new Object[] { new byte[] { 122, 119 }, new Object[] { new byte[] { 4 } }, new byte[] { 119, 122 } };
 }

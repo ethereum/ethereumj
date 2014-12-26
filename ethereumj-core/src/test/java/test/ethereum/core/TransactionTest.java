@@ -46,7 +46,7 @@ public class TransactionTest {
         byte[] cowPrivKey = Hex.decode("c85ef7d79691fe79573b1a7064c19c1a9819ebdbd1faaab1a8ec92344438aaf4");
         ECKey key = ECKey.fromPrivate(cowPrivKey);
 
-        byte[] data    = Hex.decode(txRLPRawData);
+        byte[] data = Hex.decode(txRLPRawData);
 
         // step 1: serialize + RLP encode
         // step 2: hash = sha3(step1)
@@ -69,17 +69,17 @@ public class TransactionTest {
 
         byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
 
-        byte[] gasPrice=  Hex.decode("09184e72a000");
-        byte[] gas =      Hex.decode("4255");
+        byte[] gasPrice = Hex.decode("09184e72a000");
+        byte[] gas = Hex.decode("4255");
 
         // Tn (nonce); Tp(pgas); Tg(gaslimi); Tt(value); Tv(value); Ti(sender);  Tw; Tr; Ts
         Transaction tx = new Transaction(null, gasPrice, gas, ecKey.getAddress(),
                 value.toByteArray(),
-                   null);
+                null);
 
         tx.sign(senderPrivKey);
 
-        System.out.println("v\t\t\t: " + Hex.toHexString(new byte[] { tx.getSignature().v }));
+        System.out.println("v\t\t\t: " + Hex.toHexString(new byte[]{tx.getSignature().v}));
         System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
         System.out.println("s\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().s)));
 
@@ -110,7 +110,7 @@ public class TransactionTest {
         ECKey ecKey = ECKey.fromPrivate(HashUtil.sha3("cat".getBytes()));
         byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
 
-        byte[] nonce = { 0x01 };
+        byte[] nonce = {0x01};
         byte[] gasPrice = Hex.decode("09184e72a000");
         byte[] gasLimit = Hex.decode("4255");
         BigInteger value = new BigInteger("1000000000000000000000000");
@@ -120,7 +120,7 @@ public class TransactionTest {
 
         tx.sign(senderPrivKey);
 
-        System.out.println("v\t\t\t: " + Hex.toHexString(new byte[] { tx.getSignature().v }));
+        System.out.println("v\t\t\t: " + Hex.toHexString(new byte[]{tx.getSignature().v}));
         System.out.println("r\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().r)));
         System.out.println("s\t\t\t: " + Hex.toHexString(BigIntegers.asUnsignedByteArray(tx.getSignature().s)));
 
@@ -222,12 +222,12 @@ public class TransactionTest {
         String RLP_TX_SIGNED = "f86b8085e8d4a510008227109413978aee95f38490e9769c39b2773ed763d9cd5f872386f26fc10000801ba0eab47c1a49bf2fe5d40e01d313900e19ca485867d462fe06e139e3a536c6d4f4a014a569d327dcda4b29f74f93c0e9729d2f49ad726e703f9cd90dbb0fbf6649f1";
         String HASH_TX_UNSIGNED = "328ea6d24659dec48adea1aced9a136e5ebdf40258db30d1b1d97ed2b74be34e";
 
-        byte[] nonce            = BigIntegers.asUnsignedByteArray(BigInteger.ZERO);
-        byte[] gasPrice         = Hex.decode("e8d4a51000");     // 1000000000000
-        byte[] gas              = Hex.decode("2710");           // 10000
-        byte[] recieveAddress   = Hex.decode("13978aee95f38490e9769c39b2773ed763d9cd5f");
-        byte[] value            = Hex.decode("2386f26fc10000"); //10000000000000000"
-        byte[] data             = new byte[0];
+        byte[] nonce = BigIntegers.asUnsignedByteArray(BigInteger.ZERO);
+        byte[] gasPrice = Hex.decode("e8d4a51000");     // 1000000000000
+        byte[] gas = Hex.decode("2710");           // 10000
+        byte[] recieveAddress = Hex.decode("13978aee95f38490e9769c39b2773ed763d9cd5f");
+        byte[] value = Hex.decode("2386f26fc10000"); //10000000000000000"
+        byte[] data = new byte[0];
 
         Transaction tx = new Transaction(nonce, gasPrice, gas, recieveAddress, value, data);
 
@@ -246,16 +246,18 @@ public class TransactionTest {
     @Test
     public void testTransactionCreateContract() {
 
-//        String rlp = "f89f808609184e72a0008203e8808203e8b84b4560005444602054600f60056002600a02010b0d630000001d596002602054630000003b5860066000530860056006600202010a0d6300000036596004604054630000003b5860056060541ca0ddc901d83110ea50bc40803f42083afea1bbd420548f6392a679af8e24b21345a06620b3b512bea5f0a272703e8d6933177c23afc79516fd0ca4a204aa6e34c7e9";
+//        String rlp =
+// "f89f808609184e72a0008203e8808203e8b84b4560005444602054600f60056002600a02010b0d630000001d596002602054630000003b5860066000530860056006600202010a0d6300000036596004604054630000003b5860056060541ca0ddc901d83110ea50bc40803f42083afea1bbd420548f6392a679af8e24b21345a06620b3b512bea5f0a272703e8d6933177c23afc79516fd0ca4a204aa6e34c7e9";
 
         byte[] senderPrivKey = HashUtil.sha3("cow".getBytes());
 
-        byte[] nonce            = BigIntegers.asUnsignedByteArray(BigInteger.ZERO);
-        byte[] gasPrice         = Hex.decode("09184e72a000");       // 10000000000000
-        byte[] gas              = Hex.decode("03e8");           // 1000
-        byte[] recieveAddress   = null;
-        byte[] endowment        = Hex.decode("03e8"); //10000000000000000"
-        byte[] init             = Hex.decode("4560005444602054600f60056002600a02010b0d630000001d596002602054630000003b5860066000530860056006600202010a0d6300000036596004604054630000003b586005606054");
+        byte[] nonce = BigIntegers.asUnsignedByteArray(BigInteger.ZERO);
+        byte[] gasPrice = Hex.decode("09184e72a000");       // 10000000000000
+        byte[] gas = Hex.decode("03e8");           // 1000
+        byte[] recieveAddress = null;
+        byte[] endowment = Hex.decode("03e8"); //10000000000000000"
+        byte[] init = Hex.decode
+                ("4560005444602054600f60056002600a02010b0d630000001d596002602054630000003b5860066000530860056006600202010a0d6300000036596004604054630000003b586005606054");
 
 
         Transaction tx1 = new Transaction(nonce, gasPrice, gas,

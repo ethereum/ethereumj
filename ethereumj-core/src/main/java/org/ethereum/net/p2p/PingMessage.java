@@ -9,7 +9,9 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class PingMessage extends P2pMessage {
 
-    /** Ping message is always a the same single command payload */
+    /**
+     * Ping message is always a the same single command payload
+     */
     private static byte[] FIXED_PAYLOAD = Hex.decode("C102");
 
     public byte[] getEncoded() {
@@ -22,7 +24,7 @@ public class PingMessage extends P2pMessage {
     }
 
     @Override
-    public P2pMessageCodes getCommand(){
+    public P2pMessageCodes getCommand() {
         return P2pMessageCodes.PING;
     }
 

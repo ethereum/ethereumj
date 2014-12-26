@@ -1,4 +1,4 @@
-     package test.ethereum.net;
+package test.ethereum.net;
 
 import static org.junit.Assert.assertEquals;
 
@@ -33,8 +33,8 @@ public class BlockHashesMessageTest {
     @Test /* BlockHashesMessage 2 from new */
     public void test_2() {
         List<byte[]> blockHashes = Arrays.asList(
-            Hex.decode("4ee6424d776b3f59affc20bc2de59e67f36e22cc07897ff8df152242c921716b"),
-            Hex.decode("7d2fe4df0dbbc9011da2b3bf177f0c6b7e71a11c509035c5d751efa5cf9b4817")
+                Hex.decode("4ee6424d776b3f59affc20bc2de59e67f36e22cc07897ff8df152242c921716b"),
+                Hex.decode("7d2fe4df0dbbc9011da2b3bf177f0c6b7e71a11c509035c5d751efa5cf9b4817")
         );
         BlockHashesMessage blockHashesMessage = new BlockHashesMessage(blockHashes);
         System.out.println(blockHashesMessage);

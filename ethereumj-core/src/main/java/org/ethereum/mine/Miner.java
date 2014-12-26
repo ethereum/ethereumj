@@ -77,9 +77,9 @@ public class Miner {
         byte[] testNonce = new byte[32];
         byte[] concat;
 
-        while(ByteUtil.increment(testNonce) && !stop) {
+        while (ByteUtil.increment(testNonce) && !stop) {
 
-            if (testNonce[31] == 0 && testNonce[30] == 0){
+            if (testNonce[31] == 0 && testNonce[30] == 0) {
                 System.out.println("mining: " + new BigInteger(1, testNonce));
             }
 
@@ -87,7 +87,7 @@ public class Miner {
                 sleep();
             concat = Arrays.concatenate(hash, testNonce);
             byte[] result = SHA3Helper.sha3(concat);
-            if(FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0) {
+            if (FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0) {
                 newBlock.setNonce(testNonce);
                 return true;
             }
@@ -95,11 +95,11 @@ public class Miner {
         return false; // couldn't find a valid nonce
     }
 
-    public void stop(){
+    public void stop() {
         stop = true;
     }
 
-    private void sleep(){
+    private void sleep() {
         try {
 //            Thread.sleep(1);
             Thread.sleep(10);

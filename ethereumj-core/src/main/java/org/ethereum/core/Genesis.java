@@ -30,7 +30,7 @@ public class Genesis extends Block {
 
     public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
 
-    private static String[] premine = new String[] {
+    private static String[] premine = new String[]{
             "51ba59315b3a95761d0863b05ccc7a7f54703d99",
             "e6716f9544a56c530d868e4bfbacb172315bdead",     // # (J)
             "b9c015918bdaba24b4ff057a92a3873d6eb201be",     // # (V)
@@ -50,10 +50,10 @@ public class Genesis extends Block {
     public static byte[] COINBASE = zeroHash160;
     public static byte[] LOG_BLOOM = zeroHash512;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
-    public static long   NUMBER = 0;
-    public static long   GAS_LIMIT = 1000000;
-    public static long   GAS_USED = 0;
-    public static long   TIMESTAMP = 0;
+    public static long NUMBER = 0;
+    public static long GAS_LIMIT = 1000000;
+    public static long GAS_USED = 0;
+    public static long TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
     public static byte[] NONCE = sha3(new byte[]{42});
 

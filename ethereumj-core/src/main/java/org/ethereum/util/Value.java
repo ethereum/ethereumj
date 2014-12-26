@@ -17,7 +17,8 @@ public class Value {
     public static Value fromRlpEncoded(byte[] data) {
         if (data != null && data.length != 0) {
             return new Value(RLP.decode(data, 0).getDecoded());
-        } return null;
+        }
+        return null;
     }
 
     public Value(Object obj) {
@@ -76,9 +77,9 @@ public class Value {
     }
 
     public byte[] asBytes() {
-        if(isBytes()) {
+        if (isBytes()) {
             return (byte[]) value;
-        } else if(isString()) {
+        } else if (isString()) {
             return asString().getBytes();
         }
         return ByteUtil.EMPTY_BYTE_ARRAY;
@@ -89,7 +90,7 @@ public class Value {
     }
 
     public Value get(int index) {
-        if(isList()) {
+        if (isList()) {
             // Guard for OutOfBounds
             if (asList().size() <= index) {
                 return new Value(null);
@@ -144,30 +145,30 @@ public class Value {
     }
 
     // it's only if the isBytes() = true;
-    public boolean isReadbleString(){
+    public boolean isReadbleString() {
 
         int readableChars = 0;
-        byte[] data = (byte[])value;
+        byte[] data = (byte[]) value;
 
-        if (data.length == 1 && data[0] > 31 && data[0] < 126){
+        if (data.length == 1 && data[0] > 31 && data[0] < 126) {
             return true;
         }
 
-        for (int i = 0; i < data.length; ++i){
+        for (int i = 0; i < data.length; ++i) {
             if (data[i] > 32 && data[i] < 126) ++readableChars;
         }
 
-        if ((double)readableChars / (double)data.length > 0.55)
+        if ((double) readableChars / (double) data.length > 0.55)
             return true;
         else
             return false;
     }
 
     // it's only if the isBytes() = true;
-    public boolean isHexString(){
+    public boolean isHexString() {
 
         int hexChars = 0;
-        byte[] data = (byte[])value;
+        byte[] data = (byte[]) value;
 
         for (int i = 0; i < data.length; ++i) {
 
@@ -182,7 +183,7 @@ public class Value {
             return false;
     }
 
-    public boolean isHashCode(){
+    public boolean isHashCode() {
         return this.asBytes().length == 32;
     }
 
@@ -239,9 +240,9 @@ public class Value {
             }
             buffer.append(" [");
 
-            for (int i = 0; i < list.length; ++i){
+            for (int i = 0; i < list.length; ++i) {
                 Value val = new Value(list[i]);
-                if (val.isString() || val.isEmpty()){
+                if (val.isString() || val.isEmpty()) {
                     buffer.append("'").append(val.toString()).append("'");
                 } else {
                     buffer.append(val.toString());
@@ -265,14 +266,14 @@ public class Value {
                     if (oneByte < 16) {
                         output.append("\\x").append(ByteUtil.oneByteToHexString(oneByte));
                     } else {
-                        output.append(Character.valueOf((char)oneByte));
+                        output.append(Character.valueOf((char) oneByte));
                     }
                 }
                 output.append("'");
                 return output.toString();
             }
             return Hex.toHexString(this.asBytes());
-        } else if (isString()){
+        } else if (isString()) {
             return asString();
         }
         return "Unexpected type";

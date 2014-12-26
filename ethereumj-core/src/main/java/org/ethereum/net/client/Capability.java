@@ -30,7 +30,7 @@ public class Capability implements Comparable<Capability> {
         if (this == obj) return true;
         if (!(obj instanceof Capability)) return false;
 
-        Capability other = (Capability)obj;
+        Capability other = (Capability) obj;
         if (this.name == null)
             return other.name == null;
         else

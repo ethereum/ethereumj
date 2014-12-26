@@ -18,7 +18,7 @@ public class TestSuite {
 
     public TestSuite(JSONObject testCaseJSONObj) throws ParseException {
 
-        for (Object key: testCaseJSONObj.keySet()){
+        for (Object key : testCaseJSONObj.keySet()) {
 
             Object testCaseJSON = testCaseJSONObj.get(key);
             TestCase testCase = new TestCase(key.toString(), (JSONObject) testCaseJSON);
@@ -26,7 +26,7 @@ public class TestSuite {
         }
     }
 
-    public Iterator<TestCase> iterator(){
+    public Iterator<TestCase> iterator() {
         return testList.iterator();
     }
 }

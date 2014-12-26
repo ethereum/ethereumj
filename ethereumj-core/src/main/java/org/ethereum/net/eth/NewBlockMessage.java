@@ -19,16 +19,16 @@ public class NewBlockMessage extends EthMessage {
         super(encoded);
     }
 
-    public NewBlockMessage(Block block, byte[] difficulty){
+    public NewBlockMessage(Block block, byte[] difficulty) {
         this.block = block;
         this.difficulty = difficulty;
         encode();
     }
 
-    private void encode(){
-        byte[] command = RLP.encodeByte( this.getCommand().asByte());
+    private void encode() {
+        byte[] command = RLP.encodeByte(this.getCommand().asByte());
         byte[] block = this.block.getEncoded();
-        byte[] diff  = RLP.encodeElement(this.difficulty);
+        byte[] diff = RLP.encodeElement(this.difficulty);
 
         this.encoded = RLP.encodeList(command, block, diff);
         parsed = true;
@@ -39,17 +39,17 @@ public class NewBlockMessage extends EthMessage {
 
         RLPList blockRLP = ((RLPList) paramsList.get(1));
         block = new Block(blockRLP.getRLPData());
-        difficulty =  paramsList.get(2).getRLPData();
+        difficulty = paramsList.get(2).getRLPData();
 
         parsed = true;
     }
 
-    public Block getBlock(){
+    public Block getBlock() {
         if (!parsed) parse();
         return block;
     }
 
-    public byte[] getDifficulty(){
+    public byte[] getDifficulty() {
         if (!parsed) parse();
         return difficulty;
     }
@@ -60,7 +60,7 @@ public class NewBlockMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.NEW_BLOCK;
     }
 

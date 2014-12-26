@@ -143,7 +143,7 @@ public interface Repository {
      * @param gasUsed the amount of gas used in the block until that point
      * @param txNumber is the number of the transaction for which the dump has to be made
      * @param txHash is the hash of the given transaction.
-     *      If null, the block state post coinbase reward is dumped.
+     * If null, the block state post coinbase reward is dumped.
      */
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash);
 
@@ -172,12 +172,14 @@ public interface Repository {
     /**
      * Return to one of the previous snapshots
      * by moving the root.
+     *
      * @param root - new root
      */
     public void syncToRoot(byte[] root);
 
     /**
      * Check to see if the current repository has an open connection to the database
+     *
      * @return <tt>true</tt> if connection to database is open
      */
     public boolean isClosed();
@@ -198,7 +200,7 @@ public interface Repository {
 
     public byte[] getRoot();
 
-    void  loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
+    void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                      HashMap<ByteArrayWrapper, ContractDetails> cacheDetails);
 
 }

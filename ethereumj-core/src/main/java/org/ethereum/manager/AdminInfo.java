@@ -31,7 +31,7 @@ public class AdminInfo {
         return consensus;
     }
 
-    public void lostConsensus(){
+    public void lostConsensus() {
         consensus = false;
     }
 }

@@ -287,7 +287,7 @@ public class ProgramMemoryTest {
         int offset = 16;
         int size = 32;
         program.allocateMemory(offset, size);
-        assertEquals(64 , program.getMemSize());
+        assertEquals(64, program.getMemSize());
     }
 
     @Test
@@ -320,7 +320,7 @@ public class ProgramMemoryTest {
         int offset = 16;
         int size = 16;
         program.allocateMemory(offset, size);
-        assertEquals(32,program.getMemSize());
+        assertEquals(32, program.getMemSize());
     }
 
     @Test
@@ -331,6 +331,6 @@ public class ProgramMemoryTest {
         int offset = 32;
         int size = 00;
         program.memorySave(32, 0, new byte[0]);
-        assertEquals(32,program.getMemSize());
+        assertEquals(32, program.getMemSize());
     }
 }

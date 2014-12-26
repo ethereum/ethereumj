@@ -16,7 +16,7 @@ public class JSONReader {
 
     public static String loadJSON(String filename) {
         String json = "";
-        if(!SystemProperties.CONFIG.vmTestLoadLocal())
+        if (!SystemProperties.CONFIG.vmTestLoadLocal())
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/" + filename);
         return json == "" ? json = getFromLocal(filename) : json;
     }
@@ -24,8 +24,9 @@ public class JSONReader {
     public static String getFromLocal(String filename) {
         System.out.println("Loading local file: " + filename);
         try {
-            if(System.getProperty("ETHEREUM_TEST_PATH") == null) {
-                System.out.println("ETHEREUM_TEST_PATH is not passed as a VM argument, please make sure you pass it with the correct path");
+            if (System.getProperty("ETHEREUM_TEST_PATH") == null) {
+                System.out.println("ETHEREUM_TEST_PATH is not passed as a VM argument, please make sure you pass it " +
+                        "with the correct path");
                 return "";
             }
             System.out.println("From: " + System.getProperty("ETHEREUM_TEST_PATH"));

@@ -11,7 +11,9 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class GetTransactionsMessage extends EthMessage {
 
-    /** GetTransactions message is always a the same single command payload */
+    /**
+     * GetTransactions message is always a the same single command payload
+     */
     private final static byte[] FIXED_PAYLOAD = Hex.decode("C116");
 
     public byte[] getEncoded() {
@@ -24,7 +26,7 @@ public class GetTransactionsMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.GET_TRANSACTIONS;
     }
 

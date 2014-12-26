@@ -20,6 +20,7 @@ import com.maxmind.geoip.Location;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 25/04/14 07:04
  */
@@ -71,7 +72,7 @@ public class PeersTableModel extends AbstractTableModel {
             String countryCode = peerInfo.getLocation().countryCode;
 
             ImageIcon flagIcon = null;
-            if (countryCode != null){
+            if (countryCode != null) {
                 URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode.toLowerCase() + ".png");
                 flagIcon = new ImageIcon(flagURL);
             }
@@ -97,8 +98,7 @@ public class PeersTableModel extends AbstractTableModel {
                 flagIcon = Utils.getImageIcon("disconnected.png");
             }
             return flagIcon;
-        }
-        else return "";
+        } else return "";
     }
 
     public int getRowCount() {
@@ -115,7 +115,7 @@ public class PeersTableModel extends AbstractTableModel {
 
             final Set<org.ethereum.net.peerdiscovery.PeerInfo> peers = UIEthereumManager.ethereum.getPeers();
 
-            synchronized (peers){
+            synchronized (peers) {
 
                 for (org.ethereum.net.peerdiscovery.PeerInfo peer : peers) {
                     InetAddress addr = peer.getAddress();
@@ -127,23 +127,24 @@ public class PeersTableModel extends AbstractTableModel {
         }
     }
 
-    public PeerInfo getPeerInfo(int index){
+    public PeerInfo getPeerInfo(int index) {
         return peerInfoList.get(index);
     }
 
 
     public class PeerInfo {
 
-        Location         location;
-        InetAddress      ip;
-        boolean          connected;
+        Location location;
+        InetAddress ip;
+        boolean connected;
         long lastAccessed = 0;
 
         HelloMessage handshakeHelloMessage;
         StatusMessage handshakeStatusMessage;
 
         private PeerInfo(Location location, InetAddress ip,
-                boolean isConnected, long lastAccessed, HelloMessage helloMessage, StatusMessage statusMessage) {
+                         boolean isConnected, long lastAccessed, HelloMessage helloMessage, StatusMessage
+                statusMessage) {
 
             if (location == null)
                 this.location = new Location();
@@ -181,8 +182,8 @@ public class PeersTableModel extends AbstractTableModel {
                     ", ip=" + ip +
                     ", connected=" + connected +
                     ", lastAccessed=" + lastAccessed +
-                    '}' + "\n -->" + (handshakeHelloMessage == null ?"" :  handshakeHelloMessage.toString())
-                        + "\n -->" + (handshakeStatusMessage == null?"" :  handshakeStatusMessage.toString());
+                    '}' + "\n -->" + (handshakeHelloMessage == null ? "" : handshakeHelloMessage.toString())
+                    + "\n -->" + (handshakeStatusMessage == null ? "" : handshakeStatusMessage.toString());
         }
     }
 }

@@ -3,6 +3,7 @@ package org.ethereum.trie;
 import java.util.List;
 
 import org.ethereum.util.Value;
+
 import static org.ethereum.util.CompactEncoder.unpackToNibbles;
 
 /*
@@ -32,7 +33,7 @@ public class TrieIterator {
             if (currentNode.get(1).asString() == "") {
                 this.workNode(currentNode.get(1));
             } else {
-                if (k[k.length-1] == 16) {
+                if (k[k.length - 1] == 16) {
                     this.values.add(currentNode.get(1).asString());
                 } else {
                     this.shas.add(currentNode.get(1).asBytes());

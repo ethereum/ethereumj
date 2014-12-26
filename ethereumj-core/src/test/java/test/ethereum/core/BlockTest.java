@@ -37,7 +37,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(loader=AnnotationConfigContextLoader.class)
+@ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 public class BlockTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
@@ -47,7 +47,7 @@ public class BlockTest {
     @ComponentScan(basePackages = "org.ethereum")
     static class ContextConfiguration extends TestContext {
         static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/"+ BlockTest.class);
+            SystemProperties.CONFIG.setDataBaseDir("test_db/" + BlockTest.class);
         }
     }
 
@@ -60,11 +60,11 @@ public class BlockTest {
     private String PoC7_GENESIS_HEX_HASH = "779b1b620b03c0fb24963e183d5e88e3dbe4484e3f6e2aa05942e3be7b48e179";
 
     String block_2 = "f8b5f8b1a0cf4b25b08b39350304fe12a16e4216c01a426f8f3dbf0d392b5b45"
-                   + "8ffb6a399da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a1"
-                   + "42fd40d493479476f5eabe4b342ee56b8ceba6ab2a770c3e2198e7a08a22d58b"
-                   + "a5c65b2bf660a961b075a43f564374d38bfe6cc69823eea574d1d16e80833fe0"
-                   + "04028609184e72a000830f3aab80845387c60380a00000000000000000000000"
-                   + "0000000000000000000000000033172b6669131179c0c0";
+            + "8ffb6a399da01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a1"
+            + "42fd40d493479476f5eabe4b342ee56b8ceba6ab2a770c3e2198e7a08a22d58b"
+            + "a5c65b2bf660a961b075a43f564374d38bfe6cc69823eea574d1d16e80833fe0"
+            + "04028609184e72a000830f3aab80845387c60380a00000000000000000000000"
+            + "0000000000000000000000000033172b6669131179c0c0";
 
     String block_17 = "f9016df8d3a0aa142573b355c6f2e8306471c869b0d12d0638cea3f57d39991a"
             + "b1b03ffa40daa01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40"
@@ -89,7 +89,7 @@ public class BlockTest {
 
 
     @After
-    public void doReset(){
+    public void doReset() {
         worldManager.reset();
     }
 
@@ -160,7 +160,7 @@ public class BlockTest {
 
     @Test
     public void testCalcGasLimit() {
-        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+        BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
         Block genesis = Genesis.getInstance();
         long gasLimit = blockchain.calcGasLimit(genesis.getHeader());
         logger.info("Genesis gasLimit: [{}] ", gasLimit);
@@ -180,7 +180,7 @@ public class BlockTest {
     @Test
     public void testScenario1() throws URISyntaxException, IOException {
 
-        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+        BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
 
         URL scenario1 = ClassLoader
                 .getSystemResource("blockload/scenario1.dmp");
@@ -189,15 +189,15 @@ public class BlockTest {
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
         byte[] root = Genesis.getInstance().getStateRoot();
-        for(String blockRLP : strData){
+        for (String blockRLP : strData) {
             Block block = new Block(
                     Hex.decode(blockRLP));
-            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            logger.info("sending block.hash: {}", Hex.toHexString(block.getHash()));
             blockchain.tryToConnect(block);
             root = block.getStateRoot();
         }
 
-        logger.info("asserting root state is: {}", Hex.toHexString( root ));
+        logger.info("asserting root state is: {}", Hex.toHexString(root));
 
         //expected root: fb8be59e6420892916e3967c60adfdf48836af040db0072ca411d7aaf5663804
         assertEquals(Hex.toHexString(root),
@@ -207,7 +207,7 @@ public class BlockTest {
     @Test
     public void testScenario2() throws URISyntaxException, IOException {
 
-        BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
+        BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
 
         URL scenario1 = ClassLoader
                 .getSystemResource("blockload/scenario2.dmp");
@@ -216,22 +216,20 @@ public class BlockTest {
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
 
         byte[] root = Genesis.getInstance().getStateRoot();
-        for(String blockRLP : strData){
+        for (String blockRLP : strData) {
             Block block = new Block(
                     Hex.decode(blockRLP));
-            logger.info("sending block.hash: {}", Hex.toHexString( block.getHash() ));
+            logger.info("sending block.hash: {}", Hex.toHexString(block.getHash()));
             blockchain.tryToConnect(block);
             root = block.getStateRoot();
         }
 
-        logger.info("asserting root state is: {}", Hex.toHexString( root ));
+        logger.info("asserting root state is: {}", Hex.toHexString(root));
 
         //expected root: a5e2a18bdbc4ab97775f44852382ff5585b948ccb15b1d69f0abb71e2d8f727d
         assertEquals(Hex.toHexString(root),
                 Hex.toHexString(worldManager.getRepository().getRoot()));
     }
-
-
 
 
     @Test

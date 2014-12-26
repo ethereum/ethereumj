@@ -19,6 +19,7 @@ import java.util.Collection;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
@@ -31,7 +32,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
     final JTextField gasInput;
     final JTextField contractAddrInput;
 
-    private byte[]       initByteCode;
+    private byte[] initByteCode;
 
 
     JLabel statusMsg = null;
@@ -50,7 +51,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         gasInput = new JTextField(5);
         GUIUtils.addStyle(gasInput, "Gas: ");
 
-        JTextArea   contractDataTA = new JTextArea();
+        JTextArea contractDataTA = new JTextArea();
         contractDataTA.setLineWrap(true);
         JScrollPane contractDataInput = new JScrollPane(contractDataTA);
         GUIUtils.addStyle(contractDataTA, null, false);
@@ -103,7 +104,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
                         Block lastBlock = UIEthereumManager.ethereum.getBlockchain().getBestBlock();
                         ProgramPlayDialog.createAndShowGUI(tx.getData(), tx, lastBlock);
-                    }}
+                    }
+                }
         );
 
         JLabel statusMessage = new JLabel("");
@@ -121,7 +123,8 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                     public void mouseClicked(MouseEvent e) {
 
                         dialog.dispose();
-                    }}
+                    }
+                }
         );
 
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
@@ -160,7 +163,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         this.creatorAddressCombo = creatorAddressCombo;
 
         final Border line = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
-        JComponent editor = (JComponent)(creatorAddressCombo.getEditor().getEditorComponent());
+        JComponent editor = (JComponent) (creatorAddressCombo.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
         Wallet wallet = UIEthereumManager.ethereum.getWallet();
@@ -186,7 +189,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         creatorAddressCombo.setPopupVisible(false);
 
         Object child = creatorAddressCombo.getAccessibleContext().getAccessibleChild(0);
-        BasicComboPopup popup = (BasicComboPopup)child;
+        BasicComboPopup popup = (BasicComboPopup) child;
 
         JList list = popup.getList();
         list.setSelectionBackground(Color.cyan);
@@ -273,14 +276,14 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
     private Transaction createTransaction() {
 
-        Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
+        Account account = ((AccountWrapper) creatorAddressCombo.getSelectedItem()).getAccount();
 
         byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
         BigInteger nonce = UIEthereumManager.ethereum.getRepository().getNonce(account.getAddress());
         byte[] gasPrice = new BigInteger("10000000000000").toByteArray();
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
-        byte[] gasValue  = BigIntegers.asUnsignedByteArray(gasBI);
+        byte[] gasValue = BigIntegers.asUnsignedByteArray(gasBI);
         byte[] endowment = BigIntegers.asUnsignedByteArray(new BigInteger("1000"));
 
         byte[] zeroAddress = null;
@@ -298,13 +301,13 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
     private boolean validInput() {
 
-        Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
+        Account account = ((AccountWrapper) creatorAddressCombo.getSelectedItem()).getAccount();
         BigInteger currentBalance =
                 UIEthereumManager.ethereum.getRepository().getBalance(account.getAddress());
 
         long currGasPrice = UIEthereumManager.ethereum.getBlockchain().getGasPrice();
         BigInteger gasPrice = BigInteger.valueOf(currGasPrice);
-        BigInteger gasInput = new BigInteger( this.gasInput.getText());
+        BigInteger gasInput = new BigInteger(this.gasInput.getText());
 
         boolean canAfford = currentBalance.compareTo(gasPrice.multiply(gasInput)) >= 0;
 
@@ -337,7 +340,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         public String toString() {
 
             String addressShort = Utils.getAddressShortString(account.getEcKey().getAddress());
-            String valueShort   = Utils.getValueShortString(
+            String valueShort = Utils.getValueShortString(
                     UIEthereumManager.ethereum.getRepository().getBalance(account.getAddress())
             );
 

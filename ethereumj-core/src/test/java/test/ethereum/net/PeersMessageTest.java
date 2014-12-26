@@ -39,7 +39,7 @@ public class PeersMessageTest {
         String peersMessageRaw = "f84b05f848846894d84870b84036659c3656c488437cceb11abeb9b9fc69b8055144a7e7db3584d03e606083f90e17a1d3021d674579407cdaaafdfeef485872ab719db9f2b6283f498bb90a71";
         byte[] payload = Hex.decode(peersMessageRaw);
 
-        PeersMessage peersMessage= new PeersMessage(payload);
+        PeersMessage peersMessage = new PeersMessage(payload);
         logger.info(peersMessage.toString());
 
         assertEquals(1, peersMessage.getPeers().size());

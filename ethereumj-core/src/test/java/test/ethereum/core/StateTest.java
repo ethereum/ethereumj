@@ -71,7 +71,7 @@ public class StateTest {
         AccountState account_3 = new AccountState(BigInteger.ZERO, new BigInteger("1506260000000000000"));
         trie.update(minerAddress, account_3.getEncoded());
 
-        assertEquals(expected,  Hex.toHexString(trie.getRootHash()));
+        assertEquals(expected, Hex.toHexString(trie.getRootHash()));
 
 
         /* *** GROSS DATA ***

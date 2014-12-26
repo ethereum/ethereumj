@@ -45,73 +45,74 @@ public class TestCase {
     //            "callcreates": { ... }
     private List<CallCreate> callCreateList = new ArrayList<>();
 
-    public TestCase(String name, JSONObject testCaseJSONObj) throws ParseException{
+    public TestCase(String name, JSONObject testCaseJSONObj) throws ParseException {
 
         this(testCaseJSONObj);
         this.name = name;
     }
 
-    public TestCase(JSONObject testCaseJSONObj) throws ParseException{
+    public TestCase(JSONObject testCaseJSONObj) throws ParseException {
 
         try {
 
-            JSONObject envJSON = (JSONObject)testCaseJSONObj.get("env");
-            JSONObject execJSON = (JSONObject)testCaseJSONObj.get("exec");
-            JSONObject preJSON = (JSONObject)testCaseJSONObj.get("pre");
+            JSONObject envJSON = (JSONObject) testCaseJSONObj.get("env");
+            JSONObject execJSON = (JSONObject) testCaseJSONObj.get("exec");
+            JSONObject preJSON = (JSONObject) testCaseJSONObj.get("pre");
             JSONObject postJSON = new JSONObject();
-            if(testCaseJSONObj.containsKey("post")) // in cases where there is no post dictionary (when testing for exceptions for example)
-                postJSON = (JSONObject)testCaseJSONObj.get("post");
-            JSONArray  callCreates = new JSONArray();
-            if(testCaseJSONObj.containsKey("callcreates"))
-                callCreates = (JSONArray)testCaseJSONObj.get("callcreates");
+            if (testCaseJSONObj.containsKey("post")) // in cases where there is no post dictionary (when testing for
+            // exceptions for example)
+                postJSON = (JSONObject) testCaseJSONObj.get("post");
+            JSONArray callCreates = new JSONArray();
+            if (testCaseJSONObj.containsKey("callcreates"))
+                callCreates = (JSONArray) testCaseJSONObj.get("callcreates");
 
             JSONArray logsJSON = new JSONArray();
-            if(testCaseJSONObj.containsKey("logs"))
-                logsJSON = (JSONArray)testCaseJSONObj.get("logs");
+            if (testCaseJSONObj.containsKey("logs"))
+                logsJSON = (JSONArray) testCaseJSONObj.get("logs");
             logs = new Logs(logsJSON);
 
-            String  gasString = "0";
-            if(testCaseJSONObj.containsKey("gas"))
+            String gasString = "0";
+            if (testCaseJSONObj.containsKey("gas"))
                 gasString = testCaseJSONObj.get("gas").toString();
-            this.gas    = ByteUtil.bigIntegerToBytes(new BigInteger(gasString));
+            this.gas = ByteUtil.bigIntegerToBytes(new BigInteger(gasString));
 
             String outString = null;
-            if(testCaseJSONObj.containsKey("out"))
+            if (testCaseJSONObj.containsKey("out"))
                 outString = testCaseJSONObj.get("out").toString();
             if (outString != null && outString.length() > 2)
-                this.out    = Hex.decode(outString.substring(2));
+                this.out = Hex.decode(outString.substring(2));
             else
                 this.out = ByteUtil.EMPTY_BYTE_ARRAY;
 
-            for (Object key : preJSON.keySet()){
+            for (Object key : preJSON.keySet()) {
 
                 byte[] keyBytes = Hex.decode(key.toString());
                 AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject)  preJSON.get(key));
+                        new AccountState(keyBytes, (JSONObject) preJSON.get(key));
 
                 pre.put(new ByteArrayWrapper(keyBytes), accountState);
             }
 
-            for (Object key : postJSON.keySet()){
+            for (Object key : postJSON.keySet()) {
 
                 byte[] keyBytes = Hex.decode(key.toString());
                 AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject)  postJSON.get(key));
+                        new AccountState(keyBytes, (JSONObject) postJSON.get(key));
 
                 post.put(new ByteArrayWrapper(keyBytes), accountState);
             }
 
-            for (int i = 0; i < callCreates.size(); ++i){
+            for (int i = 0; i < callCreates.size(); ++i) {
 
-                CallCreate cc = new CallCreate((JSONObject)callCreates.get(i));
+                CallCreate cc = new CallCreate((JSONObject) callCreates.get(i));
                 this.callCreateList.add(cc);
             }
 
-            this.env  = new Env(envJSON);
+            this.env = new Env(envJSON);
             this.exec = new Exec(execJSON);
 
         } catch (Throwable e) {
-            throw  new ParseException(0, e);
+            throw new ParseException(0, e);
         }
     }
 
@@ -147,7 +148,7 @@ public class TestCase {
         return callCreateList;
     }
 
-    public String getName(){
+    public String getName() {
         return name;
     }
 

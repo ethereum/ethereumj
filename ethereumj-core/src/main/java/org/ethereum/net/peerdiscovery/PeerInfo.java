@@ -20,7 +20,7 @@ public class PeerInfo {
     private String peerId;
 
     private List<Capability> capabilities;
-    private HelloMessage  handshakeHelloMessage;
+    private HelloMessage handshakeHelloMessage;
     private StatusMessage statusMessage;
 
     private transient boolean isOnline = false;
@@ -77,7 +77,7 @@ public class PeerInfo {
                 .append(" port=").append(getPort())
                 .append(" peerId=").append(getPeerId()).append("] \n")
                 .append(this.handshakeHelloMessage == null ? "" : handshakeHelloMessage + "\n")
-                .append(this.statusMessage == null         ? "" : statusMessage + "\n");
+                .append(this.statusMessage == null ? "" : statusMessage + "\n");
 
         return sb.toString();
     }

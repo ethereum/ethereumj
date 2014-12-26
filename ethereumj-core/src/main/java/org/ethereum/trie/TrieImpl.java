@@ -36,6 +36,7 @@ import org.spongycastle.util.encoders.Hex;
  * <b>Note:</b> the data isn't persisted unless `sync` is explicitly called.
  *
  * www.ethereumJ.com
+ *
  * @author: Nick Savers
  * Created on: 20/05/2014 10:44
  */
@@ -48,7 +49,7 @@ public class TrieImpl implements Trie {
 
     private Object prevRoot;
     private Object root;
-    private Cache  cache;
+    private Cache cache;
 
     public TrieImpl(DB db) {
         this(db, "");
@@ -106,7 +107,7 @@ public class TrieImpl implements Trie {
         byte[] k = binToNibbles(key);
         Value c = new Value(this.get(this.root, k));
 
-        return (c == null)? null : c.asBytes();
+        return (c == null) ? null : c.asBytes();
     }
 
     /**
@@ -126,7 +127,7 @@ public class TrieImpl implements Trie {
         byte[] k = binToNibbles(key);
 
         this.root = this.insertOrDelete(this.root, k, value);
-        if(logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             logger.debug("Added key {} and value {}", Hex.toHexString(key), Hex.toHexString(value));
             logger.debug("New root-hash: {}", Hex.toHexString(this.getRootHash()));
         }
@@ -144,7 +145,7 @@ public class TrieImpl implements Trie {
     @Override
     public void delete(byte[] key) {
         delete(new String(key));
-        if(logger.isDebugEnabled()) {
+        if (logger.isDebugEnabled()) {
             logger.debug("Deleted value for key {}", Hex.toHexString(key));
             logger.debug("New root-hash: {}", Hex.toHexString(this.getRootHash()));
         }
@@ -213,7 +214,7 @@ public class TrieImpl implements Trie {
         }
 
         if (isEmptyNode(node)) {
-            Object[] newNode = new Object[] { packNibbles(key), value };
+            Object[] newNode = new Object[]{packNibbles(key), value};
             return this.putToCache(newNode);
         }
 
@@ -227,7 +228,7 @@ public class TrieImpl implements Trie {
 
             // Matching key pair (ie. there's already an object with this key)
             if (Arrays.equals(k, key)) {
-                Object[] newNode = new Object[] {packNibbles(key), value};
+                Object[] newNode = new Object[]{packNibbles(key), value};
                 return this.putToCache(newNode);
             }
 
@@ -242,8 +243,8 @@ public class TrieImpl implements Trie {
 
                 // Expand the 2 length slice to a 17 length slice
                 // Create two nodes to putToCache into the new 17 length node
-                Object oldNode = this.insert("", copyOfRange(k, matchingLength+1, k.length), v);
-                Object newNode = this.insert("", copyOfRange(key, matchingLength+1, key.length), value);
+                Object oldNode = this.insert("", copyOfRange(k, matchingLength + 1, k.length), v);
+                Object newNode = this.insert("", copyOfRange(key, matchingLength + 1, key.length), value);
 
                 // Create an expanded slice
                 Object[] scaledSlice = emptyStringSlice(17);
@@ -258,7 +259,7 @@ public class TrieImpl implements Trie {
                 // End of the chain, return
                 return newHash;
             } else {
-                Object[] newNode = new Object[] { packNibbles(copyOfRange(key, 0, matchingLength)), newHash};
+                Object[] newNode = new Object[]{packNibbles(copyOfRange(key, 0, matchingLength)), newHash};
                 return this.putToCache(newNode);
             }
         } else {
@@ -296,9 +297,9 @@ public class TrieImpl implements Trie {
                 Object newNode;
                 if (child.length() == PAIR_SIZE) {
                     byte[] newKey = concatenate(k, unpackToNibbles(child.get(0).asBytes()));
-                    newNode = new Object[] {packNibbles(newKey), child.get(1).asObj()};
+                    newNode = new Object[]{packNibbles(newKey), child.get(1).asObj()};
                 } else {
-                    newNode = new Object[] {currentNode.get(0).asString(), hash};
+                    newNode = new Object[]{currentNode.get(0).asString(), hash};
                 }
                 return this.putToCache(newNode);
             } else {
@@ -324,14 +325,14 @@ public class TrieImpl implements Trie {
 
             Object[] newNode = null;
             if (amount == 16) {
-                newNode = new Object[] { packNibbles(new byte[] {16} ), itemList[amount]};
+                newNode = new Object[]{packNibbles(new byte[]{16}), itemList[amount]};
             } else if (amount >= 0) {
                 Value child = this.getNode(itemList[amount]);
                 if (child.length() == PAIR_SIZE) {
                     key = concatenate(new byte[]{amount}, unpackToNibbles(child.get(0).asBytes()));
-                    newNode = new Object[] {packNibbles(key), child.get(1).asObj()};
+                    newNode = new Object[]{packNibbles(key), child.get(1).asObj()};
                 } else if (child.length() == LIST_SIZE) {
-                    newNode = new Object[] { packNibbles(new byte[]{amount}), itemList[amount]};
+                    newNode = new Object[]{packNibbles(new byte[]{amount}), itemList[amount]};
                 }
             } else {
                 newNode = itemList;
@@ -445,7 +446,7 @@ public class TrieImpl implements Trie {
         this.scanTree(this.getRootHash(), collectAction);
 
         Set<byte[]> hashSet = collectAction.getCollectedHashes();
-        Map<ByteArrayWrapper, Node> nodes =  this.getCache().getNodes();
+        Map<ByteArrayWrapper, Node> nodes = this.getCache().getNodes();
         Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
 
         for (ByteArrayWrapper key : nodes.keySet()) {
@@ -466,7 +467,7 @@ public class TrieImpl implements Trie {
         logger.info("Garbage collection time: [{}ms]", System.currentTimeMillis() - startTime);
     }
 
-    public void printFootPrint(){
+    public void printFootPrint() {
 
         this.getCache().getNodes();
     }
@@ -477,7 +478,7 @@ public class TrieImpl implements Trie {
         if (node == null) return;
 
         if (node.isList()) {
-            List<Object> siblings =  node.asList();
+            List<Object> siblings = node.asList();
             if (siblings.size() == PAIR_SIZE) {
                 Value val = new Value(siblings.get(1));
                 if (val.isHashCode())
@@ -500,7 +501,7 @@ public class TrieImpl implements Trie {
         this.scanTree(this.getRootHash(), traceAction);
 
         if (this.getRoot() instanceof Value) {
-            root = "root: " + Hex.toHexString(getRootHash()) +  " => " + this.getRoot() +  "\n";
+            root = "root: " + Hex.toHexString(getRootHash()) + " => " + this.getRoot() + "\n";
         } else {
             root = "root: " + Hex.toHexString(getRootHash()) + "\n";
         }
@@ -511,7 +512,7 @@ public class TrieImpl implements Trie {
         public void doOnNode(byte[] hash, Value node);
     }
 
-    public boolean validate(){
+    public boolean validate() {
 
         if (cache.get(getRootHash()) != null)
             return true;

@@ -17,7 +17,9 @@ import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCKS;
  */
 public class GetBlocksMessage extends EthMessage {
 
-    /** List of block hashes for which to retrieve the blocks */
+    /**
+     * List of block hashes for which to retrieve the blocks
+     */
     private List<byte[]> blockHashes;
 
     public GetBlocksMessage(byte[] encoded) {
@@ -67,7 +69,7 @@ public class GetBlocksMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.GET_BLOCKS;
     }
 

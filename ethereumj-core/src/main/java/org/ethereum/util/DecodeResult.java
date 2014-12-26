@@ -18,6 +18,7 @@ public class DecodeResult implements Serializable {
     public int getPos() {
         return pos;
     }
+
     public Object getDecoded() {
         return decoded;
     }
@@ -27,7 +28,7 @@ public class DecodeResult implements Serializable {
     }
 
     private String asString(Object decoded) {
-        if(decoded instanceof String) {
+        if (decoded instanceof String) {
             return (String) decoded;
         } else if (decoded instanceof byte[]) {
             return Hex.toHexString((byte[]) decoded);

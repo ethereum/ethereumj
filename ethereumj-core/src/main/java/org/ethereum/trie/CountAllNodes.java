@@ -18,5 +18,7 @@ public class CountAllNodes implements TrieImpl.ScanAction {
         ++counted;
     }
 
-    public int getCounted(){return counted;}
+    public int getCounted() {
+        return counted;
+    }
 }

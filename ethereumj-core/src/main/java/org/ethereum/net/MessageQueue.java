@@ -16,16 +16,16 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- *  This class contains the logic for sending messages in a queue
+ * This class contains the logic for sending messages in a queue
  *
- *  Messages open by send and answered by receive of appropriate message
+ * Messages open by send and answered by receive of appropriate message
  *      PING by PONG
  *      GET_PEERS by PEERS
  *      GET_TRANSACTIONS by TRANSACTIONS
  *      GET_BLOCK_HASHES by BLOCK_HASHES
  *      GET_BLOCKS by BLOCKS
  *
- *  The following messages will not be answered:
+ * The following messages will not be answered:
  *      PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
  *
  * @author Roman Mandeleil
@@ -44,9 +44,10 @@ public class MessageQueue {
     WorldManager worldManager;
     boolean hasPing = false;
 
-    public MessageQueue(){}
+    public MessageQueue() {
+    }
 
-    public void activate(ChannelHandlerContext ctx){
+    public void activate(ChannelHandlerContext ctx) {
         this.ctx = ctx;
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
@@ -117,7 +118,7 @@ public class MessageQueue {
         }
     }
 
-    public void close(){
+    public void close() {
         timer.cancel();
         timer.purge();
     }

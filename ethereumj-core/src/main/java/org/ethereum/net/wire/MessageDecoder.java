@@ -62,10 +62,10 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
         long syncToken = in.readUnsignedInt();
 
-        if (!((syncToken >> 24   &  0xFF) == 0x22  &&
-              (syncToken >> 16   &  0xFF) == 0x40  &&
-              (syncToken >>  8   &  0xFF) == 0x08  &&
-              (syncToken         &  0xFF) == 0x91 )) {
+        if (!((syncToken >> 24 & 0xFF) == 0x22 &&
+                (syncToken >> 16 & 0xFF) == 0x40 &&
+                (syncToken >> 8 & 0xFF) == 0x08 &&
+                (syncToken & 0xFF) == 0x91)) {
 
             // TODO: Drop frame and continue.
             // A collision can happen (although rare)

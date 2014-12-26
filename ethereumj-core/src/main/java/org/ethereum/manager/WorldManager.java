@@ -75,7 +75,7 @@ public class WorldManager {
 
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
-        ((EthereumListenerWrapper)this.listener).addListener(listener);
+        ((EthereumListenerWrapper) this.listener).addListener(listener);
     }
 
     public void startPeerDiscovery() {
@@ -88,7 +88,7 @@ public class WorldManager {
             peerDiscovery.stop();
     }
 
-    public void addPendingTransactions(Set<Transaction> transactions){
+    public void addPendingTransactions(Set<Transaction> transactions) {
         logger.info("Pending transaction list added: size: [{}]", transactions.size());
 
         if (listener != null)
@@ -96,15 +96,15 @@ public class WorldManager {
         pendingTransactions.addAll(transactions);
     }
 
-    public void clearPendingTransactions(List<Transaction> recivedTransactions){
+    public void clearPendingTransactions(List<Transaction> recivedTransactions) {
 
-        for (Transaction tx : recivedTransactions){
+        for (Transaction tx : recivedTransactions) {
             logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
             pendingTransactions.remove(tx);
         }
     }
 
-    public ChannelManager getChannelManager(){
+    public ChannelManager getChannelManager() {
         return channelManager;
     }
 
@@ -116,7 +116,7 @@ public class WorldManager {
         return listener;
     }
 
-    public void setWallet(Wallet wallet)  {
+    public void setWallet(Wallet wallet) {
         this.wallet = wallet;
     }
 
@@ -144,7 +144,7 @@ public class WorldManager {
         return pendingTransactions;
     }
 
-    public boolean isBlockchainLoading(){
+    public boolean isBlockchainLoading() {
         return blockchain.getQueue().size() > 2;
     }
 
@@ -180,14 +180,14 @@ public class WorldManager {
         }
 
 
-        if (CONFIG.rootHashStart() != null){
+        if (CONFIG.rootHashStart() != null) {
 
             // update world state by dummy hash
             byte[] rootHash = Hex.decode(CONFIG.rootHashStart());
             logger.info("Loading root hash from property file: [{}]", CONFIG.rootHashStart());
             this.repository.syncToRoot(rootHash);
 
-        } else{
+        } else {
 
             // Update world state to latest loaded block from db
             this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
@@ -202,7 +202,7 @@ public class WorldManager {
 */
     }
 
-    public void reset(){
+    public void reset() {
         logger.info("Resetting blockchain ");
         repository.reset();
         blockchain.reset();

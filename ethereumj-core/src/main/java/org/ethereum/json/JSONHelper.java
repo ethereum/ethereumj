@@ -17,7 +17,7 @@ import java.util.*;
 
 /**
  * JSON Helper class to format data into ObjectNodes
- *      to match PyEthereum blockstate output
+ * to match PyEthereum blockstate output
  *
  *  Dump format:
  *  {
@@ -80,8 +80,8 @@ public class JSONHelper {
         ObjectNode statesNode = blockNode.objectNode();
         for (ByteArrayWrapper key : keys) {
             byte[] keyBytes = key.getData();
-            AccountState    accountState    = repository.getAccountState(keyBytes);
-            ContractDetails details  = repository.getContractDetails(keyBytes);
+            AccountState accountState = repository.getAccountState(keyBytes);
+            ContractDetails details = repository.getContractDetails(keyBytes);
             JSONHelper.dumpState(statesNode, Hex.toHexString(keyBytes), accountState, details);
         }
         blockNode.put("state", statesNode);

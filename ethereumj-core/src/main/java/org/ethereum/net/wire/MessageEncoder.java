@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 public class MessageEncoder extends MessageToByteEncoder<Message> {
 
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
-    private static final Logger loggerNet  = LoggerFactory.getLogger("net");
+    private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
     @Autowired
     WorldManager worldManager;

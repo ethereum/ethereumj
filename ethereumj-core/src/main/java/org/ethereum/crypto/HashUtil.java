@@ -41,7 +41,7 @@ public class HashUtil {
     public static byte[] sha3(byte[] input) {
         ByteArrayWrapper inputByteArray = new ByteArrayWrapper(input);
         byte[] result = sha3Cache.get(inputByteArray);
-        if(result != null)
+        if (result != null)
             return result;
         result = SHA3Helper.sha3(input);
         sha3Cache.put(inputByteArray, result);
@@ -71,7 +71,7 @@ public class HashUtil {
     /**
      * The way to calculate new address inside ethereum
      *
-     * @param addr  - creating addres
+     * @param addr - creating addres
      * @param nonce - nonce of creating address
      * @return new address
      */

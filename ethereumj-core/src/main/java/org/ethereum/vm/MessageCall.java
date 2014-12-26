@@ -12,26 +12,42 @@ public class MessageCall {
         POST;
     }
 
-    /** Type of internal call. Either CALL, STATELESS or POST */
+    /**
+     * Type of internal call. Either CALL, STATELESS or POST
+     */
     private MsgType type;
 
-    /** gas to pay for the call, remaining gas will be refunded to the caller */
+    /**
+     * gas to pay for the call, remaining gas will be refunded to the caller
+     */
     private DataWord gas;
-    /** address of account which code to call */
+    /**
+     * address of account which code to call
+     */
     private DataWord codeAddress;
-    /** the value that can be transfer along with the code execution */
+    /**
+     * the value that can be transfer along with the code execution
+     */
     private DataWord endowment;
-    /** start of memory to be input data to the call */
+    /**
+     * start of memory to be input data to the call
+     */
     private DataWord inDataOffs;
-    /** size of memory to be input data to the call */
+    /**
+     * size of memory to be input data to the call
+     */
     private DataWord inDataSize;
-    /** start of memory to be output of the call */
+    /**
+     * start of memory to be output of the call
+     */
     private DataWord outDataOffs;
-    /** size of memory to be output data to the call */
+    /**
+     * size of memory to be output data to the call
+     */
     private DataWord outDataSize;
 
     public MessageCall(MsgType type, DataWord gas, DataWord codeAddress,
-            DataWord endowment, DataWord inDataOffs, DataWord inDataSize) {
+                       DataWord endowment, DataWord inDataOffs, DataWord inDataSize) {
         this.type = type;
         this.gas = gas;
         this.codeAddress = codeAddress;
@@ -41,8 +57,8 @@ public class MessageCall {
     }
 
     public MessageCall(MsgType type, DataWord gas, DataWord codeAddress,
-            DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
-            DataWord outDataOffs, DataWord outDataSize) {
+                       DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
+                       DataWord outDataOffs, DataWord outDataSize) {
         this(type, gas, codeAddress, endowment, inDataOffs, inDataSize);
         this.outDataOffs = outDataOffs;
         this.outDataSize = outDataSize;

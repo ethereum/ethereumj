@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 /**
- *
  * www.etherj.com
  *
  * @author: Roman Mandeleil
@@ -26,7 +25,7 @@ public class ProgramTrace {
         this.txHash = txHash;
     }
 
-    public void addOp(Op op){
+    public void addOp(Op op) {
         ops.add(op);
     }
 
@@ -35,12 +34,12 @@ public class ProgramTrace {
      *
      * @param programTrace
      */
-    public void merge(ProgramTrace programTrace){
+    public void merge(ProgramTrace programTrace) {
 
-        this.ops.addAll( programTrace.ops );
+        this.ops.addAll(programTrace.ops);
     }
 
-    public String getJsonString(){
+    public String getJsonString() {
         return JSONArray.toJSONString(ops);
     }
 }

@@ -30,7 +30,7 @@ public class WorkerThread implements Runnable {
     public WorkerThread() {
     }
 
-    public void init(PeerInfo peer, ThreadPoolExecutor poolExecutor){
+    public void init(PeerInfo peer, ThreadPoolExecutor poolExecutor) {
         this.peerInfo = peer;
         this.poolExecutor = poolExecutor;
     }
@@ -54,7 +54,7 @@ public class WorkerThread implements Runnable {
             peerInfo.setOnline(true);
 
             peerInfo.setHandshakeHelloMessage(discoveryChannel.getHelloHandshake());
-            peerInfo.setStatusMessage( discoveryChannel.getStatusHandshake() );
+            peerInfo.setStatusMessage(discoveryChannel.getStatusHandshake());
 
             logger.info("Peer is online: [{}] ", peerInfo);
 
@@ -72,7 +72,7 @@ public class WorkerThread implements Runnable {
         }
     }
 
-    private void sleep(long milliseconds){
+    private void sleep(long milliseconds) {
 
         try {
             Thread.sleep(milliseconds);

@@ -10,7 +10,9 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class PongMessage extends P2pMessage {
 
-    /** Pong message is always a the same single command payload */
+    /**
+     * Pong message is always a the same single command payload
+     */
     private static byte[] FIXED_PAYLOAD = Hex.decode("C103");
 
     @Override
@@ -24,7 +26,7 @@ public class PongMessage extends P2pMessage {
     }
 
     @Override
-    public P2pMessageCodes getCommand(){
+    public P2pMessageCodes getCommand() {
         return P2pMessageCodes.PONG;
     }
 

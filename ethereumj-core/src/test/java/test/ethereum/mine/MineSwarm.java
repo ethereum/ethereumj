@@ -54,11 +54,15 @@ public class MineSwarm {
         miner3.start();
         workers.add(mt3);
 
-        while(!mt1.isDone() || !mt2.isDone() || !mt3.isDone()){
-            try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+        while (!mt1.isDone() || !mt2.isDone() || !mt3.isDone()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
-        while(!blockAppearQueue.isEmpty()){
+        while (!blockAppearQueue.isEmpty()) {
             System.out.println(
                     Hex.toHexString(blockAppearQueue.poll().getEncoded())
             );
@@ -77,12 +81,12 @@ public class MineSwarm {
 
 
     public void announceBlock(Block block) {
-        for(MinerThread mt : workers){
-           mt.onNewBlock(block);
+        for (MinerThread mt : workers) {
+            mt.onNewBlock(block);
         }
     }
 
-    public void addToQueue(Block block){
+    public void addToQueue(Block block) {
         synchronized (blockAppearQueue) {
             blockAppearQueue.add(block);
         }

@@ -18,6 +18,7 @@ import java.util.regex.Pattern;
 
 /**
  * www.ethereumJ.com
+ *
  * @author Roman Mandeleil
  * Created on: 13/05/14 19:37
  */
@@ -85,7 +86,7 @@ public class SerpentCompiler {
         boolean skiping = false;
         for (int i = 0; i < lexaList.size(); ++i) {
 
-            String lexa  = lexaList.get(i);
+            String lexa = lexaList.get(i);
 
             { // skiping the [asm asm] block
                 if (lexa.equals("asm]")) {
@@ -105,8 +106,8 @@ public class SerpentCompiler {
             }
 
             if (OpCode.contains(lexa) ||
-                lexa.contains("REF_") ||
-                lexa.contains("LABEL_")) continue;
+                    lexa.contains("REF_") ||
+                    lexa.contains("LABEL_")) continue;
 
             int bytesNum = ByteUtil.numBytes(lexa);
 
@@ -125,7 +126,7 @@ public class SerpentCompiler {
         // encode ref for 5 bytes
         for (int i = 0; i < lexaList.size(); ++i) {
 
-            String lexa  = lexaList.get(i);
+            String lexa = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
             lexaList.add(i + 1, lexa);
             lexaList.add(i + 2, lexa);
@@ -139,7 +140,7 @@ public class SerpentCompiler {
 
         for (int i = 0; i < lexaList.size(); ++i) {
 
-            String lexa  = lexaList.get(i);
+            String lexa = lexaList.get(i);
             if (!lexa.contains("LABEL_")) continue;
 
             String label = lexaList.remove(i);
@@ -154,7 +155,7 @@ public class SerpentCompiler {
         // encode all ref occurrence
         for (int i = 0; i < lexaList.size(); ++i) {
 
-            String lexa  = lexaList.get(i);
+            String lexa = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
 
             String ref = lexaList.remove(i);
@@ -169,7 +170,7 @@ public class SerpentCompiler {
 
             lexaList.add(i, pos.toString());
 
-            for (int j = 0; j < (4 - bytesNum) ; ++j)
+            for (int j = 0; j < (4 - bytesNum); ++j)
                 lexaList.add(i, "0");
 
             lexaList.add(i, "PUSH4");
@@ -194,7 +195,6 @@ public class SerpentCompiler {
     }
 
     /**
-     *
      * @param code
      * @param init
      * @return encoded bytes
@@ -212,12 +212,12 @@ public class SerpentCompiler {
         }
 
         // calc real code start position (after the init header)
-        int pos = 10  + numBytes * 2;
-        if (init != null) pos+=init.length;
+        int pos = 10 + numBytes * 2;
+        if (init != null) pos += init.length;
 
         // @push_len @len PUSH1 @src_start  PUSH1 0 CODECOPY @push_len @len 0 PUSH1 0 RETURN
-        String header =  String.format("[asm %s %s PUSH1 %d  PUSH1 0 CODECOPY %s %s PUSH1 0 RETURN asm]",
-                "PUSH" + numBytes, sb.toString(), pos , "PUSH" + numBytes, sb.toString());
+        String header = String.format("[asm %s %s PUSH1 %d  PUSH1 0 CODECOPY %s %s PUSH1 0 RETURN asm]",
+                "PUSH" + numBytes, sb.toString(), pos, "PUSH" + numBytes, sb.toString());
 
         byte[] headerMachine = compileAssemblyToMachine(header);
 

@@ -8,6 +8,7 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 03/06/2014 15:00
  */
@@ -35,13 +36,13 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         this.repository.createAccount(contractAddress);
         this.repository.saveCode(contractAddress,
                 Hex.decode("385E60076000396000605f556014600054601e60"
-                + "205463abcddcba6040545b51602001600a525451"
-                + "6040016014525451606001601e52545160800160"
-                + "28525460a052546016604860003960166000f260"
-                + "00603f556103e75660005460005360200235"));
+                        + "205463abcddcba6040545b51602001600a525451"
+                        + "6040016014525451606001601e52545160800160"
+                        + "28525460a052546016604860003960166000f260"
+                        + "00603f556103e75660005460005360200235"));
     }
 
-    public ProgramInvokeMockImpl(boolean defaults){
+    public ProgramInvokeMockImpl(boolean defaults) {
 
 
     }
@@ -88,7 +89,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(gasLimit);
     }
 
-    public void setGas(long gasLimit){
+    public void setGas(long gasLimit) {
         this.gasLimit = gasLimit;
     }
 
@@ -112,7 +113,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
         if (msgData == null) return new DataWord(data);
         if (index > msgData.length) return new DataWord(data);
-        if (index + 32 > msgData.length) size = msgData.length - index ;
+        if (index + 32 > msgData.length) size = msgData.length - index;
 
         System.arraycopy(msgData, index, data, 0, size);
 
@@ -137,7 +138,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
         if (msgData == null) return data;
         if (offset > msgData.length) return data;
-        if (offset + length > msgData.length) length = msgData.length - offset ;
+        if (offset + length > msgData.length) length = msgData.length - offset;
 
         System.arraycopy(msgData, offset, data, 0, length);
 
@@ -151,10 +152,10 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     @Override
-    public int countNonZeroData(){
+    public int countNonZeroData() {
 
         int counter = 0;
-        for (int i = 0; i < msgData.length; ++i){
+        for (int i = 0; i < msgData.length; ++i) {
 
             if (msgData[i] != 0) ++counter;
         }

@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 
-
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -18,6 +17,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 25/04/14 07:11
  */
@@ -25,7 +25,7 @@ public class PeersTableWindow extends JFrame {
 
     // Instance attributes used in this example
     private JPanel topPanel;
-    private JTable      table;
+    private JTable table;
     private JScrollPane scrollPane;
     private Timer updater = new Timer();
 
@@ -61,7 +61,7 @@ public class PeersTableWindow extends JFrame {
 
         table.addMouseListener(new MouseAdapter() {
             public void mousePressed(MouseEvent me) {
-                JTable table =(JTable) me.getSource();
+                JTable table = (JTable) me.getSource();
                 Point p = me.getPoint();
                 int row = table.rowAtPoint(p);
                 PeersTableModel model = (PeersTableModel) table.getModel();

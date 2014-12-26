@@ -38,7 +38,7 @@ public class TransactionExecutor {
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
         this.tx = tx;
-        this.coinbase  = coinbase;
+        this.coinbase = coinbase;
         this.track = track;
         this.programInvokeFactory = programInvokeFactory;
         this.currentBlock = currentBlock;
@@ -53,7 +53,7 @@ public class TransactionExecutor {
 //        https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L55
 
 
-    public void execute(){
+    public void execute() {
 
 
         logger.info("applyTransaction: [{}]", Hex.toHexString(tx.getHash()));
@@ -166,8 +166,8 @@ public class TransactionExecutor {
             try {
 
                 // CREATE NEW CONTRACT ADDRESS AND ADD TX VALUE
-                if(isContractCreation) {
-                    if(stateLogger.isDebugEnabled())
+                if (isContractCreation) {
+                    if (stateLogger.isDebugEnabled())
                         stateLogger.debug("new contract created address={}",
                                 Hex.toHexString(receiverAddress));
                 }
@@ -199,9 +199,9 @@ public class TransactionExecutor {
             trackTx.commit();
         } else {
             // REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TX_NO_ZERO_DATA)
-            long dataCost = tx.getData() == null ? 0:
+            long dataCost = tx.getData() == null ? 0 :
                     tx.nonZeroDataBytes() * GasCost.TX_NO_ZERO_DATA +
-                    tx.zeroDataBytes()    * GasCost.TX_ZERO_DATA;
+                            tx.zeroDataBytes() * GasCost.TX_ZERO_DATA;
             gasUsed = GasCost.TRANSACTION + dataCost;
 
             BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));
@@ -253,7 +253,7 @@ public class TransactionExecutor {
             repository.addBalance(coinbase, refund.negate());
         }
 
-        if (result.getFutureRefund() > 0){
+        if (result.getFutureRefund() > 0) {
 
             long futureRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
             BigInteger futureRefundBI = BigInteger.valueOf(futureRefund);
@@ -284,11 +284,12 @@ public class TransactionExecutor {
                                     Hex.toHexString(contractAddress),
                                     Hex.toHexString(bodyCode));
 
-                BigInteger storageCost =  gasPrice.multiply( BigInteger.valueOf( bodyCode.length * GasCost.CREATE_DATA_BYTE)  );
+                BigInteger storageCost = gasPrice.multiply(BigInteger.valueOf(bodyCode.length * GasCost
+                        .CREATE_DATA_BYTE));
                 BigInteger balance = repository.getBalance(senderAddress);
 
                 // check if can be charged for the contract data save
-                if (storageCost.compareTo(balance) > 1){
+                if (storageCost.compareTo(balance) > 1) {
                     bodyCode = EMPTY_BYTE_ARRAY;
                 } else {
                     repository.addBalance(coinbase, storageCost);
@@ -301,7 +302,7 @@ public class TransactionExecutor {
 
         // delete the marked to die accounts
         if (result.getDeleteAccounts() == null) return;
-        for (DataWord address : result.getDeleteAccounts()){
+        for (DataWord address : result.getDeleteAccounts()) {
             repository.delete(address.getNoLeadZeroesData());
         }
     }

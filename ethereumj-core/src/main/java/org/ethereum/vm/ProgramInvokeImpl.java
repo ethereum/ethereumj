@@ -8,19 +8,24 @@ import java.util.Map;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 03/06/2014 15:00
  */
 public class ProgramInvokeImpl implements ProgramInvoke {
 
-    /*** TRANSACTION  env ***/
+    /**
+     * TRANSACTION  env **
+     */
     private DataWord address;
-    private DataWord  origin, caller,
+    private DataWord origin, caller,
             balance, gas, gasPrice, callValue;
 
     byte[] msgData;
 
-    /*** BLOCK  env ***/
+    /**
+     * BLOCK  env **
+     */
     private DataWord prevHash, coinbase, timestamp,
             number, difficulty, gaslimit;
 
@@ -31,18 +36,19 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     private boolean byTestingSuite = false;
     private int callDeep = 0;
 
-    public ProgramInvokeImpl(DataWord address,  DataWord origin,   DataWord caller, DataWord balance,
-                             DataWord gasPrice, DataWord gas,      DataWord callValue, byte[] msgData,
-                             DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord difficulty,
+    public ProgramInvokeImpl(DataWord address, DataWord origin, DataWord caller, DataWord balance,
+                             DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
+                             DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord
+                                     difficulty,
                              DataWord gaslimit, Repository repository, int callDeep) {
 
         // Transaction env
-        this.address   = address;
-        this.origin    = origin;
-        this.caller    = caller;
-        this.balance   = balance;
-        this.gasPrice  = gasPrice;
-        this.gas       = gas;
+        this.address = address;
+        this.origin = origin;
+        this.caller = caller;
+        this.balance = balance;
+        this.gasPrice = gasPrice;
+        this.gas = gas;
         this.callValue = callValue;
         this.msgData = msgData;
 
@@ -52,7 +58,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.timestamp = timestamp;
         this.number = number;
         this.difficulty = difficulty;
-        this.gaslimit   = gaslimit;
+        this.gaslimit = gaslimit;
 
         this.repository = repository;
         this.byTransaction = false;
@@ -77,12 +83,12 @@ public class ProgramInvokeImpl implements ProgramInvoke {
                              Repository repository) {
 
         // Transaction env
-        this.address   = new DataWord(address);
-        this.origin    = new DataWord(origin);
-        this.caller    = new DataWord(caller);
-        this.balance   = new DataWord(balance);
-        this.gasPrice  = new DataWord(gasPrice);
-        this.gas       = new DataWord(gas);
+        this.address = new DataWord(address);
+        this.origin = new DataWord(origin);
+        this.caller = new DataWord(caller);
+        this.balance = new DataWord(balance);
+        this.gasPrice = new DataWord(gasPrice);
+        this.gas = new DataWord(gas);
         this.callValue = new DataWord(callValue);
         this.msgData = msgData;
 
@@ -92,7 +98,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.timestamp = new DataWord(timestamp);
         this.number = new DataWord(number);
         this.difficulty = new DataWord(difficulty);
-        this.gaslimit   = new DataWord(gaslimit);
+        this.gaslimit = new DataWord(gaslimit);
 
         this.repository = repository;
     }
@@ -139,6 +145,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
      * However msgData here is a byte[] and this can't hold more than 2^32-1
      */
     private static BigInteger MAX_MSG_DATA = BigInteger.valueOf(Integer.MAX_VALUE);
+
     /*     CALLDATALOAD  op   */
     public DataWord getDataValue(DataWord indexData) {
 
@@ -175,7 +182,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
         if (msgData == null) return data;
         if (offset > msgData.length) return data;
-        if (offset + length > msgData.length) length = msgData.length - offset ;
+        if (offset + length > msgData.length) length = msgData.length - offset;
 
         System.arraycopy(msgData, offset, data, 0, length);
 
@@ -184,10 +191,10 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
 
     @Override
-    public int countNonZeroData(){
+    public int countNonZeroData() {
 
         int counter = 0;
-        for (int i = 0; i < msgData.length; ++i){
+        for (int i = 0; i < msgData.length; ++i) {
 
             if (msgData[i] != 0) ++counter;
         }
@@ -225,7 +232,9 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     }
 
     /*  Storage */
-    public Map<DataWord, DataWord> getStorage() { return storage; }
+    public Map<DataWord, DataWord> getStorage() {
+        return storage;
+    }
 
     public Repository getRepository() {
         return repository;

@@ -56,7 +56,7 @@ public class TestContext {
 
 
     @Bean
-    public DataSourceTransactionManager transactionManager(){
+    public DataSourceTransactionManager transactionManager() {
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
         dataSourceTransactionManager.setDataSource(dataSource());
 
@@ -64,18 +64,18 @@ public class TestContext {
     }
 
     @Bean(name = "dataSource")
-    public DriverManagerDataSource dataSource(){
+    public DriverManagerDataSource dataSource() {
 
         logger.info("Connecting to the block store");
 
         System.setProperty("hsqldb.reconfig_logging", "false");
 
         String url =
-            String.format("jdbc:hsqldb:file:./%s/blockchain/blockchain.db;" +
-                            "create=%s;hsqldb.default_table_type=cached",
+                String.format("jdbc:hsqldb:file:./%s/blockchain/blockchain.db;" +
+                                "create=%s;hsqldb.default_table_type=cached",
 
-                    SystemProperties.CONFIG.databaseDir(),
-                    SystemProperties.CONFIG.databaseReset());
+                        SystemProperties.CONFIG.databaseDir(),
+                        SystemProperties.CONFIG.databaseReset());
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.hsqldb.jdbcDriver");

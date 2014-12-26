@@ -33,19 +33,19 @@ public class Env {
   */
     public Env(JSONObject env) {
 
-        String coinbase   = env.get("currentCoinbase").toString();
+        String coinbase = env.get("currentCoinbase").toString();
         String difficulty = env.get("currentDifficulty").toString();
-        String timestamp  = env.get("currentTimestamp").toString();
-        String number      = env.get("currentNumber").toString();
-        String gasLimit    = env.get("currentGasLimit").toString();
-        String prevHash   = env.get("previousHash").toString();
+        String timestamp = env.get("currentTimestamp").toString();
+        String number = env.get("currentNumber").toString();
+        String gasLimit = env.get("currentGasLimit").toString();
+        String prevHash = env.get("previousHash").toString();
 
-        this.currentCoinbase  = Hex.decode(coinbase);
+        this.currentCoinbase = Hex.decode(coinbase);
         this.currentDifficlty = new BigInteger(difficulty).toByteArray();
-        this.currentGasLimit  = new BigInteger(gasLimit).toByteArray();
-        this.currentNumber    = new BigInteger(number).toByteArray();
+        this.currentGasLimit = new BigInteger(gasLimit).toByteArray();
+        this.currentNumber = new BigInteger(number).toByteArray();
         this.currentTimestamp = new BigInteger(timestamp).toByteArray();
-        this.previousHash     = Hex.decode(prevHash);
+        this.previousHash = Hex.decode(prevHash);
 
     }
 

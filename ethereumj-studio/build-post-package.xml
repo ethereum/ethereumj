@@ -6,23 +6,23 @@
     <!-- set global properties for this build -->
     <property name="src" location="src"/>
     <property name="build" location="build"/>
-    <property name="dist"  location="dist"  />
+    <property name="dist" location="dist"/>
 
 
     <target name="init">
         <!-- Create the time stamp -->
         <tstamp/>
 
-        <echo message="Ant is taking control [assembly the package]"> </echo>
-        <echo message="${maven.project.artifactId}"> </echo>
-        <echo message="${maven.project.version}"> </echo>
+        <echo message="Ant is taking control [assembly the package]"></echo>
+        <echo message="${maven.project.artifactId}"></echo>
+        <echo message="${maven.project.version}"></echo>
 
     </target>
 
     <target name="make-package">
 
         <mkdir dir="./target/package"/>
-        <copy  todir="./target/package/ethereumj/lib">
+        <copy todir="./target/package/ethereumj/lib">
             <fileset dir="./target/dependency"/>
         </copy>
 
@@ -37,10 +37,9 @@
         <copy file="./target/classes/system.properties" todir="./target/package/ethereumj/config"/>
         <copy file="./target/classes/GeoLiteCity.dat" todir="./target/package/ethereumj/config"/>
 
-        <copy  todir="./target/package/ethereumj/samples">
+        <copy todir="./target/package/ethereumj/samples">
             <fileset dir="./samples"/>
         </copy>
-
 
 
         <zip destfile="ethereumj-${DSTAMP}-${TSTAMP}.zip" basedir="./target/package">
@@ -50,7 +49,6 @@
     </target>
 
     <target name="run" depends="init, make-package"></target>
-
 
 
 </project>

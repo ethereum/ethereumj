@@ -28,6 +28,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 01/06/2014 10:45
  */
@@ -48,11 +49,11 @@ public class Program {
     ProgramResult result = new ProgramResult();
     ProgramTrace programTrace = new ProgramTrace();
 
-    byte[]   ops;
-    int      pc = 0;
-    byte     lastOp = 0;
-    byte     previouslyExecutedOp = 0;
-    boolean  stopped = false;
+    byte[] ops;
+    int pc = 0;
+    byte lastOp = 0;
+    byte previouslyExecutedOp = 0;
+    boolean stopped = false;
 
     ProgramInvoke invokeData;
 
@@ -76,13 +77,14 @@ public class Program {
     }
 
     public byte getCurrentOp() {
-        if(ops.length == 0)
+        if (ops.length == 0)
             return 0;
         return ops[pc];
     }
 
     /**
      * Last Op can only be set publicly (no getLastOp method), is used for logging
+     *
      * @param op
      */
     public void setLastOp(byte op) {
@@ -91,6 +93,7 @@ public class Program {
 
     /**
      * Should be set only after the OP is fully executed
+     *
      * @param op
      */
     public void setPreviouslyExecutedOp(byte op) {
@@ -99,6 +102,7 @@ public class Program {
 
     /**
      * returns the last fully executed OP
+     *
      * @return
      */
     public byte getPreviouslyExecutedOp() {
@@ -178,6 +182,7 @@ public class Program {
 
     /**
      * Verifies that the stack is at least <code>stackSize</code>
+     *
      * @param stackSize int
      * @throws StackTooSmallException If the stack is
      *      smaller than <code>stackSize</code>
@@ -246,7 +251,7 @@ public class Program {
         allocateMemory(offset, size);
         byte[] chunk;
         if (memory != null && size != 0)
-            chunk = Arrays.copyOfRange(memory.array(), offset, offset+size);
+            chunk = Arrays.copyOfRange(memory.array(), offset, offset + size);
         else
             chunk = new byte[size];
         return ByteBuffer.wrap(chunk);
@@ -254,7 +259,7 @@ public class Program {
 
     /**
      * Allocates extra memory in the program for
-     *  a specified size, calculated from a given offset
+     * a specified size, calculated from a given offset
      *
      * @param offset the memory address offset
      * @param size the number of bytes to allocate
@@ -264,7 +269,7 @@ public class Program {
         int memSize = memory != null ? memory.limit() : 0;
         double newMemSize = Math.max(memSize, size != 0 ?
                 Math.ceil((double) (offset + size) / 32) * 32 : 0);
-        ByteBuffer tmpMem = ByteBuffer.allocate((int)newMemSize);
+        ByteBuffer tmpMem = ByteBuffer.allocate((int) newMemSize);
         if (memory != null)
             tmpMem.put(memory.array(), 0, memory.limit());
         memory = tmpMem;
@@ -301,8 +306,8 @@ public class Program {
         this.spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
-        byte[] nonce =  result.getRepository().getNonce(senderAddress).toByteArray();
-        byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
+        byte[] nonce = result.getRepository().getNonce(senderAddress).toByteArray();
+        byte[] newAddress = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
         result.getRepository().createAccount(newAddress);
 
         if (invokeData.byTestingSuite()) {
@@ -358,11 +363,11 @@ public class Program {
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
-        byte[] code    = result.getHReturn().array();
+        byte[] code = result.getHReturn().array();
 
         long storageCost = code.length * GasCost.CREATE_DATA_BYTE;
         long afterSpend = invokeData.getGas().longValue() - storageCost - result.getGasUsed();
-        if (afterSpend < 0){
+        if (afterSpend < 0) {
             track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
         } else {
 
@@ -414,9 +419,9 @@ public class Program {
 
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        if (this.getGas().longValue() - msg.getGas().longValue() < 0 ) {
+        if (this.getGas().longValue() - msg.getGas().longValue() < 0) {
             gasLogger.info("No gas for the internal call, \n" +
-                    "fromAddress={}, codeAddress={}",
+                            "fromAddress={}, codeAddress={}",
                     Hex.toHexString(senderAddress), Hex.toHexString(codeAddress));
             throw new OutOfGasException();
         }
@@ -493,7 +498,7 @@ public class Program {
             BigInteger refundGas = msg.getGas().value().subtract(BigInteger.valueOf(result.getGasUsed()));
             if (refundGas.signum() == 1) {
                 this.refundGas(refundGas.longValue(), "remaining gas from the internal call");
-                if(gasLogger.isInfoEnabled())
+                if (gasLogger.isInfoEnabled())
                     gasLogger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
                             Hex.toHexString(senderAddress),
                             refundGas.toString());
@@ -607,7 +612,7 @@ public class Program {
     }
 
     public DataWord getPrevHash() {
-       return invokeData.getPrevHash().clone();
+        return invokeData.getPrevHash().clone();
     }
 
     public DataWord getCoinbase() {
@@ -615,7 +620,7 @@ public class Program {
     }
 
     public DataWord getTimestamp() {
-        return  invokeData.getTimestamp().clone();
+        return invokeData.getTimestamp().clone();
     }
 
     public DataWord getNumber() {
@@ -623,7 +628,7 @@ public class Program {
     }
 
     public DataWord getDifficulty() {
-        return  invokeData.getDifficulty().clone();
+        return invokeData.getDifficulty().clone();
     }
 
     public DataWord getGaslimit() {
@@ -646,7 +651,7 @@ public class Program {
 
             byte value = memory.get(i);
             // Check if value is ASCII
-            String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[] { value }) : "?";
+            String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[]{value}) : "?";
             firstLine.append(character).append("");
             secondLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
@@ -655,7 +660,7 @@ public class Program {
                 memoryData.append("").append(tmp).append(" ");
                 memoryData.append(firstLine).append(" ");
                 memoryData.append(secondLine);
-                if (i+1 < memory.limit()) memoryData.append("\n");
+                if (i + 1 < memory.limit()) memoryData.append("\n");
                 firstLine.setLength(0);
                 secondLine.setLength(0);
             }
@@ -677,7 +682,7 @@ public class Program {
             ContractDetails contractDetails = this.result.getRepository().
                     getContractDetails(this.programAddress.getLast20Bytes());
             StringBuilder storageData = new StringBuilder();
-            if(contractDetails != null) {
+            if (contractDetails != null) {
                 List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
                 Collections.sort((List<DataWord>) storageKeys);
                 for (DataWord key : storageKeys) {
@@ -697,7 +702,7 @@ public class Program {
                 if ((i + 1) % 16 == 0) {
                     String tmp = String.format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
                             Integer.toString(i, 16)).replace(" ", "0");
-                    memoryData.append("" ).append(tmp).append(" ");
+                    memoryData.append("").append(tmp).append(" ");
                     memoryData.append(oneLine);
                     if (i < memory.limit()) memoryData.append("\n");
                     oneLine.setLength(0);
@@ -709,7 +714,7 @@ public class Program {
             for (int i = 0; i < ops.length; ++i) {
 
                 String tmpString = Integer.toString(ops[i] & 0xFF, 16);
-                tmpString = tmpString.length() == 1? "0" + tmpString : tmpString;
+                tmpString = tmpString.length() == 1 ? "0" + tmpString : tmpString;
 
                 if (i != pc)
                     opsString.append(tmpString);
@@ -756,7 +761,7 @@ public class Program {
         }
     }
 
-    public void saveOpTrace(){
+    public void saveOpTrace() {
 
         if (pc >= ops.length) return;
 
@@ -775,7 +780,7 @@ public class Program {
         programTrace.addOp(op);
     }
 
-    public void saveProgramTraceToFile(String fileName){
+    public void saveProgramTraceToFile(String fileName) {
 
         if (!CONFIG.vmTrace()) return;
 
@@ -797,7 +802,7 @@ public class Program {
             objectMapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
 
             String originalJson = programTrace.getJsonString();
-            JsonNode tree = objectMapper .readTree(originalJson);
+            JsonNode tree = objectMapper.readTree(originalJson);
             String formattedJson = objectMapper.writeValueAsString(tree);
             bw.write(formattedJson);
 
@@ -818,7 +823,7 @@ public class Program {
     }
 
     public static String stringify(byte[] code, int index, String result) {
-        if(code == null || code.length == 0)
+        if (code == null || code.length == 0)
             return result;
 
         OpCode op = OpCode.code(code[index]);
@@ -832,7 +837,7 @@ public class Program {
                 result += ' ' + op.name() + ' ';
 
                 int nPush = op.val() - OpCode.PUSH1.val() + 1;
-                byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
+                byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
                 result += new BigInteger(1, data).toString() + ' ';
 
                 continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
@@ -855,13 +860,16 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class OutOfGasException extends RuntimeException {}
+    public class OutOfGasException extends RuntimeException {
+    }
 
     @SuppressWarnings("serial")
-    public class IllegalOperationException extends RuntimeException {}
+    public class IllegalOperationException extends RuntimeException {
+    }
 
     @SuppressWarnings("serial")
-    public class BadJumpDestinationException extends RuntimeException {}
+    public class BadJumpDestinationException extends RuntimeException {
+    }
 
     @SuppressWarnings("serial")
     public class StackTooSmallException extends RuntimeException {
@@ -873,17 +881,16 @@ public class Program {
     /**
      * used mostly for testing reasons
      */
-    public ByteBuffer getMemory(){
+    public ByteBuffer getMemory() {
         return memory;
     }
 
     /**
      * used mostly for testing reasons
      */
-    public void initMem(ByteBuffer memory){
+    public void initMem(ByteBuffer memory) {
         this.memory = memory;
     }
-
 
 
 }

@@ -1,6 +1,7 @@
 package test.ethereum.serpent;
 
 import org.antlr.v4.runtime.tree.ParseTree;
+
 import static org.junit.Assert.*;
 
 import org.ethereum.serpent.*;
@@ -8,6 +9,7 @@ import org.junit.Test;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 13/05/14 10:07
  */
@@ -34,7 +36,7 @@ public class SerpentCompileTest {
     public void test2() {
 
         String code = "a=2\n" +
-                      "b=6";
+                "b=6";
         String expected = "2 0 MSTORE 6 32 MSTORE";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
@@ -52,8 +54,8 @@ public class SerpentCompileTest {
     public void test3() {
 
         String code = "a=2\n" +
-                      "b=6\n" +
-                      "c=b";
+                "b=6\n" +
+                "c=b";
         String expected = "2 0 MSTORE 6 32 MSTORE 32 MLOAD 64 MSTORE";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
@@ -71,9 +73,9 @@ public class SerpentCompileTest {
     public void test4() {
 
         String code = "a=2\n" +
-                      "b=6\n" +
-                      "c=b\n" +
-                      "a=c";
+                "b=6\n" +
+                "c=b\n" +
+                "a=c";
         String expected = "2 0 MSTORE 6 32 MSTORE 32 MLOAD 64 MSTORE 64 MLOAD 0 MSTORE";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
@@ -87,7 +89,7 @@ public class SerpentCompileTest {
         assertEquals(expected, result);
     }
 
-    @Test(expected=SerpentToAssemblyCompiler.UnassignVarException.class)    // assign test 5
+    @Test(expected = SerpentToAssemblyCompiler.UnassignVarException.class)    // assign test 5
     public void test5() {
 
         String code = "a=2\n" +
@@ -278,7 +280,7 @@ public class SerpentCompileTest {
     public void test16() {
 
         String code = "if 1>2: \n" +
-                      "  a=2";
+                "  a=2";
         String expected = "2 1 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0";
 
         /**
@@ -288,7 +290,7 @@ public class SerpentCompileTest {
                  REF_0 JUMP
             LABEL_1 LABEL_0
 
-          */
+         */
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class, SerpentParser.class,
                 code);
         ParseTree tree = parser.parse();
@@ -304,7 +306,7 @@ public class SerpentCompileTest {
     public void test17() {
 
         String code = "if 10 > 2 + 5: \n" +
-                      "  a=2";
+                "  a=2";
         String expected = "5 2 ADD 10 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0";
 
         /**
@@ -314,7 +316,7 @@ public class SerpentCompileTest {
             REF_0 JUMP
          LABEL_1 LABEL_0
 
-          */
+         */
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
@@ -331,9 +333,9 @@ public class SerpentCompileTest {
     public void test18() {
 
         String code = "if 10 > 2 + 5: \n" +
-                      "  a=2\n" +
-                      "else: \n" +
-                      "  c=3\n";
+                "  a=2\n" +
+                "else: \n" +
+                "  c=3\n";
         String expected = "5 2 ADD 10 GT NOT REF_1 JUMPI 2 0 MSTORE REF_0 JUMP LABEL_1 3 32 MSTORE LABEL_0";
 
         /**
@@ -760,13 +762,13 @@ public class SerpentCompileTest {
         assertEquals(expected, result);
     }
 
-    @Test(expected=ParserUtils.AntlrParseException.class)    // if elif else test 14
+    @Test(expected = ParserUtils.AntlrParseException.class)    // if elif else test 14
     public void test29() {
 
-        String code =   "  if 2>4:  \n" +
-                        " a=20      \n" +
-                        "           \n" +
-                        "           \n";
+        String code = "  if 2>4:  \n" +
+                " a=20      \n" +
+                "           \n" +
+                "           \n";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
@@ -775,13 +777,13 @@ public class SerpentCompileTest {
         fail("Should be indent error thrown");
     }
 
-    @Test(expected=ParserUtils.AntlrParseException.class)    // if elif else test 15
+    @Test(expected = ParserUtils.AntlrParseException.class)    // if elif else test 15
     public void test30() {
 
-        String code =   "if 2>4:  \n" +
-                        "    a=20   \n" +
-                        "  else:  \n" +
-                        "    a=40   \n";
+        String code = "if 2>4:  \n" +
+                "    a=20   \n" +
+                "  else:  \n" +
+                "    a=40   \n";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
@@ -790,15 +792,15 @@ public class SerpentCompileTest {
         fail("Should be indent error thrown");
     }
 
-    @Test(expected=ParserUtils.AntlrParseException.class)    // if elif else test 16
+    @Test(expected = ParserUtils.AntlrParseException.class)    // if elif else test 16
     public void test31() {
 
-        String code =   "if 2>4:    \n" +
-                        "    a=20   \n" +
-                        " elif 2<9: \n" +
-                        "    a=40   \n" +
-                        "else:      \n" +
-                        "    a=40   \n";
+        String code = "if 2>4:    \n" +
+                "    a=20   \n" +
+                " elif 2<9: \n" +
+                "    a=40   \n" +
+                "else:      \n" +
+                "    a=40   \n";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
@@ -841,15 +843,15 @@ public class SerpentCompileTest {
         assertEquals(expected, result);
     }
 
-    @Test(expected=ParserUtils.AntlrParseException.class)    // if elif else test 18
+    @Test(expected = ParserUtils.AntlrParseException.class)    // if elif else test 18
     public void test33() {
 
-        String code =   "if 2*2==4:         \n" +
-                        "    if 3*3==9:     \n" +
-                        "      if 4*4==16:  \n" +
-                        "        a=20       \n" +
-                        "    else:          \n" +
-                        "                   \n";
+        String code = "if 2*2==4:         \n" +
+                "    if 3*3==9:     \n" +
+                "      if 4*4==16:  \n" +
+                "        a=20       \n" +
+                "    else:          \n" +
+                "                   \n";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
@@ -948,9 +950,9 @@ public class SerpentCompileTest {
     @Test    // while test 1
     public void test36() {
 
-        String code =   "a = 20        \n" +
-                        "while a>0:    \n" +
-                        "  a = a - 1   \n"  ;
+        String code = "a = 20        \n" +
+                "while a>0:    \n" +
+                "  a = a - 1   \n";
 
         String expected = "20 0 MSTORE LABEL_0 0 0 MLOAD GT NOT REF_1 JUMPI 1 0 MLOAD SUB 0 MSTORE REF_0 JUMP LABEL_1";
 
@@ -1054,13 +1056,13 @@ public class SerpentCompileTest {
         assertEquals(expected, result);
     }
 
-    @Test(expected=ParserUtils.AntlrParseException.class)    // while test 4
+    @Test(expected = ParserUtils.AntlrParseException.class)    // while test 4
     public void test39() {
 
-        String code =   "x = 0xFF\n" +
-                        "while x > 1:\n" +
-                        "x = x +2\n" +
-                        "x = 3 * x + 1"  ;
+        String code = "x = 0xFF\n" +
+                "while x > 1:\n" +
+                "x = x +2\n" +
+                "x = 3 * x + 1";
 
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
@@ -1151,12 +1153,12 @@ public class SerpentCompileTest {
     @Test // compile to machine code 1
     public void test42() {
 
-        String code =   "x = 256              \n" +
+        String code = "x = 256              \n" +
                 "while x > 1:         \n" +
                 "   if (x % 2) == 0:  \n" +
                 "       x = x / 2     \n" +
                 "   else:             \n " +
-                "       x = 3 * x + 1 \n"  ;
+                "       x = 3 * x + 1 \n";
 
         String expected = "97 1 0 96 0 84 96 1 96 0 83 11 12 13 99 0 0 0 53 89 96 0 96 2 96 0 83 6 12 13 99 0 0 0 39 89 96 2 96 0 83 4 96 0 84 99 0 0 0 51 88 96 1 96 0 83 96 3 2 1 96 0 84 99 0 0 0 6 88";
 
@@ -1167,11 +1169,11 @@ public class SerpentCompileTest {
 
     @Test // test init/code blocks 1
     public void test43() {
-        String code =   "init:\n" +
-                        "  a = 2\n" +
-                        "code:\n" +
-                        "  b=msg.data[1]\n" +
-                        "  stop\n" ;
+        String code = "init:\n" +
+                "  a = 2\n" +
+                "code:\n" +
+                "  b=msg.data[1]\n" +
+                "  stop\n";
 
         String expected = "[init 2 0 MSTORE init] [code 1 32 MUL CALLDATALOAD 0 MSTORE STOP code]";
         String asmResult = SerpentCompiler.compileFullNotion(code);
@@ -1256,7 +1258,7 @@ public class SerpentCompileTest {
 
     @Test // test create(gas, mem_start , mem_size)
     public void test51() {
-        String code =   "\n" +
+        String code = "\n" +
                 "create(100, 0, 32) \n";
         String expected = "32 0 100 CREATE";
 

@@ -45,24 +45,26 @@ import org.spongycastle.util.encoders.Hex;
  * See: https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP
  *
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 01/04/2014 10:45
- *
  */
 public class RLP {
 
-    /** Allow for content up to size of 2^64 bytes **/
+    /**
+     * Allow for content up to size of 2^64 bytes *
+     */
     private static double MAX_ITEM_LENGTH = Math.pow(256, 8);
 
     /**
      * Reason for threshold according to Vitalik Buterin:
-     *  - 56 bytes maximizes the benefit of both options
-     *  - if we went with 60 then we would have only had 4 slots for long strings
+     * - 56 bytes maximizes the benefit of both options
+     * - if we went with 60 then we would have only had 4 slots for long strings
      * so RLP would not have been able to store objects above 4gb
-     *  - if we went with 48 then RLP would be fine for 2^128 space, but that's way too much
-     *  - so 56 and 2^64 space seems like the right place to put the cutoff
-     *  - also, that's where Bitcoin's varint does the cutof
-     **/
+     * - if we went with 48 then RLP would be fine for 2^128 space, but that's way too much
+     * - so 56 and 2^64 space seems like the right place to put the cutoff
+     * - also, that's where Bitcoin's varint does the cutof
+     */
     private static int SIZE_THRESHOLD = 56;
 
     /** RLP encoding rules are defined as follows: */
@@ -347,7 +349,7 @@ public class RLP {
         byte dByte = decodeOneByteItem(data, index + offset);
 
         // return IP address
-        return new byte[] { aByte, bByte, cByte, dByte };
+        return new byte[]{aByte, bByte, cByte, dByte};
     }
 
     public static int getFirstListElement(byte[] payload, int pos) {
@@ -659,7 +661,7 @@ public class RLP {
                 // single byte item
                 if ((msgData[pos] & 0xFF) < OFFSET_SHORT_ITEM) {
 
-                    byte[] item = { (byte) (msgData[pos] & 0xFF) };
+                    byte[] item = {(byte) (msgData[pos] & 0xFF)};
 
                     RLPItem rlpItem = new RLPItem(item);
                     rlpList.add(rlpItem);
@@ -685,23 +687,25 @@ public class RLP {
         }
         int prefix = data[pos] & 0xFF;
         if (prefix == OFFSET_SHORT_ITEM) {
-            return new DecodeResult(pos+1, ""); // means no length or 0
+            return new DecodeResult(pos + 1, ""); // means no length or 0
         } else if (prefix < OFFSET_SHORT_ITEM) {
-            return new DecodeResult(pos+1, new byte[] { data[pos] }); // byte is its own RLP encoding
+            return new DecodeResult(pos + 1, new byte[]{data[pos]}); // byte is its own RLP encoding
         } else if (prefix < OFFSET_LONG_ITEM) {
             int len = prefix - OFFSET_SHORT_ITEM; // length of the encoded bytes
-            return new DecodeResult(pos+1+len, copyOfRange(data, pos+1, pos+1+len));
+            return new DecodeResult(pos + 1 + len, copyOfRange(data, pos + 1, pos + 1 + len));
         } else if (prefix < OFFSET_SHORT_LIST) {
             int lenlen = prefix - OFFSET_LONG_ITEM; // length of length the encoded bytes
-            int lenbytes = byteArrayToInt(copyOfRange(data, pos+1, pos+1+lenlen)); // length of encoded bytes
-            return new DecodeResult(pos+1+lenlen+lenbytes, copyOfRange(data, pos+1+lenlen, pos+1+lenlen+lenbytes));
+            int lenbytes = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
+            return new DecodeResult(pos + 1 + lenlen + lenbytes, copyOfRange(data, pos + 1 + lenlen, pos + 1 + lenlen
+                    + lenbytes));
         } else if (prefix <= OFFSET_LONG_LIST) {
             int len = prefix - OFFSET_SHORT_LIST; // length of the encoded list
-            int prevPos = pos; pos++;
+            int prevPos = pos;
+            pos++;
             return decodeList(data, pos, prevPos, len);
         } else if (prefix < 0xFF) {
             int lenlen = prefix - OFFSET_LONG_LIST; // length of length the encoded list
-            int lenlist = byteArrayToInt(copyOfRange(data, pos+1, pos+1+lenlen)); // length of encoded bytes
+            int lenlist = byteArrayToInt(copyOfRange(data, pos + 1, pos + 1 + lenlen)); // length of encoded bytes
             pos = pos + lenlen + 1; // start at position of first element in list
             int prevPos = lenlist;
             return decodeList(data, pos, prevPos, lenlist);
@@ -712,7 +716,7 @@ public class RLP {
 
     private static DecodeResult decodeList(byte[] data, int pos, int prevPos, int len) {
         List<Object> slice = new ArrayList<>();
-        for (int i = 0; i < len;) {
+        for (int i = 0; i < len; ) {
             // Get the next item in the data list and append it
             DecodeResult result = decode(data, pos);
             slice.add(result.getDecoded());
@@ -759,19 +763,21 @@ public class RLP {
         }
     }
 
-    /** Integer limitation goes up to 2^31-1 so length can never be bigger than MAX_ITEM_LENGTH */
+    /**
+     * Integer limitation goes up to 2^31-1 so length can never be bigger than MAX_ITEM_LENGTH
+     */
     public static byte[] encodeLength(int length, int offset) {
         if (length < SIZE_THRESHOLD) {
             byte firstByte = (byte) (length + offset);
-            return new byte[] { firstByte };
+            return new byte[]{firstByte};
         } else if (length < MAX_ITEM_LENGTH) {
             byte[] binaryLength;
             if (length > 0xFF)
                 binaryLength = BigInteger.valueOf(length).toByteArray();
             else
-                binaryLength = new byte[] { (byte) length };
+                binaryLength = new byte[]{(byte) length};
             byte firstByte = (byte) (binaryLength.length + offset + SIZE_THRESHOLD - 1);
-            return concatenate(new byte[] { firstByte }, binaryLength);
+            return concatenate(new byte[]{firstByte}, binaryLength);
         } else {
             throw new RuntimeException("Input too long");
         }
@@ -779,11 +785,11 @@ public class RLP {
 
     public static byte[] encodeByte(byte singleByte) {
         if ((singleByte & 0xFF) == 0) {
-            return new byte[] { (byte) OFFSET_SHORT_ITEM };
+            return new byte[]{(byte) OFFSET_SHORT_ITEM};
         } else if ((singleByte & 0xFF) < 0x7F) {
-            return new byte[] { singleByte };
+            return new byte[]{singleByte};
         } else {
-            return new byte[] { (byte) (OFFSET_SHORT_ITEM + 1), singleByte };
+            return new byte[]{(byte) (OFFSET_SHORT_ITEM + 1), singleByte};
         }
     }
 
@@ -791,9 +797,9 @@ public class RLP {
         if (singleShort <= 0xFF)
             return encodeByte((byte) singleShort);
         else {
-            return new byte[] { (byte) (OFFSET_SHORT_ITEM + 2),
+            return new byte[]{(byte) (OFFSET_SHORT_ITEM + 2),
                     (byte) (singleShort >> 8 & 0xFF),
-                    (byte) (singleShort >> 0 & 0xFF) };
+                    (byte) (singleShort >> 0 & 0xFF)};
         }
     }
 
@@ -803,12 +809,12 @@ public class RLP {
         else if (singleInt <= 0xFFFF)
             return encodeShort((short) singleInt);
         else if (singleInt <= 0xFFFFFF)
-            return new byte[] { (byte) (OFFSET_SHORT_ITEM + 3),
-                (byte) (singleInt >>> 16),
-                (byte) (singleInt >>> 8),
-                (byte) singleInt};
+            return new byte[]{(byte) (OFFSET_SHORT_ITEM + 3),
+                    (byte) (singleInt >>> 16),
+                    (byte) (singleInt >>> 8),
+                    (byte) singleInt};
         else {
-            return new byte[] { (byte) (OFFSET_SHORT_ITEM + 4),
+            return new byte[]{(byte) (OFFSET_SHORT_ITEM + 4),
                     (byte) (singleInt >>> 24),
                     (byte) (singleInt >>> 16),
                     (byte) (singleInt >>> 8),
@@ -821,8 +827,8 @@ public class RLP {
     }
 
     public static byte[] encodeBigInteger(BigInteger srcBigInteger) {
-        if(srcBigInteger == BigInteger.ZERO)
-            return encodeByte((byte)0);
+        if (srcBigInteger == BigInteger.ZERO)
+            return encodeByte((byte) 0);
         else
             return encodeElement(asUnsignedByteArray(srcBigInteger));
     }
@@ -866,14 +872,14 @@ public class RLP {
 
     public static byte[] encodeList(byte[]... elements) {
 
-        if (elements == null){
-            return new byte[] {(byte)OFFSET_SHORT_LIST };
+        if (elements == null) {
+            return new byte[]{(byte) OFFSET_SHORT_LIST};
         }
 
         int totalLength = 0;
         for (int i = 0;
              elements != null && i < elements.length; ++i) {
-             totalLength += elements[i].length;
+            totalLength += elements[i].length;
         }
 
         byte[] data;
@@ -920,13 +926,13 @@ public class RLP {
         } else if (input instanceof String) {
             String inputString = (String) input;
             return inputString.getBytes();
-        } else if(input instanceof Long) {
+        } else if (input instanceof Long) {
             Long inputLong = (Long) input;
             return (inputLong == 0) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(inputLong));
-        } else if(input instanceof Integer) {
+        } else if (input instanceof Integer) {
             Integer inputInt = (Integer) input;
             return (inputInt == 0) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(inputInt.intValue()));
-        } else if(input instanceof BigInteger) {
+        } else if (input instanceof BigInteger) {
             BigInteger inputBigInt = (BigInteger) input;
             return (inputBigInt == BigInteger.ZERO) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(inputBigInt);
         } else if (input instanceof Value) {

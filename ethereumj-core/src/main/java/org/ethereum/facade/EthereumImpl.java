@@ -60,19 +60,22 @@ public class EthereumImpl implements Ethereum {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         worldManager.loadBlockchain();
-        if (CONFIG.listenPort() > 0){
+        if (CONFIG.listenPort() > 0) {
             Executors.newSingleThreadExecutor().submit(
-                    new Runnable() { public void run() {
-                        peerServer.start(CONFIG.listenPort());
-                    }}
+                    new Runnable() {
+                        public void run() {
+                            peerServer.start(CONFIG.listenPort());
+                        }
+                    }
             );
         }
     }
 
     /**
      * Find a peer but not this one
+     *
      * @param peer - peer to exclude
      * @return online peer
      */
@@ -90,7 +93,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeers)  {
+    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeers) {
         logger.info("Looking for online peers...");
 
         final EthereumListener listener = worldManager.getListener();
@@ -132,7 +135,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public void startPeerDiscovery(){
+    public void startPeerDiscovery() {
         worldManager.startPeerDiscovery();
     }
 
@@ -179,10 +182,10 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public PeerClient getDefaultPeer(){
+    public PeerClient getDefaultPeer() {
 
         PeerClient peer = worldManager.getActivePeer();
-        if (peer == null){
+        if (peer == null) {
 
             peer = new PeerClient();
             worldManager.setActivePeer(peer);
@@ -200,12 +203,12 @@ public class EthereumImpl implements Ethereum {
                                          BigInteger gasPrice,
                                          BigInteger gas,
                                          byte[] recieveAddress,
-                                         BigInteger value, byte[] data ){
+                                         BigInteger value, byte[] data) {
 
-        byte[] nonceBytes    =  ByteUtil.bigIntegerToBytes(nonce);
-        byte[] gasPriceBytes =  ByteUtil.bigIntegerToBytes(gasPrice);
-        byte[] gasBytes      =  ByteUtil.bigIntegerToBytes(gas);
-        byte[] valueBytes    =  ByteUtil.bigIntegerToBytes(value);
+        byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce);
+        byte[] gasPriceBytes = ByteUtil.bigIntegerToBytes(gasPrice);
+        byte[] gasBytes = ByteUtil.bigIntegerToBytes(gas);
+        byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
 
         Transaction tx = new Transaction(nonceBytes, gasPriceBytes, gasBytes,
                 recieveAddress, valueBytes, data);
@@ -215,7 +218,7 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Future<Transaction> submitTransaction(Transaction transaction){
+    public Future<Transaction> submitTransaction(Transaction transaction) {
 
         TransactionTask transactionTask = new TransactionTask(transaction, worldManager);
         Future<Transaction> future = TransactionExecutor.instance.submitTransaction(transactionTask);
@@ -225,13 +228,13 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Wallet getWallet(){
+    public Wallet getWallet() {
         return worldManager.getWallet();
     }
 
 
     @Override
-    public Repository getRepository(){
+    public Repository getRepository() {
         return worldManager.getRepository();
     }
 

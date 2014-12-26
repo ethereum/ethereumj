@@ -23,7 +23,7 @@ public class BlocksMessage extends EthMessage {
         super(encoded);
     }
 
-    public BlocksMessage(List<Block> blocks){
+    public BlocksMessage(List<Block> blocks) {
         this.blocks = blocks;
         parsed = true;
     }
@@ -45,7 +45,7 @@ public class BlocksMessage extends EthMessage {
         List<byte[]> encodedElements = new Vector<>();
         encodedElements.add(RLP.encodeByte(BLOCKS.asByte()));
 
-        for (Block block : blocks){
+        for (Block block : blocks) {
             encodedElements.add(block.getEncoded());
         }
 
@@ -68,7 +68,7 @@ public class BlocksMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.BLOCKS;
     }
 

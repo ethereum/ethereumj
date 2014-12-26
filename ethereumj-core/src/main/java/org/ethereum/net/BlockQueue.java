@@ -27,17 +27,25 @@ public class BlockQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
-    /** The list of hashes of the heaviest chain on the network,
-     * for which this client doesn't have the blocks yet */
+    /**
+     * The list of hashes of the heaviest chain on the network,
+     * for which this client doesn't have the blocks yet
+     */
     private Deque<byte[]> blockHashQueue = new ArrayDeque<>();
 
-    /** Queue with blocks to be validated and added to the blockchain */
+    /**
+     * Queue with blocks to be validated and added to the blockchain
+     */
     private Queue<Block> blockReceivedQueue = new ConcurrentLinkedQueue<>();
 
-    /** Highest known total difficulty, representing the heaviest chain on the network */
+    /**
+     * Highest known total difficulty, representing the heaviest chain on the network
+     */
     private BigInteger highestTotalDifficulty;
 
-    /** Last block in the queue to be processed */
+    /**
+     * Last block in the queue to be processed
+     */
     private Block lastBlock;
 
     private Timer timer = new Timer("BlockQueueTimer");
@@ -61,7 +69,7 @@ public class BlockQueue {
             return;
 
         logger.info("BlockQueue size: {}", blockReceivedQueue.size());
-        while(!blockReceivedQueue.isEmpty()){
+        while (!blockReceivedQueue.isEmpty()) {
             Block block = blockReceivedQueue.poll();
 
             logger.info("Processing block index: {}", block.getNumber());
@@ -85,22 +93,23 @@ public class BlockQueue {
         blockReceivedQueue.addAll(blockList);
         lastBlock = blockList.get(blockList.size() - 1);
 
-        logger.info("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]" ,
+        logger.info("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockReceivedQueue.size(),
                 lastBlock.getNumber());
     }
 
     /**
      * adding single block to the queue usually
-     *        a result of a NEW_BLOCK message announce.
+     * a result of a NEW_BLOCK message announce.
+     *
      * @param block - new block
      */
-    public void addBlock(Block block){
+    public void addBlock(Block block) {
 
         blockReceivedQueue.add(block);
         lastBlock = block;
 
-        logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]" ,
+        logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockReceivedQueue.size(),
                 lastBlock.getNumber());
     }
@@ -143,19 +152,19 @@ public class BlockQueue {
     public void addHash(byte[] hash) {
         blockHashQueue.addLast(hash);
 
-        if (logger.isTraceEnabled()){
-            logger.trace("Adding hash to a hashQueue: [{}]" , Hex.toHexString(hash));
+        if (logger.isTraceEnabled()) {
+            logger.trace("Adding hash to a hashQueue: [{}]", Hex.toHexString(hash));
         }
     }
 
-    public void returnHashes(List<byte[]> hashes){
+    public void returnHashes(List<byte[]> hashes) {
 
-        ListIterator iterator =  hashes.listIterator(hashes.size());
-        while(iterator.hasPrevious())
-            blockHashQueue.addLast((byte[])iterator.previous());
+        ListIterator iterator = hashes.listIterator(hashes.size());
+        while (iterator.hasPrevious())
+            blockHashQueue.addLast((byte[]) iterator.previous());
     }
 
-    public void addNewBlockHash(byte[] hash){
+    public void addNewBlockHash(byte[] hash) {
         blockHashQueue.addFirst(hash);
     }
 
@@ -168,14 +177,14 @@ public class BlockQueue {
 
         List<byte[]> hashes = new ArrayList<>();
         while (!blockHashQueue.isEmpty() && hashes.size() < CONFIG.maxBlocksAsk()) {
-                hashes.add(blockHashQueue.removeLast());
+            hashes.add(blockHashQueue.removeLast());
         }
         return hashes;
     }
 
     // a bit ugly but really gives
     // good result
-    public void logHashQueueSize(){
+    public void logHashQueueSize() {
         logger.info("Block hashes list size: [{}]", blockHashQueue.size());
     }
 
@@ -213,11 +222,11 @@ public class BlockQueue {
         return blockReceivedQueue.size();
     }
 
-    public boolean isHashesEmpty(){
+    public boolean isHashesEmpty() {
         return blockHashQueue.size() == 0;
     }
 
-    public void clear(){
+    public void clear() {
         this.blockHashQueue.clear();
         this.blockReceivedQueue.clear();
     }

@@ -53,7 +53,7 @@ public class TestRunner {
 
         List<String> results = null;
         logger.info("\n***");
-        logger.info(" Running test case: [" + testCase.getName() + "]") ;
+        logger.info(" Running test case: [" + testCase.getName() + "]");
         logger.info("***\n");
         results = new ArrayList<>();
 
@@ -62,7 +62,7 @@ public class TestRunner {
 
         logger.info("loaded repository");
 
-        org.ethereum.core.Transaction tx =  createTransaction(testCase.getTransaction());
+        org.ethereum.core.Transaction tx = createTransaction(testCase.getTransaction());
         logger.info("transaction: {}", tx.toString());
 
         byte[] secretKey = testCase.getTransaction().secretKey;
@@ -91,9 +91,9 @@ public class TestRunner {
         List<String> logResults = testCase.getLogs().compareToReal(logs);
         results.addAll(logResults);
 
-        Set<ByteArrayWrapper> fullAddressSet =  repository.getFullAddressSet();
+        Set<ByteArrayWrapper> fullAddressSet = repository.getFullAddressSet();
         int repoSize = 0;
-        for (ByteArrayWrapper addrWrapped : fullAddressSet){
+        for (ByteArrayWrapper addrWrapped : fullAddressSet) {
 
             byte[] addr = addrWrapped.getData();
 
@@ -101,11 +101,11 @@ public class TestRunner {
             ContractDetails contractDetails = repository.getContractDetails(addr);
 
             logger.info("{} \n{} \n{}", Hex.toHexString(addr),
-                    accountState.toString(), contractDetails.toString() );
+                    accountState.toString(), contractDetails.toString());
             logger.info("");
 
             AccountState expectedAccountState = testCase.getPost().get(wrap(addr));
-            if (expectedAccountState == null){
+            if (expectedAccountState == null) {
                 String formatedString = String.format("Unexpected account state: address: %s", Hex.toHexString(addr));
                 results.add(formatedString);
                 continue;
@@ -119,7 +119,7 @@ public class TestRunner {
 
         int postRepoSize = testCase.getPost().size();
 
-        if (postRepoSize > repoSize){
+        if (postRepoSize > repoSize) {
             results.add("ERROR: Post repository contains more accounts than executed repository ");
         }
 
@@ -129,7 +129,7 @@ public class TestRunner {
     public List<String> runTestCase(TestCase testCase) {
 
         logger.info("\n***");
-        logger.info(" Running test case: [" + testCase.getName() + "]") ;
+        logger.info(" Running test case: [" + testCase.getName() + "]");
         logger.info("***\n");
         List<String> results = new ArrayList<>();
 
@@ -141,29 +141,29 @@ public class TestRunner {
 
 
             /* 2. Create ProgramInvoke - Env/Exec */
-            Env  env  = testCase.getEnv();
+            Env env = testCase.getEnv();
             Exec exec = testCase.getExec();
             Logs logs = testCase.getLogs();
 
-            byte[] address     = exec.getAddress();
-            byte[] origin      = exec.getOrigin();
-            byte[] caller      = exec.getCaller();
-            byte[] balance     = ByteUtil.bigIntegerToBytes(repository.getBalance(exec.getAddress()));
-            byte[] gasPrice    = exec.getGasPrice();
-            byte[] gas         = exec.getGas();
-            byte[] callValue   = exec.getValue();
-            byte[] msgData     = exec.getData();
-            byte[] lastHash    = env.getPreviousHash();
-            byte[] coinbase    = env.getCurrentCoinbase();
-            long timestamp     = new BigInteger(env.getCurrentTimestamp()).longValue();
-            long number        = new BigInteger(env.getCurrentNumber()).longValue();
-            byte[] difficulty  = env.getCurrentDifficlty();
-            long gaslimit      = new BigInteger(env.getCurrentGasLimit()).longValue();
+            byte[] address = exec.getAddress();
+            byte[] origin = exec.getOrigin();
+            byte[] caller = exec.getCaller();
+            byte[] balance = ByteUtil.bigIntegerToBytes(repository.getBalance(exec.getAddress()));
+            byte[] gasPrice = exec.getGasPrice();
+            byte[] gas = exec.getGas();
+            byte[] callValue = exec.getValue();
+            byte[] msgData = exec.getData();
+            byte[] lastHash = env.getPreviousHash();
+            byte[] coinbase = env.getCurrentCoinbase();
+            long timestamp = new BigInteger(env.getCurrentTimestamp()).longValue();
+            long number = new BigInteger(env.getCurrentNumber()).longValue();
+            byte[] difficulty = env.getCurrentDifficlty();
+            long gaslimit = new BigInteger(env.getCurrentGasLimit()).longValue();
 
             // Origin and caller need to exist in order to be able to execute
-            if(repository.getAccountState(origin) == null)
+            if (repository.getAccountState(origin) == null)
                 repository.createAccount(origin);
-            if(repository.getAccountState(caller) == null)
+            if (repository.getAccountState(caller) == null)
                 repository.createAccount(caller);
 
             ProgramInvoke programInvoke = new ProgramInvokeImpl(address, origin, caller, balance,
@@ -177,27 +177,24 @@ public class TestRunner {
             boolean vmDidThrowAnEception = false;
             RuntimeException e = null;
             try {
-                while(!program.isStopped())
+                while (!program.isStopped())
                     vm.step(program);
-            }
-            catch (RuntimeException ex) {
+            } catch (RuntimeException ex) {
                 vmDidThrowAnEception = true;
                 e = ex;
             }
             program.saveProgramTraceToFile(testCase.getName());
 
-            if(testCase.getPost().size() == 0) {
-                if(vmDidThrowAnEception != true) {
+            if (testCase.getPost().size() == 0) {
+                if (vmDidThrowAnEception != true) {
                     String output =
                             String.format("VM was expected to throw an exception");
                     logger.info(output);
                     results.add(output);
-                }
-                else
+                } else
                     logger.info("VM did throw an exception: " + e.toString());
-            }
-            else {
-                if(vmDidThrowAnEception) {
+            } else {
+                if (vmDidThrowAnEception) {
                     String output =
                             String.format("VM threw an unexpected exception: " + e.toString());
                     logger.info(output);
@@ -213,9 +210,9 @@ public class TestRunner {
 
                     AccountState accountState = testCase.getPost().get(key);
 
-                    long       expectedNonce     = accountState.getNonceLong();
-                    BigInteger expectedBalance   = accountState.getBigIntegerBalance();
-                    byte[]     expectedCode      = accountState.getCode();
+                    long expectedNonce = accountState.getNonceLong();
+                    BigInteger expectedBalance = accountState.getBigIntegerBalance();
+                    byte[] expectedCode = accountState.getCode();
 
                     boolean accountExist = (null != repository.getAccountState(key.getData()));
                     if (!accountExist) {
@@ -283,17 +280,17 @@ public class TestRunner {
                             continue;
                         }
 
-                        Map<DataWord, DataWord>  testStorage = contractDetails.getStorage();
+                        Map<DataWord, DataWord> testStorage = contractDetails.getStorage();
                         DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
 
                         if (actualValue == null ||
-                            !Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())) {
+                                !Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())) {
 
                             String output =
                                     String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",
                                             Hex.toHexString(storageKey.getData()),
                                             Hex.toHexString(expectedStValue),
-                                            actualValue == null ? "" :   Hex.toHexString(actualValue.getNoLeadZeroesData()));
+                                            actualValue == null ? "" : Hex.toHexString(actualValue.getNoLeadZeroesData()));
                             logger.info(output);
                             results.add(output);
                         }
@@ -304,36 +301,35 @@ public class TestRunner {
 
                     Iterator<LogInfo> postLogs = logs.getIterator();
                     int i = 0;
-                    while(postLogs.hasNext()) {
+                    while (postLogs.hasNext()) {
 
                         LogInfo expectedLogInfo = postLogs.next();
 
                         LogInfo foundLogInfo = null;
                         if (logResult.size() > i)
-                            foundLogInfo  = logResult.get(i);
+                            foundLogInfo = logResult.get(i);
 
-                        if(foundLogInfo == null) {
+                        if (foundLogInfo == null) {
                             String output =
                                     String.format("Expected log [ %s ]", expectedLogInfo.toString());
                             logger.info(output);
                             results.add(output);
-                        }
-                        else {
-                            if(!Arrays.equals(expectedLogInfo.getAddress(), foundLogInfo.getAddress())) {
+                        } else {
+                            if (!Arrays.equals(expectedLogInfo.getAddress(), foundLogInfo.getAddress())) {
                                 String output =
                                         String.format("Expected address [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getAddress()), Hex.toHexString(foundLogInfo.getAddress()));
                                 logger.info(output);
                                 results.add(output);
                             }
 
-                            if(!Arrays.equals(expectedLogInfo.getData(), foundLogInfo.getData())) {
+                            if (!Arrays.equals(expectedLogInfo.getData(), foundLogInfo.getData())) {
                                 String output =
                                         String.format("Expected data [ %s ], found [ %s ]", Hex.toHexString(expectedLogInfo.getData()), Hex.toHexString(foundLogInfo.getData()));
                                 logger.info(output);
                                 results.add(output);
                             }
 
-                            if(!expectedLogInfo.getBloom().equals(foundLogInfo.getBloom())) {
+                            if (!expectedLogInfo.getBloom().equals(foundLogInfo.getBloom())) {
                                 String output =
                                         String.format("Expected bloom [ %s ], found [ %s ]",
                                                 Hex.toHexString(expectedLogInfo.getBloom().getData()),
@@ -342,18 +338,18 @@ public class TestRunner {
                                 results.add(output);
                             }
 
-                            if(expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
+                            if (expectedLogInfo.getTopics().size() != foundLogInfo.getTopics().size()) {
                                 String output =
-                                        String.format("Expected number of topics [ %d ], found [ %d ]", expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
+                                        String.format("Expected number of topics [ %d ], found [ %d ]",
+                                                expectedLogInfo.getTopics().size(), foundLogInfo.getTopics().size());
                                 logger.info(output);
                                 results.add(output);
-                            }
-                            else {
-                                int j=0;
-                                for(DataWord topic: expectedLogInfo.getTopics()) {
+                            } else {
+                                int j = 0;
+                                for (DataWord topic : expectedLogInfo.getTopics()) {
                                     byte[] foundTopic = foundLogInfo.getTopics().get(j).getData();
 
-                                    if(!Arrays.equals(topic.getData(), foundTopic)) {
+                                    if (!Arrays.equals(topic.getData(), foundTopic)) {
                                         String output =
                                                 String.format("Expected topic [ %s ], found [ %s ]", Hex.toHexString(topic.getData()), Hex.toHexString(foundTopic));
                                         logger.info(output);
@@ -373,7 +369,7 @@ public class TestRunner {
                 // TODO:  -> basically the deleted by suicide should be deleted
                 // TODO:  -> and no unexpected created
 
-                List<org.ethereum.vm.CallCreate> resultCallCreates  =
+                List<org.ethereum.vm.CallCreate> resultCallCreates =
                         program.getResult().getCallCreateList();
 
                 // assert call creates
@@ -492,14 +488,14 @@ public class TestRunner {
         }
     }
 
-    public org.ethereum.core.Transaction createTransaction(Transaction tx){
+    public org.ethereum.core.Transaction createTransaction(Transaction tx) {
 
-        byte[] nonceBytes    =  ByteUtil.longToBytes(tx.nonce);
-        byte[] gasPriceBytes =  ByteUtil.longToBytes(tx.gasPrice);
-        byte[] gasBytes      =  ByteUtil.longToBytes(tx.gasLimit);
-        byte[] valueBytes    =  ByteUtil.longToBytes(tx.value);
-        byte[] toAddr        =  tx.getTo();
-        byte[] data          =  tx.getData();
+        byte[] nonceBytes = ByteUtil.longToBytes(tx.nonce);
+        byte[] gasPriceBytes = ByteUtil.longToBytes(tx.gasPrice);
+        byte[] gasBytes = ByteUtil.longToBytes(tx.gasLimit);
+        byte[] valueBytes = ByteUtil.longToBytes(tx.value);
+        byte[] toAddr = tx.getTo();
+        byte[] data = tx.getData();
 
         org.ethereum.core.Transaction transaction = new org.ethereum.core.Transaction(
                 nonceBytes, gasPriceBytes, gasBytes,
@@ -508,7 +504,7 @@ public class TestRunner {
         return transaction;
     }
 
-    public RepositoryDummy loadRepository(Map<ByteArrayWrapper, AccountState> pre){
+    public RepositoryDummy loadRepository(Map<ByteArrayWrapper, AccountState> pre) {
 
 
         RepositoryDummy track = new RepositoryDummy();
@@ -524,7 +520,7 @@ public class TestRunner {
 
             track.saveCode(addr, accountState.getCode());
 
-            for (DataWord storageKey : accountState.getStorage().keySet()){
+            for (DataWord storageKey : accountState.getStorage().keySet()) {
                 track.addStorageRow(addr, storageKey, accountState.getStorage().get(storageKey));
             }
         }

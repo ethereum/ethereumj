@@ -110,7 +110,7 @@ public class Wallet {
      * @param transaction
      * @return
      */
-    public WalletTransaction addByWalletTransaction(Transaction transaction){
+    public WalletTransaction addByWalletTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
         WalletTransaction walletTransaction = new WalletTransaction(transaction);
         this.walletTransactions.put(hash, walletTransaction);
@@ -127,9 +127,9 @@ public class Wallet {
      */
     public WalletTransaction addTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction placed hash: {}", hash );
+        logger.info("pending transaction placed hash: {}", hash);
 
-        WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
+        WalletTransaction walletTransaction = this.walletTransactions.get(hash);
         if (walletTransaction != null)
             walletTransaction.incApproved();
         else {
@@ -158,7 +158,7 @@ public class Wallet {
 
     public void removeTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction removed with hash: {} ",  hash);
+        logger.info("pending transaction removed with hash: {} ", hash);
         walletTransactions.remove(hash);
     }
 
@@ -167,7 +167,7 @@ public class Wallet {
         transactionMap.put(new ByteArrayWrapper(transaction.getHash()), transaction);
 
         byte[] senderAddress = transaction.getSender();
-        Account sender =  rows.get(Hex.toHexString(senderAddress));
+        Account sender = rows.get(Hex.toHexString(senderAddress));
         if (sender != null) {
             sender.addPendingTransaction(transaction);
 
@@ -178,8 +178,8 @@ public class Wallet {
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
-        if(receiveAddress != null) {
-            Account receiver =  rows.get(Hex.toHexString(receiveAddress));
+        if (receiveAddress != null) {
+            Account receiver = rows.get(Hex.toHexString(receiveAddress));
             if (receiver != null) {
                 receiver.addPendingTransaction(transaction);
 
@@ -195,7 +195,7 @@ public class Wallet {
 
     public void processBlock(Block block) {
 
-        for (Account account : getAccountCollection()){
+        for (Account account : getAccountCollection()) {
             account.clearAllPendingTransactions();
         }
 
@@ -237,11 +237,11 @@ public class Wallet {
 
         NodeList rowNodes = walletNode.getChildNodes();
 
-        for (int i = 0; i <  rowNodes.getLength(); ++i ) {
+        for (int i = 0; i < rowNodes.getLength(); ++i) {
 
-            Node rowNode   = rowNodes.item(i);
-            Node addrNode  = rowNode.getChildNodes().item(0);
-            Node privNode  = rowNode.getChildNodes().item(1);
+            Node rowNode = rowNodes.item(i);
+            Node addrNode = rowNode.getChildNodes().item(0);
+            Node privNode = rowNode.getChildNodes().item(1);
             Node valueNode = rowNode.getChildNodes().item(2);
 
             // TODO: complete load func
@@ -287,11 +287,11 @@ public class Wallet {
         doc.appendChild(walletElement);
 
         Attr high = doc.createAttribute("high");
-        high.setValue(Long.toString( this.high ));
+        high.setValue(Long.toString(this.high));
         walletElement.setAttributeNode(high);
 
         int i = 0;
-        for (Account account :  getAccountCollection()) {
+        for (Account account : getAccountCollection()) {
 
             Element raw = doc.createElement("raw");
             Attr id = doc.createAttribute("id");
@@ -308,7 +308,7 @@ public class Wallet {
             Element privKey = doc.createElement("privkey");
             privKey.setTextContent(Hex.toHexString(account.getEcKey().getPrivKeyBytes()));
 
-            Element value   = doc.createElement("value");
+            Element value = doc.createElement("value");
             value.setTextContent(account.getBalance().toString());
 
             raw.appendChild(addressE);
@@ -334,7 +334,7 @@ public class Wallet {
             listener.valueChanged();
     }
 
-    public interface WalletListener{
+    public interface WalletListener {
         public void valueChanged();
     }
 

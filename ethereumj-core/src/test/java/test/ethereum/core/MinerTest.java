@@ -25,7 +25,7 @@ public class MinerTest {
     public void testMine() {
         boolean miningTestEnabled = false;
 
-        if(miningTestEnabled) {
+        if (miningTestEnabled) {
             Block block = createBlock(null);
             assertEquals(rlpWithoutNonce, Hex.toHexString(block.getEncodedWithoutNonce()));
             System.out.println("Searching for nonce of following block: \n" + block.toString());
@@ -54,7 +54,7 @@ public class MinerTest {
     public void testMine2() {
         boolean miningTestEnabled = true;
 
-        if(miningTestEnabled) {
+        if (miningTestEnabled) {
             Block block = createBlock(null);
 
             logger.info("Minning on block: [{}] ", block.getNumber());
@@ -68,7 +68,7 @@ public class MinerTest {
             assertTrue(valid);
             logger.info("found nonce: [{}]", Hex.toHexString(block.getNonce()));
 
-            while(true){
+            while (true) {
 
                 Block newBlock = createBlock(block);
                 mined = miner.mine(newBlock, newBlock.getDifficulty());
@@ -90,7 +90,7 @@ public class MinerTest {
      */
     private Block createBlock(Block lastBlock) {
 
-        if (lastBlock == null){
+        if (lastBlock == null) {
 
             byte[] parentHash = Hex.decode("0a312c2b0a8f125c60a3976b6e508e740e095eb59943988d9bbfb8aa43922e31");
             byte[] unclesHash = Hex.decode("1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347");
@@ -106,10 +106,10 @@ public class MinerTest {
 
             Block newBlock = new Block(parentHash, unclesHash, coinbase, null,
                     difficulty, number, gasLimit, gasUsed, timestamp,
-                    null, nonce,  null, null);
+                    null, nonce, null, null);
             // Setting stateRoot manually, because don't have state available.
             return newBlock;
-        } else{
+        } else {
 
             Block newBlock = new Block(lastBlock.getHash(), lastBlock.getUnclesHash(), lastBlock.getCoinbase(), null,
                     lastBlock.getDifficulty(), lastBlock.getNumber() + 1,

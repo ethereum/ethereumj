@@ -48,7 +48,7 @@ public class PeersMessage extends P2pMessage {
                 int peerPort = ByteUtil.byteArrayToInt(portBytes);
                 InetAddress address = InetAddress.getByAddress(ipBytes);
 
-                String peerId = peerIdRaw == null ? "" :  Hex.toHexString(peerIdRaw);
+                String peerId = peerIdRaw == null ? "" : Hex.toHexString(peerIdRaw);
                 Peer peer = new Peer(address, peerPort, peerId);
                 peers.add(peer);
             } catch (UnknownHostException e) {
@@ -80,7 +80,7 @@ public class PeersMessage extends P2pMessage {
     }
 
     @Override
-    public P2pMessageCodes getCommand(){
+    public P2pMessageCodes getCommand() {
         return P2pMessageCodes.PEERS;
     }
 

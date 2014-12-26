@@ -18,12 +18,12 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- *  Generic interface for Ethereum database
+ * Generic interface for Ethereum database
  *
- *  LevelDB key/value pair DB implementation will be used.
- *  Choice must be made between:
- *      Pure Java: https://github.com/dain/leveldb
- *      JNI binding: https://github.com/fusesource/leveldbjni
+ * LevelDB key/value pair DB implementation will be used.
+ * Choice must be made between:
+ * Pure Java: https://github.com/dain/leveldb
+ * JNI binding: https://github.com/fusesource/leveldbjni
  */
 public class DatabaseImpl implements Database {
 
@@ -40,10 +40,10 @@ public class DatabaseImpl implements Database {
         try {
             logger.debug("Opening database");
             File dbLocation = new File(System.getProperty("user.dir") + "/" +
-                                       SystemProperties.CONFIG.databaseDir() + "/");
+                    SystemProperties.CONFIG.databaseDir() + "/");
             File fileLocation = new File(dbLocation, name);
 
-            if(SystemProperties.CONFIG.databaseReset()) {
+            if (SystemProperties.CONFIG.databaseReset()) {
                 destroyDB(fileLocation);
             }
 
@@ -53,13 +53,13 @@ public class DatabaseImpl implements Database {
 //          String stats = DATABASE.getProperty("leveldb.stats");
 //          logger.debug(stats);
 
-            if (logger.isTraceEnabled()){
+            if (logger.isTraceEnabled()) {
 
                 logger.trace("Dump for: {}", fileLocation.toString());
-                DBIterator iter =  db.iterator();
+                DBIterator iter = db.iterator();
 
-                while(iter.hasNext()){
-                    byte[] key   = iter.peekNext().getKey();
+                while (iter.hasNext()) {
+                    byte[] key = iter.peekNext().getKey();
                     byte[] value = iter.peekNext().getValue();
 
                     logger.trace("key={}, value={}", Hex.toHexString(key), Hex.toHexString(value));
@@ -90,7 +90,7 @@ public class DatabaseImpl implements Database {
     @Override
     public void put(byte[] key, byte[] value) {
 
-        if(logger.isDebugEnabled())
+        if (logger.isDebugEnabled())
             logger.debug("put: key: [{}], value: [{}]",
                     Hex.toHexString(key),
                     Hex.toHexString(value));
@@ -99,7 +99,7 @@ public class DatabaseImpl implements Database {
 
     @Override
     public void delete(byte[] key) {
-        if(logger.isDebugEnabled())
+        if (logger.isDebugEnabled())
             logger.debug("delete: key: [{}]");
 
         db.delete(key);

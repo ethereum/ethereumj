@@ -25,8 +25,10 @@ import java.math.BigInteger;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Map;
+
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 18/05/14 22:21
  */
@@ -42,7 +44,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     private final JTextField contractAddrInput;
 
     private JScrollPane contractDataInput;
-    private JTextArea   msgDataTA;
+    private JTextArea msgDataTA;
 
     private JLabel statusMsg = null;
     private JLabel playLabel = null;
@@ -107,8 +109,9 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
                 new MouseAdapter() {
                     @Override
                     public void mouseClicked(MouseEvent e) {
-                          ContractCallDialog.this.playContractCall();
-                    }}
+                        ContractCallDialog.this.playContractCall();
+                    }
+                }
         );
 
         playLabel.setBounds(438, 100, 42, 42);
@@ -153,6 +156,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
         JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>() {
             private static final long serialVersionUID = -3748305421049121671L;
+
             @Override
             public ComboBoxUI getUI() {
                 return super.getUI();
@@ -167,7 +171,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         this.creatorAddressCombo = creatorAddressCombo;
 
         final Border line = BorderFactory.createLineBorder(Color.LIGHT_GRAY);
-        JComponent editor = (JComponent)(creatorAddressCombo.getEditor().getEditorComponent());
+        JComponent editor = (JComponent) (creatorAddressCombo.getEditor().getEditorComponent());
         editor.setForeground(Color.RED);
 
         Wallet wallet = UIEthereumManager.ethereum.getWallet();
@@ -193,7 +197,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         creatorAddressCombo.setPopupVisible(false);
 
         Object child = creatorAddressCombo.getAccessibleContext().getAccessibleChild(0);
-        BasicComboPopup popup = (BasicComboPopup)child;
+        BasicComboPopup popup = (BasicComboPopup) child;
 
         JList list = popup.getList();
         list.setSelectionBackground(Color.cyan);
@@ -219,7 +223,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
     private void populateContractDetails() {
         byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
-        if(addr == null) {
+        if (addr == null) {
             alertStatusMsg("Not a valid contract address");
             return;
         }
@@ -281,7 +285,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
                 detailPanel.setVisible(false);
 
                 JTextField contractCode = new JTextField(15);
-                contractCode.setText(Hex.toHexString( programCode ));
+                contractCode.setText(Hex.toHexString(programCode));
                 GUIUtils.addStyle(contractCode, "Code: ");
                 contractCode.setBounds(70, 230, 350, 45);
 
@@ -310,7 +314,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
     private void playContractCall() {
         byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
-        if(addr == null) {
+        if (addr == null) {
             alertStatusMsg("Not a valid contract address");
             return;
         }
@@ -396,12 +400,12 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             Object[] lexaList = msgDataTA.getText().split(",");
             data = ByteUtil.encodeDataList(lexaList);
         } else {
-            data = new byte[] {};
+            data = new byte[]{};
         }
 
-        byte[] contractAddress = Hex.decode( contractAddrInput.getText());
+        byte[] contractAddress = Hex.decode(contractAddrInput.getText());
 
-        Account account = ((AccountWrapper)creatorAddressCombo.getSelectedItem()).getAccount();
+        Account account = ((AccountWrapper) creatorAddressCombo.getSelectedItem()).getAccount();
 
         byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
 
@@ -409,16 +413,16 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         BigInteger gasPrice = new BigInteger("10000000000000");
 
         BigInteger gasBI = new BigInteger(gasInput.getText());
-        byte[] gasValue  = BigIntegers.asUnsignedByteArray(gasBI);
+        byte[] gasValue = BigIntegers.asUnsignedByteArray(gasBI);
         BigInteger endowment = new BigInteger("1000");
 
         if (logger.isInfoEnabled()) {
             logger.info("Contract call:");
             logger.info("tx.nonce: {}", nonce == null ? "null" : nonce.toString());
-            logger.info("tx.gasPrice: {}", Hex.toHexString(BigIntegers.asUnsignedByteArray( gasPrice )));
+            logger.info("tx.gasPrice: {}", Hex.toHexString(BigIntegers.asUnsignedByteArray(gasPrice)));
             logger.info("tx.gasValue: {}", Hex.toHexString(gasValue));
             logger.info("tx.address: {}", Hex.toHexString(contractAddress));
-            logger.info("tx.endowment: {}", Hex.toHexString(BigIntegers.asUnsignedByteArray( endowment)));
+            logger.info("tx.endowment: {}", Hex.toHexString(BigIntegers.asUnsignedByteArray(endowment)));
             logger.info("tx.data: {}", Hex.toHexString(data));
         }
 

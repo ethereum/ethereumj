@@ -20,12 +20,12 @@ public class ContractDetails {
 
     private byte[] rlpEncoded;
 
-    private List<DataWord> storageKeys   = new ArrayList<>();
+    private List<DataWord> storageKeys = new ArrayList<>();
     private List<DataWord> storageValues = new ArrayList<>();
 
     private byte[] code = ByteUtil.EMPTY_BYTE_ARRAY;
 
-    private boolean dirty   = false;
+    private boolean dirty = false;
     private boolean deleted = false;
 
     private Trie storageTrie = new TrieImpl(null);
@@ -75,8 +75,7 @@ public class ContractDetails {
         if (foundIndex != -1) {
             DataWord value = storageValues.get(foundIndex);
             return value.clone();
-        }
-        else
+        } else
             return null;
     }
 
@@ -94,7 +93,7 @@ public class ContractDetails {
 
         storageTrie = new TrieImpl(null);
         // calc the trie for root hash
-        for (int i = 0; i < storageKeys.size(); ++i){
+        for (int i = 0; i < storageKeys.size(); ++i) {
             storageTrie.update(storageKeys.get(i).getData(), RLP
                     .encodeElement(storageValues.get(i).getNoLeadZeroesData()));
         }
@@ -197,7 +196,7 @@ public class ContractDetails {
         keys.addAll(storageKeys);
 
         List<DataWord> values = new ArrayList<>();
-        for (DataWord key : keys){
+        for (DataWord key : keys) {
 
             DataWord value = storage.get(key);
             values.add(value);
@@ -208,18 +207,17 @@ public class ContractDetails {
     }
 
 
-
-    public ContractDetails clone(){
+    public ContractDetails clone() {
 
         ContractDetails contractDetails = new ContractDetails();
 
         contractDetails.setCode(this.getCode());
-        contractDetails.setStorage(new ArrayList<DataWord>(this.storageKeys)  ,
-                                   new ArrayList<DataWord>(this.storageValues));
+        contractDetails.setStorage(new ArrayList<DataWord>(this.storageKeys),
+                new ArrayList<DataWord>(this.storageValues));
         return contractDetails;
     }
 
-    public String toString(){
+    public String toString() {
 
         String ret = "  Code: " + Hex.toHexString(code) + "\n";
         ret += "  Storage: " + getStorage().toString();

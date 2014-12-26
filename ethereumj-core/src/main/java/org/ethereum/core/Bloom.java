@@ -15,14 +15,14 @@ import java.util.Arrays;
  * http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html
  */
 
-public class  Bloom {
+public class Bloom {
 
     byte[] data = new byte[64];
 
     public Bloom() {
     }
 
-    public Bloom(byte[] data){
+    public Bloom(byte[] data) {
         this.data = data;
     }
 
@@ -41,8 +41,8 @@ public class  Bloom {
         return bloom;
     }
 
-    public void or(Bloom bloom){
-        for (int i = 0; i < data.length; ++i){
+    public void or(Bloom bloom) {
+        for (int i = 0; i < data.length; ++i) {
             data[i] |= bloom.data[i];
         }
     }

@@ -14,16 +14,17 @@ import java.nio.ByteBuffer;
  * Calculations can be done on this word with other DataWords
  *
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 01/06/2014 10:45
  */
 public class DataWord implements Comparable<DataWord> {
 
     /* Maximum value of the DataWord */
-    public static final BigInteger _2_256           = BigInteger.valueOf(2).pow(256);
-    public static final BigInteger MAX_VALUE        = _2_256.subtract(BigInteger.ONE);
-    public static final DataWord ZERO               = new DataWord(new byte[32]);      // don't push it in to the stack
-    public static final DataWord ZERO_EMPTY_ARRAY   = new DataWord(new byte[0]);      // don't push it in to the stack
+    public static final BigInteger _2_256 = BigInteger.valueOf(2).pow(256);
+    public static final BigInteger MAX_VALUE = _2_256.subtract(BigInteger.ONE);
+    public static final DataWord ZERO = new DataWord(new byte[32]);      // don't push it in to the stack
+    public static final DataWord ZERO_EMPTY_ARRAY = new DataWord(new byte[0]);      // don't push it in to the stack
 
     private byte[] data = new byte[32];
 
@@ -60,6 +61,7 @@ public class DataWord implements Comparable<DataWord> {
     public byte[] getNoLeadZeroesData() {
         return ByteUtil.stripLeadingZeroes(data);
     }
+
     public byte[] getLast20Bytes() {
         return Arrays.copyOfRange(data, 12, data.length);
     }
@@ -78,7 +80,7 @@ public class DataWord implements Comparable<DataWord> {
      */
     public int intValue() {
         BigDecimal tmpValue = new BigDecimal(this.value());
-        if(this.bytesOccupied() > 4)
+        if (this.bytesOccupied() > 4)
             return Integer.MAX_VALUE;
         return tmpValue.intValueExact();
     }
@@ -148,8 +150,8 @@ public class DataWord implements Comparable<DataWord> {
             this.data[i] = (byte) ~this.data[i];
         }
 
-        for (int i = this.data.length - 1; i >= 0 ; --i) {
-            this.data[i] = (byte)  (1 + this.data[i] & 0xFF);
+        for (int i = this.data.length - 1; i >= 0; --i) {
+            this.data[i] = (byte) (1 + this.data[i] & 0xFF);
             if (this.data[i] != 0) break;
         }
     }
@@ -186,7 +188,7 @@ public class DataWord implements Comparable<DataWord> {
     }
 
     // TODO: improve with no BigInteger
-    public void div(DataWord word)  {
+    public void div(DataWord word) {
 
         if (word.isZero()) {
             this.and(ZERO);
@@ -305,7 +307,7 @@ public class DataWord implements Comparable<DataWord> {
         }
     }
 
-    public int bytesOccupied(){
+    public int bytesOccupied() {
         int firstNonZero = ByteUtil.firstNonZeroByte(data);
         if (firstNonZero == -1) return 0;
         return 31 - firstNonZero + 1;

@@ -30,22 +30,22 @@ public class TrackDatabaseTest {
         TrackDatabase trackDatabase1 = new TrackDatabase(db1);
 
         trackDatabase1.put(Hex.decode("abcdef"), Hex.decode("abcdef"));
-        byte[] value  = trackDatabase1.get(Hex.decode("abcdef"));
+        byte[] value = trackDatabase1.get(Hex.decode("abcdef"));
         assertEquals("abcdef", Hex.toHexString(value));
 
         trackDatabase1.startTrack();
         trackDatabase1.put(Hex.decode("abcdef"), Hex.decode("ffffff"));
-        value  = trackDatabase1.get(Hex.decode("abcdef"));
+        value = trackDatabase1.get(Hex.decode("abcdef"));
         assertEquals("ffffff", Hex.toHexString(value));
 
         trackDatabase1.rollbackTrack();
-        value  = trackDatabase1.get(Hex.decode("abcdef"));
+        value = trackDatabase1.get(Hex.decode("abcdef"));
         assertEquals("abcdef", Hex.toHexString(value));
 
         trackDatabase1.startTrack();
         trackDatabase1.put(Hex.decode("abcdef"), Hex.decode("ffffff"));
         trackDatabase1.commitTrack();
-        value  = trackDatabase1.get(Hex.decode("abcdef"));
+        value = trackDatabase1.get(Hex.decode("abcdef"));
         assertEquals("ffffff", Hex.toHexString(value));
 
         db1.close();

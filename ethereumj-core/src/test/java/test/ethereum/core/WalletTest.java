@@ -30,12 +30,13 @@ import java.math.BigInteger;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 17/05/14 17:06
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(loader=AnnotationConfigContextLoader.class)
+@ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 public class WalletTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
@@ -44,7 +45,7 @@ public class WalletTest {
     @ComponentScan(basePackages = "org.ethereum")
     static class ContextConfiguration extends TestContext {
         static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/"+ WalletTest.class);
+            SystemProperties.CONFIG.setDataBaseDir("test_db/" + WalletTest.class);
         }
     }
 
@@ -52,13 +53,13 @@ public class WalletTest {
     WorldManager worldManager;
 
     @After
-    public void doReset(){
+    public void doReset() {
         worldManager.reset();
     }
 
 
     @Test   // Testing account for simple balance set
-    public void accountTest_1(){
+    public void accountTest_1() {
 
         Repository repository = worldManager.getRepository();
 
@@ -78,7 +79,7 @@ public class WalletTest {
 
 
     @Test  // test account balance with pending "unblocked" transaction
-    public void accountTest_2(){
+    public void accountTest_2() {
 
         Repository repository = worldManager.getRepository();
 

@@ -13,7 +13,7 @@ public class MessageFactory {
     public static Message createMessage(byte[] encoded) {
         byte code = RLP.getCommandCode(encoded);
 
-        if (P2pMessageCodes.inRange(code)){
+        if (P2pMessageCodes.inRange(code)) {
 
             P2pMessageCodes receivedCommand = P2pMessageCodes.fromByte(code);
             switch (receivedCommand) {

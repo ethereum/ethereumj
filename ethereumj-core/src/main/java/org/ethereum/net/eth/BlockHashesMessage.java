@@ -18,7 +18,9 @@ import org.ethereum.util.Utils;
  */
 public class BlockHashesMessage extends EthMessage {
 
-    /** List of block hashes from the peer ordered from child to parent */
+    /**
+     * List of block hashes from the peer ordered from child to parent
+     */
     private List<byte[]> blockHashes;
 
     public BlockHashesMessage(byte[] payload) {
@@ -69,7 +71,7 @@ public class BlockHashesMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.BLOCK_HASHES;
     }
 

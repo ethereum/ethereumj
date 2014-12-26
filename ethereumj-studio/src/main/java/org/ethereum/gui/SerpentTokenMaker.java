@@ -7,6 +7,7 @@ import org.fife.ui.rsyntaxtextarea.*;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 24/04/14 11:52
  */
@@ -46,14 +47,14 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
             // into here as "identifiers," we have to see what the token
             // really is...
             case Token.IDENTIFIER:
-                int value = wordsToHighlight.get(segment, start,end);
-                if (value!=-1)
+                int value = wordsToHighlight.get(segment, start, end);
+                if (value != -1)
                     tokenType = value;
                 break;
 
             case Token.ANNOTATION:
-                value = wordsToHighlight.get(segment, start,end);
-                if (value!=-1)
+                value = wordsToHighlight.get(segment, start, end);
+                if (value != -1)
                     tokenType = value;
                 break;
         }
@@ -65,11 +66,11 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
      * line to "comment" it in a this programming language.
      *
      * @return The start and end strings to add to a line to "comment"
-     *         it out.
+     * it out.
      */
     @Override
     public String[] getLineCommentStartAndEnd() {
-        return new String[] { "#", null };
+        return new String[]{"#", null};
     }
 
     /**
@@ -78,18 +79,18 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
      *
      * @param type The token type.
      * @return Whether tokens of this type should have "mark occurrences"
-     *         enabled.
+     * enabled.
      */
     @Override
     public boolean getMarkOccurrencesOfTokenType(int type) {
-        return type==Token.IDENTIFIER || type==Token.VARIABLE;
+        return type == Token.IDENTIFIER || type == Token.VARIABLE;
     }
 
     /**
      * Returns the words to highlight for Windows batch files.
      *
      * @return A <code>TokenMap</code> containing the words to highlight for
-     *         Windows batch files.
+     * Windows batch files.
      * @see org.fife.ui.rsyntaxtextarea.AbstractTokenMaker#getWordsToHighlight
      */
     @Override
@@ -98,40 +99,40 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         TokenMap tokenMap = new TokenMap(false); // Ignore case.
 
         int reservedWord = Token.RESERVED_WORD;
-        tokenMap.put("set",     reservedWord);
-        tokenMap.put("if",      reservedWord);
-        tokenMap.put("else",        reservedWord);
-        tokenMap.put("elif",        reservedWord);
-        tokenMap.put("seq",     reservedWord);
-        tokenMap.put("while",       reservedWord);
-        tokenMap.put("byte",        reservedWord);
-        tokenMap.put("access",      reservedWord);
-        tokenMap.put("arrset",      reservedWord);
-        tokenMap.put("set_and_inc",     reservedWord);
-        tokenMap.put("array",       reservedWord);
-        tokenMap.put("getch",       reservedWord);
-        tokenMap.put("setch",       reservedWord);
-        tokenMap.put("string",      reservedWord);
-        tokenMap.put("send",        reservedWord);
-        tokenMap.put("create",      reservedWord);
-        tokenMap.put("sha3",        reservedWord);
-        tokenMap.put("sha3bytes",       reservedWord);
-        tokenMap.put("sload",       reservedWord);
-        tokenMap.put("sstore",      reservedWord);
-        tokenMap.put("calldataload",        reservedWord);
-        tokenMap.put("id",      reservedWord);
-        tokenMap.put("return",      reservedWord);
-        tokenMap.put("suicide",     reservedWord);
+        tokenMap.put("set", reservedWord);
+        tokenMap.put("if", reservedWord);
+        tokenMap.put("else", reservedWord);
+        tokenMap.put("elif", reservedWord);
+        tokenMap.put("seq", reservedWord);
+        tokenMap.put("while", reservedWord);
+        tokenMap.put("byte", reservedWord);
+        tokenMap.put("access", reservedWord);
+        tokenMap.put("arrset", reservedWord);
+        tokenMap.put("set_and_inc", reservedWord);
+        tokenMap.put("array", reservedWord);
+        tokenMap.put("getch", reservedWord);
+        tokenMap.put("setch", reservedWord);
+        tokenMap.put("string", reservedWord);
+        tokenMap.put("send", reservedWord);
+        tokenMap.put("create", reservedWord);
+        tokenMap.put("sha3", reservedWord);
+        tokenMap.put("sha3bytes", reservedWord);
+        tokenMap.put("sload", reservedWord);
+        tokenMap.put("sstore", reservedWord);
+        tokenMap.put("calldataload", reservedWord);
+        tokenMap.put("id", reservedWord);
+        tokenMap.put("return", reservedWord);
+        tokenMap.put("suicide", reservedWord);
 
-        tokenMap.put("stop",            reservedWord);
+        tokenMap.put("stop", reservedWord);
 
         int function = Token.FUNCTION;
-        tokenMap.put("msg",                 function);
-        tokenMap.put("data",                    function);
-        tokenMap.put("contract",            function);
-        tokenMap.put("storage",         function);
-        tokenMap.put("block",           function);
-        tokenMap.put("tx",          function);
+        tokenMap.put("msg", function);
+        tokenMap.put("data", function);
+        tokenMap.put("contract", function);
+        tokenMap.put("storage", function);
+        tokenMap.put("block", function);
+        tokenMap.put("tx", function);
 
         // ALL the assembly tokens
         int reservedWord2 = Token.RESERVED_WORD_2;
@@ -142,8 +143,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         }
 
         int dataType = Token.ANNOTATION;
-        tokenMap.put("init",            dataType);
-        tokenMap.put("code",            dataType);
+        tokenMap.put("init", dataType);
+        tokenMap.put("code", dataType);
 
         return tokenMap;
     }
@@ -173,10 +174,10 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         int newStartOffset = startOffset - offset;
 
         currentTokenStart = offset;
-        currentTokenType  = startTokenType;
+        currentTokenType = startTokenType;
 
 //beginning:
-        for (int i=offset; i<end; i++) {
+        for (int i = offset; i < end; i++) {
 
             char c = array[i];
 
@@ -205,14 +206,14 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         // The "separators".
                         case '(':
                         case ')':
-                            addToken(text, currentTokenStart,i, Token.SEPARATOR, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i, Token.SEPARATOR, newStartOffset + currentTokenStart);
                             currentTokenType = Token.NULL;
                             break;
 
                         // The "separators2".
                         case ',':
                         case ';':
-                            addToken(text, currentTokenStart,i, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i, Token.IDENTIFIER, newStartOffset + currentTokenStart);
                             currentTokenType = Token.NULL;
                             break;
 
@@ -223,12 +224,10 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             if (firstToken == null) {
                                 if (i < end - 1 && array[i + 1] == ':') { // new-style comment
                                     currentTokenType = Token.COMMENT_EOL;
-                                }
-                                else { // Label
+                                } else { // Label
                                     currentTokenType = Token.PREPROCESSOR;
                                 }
-                            }
-                            else { // Just a colon
+                            } else { // Just a colon
                                 currentTokenType = Token.IDENTIFIER;
                             }
                             break;
@@ -236,18 +235,18 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                         default:
                             // Just to speed things up a tad, as this will usually be the case (if spaces above failed).
-                            if (RSyntaxUtilities.isLetterOrDigit(c) || c=='\\') {
+                            if (RSyntaxUtilities.isLetterOrDigit(c) || c == '\\') {
                                 currentTokenType = Token.IDENTIFIER;
                                 break;
                             }
 
-                            int indexOf = operators.indexOf(c,0);
+                            int indexOf = operators.indexOf(c, 0);
                             if (indexOf > -1) {
-                                addToken(text, currentTokenStart,i, Token.OPERATOR, newStartOffset+currentTokenStart);
+                                addToken(text, currentTokenStart, i, Token.OPERATOR, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenType = Token.NULL;
                                 break;
-                            }
-                            else {
+                            } else {
                                 currentTokenType = Token.IDENTIFIER;
                                 break;
                             }
@@ -259,8 +258,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                     switch (c) {
 
                         case '/':
-                            addToken(text, currentTokenStart,i-1,
-                                    Token.COMMENT_EOL, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1,
+                                    Token.COMMENT_EOL, newStartOffset + currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.COMMENT_EOL;
                             break;
@@ -269,7 +268,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             break;  // Still whitespace.
 
                         case '"':
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             break;
@@ -278,55 +278,57 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         // The "separators".
                         case '(':
                         case ')':
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             break;
 
                         // The "separators2".
                         case ',':
                         case ';':
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             break;
 
                         // Newer version of EOL comments, or a label
                         case ':':
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             // If the previous (whitespace) token was the first token
                             // added, this is a new-style comment or a label
                             if (firstToken.getNextToken() == null) {
                                 if (i < end - 1 && array[i + 1] == ':') { // new-style comment
                                     currentTokenType = Token.COMMENT_EOL;
-                                }
-                                else { // Label
+                                } else { // Label
                                     currentTokenType = Token.PREPROCESSOR;
                                 }
-                            }
-                            else { // Just a colon
+                            } else { // Just a colon
                                 currentTokenType = Token.IDENTIFIER;
                             }
                             break;
 
                         default:    // Add the whitespace token and start anew.
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
 
                             // Just to speed things up a tad, as this will usually be the case (if spaces above failed).
-                            if (RSyntaxUtilities.isLetterOrDigit(c) || c=='\\') {
+                            if (RSyntaxUtilities.isLetterOrDigit(c) || c == '\\') {
                                 currentTokenType = Token.IDENTIFIER;
                                 break;
                             }
 
-                            int indexOf = operators.indexOf(c,0);
+                            int indexOf = operators.indexOf(c, 0);
                             if (indexOf > -1) {
-                                addToken(text, currentTokenStart,i, Token.OPERATOR, newStartOffset+currentTokenStart);
+                                addToken(text, currentTokenStart, i, Token.OPERATOR, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenType = Token.NULL;
                                 break;
-                            }
-                            else {
+                            } else {
                                 currentTokenType = Token.IDENTIFIER;
                             }
                     } // End of switch (c).
@@ -340,20 +342,22 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         case ' ':
                         case '\t':
                             // Check for REM comments.
-                            if (i-currentTokenStart==3 &&
-                                    (array[i-3]=='r' || array[i-3]=='R') &&
-                                    (array[i-2]=='e' || array[i-2]=='E') &&
-                                    (array[i-1]=='m' || array[i-1]=='M')) {
+                            if (i - currentTokenStart == 3 &&
+                                    (array[i - 3] == 'r' || array[i - 3] == 'R') &&
+                                    (array[i - 2] == 'e' || array[i - 2] == 'E') &&
+                                    (array[i - 1] == 'm' || array[i - 1] == 'M')) {
                                 currentTokenType = Token.COMMENT_EOL;
                                 break;
                             }
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.WHITESPACE;
                             break;
 
                         case '"':
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             break;
@@ -362,10 +366,10 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         // Should be part of identifiers, but not at end of "REM".
                         case '\\':
                             // Check for REM comments.
-                            if (i-currentTokenStart==3 &&
-                                    (array[i-3]=='r' || array[i-3]=='R') &&
-                                    (array[i-2]=='e' || array[i-2]=='E') &&
-                                    (array[i-1]=='m' || array[i-1]=='M')) {
+                            if (i - currentTokenStart == 3 &&
+                                    (array[i - 3] == 'r' || array[i - 3] == 'R') &&
+                                    (array[i - 2] == 'e' || array[i - 2] == 'E') &&
+                                    (array[i - 1] == 'm' || array[i - 1] == 'M')) {
                                 currentTokenType = Token.COMMENT_EOL;
                             }
                             break;
@@ -377,30 +381,33 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         // The "separators".
                         case '(':
                         case ')':
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             break;
 
                         // The "separators2".
                         case ',':
                         case ';':
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             break;
 
                         default:
 
                             // Just to speed things up a tad, as this will usually be the case.
-                            if (RSyntaxUtilities.isLetterOrDigit(c) || c=='\\') {
+                            if (RSyntaxUtilities.isLetterOrDigit(c) || c == '\\') {
                                 break;
                             }
 
                             int indexOf = operators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.OPERATOR, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.OPERATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
@@ -413,11 +420,11 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                     if (i + 1 >= array.length)
                         break;
 
-                    char nextC = array[i+1];
+                    char nextC = array[i + 1];
                     if (nextC == '/') {
 
                         i = end - 1;
-                        addToken(text, currentTokenStart,i, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
+                        addToken(text, currentTokenStart, i, Token.COMMENT_EOL, newStartOffset + currentTokenStart);
                         // We need to set token type to null so at the bottom we don't add one more token.
                         currentTokenType = Token.NULL;
                     }
@@ -425,7 +432,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                 case Token.PREPROCESSOR: // Used for labels
                     i = end - 1;
-                    addToken(text, currentTokenStart,i, Token.PREPROCESSOR, newStartOffset+currentTokenStart);
+                    addToken(text, currentTokenStart, i, Token.PREPROCESSOR, newStartOffset + currentTokenStart);
                     // We need to set token type to null so at the bottom we don't add one more token.
                     currentTokenType = Token.NULL;
                     break;
@@ -464,8 +471,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                                     break;
                                 }
                         } // End of switch (c).
-                    }
-                    else { // Character other than first after the '%'.
+                    } else { // Character other than first after the '%'.
                         if (bracketVariable == true) {
                             if (c == '}') {
                                 addToken(text, currentTokenStart, i, Token.VARIABLE, newStartOffset + currentTokenStart);
@@ -483,13 +489,13 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         // Deal with the (possibly there) last token.
         if (currentTokenType != Token.NULL) {
             // Check for REM comments.
-            if (end-currentTokenStart==3 &&
-                    (array[end-3]=='r' || array[end-3]=='R') &&
-                    (array[end-2]=='e' || array[end-2]=='E') &&
-                    (array[end-1]=='m' || array[end-1]=='M')) {
+            if (end - currentTokenStart == 3 &&
+                    (array[end - 3] == 'r' || array[end - 3] == 'R') &&
+                    (array[end - 2] == 'e' || array[end - 2] == 'E') &&
+                    (array[end - 1] == 'm' || array[end - 1] == 'M')) {
                 currentTokenType = Token.COMMENT_EOL;
             }
-            addToken(text, currentTokenStart,end-1, currentTokenType, newStartOffset+currentTokenStart);
+            addToken(text, currentTokenStart, end - 1, currentTokenType, newStartOffset + currentTokenStart);
         }
         addNullToken();
         // Return the first token in our linked peerInfoList.

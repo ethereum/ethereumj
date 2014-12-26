@@ -20,6 +20,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 24/04/14 11:32
  */
@@ -28,12 +29,12 @@ public class SerpentEditor extends JFrame {
     private Logger logger = LoggerFactory.getLogger("gui");
 
     private String codeSample = "\n\n\n" +
-                                "" +
-                                "if !contract.storage[msg.data[0]]:\n" +
-                                "        contract.storage[msg.data[0]] = msg.data[1]\n" +
-                                "    return(1)\n" +
-                                "else:\n" +
-                                "    return(0)\n";
+            "" +
+            "if !contract.storage[msg.data[0]]:\n" +
+            "        contract.storage[msg.data[0]] = msg.data[1]\n" +
+            "    return(1)\n" +
+            "else:\n" +
+            "    return(0)\n";
 
     private String codeSample2 = "\n\n\n" +
             "" +
@@ -88,7 +89,7 @@ public class SerpentEditor extends JFrame {
         this.setIconImage(img);
         this.setLocation(30, 70);
 
-        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory)TokenMakerFactory.getDefaultInstance();
+        AbstractTokenMakerFactory atmf = (AbstractTokenMakerFactory) TokenMakerFactory.getDefaultInstance();
         atmf.putMapping("text/serpent", "org.ethereum.gui.SerpentTokenMaker");
 
         codeArea = new RSyntaxTextArea(32, 80);
@@ -191,7 +192,7 @@ public class SerpentEditor extends JFrame {
             result.setVisible(true);
             result.setText(th.getMessage());
             result.setForeground(Color.RED);
-            return ;
+            return;
         }
         result.setForeground(Color.BLACK.brighter());
         result.setVisible(true);
@@ -258,7 +259,7 @@ public class SerpentEditor extends JFrame {
                     put(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK),
                             "OpenFileButton");
 
-            mainContentPane.getActionMap().put("OpenFileButton",openFile);
+            mainContentPane.getActionMap().put("OpenFileButton", openFile);
 
             button.addActionListener(new ActionListener() {
                 @Override
@@ -299,7 +300,7 @@ public class SerpentEditor extends JFrame {
                     put(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK | InputEvent.SHIFT_DOWN_MASK),
                             "OpenSaveButtonAlways");
 
-            mainContentPane.getActionMap().put("OpenSaveButtonAlways",saveNewFile);
+            mainContentPane.getActionMap().put("OpenSaveButtonAlways", saveNewFile);
 
             Action saveFile = new AbstractAction() {
                 @Override
@@ -312,7 +313,7 @@ public class SerpentEditor extends JFrame {
                     put(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
                             "OpenSaveButton");
 
-            mainContentPane.getActionMap().put("OpenSaveButton",saveFile);
+            mainContentPane.getActionMap().put("OpenSaveButton", saveFile);
 
             button.addActionListener(new ActionListener() {
                 @Override
@@ -365,7 +366,7 @@ public class SerpentEditor extends JFrame {
                     put(KeyStroke.getKeyStroke(KeyEvent.VK_F9, InputEvent.CTRL_DOWN_MASK),
                             "CompileButton");
 
-            mainContentPane.getActionMap().put("CompileButton",compile);
+            mainContentPane.getActionMap().put("CompileButton", compile);
 
             button.addActionListener(new ActionListener() {
                 @Override
@@ -396,7 +397,7 @@ public class SerpentEditor extends JFrame {
                                     InputEvent.SHIFT_DOWN_MASK | InputEvent.CTRL_DOWN_MASK),
                             "DeployButton");
 
-            mainContentPane.getActionMap().put("DeployButton",deploy);
+            mainContentPane.getActionMap().put("DeployButton", deploy);
 
             button.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent e) {
@@ -455,9 +456,9 @@ public class SerpentEditor extends JFrame {
         }
 
         switch (fileChooser.showOpenDialog(SerpentEditor.this)) {
-        case JFileChooser.APPROVE_OPTION:
-            file = fileChooser.getSelectedFile();
-            break;
+            case JFileChooser.APPROVE_OPTION:
+                file = fileChooser.getSelectedFile();
+                break;
         }
         return file;
     }

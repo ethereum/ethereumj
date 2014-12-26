@@ -27,7 +27,7 @@ public class Chain {
     private Map<ByteArrayWrapper, Block> index = new HashMap<>();
 
 
-    public boolean tryToConnect(Block block){
+    public boolean tryToConnect(Block block) {
 
         if (chain.isEmpty()) {
             add(block);
@@ -35,14 +35,14 @@ public class Chain {
         }
 
         Block lastBlock = chain.get(chain.size() - 1);
-        if (lastBlock.isParentOf(block)){
+        if (lastBlock.isParentOf(block)) {
             add(block);
             return true;
         }
         return false;
     }
 
-    public void add(Block block){
+    public void add(Block block) {
         logger.info("adding block to alt chain block.hash: [{}] ", block.getShortHash());
         totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
         logger.info("total difficulty on alt chain is: [{}] ", totalDifficulty);
@@ -50,15 +50,15 @@ public class Chain {
         index.put(new ByteArrayWrapper(block.getHash()), block);
     }
 
-    public Block get(int i){
+    public Block get(int i) {
         return chain.get(i);
     }
 
-    public Block getLast(){
+    public Block getLast() {
         return chain.get(chain.size() - 1);
     }
 
-    public BigInteger getTotalDifficulty(){
+    public BigInteger getTotalDifficulty() {
         return totalDifficulty;
     }
 
@@ -66,11 +66,11 @@ public class Chain {
         this.totalDifficulty = totalDifficulty;
     }
 
-    public boolean isParentOnTheChain(Block block){
-        return (index.get(new ByteArrayWrapper( block.getParentHash() )) != null);
+    public boolean isParentOnTheChain(Block block) {
+        return (index.get(new ByteArrayWrapper(block.getParentHash())) != null);
     }
 
-    public long getSize(){
+    public long getSize() {
         return chain.size();
     }
 

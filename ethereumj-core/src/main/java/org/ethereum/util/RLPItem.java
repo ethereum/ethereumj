@@ -3,6 +3,7 @@ package org.ethereum.util;
 
 /**
  * www.ethereumJ.com
+ *
  * @author: Roman Mandeleil
  * Created on: 21/04/14 16:26
  */

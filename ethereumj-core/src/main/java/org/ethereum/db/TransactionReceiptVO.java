@@ -26,8 +26,8 @@ public class TransactionReceiptVO {
     }
 
     public TransactionReceiptVO(byte[] hash, byte[] rlp) {
-        this.hash   = hash;
-        this.rlp    = rlp;
+        this.hash = hash;
+        this.rlp = rlp;
     }
 
     public byte[] getHash() {
