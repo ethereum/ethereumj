@@ -1,6 +1,5 @@
 package test.ethereum.vm;
 
-import junit.framework.Assert;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;

@@ -59,7 +59,6 @@ dependencies {
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}" // TODO: runtime scope
     compile "log4j:log4j:${log4jVersion}"
     compile "log4j:apache-log4j-extras:${log4jVersion}"
-    compile "com.googlecode.json-simple:json-simple:1.1.1"
     compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
     compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.2.0"
@@ -71,6 +70,9 @@ dependencies {
     compile "org.hibernate:hibernate-core:${hibernateVersion}"
     compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
     compile "commons-dbcp:commons-dbcp:1.4"
+    compile("com.googlecode.json-simple:json-simple:1.1.1") {
+        exclude group:'junit', module:'junit'
+    }
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
 }
