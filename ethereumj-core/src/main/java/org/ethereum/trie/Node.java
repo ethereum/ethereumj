@@ -25,7 +25,7 @@ import org.ethereum.util.Value;
  *  *
  * Also, we add another conceptual change: internal nodes can no longer
  * have values, only leaves with no children of their own can; however,
- * since to be fully generic we want the key/value store to be able to
+ * since to be fully generic we want the key/value store to be able
  * store keys like 'dog' and 'doge' at the same time, we simply add
  * a terminator symbol (16) to the alphabet so there is never a value
  * "en-route" to another value.
@@ -42,7 +42,7 @@ import org.ethereum.util.Value;
  * www.ethereumJ.com
  *
  * @author Nick Savers
- * Created on: 20/05/2014 10:44
+ * @since 20.05.2014
  */
 public class Node {
 

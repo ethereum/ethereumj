@@ -14,7 +14,7 @@ import static java.lang.Thread.sleep;
 
 /**
  * @author Roman Mandeleil
- * Created on: 23/05/2014 18:33
+ * @since 23.05.2014
  */
 public class TransactionTask implements Callable<Transaction> {
 

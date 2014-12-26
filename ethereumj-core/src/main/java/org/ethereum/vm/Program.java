@@ -30,7 +30,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 01/06/2014 10:45
+ * @since 01.06.2014
  */
 public class Program {
 

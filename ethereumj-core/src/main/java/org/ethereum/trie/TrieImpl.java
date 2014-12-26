@@ -38,7 +38,7 @@ import org.spongycastle.util.encoders.Hex;
  * www.ethereumJ.com
  *
  * @author Nick Savers
- * Created on: 20/05/2014 10:44
+ * @since 20.05.2014
  */
 public class TrieImpl implements Trie {
 

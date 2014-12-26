@@ -36,7 +36,7 @@ import static junit.framework.TestCase.assertEquals;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 09/11/2014 23:35
+ * @since 09.11.2014
  */
 
 @RunWith(SpringJUnit4ClassRunner.class)

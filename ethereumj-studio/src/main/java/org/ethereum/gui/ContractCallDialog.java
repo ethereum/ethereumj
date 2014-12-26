@@ -30,7 +30,7 @@ import java.util.Map;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 18/05/14 22:21
+ * @since 18.05.14
  */
 class ContractCallDialog extends JDialog implements MessageAwareDialog {
 

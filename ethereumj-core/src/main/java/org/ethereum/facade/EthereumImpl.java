@@ -34,7 +34,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 27/07/2014 09:12
+ * @since 27.07.2014
  */
 @Component
 public class EthereumImpl implements Ethereum {

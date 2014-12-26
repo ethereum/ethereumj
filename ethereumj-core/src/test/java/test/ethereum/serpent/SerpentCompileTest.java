@@ -11,7 +11,7 @@ import org.junit.Test;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 13/05/14 10:07
+ * @since 13.05.14
  */
 public class SerpentCompileTest {
 

@@ -9,7 +9,7 @@ import org.fife.ui.rsyntaxtextarea.*;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 24/04/14 11:52
+ * @since 24.04.14
  */
 public class SerpentTokenMaker extends AbstractTokenMaker {
 
@@ -168,7 +168,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         int end = offset + count;
 
         // See, when we find a token, its starting position is always of the form:
-        // 'startOffset + (currentTokenStart-offset)'; but since startOffset and
+        // 'startOffset + (currentTokenStart-offset)'; but since startOffset
         // offset are constant, tokens' starting positions become:
         // 'newStartOffset+currentTokenStart' for one less subtraction operation.
         int newStartOffset = startOffset - offset;

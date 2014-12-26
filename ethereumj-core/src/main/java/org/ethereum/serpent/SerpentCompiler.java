@@ -20,7 +20,7 @@ import java.util.regex.Pattern;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 13/05/14 19:37
+ * @since 13.05.14
  */
 public class SerpentCompiler {
 

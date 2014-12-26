@@ -8,7 +8,7 @@ import org.ethereum.core.Transaction;
 
 /**
  * @author Roman Mandeleil
- * Created on: 23/05/2014 19:07
+ * @since 23.05.2014
  */
 public class TransactionExecutor {
 

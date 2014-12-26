@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 16/06/2014 10:37
+ * @since 16.06.2014
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMComplexTest {

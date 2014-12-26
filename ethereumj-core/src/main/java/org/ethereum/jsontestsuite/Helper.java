@@ -15,7 +15,7 @@ import java.util.regex.Pattern;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 28/06/2014 11:59
+ * @since 28.06.2014
  */
 public class Helper {
 

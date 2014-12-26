@@ -17,7 +17,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Roman Mandeleil
- * Created on: 22/05/2014 09:10
+ * @since 22.05.2014
  */
 @Component
 public class PeerDiscovery {

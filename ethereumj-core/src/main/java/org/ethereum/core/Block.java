@@ -26,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *
  * @author Roman Mandeleil
  * @author Nick Savers
- * Created on: 20/05/2014 10:44
+ * @since 20.05.2014
  */
 public class Block {
 

@@ -4,7 +4,7 @@ import org.ethereum.core.Transaction;
 
 /**
  * @author Roman Mandeleil
- * Created on: 23/05/2014 18:41
+ * @since 23.05.2014
  */
 public class WalletTransaction {
 

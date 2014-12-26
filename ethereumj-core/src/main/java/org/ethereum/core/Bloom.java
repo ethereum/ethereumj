@@ -10,7 +10,7 @@ import java.util.Arrays;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 20/11/2014 11:10
+ * @since 20.11.2014
  *
  * http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html
  */

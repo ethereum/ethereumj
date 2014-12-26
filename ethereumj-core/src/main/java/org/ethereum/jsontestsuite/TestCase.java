@@ -14,7 +14,7 @@ import java.util.*;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 28/06/2014 10:22
+ * @since 28.06.2014
  */
 
 public class TestCase {

@@ -21,7 +21,7 @@ import org.spongycastle.util.encoders.Hex;
  * will always be the same and therefore don't need to be created each time.
  *
  * @author Roman Mandeleil
- * Created on: 13/04/14 20:19
+ * @since 13.04.14
  */
 public class StaticMessages {
 

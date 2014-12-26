@@ -10,7 +10,7 @@ import java.math.BigInteger;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 14/11/2014 09:59
+ * @since 14.11.2014
  */
 @Entity
 @Table(name = "block")

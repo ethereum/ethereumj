@@ -30,7 +30,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 01/11/2014 10:58
+ * @since 01.11.2014
  */
 @Component
 public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChannel> {

@@ -14,7 +14,7 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil
- * Created on: 24/06/2014 00:12
+ * @since 24.06.2014
  */
 public class ContractDetails {
 

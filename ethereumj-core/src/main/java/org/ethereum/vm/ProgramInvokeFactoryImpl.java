@@ -18,7 +18,7 @@ import java.math.BigInteger;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 08/06/2014 09:59
+ * @since 08.06.2014
  */
 @Component("ProgramInvokeFactory")
 public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {

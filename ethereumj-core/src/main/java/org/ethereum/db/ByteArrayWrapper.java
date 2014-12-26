@@ -7,7 +7,7 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil
- * Created on: 11/06/2014 15:02
+ * @since 11.06.2014
  */
 public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
 

@@ -15,7 +15,7 @@ import java.util.Map;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 09/11/2014 09:31
+ * @since 09.11.2014
  */
 
 public class Chain {

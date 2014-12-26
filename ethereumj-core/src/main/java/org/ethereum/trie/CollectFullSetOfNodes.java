@@ -9,7 +9,7 @@ import java.util.Set;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 29/08/2014 10:46
+ * @since 29.08.2014
  */
 
 public class CollectFullSetOfNodes implements TrieImpl.ScanAction {

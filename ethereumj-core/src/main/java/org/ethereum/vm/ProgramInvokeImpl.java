@@ -10,7 +10,7 @@ import java.util.Map;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 03/06/2014 15:00
+ * @since 03.06.2014
  */
 public class ProgramInvokeImpl implements ProgramInvoke {
 

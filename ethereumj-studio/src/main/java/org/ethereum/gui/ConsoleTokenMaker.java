@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 24/04/14 11:52
+ * @since 24.04.14
  */
 public class ConsoleTokenMaker extends AbstractTokenMaker {
 
@@ -786,7 +786,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                                     currentTokenStart);
                             addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
-                            backslash = true; // Must be first backslash in a row since previous character is
+                            backslash = true; // Must be first backslash in a row since previous character
                             // identifier char.
                             break;
 
@@ -857,7 +857,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                                     currentTokenStart);
                             addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
-                            backslash = true; // Must be first backslash in a row since previous char is a number char.
+                            backslash = true; // Must be first backslash in a row since previous char is a number
                             break;
 
                         default:

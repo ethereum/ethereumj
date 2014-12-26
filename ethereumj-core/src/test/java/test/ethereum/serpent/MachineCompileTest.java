@@ -10,7 +10,7 @@ import org.spongycastle.util.encoders.Hex;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 28/05/2014 20:05
+ * @since 28.05.2014
  */
 public class MachineCompileTest {
 

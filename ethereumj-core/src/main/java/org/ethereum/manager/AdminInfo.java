@@ -8,7 +8,7 @@ import javax.annotation.PostConstruct;
  * www.ethergit.com
  *
  * @author Roman Mandeleil
- * Created on: 11/12/2014 11:24
+ * @since 11.12.2014
  */
 @Component
 public class AdminInfo {

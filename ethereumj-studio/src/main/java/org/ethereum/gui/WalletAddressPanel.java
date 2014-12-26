@@ -20,7 +20,7 @@ import java.net.URL;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 17/05/14 12:32
+ * @since 17.05.14
  */
 public class WalletAddressPanel extends JPanel {
 

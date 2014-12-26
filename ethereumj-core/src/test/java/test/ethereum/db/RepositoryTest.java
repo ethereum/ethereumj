@@ -22,7 +22,7 @@ import static org.junit.Assert.assertNull;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 17/11/2014 23:08
+ * @since 17.11.2014
  */
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

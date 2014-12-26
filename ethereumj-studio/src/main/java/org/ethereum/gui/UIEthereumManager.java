@@ -8,7 +8,7 @@ import org.ethereum.facade.EthereumImpl;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 01/09/2014 19:43
+ * @since 01.09.2014
  */
 
 public class UIEthereumManager {

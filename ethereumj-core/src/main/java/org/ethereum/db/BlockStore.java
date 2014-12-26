@@ -17,7 +17,7 @@ import java.util.List;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 12/11/2014 17:16
+ * @since 12.11.2014
  */
 @Repository
 @Transactional(propagation = Propagation.SUPPORTS)

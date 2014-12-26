@@ -4,7 +4,7 @@ package org.ethereum.net.message;
  * Abstract message class for all messages on the Ethereum network
  *
  * @author Roman Mandeleil
- * Created on: 06/04/14 14:58
+ * @since 06.04.14
  */
 public abstract class Message {
 

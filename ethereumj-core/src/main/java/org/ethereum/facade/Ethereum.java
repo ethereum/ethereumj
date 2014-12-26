@@ -17,7 +17,7 @@ import java.util.concurrent.Future;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 27/07/2014 09:11
+ * @since 27.07.2014
  */
 
 public interface Ethereum {

@@ -16,7 +16,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
  * www.ethergit.com
  *
  * @author Roman Mandeleil
- * Created on: 19/12/2014 12:56
+ * @since 19.12.2014
  */
 
 public class TransactionExecutor {

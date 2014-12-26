@@ -8,7 +8,7 @@ import org.spongycastle.util.encoders.Hex;
  * www.ethergit.com
  *
  * @author Roman Mandeleil
- * Created on: 15/12/2014 12:41
+ * @since 15.12.2014
  */
 
 public class Utils {

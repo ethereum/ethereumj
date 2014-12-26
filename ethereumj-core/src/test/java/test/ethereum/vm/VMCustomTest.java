@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 01/06/2014 11:05
+ * @since 01.06.2014
  */
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

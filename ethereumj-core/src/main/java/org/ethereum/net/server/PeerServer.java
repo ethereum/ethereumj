@@ -23,7 +23,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 01/11/2014 10:11
+ * @since 01.11.2014
  */
 @Component
 public class PeerServer {

@@ -9,7 +9,7 @@ import java.util.Map;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 11/06/2014 14:09
+ * @since 11.06.2014
  */
 public class TrackDatabase implements Database {
 

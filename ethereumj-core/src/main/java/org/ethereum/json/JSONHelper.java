@@ -39,7 +39,7 @@ import java.util.*;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 26/06/2014 10:08
+ * @since 26.06.2014
  */
 public class JSONHelper {
 

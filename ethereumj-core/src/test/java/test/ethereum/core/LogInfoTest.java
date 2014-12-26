@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 05/12/2014 16:26
+ * @since 05.12.2014
  */
 
 public class LogInfoTest {

@@ -9,7 +9,7 @@ import org.spongycastle.util.encoders.Hex;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 20/11/2014 11:29
+ * @since 20.11.2014
  */
 
 public class BloomTest {

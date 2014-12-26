@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
  * Utility class to retrieve property values from the system.properties files
  *
  * @author Roman Mandeleil
- *         Created on: 22/05/2014 19:22
+ * @since 22.05.2014
  */
 public class SystemProperties {
 

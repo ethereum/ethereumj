@@ -11,7 +11,7 @@ import java.util.Set;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 12/11/2014 08:34
+ * @since 12.11.2014
  */
 @Component(value = "EthereumListener")
 public class EthereumListenerWrapper implements EthereumListener {

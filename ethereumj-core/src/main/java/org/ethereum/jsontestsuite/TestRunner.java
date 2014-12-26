@@ -24,7 +24,7 @@ import static org.ethereum.util.ByteUtil.wrap;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 02/07/2014 13:03
+ * @since 02.07.2014
  */
 
 public class TestRunner {

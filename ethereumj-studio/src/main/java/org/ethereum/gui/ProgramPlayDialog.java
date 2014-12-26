@@ -20,7 +20,7 @@ import java.util.List;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 02/06/2014 16:58
+ * @since 02.06.2014
  */
 
 public class ProgramPlayDialog extends JPanel implements ActionListener,

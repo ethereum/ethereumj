@@ -13,7 +13,7 @@ import java.util.List;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 28/10/2014 23:47
+ * @since 28.10.2014
  */
 
 public class ProgramTrace {

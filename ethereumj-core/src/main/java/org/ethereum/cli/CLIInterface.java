@@ -11,7 +11,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 13/11/2014 14:40
+ * @since 13.11.2014
  */
 @Component
 public class CLIInterface {

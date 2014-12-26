@@ -24,7 +24,7 @@ import java.util.*;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 28/10/2014 23:39
+ * @since 28.10.2014
  */
 
 public class Op {

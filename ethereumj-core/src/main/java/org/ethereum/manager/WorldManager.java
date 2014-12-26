@@ -27,7 +27,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * WorldManager is a singleton containing references to different parts of the system.
  *
  * @author Roman Mandeleil
- * Created on: 01/06/2014 10:44
+ * @since 01.06.2014
  */
 @Component
 public class WorldManager {

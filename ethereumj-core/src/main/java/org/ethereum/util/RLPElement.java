@@ -8,7 +8,7 @@ import java.io.Serializable;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 01/04/2014 10:45
+ * @since 01.04.2014
  */
 public interface RLPElement extends Serializable {
 

@@ -32,7 +32,7 @@ import java.math.BigInteger;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 17/05/14 17:06
+ * @since 17.05.14
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 @RunWith(SpringJUnit4ClassRunner.class)

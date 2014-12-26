@@ -20,7 +20,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * Based on these hashes, blocks are added to the queue.
  *
  * @author Roman Mandeleil
- * Created on: 27/07/2014 11:28
+ * @since 27.07.2014
  */
 @Component
 public class BlockQueue {

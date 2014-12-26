@@ -16,7 +16,7 @@ import java.util.*;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 11/11/2014 13:38
+ * @since 11.11.2014
  */
 @Component
 public class ChannelManager {

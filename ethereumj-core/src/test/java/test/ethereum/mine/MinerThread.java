@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * @author Roman Mandeleil
- * Created on: 22/05/2014 09:26
+ * @since 22.05.2014
  */
 public class MinerThread implements Runnable {
 

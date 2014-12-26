@@ -6,7 +6,7 @@ import org.ethereum.facade.Repository;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 03/06/2014 14:59
+ * @since 03.06.2014
  */
 public interface ProgramInvoke {
 

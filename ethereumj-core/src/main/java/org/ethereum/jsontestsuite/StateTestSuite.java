@@ -11,7 +11,7 @@ import java.util.*;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 10/07/2014 09:46
+ * @since 10.07.2014
  */
 
 public class StateTestSuite {

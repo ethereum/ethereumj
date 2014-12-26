@@ -10,7 +10,7 @@ import java.util.List;
  * www.ethereumJ.com
  *
  * @author Roman Mandeleil
- * Created on: 07/06/2014 17:45
+ * @since 07.06.2014
  */
 public class ProgramResult {
 

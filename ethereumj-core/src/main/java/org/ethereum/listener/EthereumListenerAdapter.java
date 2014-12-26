@@ -8,7 +8,7 @@ import java.util.Set;
 
 /**
  * @author Roman Mandeleil
- * Created on: 08/08/2014 15:22
+ * @since 08.08.2014
  */
 public class EthereumListenerAdapter implements EthereumListener {
 

@@ -14,7 +14,7 @@ import java.util.Map;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 15/12/2014 12:24
+ * @since 15.12.2014
  */
 
 public class StateTestCase {

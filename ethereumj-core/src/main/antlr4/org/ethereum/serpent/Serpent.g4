@@ -1,7 +1,7 @@
 
 // www.ethereumj.com
 // @author Roman Mandeleil
-// Created on: 22/03/2014 19:22
+// @since 22.03.2014
 grammar Serpent;
 
 tokens {

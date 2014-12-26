@@ -24,7 +24,7 @@ import java.util.Properties;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 13/11/2014 11:22
+ * @since 13.11.2014
  */
 @Configuration
 @EnableTransactionManagement

@@ -13,7 +13,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * www.etherj.com
  *
  * @author Roman Mandeleil
- * Created on: 28/06/2014 10:25
+ * @since 28.06.2014
  */
 
 public class Transaction {

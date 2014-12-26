@@ -11,7 +11,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * thread bounds and queue capacities are reached
  *
  * @author Roman Mandeleil
- * Created on: 22/05/2014 10:31
+ * @since 22.05.2014
  */
 public class RejectionLogger implements RejectedExecutionHandler {
 

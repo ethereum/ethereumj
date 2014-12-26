@@ -12,7 +12,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * @author Roman Mandeleil
- * Created on: 22/05/2014 09:26
+ * @since 22.05.2014
  */
 @Component
 @Scope("prototype")
