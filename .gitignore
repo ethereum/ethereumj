@@ -1,10 +1,14 @@
 # local credentials
 credentials.properties
 
-# Java
-*.class
+# Vim
+*.sw[op]
 
-# Intellij
+# Gradle
+.gradle
+build
+
+# IDEA
 .idea/
 *.iml
 *.iws
@@ -18,12 +22,6 @@ credentials.properties
 # Maven
 log/
 target/
-
-# Package Files #
-*.zip
-*.jar
-*.war
-*.ear
 
 # Output #
 */logs
