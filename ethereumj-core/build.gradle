@@ -8,13 +8,6 @@ plugins {
     id 'com.github.kt3k.coveralls' version '2.0.1x'
 }
 
-wrapper.gradleVersion = '2.2.1'
-
-sourceCompatibility = 1.7
-
-group = 'org.ethereum'
-version = '0.7.15-SNAPSHOT'
-
 mainClassName = 'org.ethereum.Start'
 
 ext.generatedSrcDir = file('src/gen/java')
@@ -40,10 +33,6 @@ ext {
     springVersion = '4.1.2.RELEASE'
     hibernateVersion = '4.3.7.Final'
     junitVersion = '4.11'
-}
-
-repositories {
-    jcenter()
 }
 
 dependencies {
