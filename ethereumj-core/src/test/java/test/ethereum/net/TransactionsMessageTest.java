@@ -15,6 +15,7 @@ import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.eth.GetTransactionsMessage;
 import org.ethereum.net.eth.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -36,6 +37,7 @@ public class TransactionsMessageTest {
 
     /* TRANSACTIONS */
 
+    @Ignore
     @Test  /* Transactions message 1 */
     public void test_1() {
 
@@ -67,6 +69,7 @@ public class TransactionsMessageTest {
         assertEquals("0b7907532b1f29c79942b75fff98822293bf5fdaa3653a8d9f424c6a3265f06c", Hex.toHexString(tx.getSignature().s.toByteArray()));
     }
 
+    @Ignore
     @Test  /* Transactions message 2 */
     public void test_2() {
 

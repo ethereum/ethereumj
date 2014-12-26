@@ -17,6 +17,7 @@ import java.util.*;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.DatabaseImpl;
+import org.junit.Ignore;
 import test.ethereum.db.MockDB;
 import org.ethereum.trie.TrieImpl;
 import org.json.simple.JSONArray;
@@ -381,6 +382,7 @@ public class TrieTest {
         assertNotEquals(Hex.toHexString(trie1.getRootHash()), Hex.toHexString(trie2.getRootHash()));
     }
 
+    @Ignore
     @Test
     public void testTrieSync() {
         TrieImpl trie = new TrieImpl(mockDb);
@@ -392,6 +394,7 @@ public class TrieTest {
         assertNotEquals("Expected data to be persisted", mockDb.getAddedItems(), 0);
     }
 
+    @Ignore
     @Test
     public void TestTrieDirtyTracking() {
         TrieImpl trie = new TrieImpl(mockDb);
@@ -575,6 +578,7 @@ public class TrieTest {
     }
 
 
+    @Ignore
     @Test
     public void testMasiveDetermenisticUpdate() throws IOException, URISyntaxException {
 
@@ -744,6 +748,7 @@ public class TrieTest {
     }
 
 
+    @Ignore
     @Test
     public void testGetFromRootNode() {
         TrieImpl trie1 = new TrieImpl(mockDb);

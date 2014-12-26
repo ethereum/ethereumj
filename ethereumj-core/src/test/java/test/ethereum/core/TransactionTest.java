@@ -14,6 +14,7 @@ import java.util.List;
 import org.ethereum.core.Bloom;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.vm.LogInfo;
+import org.junit.Ignore;
 import test.ethereum.TestContext;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
@@ -33,6 +34,7 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
+@Ignore
 public class TransactionTest {
 
 

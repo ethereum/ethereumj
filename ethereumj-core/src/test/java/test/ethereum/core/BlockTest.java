@@ -177,6 +177,7 @@ public class BlockTest {
     }
 
 
+    @Ignore
     @Test
     public void testScenario1() throws URISyntaxException, IOException {
 
@@ -204,6 +205,7 @@ public class BlockTest {
                 Hex.toHexString(worldManager.getRepository().getRoot()));
     }
 
+    @Ignore
     @Test
     public void testScenario2() throws URISyntaxException, IOException {
 

@@ -7,6 +7,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {
 

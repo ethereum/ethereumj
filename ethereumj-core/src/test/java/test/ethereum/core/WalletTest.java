@@ -56,6 +56,7 @@ public class WalletTest {
     }
 
 
+    @Ignore
     @Test   // Testing account for simple balance set
     public void accountTest_1() {
 
@@ -76,6 +77,7 @@ public class WalletTest {
     }
 
 
+    @Ignore
     @Test  // test account balance with pending "unblocked" transaction
     public void accountTest_2() {
 
@@ -109,6 +111,7 @@ public class WalletTest {
     }
 
 
+    @Ignore
     @Test
     public void testSave1() throws TransformerException, ParserConfigurationException {
 

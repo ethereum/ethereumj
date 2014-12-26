@@ -323,6 +323,7 @@ public class ProgramMemoryTest {
         assertEquals(32, program.getMemSize());
     }
 
+    @Ignore
     @Test
     public void testInitialInsert() {
 

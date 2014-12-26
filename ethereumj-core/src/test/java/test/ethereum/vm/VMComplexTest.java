@@ -184,6 +184,7 @@ public class VMComplexTest {
         // TODO: check that the value pushed after exec is 1
     }
 
+    @Ignore
     @Test // contractB call contractA with return expectation
     public void test3() {
 
@@ -344,6 +345,7 @@ public class VMComplexTest {
         // TODO CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
     }
 
+    @Ignore
     @Test // contractB call itself with code from contractA
     public void test6() {
         /**

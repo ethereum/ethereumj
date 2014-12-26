@@ -1,5 +1,6 @@
 package test.ethereum.core;
 
+import org.junit.Ignore;
 import test.ethereum.TestContext;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
@@ -60,6 +61,7 @@ public class ForkTest {
     }
 
 
+    @Ignore
     @Test
     public void fork1() throws URISyntaxException, IOException {
 
@@ -87,6 +89,7 @@ public class ForkTest {
         assertEquals(0, garbage.size());
     }
 
+    @Ignore
     @Test
     public void fork2() throws URISyntaxException, IOException {
 
