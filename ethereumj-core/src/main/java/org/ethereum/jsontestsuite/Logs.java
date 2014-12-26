@@ -15,7 +15,7 @@ import org.spongycastle.util.encoders.Hex;
 
 public class Logs {
     List<LogInfo> logs = new ArrayList<>();
-    
+
     public Logs(JSONArray jLogs) {
 
         for (int i = 0; i < jLogs.size(); ++i){

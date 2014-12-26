@@ -32,7 +32,7 @@ public class ContractDetails {
 
     public ContractDetails() {
     }
-    
+
     public ContractDetails(byte[] rlpCode) {
         decode(rlpCode);
     }

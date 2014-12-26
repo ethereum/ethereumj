@@ -30,7 +30,7 @@ public class Value {
             this.value = obj;
         }
     }
-    
+
     /* *****************
      *      Convert
      * *****************/
@@ -102,7 +102,7 @@ public class Value {
         // If this wasn't a slice you probably shouldn't be using this function
         return new Value(null);
     }
-    
+
     /* *****************
      *      Utility
      * *****************/
@@ -114,7 +114,7 @@ public class Value {
     public boolean cmp(Value o) {
         return DeepEquals.deepEquals(this, o);
     }
-    
+
     /* *****************
      *      Checks
      * *****************/

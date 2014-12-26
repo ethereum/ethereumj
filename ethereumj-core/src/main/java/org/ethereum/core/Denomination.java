@@ -12,10 +12,10 @@ public enum Denomination {
     FINNY(newBigInt(15)),
     ETHER(newBigInt(18)),
     EINSTEIN(newBigInt(21)),
-    DOUGLAS(newBigInt(42));                  
-             
+    DOUGLAS(newBigInt(42));
+
     private BigInteger amount;
-            
+
     private Denomination(BigInteger value) {
         this.amount = value;
     }
@@ -23,7 +23,7 @@ public enum Denomination {
     public BigInteger value() {
         return amount;
     }
-    
+
     public long longValue() {
         return value().longValue();
     }
@@ -31,7 +31,7 @@ public enum Denomination {
     private static BigInteger newBigInt(int value) {
         return BigInteger.valueOf(10).pow(value);
     }
-    
+
     public static String toFriendlyString(BigInteger value) {
         if(value.compareTo(DOUGLAS.value()) == 1 || value.compareTo(DOUGLAS.value()) == 0) {
             return Float.toString(value.divide(DOUGLAS.value()).floatValue()) +  " DOUGLAS";

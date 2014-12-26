@@ -22,10 +22,10 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 public class AccountsListWindow  extends JFrame {
-    
+
     private JTable tblAccountsDataTable;
     private AccountsDataAdapter adapter;
-    
+
     public AccountsListWindow() {
         java.net.URL url = ClassLoader.getSystemResource("ethereum-icon.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
@@ -35,25 +35,25 @@ public class AccountsListWindow  extends JFrame {
         setSize(700, 500);
         setLocation(50, 180);
         setResizable(false);
-        
+
         JPanel panel = new JPanel();
         getContentPane().add(panel);
-        
+
         tblAccountsDataTable = new JTable();
-        
+
         adapter = new AccountsDataAdapter(new ArrayList<DataClass>());
         tblAccountsDataTable.setModel(adapter);
-        
+
         JScrollPane scrollPane = new JScrollPane(tblAccountsDataTable);
         scrollPane.setPreferredSize(new Dimension(680,490));
         panel.add(scrollPane);
-     
+
         loadAccounts();
     }
-    
+
     private void loadAccounts() {
         new Thread(){
-            
+
             @Override
             public void run(){
                 Repository repository = UIEthereumManager.ethereum.getRepository();
@@ -61,25 +61,25 @@ public class AccountsListWindow  extends JFrame {
                 while(i.hasNext()) {
                     DataClass dc = new DataClass();
                     dc.address = i.next().getKey();
-                    
+
                     AccountState state = repository.getAccountState(dc.address);
                     dc.accountState = state;
-                    
+
                     adapter.addDataPiece(dc);
                 }
             }
         }.start();
     }
-    
+
     private class AccountsDataAdapter extends AbstractTableModel {
         List<DataClass> data;
-        
+
         final String[] columns = new String[]{ "Account", "Balance", "Is Contract"};
-        
+
         public AccountsDataAdapter(List<DataClass> data) {
             this.data = data;
         }
-        
+
         public void addDataPiece(DataClass d) {
             data.add(d);
             this.fireTableRowsInserted(Math.min(data.size() - 2, 0), data.size() - 1);
@@ -94,12 +94,12 @@ public class AccountsListWindow  extends JFrame {
         public int getColumnCount() {
             return 3;
         }
-        
+
         @Override
         public String getColumnName(int column) {
             return columns[column];
         }
-        
+
         @Override
         public boolean isCellEditable(int row, int column) { // custom isCellEditable function
            return column == 0? true:false;
@@ -125,7 +125,7 @@ public class AccountsListWindow  extends JFrame {
             }
         }
     }
-    
+
     private class DataClass {
         public byte[] address;
         public AccountState accountState;

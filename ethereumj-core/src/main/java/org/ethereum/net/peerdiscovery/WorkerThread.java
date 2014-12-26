@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.ThreadPoolExecutor;
 
 /**
- * @author Roman Mandeleil 
+ * @author Roman Mandeleil
  * Created on: 22/05/2014 09:26
  */
 @Component

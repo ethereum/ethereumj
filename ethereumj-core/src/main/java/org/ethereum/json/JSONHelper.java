@@ -16,26 +16,26 @@ import java.math.BigInteger;
 import java.util.*;
 
 /**
- * JSON Helper class to format data into ObjectNodes 
+ * JSON Helper class to format data into ObjectNodes
  *      to match PyEthereum blockstate output
- * 
+ *
  *  Dump format:
  *  {
- *      "address": 
- *      { 
- *          "nonce": "n1", 
- *          "balance": "b1", 
- *          "stateRoot": "s1", 
- *          "codeHash": "c1", 
- *          "code": "c2", 
- *          "storage": 
- *          { 
- *              "key1": "value1", 
- *              "key2": "value2" 
+ *      "address":
+ *      {
+ *          "nonce": "n1",
+ *          "balance": "b1",
+ *          "stateRoot": "s1",
+ *          "codeHash": "c1",
+ *          "code": "c2",
+ *          "storage":
+ *          {
+ *              "key1": "value1",
+ *              "key2": "value2"
  *          }
  *      }
  *  }
- * 
+ *
  * www.ethereumJ.com
  *
  * @author: Roman Mandeleil
@@ -43,14 +43,14 @@ import java.util.*;
  */
 public class JSONHelper {
 
-    public static void dumpState(ObjectNode statesNode, String address, AccountState state, ContractDetails details) {      
+    public static void dumpState(ObjectNode statesNode, String address, AccountState state, ContractDetails details) {
 
         List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
         Collections.sort((List<DataWord>) storageKeys);
 
         ObjectNode account = statesNode.objectNode();
         ObjectNode storage = statesNode.objectNode();
-                
+
         for (DataWord key : storageKeys) {
             storage.put("0x" + Hex.toHexString(key.getData()),
                     "0x" + Hex.toHexString(details.getStorage().get(key).getNoLeadZeroesData()));
@@ -61,14 +61,14 @@ public class JSONHelper {
         account.put("nonce", state.getNonce() == null ? "0" : state.getNonce().toString());
         account.put("storage", storage);
         account.put("storage_root", state.getStateRoot() == null ? "" : Hex.toHexString(state.getStateRoot()));
-        
+
         statesNode.put(address, account);
     }
-    
+
     public static void dumpBlock(ObjectNode blockNode, Block block,
             long gasUsed, byte[] state, List<ByteArrayWrapper> keys,
             Repository repository) {
-        
+
         blockNode.put("coinbase", Hex.toHexString(block.getCoinbase()));
         blockNode.put("difficulty", new BigInteger(1, block.calcDifficulty()).toString());
         blockNode.put("extra_data", "0x");
@@ -76,25 +76,25 @@ public class JSONHelper {
         blockNode.put("nonce", "0x" + Hex.toHexString(block.getNonce()));
         blockNode.put("number", String.valueOf(block.getNumber()));
         blockNode.put("prevhash", "0x" + Hex.toHexString(block.getParentHash()));
-        
+
         ObjectNode statesNode = blockNode.objectNode();
         for (ByteArrayWrapper key : keys) {
             byte[] keyBytes = key.getData();
             AccountState    accountState    = repository.getAccountState(keyBytes);
             ContractDetails details  = repository.getContractDetails(keyBytes);
             JSONHelper.dumpState(statesNode, Hex.toHexString(keyBytes), accountState, details);
-        }       
+        }
         blockNode.put("state", statesNode);
-        
+
         blockNode.put("state_root", Hex.toHexString(state));
         blockNode.put("timestamp", String.valueOf(block.getTimestamp()));
-        
+
         ArrayNode transactionsNode = blockNode.arrayNode();
         blockNode.put("transactions", transactionsNode);
-        
+
         blockNode.put("tx_list_root", ByteUtil.toHexString(block.getTxTrieRoot()));
         blockNode.put("uncles_hash", "0x" + Hex.toHexString(block.getUnclesHash()));
-        
+
 //      JSONHelper.dumpTransactions(blockNode,
 //              stateRoot, codeHash, code, storage);
     }

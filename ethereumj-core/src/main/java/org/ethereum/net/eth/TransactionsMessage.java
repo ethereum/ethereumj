@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Wrapper around an Ethereum Transactions message on the network 
- * 
+ * Wrapper around an Ethereum Transactions message on the network
+ *
  * @see org.ethereum.net.eth.EthMessageCodes#TRANSACTIONS
  */
 public class TransactionsMessage extends EthMessage {
-    
+
     private Set<Transaction> transactions;
 
     public TransactionsMessage(byte[] encoded) {
@@ -36,7 +36,7 @@ public class TransactionsMessage extends EthMessage {
         this.transactions = transactionList;
         parsed = true;
     }
-    
+
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
@@ -48,7 +48,7 @@ public class TransactionsMessage extends EthMessage {
         }
         parsed = true;
     }
-    
+
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
         encodedElements.add(RLP.encodeByte(TRANSACTIONS.asByte()));
@@ -58,7 +58,7 @@ public class TransactionsMessage extends EthMessage {
                 .toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
     }
-    
+
     @Override
     public byte[] getEncoded() {
         if (encoded == null) encode();
@@ -80,7 +80,7 @@ public class TransactionsMessage extends EthMessage {
     public Class<?> getAnswerMessage() {
         return null;
     }
-    
+
     public String toString() {
         if(!parsed) parse();
         StringBuffer sb = new StringBuffer();

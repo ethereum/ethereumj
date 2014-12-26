@@ -39,10 +39,10 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
             loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
 
         byte[] encoded = msg.getEncoded();
-        
+
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
-        
+
         out.capacity(encoded.length + 8);
         out.writeBytes(StaticMessages.SYNC_TOKEN);
         out.writeBytes(ByteUtil.calcPacketLength(encoded));

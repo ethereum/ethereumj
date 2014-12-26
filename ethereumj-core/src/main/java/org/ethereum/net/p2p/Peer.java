@@ -57,7 +57,7 @@ public class Peer {
 
     @Override
     public String toString() {
-        return "[ip=" + getAddress().getHostAddress() + 
+        return "[ip=" + getAddress().getHostAddress() +
                 " port=" + getPort()
                 + " peerId=" + getPeerId() + "]";
     }

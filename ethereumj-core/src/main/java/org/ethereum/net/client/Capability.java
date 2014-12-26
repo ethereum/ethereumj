@@ -8,7 +8,7 @@ public class Capability implements Comparable<Capability> {
     public final static String P2P = "p2p";
     public final static String ETH = "eth";
     public final static String SHH = "shh";
-    
+
     private String name;
     private byte version;
 
@@ -16,7 +16,7 @@ public class Capability implements Comparable<Capability> {
         this.name = name;
         this.version = version;
     }
-    
+
     public String getName() {
         return name;
     }
@@ -24,7 +24,7 @@ public class Capability implements Comparable<Capability> {
     public byte getVersion() {
         return version;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -41,7 +41,7 @@ public class Capability implements Comparable<Capability> {
     public int compareTo(Capability o) {
         return this.name.compareTo(o.name);
     }
-    
+
     public String toString() {
         return name + ":" + version;
     }

@@ -19,14 +19,14 @@ import org.spongycastle.util.encoders.Hex;
 /**
  * This class contains static values of messages on the network. These message
  * will always be the same and therefore don't need to be created each time.
- * 
+ *
  * @author Roman Mandeleil
  * Created on: 13/04/14 20:19
  */
 public class StaticMessages {
 
     public static final String PEER_ID = Hex.toHexString(HashUtil.randomPeerId());
-    
+
     public final static PingMessage PING_MESSAGE                        = new PingMessage();
     public final static PongMessage PONG_MESSAGE                        = new PongMessage();
     public final static HelloMessage HELLO_MESSAGE                      = generateHelloMessage();
@@ -43,7 +43,7 @@ public class StaticMessages {
                 new Capability(Capability.SHH, ShhHandler.VERSION));
         int listenPort = SystemProperties.CONFIG.listenPort();
 
-        return new HelloMessage(p2pVersion, helloAnnouncement, 
+        return new HelloMessage(p2pVersion, helloAnnouncement,
                 capabilities, listenPort, PEER_ID);
     }
 

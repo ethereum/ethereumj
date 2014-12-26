@@ -45,21 +45,21 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 
 public class StateExplorerWindow extends JFrame {
-    
+
     private ToolBar toolBar = null;
     private JTextField txfAccountAddress;
     private WindowTextArea txaPrinter;
     private JButton btnPlayCode;
     private AccountsListWindow accountsListWindow;
     ProgramPlayDialog codePanel;
-    
+
     private JTable tblStateDataTable;
     private StateDataTableModel dataModel;
     String[] dataTypes = {"String", "Hex", "Number"};
-    
+
     public StateExplorerWindow(ToolBar toolBar) {
         this.toolBar = toolBar;
-        
+
         URL url = ClassLoader.getSystemResource("ethereum-icon.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
@@ -68,19 +68,19 @@ public class StateExplorerWindow extends JFrame {
         setSize(700, 530);
         setLocation(50, 180);
         setResizable(false);
-        
+
         /*
-         * top search panel 
+         * top search panel
          */
         JPanel panel = new JPanel();
         getContentPane().add(panel);
-        
+
         Box horizontalBox = Box.createHorizontalBox();
         panel.add(horizontalBox);
-        
+
         java.net.URL imageURL = ClassLoader.getSystemResource("buttons/list.png");
         ImageIcon image = new ImageIcon(imageURL);
-        JToggleButton btnListAccounts = new JToggleButton(""); 
+        JToggleButton btnListAccounts = new JToggleButton("");
         btnListAccounts.setIcon(image);
         btnListAccounts.setContentAreaFilled(true);
         btnListAccounts.setToolTipText("Serpent Editor");
@@ -101,12 +101,12 @@ public class StateExplorerWindow extends JFrame {
             }
         });
         horizontalBox.add(btnListAccounts);
-        
-        
+
+
         txfAccountAddress = new JTextField();
         horizontalBox.add(txfAccountAddress);
         txfAccountAddress.setColumns(30);
-        
+
         JButton btnSearch = new JButton("Search");
         horizontalBox.add(btnSearch);
         btnSearch.addMouseListener(new MouseAdapter(){
@@ -115,9 +115,9 @@ public class StateExplorerWindow extends JFrame {
                 byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
                 if(addr != null)
                     searchAccount(addr);
-            }           
+            }
         });
-        
+
         btnPlayCode = new JButton("Play Code");
         horizontalBox.add(btnPlayCode);
         btnPlayCode.addMouseListener(new MouseAdapter(){
@@ -130,25 +130,25 @@ public class StateExplorerWindow extends JFrame {
                     if(code != null)
                         ProgramPlayDialog.createAndShowGUI(code, null, null);
                 }
-            }           
+            }
         });
-        
+
         /*
          * center text panel
          */
         JPanel centerPanel = new JPanel();
         panel.add(centerPanel);
-        
+
         txaPrinter = new WindowTextArea();
         centerPanel.add(txaPrinter);
-        
+
         /*
          * bottom data panel
-         */      
+         */
         // data type choice boxes
         Box Hbox = Box.createHorizontalBox();
         panel.add(Hbox);
-                
+
         Box VBox1 = Box.createVerticalBox();
         JLabel l1 = new JLabel("Key Encoding");
         l1.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -163,7 +163,7 @@ public class StateExplorerWindow extends JFrame {
         });
         VBox1.add(l1);
         VBox1.add(cmbKey);
-        
+
         Box VBox2 = Box.createVerticalBox();
         VBox2.setAlignmentX(LEFT_ALIGNMENT);
         JLabel l2 = new JLabel("Value Encoding");
@@ -179,92 +179,92 @@ public class StateExplorerWindow extends JFrame {
         });
         VBox2.add(l2);
         VBox2.add(cmbValue);
-        
+
         Hbox.add(VBox1);
-        
+
         JPanel spacer = new JPanel();
         FlowLayout flowLayout = (FlowLayout) spacer.getLayout();
         flowLayout.setHgap(100);
         Hbox.add(spacer);
         Hbox.add(VBox2);
-        
+
         // table
         tblStateDataTable = new JTable();
         dataModel = new StateDataTableModel();
         tblStateDataTable.setModel(dataModel);
-        
-        
+
+
         JScrollPane scrollPane = new JScrollPane(tblStateDataTable);
         scrollPane.setPreferredSize(new Dimension(600,200));
         panel.add(scrollPane);
     }
-    
+
     private void searchAccount(byte[] add){
         txaPrinter.clean();
         txaPrinter.println(accountDetailsString(add, dataModel));
     }
-    
-    private String accountDetailsString(byte[] account, StateDataTableModel dataModel){ 
+
+    private String accountDetailsString(byte[] account, StateDataTableModel dataModel){
         String ret = "";
         // 1) print account address
         ret = "Account: " + Hex.toHexString(account) + "\n";
-        
+
         //2) print state
         Repository repository = UIEthereumManager.ethereum.getRepository();
         AccountState state = repository.getAccountState(account);
         if(state != null)
             ret += state.toString() + "\n";
-        
+
         //3) print storage
         ContractDetails contractDetails = repository.getContractDetails(account);
         if(contractDetails != null) {
             Map<DataWord, DataWord> accountStorage = contractDetails.getStorage();
             dataModel.setData(accountStorage);
         }
-        
+
         //4) code print
         byte[] code = repository.getCode(account);
         if(code != null) {
             ret += "\n\nCode:\n";
             ret += Program.stringify(code, 0, "");
         }
-        
+
         return ret;
     }
-    
+
     private class StateDataTableModel extends AbstractTableModel {
 
         Map<DataWord, DataWord> data;
         DataEncodingType keyEncodingType = DataEncodingType.HEX;
         DataEncodingType valueEncodingType = DataEncodingType.HEX;
         String[] columns = new String[]{ "Key", "Value"};
-        
+
         public StateDataTableModel() { }
-        
+
         public StateDataTableModel(Map<DataWord, DataWord> initData) {
             setData(initData);
         }
-        
+
         public void setData(Map<DataWord, DataWord> initData) {
             data = initData;
             fireTableDataChanged();
         }
-        
+
         public void setKeyEncoding(DataEncodingType type) {
             keyEncodingType  = type;
             fireTableDataChanged();
         }
-        
+
         public void setValueEncoding(DataEncodingType type) {
             valueEncodingType  = type;
             fireTableDataChanged();
         }
-        
+
         @Override
         public String getColumnName(int column) {
             return columns[column];
         }
-        
+
         @Override
         public int getRowCount() {
             return data == null? 0:data.size();
@@ -278,7 +278,7 @@ public class StateExplorerWindow extends JFrame {
         @Override
         public Object getValueAt(int rowIndex, int columnIndex) {
             DataWord key = (DataWord) this.data.keySet().toArray()[rowIndex];
-            
+
             if(columnIndex == 0) {
                 return getDataWithEncoding(key.getData(), keyEncodingType);
             }
@@ -287,7 +287,7 @@ public class StateExplorerWindow extends JFrame {
                 return getDataWithEncoding(value.getData(), valueEncodingType);
             }
         }
-        
+
         private String getDataWithEncoding(byte[] data, DataEncodingType enc) {
             switch(enc) {
             case STRING:
@@ -297,16 +297,16 @@ public class StateExplorerWindow extends JFrame {
             case NUMBER:
                 return new BigInteger(data).toString();
             }
-            
+
             return data.toString();
         }
     }
-    
+
     private enum DataEncodingType{
         STRING,
         HEX,
         NUMBER;
-        
+
         static public DataEncodingType getTypeFromString(String value) {
             switch(value){
             case "String":
@@ -319,22 +319,22 @@ public class StateExplorerWindow extends JFrame {
             return STRING;
         }
     }
-    
+
     private class WindowTextArea extends TextArea {
-        
+
         public WindowTextArea() {
             super();
         }
-        
+
         public void println(String txt) {
             setText(getText() + txt + "\n");
         }
-        
+
         public void clean() {
             setText("");
         }
     }
-    
+
     public static void main(String[] args) {
         // Start all Swing applications on the EDT.
         SwingUtilities.invokeLater(new Runnable() {

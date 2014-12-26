@@ -124,7 +124,7 @@ public class SerpentCompiler {
 
         // encode ref for 5 bytes
         for (int i = 0; i < lexaList.size(); ++i) {
-            
+
             String lexa  = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
             lexaList.add(i + 1, lexa);

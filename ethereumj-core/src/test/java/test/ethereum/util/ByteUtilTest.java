@@ -19,7 +19,7 @@ public class ByteUtilTest {
     @Test
     public void testAppendByte() {
         byte[] bytes = "tes".getBytes();
-        byte b = 0x74; 
+        byte b = 0x74;
         Assert.assertArrayEquals("test".getBytes(), ByteUtil.appendByte(bytes, b));
     }
 
@@ -38,15 +38,15 @@ public class ByteUtilTest {
         byte[] actuals = ByteUtil.bigIntegerToBytes(b);
         assertArrayEquals(expecteds, actuals);
     }
-    
-    @Test 
+
+    @Test
     public void testBigIntegerToBytesZero() {
         byte[] expecteds = new byte[]{0x00};
         BigInteger b = BigInteger.ZERO;
         byte[] actuals = ByteUtil.bigIntegerToBytes(b);
         assertArrayEquals(expecteds, actuals);
     }
-    
+
     @Test
     public void testToHexString() {
         assertEquals("", ByteUtil.toHexString(null));
@@ -63,7 +63,7 @@ public class ByteUtilTest {
     public void testByteArrayToInt() {
         assertEquals(0, ByteUtil.byteArrayToInt(null));
         assertEquals(0, ByteUtil.byteArrayToInt(new byte[0]));
-    
+
 //      byte[] x = new byte[] { 5,1,7,0,8 };
 //      long start = System.currentTimeMillis();
 //      for (int i = 0; i < 100000000; i++) {
@@ -102,7 +102,7 @@ public class ByteUtilTest {
         assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test1));
         assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test2));
     }
-        
+
     @Test
     public void testMatchingNibbleLength1() {
         // a larger than b
@@ -119,7 +119,7 @@ public class ByteUtilTest {
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(1, result);
     }
-    
+
     @Test
     public void testMatchingNibbleLength3() {
         // a and b the same length equal
@@ -128,7 +128,7 @@ public class ByteUtilTest {
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(1, result);
     }
-    
+
     @Test
     public void testMatchingNibbleLength4() {
         // a and b the same length not equal
@@ -137,7 +137,7 @@ public class ByteUtilTest {
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(0, result);
     }
-    
+
     @Test
     public void testNiceNiblesOutput_1(){
         byte[] test = {7, 0, 7, 5, 7, 0, 7, 0, 7, 9};
@@ -151,7 +151,7 @@ public class ByteUtilTest {
         String result = "\\x07\\x00\\x07\\x0f\\x07\\x00\\x0a\\x00\\x07\\x09";
         assertEquals(result, ByteUtil.nibblesToPrettyString(test));
     }
-    
+
     @Test(expected=NullPointerException.class)
     public void testMatchingNibbleLength5() {
         // a == null
@@ -159,7 +159,7 @@ public class ByteUtilTest {
         byte[] b = new byte[] { 0x00 };
         ByteUtil.matchingNibbleLength(a, b);
     }
-    
+
     @Test(expected=NullPointerException.class)
     public void testMatchingNibbleLength6() {
         // b == null
@@ -167,7 +167,7 @@ public class ByteUtilTest {
         byte[] b = null;
         ByteUtil.matchingNibbleLength(a, b);
     }
-    
+
     @Test
     public void testMatchingNibbleLength7() {
         // a or b is empty
@@ -176,18 +176,18 @@ public class ByteUtilTest {
         int result = ByteUtil.matchingNibbleLength(a, b);
         assertEquals(0, result);
     }
-    
+
     /**
-     * This test shows the difference between iterating over, 
+     * This test shows the difference between iterating over,
      * and comparing byte[] vs BigInteger value.
-     * 
+     *
      * Results indicate that the former has ~15x better performance.
      * Therefore this is used in the Miner.mine() method.
      */
     @Test
     public void testIncrementPerformance() {
         boolean testEnabled = false;
-        
+
         if(testEnabled) {
             byte[] counter1 = new byte[4];
             byte[] max = ByteBuffer.allocate(4).putInt(Integer.MAX_VALUE).array();
@@ -198,7 +198,7 @@ public class ByteUtilTest {
                 }
             }
             System.out.println(System.currentTimeMillis() - start1 + "ms to reach: " + Hex.toHexString(counter1));
-            
+
             BigInteger counter2 = BigInteger.ZERO;
             long start2 = System.currentTimeMillis();
             while(true) {

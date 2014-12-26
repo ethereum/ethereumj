@@ -26,35 +26,35 @@ import static org.ethereum.vm.OpCode.PUSH1;
 /**
  * The Ethereum Virtual Machine (EVM) is responsible for initialization
  * and executing a transaction on a contract.
- * 
- * It is a quasi-Turing-complete machine; the quasi qualification 
- * comes from the fact that the computation is intrinsically bounded 
+ *
+ * It is a quasi-Turing-complete machine; the quasi qualification
+ * comes from the fact that the computation is intrinsically bounded
  * through a parameter, gas, which limits the total amount of computation done.
  *
- * The EVM is a simple stack-based architecture. The word size of the machine 
- * (and thus size of stack item) is 256-bit. This was chosen to facilitate 
- * the SHA3-256 hash scheme and  elliptic-curve computations. The memory model 
- * is a simple word-addressed byte array. The stack has an unlimited size. 
- * The machine also has an independent storage model; this is similar in concept 
- * to the memory but rather than a byte array, it is a word-addressable word array. 
- * 
- * Unlike memory, which is volatile, storage is non volatile and is 
- * maintained as part of the system state. All locations in both storage 
+ * The EVM is a simple stack-based architecture. The word size of the machine
+ * (and thus size of stack item) is 256-bit. This was chosen to facilitate
+ * the SHA3-256 hash scheme and  elliptic-curve computations. The memory model
+ * is a simple word-addressed byte array. The stack has an unlimited size.
+ * The machine also has an independent storage model; this is similar in concept
+ * to the memory but rather than a byte array, it is a word-addressable word array.
+ *
+ * Unlike memory, which is volatile, storage is non volatile and is
+ * maintained as part of the system state. All locations in both storage
  * and memory are well-defined initially as zero.
- * 
- * The machine does not follow the standard von Neumann architecture. 
- * Rather than storing program code in generally-accessible memory or storage, 
- * it is stored separately in a virtual ROM interactable only though 
+ *
+ * The machine does not follow the standard von Neumann architecture.
+ * Rather than storing program code in generally-accessible memory or storage,
+ * it is stored separately in a virtual ROM interactable only though
  * a specialised instruction.
- * 
- * The machine can have exceptional execution for several reasons, 
- * including stack underflows and invalid instructions. These unambiguously 
- * and validly result in immediate halting of the machine with all state changes 
- * left intact. The one piece of exceptional execution that does not leave 
- * state changes intact is the out-of-gas (OOG) exception. 
- * 
- * Here, the machine halts immediately and reports the issue to 
- * the execution agent (either the transaction processor or, recursively, 
+ *
+ * The machine can have exceptional execution for several reasons,
+ * including stack underflows and invalid instructions. These unambiguously
+ * and validly result in immediate halting of the machine with all state changes
+ * left intact. The one piece of exceptional execution that does not leave
+ * state changes intact is the out-of-gas (OOG) exception.
+ *
+ * Here, the machine halts immediately and reports the issue to
+ * the execution agent (either the transaction processor or, recursively,
  * the spawning execution environment) and which will deal with it separately.
  *
  * www.ethereumJ.com
@@ -62,22 +62,22 @@ import static org.ethereum.vm.OpCode.PUSH1;
  * Created on: 01/06/2014 10:44
  */
 public class VM {
-    
+
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger dumpLogger = LoggerFactory.getLogger("dump");
     private static BigInteger _32_ = BigInteger.valueOf(32);
     private static String logString = "[{}]\t Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
-    
+
     private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
-    
+
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
-    
+
     public void step(Program program) {
 
         if (CONFIG.vmTrace())
             program.saveOpTrace();
-        
+
         try {
             OpCode op = OpCode.code(program.getCurrentOp());
             if (op == null)
@@ -96,7 +96,7 @@ public class VM {
             long gasCost = GasCost.STEP;
             long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
-                        
+
             // Calculate fees and spend gas
             switch (op) {
                 case STOP: case SUICIDE:
@@ -123,7 +123,7 @@ public class VM {
                 case BALANCE:
                     gasCost = GasCost.BALANCE;
                     break;
-                    
+
                 // These all operate on memory and therefore potentially expand it:
                 case MSTORE:
                     newMemSize = memNeeded(stack.peek(), new DataWord(32));
@@ -196,13 +196,13 @@ public class VM {
                     break;
             }
             program.spendGas(gasCost, op.name());
-            
+
             // Avoid overflows
             if(newMemSize.compareTo(MAX_GAS) == 1)
                 throw program.new OutOfGasException();
 
             // memory gas calc
-            long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;            
+            long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;
             if (memoryUsage > oldMemSize) {
                 memWords = (memoryUsage - oldMemSize) / 32;
                 long memGas = GasCost.MEMORY * memWords;
@@ -219,7 +219,7 @@ public class VM {
             // Log debugging line for VM
             if(program.getNumber().intValue() == CONFIG.dumpBlock())
                 this.dumpLine(op, gasBefore, gasCost+callGas, memWords, program);
-                
+
             // Execute operation
             switch (op) {
                 /**
@@ -443,7 +443,7 @@ public class VM {
                 /**
                  * Bitwise Logic Operations
                  */
-                case AND:{                  
+                case AND:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -454,7 +454,7 @@ public class VM {
                     program.stackPush(word1);
                     program.step();
                 }   break;
-                case OR: {              
+                case OR: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -465,7 +465,7 @@ public class VM {
                     program.stackPush(word1);
                     program.step();
                 }   break;
-                case XOR: {                 
+                case XOR: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
 
@@ -476,7 +476,7 @@ public class VM {
                     program.stackPush(word1);
                     program.step();
                 }   break;
-                case BYTE:{                 
+                case BYTE:{
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
                     DataWord result = null;
@@ -515,7 +515,7 @@ public class VM {
                 /**
                  * SHA3
                  */
-                case SHA3:{                 
+                case SHA3:{
                     DataWord memOffsetData  = program.stackPop();
                     DataWord lengthData     = program.stackPop();
                     ByteBuffer buffer = program.memoryChunk(memOffsetData, lengthData);
@@ -581,7 +581,7 @@ public class VM {
                     program.stackPush(callValue);
                     program.step();
                 }   break;
-                case CALLDATALOAD:{             
+                case CALLDATALOAD:{
                     DataWord dataOffs  = program.stackPop();
                     DataWord value = program.getDataValue(dataOffs);
 
@@ -600,11 +600,11 @@ public class VM {
                     program.stackPush(dataSize);
                     program.step();
                 }   break;
-                case CALLDATACOPY:{                 
+                case CALLDATACOPY:{
                     DataWord memOffsetData  = program.stackPop();
                     DataWord dataOffsetData = program.stackPop();
                     DataWord lengthData     = program.stackPop();
-                    
+
                     byte[] msgData = program.getDataCopy(dataOffsetData, lengthData);
 
                     if (logger.isInfoEnabled())
@@ -614,7 +614,7 @@ public class VM {
                     program.step();
                 }   break;
                 case CODESIZE: case EXTCODESIZE: {
-                    
+
                     int length;
                     if (op == OpCode.CODESIZE)
                         length = program.getCode().length;
@@ -629,7 +629,7 @@ public class VM {
 
                     program.stackPush(codeLength);
                     program.step();
-                }   break;              
+                }   break;
                 case CODECOPY: case EXTCODECOPY: {
 
                     byte[] fullCode = ByteUtil.EMPTY_BYTE_ARRAY;
@@ -733,19 +733,19 @@ public class VM {
                     program.step();
                 }   break;
                 case DUP1: case DUP2: case DUP3: case DUP4:
-                case DUP5: case DUP6: case DUP7: case DUP8: 
-                case DUP9: case DUP10: case DUP11: case DUP12: 
+                case DUP5: case DUP6: case DUP7: case DUP8:
+                case DUP9: case DUP10: case DUP11: case DUP12:
                 case DUP13: case DUP14: case DUP15: case DUP16:{
 
                     int n = op.val() - OpCode.DUP1.val() + 1;
                     DataWord word_1 = stack.get(stack.size() - n);
                     program.stackPush(word_1.clone());
                     program.step();
-                    
+
                 }   break;
                 case SWAP1: case SWAP2: case SWAP3: case SWAP4:
-                case SWAP5: case SWAP6: case SWAP7: case SWAP8: 
-                case SWAP9: case SWAP10: case SWAP11: case SWAP12: 
+                case SWAP5: case SWAP6: case SWAP7: case SWAP8:
+                case SWAP9: case SWAP10: case SWAP11: case SWAP12:
                 case SWAP13: case SWAP14: case SWAP15: case SWAP16:{
 
                     int n = op.val() - OpCode.SWAP1.val() + 2;
@@ -838,7 +838,7 @@ public class VM {
                         if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
                             throw program.new BadJumpDestinationException();
                     }
-                    
+
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
 
@@ -848,7 +848,7 @@ public class VM {
                 case JUMPI:{
                     DataWord pos   =  program.stackPop();
                     DataWord cond  =  program.stackPop();
-                    
+
                     if (!cond.isZero()) {
                         int nextPC = pos.intValue(); // possible overflow
                         if(program.getPreviouslyExecutedOp() < OpCode.PUSH1.val() || program.getPreviouslyExecutedOp() > OpCode.PUSH32.val()) {
@@ -866,7 +866,7 @@ public class VM {
                     } else {
                         program.step();
                     }
-                    
+
                 }   break;
                 case PC:{
                     int pc = program.getPC();
@@ -925,7 +925,7 @@ public class VM {
                                 String.format("%-12s", op.name()),
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
-                    
+
                     program.createContract(value, inOffset, inSize);
 
                     program.step();
@@ -940,9 +940,9 @@ public class VM {
 
                     DataWord outDataOffs =  program.stackPop();
                     DataWord outDataSize =  program.stackPop();
-                    
+
                     if (logger.isInfoEnabled()) {
-                        hint = "addr: " + Hex.toHexString(codeAddress.getLast20Bytes()) 
+                        hint = "addr: " + Hex.toHexString(codeAddress.getLast20Bytes())
                                 + " gas: " + gas.shortHex()
                                 + " inOff: " + inDataOffs.shortHex()
                                 + " inSize: " + inDataSize.shortHex();
@@ -951,7 +951,7 @@ public class VM {
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
                     }
-                    
+
                     MessageCall msg = new MessageCall(
                             op.equals(CALL) ? MsgType.CALL : MsgType.STATELESS,
                             gas, codeAddress, value, inDataOffs, inDataSize,
@@ -978,24 +978,24 @@ public class VM {
                 case SUICIDE:{
                     DataWord address =  program.stackPop();
                     program.suicide(address);
-                    
+
                     if (logger.isInfoEnabled())
                         hint = "address: " + Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
-                    
+
                     program.stop();
                 }   break;
                 default:
                     break;
             }
-            
+
             program.setPreviouslyExecutedOp(op.val());
-            
+
             if (logger.isInfoEnabled() && !op.equals(CALL)
                     && !op.equals(CREATE))
                 logger.info(logString, stepBefore, String.format("%-12s",
                         op.name()), program.getGas().longValue(),
                         program.invokeData.getCallDeep(), hint);
-            
+
             vmCounter++;
         } catch (RuntimeException e) {
             logger.warn("VM halted: [{}]", e.toString());
@@ -1022,7 +1022,7 @@ public class VM {
                 program.spendGas(GasCost.TX_NO_ZERO_DATA * nonZeroesVals, "DATA");
                 program.spendGas(GasCost.TX_ZERO_DATA * zeroVals, "DATA");
             }
-            
+
             while(!program.isStopped())
                 this.step(program);
 
@@ -1034,7 +1034,7 @@ public class VM {
     /**
      * Utility to calculate new total memory size needed for an operation.
      * <br/> Basically just offset + size, unless size is 0, in which case the result is also 0.
-     * 
+     *
      * @param offset starting position of the memory
      * @param size number of bytes needed
      * @return offset + size, unless size is 0. In that case memNeeded is also 0.
@@ -1044,12 +1044,12 @@ public class VM {
             return BigInteger.ZERO;
         return offset.value().add(size.value());
     }
-    
+
     /*
      * Dumping the VM state at the current operation in various styles
      *  - standard  Not Yet Implemented
      *  - standard+ (owner address, program counter, operation, gas left)
-     *  - pretty (stack, memory, storage, level, contract, 
+     *  - pretty (stack, memory, storage, level, contract,
      *              vmCounter, internalSteps, operation
                     gasBefore, gasCost, memWords)
      */
@@ -1057,12 +1057,12 @@ public class VM {
         if(CONFIG.dumpStyle().equals("standard+")) {
             switch (op) {
                 case STOP: case RETURN: case SUICIDE:
-                    
+
                     ContractDetails details = program.getResult().getRepository()
                         .getContractDetails(program.getOwnerAddress().getLast20Bytes());
                     List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
                     Collections.sort((List<DataWord>) storageKeys);
-                    
+
                     for (DataWord key : storageKeys) {
                         dumpLogger.trace("{} {}",
                             Hex.toHexString(key.getNoLeadZeroesData()),
@@ -1086,25 +1086,25 @@ public class VM {
             String memoryString = program.memoryToString();
             if(!"".equals(memoryString))
                 dumpLogger.trace("{}", memoryString);
-            
+
             dumpLogger.trace("    STORAGE");
             ContractDetails details = program.getResult().getRepository()
                     .getContractDetails(program.getOwnerAddress().getLast20Bytes());
             List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
             Collections.sort((List<DataWord>) storageKeys);
-            
+
             for (DataWord key : storageKeys) {
                 dumpLogger.trace("{}: {}",
                     key.shortHex(),
                     details.getStorage().get(key).shortHex());
             }
-            
+
             int level = program.invokeData.getCallDeep();
             String contract = Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
             String internalSteps = String.format("%4s", Integer.toHexString(program.getPC())).replace(' ', '0').toUpperCase();
             dumpLogger.trace("{} | {} | #{} | {} : {} | {} | -{} | {}x32",
                     level, contract, vmCounter, internalSteps, op,
-                    gasBefore, gasCost, memWords);      
+                    gasBefore, gasCost, memWords);
         }
-    }    
+    }
 }

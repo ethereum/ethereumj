@@ -10,26 +10,26 @@ import org.ethereum.trie.TrieImpl;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * The genesis block is the first block in the chain and has fixed values according to 
+ * The genesis block is the first block in the chain and has fixed values according to
  * the protocol specification. The genesis block is 13 items, and is specified thus:
- * 
+ *
  * ( zerohash_256 , SHA3 RLP () , zerohash_160 , stateRoot, 0, 2^22 , 0, 0, 1000000, 0, 0, 0, SHA3 (42) , (), () )
- * 
- * - Where zerohash_256 refers to the parent hash, a 256-bit hash which is all zeroes; 
- * - zerohash_160 refers to the coinbase address, a 160-bit hash which is all zeroes; 
- * - 2^22 refers to the difficulty; 
- * - 0 refers to the timestamp (the Unix epoch); 
- * - the transaction trie root and extradata are both 0, being equivalent to the empty byte array. 
- * - The sequences of both uncles and transactions are empty and represented by (). 
- * - SHA3 (42) refers to the SHA3 hash of a byte array of length one whose first and only byte is of value 42. 
+ *
+ * - Where zerohash_256 refers to the parent hash, a 256-bit hash which is all zeroes;
+ * - zerohash_160 refers to the coinbase address, a 160-bit hash which is all zeroes;
+ * - 2^22 refers to the difficulty;
+ * - 0 refers to the timestamp (the Unix epoch);
+ * - the transaction trie root and extradata are both 0, being equivalent to the empty byte array.
+ * - The sequences of both uncles and transactions are empty and represented by ().
+ * - SHA3 (42) refers to the SHA3 hash of a byte array of length one whose first and only byte is of value 42.
  * - SHA3 RLP () value refers to the hash of the uncle lists in RLP, both empty lists.
- * 
+ *
  * See Yellow Paper: http://www.gavwood.com/Paper.pdf (Appendix I. Genesis Block)
  */
 public class Genesis extends Block {
 
     public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
-    
+
     private static String[] premine = new String[] {
             "51ba59315b3a95761d0863b05ccc7a7f54703d99",
             "e6716f9544a56c530d868e4bfbacb172315bdead",     // # (J)
@@ -56,14 +56,14 @@ public class Genesis extends Block {
     public static long   TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
     public static byte[] NONCE = sha3(new byte[]{42});
-    
+
     private static Block instance;
-    
+
     private Genesis() {
         super(PARENT_HASH, UNCLES_HASH, COINBASE, LOG_BLOOM, DIFFICULTY,
                 NUMBER, GAS_LIMIT, GAS_USED, TIMESTAMP,
                 EXTRA_DATA, NONCE, null, null);
-        
+
         Trie state = new TrieImpl(null);
         // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
@@ -74,14 +74,14 @@ public class Genesis extends Block {
 
         setStateRoot(state.getRootHash());
     }
-    
+
     public static Block getInstance() {
         if (instance == null) {
             instance = new Genesis();
         }
         return instance;
     }
-    
+
     public final static String[] getPremine() {
         return premine;
     }

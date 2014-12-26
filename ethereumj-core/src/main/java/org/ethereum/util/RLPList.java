@@ -26,7 +26,7 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
         if (element instanceof RLPList) {
 
             RLPList rlpList = (RLPList) element;
-            System.out.print("[");          
+            System.out.print("[");
             for (RLPElement singleElement : rlpList) {
                 recursivePrint(singleElement);
             }

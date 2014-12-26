@@ -85,7 +85,7 @@ public class BlocksMessageTest {
                 Hex.toHexString(block.getStateRoot()));
 
     }
-    
+
     @Ignore
     @Test /* Block msg decode - found bug tool */
     public void test_4() throws URISyntaxException, IOException {

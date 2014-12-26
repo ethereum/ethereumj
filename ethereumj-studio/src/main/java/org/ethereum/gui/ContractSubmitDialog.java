@@ -25,7 +25,7 @@ import java.util.Collection;
 class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
     private static final long serialVersionUID = -3622984456084608996L;
-    
+
     ContractSubmitDialog dialog;
     JComboBox<AccountWrapper> creatorAddressCombo;
     final JTextField gasInput;
@@ -194,7 +194,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
         for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++) {
             if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
-                CellRendererPane crp = ((CellRendererPane) 
+                CellRendererPane crp = ((CellRendererPane)
                         (creatorAddressCombo.getComponent(i)));
             }
             if (creatorAddressCombo.getComponent(i) instanceof AbstractButton) {
@@ -207,7 +207,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
         this.setResizable(false);
-        
+
         this.setVisible(true);
     }
 

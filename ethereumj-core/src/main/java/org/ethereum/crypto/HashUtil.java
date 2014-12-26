@@ -18,14 +18,14 @@ import org.ethereum.util.LRUMap;
 
 public class HashUtil {
 
-    private static final int MAX_ENTRIES = 100; // Should contain most commonly hashed values 
+    private static final int MAX_ENTRIES = 100; // Should contain most commonly hashed values
     private static LRUMap<ByteArrayWrapper, byte[]> sha3Cache = new LRUMap<>(0, MAX_ENTRIES);
     public static final byte[] EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
     public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList());
     public static final byte[] EMPTY_TRIE_HASH = sha3(RLP.encodeElement(EMPTY_BYTE_ARRAY));
 
     private static final MessageDigest sha256digest;
-    
+
     static {
         try {
             sha256digest = MessageDigest.getInstance("SHA-256");
@@ -33,7 +33,7 @@ public class HashUtil {
             throw new RuntimeException(e);  // Can't happen.
         }
     }
-    
+
     public static byte[] sha256(byte[] input) {
         return sha256digest.digest(input);
     }
@@ -47,7 +47,7 @@ public class HashUtil {
         sha3Cache.put(inputByteArray, result);
         return result;
     }
-    
+
     public static byte[] ripemd160(byte[] message) {
         Digest digest = new RIPEMD160Digest();
         if (message != null) {
@@ -83,7 +83,7 @@ public class HashUtil {
 
         return newAddress;
     }
-    
+
     /**
      * @see #doubleDigest(byte[], int, int)
      */

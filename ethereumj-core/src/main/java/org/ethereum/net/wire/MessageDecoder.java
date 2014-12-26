@@ -39,7 +39,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
         byte[] encoded = new byte[in.readInt()];
         in.readBytes(encoded);
-    
+
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
 
@@ -54,7 +54,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
         out.add(msg);
         in.markReaderIndex();
     }
-    
+
     private boolean isValidEthereumPacket(ByteBuf in) {
         // Ethereum message is at least 8 bytes
         if (in.readableBytes() < 8)

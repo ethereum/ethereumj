@@ -23,7 +23,7 @@ public class TestCase {
 
     //            "env": { ... },
     private Env env;
-    
+
     //
     private Logs logs;
 
@@ -64,7 +64,7 @@ public class TestCase {
             JSONArray  callCreates = new JSONArray();
             if(testCaseJSONObj.containsKey("callcreates"))
                 callCreates = (JSONArray)testCaseJSONObj.get("callcreates");
-            
+
             JSONArray logsJSON = new JSONArray();
             if(testCaseJSONObj.containsKey("logs"))
                 logsJSON = (JSONArray)testCaseJSONObj.get("logs");
@@ -74,7 +74,7 @@ public class TestCase {
             if(testCaseJSONObj.containsKey("gas"))
                 gasString = testCaseJSONObj.get("gas").toString();
             this.gas    = ByteUtil.bigIntegerToBytes(new BigInteger(gasString));
-            
+
             String outString = null;
             if(testCaseJSONObj.containsKey("out"))
                 outString = testCaseJSONObj.get("out").toString();
@@ -122,7 +122,7 @@ public class TestCase {
     public Exec getExec() {
         return exec;
     }
-    
+
     public Logs getLogs() {
         return logs;
     }

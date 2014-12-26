@@ -96,7 +96,7 @@ public class ToolBar extends JFrame {
 
         java.net.URL imageURL_5 = ClassLoader.getSystemResource("buttons/wallet.png");
         ImageIcon image_5 = new ImageIcon(imageURL_5);
-        
+
         java.net.URL imageURL_6 = ClassLoader.getSystemResource("buttons/stateExplorer.png");
         ImageIcon image_6 = new ImageIcon(imageURL_6);
 
@@ -227,7 +227,7 @@ public class ToolBar extends JFrame {
                     }
                 }
         );
-        
+
         stateExplorer = new JToggleButton();
         stateExplorer.setIcon(image_6);
         stateExplorer.setToolTipText("State Explorer");

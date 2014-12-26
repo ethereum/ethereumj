@@ -7,7 +7,7 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum Blocks message on the network
- * 
+ *
  * @see org.ethereum.net.eth.EthMessageCodes#NEW_BLOCK
  */
 public class NewBlockMessage extends EthMessage {
@@ -48,7 +48,7 @@ public class NewBlockMessage extends EthMessage {
         if (!parsed) parse();
         return block;
     }
-    
+
     public byte[] getDifficulty(){
         if (!parsed) parse();
         return difficulty;

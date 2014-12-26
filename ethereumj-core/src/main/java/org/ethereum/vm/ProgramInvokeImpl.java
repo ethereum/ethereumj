@@ -21,7 +21,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     byte[] msgData;
 
     /*** BLOCK  env ***/
-    private DataWord prevHash, coinbase, timestamp, 
+    private DataWord prevHash, coinbase, timestamp,
             number, difficulty, gaslimit;
 
     Map<DataWord, DataWord> storage;
@@ -151,7 +151,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
             return new DataWord();
         if (index + size > msgData.length)
             size = msgData.length - index;
-        
+
         byte[] data = new byte[32];
         System.arraycopy(msgData, index, data, 0, size);
         return new DataWord(data);

@@ -28,19 +28,19 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 public class ECKeyTest {
     private static final Logger log = LoggerFactory.getLogger(ECKeyTest.class);
-    
+
     private String privString = "3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4";
     private BigInteger privateKey = new BigInteger(Hex.decode(privString));
-    
+
     private String pubString = "0497466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce78549b514e4453d74ef11b0cd5e4e4c364effddac8b51bcfc8de80682f952896f";
     private String compressedPubString = "0397466f2b32bc3bb76d4741ae51cd1d8578b48d3f1e68da206d47321aec267ce7";
     private byte[] pubKey = Hex.decode(pubString);
     private byte[] compressedPubKey = Hex.decode(compressedPubString);
     private String address = "8a40bfaa73256b60764c1bf40675a99083efb075";
-    
+
     private String exampleMessage = new String("This is an example of a signed message.");
     private String sigBase64 = "HD5AsBr4wuH6UU9tXuSJhUvgfGayfwoY0cKT03sFUjnpQsupHznd/3mCIRfLuNHlRCVGdAyHecdyM8IVZMtc1I8=";
-    
+
     @Test
     public void testHashCode() {
         Assert.assertEquals(1866897155, ECKey.fromPrivate(privateKey).hashCode());
@@ -84,7 +84,7 @@ public class ECKeyTest {
         byte[] pubFromPriv = ECKey.publicKeyFromPrivate(privateKey, false);
         assertArrayEquals(pubKey, pubFromPriv);
     }
-    
+
     @Test
     public void testPublicKeyFromPrivateCompressed() {
         byte[] pubFromPriv = ECKey.publicKeyFromPrivate(privateKey, true);
@@ -105,7 +105,7 @@ public class ECKeyTest {
 
     @Test
     public void testEthereumSign() throws IOException {
-        // TODO: Understand why key must be decompressed for this to work 
+        // TODO: Understand why key must be decompressed for this to work
         ECKey key = ECKey.fromPrivate(privateKey).decompress();
         System.out.println("Secret\t: " + Hex.toHexString(key.getPrivKeyBytes()));
         System.out.println("Pubkey\t: " + Hex.toHexString(key.getPubKey()));
@@ -116,7 +116,7 @@ public class ECKeyTest {
         System.out.println("Signtr\t: " + output + " (Base64, length: " + output.length() + ")");
         assertEquals(sigBase64, output);
     }
-    
+
     @Test
     public void testVerifySignature1() {
         ECKey key = ECKey.fromPublicOnly(pubKey);
@@ -125,7 +125,7 @@ public class ECKeyTest {
         ECDSASignature sig = ECDSASignature.fromComponents(r.toByteArray(), s.toByteArray(), (byte) 28);
         key.verify(HashUtil.sha3(exampleMessage.getBytes()), sig);
     }
-    
+
     @Test
     public void testVerifySignature2() {
         BigInteger r = new BigInteger("c52c114d4f5a3ba904a9b3036e5e118fe0dbb987fe3955da20f2cd8f6c21ab9c", 16);
@@ -158,7 +158,7 @@ public class ECKeyTest {
         // todo: add test assertion when the sign/verify part actually works.
     }
 
-    
+
     @Test
     public void testSValue() throws Exception {
         // Check that we never generate an S value that is larger than half the curve order. This avoids a malleability
@@ -184,7 +184,7 @@ public class ECKeyTest {
         assertEquals(sigs.get(0), duplicate);
         assertEquals(sigs.get(0).hashCode(), duplicate.hashCode());
     }
-    
+
     @Test
     public void testSignVerify() {
         ECKey key = ECKey.fromPrivate(privateKey);
@@ -192,7 +192,7 @@ public class ECKeyTest {
         ECDSASignature output = key.doSign(message.getBytes());
         assertTrue(key.verify(message.getBytes(), output));
     }
-        
+
     @Test
     public void testIsPubKeyCanonicalCorect() {
         // Test correct prefix 4, right length 65
@@ -205,7 +205,7 @@ public class ECKeyTest {
         byte[] canonicalPubkey3 = new byte[33]; canonicalPubkey3[0] = 0x03;
         assertTrue(ECKey.isPubKeyCanonical(canonicalPubkey3));
     }
-    
+
     @Test
     public void testIsPubKeyCanonicalWrongLength() {
         // Test correct prefix 4, but wrong length !65
@@ -218,7 +218,7 @@ public class ECKeyTest {
         byte[] nonCanonicalPubkey3 = new byte[32]; nonCanonicalPubkey3[0] = 0x03;
         assertFalse(ECKey.isPubKeyCanonical(nonCanonicalPubkey3));
     }
-    
+
     @Test
     public void testIsPubKeyCanonicalWrongPrefix() {
         // Test wrong prefix 4, right length 65
@@ -231,7 +231,7 @@ public class ECKeyTest {
         byte[] nonCanonicalPubkey6 = new byte[33];
         assertFalse(ECKey.isPubKeyCanonical(nonCanonicalPubkey6));
     }
-    
+
     @Test
     public void keyRecovery() throws Exception {
         ECKey key = new ECKey();
@@ -250,7 +250,7 @@ public class ECKeyTest {
         }
         assertTrue(found);
     }
-    
+
     @Test
     public void testSignedMessageToKey() throws SignatureException {
         byte[] messageHash = HashUtil.sha3(exampleMessage.getBytes());
@@ -258,7 +258,7 @@ public class ECKeyTest {
         assertNotNull(key);
         assertArrayEquals(pubKey, key.getPubKey());
     }
-        
+
     @Test
     public void testGetPrivKeyBytes() {
         ECKey key = new ECKey();
@@ -271,9 +271,9 @@ public class ECKeyTest {
         ECKey key0 = new ECKey();
         ECKey key1 = ECKey.fromPrivate(privateKey);
         ECKey key2 = ECKey.fromPrivate(privateKey);
-        
+
         assertFalse(key0.equals(key1));
         assertTrue(key1.equals(key1));
         assertTrue(key1.equals(key2));
-    }   
+    }
 }

@@ -16,17 +16,17 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
 
 /**
- * A transaction (formally, T) is a single cryptographically 
- * signed instruction sent by an actor external to Ethereum. 
- * An external actor can be a person (via a mobile device or desktop computer) 
- * or could be from a piece of automated software running on a server. 
- * There are two types of transactions: those which result in message calls 
+ * A transaction (formally, T) is a single cryptographically
+ * signed instruction sent by an actor external to Ethereum.
+ * An external actor can be a person (via a mobile device or desktop computer)
+ * or could be from a piece of automated software running on a server.
+ * There are two types of transactions: those which result in message calls
  * and those which result in the creation of new contracts.
  */
 public class Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
-    
+
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
 
@@ -64,7 +64,7 @@ public class Transaction {
     /* Tx in encoded form */
     private byte[] rlpEncoded;
     private byte[] rlpRaw;
-    /* Indicates if this transaction has been parsed 
+    /* Indicates if this transaction has been parsed
      * from the RLP-encoded data */
     private boolean parsed = false;
 
@@ -295,7 +295,7 @@ public class Transaction {
         byte[] data                 = RLP.encodeElement(this.data);
 
         byte[] v, r, s;
-        
+
         if(signature != null) {
             v = RLP.encodeByte( signature.v );
             r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));

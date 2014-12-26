@@ -5,13 +5,13 @@ package org.ethereum.vm;
  * This can either be a normal CALL, STATELESS call or POST call.
  */
 public class MessageCall {
-    
-    public enum MsgType { 
-        CALL, 
-        STATELESS, 
+
+    public enum MsgType {
+        CALL,
+        STATELESS,
         POST;
     }
-    
+
     /** Type of internal call. Either CALL, STATELESS or POST */
     private MsgType type;
 
@@ -39,7 +39,7 @@ public class MessageCall {
         this.inDataOffs = inDataOffs;
         this.inDataSize = inDataSize;
     }
-    
+
     public MessageCall(MsgType type, DataWord gas, DataWord codeAddress,
             DataWord endowment, DataWord inDataOffs, DataWord inDataSize,
             DataWord outDataOffs, DataWord outDataSize) {

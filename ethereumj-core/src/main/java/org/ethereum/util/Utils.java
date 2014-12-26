@@ -29,11 +29,11 @@ public class Utils {
         byte[] numberBytes = Hex.decode(hexNum.substring(2));
         return (new BigInteger(1, numberBytes)).toString();
     }
-    
-    /** 
+
+    /**
      * Return formatted Date String: yyyy.MM.dd HH:mm:ss
      * Based on Unix's time() input in seconds
-     * 
+     *
      * @param timestamp seconds since start of Unix-time
      * @return String formatted as - yyyy.MM.dd HH:mm:ss
      */
@@ -42,7 +42,7 @@ public class Utils {
         DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
         return formatter.format(date);
     }
-    
+
     public static ImageIcon getImageIcon(String resource) {
         URL imageURL = ClassLoader.getSystemResource(resource);
         ImageIcon image = new ImageIcon(imageURL);
@@ -59,10 +59,10 @@ public class Utils {
         }
         return result.toString() + "·(" + "10^" + pow + ")";
     }
-    
+
     /**
-     * Decodes a hex string to address bytes and checks validity 
-     * 
+     * Decodes a hex string to address bytes and checks validity
+     *
      * @param hex - a hex string of the address, e.g., 6c386a4b26f73c802f34673f7248bb118f97424a
      * @return - decode and validated address byte[]
      */
@@ -70,12 +70,12 @@ public class Utils {
         byte[] addr = null;
         try { addr = Hex.decode(hex); }
         catch(DecoderException addressIsNotValid) { return null; }
-        
+
         if(isValidAddress(addr))
             return addr;
         return null;
     }
-    
+
     public static boolean isValidAddress(byte[] addr) {
         return addr != null && addr.length == 20;
     }

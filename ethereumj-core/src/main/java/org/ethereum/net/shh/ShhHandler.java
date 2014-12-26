@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Process the messages between peers with 'shh' capability on the network.
- * 
+ *
  * Peers with 'shh' capability can send/receive:
  *
  *
@@ -63,7 +63,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
                 break;
         }
     }
-    
+
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error(cause.getCause().toString());

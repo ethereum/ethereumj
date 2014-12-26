@@ -7,7 +7,7 @@ import java.util.Map;
  * A list of commands for the Whisper network protocol.
  * <br>
  * The codes for these commands are the first byte in every packet.
- * 
+ *
  * @see <a href="https://github.com/ethereum/wiki/wiki/Wire-Protocol">
  * https://github.com/ethereum/wiki/wiki/Wire-Protocol</a>
  */

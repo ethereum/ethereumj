@@ -26,7 +26,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class SerpentEditor extends JFrame {
 
     private Logger logger = LoggerFactory.getLogger("gui");
-    
+
     private String codeSample = "\n\n\n" +
                                 "" +
                                 "if !contract.storage[msg.data[0]]:\n" +

@@ -12,32 +12,32 @@ import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 public class AccountState {
 
     private byte[] rlpEncoded;
-    
+
     /* A value equal to the number of transactions sent
-     * from this address, or, in the case of contract accounts, 
+     * from this address, or, in the case of contract accounts,
      * the number of contract-creations made by this account */
     private BigInteger nonce;
-    
+
     /* A scalar value equal to the number of Wei owned by this address */
     private BigInteger balance;
-    
-    /* A 256-bit hash of the root node of a trie structure 
-     * that encodes the storage contents of the contract, 
-     * itself a simple mapping between byte arrays of size 32. 
-     * The hash is formally denoted σ[a] s . 
-     * 
-     * Since I typically wish to refer not to the trie’s root hash 
+
+    /* A 256-bit hash of the root node of a trie structure
+     * that encodes the storage contents of the contract,
+     * itself a simple mapping between byte arrays of size 32.
+     * The hash is formally denoted σ[a] s .
+     *
+     * Since I typically wish to refer not to the trie’s root hash
      * but to the underlying set of key/value pairs stored within,
-     * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s . 
-     * It shall be understood that σ[a] s is not a ‘physical’ member 
+     * I define a convenient equivalence TRIE (σ[a] s ) ≡ σ[a] s .
+     * It shall be understood that σ[a] s is not a ‘physical’ member
      * of the account and does not contribute to its later serialisation */
     private byte[] stateRoot = EMPTY_TRIE_HASH;
-    
-    /* The hash of the EVM code of this contract—this is the code 
-     * that gets executed should this address receive a message call; 
-     * it is immutable and thus, unlike all other fields, cannot be changed 
-     * after construction. All such code fragments are contained in 
-     * the state database under their corresponding hashes for later 
+
+    /* The hash of the EVM code of this contract—this is the code
+     * that gets executed should this address receive a message call;
+     * it is immutable and thus, unlike all other fields, cannot be changed
+     * after construction. All such code fragments are contained in
+     * the state database under their corresponding hashes for later
      * retrieval */
     private byte[] codeHash = EMPTY_DATA_HASH;
 
@@ -53,7 +53,7 @@ public class AccountState {
         this.nonce = nonce;
         this.balance = balance;
     }
-    
+
     public AccountState(byte[] rlpData) {
         this.rlpEncoded = rlpData;
 
@@ -115,7 +115,7 @@ public class AccountState {
         this.balance = balance.subtract(value);
         setDirty(true);
     }
-    
+
     public byte[] getEncoded() {
         if(rlpEncoded == null) {
             byte[] nonce        = RLP.encodeBigInteger(this.nonce);

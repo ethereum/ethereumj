@@ -18,10 +18,10 @@ public class PingPongMessageTest {
         System.out.println(pingMessage);
 
         assertEquals(PongMessage.class, pingMessage.getAnswerMessage());
-        
+
         assertEquals(P2pMessageCodes.PING, pingMessage.getCommand());
     }
-    
+
     @Test /* PongMessage */
     public void testPong() {
 

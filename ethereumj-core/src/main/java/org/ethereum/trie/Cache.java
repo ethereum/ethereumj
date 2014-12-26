@@ -15,7 +15,7 @@ import org.iq80.leveldb.WriteBatch;
  * Created on: 20/05/2014 10:44
  */
 public class Cache {
-    
+
     private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
     private DB db;
     private boolean isDirty;
@@ -26,8 +26,8 @@ public class Cache {
 
     /**
      * Put the node in the cache if RLP encoded value is longer than 32 bytes
-     * 
-     * @param o the Node which could be a pair-, multi-item Node or single Value  
+     *
+     * @param o the Node which could be a pair-, multi-item Node or single Value
      * @return sha3 hash of RLP encoded node if length &gt; 32 otherwise return node itself
      */
     public Object put(Object o) {

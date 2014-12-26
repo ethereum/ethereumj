@@ -11,7 +11,7 @@ import static org.ethereum.util.CompactEncoder.unpackToNibbles;
  * Created on: 20/05/2014 10:44
  */
 public class TrieIterator {
-    
+
     private TrieImpl trie;
     private String key;
     private String value;
@@ -73,9 +73,9 @@ public class TrieIterator {
 
     public int purge() {
         List<byte[]> shas = this.collect();
-            
+
         for (byte[] sha : shas) {
-            this.trie.getCache().delete(sha);   
+            this.trie.getCache().delete(sha);
         }
         return this.values.size();
     }

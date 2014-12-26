@@ -50,7 +50,7 @@ import org.spongycastle.util.encoders.Hex;
  * Creating a new ECKey with the empty constructor will generate a new random keypair. Other static methods can be used
  * when you already have the public or private parts. If you create a key with only the public part, you can check
  * signatures but not create them.</p>
- * 
+ *
  * <p>The ECDSA algorithm supports <i>key recovery</i> in which a signature plus a couple of discriminator bits can
  * be reversed to find the public key used to calculate it. This can be convenient when you have a message and a
  * signature and want to find out who signed it, rather than requiring the user to provide the expected identity.</p>
@@ -70,7 +70,7 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class ECKey implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
-    
+
     /** The parameters of the secp256k1 curve that Ethereum uses. */
     public static final ECDomainParameters CURVE;
 
@@ -90,7 +90,7 @@ public class ECKey implements Serializable {
         HALF_CURVE_ORDER = params.getN().shiftRight(1);
         secureRandom = new SecureRandom();
     }
-    
+
     // The two parts of the key. If "priv" is set, "pub" can always be calculated. If "pub" is set but not "priv", we
     // can only verify signatures not make them.
     // TODO: Redesign this class to use consistent internals and more efficient serialization.
@@ -129,7 +129,7 @@ public class ECKey implements Serializable {
             throw new IllegalArgumentException("Public key may not be null");
         this.pub = pub;
     }
-    
+
     /**
      * Utility for compressing an elliptic curve point. Returns the same point if it's already compressed.
      * See the ECKey class docs for a discussion of point compression.
@@ -145,7 +145,7 @@ public class ECKey implements Serializable {
     public static ECPoint decompressPoint(ECPoint compressed) {
         return CURVE.getCurve().decodePoint(compressed.getEncoded(false));
     }
-    
+
     /**
      * Creates an ECKey given the private key only.  The public key is calculated from it (this is slow). Note that
      * the resulting public key is compressed.
@@ -197,7 +197,7 @@ public class ECKey implements Serializable {
     public static ECKey fromPublicOnly(byte[] pub) {
         return new ECKey(null, CURVE.getCurve().decodePoint(pub));
     }
-    
+
     /**
      * Returns a copy of this key, but with the public point represented in uncompressed form. Normally you would
      * never need this: it's for specialised scenarios or when backwards compatibility in encoded form is necessary.
@@ -224,7 +224,7 @@ public class ECKey implements Serializable {
     public boolean hasPrivKey() {
         return priv != null;
     }
-    
+
     /**
      * Returns public key bytes from the given private key. To convert a byte array into a BigInteger, use <tt>
      * new BigInteger(1, bytes);</tt>
@@ -293,7 +293,7 @@ public class ECKey implements Serializable {
         }
         return b.toString();
     }
-   
+
     /**
      * Groups the two components that make up a signature, and provides a way to encode to Base64 form, which is
      * how ECDSA signatures are represented when embedded in other data structures in the Ethereum protocol. The raw
@@ -311,11 +311,11 @@ public class ECKey implements Serializable {
             this.r = r;
             this.s = s;
         }
-        
+
         private static ECDSASignature fromComponents(byte[] r, byte[] s) {
             return new ECDSASignature(new BigInteger(1, r), new BigInteger(1, s));
         }
-        
+
         public static ECDSASignature fromComponents(byte[] r, byte[] s, byte v) {
             ECDSASignature signature = fromComponents(r, s);
             signature.v = v;
@@ -341,7 +341,7 @@ public class ECKey implements Serializable {
                 return this;
             }
         }
-        
+
         public String toBase64() {
             byte[] sigData = new byte[65];  // 1 header + 32 bytes for R + 32 bytes for S
             sigData[0] = v;
@@ -349,7 +349,7 @@ public class ECKey implements Serializable {
             System.arraycopy(bigIntegerToBytes(this.s, 32), 0, sigData, 33, 32);
             return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
         }
-        
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
@@ -370,11 +370,11 @@ public class ECKey implements Serializable {
             return result;
         }
     }
-    
+
     /**
-     * Signs the given hash and returns the R and S components as BigIntegers 
-     * and put them in ECDSASignature 
-     * 
+     * Signs the given hash and returns the R and S components as BigIntegers
+     * and put them in ECDSASignature
+     *
      * @param input to sign
      * @return ECDSASignature signature that contains the R and S components
      */
@@ -389,7 +389,7 @@ public class ECKey implements Serializable {
         BigInteger[] components = signer.generateSignature(input);
         return new ECDSASignature(components[0], components[1]).toCanonicalised();
     }
-    
+
     /**
      * Takes the sha3 hash (32 bytes) of data and returns the ECDSA signature
      *
@@ -413,12 +413,12 @@ public class ECKey implements Serializable {
         sig.v = (byte) (recId + 27 + (isCompressed() ? 4 : 0));
         return sig;
     }
-    
+
     /**
      * Given a piece of text and a message signature encoded in base64, returns an ECKey
      * containing the public key that was used to sign it. This can then be compared to the expected public key to
      * determine if the signature was correct.
-     * 
+     *
      * @param messageHash a piece of human readable text that was signed
      * @param signatureBase64 The Ethereum-format message signature in base64
      * @throws SignatureException If the public key could not be recovered or if there was a signature format error.
@@ -453,10 +453,10 @@ public class ECKey implements Serializable {
             throw new SignatureException("Could not recover public key from signature");
         return key;
     }
-    
+
     /**
      * <p>Verifies the given ECDSA signature against the message bytes using the public key bytes.</p>
-     * 
+     *
      * <p>When using native ECDSA verification, data must be 32 bytes, and no element may be
      * larger than 520 bytes.</p>
      *
@@ -471,7 +471,7 @@ public class ECKey implements Serializable {
         try {
             return signer.verifySignature(data, signature.r, signature.s);
         } catch (NullPointerException npe) {
-            // Bouncy Castle contains a bug that can cause NPEs given specially crafted signatures. 
+            // Bouncy Castle contains a bug that can cause NPEs given specially crafted signatures.
             // Those signatures are inherently invalid/attack sigs so we just fail them here rather than crash the thread.
             logger.error("Caught NPE inside bouncy castle", npe);
             return false;
@@ -637,7 +637,7 @@ public class ECKey implements Serializable {
         byte[] bits = getPubKey();
         return (bits[0] & 0xFF) | ((bits[1] & 0xFF) << 8) | ((bits[2] & 0xFF) << 16) | ((bits[3] & 0xFF) << 24);
     }
-    
+
     @SuppressWarnings("serial")
     public static class MissingPrivateKeyException extends RuntimeException {
     }

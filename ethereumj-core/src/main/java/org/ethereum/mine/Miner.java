@@ -14,18 +14,18 @@ import java.math.BigInteger;
 
 /**
  * The Miner performs the proof-of-work needed for a valid block
- * 
+ *
  * The mining proof-of-work (PoW) exists as a cryptographically secure nonce
- * that proves beyond reasonable doubt that a particular amount of computation 
- * has been expended in the determination of some token value n. 
- * It is utilised to enforce the blockchain security by giving meaning 
- * and credence to the notion of difficulty (and, by extension, total difficulty). 
- * 
- * However, since mining new blocks comes with an attached reward, 
- * the proof-of-work not only functions as a method of securing confidence 
- * that the blockchain will remain canonical into the future, but also as 
+ * that proves beyond reasonable doubt that a particular amount of computation
+ * has been expended in the determination of some token value n.
+ * It is utilised to enforce the blockchain security by giving meaning
+ * and credence to the notion of difficulty (and, by extension, total difficulty).
+ *
+ * However, since mining new blocks comes with an attached reward,
+ * the proof-of-work not only functions as a method of securing confidence
+ * that the blockchain will remain canonical into the future, but also as
  * a wealth distribution mechanism.
- * 
+ *
  * See Yellow Paper: http://www.gavwood.com/Paper.pdf (chapter 11.5 Mining Proof-of-Work)
  */
 public class Miner {
@@ -36,13 +36,13 @@ public class Miner {
 
     /**
      * Adds a nonce to given block which complies with the given difficulty
-     * 
-     * For the PoC series, we use a simplified proof-of-work. 
-     * This is not ASIC resistant and is meant merely as a placeholder. 
-     * It utilizes the bare SHA3 hash function to secure the block chain by requiring 
-     * the SHA3 hash of the concatenation of the nonce and the header’s SHA3 hash to be 
+     *
+     * For the PoC series, we use a simplified proof-of-work.
+     * This is not ASIC resistant and is meant merely as a placeholder.
+     * It utilizes the bare SHA3 hash function to secure the block chain by requiring
+     * the SHA3 hash of the concatenation of the nonce and the header’s SHA3 hash to be
      * sufficiently low. It is formally defined as PoW:
-     * 
+     *
      *      PoW(H, n) ≡ BE(SHA3(SHA3(RLP(H!n)) ◦ n))
      *
      *  where:
@@ -54,7 +54,7 @@ public class Miner {
      *      o is the series concatenation operator;
      *      BE(X) evaluates to the value equal to X when interpreted as a
      *          big-endian-encoded integer.
-     * 
+     *
      * @param newBlock without a valid nonce
      * @param difficulty - the mining difficulty
      * @return true if valid nonce has been added to the block
@@ -76,7 +76,7 @@ public class Miner {
 
         byte[] testNonce = new byte[32];
         byte[] concat;
-        
+
         while(ByteUtil.increment(testNonce) && !stop) {
 
             if (testNonce[31] == 0 && testNonce[30] == 0){

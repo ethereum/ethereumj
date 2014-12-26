@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * Created on: 24/04/14 11:52
  */
 public class ConsoleTokenMaker extends AbstractTokenMaker {
-    
+
     private Logger logger = LoggerFactory.getLogger("gui");
 
     protected final String operators = "+-*/%!=<>^&|?:";

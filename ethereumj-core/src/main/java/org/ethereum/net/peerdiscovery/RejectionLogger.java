@@ -9,8 +9,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 /**
  * A handler to log rejected threads when execution is blocked because the
  * thread bounds and queue capacities are reached
- * 
- * @author Roman Mandeleil 
+ *
+ * @author Roman Mandeleil
  * Created on: 22/05/2014 10:31
  */
 public class RejectionLogger implements RejectedExecutionHandler {

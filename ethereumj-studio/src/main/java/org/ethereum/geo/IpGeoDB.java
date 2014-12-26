@@ -17,7 +17,7 @@ import java.net.URL;
 public class IpGeoDB {   // change
 
     private static Logger logger = LoggerFactory.getLogger(IpGeoDB.class);
-    
+
     static {
         try {
             File file = null;

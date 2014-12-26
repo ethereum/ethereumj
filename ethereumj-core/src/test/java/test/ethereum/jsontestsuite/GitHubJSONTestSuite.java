@@ -18,9 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Test file specific for tests maintained in the GitHub repository 
+ * Test file specific for tests maintained in the GitHub repository
  * by the Ethereum DEV team. <br/>
- * 
+ *
  * @see <a href="https://github.com/ethereum/tests/">https://github.com/ethereum/tests/</a>
  */
 @RunWith(Suite.class)
@@ -31,7 +31,7 @@ public class GitHubJSONTestSuite {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
-    
+
     protected static void runGitHubJsonTest(String json) throws ParseException {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
@@ -44,7 +44,7 @@ public class GitHubJSONTestSuite {
         while (testIterator.hasNext()){
 
             TestCase testCase = testIterator.next();
-            
+
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
             Assert.assertTrue(result.isEmpty());

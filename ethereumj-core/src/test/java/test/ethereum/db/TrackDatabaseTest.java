@@ -22,7 +22,7 @@ import org.spongycastle.util.encoders.Hex;
  * Created on: 11/06/2014 14:54
  */
 public class TrackDatabaseTest {
-    
+
     @Test
     public void test1() {
 
@@ -50,7 +50,7 @@ public class TrackDatabaseTest {
 
         db1.close();
     }
-    
+
     @AfterClass
     public static void destroyDB() {
         try {

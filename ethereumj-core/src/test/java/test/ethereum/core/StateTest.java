@@ -70,7 +70,7 @@ public class StateTest {
         byte[] minerAddress = Hex.decode("4c5f4d519dff3c16f0d54b6866e256fbbbc1a600");
         AccountState account_3 = new AccountState(BigInteger.ZERO, new BigInteger("1506260000000000000"));
         trie.update(minerAddress, account_3.getEncoded());
-        
+
         assertEquals(expected,  Hex.toHexString(trie.getRootHash()));
 
 
@@ -116,7 +116,7 @@ public class StateTest {
         Trie trie = new TrieImpl(new MockDB());
         for (String address : Genesis.getPremine()) {
             AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-            trie.update(Hex.decode(address), acct.getEncoded());            
+            trie.update(Hex.decode(address), acct.getEncoded());
         }
         return trie;
     }

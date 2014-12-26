@@ -11,9 +11,9 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * An extended {@link com.fasterxml.jackson.databind.ObjectMapper ObjectMapper} class to 
+ * An extended {@link com.fasterxml.jackson.databind.ObjectMapper ObjectMapper} class to
  * customize ethereum state dumps.
- * 
+ *
  * @author Alon Muroch
  *
  */
@@ -21,7 +21,7 @@ public class EtherObjectMapper extends ObjectMapper {
 
     @Override
     public String writeValueAsString(Object value)
-            throws JsonProcessingException {        
+            throws JsonProcessingException {
             // alas, we have to pull the recycler directly here...
             SegmentedStringWriter sw = new SegmentedStringWriter(_jsonFactory._getBufferRecycler());
             try {
@@ -29,7 +29,7 @@ public class EtherObjectMapper extends ObjectMapper {
                 // set ethereum custom pretty printer
                 EtherPrettyPrinter pp = new EtherPrettyPrinter();
                 ge.setPrettyPrinter(pp);
-                
+
                 _configAndWriteValue(ge, value);
             } catch (JsonProcessingException e) { // to support [JACKSON-758]
                 throw e;
@@ -38,11 +38,11 @@ public class EtherObjectMapper extends ObjectMapper {
             }
             return sw.getAndClear();
         }
-    
+
     /**
-     * An extended {@link com.fasterxml.jackson.core.util.DefaultPrettyPrinter} class to customize 
+     * An extended {@link com.fasterxml.jackson.core.util.DefaultPrettyPrinter} class to customize
      * an ethereum {@link com.fasterxml.jackson.core.PrettyPrinter Pretty Printer} Generator
-     * 
+     *
      * @author Alon Muroch
      *
      */
@@ -51,7 +51,7 @@ public class EtherObjectMapper extends ObjectMapper {
         public EtherPrettyPrinter() {
             super();
         }
-        
+
         @Override
         public void writeObjectFieldValueSeparator(JsonGenerator jg)
                 throws IOException, JsonGenerationException {

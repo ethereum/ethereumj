@@ -20,7 +20,7 @@ public class JSONReader {
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/" + filename);
         return json == "" ? json = getFromLocal(filename) : json;
     }
-    
+
     public static String getFromLocal(String filename) {
         System.out.println("Loading local file: " + filename);
         try {
@@ -36,7 +36,7 @@ public class JSONReader {
         }
         return "";
     }
-    
+
     public static String getFromUrl(String urlToRead) {
         URL url;
         HttpURLConnection conn;

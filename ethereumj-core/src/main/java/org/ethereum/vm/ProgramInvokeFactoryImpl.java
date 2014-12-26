@@ -28,14 +28,14 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     @Autowired
     private Blockchain blockchain;
 
-    /** 
+    /**
      * This attribute defines the number of recursive calls allowed in the EVM
      * Note: For the JVM to reach this level without a StackOverflow exception,
-     * ethereumj may need to be started with a JVM argument to increase 
+     * ethereumj may need to be started with a JVM argument to increase
      * the stack size. For example: -Xss10m
      */
-    private static final int MAX_DEPTH = 1024; 
-    
+    private static final int MAX_DEPTH = 1024;
+
         // Invocation by the wire tx
     @Override
     public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
@@ -188,7 +188,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                     Hex.toHexString(difficulty.getNoLeadZeroesData()),
                     gasLimit.longValue());
         }
-        
+
         if (program.invokeData.getCallDeep() >= MAX_DEPTH)
             throw program.new OutOfGasException();
 

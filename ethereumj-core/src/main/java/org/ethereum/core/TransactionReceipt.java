@@ -13,9 +13,9 @@ import java.util.List;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
- * The transaction receipt is a tuple of three items 
- * comprising the transaction, together with the post-transaction state, 
- * and the cumulative gas used in the block containing the transaction receipt 
+ * The transaction receipt is a tuple of three items
+ * comprising the transaction, together with the post-transaction state,
+ * and the cumulative gas used in the block containing the transaction receipt
  * as of immediately after the transaction has happened,
  *
  *

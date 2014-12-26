@@ -32,11 +32,11 @@ public class VMComplexTest {
         /**
          *       #The code will run
          *       ------------------
-        
+
                  a = contract.storage[999]
                  if a > 0:
                      contract.storage[999] = a - 1
-        
+
                      # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
                      send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
                  else:
@@ -338,13 +338,13 @@ public class VMComplexTest {
         // TODO: check that the value pushed after exec is the new address
         repository.close();
     }
-    
+
     @Test // CALL contract with too much gas
     @Ignore
     public void test5() {
         // TODO CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
     }
-    
+
     @Test // contractB call itself with code from contractA
     public void test6() {
         /**
@@ -353,13 +353,13 @@ public class VMComplexTest {
 
          contract A: 945304eb96065b2a98b57a48a06ae28d285a71b5
          ---------------
-        
-         PUSH1 0 CALLDATALOAD SLOAD NOT PUSH1 9 JUMPI STOP 
+
+         PUSH1 0 CALLDATALOAD SLOAD NOT PUSH1 9 JUMPI STOP
          PUSH1 32 CALLDATALOAD PUSH1 0 CALLDATALOAD SSTORE
 
          contract B: 0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6
          -----------
-             { (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) 
+             { (MSTORE 0 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff)
                (MSTORE 32 0xaaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa)
                [[ 0 ]] (CALLSTATELESS 1000000 0x945304eb96065b2a98b57a48a06ae28d285a71b5 23 0 64 64 0)
              }
@@ -377,7 +377,7 @@ public class VMComplexTest {
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();
         pi.setOwnerAddress(contractB_addr_bytes);
         pi.setGasLimit(10000000000000l);
-        
+
         Repository repository  = pi.getRepository();
         repository.createAccount(contractA_addr_bytes);
         repository.saveCode(contractA_addr_bytes, codeA);

@@ -29,14 +29,14 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 
 /**
- * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain, 
- * although it does have some differences. 
- * 
- * The main difference between Ethereum and Bitcoin with regard to the blockchain architecture 
- * is that, unlike Bitcoin, Ethereum blocks contain a copy of both the transaction list 
- * and the most recent state. Aside from that, two other values, the block number and 
- * the difficulty, are also stored in the block. 
- * 
+ * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
+ * although it does have some differences.
+ *
+ * The main difference between Ethereum and Bitcoin with regard to the blockchain architecture
+ * is that, unlike Bitcoin, Ethereum blocks contain a copy of both the transaction list
+ * and the most recent state. Aside from that, two other values, the block number and
+ * the difficulty, are also stored in the block.
+ *
  * The block validation algorithm in Ethereum is as follows:
  * <ol>
  * <li>Check if the previous block referenced exists and is valid.</li>
@@ -44,9 +44,9 @@ import static org.ethereum.core.Denomination.SZABO;
  * <li>Check that the block number, difficulty, transaction root, uncle root and gas limit (various low-level Ethereum-specific concepts) are valid.</li>
  * <li>Check that the proof of work on the block is valid.</li>
  * <li>Let S[0] be the STATE_ROOT of the previous block.</li>
- * <li>Let TX be the block's transaction list, with n transactions. 
- *  For all in in 0...n-1, set S[i+1] = APPLY(S[i],TX[i]). 
- * If any applications returns an error, or if the total gas consumed in the block 
+ * <li>Let TX be the block's transaction list, with n transactions.
+ *  For all in in 0...n-1, set S[i+1] = APPLY(S[i],TX[i]).
+ * If any applications returns an error, or if the total gas consumed in the block
  * up until this point exceeds the GASLIMIT, return an error.</li>
  * <li>Let S_FINAL be S[n], but adding the block reward paid to the miner.</li>
  * <li>Check if S_FINAL is the same as the STATE_ROOT. If it is, the block is valid; otherwise, it is not valid.</li>
@@ -66,7 +66,7 @@ public class BlockchainImpl implements Blockchain {
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
-    
+
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
@@ -107,7 +107,7 @@ public class BlockchainImpl implements Blockchain {
     public byte[] getBestBlockHash() {
         return getBestBlock().getHash();
     }
-    
+
     @Override
     public long getSize() {
         return bestBlock.getNumber() + 1;
@@ -313,7 +313,7 @@ public class BlockchainImpl implements Blockchain {
             logger.warn("Invalid block with nr: {}", block.getNumber());
         }
     }
-    
+
     private List<TransactionReceipt> applyBlock(Block block) {
 
         int i = 1;
@@ -363,15 +363,15 @@ public class BlockchainImpl implements Blockchain {
     /**
      * Add reward to block- and every uncle coinbase
      * assuming the entire block is valid.
-     * 
+     *
      * @param block object containing the header and uncles
      */
     private void addReward(Block block) {
 
         // Add standard block reward
         BigInteger totalBlockReward = Block.BLOCK_REWARD;
-        
-        // Add extra rewards based on number of uncles      
+
+        // Add extra rewards based on number of uncles
         if(block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
                 track.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
@@ -381,7 +381,7 @@ public class BlockchainImpl implements Blockchain {
         }
         track.addBalance(block.getCoinbase(), totalBlockReward);
     }
-    
+
     @Override
     public void storeBlock(Block block, List<TransactionReceipt> receipts) {
 
@@ -408,8 +408,8 @@ public class BlockchainImpl implements Blockchain {
             logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
         if (block.getNumber() % 100 == 0)
             logger.info("*** Last block added [ #{} ]", block.getNumber());
-    }    
-    
+    }
+
 
     public boolean hasParentOnTheChain(Block block){
         return getParent(block.getHeader()) != null;

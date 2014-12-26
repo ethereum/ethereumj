@@ -28,21 +28,21 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     private List<String> outputList;
     private JTextArea console;
     private JSlider stepSlider;
-    
+
     private ProgramInvoke pi;
-    
+
     public ProgramPlayDialog(byte[] code) {
         this(code, new ProgramInvokeMockImpl());
     }
-    
+
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
 //      this(code, ProgramInvokeFactory.createProgramInvoke(tx, lastBlock,
 //                UIEthereumManager.ethereum.getRepository()));
     }
-    
+
     public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke) {
         pi = programInvoke;
-        
+
         outputList = new ArrayList<String>();
         VM vm = new VM();
 
@@ -56,9 +56,9 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
         doGUI();
     }
-    
+
     public void doGUI() {
-        
+
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         //Create the slider.
@@ -152,7 +152,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
 
         //Add content to the window.
         frame.add(ppd, BorderLayout.CENTER);
-        
+
         // close event
         frame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -169,7 +169,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         frame.setVisible(true);
         ppd.setFocus();
     }
-  
+
 
     @Override
     public void output(String out) {

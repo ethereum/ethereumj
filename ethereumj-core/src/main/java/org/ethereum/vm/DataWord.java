@@ -50,7 +50,7 @@ public class DataWord implements Comparable<DataWord> {
         else if (data.length <= 32)
             System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
         else
-            throw new RuntimeException("Data word can't exit 32 bytes: " + data);           
+            throw new RuntimeException("Data word can't exit 32 bytes: " + data);
     }
 
     public byte[] getData() {
@@ -67,12 +67,12 @@ public class DataWord implements Comparable<DataWord> {
     public BigInteger value() {
         return new BigInteger(1, data);
     }
-    
+
     /**
-     * Converts this DataWord to an int, checking for lost information. 
-     * If this DataWord is out of the possible range for an int result 
+     * Converts this DataWord to an int, checking for lost information.
+     * If this DataWord is out of the possible range for an int result
      * then an ArithmeticException is thrown.
-     * 
+     *
      * @return this DataWord converted to an int.
      * @throws ArithmeticException - if this will not fit in an int.
      */
@@ -82,12 +82,12 @@ public class DataWord implements Comparable<DataWord> {
             return Integer.MAX_VALUE;
         return tmpValue.intValueExact();
     }
-    
+
     /**
-     * Converts this DataWord to a long, checking for lost information. 
-     * If this DataWord is out of the possible range for a long result 
+     * Converts this DataWord to a long, checking for lost information.
+     * If this DataWord is out of the possible range for a long result
      * then an ArithmeticException is thrown.
-     * 
+     *
      * @return this DataWord converted to a long.
      * @throws ArithmeticException - if this will not fit in a long.
      */
@@ -153,7 +153,7 @@ public class DataWord implements Comparable<DataWord> {
             if (this.data[i] != 0) break;
         }
     }
-    
+
     public void bnot() {
         if (this.isZero()) return;
         this.data = ByteUtil.copyToArray(MAX_VALUE.subtract(this.value()));
@@ -170,13 +170,13 @@ public class DataWord implements Comparable<DataWord> {
         }
         this.data = result;
     }
-    
+
     // old add-method with BigInteger quick hack
     public void add2(DataWord word) {
         BigInteger result = value().add(word.value());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
-    
+
     // TODO: mul can be done in more efficient way
     // TODO:     with shift left shift right trick
     // TODO      without BigInteger quick hack
@@ -212,7 +212,7 @@ public class DataWord implements Comparable<DataWord> {
 
     // TODO: improve with no BigInteger
     public void sub(DataWord word) {
-        BigInteger result = value().subtract(word.value());        
+        BigInteger result = value().subtract(word.value());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
@@ -244,22 +244,22 @@ public class DataWord implements Comparable<DataWord> {
         BigInteger result = sValue().remainder(word.sValue());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
-    
+
     public void addmod(DataWord word1, DataWord word2) {
         this.add(word1);
         BigInteger result = this.value().mod(word2.value());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
-    
+
     public void mulmod(DataWord word1, DataWord word2) {
         BigInteger result = value().multiply(word1.value()).mod(word2.value());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
-    
+
     public String toString() {
         return Hex.toHexString(data);
     }
-   
+
     public String shortHex() {
         String hexValue = Hex.toHexString(getNoLeadZeroesData()).toUpperCase();
         return "0x" + hexValue.replaceFirst("^0+(?!$)", "");
@@ -280,7 +280,7 @@ public class DataWord implements Comparable<DataWord> {
 
         return true;
     }
-    
+
     @Override
     public int hashCode() {
         return java.util.Arrays.hashCode(data);

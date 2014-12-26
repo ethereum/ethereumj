@@ -22,7 +22,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     // default for most tests. This can be overwritten by the test
     private long gasLimit = 1000000;
-    
+
     public ProgramInvokeMockImpl(byte[] msgDataRaw) {
         this();
         this.msgData = msgDataRaw;
@@ -31,9 +31,9 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
         this.repository = new RepositoryImpl("detailsMoc", "stateMoc");
         this.repository.createAccount(ownerAddress);
-        
+
         this.repository.createAccount(contractAddress);
-        this.repository.saveCode(contractAddress, 
+        this.repository.saveCode(contractAddress,
                 Hex.decode("385E60076000396000605f556014600054601e60"
                 + "205463abcddcba6040545b51602001600a525451"
                 + "6040016014525451606001601e52545160800160"
@@ -84,7 +84,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     /*           GAS op       */
     public DataWord getGas() {
-        
+
         return new DataWord(gasLimit);
     }
 
@@ -190,10 +190,10 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public DataWord getGaslimit() {
         return new DataWord(gasLimit);
     }
-    
+
     public void setGasLimit(long gasLimit) {
         this.gasLimit = gasLimit;
-    }    
+    }
 
     public void setOwnerAddress(byte[] ownerAddress) {
         this.ownerAddress = ownerAddress;

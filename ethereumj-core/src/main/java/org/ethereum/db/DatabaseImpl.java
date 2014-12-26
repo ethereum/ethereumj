@@ -19,18 +19,18 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  *  Generic interface for Ethereum database
- *  
+ *
  *  LevelDB key/value pair DB implementation will be used.
  *  Choice must be made between:
  *      Pure Java: https://github.com/dain/leveldb
  *      JNI binding: https://github.com/fusesource/leveldbjni
  */
 public class DatabaseImpl implements Database {
-    
+
     private static final Logger logger = LoggerFactory.getLogger("db");
     private DB db;
     private String name;
-    
+
     public DatabaseImpl(String name) {
         // Initialize Database
         this.name = name;
@@ -69,9 +69,9 @@ public class DatabaseImpl implements Database {
         } catch (IOException ioe) {
             logger.error(ioe.getMessage(), ioe);
             throw new RuntimeException("Can't initialize database");
-        }       
+        }
     }
-    
+
     public void destroyDB(File fileLocation) {
         logger.debug("Destroying existing database");
         Options options = new Options();
@@ -81,12 +81,12 @@ public class DatabaseImpl implements Database {
             logger.error(e.getMessage(), e);
         }
     }
-    
+
     @Override
     public byte[] get(byte[] key) {
         return db.get(key);
     }
-    
+
     @Override
     public void put(byte[] key, byte[] value) {
 
@@ -96,7 +96,7 @@ public class DatabaseImpl implements Database {
                     Hex.toHexString(value));
         db.put(key, value);
     }
-    
+
     @Override
     public void delete(byte[] key) {
         if(logger.isDebugEnabled())
@@ -104,11 +104,11 @@ public class DatabaseImpl implements Database {
 
         db.delete(key);
     }
-    
+
     public DBIterator iterator() {
         return db.iterator();
     }
-    
+
     public DB getDb() {
         return this.db;
     }

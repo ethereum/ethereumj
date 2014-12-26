@@ -25,8 +25,8 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.
- * 
- * @author Roman Mandeleil 
+ *
+ * @author Roman Mandeleil
  * Created on: 01/06/2014 10:44
  */
 @Component
@@ -57,12 +57,12 @@ public class WorldManager {
 
     @Autowired
     private AdminInfo adminInfo;
-    
+
     private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
     @Autowired
     private EthereumListener listener;
-    
+
     @PostConstruct
     public void init() {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -72,7 +72,7 @@ public class WorldManager {
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());
         wallet.importKey(cbAddr);
     }
-    
+
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
         ((EthereumListenerWrapper)this.listener).addListener(listener);
@@ -115,7 +115,7 @@ public class WorldManager {
     public EthereumListener getListener() {
         return listener;
     }
-    
+
     public void setWallet(Wallet wallet)  {
         this.wallet = wallet;
     }
@@ -123,11 +123,11 @@ public class WorldManager {
     public Repository getRepository() {
         return repository;
     }
-    
+
     public Blockchain getBlockchain() {
         return blockchain;
     }
-    
+
     public Wallet getWallet() {
         return wallet;
     }

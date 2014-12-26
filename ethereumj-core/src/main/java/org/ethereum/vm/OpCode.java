@@ -5,7 +5,7 @@ import java.util.Map;
 
 /**
  * Instruction set for the Ethereum Virtual Machine
- * See Yellow Paper: http://www.gavwood.com/Paper.pdf 
+ * See Yellow Paper: http://www.gavwood.com/Paper.pdf
  * - Appendix G. Virtual Machine Specification
  */
 public enum OpCode {
@@ -29,10 +29,10 @@ public enum OpCode {
     MOD(0x06, 2),
     /** (0x07) Signed modulo remainder operation*/
     SMOD(0x07, 2),
-    /** (0x08) Addition combined with modulo 
+    /** (0x08) Addition combined with modulo
      * remainder operation */
     ADDMOD(0x08, 3),
-    /** (0x09) Multiplication combined with modulo 
+    /** (0x09) Multiplication combined with modulo
      * remainder operation */
     MULMOD(0x09, 3),
     /** (0x0a) Exponential operation            */
@@ -72,7 +72,7 @@ public enum OpCode {
 
     /*  Environmental Information   */
 
-    /** (0x30)  Get address of currently 
+    /** (0x30)  Get address of currently
      * executing account                        */
     ADDRESS(0x30, 0),
     /** (0x31) Get balance of the given account */
@@ -81,38 +81,38 @@ public enum OpCode {
     ORIGIN(0x32, 0),
     /** (0x33) Get caller address               */
     CALLER(0x33, 0),
-    /** (0x34) Get deposited value by the 
-     * instruction/transaction responsible 
+    /** (0x34) Get deposited value by the
+     * instruction/transaction responsible
      * for this execution                       */
     CALLVALUE(0x34, 0),
-    /** (0x35) Get input data of current 
+    /** (0x35) Get input data of current
      * environment                              */
     CALLDATALOAD(0x35, 1),
     /** (0x36) Get size of input data in current
      * environment                              */
     CALLDATASIZE(0x36, 0),
-    /** (0x37) Copy input data in current 
+    /** (0x37) Copy input data in current
      * environment to memory                    */
     CALLDATACOPY(0x37, 3),
-    /** (0x38) Get size of code running in 
+    /** (0x38) Get size of code running in
      * current environment                      */
     CODESIZE(0x38, 0),
-    /** (0x39) Copy code running in current 
+    /** (0x39) Copy code running in current
      * environment to memory                    */
     CODECOPY(0x39, 3), // [len code_start mem_start CODECOPY]
-    /** (0x3a) Get price of gas in current 
+    /** (0x3a) Get price of gas in current
      * environment                              */
     GASPRICE(0x3a, 0),
-    /** (0x3b) Get size of code running in 
+    /** (0x3b) Get size of code running in
      * current environment with given offset    */
     EXTCODESIZE(0x3b, 1),
-    /** (0x3c) Copy code running in current 
+    /** (0x3c) Copy code running in current
      * environment to memory with given offset  */
     EXTCODECOPY(0x3c, 4),
 
     /*  Block Information   */
 
-    /** (0x40) Get hash of most recent 
+    /** (0x40) Get hash of most recent
      * complete block                           */
     PREVHASH(0x40, 0),
     /** (0x41) Get the block’s coinbase address   */
@@ -142,7 +142,7 @@ public enum OpCode {
     SSTORE(0x55, 2),
     /** (0x56) Alter the program counter        */
     JUMP(0x56, 1),
-    /** (0x57) Conditionally alter the program 
+    /** (0x57) Conditionally alter the program
      * counter                                  */
     JUMPI(0x57, 2),
     /** (0x58) Get the program counter          */
@@ -218,7 +218,7 @@ public enum OpCode {
     PUSH30(0x7d, 0),
     /** (0x7e) Place 31-byte item on stack      */
     PUSH31(0x7e, 0),
-    /** (0x7f) Place 32-byte (full word) 
+    /** (0x7f) Place 32-byte (full word)
      * item on stack                            */
     PUSH32(0x7f, 0),
 
@@ -316,7 +316,7 @@ public enum OpCode {
 
     private byte opcode;
     private int require;
-    
+
     private static final Map<Byte, OpCode> intToTypeMap = new HashMap<>();
     private static final Map<String, Byte> stringToByteMap = new HashMap<>();
 
@@ -326,19 +326,19 @@ public enum OpCode {
             stringToByteMap.put(type.name(), type.opcode);
         }
     }
-    
+
     private OpCode(int op, int require) {
         this.opcode = (byte) op;
         this.require = require;
     }
-    
+
     public byte val() {
         return opcode;
     }
-    
+
     /**
      * Returns the mininum amount of items required on the stack for this operation
-     * 
+     *
      * @return minimum amount of expected items on the stack
      */
     public int require() {

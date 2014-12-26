@@ -767,7 +767,7 @@ public class SerpentCompileTest {
                         " a=20      \n" +
                         "           \n" +
                         "           \n";
-        
+
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
 
@@ -799,7 +799,7 @@ public class SerpentCompileTest {
                         "    a=40   \n" +
                         "else:      \n" +
                         "    a=40   \n";
-        
+
         SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
 
@@ -1215,7 +1215,7 @@ public class SerpentCompileTest {
                         "c = [22, 24, 25]\n" +
                         "c[ 0 ] = 3" ;
         String expected = "MSIZE 32 ADD MSIZE DUP 32 ADD 2 SWAP MSTORE DUP 64 ADD 4 SWAP MSTORE DUP 96 ADD 6 SWAP MSTORE 128 SWAP MSTORE MSIZE 32 ADD MSIZE DUP 32 ADD 12 SWAP MSTORE DUP 64 ADD 14 SWAP MSTORE 96 SWAP MSTORE MSIZE 32 ADD MSIZE DUP 32 ADD 22 SWAP MSTORE DUP 64 ADD 24 SWAP MSTORE DUP 96 ADD 25 SWAP MSTORE 128 SWAP MSTORE 3 32 0 MUL 32 ADD 224 ADD 0 ADD MSTORE";
-        
+
         String asmResult = SerpentCompiler.compile(code);
         assertEquals(expected, asmResult);
     }
@@ -1293,7 +1293,7 @@ public class SerpentCompileTest {
      * TODO: suicide(1) testing
      * TODO: stop testing
      */
-    
+
     /**
      TODO: add this namecoin sample to the testing
      if !(contract.storage[msg.data[0]]):

@@ -7,7 +7,7 @@ import java.util.Map;
  * A list of commands for the Ethereum network protocol.
  * <br>
  * The codes for these commands are the first byte in every packet.
- * 
+ *
  * @see <a href="https://github.com/ethereum/wiki/wiki/Ethereum-Wire-Protocol">
  * https://github.com/ethereum/wiki/wiki/Ethereum-Wire-Protocol</a>
  */
@@ -56,8 +56,8 @@ public enum EthMessageCodes {
 
     /**
      * [+0x07 [blockHeader, transactionList, uncleList], totalDifficulty] <br>
-     * Specify a single block that the peer should know about. The composite item 
-     * in the list (following the message ID) is a block in the format described 
+     * Specify a single block that the peer should know about. The composite item
+     * in the list (following the message ID) is a block in the format described
      * in the main Ethereum specification. */
     NEW_BLOCK(0x07),
 

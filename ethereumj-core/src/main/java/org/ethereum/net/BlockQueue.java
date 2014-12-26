@@ -18,8 +18,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * The processing queue for blocks to be validated and added to the blockchain.
  * This class also maintains the list of hashes from the peer with the heaviest sub-tree.
  * Based on these hashes, blocks are added to the queue.
- * 
- * @author Roman Mandeleil 
+ *
+ * @author Roman Mandeleil
  * Created on: 27/07/2014 11:28
  */
 @Component
@@ -27,13 +27,13 @@ public class BlockQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
-    /** The list of hashes of the heaviest chain on the network, 
+    /** The list of hashes of the heaviest chain on the network,
      * for which this client doesn't have the blocks yet */
     private Deque<byte[]> blockHashQueue = new ArrayDeque<>();
-    
+
     /** Queue with blocks to be validated and added to the blockchain */
     private Queue<Block> blockReceivedQueue = new ConcurrentLinkedQueue<>();
-    
+
     /** Highest known total difficulty, representing the heaviest chain on the network */
     private BigInteger highestTotalDifficulty;
 
@@ -59,7 +59,7 @@ public class BlockQueue {
     private void nudgeQueue() {
         if (blockReceivedQueue.isEmpty())
             return;
-        
+
         logger.info("BlockQueue size: {}", blockReceivedQueue.size());
         while(!blockReceivedQueue.isEmpty()){
             Block block = blockReceivedQueue.poll();
@@ -74,10 +74,10 @@ public class BlockQueue {
      * Add a list of blocks to the processing queue.
      * The list is validated by making sure the first block in the received list of blocks
      * is the next expected block number of the queue.
-     * 
+     *
      * The queue is configured to contain a maximum number of blocks to avoid memory issues
      * If the list exceeds that, the rest of the received blocks in the list are discarded.
-     * 
+     *
      * @param blockList - the blocks received from a peer to be added to the queue
      */
     public void addBlocks(List<Block> blockList) {
@@ -104,13 +104,13 @@ public class BlockQueue {
                 blockReceivedQueue.size(),
                 lastBlock.getNumber());
     }
-    
+
     /**
-     * Returns the last block in the queue. If the queue is empty, 
+     * Returns the last block in the queue. If the queue is empty,
      * this will return the last block added to the blockchain.
-     * 
+     *
      * @return The last known block this client on the network
-     * and will never return <code>null</code> as there is 
+     * and will never return <code>null</code> as there is
      * always the Genesis block at the start of the chain.
      */
     public Block getLastBlock() {
@@ -122,7 +122,7 @@ public class BlockQueue {
     /**
      * Reset the queue of hashes of blocks to be retrieved
      * and add the best hash to the top of the queue
-     * 
+     *
      * @param hash - the best hash
      */
     public void setBestHash(byte[] hash) {
@@ -131,9 +131,9 @@ public class BlockQueue {
     }
 
     /**
-     * Returns the last added hash to the queue representing 
+     * Returns the last added hash to the queue representing
      * the latest known block on the network
-     * 
+     *
      * @return The best hash on the network known to the client
      */
     public byte[] getBestHash() {
@@ -158,10 +158,10 @@ public class BlockQueue {
     public void addNewBlockHash(byte[] hash){
         blockHashQueue.addFirst(hash);
     }
-    
+
     /**
      * Return a list of hashes from blocks that still need to be downloaded.
-     * 
+     *
      * @return A list of hashes for which blocks need to be retrieved.
      */
     public List<byte[]> getHashes() {
@@ -195,7 +195,7 @@ public class BlockQueue {
             return 0;
         }
     }
-    
+
     public BigInteger getHighestTotalDifficulty() {
         return highestTotalDifficulty;
     }
@@ -206,7 +206,7 @@ public class BlockQueue {
 
     /**
      * Returns the current number of blocks in the queue
-     * 
+     *
      * @return the current number of blocks in the queue
      */
     public int size() {
@@ -223,7 +223,7 @@ public class BlockQueue {
     }
 
     /**
-     * Cancel and purge the timer-thread that 
+     * Cancel and purge the timer-thread that
      * processes the blocks in the queue
      */
     public void close() {

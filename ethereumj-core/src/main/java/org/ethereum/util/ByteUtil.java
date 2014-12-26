@@ -24,7 +24,7 @@ public class ByteUtil {
     }
 
     /**
-     * The regular {@link java.math.BigInteger#toByteArray()} method isn't quite what we often need: 
+     * The regular {@link java.math.BigInteger#toByteArray()} method isn't quite what we often need:
      * it appends a leading zero to indicate that the number is positive and may need padding.
      *
      * @param b the integer to format into a byte array
@@ -39,23 +39,23 @@ public class ByteUtil {
         int start = (biBytes.length == numBytes + 1) ? 1 : 0;
         int length = Math.min(biBytes.length, numBytes);
         System.arraycopy(biBytes, start, bytes, numBytes - length, length);
-        return bytes;        
+        return bytes;
     }
 
     /**
      * Omitting sign indication byte.
      * <br><br>
-     * Instead of {@link org.spongycastle.util.BigIntegers#asUnsignedByteArray(BigInteger)} 
+     * Instead of {@link org.spongycastle.util.BigIntegers#asUnsignedByteArray(BigInteger)}
      * <br>we use this custom method to avoid an empty array in case of BigInteger.ZERO
      *
      * @param value - any big integer number. A <code>null</code>-value will return <code>null</code>
-     * @return A byte array without a leading zero byte if present in the signed encoding. 
+     * @return A byte array without a leading zero byte if present in the signed encoding.
      *      BigInteger.ZERO will return an array with length 1 and byte-value 0.
      */
     public static byte[] bigIntegerToBytes(BigInteger value) {
         if (value == null)
             return null;
-        
+
         byte[] data = value.toByteArray();
 
         if (data.length != 1 && data[0] == 0) {
@@ -66,10 +66,10 @@ public class ByteUtil {
         return data;
     }
 
-    /** 
+    /**
      * Returns the amount of nibbles that match each other from 0 ...
      *  amount will never be larger than smallest input
-     * 
+     *
      * @param a - first input
      * @param b - second input
      * @return Number of bytes that match
@@ -84,22 +84,22 @@ public class ByteUtil {
         }
         return i;
     }
-    
+
     /**
      * Converts a long value into a byte array.
-     * 
+     *
      * @param val - long value to convert
      * @return <code>byte[]</code> of length 8, representing the long value
      */
     public static byte[] longToBytes(long val) {
         return ByteBuffer.allocate(8).putLong(val).array();
     }
-    
+
     /**
      * Convert a byte-array into a hex String.<br>
-     * Works similar to {@link Hex#toHexString} 
+     * Works similar to {@link Hex#toHexString}
      * but allows for <code>null</code>
-     * 
+     *
      * @param data - byte-array to convert to a hex-string
      * @return hex representation of the data.<br>
      *      Returns an empty String if the input is <code>null</code>
@@ -109,7 +109,7 @@ public class ByteUtil {
     public static String toHexString(byte[] data) {
         return data == null ? "" : Hex.toHexString(data);
     }
-    
+
     /**
      * Calculate packet length
      * @param msg byte[]
@@ -124,14 +124,14 @@ public class ByteUtil {
                 (byte)((msgLen      ) & 0xFF)};
         return len;
     }
-    
+
     /**
      * Cast hex encoded value from byte[] to int
-     * 
+     *
      * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
-     * 
+     *
      * @param b array contains the values
-     * @return unsigned positive int value. 
+     * @return unsigned positive int value.
      */
     public static int byteArrayToInt(byte[] b) {
         if (b == null || b.length == 0)
@@ -153,10 +153,10 @@ public class ByteUtil {
         return new BigInteger(1, b).longValue();
     }
 
-    
+
     /**
      * Turn nibbles to a pretty looking output string
-     *      
+     *
      *  Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
      *
      * @param nibbles - getting byte of data [ 04 ] and turning
@@ -171,7 +171,7 @@ public class ByteUtil {
         }
         return buffer.toString();
     }
-    
+
     public static String oneByteToHexString(byte value) {
         String retVal = Integer.toString(value & 0xFF, 16);
         if (retVal.length() == 1) retVal = "0" + retVal;
@@ -197,7 +197,7 @@ public class ByteUtil {
         if (bytes == 0) ++bytes;
         return bytes;
     }
-    
+
     /**
      * @param arg - not more that 32 bits
      * @return - bytes of the value pad with complete to 32 zeroes
@@ -215,7 +215,7 @@ public class ByteUtil {
         else
             data = arg.toString().trim().getBytes();
 
-        
+
         if (data.length > 32)
             throw new RuntimeException("values can't be more than 32 byte");
 
@@ -304,9 +304,9 @@ public class ByteUtil {
 
     /**
      * Utility function to copy a byte array into a new byte array with given size.
-     * If the src length is smaller than the given size, the result will be left-padded 
+     * If the src length is smaller than the given size, the result will be left-padded
      * with zeros.
-     * 
+     *
      * @param value - a BigInteger with a maximum value of 2^256-1
      * @return Byte array of given size with a copy of the <code>src</code>
      */

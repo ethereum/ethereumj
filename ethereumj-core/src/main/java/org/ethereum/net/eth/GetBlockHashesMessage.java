@@ -9,15 +9,15 @@ import org.spongycastle.util.encoders.Hex;
 
 /**
  * Wrapper around an Ethereum GetBlockHashes message on the network
- * 
+ *
  * @see org.ethereum.net.eth.EthMessageCodes#GET_BLOCK_HASHES
  */
 public class GetBlockHashesMessage extends EthMessage {
 
     /** The newest block hash from which to start sending older hashes */
     private byte[] bestHash;
-    
-    /** The maximum number of blocks to return. 
+
+    /** The maximum number of blocks to return.
      * <b>Note:</b> the peer could return fewer. */
     private int maxBlocks;
 
@@ -80,8 +80,8 @@ public class GetBlockHashesMessage extends EthMessage {
     @Override
     public String toString() {
         if (!parsed) parse();
-        return "[" + this.getCommand().name() + 
-                " bestHash=" + Hex.toHexString(bestHash) + 
+        return "[" + this.getCommand().name() +
+                " bestHash=" + Hex.toHexString(bestHash) +
                 " maxBlocks=" + maxBlocks + "]";
     }
 }

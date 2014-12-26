@@ -19,19 +19,19 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * The modified Merkle Patricia tree (trie) provides a persistent data structure 
- * to map between arbitrary-length binary data (byte arrays). It is defined in terms of 
- * a mutable data structure to map between 256-bit binary fragments and arbitrary-length 
- * binary data, typically implemented as a database. The core of the trie, and its sole 
- * requirement in terms of the protocol specification is to provide a single value that 
- * identifies a given set of key-value pairs, which may either a 32 byte sequence or 
- * the empty byte sequence. It is left as an implementation consideration to store and 
- * maintain the structure of the trie in a manner the allows effective and efficient 
+ * The modified Merkle Patricia tree (trie) provides a persistent data structure
+ * to map between arbitrary-length binary data (byte arrays). It is defined in terms of
+ * a mutable data structure to map between 256-bit binary fragments and arbitrary-length
+ * binary data, typically implemented as a database. The core of the trie, and its sole
+ * requirement in terms of the protocol specification is to provide a single value that
+ * identifies a given set of key-value pairs, which may either a 32 byte sequence or
+ * the empty byte sequence. It is left as an implementation consideration to store and
+ * maintain the structure of the trie in a manner the allows effective and efficient
  * realisation of the protocol.
  *
- * The trie implements a caching mechanism and will use cached values if they are present. 
- * If a node is not present in the cache it will try to fetch it from the database and 
- * store the cached value. 
+ * The trie implements a caching mechanism and will use cached values if they are present.
+ * If a node is not present in the cache it will try to fetch it from the database and
+ * store the cached value.
  *
  * <b>Note:</b> the data isn't persisted unless `sync` is explicitly called.
  *
@@ -63,7 +63,7 @@ public class TrieImpl implements Trie {
     public TrieIterator getIterator() {
         return new TrieIterator(this);
     }
-    
+
     public void setCache(Cache cache) {
         this.cache = cache;
     }
@@ -101,14 +101,14 @@ public class TrieImpl implements Trie {
 
     @Override
     public byte[] get(byte[] key) {
-        if (logger.isDebugEnabled()) 
+        if (logger.isDebugEnabled())
             logger.debug("Retrieving key {}", Hex.toHexString(key));
         byte[] k = binToNibbles(key);
         Value c = new Value(this.get(this.root, k));
 
         return (c == null)? null : c.asBytes();
     }
-    
+
     /**
      * Insert key/value pair into trie
      *
@@ -140,7 +140,7 @@ public class TrieImpl implements Trie {
     public void delete(String key) {
         this.update(key.getBytes(), "".getBytes());
     }
-    
+
     @Override
     public void delete(byte[] key) {
         delete(new String(key));
@@ -149,7 +149,7 @@ public class TrieImpl implements Trie {
             logger.debug("New root-hash: {}", Hex.toHexString(this.getRootHash()));
         }
     }
-    
+
     @Override
     public byte[] getRootHash() {
         if (root == null

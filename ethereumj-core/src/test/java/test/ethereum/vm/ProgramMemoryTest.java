@@ -16,12 +16,12 @@ public class ProgramMemoryTest {
     ProgramInvokeMockImpl pi = null;
     Program program;
     ByteBuffer memory;
-    
+
     @Before
     public void createProgram() {
         program = new Program(ByteUtil.EMPTY_BYTE_ARRAY, pi);
     }
-    
+
     @Test
     public void testGetMemSize() {
         ByteBuffer memory = ByteBuffer.allocate(64);
@@ -49,7 +49,7 @@ public class ProgramMemoryTest {
         program.memoryChunk(offset, size);
         assertEquals(160, program.getMemSize());
     }
-    
+
     @Test // size 0 doesn't increate memory
     public void testMemoryChunk2() {
         program.initMem(ByteBuffer.allocate(64));
@@ -68,7 +68,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(64, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory2() {
 
@@ -80,7 +80,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(96, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory3() {
 
@@ -91,7 +91,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(64, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory4() {
 
@@ -101,7 +101,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(64, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory5() {
 
@@ -111,7 +111,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(64, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory6() {
 
@@ -122,7 +122,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(96, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory7() {
 
@@ -133,7 +133,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(128, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory8() {
 
@@ -143,7 +143,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(96, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory9() {
 
@@ -155,10 +155,10 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(64, program.getMemSize());
     }
-    
+
     /************************************************/
-    
-    
+
+
     @Test
     public void testAllocateMemory10() {
 
@@ -168,7 +168,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(0, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory11() {
 
@@ -178,7 +178,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(32, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory12() {
 
@@ -189,7 +189,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(160, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory13() {
 
@@ -200,7 +200,7 @@ public class ProgramMemoryTest {
         program.allocateMemory(offset, size);
         assertEquals(160, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemory14() {
 
@@ -249,73 +249,73 @@ public class ProgramMemoryTest {
     @Test
     public void testAllocateMemoryUnrounded1() {
 
-        // memory unrounded 
+        // memory unrounded
         program.initMem(ByteBuffer.allocate(64));
         int offset = 64;
         int size = 32;
         program.allocateMemory(offset, size);
         assertEquals(96, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemoryUnrounded2() {
 
-        // offset unrounded 
+        // offset unrounded
         program.initMem(ByteBuffer.allocate(64));
         int offset = 16;
         int size = 32;
         program.allocateMemory(offset, size);
         assertEquals(64, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemoryUnrounded3() {
 
-        // size unrounded 
+        // size unrounded
         program.initMem(ByteBuffer.allocate(64));
         int offset = 64;
         int size = 16;
         program.allocateMemory(offset, size);
         assertEquals(96, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemoryUnrounded4() {
 
-        // memory + offset unrounded 
+        // memory + offset unrounded
         program.initMem(ByteBuffer.allocate(64));
         int offset = 16;
         int size = 32;
         program.allocateMemory(offset, size);
         assertEquals(64 , program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemoryUnrounded5() {
 
-        // memory + size unrounded 
+        // memory + size unrounded
         program.initMem(ByteBuffer.allocate(64));
         int offset = 32;
         int size = 16;
         program.allocateMemory(offset, size);
         assertEquals(64, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemoryUnrounded6() {
 
-        // offset + size unrounded 
+        // offset + size unrounded
         program.initMem(ByteBuffer.allocate(32));
         int offset = 16;
         int size = 16;
         program.allocateMemory(offset, size);
         assertEquals(32, program.getMemSize());
     }
-    
+
     @Test
     public void testAllocateMemoryUnrounded7() {
 
-        // memory + offset + size unrounded 
+        // memory + offset + size unrounded
         program.initMem(ByteBuffer.allocate(32));
         int offset = 16;
         int size = 16;

@@ -77,7 +77,7 @@ public class BlockTest {
             + "9e262996493846a590c7011697dba07bb7680a256ede4034212b7a1ae6c7caea73190cb0"
             + "7dedb91a07b72f34074e76a00cd22d78d556175604407dc6109797f5c8d990d05f1b352e"
             + "10c71b3dd74bc70f8201f4c0";
-    
+
     String block_32 = "f8f8f8f4a00a312c2b0a8f125c60a3976b6e508e740e095eb59943988d9bbfb8"
             + "aa43922e31a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4"
             + "934794e559de5527492bcb42ec68d07df0742a98ec3f1ea050188ab86bdf164ac90eb283"
@@ -104,7 +104,7 @@ public class BlockTest {
         assertEquals(Hex.toHexString(genesis.getParentHash()), Hex.toHexString(genesisFromRLP.getParentHash()));
         assertEquals(Hex.toHexString(genesis.getStateRoot()), Hex.toHexString(genesisFromRLP.getStateRoot()));
     }
-    
+
     @Test
     public void testGenesisFromNew() {
         Block genesis = Genesis.getInstance();
@@ -115,7 +115,7 @@ public class BlockTest {
         assertEquals(PoC7_GENESIS_HEX_HASH, Hex.toHexString(genesis.getHash()));
         assertEquals(PoC7_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
     }
-    
+
     @Test /* block without transactions - block#32 in PoC5 cpp-chain */
     public void testEmptyBlock() {
         byte[] payload = Hex.decode(block_32);
@@ -137,7 +137,7 @@ public class BlockTest {
         Block block = new Block(payload);
         logger.info(block.toString());
     }
-    
+
     @Test
     public void testCalcDifficulty() {
 
@@ -157,7 +157,7 @@ public class BlockTest {
         logger.info("Block#1 calculated difficulty: [{}] ", calcDifficulty.toString());
         assertEquals(actualDifficulty, calcDifficulty);
     }
-    
+
     @Test
     public void testCalcGasLimit() {
         BlockchainImpl blockchain =  (BlockchainImpl)worldManager.getBlockchain();
@@ -240,14 +240,14 @@ public class BlockTest {
         // TODO
         fail("Not yet implemented");
     }
-    
+
     @Test
     @Ignore
     public void testUncleInvalidGenerationGap() {
         // TODO
         fail("Not yet implemented");
     }
-    
+
     @Test
     @Ignore
     public void testUncleInvalidParentGenerationGap() {

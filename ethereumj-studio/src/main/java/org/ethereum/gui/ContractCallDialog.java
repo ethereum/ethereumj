@@ -213,7 +213,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         this.getContentPane().revalidate();
         this.getContentPane().repaint();
         this.setResizable(false);
-        
+
         this.setVisible(true);
     }
 
@@ -223,7 +223,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             alertStatusMsg("Not a valid contract address");
             return;
         }
-            
+
         ContractDetails contractDetails = UIEthereumManager.ethereum
                 .getRepository().getContractDetails(addr);
         if (contractDetails == null) {
@@ -236,7 +236,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             alertStatusMsg("Such account exist but no code in the db");
             return;
         }
-        
+
         final Map storageMap = contractDetails.getStorage();
 
         contractDataInput.setBounds(70, 80, 350, 145);
@@ -307,14 +307,14 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         });
         this.repaint();
     }
-    
-    private void playContractCall() {       
+
+    private void playContractCall() {
         byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
         if(addr == null) {
             alertStatusMsg("Not a valid contract address");
             return;
         }
-        
+
         ContractDetails contractDetails = UIEthereumManager.ethereum
                 .getRepository().getContractDetails(addr);
         if (contractDetails == null) {

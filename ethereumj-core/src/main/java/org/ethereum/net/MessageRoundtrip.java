@@ -7,7 +7,7 @@ import org.ethereum.net.message.Message;
  * been offered This class also contains the last time a message was offered and
  * is updated when an answer has been received to it can be removed from the
  * queue.
- * 
+ *
  * @author Roman Mandeleil
  */
 public class MessageRoundtrip {

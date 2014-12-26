@@ -32,7 +32,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
  * Created on: 01/06/2014 10:45
  */
 public class Program {
-    
+
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger gasLogger = LoggerFactory.getLogger("gas");
 
@@ -57,10 +57,10 @@ public class Program {
     ProgramInvoke invokeData;
 
     public Program(byte[] ops, ProgramInvoke invokeData) {
-        
+
         if (ops == null) ops = EMPTY_BYTE_ARRAY;
         this.ops = ops;
-        
+
         if (invokeData != null) {
             this.invokeData = invokeData;
             this.programAddress = invokeData.getOwnerAddress();
@@ -88,7 +88,7 @@ public class Program {
     public void setLastOp(byte op) {
         this.lastOp = op;
     }
-    
+
     /**
      * Should be set only after the OP is fully executed
      * @param op
@@ -96,7 +96,7 @@ public class Program {
     public void setPreviouslyExecutedOp(byte op) {
         this.previouslyExecutedOp = op;
     }
-    
+
     /**
      * returns the last fully executed OP
      * @return
@@ -104,7 +104,7 @@ public class Program {
     public byte getPreviouslyExecutedOp() {
         return this.previouslyExecutedOp;
     }
-    
+
     public void stackPush(byte[] data) {
         DataWord stackWord = new DataWord(data);
         stack.push(stackWord);
@@ -123,7 +123,7 @@ public class Program {
     public void stackPush(DataWord stackWord) {
         stack.push(stackWord);
     }
-    
+
     public Stack<DataWord> getStack() {
         return this.stack;
     }
@@ -138,7 +138,7 @@ public class Program {
 
     public void setPC(int pc) {
         this.pc = pc;
-        
+
         if (this.pc >= ops.length)
             stop();
     }
@@ -175,11 +175,11 @@ public class Program {
     public DataWord stackPop() {
         return stack.pop();
     }
-    
+
     /**
      * Verifies that the stack is at least <code>stackSize</code>
      * @param stackSize int
-     * @throws StackTooSmallException If the stack is 
+     * @throws StackTooSmallException If the stack is
      *      smaller than <code>stackSize</code>
      */
     public void stackRequire(int stackSize) {
@@ -203,7 +203,7 @@ public class Program {
 
     /**
      * Allocates a piece of memory and stores value at given offset address
-     * 
+     *
      * @param addr is the offset address
      * @param allocSize size of memory needed to write
      * @param value the data to write to memory
@@ -213,11 +213,11 @@ public class Program {
         allocateMemory(addr, allocSize);
         System.arraycopy(value, 0, memory.array(), addr, value.length);
     }
-    
+
     public DataWord memoryLoad(DataWord addr) {
         return memoryLoad(addr.intValue());
     }
-    
+
     public DataWord memoryLoad(int address) {
 
         allocateMemory(address, DataWord.ZERO.getData().length);
@@ -255,14 +255,14 @@ public class Program {
     /**
      * Allocates extra memory in the program for
      *  a specified size, calculated from a given offset
-     * 
+     *
      * @param offset the memory address offset
      * @param size the number of bytes to allocate
      */
     public void allocateMemory(int offset, int size) {
 
         int memSize = memory != null ? memory.limit() : 0;
-        double newMemSize = Math.max(memSize, size != 0 ? 
+        double newMemSize = Math.max(memSize, size != 0 ?
                 Math.ceil((double) (offset + size) / 32) * 32 : 0);
         ByteBuffer tmpMem = ByteBuffer.allocate((int)newMemSize);
         if (memory != null)
@@ -295,7 +295,7 @@ public class Program {
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
-        
+
         //  actual gas subtract
         DataWord gasLimit = this.getGas();
         this.spendGas(gasLimit.longValue(), "internal call");
@@ -332,9 +332,9 @@ public class Program {
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
                 newBalance, null, track);
-        
+
         ProgramResult result = null;
-        
+
         if (programCode != null && programCode.length != 0) {
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke);
@@ -343,8 +343,8 @@ public class Program {
             this.result.addDeleteAccounts(result.getDeleteAccounts());
             this.result.addLogInfos(result.getLogInfoList());
         }
-        
-        if (result != null && 
+
+        if (result != null &&
                 result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
@@ -374,7 +374,7 @@ public class Program {
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));
-        
+
         // 5. REFUND THE REMAIN GAS
 
         long refundGas = gasLimit.longValue() - result.getGasUsed();
@@ -390,14 +390,14 @@ public class Program {
 
     /**
      * That method is for internal code invocations
-     * 
+     *
      * - Normal calls invoke a specified contract which updates itself
      * - Stateless calls invoke code from another contract, within the context of the caller
      *
      * @param msg is the message call object
      */
     public void callToAddress(MessageCall msg) {
-        
+
         byte[] data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
 
         // FETCH THE SAVED STORAGE
@@ -420,7 +420,7 @@ public class Program {
                     Hex.toHexString(senderAddress), Hex.toHexString(codeAddress));
             throw new OutOfGasException();
         }
-        
+
         BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
@@ -429,22 +429,22 @@ public class Program {
         }
         result.getRepository().addBalance(senderAddress, endowment.negate());
         BigInteger contextBalance = result.getRepository().addBalance(contextAddress, endowment);
-        
+
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test
             this.getResult().addCallCreate(data, contextAddress,
-                    msg.getGas().getNoLeadZeroesData(), 
+                    msg.getGas().getNoLeadZeroesData(),
                     msg.getEndowment().getNoLeadZeroesData());
         }
-        
+
         //  actual gas subtract
         this.spendGas(msg.getGas().longValue(), "internal call");
-        
+
         Repository trackRepository = result.getRepository().startTracking();
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(contextAddress), msg.getEndowment(),
                 msg.getGas(), contextBalance, data, trackRepository);
-        
+
         ProgramResult result = null;
 
         if (programCode != null && programCode.length != 0) {
@@ -456,7 +456,7 @@ public class Program {
             this.result.addDeleteAccounts(result.getDeleteAccounts());
             this.result.addLogInfos(result.getLogInfoList());
         }
-        
+
         if (result != null &&
                 result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException) {
@@ -483,11 +483,11 @@ public class Program {
                     this.memorySave(offset, allocSize, buffer.array());
             }
         }
-        
+
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
         trackRepository.commit();
         stackPushOne();
-        
+
         // 5. REFUND THE REMAIN GAS
         if (result != null) {
             BigInteger refundGas = msg.getGas().value().subtract(BigInteger.valueOf(result.getGasUsed()));
@@ -511,7 +511,7 @@ public class Program {
             throw new OutOfGasException();
         result.spendGas(gasValue);
     }
-    
+
     public void spendAllGas() {
         spendGas(invokeData.getGas().longValue() - result.getGasUsed(), "Spending all remaining");
     }
@@ -534,11 +534,11 @@ public class Program {
         DataWord valWord = new DataWord(val);
         result.getRepository().addStorageRow(this.programAddress.getLast20Bytes(), keyWord, valWord);
     }
-    
+
     public byte[] getCode() {
         return ops;
     }
-    
+
     public byte[] getCodeAt(DataWord address) {
 
         byte[] code = invokeData.getRepository().getCode(address.getLast20Bytes());
@@ -637,7 +637,7 @@ public class Program {
     public void setRuntimeFailure(RuntimeException e) {
         result.setException(e);
     }
-    
+
     public String memoryToString() {
         StringBuilder memoryData = new StringBuilder();
         StringBuilder firstLine = new StringBuilder();
@@ -645,7 +645,7 @@ public class Program {
         for (int i = 0; memory != null && i < memory.limit(); ++i) {
 
             byte value = memory.get(i);
-            // Check if value is ASCII 
+            // Check if value is ASCII
             String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[] { value }) : "?";
             firstLine.append(character).append("");
             secondLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
@@ -820,29 +820,29 @@ public class Program {
     public static String stringify(byte[] code, int index, String result) {
         if(code == null || code.length == 0)
             return result;
-        
+
         OpCode op = OpCode.code(code[index]);
         byte[] continuedCode = null;
-                
+
         switch(op) {
             case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
             case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
             case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
             case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:
                 result += ' ' + op.name() + ' ';
-                
+
                 int nPush = op.val() - OpCode.PUSH1.val() + 1;
                 byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
                 result += new BigInteger(1, data).toString() + ' ';
-                
+
                 continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
                 break;
-                
+
             default:
                 result += ' ' + op.name();
                 continuedCode = Arrays.copyOfRange(code, index + 1, code.length);
                 break;
-        }       
+        }
         return stringify(continuedCode, 0, result);
     }
 
@@ -856,13 +856,13 @@ public class Program {
 
     @SuppressWarnings("serial")
     public class OutOfGasException extends RuntimeException {}
-    
+
     @SuppressWarnings("serial")
     public class IllegalOperationException extends RuntimeException {}
-    
+
     @SuppressWarnings("serial")
     public class BadJumpDestinationException extends RuntimeException {}
-    
+
     @SuppressWarnings("serial")
     public class StackTooSmallException extends RuntimeException {
         public StackTooSmallException(String message) {

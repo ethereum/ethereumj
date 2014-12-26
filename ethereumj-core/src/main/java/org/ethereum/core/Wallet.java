@@ -40,7 +40,7 @@ public class Wallet {
     // TODO: a) the values I need to keep for address state is balance & nonce & ECKey
     // TODO: b) keep it to be easy accessed by the toAddress()
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
-    
+
     // This map of transaction designed
     // to approve the tx by external trusted peer
     private Map<String, WalletTransaction> walletTransactions = new ConcurrentHashMap<>();
@@ -141,13 +141,13 @@ public class Wallet {
 
         return walletTransaction;
     }
-    
+
     public void addTransactions(List<Transaction> transactions) {
         for (Transaction transaction : transactions) {
             this.addTransaction(transaction);
         }
     }
-    
+
     public void removeTransactions(List<Transaction> transactions) {
         for (Transaction tx : transactions) {
             if (logger.isDebugEnabled())
@@ -182,7 +182,7 @@ public class Wallet {
             Account receiver =  rows.get(Hex.toHexString(receiveAddress));
             if (receiver != null) {
                 receiver.addPendingTransaction(transaction);
-    
+
                 logger.info("Pending transaction added to " +
                                 "\n account: [{}], " +
                                 "\n tx: [{}]",
@@ -221,7 +221,7 @@ public class Wallet {
                  <value>900099909<value/>
              </row>
          </wallet>
-         
+
          */
 
         String dir = System.getProperty("user.dir");

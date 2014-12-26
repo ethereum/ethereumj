@@ -8,14 +8,14 @@ import org.junit.Test;
 public class CompactEncoderTest {
 
     private final static byte T = 16; // terminator
-    
+
     @Test
     public void testCompactEncodeOddCompact() {
         byte[] test = new byte[] { 1, 2, 3, 4, 5 };
         byte[] expectedData = new byte[] { 0x11, 0x23, 0x45 };
         assertArrayEquals("odd compact encode fail", expectedData, CompactEncoder.packNibbles(test));
     }
-    
+
     @Test
     public void testCompactEncodeEvenCompact() {
         byte[] test = new byte[] { 0, 1, 2, 3, 4, 5 };
@@ -31,7 +31,7 @@ public class CompactEncoderTest {
     }
 
     @Test
-    public void testCompactEncodeOddTerminated() {      
+    public void testCompactEncodeOddTerminated() {
         byte[] test = new byte[] { 15, 1, 12, 11, 8, T };
         byte[] expectedData = new byte[] { 0x3f, 0x1c, (byte) 0xb8 };
         assertArrayEquals("odd terminated compact encode fail", expectedData, CompactEncoder.packNibbles(test));

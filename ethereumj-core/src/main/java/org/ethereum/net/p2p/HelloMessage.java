@@ -15,7 +15,7 @@ import java.util.List;
 
 /**
  * Wrapper around an Ethereum HelloMessage on the network
- * 
+ *
  * @see org.ethereum.net.p2p.P2pMessageCodes#HELLO
  */
 public class HelloMessage extends P2pMessage {
@@ -24,7 +24,7 @@ public class HelloMessage extends P2pMessage {
     private byte p2pVersion;
     /** The underlying client. A user-readable string. */
     private String clientId;
-    /** A peer-network capability code, readable ASCII and 3 letters. 
+    /** A peer-network capability code, readable ASCII and 3 letters.
      * Currently only "eth", "shh" and "bzz" are known. */
     private List<Capability> capabilities;
     /** The port on which the peer is listening for an incoming connection */
@@ -64,10 +64,10 @@ public class HelloMessage extends P2pMessage {
 
             RLPElement capId = ((RLPList)capabilityList.get(i)).get(0);
             RLPElement capVersion = ((RLPList)capabilityList.get(i)).get(1);
-            
+
             String name = new String(capId.getRLPData());
             byte version = capVersion.getRLPData() == null ? 0 : capVersion.getRLPData()[0];
-            
+
             Capability cap = new Capability(name, version);
             this.capabilities.add(cap);
         }

@@ -77,7 +77,7 @@ public class PeersTableModel extends AbstractTableModel {
             }
             return flagIcon;
         }
-        if (column == 1) 
+        if (column == 1)
             return peerInfo.getIp().getHostAddress();
 
         if (column == 2) {

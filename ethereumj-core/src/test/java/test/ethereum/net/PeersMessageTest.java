@@ -30,7 +30,7 @@ public class PeersMessageTest {
 
         assertEquals(P2pMessageCodes.GET_PEERS, getPeersMessage.getCommand());
     }
-    
+
     /* PEERS */
 
     @Test /* PeersMessage 1 from RLP */

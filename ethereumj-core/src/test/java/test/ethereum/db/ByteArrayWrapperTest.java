@@ -19,10 +19,10 @@ public class ByteArrayWrapperTest {
     static ByteArrayWrapper wrapper2;
     static ByteArrayWrapper wrapper3;
     static ByteArrayWrapper wrapper4;
-    
+
     @BeforeClass
     public static void loadByteArrays() {
-        
+
         String block = "f9072df8d3a077ef4fdaf389dca53236bcf7f72698e154eab2828f86fbc4fc6c"
                 + "d9225d285c89a01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0"
                 + "a142fd40d493479476f5eabe4b342ee56b8ceba6ab2a770c3e2198e7a0faa0ca"
@@ -81,18 +81,18 @@ public class ByteArrayWrapperTest {
                 + "2ba37af8e83c3741225da066ae0ec1217b0ca698a5369d4881e1c4cbde56af99"
                 + "31ebf9281580a23b659c08a051f947cb2315d0259f55848c630caa10cd91d6e4"
                 + "4ff8bad7758c65b25e2191308227d2c0";
-        
+
         byte[] test1 = Hex.decode(block);
         byte[] test2 = Hex.decode(block);
         byte[] test3 = Hex.decode("4ff8bad7758c65b25e2191308227d2c0");
         byte[] test4 = Hex.decode("");
-        
+
         wrapper1 = new ByteArrayWrapper(test1);
         wrapper2 = new ByteArrayWrapper(test2);
         wrapper3 = new ByteArrayWrapper(test3);
         wrapper4 = new ByteArrayWrapper(test4);
     }
-    
+
     @Test
     public void testEqualsObject() {
         assertTrue(wrapper1.equals(wrapper2));
@@ -109,11 +109,11 @@ public class ByteArrayWrapperTest {
         assertTrue(wrapper1.compareTo(wrapper4) > 1);
         assertTrue(wrapper2.compareTo(wrapper3) > 1);
     }
-    
+
     @Test
     public void testEqualsPerformance() {
         boolean testEnabled = false;
-        
+
         if(testEnabled) {
             final int ITERATIONS = 10000000;
             long start1 = System.currentTimeMillis();
@@ -125,18 +125,18 @@ public class ByteArrayWrapperTest {
                         wrapper2.getData());
             }
             System.out.println(System.currentTimeMillis() - start1 + "ms");
-            
+
             long start2 = System.currentTimeMillis();
             for (int i = 0; i < ITERATIONS; i++) {
                 Arrays.equals(wrapper1.getData(), wrapper2.getData());
             }
             System.out.println(System.currentTimeMillis() - start2 + "ms");
-            
+
             long start3 = System.currentTimeMillis();
             for (int i = 0; i < ITERATIONS; i++) {
                 FastByteComparisons.compareTo(wrapper1.getData(), 0, wrapper1.getData().length, wrapper2.getData(), 0, wrapper1.getData().length);
             }
             System.out.println(System.currentTimeMillis() - start3 + "ms");
         }
-    }   
+    }
 }

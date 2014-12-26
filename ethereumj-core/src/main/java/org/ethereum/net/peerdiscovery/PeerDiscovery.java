@@ -25,7 +25,7 @@ public class PeerDiscovery {
     private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
     private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<PeerInfo>());
-    
+
     private PeerMonitorThread monitor;
     private ThreadFactory threadFactory;
     private ThreadPoolExecutor executorPool;
@@ -77,11 +77,11 @@ public class PeerDiscovery {
     public boolean isStarted() {
         return started.get();
     }
-    
+
     public Set<PeerInfo> getPeers() {
         return peers;
     }
-        
+
     /**
      * Update list of known peers with new peers
      * This method checks for duplicate peer id's and addresses

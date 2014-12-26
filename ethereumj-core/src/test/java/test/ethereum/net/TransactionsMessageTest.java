@@ -23,7 +23,7 @@ import java.util.Arrays;
 public class TransactionsMessageTest {
 
     /* GET_TRANSACTIONS */
-    
+
     @Test  /* GetTransactions message 1 */
     public void testGetTransactions() {
 
@@ -33,9 +33,9 @@ public class TransactionsMessageTest {
         assertEquals(EthMessageCodes.GET_TRANSACTIONS, getTransactionsMessage.getCommand());
         assertEquals(TransactionsMessage.class, getTransactionsMessage.getAnswerMessage());
     }
-    
+
     /* TRANSACTIONS */
-    
+
     @Test  /* Transactions message 1 */
     public void test_1() {
 
@@ -43,7 +43,7 @@ public class TransactionsMessageTest {
                 + "881bc16d674ec80000801ba05c89ebf2b77eeab88251e553f6f9d53badc1d800"
                 + "bbac02d830801c2aa94a4c9fa00b7907532b1f29c79942b75fff98822293bf5f"
                 + "daa3653a8d9f424c6a3265f06c";
-        
+
         byte[] payload = Hex.decode(txsPacketRaw);
 
         TransactionsMessage transactionsMessage = new TransactionsMessage(payload);
@@ -66,7 +66,7 @@ public class TransactionsMessageTest {
         assertEquals("5c89ebf2b77eeab88251e553f6f9d53badc1d800bbac02d830801c2aa94a4c9f", Hex.toHexString(tx.getSignature().r.toByteArray()));
         assertEquals("0b7907532b1f29c79942b75fff98822293bf5fdaa3653a8d9f424c6a3265f06c", Hex.toHexString(tx.getSignature().s.toByteArray()));
     }
-    
+
     @Test  /* Transactions message 2 */
     public void test_2() {
 
@@ -96,13 +96,13 @@ public class TransactionsMessageTest {
         System.out.println(transactionsMessage);
 
         assertEquals(EthMessageCodes.TRANSACTIONS, transactionsMessage.getCommand());
-        
+
         assertEquals(3, transactionsMessage.getTransactions().size());
 
         Iterator<Transaction> txIter = transactionsMessage.getTransactions().iterator();
         Transaction tx1 = txIter.next(); txIter.next(); // skip one
         Transaction tx3 = txIter.next();
-        
+
         assertEquals("1b9d9456293cbcbc2f28a0fdc67028128ea571b033fb0e21d0ee00bcd6167e5d",
                 Hex.toHexString(tx3.getHash()));
 
@@ -133,7 +133,7 @@ public class TransactionsMessageTest {
                 Hex.toHexString(tx3.getSignature().s.toByteArray()));
 
         // Transaction #2
-        
+
         assertEquals("dde9543921850f41ca88e5401322cd7651c78a1e4deebd5ee385af8ac343f0ad",
                 Hex.toHexString(tx1.getHash()));
 
@@ -163,7 +163,7 @@ public class TransactionsMessageTest {
         assertEquals("1e87172a861f6c37b5a9e3a5d0d7393152a7fbe41530e5bb8ac8f35433e5931b",
                 Hex.toHexString(tx1.getSignature().s.toByteArray()));
     }
-    
+
     @Test /* Transactions msg encode */
     public void test_3() throws Exception {
 

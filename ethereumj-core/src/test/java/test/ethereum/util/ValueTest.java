@@ -15,12 +15,12 @@ public class ValueTest {
     public void testCmp() {
         Value val1 = new Value("hello");
         Value val2 = new Value("world");
-        
+
         assertFalse("Expected values not to be equal", val1.cmp(val2));
 
         Value val3 = new Value("hello");
         Value val4 = new Value("hello");
-        
+
         assertTrue("Expected values to be equal", val3.cmp(val4));
     }
 

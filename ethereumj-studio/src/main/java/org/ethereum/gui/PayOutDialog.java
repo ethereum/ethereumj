@@ -241,7 +241,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
                   setVisible(true);
               }
         });
-       
+
 
         return rootPane;
     }

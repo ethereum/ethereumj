@@ -37,13 +37,13 @@ public class DisconnectMessageTest {
 
     @Test /* DisconnectMessage 2 - from constructor */
     public void test_3() {
-        
+
         DisconnectMessage disconnectMessage = new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK);
         System.out.println(disconnectMessage);
 
         String expected = "c20107";
         assertEquals(expected, Hex.toHexString(disconnectMessage.getEncoded()));
-        
+
         assertEquals(ReasonCode.INCOMPATIBLE_NETWORK, disconnectMessage.getReason());
     }
 }

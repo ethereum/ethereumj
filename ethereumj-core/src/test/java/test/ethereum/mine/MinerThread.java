@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author Roman Mandeleil 
+ * @author Roman Mandeleil
  * Created on: 22/05/2014 09:26
  */
 public class MinerThread implements Runnable {

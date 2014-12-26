@@ -33,7 +33,7 @@ public class TestRunner {
     private ProgramTrace trace = null;
 
     public List<String> runTestSuite(TestSuite testSuite) {
-        
+
         Iterator<TestCase> testIterator = testSuite.iterator();
         List<String> resultCollector = new ArrayList<>();
 

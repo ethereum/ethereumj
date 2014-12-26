@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Process the basic protocol messages between every peer on the network.
- * 
+ *
  * Peers can send/receive
  * <ul>
  *  <li>HELLO       :   Announce themselves to the network</li>
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Component;
 public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public final static byte VERSION = 2;
-    
+
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private final Timer timer = new Timer("MessageTimer");
@@ -69,7 +69,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
         this.peerDiscoveryMode = false;
     }
-    
+
     public P2pHandler(MessageQueue msgQueue, boolean peerDiscoveryMode) {
         this.msgQueue = msgQueue;
         this.peerDiscoveryMode = peerDiscoveryMode;
@@ -167,7 +167,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         ctx.close();
         killTimers();
     }
-        
+
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
         worldManager.getPeerDiscovery().addPeers(peersMessage.getPeers());
     }
@@ -264,7 +264,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             if (capability.getName().equals(Capability.ETH)) {
                 EthMessageCodes.setOffset(offset);
                 offset += EthMessageCodes.values().length;
-            } 
+            }
 
             if (capability.getName().equals(Capability.SHH)) {
                 ShhMessageCodes.setOffset(offset);
@@ -295,7 +295,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }, 500, 25000);
 */
     }
-    
+
     public void killTimers(){
         timer.cancel();
         timer.purge();

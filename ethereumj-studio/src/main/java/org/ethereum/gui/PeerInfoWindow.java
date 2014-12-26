@@ -66,10 +66,10 @@ public class PeerInfoWindow extends JFrame {
 //        setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setLocation(802, 460);
-        
+
         if (CONFIG.peerDiscovery())
             UIEthereumManager.ethereum.startPeerDiscovery();
-        
+
     }
 
 
