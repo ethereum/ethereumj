@@ -65,7 +65,7 @@ public class DiscoveryChannel {
 
     public void connect(String host, int port) {
 
-    	EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
         worldManager.getListener().trace("Connecting to: " + host + ":" + port);
 
         try {
@@ -123,10 +123,10 @@ public class DiscoveryChannel {
             logger.debug("Connection is closed");
 
         } catch (Exception e) {
-        	logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
             throw new Error("Disconnnected");
         } finally {
-        	workerGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
 
             if (!peerDiscoveryMode){
 //                EthereumListener listener =  WorldManager.getInstance().getListener();

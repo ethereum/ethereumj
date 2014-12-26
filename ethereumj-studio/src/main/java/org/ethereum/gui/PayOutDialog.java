@@ -25,9 +25,9 @@ import javax.swing.*;
  */
 class PayOutDialog extends JDialog implements MessageAwareDialog {
 
-	private static final long serialVersionUID = -2838121935782110981L;
+    private static final long serialVersionUID = -2838121935782110981L;
 
-	private PayOutDialog dialog;
+    private PayOutDialog dialog;
 
     private Account account = null;
     private JLabel statusMsg = null;
@@ -36,11 +36,11 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
     private final JTextField amountInput;
     private final JTextField feeInput;
 
-	public PayOutDialog(Frame parent, final Account account) {
-		super(parent, "Payout details: ", false);
-		dialog = this;
+    public PayOutDialog(Frame parent, final Account account) {
+        super(parent, "Payout details: ", false);
+        dialog = this;
 
-		this.account = account;
+        this.account = account;
 
         receiverInput = new JTextField(18);
         GUIUtils.addStyle(receiverInput, "Pay to:");
@@ -78,12 +78,12 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         rejectLabel.setBounds(260, 145, 45, 45);
         this.getContentPane().add(rejectLabel);
         rejectLabel.setVisible(true);
-		rejectLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				dialog.dispose();
-			}
-		});
+        rejectLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dialog.dispose();
+            }
+        });
 
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
         ImageIcon approveIcon = new ImageIcon(approveIconURL);
@@ -95,9 +95,9 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         this.getContentPane().add(approveLabel);
         approveLabel.setVisible(true);
 
-		approveLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
+        approveLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
 
                 if (!validInput()) {
                     return;
@@ -108,36 +108,36 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
                 byte[] address = Hex.decode(receiverInput.getText());
 
 
-				if (!UIEthereumManager.ethereum.isConnected()) {
-					dialog.alertStatusMsg("Not connected to any peer");
-					return;
-				}
+                if (!UIEthereumManager.ethereum.isConnected()) {
+                    dialog.alertStatusMsg("Not connected to any peer");
+                    return;
+                }
 
 
-				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
+                byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
 
                 BigInteger nonce = account.getNonce();
 
                 byte[] gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockchain().getGasPrice()).toByteArray();
 
-				Transaction tx = new Transaction(
+                Transaction tx = new Transaction(
                         BigIntegers.asUnsignedByteArray(nonce),
                          gasPrice,
                         BigIntegers.asUnsignedByteArray(fee), address,
                         BigIntegers.asUnsignedByteArray(value), null);
 
-				try {
-					tx.sign(senderPrivKey);
-				} catch (Exception e1) {
-					dialog.alertStatusMsg("Failed to sign the transaction");
-					return;
-				}
+                try {
+                    tx.sign(senderPrivKey);
+                } catch (Exception e1) {
+                    dialog.alertStatusMsg("Failed to sign the transaction");
+                    return;
+                }
 
-				// SwingWorker
-				DialogWorker worker = new DialogWorker(tx, dialog);
-				worker.execute();
-			}
-		});
+                // SwingWorker
+                DialogWorker worker = new DialogWorker(tx, dialog);
+                worker.execute();
+            }
+        });
 
         feeInput.setText("1000");
         amountInput.setText("0");
@@ -236,10 +236,10 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
         SwingUtilities.invokeLater(new Runnable() {
-        	  public void run() {
-        		  setSize(500, 255);
-        	      setVisible(true);
-        	  }
+              public void run() {
+                  setSize(500, 255);
+                  setVisible(true);
+              }
         });
        
 

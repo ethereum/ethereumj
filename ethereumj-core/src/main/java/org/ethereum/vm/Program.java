@@ -32,7 +32,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
  * Created on: 01/06/2014 10:45
  */
 public class Program {
-	
+    
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger gasLogger = LoggerFactory.getLogger("gas");
 
@@ -51,33 +51,33 @@ public class Program {
     byte[]   ops;
     int      pc = 0;
     byte     lastOp = 0;
-    byte 	 previouslyExecutedOp = 0;
+    byte     previouslyExecutedOp = 0;
     boolean  stopped = false;
 
     ProgramInvoke invokeData;
 
-	public Program(byte[] ops, ProgramInvoke invokeData) {
-		
-	    if (ops == null) ops = EMPTY_BYTE_ARRAY;
-	    this.ops = ops;
-	    
-	    if (invokeData != null) {
-	        this.invokeData = invokeData;
-	        this.programAddress = invokeData.getOwnerAddress();
-	    	this.invokeHash = invokeData.hashCode();
-	        this.result.setRepository(invokeData.getRepository());
-	    }
-	}
+    public Program(byte[] ops, ProgramInvoke invokeData) {
+        
+        if (ops == null) ops = EMPTY_BYTE_ARRAY;
+        this.ops = ops;
+        
+        if (invokeData != null) {
+            this.invokeData = invokeData;
+            this.programAddress = invokeData.getOwnerAddress();
+            this.invokeHash = invokeData.hashCode();
+            this.result.setRepository(invokeData.getRepository());
+        }
+    }
 
-	public byte getOp(int pc) {
-		if (ops.length <= pc)
-			return 0;
-		return ops[pc];
-	}
+    public byte getOp(int pc) {
+        if (ops.length <= pc)
+            return 0;
+        return ops[pc];
+    }
 
     public byte getCurrentOp() {
-    	if(ops.length == 0)
-    		return 0;
+        if(ops.length == 0)
+            return 0;
         return ops[pc];
     }
 
@@ -94,7 +94,7 @@ public class Program {
      * @param op
      */
     public void setPreviouslyExecutedOp(byte op) {
-    	this.previouslyExecutedOp = op;
+        this.previouslyExecutedOp = op;
     }
     
     /**
@@ -102,7 +102,7 @@ public class Program {
      * @return
      */
     public byte getPreviouslyExecutedOp() {
-    	return this.previouslyExecutedOp;
+        return this.previouslyExecutedOp;
     }
     
     public void stackPush(byte[] data) {
@@ -125,7 +125,7 @@ public class Program {
     }
     
     public Stack<DataWord> getStack() {
-    	return this.stack;
+        return this.stack;
     }
 
     public int getPC() {
@@ -180,13 +180,13 @@ public class Program {
      * Verifies that the stack is at least <code>stackSize</code>
      * @param stackSize int
      * @throws StackTooSmallException If the stack is 
-     * 		smaller than <code>stackSize</code>
+     *      smaller than <code>stackSize</code>
      */
     public void stackRequire(int stackSize) {
-		if (stack.size() < stackSize) {
-			throw new StackTooSmallException("Expected: " + stackSize
-					+ ", found: " + stack.size());
-		}
+        if (stack.size() < stackSize) {
+            throw new StackTooSmallException("Expected: " + stackSize
+                    + ", found: " + stack.size());
+        }
     }
 
     public int getMemSize() {
@@ -198,7 +198,7 @@ public class Program {
     }
 
     public void memorySave(int addr, byte[] value) {
-    	memorySave(addr, value.length, value);
+        memorySave(addr, value.length, value);
     }
 
     /**
@@ -215,7 +215,7 @@ public class Program {
     }
     
     public DataWord memoryLoad(DataWord addr) {
-    	return memoryLoad(addr.intValue());
+        return memoryLoad(addr.intValue());
     }
     
     public DataWord memoryLoad(int address) {
@@ -229,7 +229,7 @@ public class Program {
     }
 
     public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData) {
-    	return memoryChunk(offsetData.intValue(), sizeData.intValue());
+        return memoryChunk(offsetData.intValue(), sizeData.intValue());
     }
 
     /**
@@ -246,9 +246,9 @@ public class Program {
         allocateMemory(offset, size);
         byte[] chunk;
         if (memory != null && size != 0)
-        	chunk = Arrays.copyOfRange(memory.array(), offset, offset+size);
+            chunk = Arrays.copyOfRange(memory.array(), offset, offset+size);
         else
-        	chunk = new byte[size];
+            chunk = new byte[size];
         return ByteBuffer.wrap(chunk);
     }
 
@@ -262,11 +262,11 @@ public class Program {
     public void allocateMemory(int offset, int size) {
 
         int memSize = memory != null ? memory.limit() : 0;
-		double newMemSize = Math.max(memSize, size != 0 ? 
-				Math.ceil((double) (offset + size) / 32) * 32 : 0);
+        double newMemSize = Math.max(memSize, size != 0 ? 
+                Math.ceil((double) (offset + size) / 32) * 32 : 0);
         ByteBuffer tmpMem = ByteBuffer.allocate((int)newMemSize);
         if (memory != null)
-        	tmpMem.put(memory.array(), 0, memory.limit());
+            tmpMem.put(memory.array(), 0, memory.limit());
         memory = tmpMem;
     }
 
@@ -276,9 +276,9 @@ public class Program {
         DataWord balance = getBalance(this.getOwnerAddress());
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
-			logger.info("Transfer to: [{}] heritage: [{}]",
-					Hex.toHexString(obtainer.getLast20Bytes()),
-					balance.longValue());
+            logger.info("Transfer to: [{}] heritage: [{}]",
+                    Hex.toHexString(obtainer.getLast20Bytes()),
+                    balance.longValue());
 
         this.result.getRepository().addBalance(obtainer.getLast20Bytes(), balance.value());
         this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), balance.value().negate());
@@ -305,12 +305,12 @@ public class Program {
         byte[] newAddress  = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
         result.getRepository().createAccount(newAddress);
 
-		if (invokeData.byTestingSuite()) {
-			// This keeps track of the contracts created for a test
-			this.getResult().addCallCreate(programCode, newAddress,
-					gasLimit.getNoLeadZeroesData(),
-					value.getNoLeadZeroesData());
-		}
+        if (invokeData.byTestingSuite()) {
+            // This keeps track of the contracts created for a test
+            this.getResult().addCallCreate(programCode, newAddress,
+                    gasLimit.getNoLeadZeroesData(),
+                    value.getNoLeadZeroesData());
+        }
 
         // [4] TRANSFER THE BALANCE
         BigInteger endowment = value.value();
@@ -329,10 +329,10 @@ public class Program {
         Repository track = result.getRepository().startTracking();
 
         // [5] COOK THE INVOKE AND EXECUTE
-		ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-				this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
-				newBalance, null, track);
-		
+        ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
+                this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
+                newBalance, null, track);
+        
         ProgramResult result = null;
         
         if (programCode != null && programCode.length != 0) {
@@ -345,7 +345,7 @@ public class Program {
         }
         
         if (result != null && 
-        		result.getException() != null &&
+                result.getException() != null &&
                 result.getException() instanceof Program.OutOfGasException) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
@@ -397,7 +397,7 @@ public class Program {
      * @param msg is the message call object
      */
     public void callToAddress(MessageCall msg) {
-    	
+        
         byte[] data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
 
         // FETCH THE SAVED STORAGE
@@ -432,7 +432,7 @@ public class Program {
         
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test
-			this.getResult().addCallCreate(data, contextAddress,
+            this.getResult().addCallCreate(data, contextAddress,
                     msg.getGas().getNoLeadZeroesData(), 
                     msg.getEndowment().getNoLeadZeroesData());
         }
@@ -441,10 +441,10 @@ public class Program {
         this.spendGas(msg.getGas().longValue(), "internal call");
         
         Repository trackRepository = result.getRepository().startTracking();
-		ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
-				this, new DataWord(contextAddress), msg.getEndowment(),
-				msg.getGas(), contextBalance, data, trackRepository);
-		
+        ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
+                this, new DataWord(contextAddress), msg.getEndowment(),
+                msg.getGas(), contextBalance, data, trackRepository);
+        
         ProgramResult result = null;
 
         if (programCode != null && programCode.length != 0) {
@@ -458,8 +458,8 @@ public class Program {
         }
         
         if (result != null &&
-	            result.getException() != null &&
-	            result.getException() instanceof Program.OutOfGasException) {
+                result.getException() != null &&
+                result.getException() instanceof Program.OutOfGasException) {
             gasLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(contextAddress),
                     result.getException());
@@ -494,9 +494,9 @@ public class Program {
             if (refundGas.signum() == 1) {
                 this.refundGas(refundGas.longValue(), "remaining gas from the internal call");
                 if(gasLogger.isInfoEnabled())
-					gasLogger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
-							Hex.toHexString(senderAddress),
-							refundGas.toString());
+                    gasLogger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
+                            Hex.toHexString(senderAddress),
+                            refundGas.toString());
             }
         } else {
             this.refundGas(msg.getGas().longValue(), "remaining gas from the internal call");
@@ -513,7 +513,7 @@ public class Program {
     }
     
     public void spendAllGas() {
-    	spendGas(invokeData.getGas().longValue() - result.getGasUsed(), "Spending all remaining");
+        spendGas(invokeData.getGas().longValue() - result.getGasUsed(), "Spending all remaining");
     }
 
     public void refundGas(long gasValue, String cause) {
@@ -536,7 +536,7 @@ public class Program {
     }
     
     public byte[] getCode() {
-    	return ops;
+        return ops;
     }
     
     public byte[] getCodeAt(DataWord address) {
@@ -544,7 +544,7 @@ public class Program {
         byte[] code = invokeData.getRepository().getCode(address.getLast20Bytes());
         if (code == null) code = ByteUtil.EMPTY_BYTE_ARRAY;
 
-    	return code;
+        return code;
     }
 
     public DataWord getOwnerAddress() {
@@ -646,7 +646,7 @@ public class Program {
 
             byte value = memory.get(i);
             // Check if value is ASCII 
-			String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[] { value }) : "?";
+            String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[] { value }) : "?";
             firstLine.append(character).append("");
             secondLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
@@ -679,7 +679,7 @@ public class Program {
             StringBuilder storageData = new StringBuilder();
             if(contractDetails != null) {
                 List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
-        		Collections.sort((List<DataWord>) storageKeys);
+                Collections.sort((List<DataWord>) storageKeys);
                 for (DataWord key : storageKeys) {
                     storageData.append(" ").append(key).append(" -> ").
                             append(contractDetails.getStorage().get(key)).append("\n");
@@ -741,18 +741,18 @@ public class Program {
             globalOutput.append(" -- STORAGE -- ").append(storageData).append("\n");
 
             if (result.getHReturn() != null)
-				globalOutput.append("\n  HReturn: ").append(
-						Hex.toHexString(result.getHReturn().array()));
+                globalOutput.append("\n  HReturn: ").append(
+                        Hex.toHexString(result.getHReturn().array()));
 
             // sophisticated assumption that msg.data != codedata
             // means we are calling the contract not creating it
             byte[] txData = invokeData.getDataCopy(DataWord.ZERO, getDataSize());
             if (!Arrays.equals(txData, ops))
-				globalOutput.append("\n  msg.data: ").append(Hex.toHexString(txData));
+                globalOutput.append("\n  msg.data: ").append(Hex.toHexString(txData));
             globalOutput.append("\n\n  Spent Gas: ").append(result.getGasUsed());
 
-			if (listener != null)
-				listener.output(globalOutput.toString());
+            if (listener != null)
+                listener.output(globalOutput.toString());
         }
     }
 
@@ -818,57 +818,57 @@ public class Program {
     }
 
     public static String stringify(byte[] code, int index, String result) {
-    	if(code == null || code.length == 0)
-    		return result;
-    	
-    	OpCode op = OpCode.code(code[index]);
-    	byte[] continuedCode = null;
-    			
-    	switch(op) {
-	    	case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
-	        case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
-	        case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
-	        case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:
-	        	result += ' ' + op.name() + ' ';
-	        	
-	        	int nPush = op.val() - OpCode.PUSH1.val() + 1;
-	        	byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
-	        	result += new BigInteger(1, data).toString() + ' ';
-	        	
-	    		continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
-	        	break;
-	    		
-	    	default:
-	    		result += ' ' + op.name();
-	    		continuedCode = Arrays.copyOfRange(code, index + 1, code.length);
-	    		break;
-    	}    	
-    	return stringify(continuedCode, 0, result);
+        if(code == null || code.length == 0)
+            return result;
+        
+        OpCode op = OpCode.code(code[index]);
+        byte[] continuedCode = null;
+                
+        switch(op) {
+            case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
+            case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
+            case PUSH17: case PUSH18: case PUSH19: case PUSH20: case PUSH21: case PUSH22: case PUSH23: case PUSH24:
+            case PUSH25: case PUSH26: case PUSH27: case PUSH28: case PUSH29: case PUSH30: case PUSH31: case PUSH32:
+                result += ' ' + op.name() + ' ';
+                
+                int nPush = op.val() - OpCode.PUSH1.val() + 1;
+                byte[] data = Arrays.copyOfRange(code, index+1, index + nPush + 1);
+                result += new BigInteger(1, data).toString() + ' ';
+                
+                continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
+                break;
+                
+            default:
+                result += ' ' + op.name();
+                continuedCode = Arrays.copyOfRange(code, index + 1, code.length);
+                break;
+        }       
+        return stringify(continuedCode, 0, result);
     }
 
-	public void addListener(ProgramListener listener) {
-		this.listener = listener;
-	}
+    public void addListener(ProgramListener listener) {
+        this.listener = listener;
+    }
 
-	public interface ProgramListener {
-		public void output(String out);
-	}
+    public interface ProgramListener {
+        public void output(String out);
+    }
 
-	@SuppressWarnings("serial")
-	public class OutOfGasException extends RuntimeException {}
-	
+    @SuppressWarnings("serial")
+    public class OutOfGasException extends RuntimeException {}
+    
     @SuppressWarnings("serial")
     public class IllegalOperationException extends RuntimeException {}
     
     @SuppressWarnings("serial")
     public class BadJumpDestinationException extends RuntimeException {}
-	
-	@SuppressWarnings("serial")
-	public class StackTooSmallException extends RuntimeException {
-		public StackTooSmallException(String message) {
-			super(message);
-		}
-	}
+    
+    @SuppressWarnings("serial")
+    public class StackTooSmallException extends RuntimeException {
+        public StackTooSmallException(String message) {
+            super(message);
+        }
+    }
 
     /**
      * used mostly for testing reasons

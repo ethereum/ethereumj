@@ -57,13 +57,13 @@ public class AccountState {
     public AccountState(byte[] rlpData) {
         this.rlpEncoded = rlpData;
 
-		RLPList items 	= (RLPList) RLP.decode2(rlpEncoded).get(0);
-		this.nonce = items.get(0).getRLPData() == null ? BigInteger.ZERO
-				: new BigInteger(1, items.get(0).getRLPData());
-		this.balance = items.get(1).getRLPData() == null ? BigInteger.ZERO
-				: new BigInteger(1, items.get(1).getRLPData());
-		this.stateRoot 	= items.get(2).getRLPData();
-		this.codeHash 	= items.get(3).getRLPData();
+        RLPList items   = (RLPList) RLP.decode2(rlpEncoded).get(0);
+        this.nonce = items.get(0).getRLPData() == null ? BigInteger.ZERO
+                : new BigInteger(1, items.get(0).getRLPData());
+        this.balance = items.get(1).getRLPData() == null ? BigInteger.ZERO
+                : new BigInteger(1, items.get(1).getRLPData());
+        this.stateRoot  = items.get(2).getRLPData();
+        this.codeHash   = items.get(3).getRLPData();
     }
 
     public BigInteger getNonce() {
@@ -110,21 +110,21 @@ public class AccountState {
         return this.balance;
     }
 
-	public void subFromBalance(BigInteger value) {
+    public void subFromBalance(BigInteger value) {
         if (value.signum() != 0) rlpEncoded = null;
         this.balance = balance.subtract(value);
         setDirty(true);
-	}
+    }
     
     public byte[] getEncoded() {
-		if(rlpEncoded == null) {
-	        byte[] nonce		= RLP.encodeBigInteger(this.nonce);
-	        byte[] balance		= RLP.encodeBigInteger(this.balance);
-	        byte[] stateRoot	= RLP.encodeElement(this.stateRoot);
-	        byte[] codeHash		= RLP.encodeElement(this.codeHash);
-	        this.rlpEncoded = RLP.encodeList(nonce, balance, stateRoot, codeHash);
-		}
-		return rlpEncoded;
+        if(rlpEncoded == null) {
+            byte[] nonce        = RLP.encodeBigInteger(this.nonce);
+            byte[] balance      = RLP.encodeBigInteger(this.balance);
+            byte[] stateRoot    = RLP.encodeElement(this.stateRoot);
+            byte[] codeHash     = RLP.encodeElement(this.codeHash);
+            this.rlpEncoded = RLP.encodeList(nonce, balance, stateRoot, codeHash);
+        }
+        return rlpEncoded;
     }
 
     public void setDirty(boolean dirty) {
@@ -156,10 +156,10 @@ public class AccountState {
     }
 
     public String toString() {
-    	String ret =  "  Nonce: " 		+ this.getNonce().toString() 							+ "\n" +
-    				  "  Balance: " 		+ getBalance() 			+ "\n" +
-    				  "  State Root: " 	+ Hex.toHexString(this.getStateRoot()) 	+ "\n" +
-    				  "  Code Hash: " 	+ Hex.toHexString(this.getCodeHash());
-    	return ret;
+        String ret =  "  Nonce: "       + this.getNonce().toString()                            + "\n" +
+                      "  Balance: "         + getBalance()          + "\n" +
+                      "  State Root: "  + Hex.toHexString(this.getStateRoot())  + "\n" +
+                      "  Code Hash: "   + Hex.toHexString(this.getCodeHash());
+        return ret;
     }
 }

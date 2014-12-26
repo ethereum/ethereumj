@@ -16,17 +16,17 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- *	This class contains the logic for sending messages in a queue
+ *  This class contains the logic for sending messages in a queue
  *
- *	Messages open by send and answered by receive of appropriate message
- *		PING by PONG
- *		GET_PEERS by PEERS
- *		GET_TRANSACTIONS by TRANSACTIONS
- *		GET_BLOCK_HASHES by BLOCK_HASHES
- *		GET_BLOCKS by BLOCKS
+ *  Messages open by send and answered by receive of appropriate message
+ *      PING by PONG
+ *      GET_PEERS by PEERS
+ *      GET_TRANSACTIONS by TRANSACTIONS
+ *      GET_BLOCK_HASHES by BLOCK_HASHES
+ *      GET_BLOCKS by BLOCKS
  *
- *	The following messages will not be answered:
- *		PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
+ *  The following messages will not be answered:
+ *      PONG, PEERS, HELLO, STATUS, TRANSACTIONS, BLOCKS
  *
  * @author Roman Mandeleil
  */
@@ -34,11 +34,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 @Scope("prototype")
 public class MessageQueue {
 
-	private static final Logger logger = LoggerFactory.getLogger("net");
+    private static final Logger logger = LoggerFactory.getLogger("net");
 
-	private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
-	private ChannelHandlerContext ctx = null;
-	private final Timer timer = new Timer("MessageQueue");
+    private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
+    private ChannelHandlerContext ctx = null;
+    private final Timer timer = new Timer("MessageQueue");
 
     @Autowired
     WorldManager worldManager;
@@ -55,67 +55,67 @@ public class MessageQueue {
         }, 10, 10);
     }
 
-	public void sendMessage(Message msg) {
+    public void sendMessage(Message msg) {
 
         if (msg instanceof PingMessage && hasPing)
             return;
         if (msg instanceof PingMessage && !hasPing)
             hasPing = true;
 
-		messageQueue.add(new MessageRoundtrip(msg));
-	}
+        messageQueue.add(new MessageRoundtrip(msg));
+    }
 
-	public void receivedMessage(Message msg) throws InterruptedException {
+    public void receivedMessage(Message msg) throws InterruptedException {
 
         worldManager.getListener().trace("[Recv: " + msg + "]");
 
-		if (messageQueue.peek() != null) {
-			MessageRoundtrip messageRoundtrip = messageQueue.peek();
-			Message waitingMessage = messageRoundtrip.getMsg();
+        if (messageQueue.peek() != null) {
+            MessageRoundtrip messageRoundtrip = messageQueue.peek();
+            Message waitingMessage = messageRoundtrip.getMsg();
 
             if (waitingMessage instanceof PingMessage) hasPing = false;
 
-			if (waitingMessage.getAnswerMessage() != null
-					&& msg.getClass() == waitingMessage.getAnswerMessage()) {
-				messageRoundtrip.answer();
-				logger.debug("Message round trip covered: [{}] ",
-						messageRoundtrip.getMsg().getClass());
-			}
-		}
-	}
+            if (waitingMessage.getAnswerMessage() != null
+                    && msg.getClass() == waitingMessage.getAnswerMessage()) {
+                messageRoundtrip.answer();
+                logger.debug("Message round trip covered: [{}] ",
+                        messageRoundtrip.getMsg().getClass());
+            }
+        }
+    }
 
-	private void removeAnsweredMessage(MessageRoundtrip messageRoundtrip) {
-		if (messageRoundtrip != null && messageRoundtrip.isAnswered())
-			messageQueue.remove();
-	}
+    private void removeAnsweredMessage(MessageRoundtrip messageRoundtrip) {
+        if (messageRoundtrip != null && messageRoundtrip.isAnswered())
+            messageQueue.remove();
+    }
 
-	private void nudgeQueue() {
-		// remove last answered message on the queue
-		removeAnsweredMessage(messageQueue.peek());
-		// Now send the next message
-		sendToWire(messageQueue.peek());
-	}
+    private void nudgeQueue() {
+        // remove last answered message on the queue
+        removeAnsweredMessage(messageQueue.peek());
+        // Now send the next message
+        sendToWire(messageQueue.peek());
+    }
 
-	private void sendToWire(MessageRoundtrip messageRoundtrip) {
+    private void sendToWire(MessageRoundtrip messageRoundtrip) {
 
-		if (messageRoundtrip != null && messageRoundtrip.getRetryTimes() == 0) {
-			// TODO: retry logic || messageRoundtrip.hasToRetry()){
+        if (messageRoundtrip != null && messageRoundtrip.getRetryTimes() == 0) {
+            // TODO: retry logic || messageRoundtrip.hasToRetry()){
 
-			Message msg = messageRoundtrip.getMsg();
+            Message msg = messageRoundtrip.getMsg();
 
             EthereumListener listener = worldManager.getListener();
             listener.onSendMessage(msg);
 
-			ctx.writeAndFlush(msg);
+            ctx.writeAndFlush(msg);
 
-			if (msg.getAnswerMessage() == null)
-				messageQueue.remove();
-			else {
-				messageRoundtrip.incRetryTimes();
-				messageRoundtrip.saveTime();
-			}
-		}
-	}
+            if (msg.getAnswerMessage() == null)
+                messageQueue.remove();
+            else {
+                messageRoundtrip.incRetryTimes();
+                messageRoundtrip.saveTime();
+            }
+        }
+    }
 
     public void close(){
         timer.cancel();

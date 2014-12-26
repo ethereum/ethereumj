@@ -23,27 +23,27 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class MessageEncoder extends MessageToByteEncoder<Message> {
 
-	private static final Logger loggerWire = LoggerFactory.getLogger("wire");
-	private static final Logger loggerNet  = LoggerFactory.getLogger("net");
+    private static final Logger loggerWire = LoggerFactory.getLogger("wire");
+    private static final Logger loggerNet  = LoggerFactory.getLogger("net");
 
     @Autowired
     WorldManager worldManager;
 
-	@Override
-	protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
+    @Override
+    protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
 
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
         worldManager.getListener().trace(output);
 
-		if (loggerNet.isInfoEnabled())
+        if (loggerNet.isInfoEnabled())
             loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
 
-		byte[] encoded = msg.getEncoded();
-		
-		if (loggerWire.isDebugEnabled())
-			loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
-		
-		out.capacity(encoded.length + 8);
+        byte[] encoded = msg.getEncoded();
+        
+        if (loggerWire.isDebugEnabled())
+            loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
+        
+        out.capacity(encoded.length + 8);
         out.writeBytes(StaticMessages.SYNC_TOKEN);
         out.writeBytes(ByteUtil.calcPacketLength(encoded));
         out.writeBytes(encoded);

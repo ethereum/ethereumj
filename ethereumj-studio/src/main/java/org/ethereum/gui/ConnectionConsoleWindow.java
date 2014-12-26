@@ -75,12 +75,12 @@ public class ConnectionConsoleWindow extends JFrame {
             UIEthereumManager.ethereum.startPeerDiscovery();
 
         Thread t = new Thread() {
-			public void run() {
+            public void run() {
 
                 UIEthereumManager.ethereum.connect(SystemProperties.CONFIG.activePeerIP(),
                         SystemProperties.CONFIG.activePeerPort());
-			}
-		};
+            }
+        };
 
         UIEthereumManager.ethereum.addListener(new EthereumListenerAdapter(){
             @Override
@@ -135,22 +135,22 @@ public class ConnectionConsoleWindow extends JFrame {
         }
     }
 
-	public void addCloseAction() {
-		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				toolBar.logToggle.setSelected(false);
-			}
-		});
-	}
+    public void addCloseAction() {
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                toolBar.logToggle.setSelected(false);
+            }
+        });
+    }
 
-	public static void main(String[] args) {
-		// Start all Swing applications on the EDT.
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new ConnectionConsoleWindow(null).setVisible(true);
-			}
-		});
-	}
+    public static void main(String[] args) {
+        // Start all Swing applications on the EDT.
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new ConnectionConsoleWindow(null).setVisible(true);
+            }
+        });
+    }
 
 
 }

@@ -25,37 +25,37 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class StaticMessages {
 
-	public static final String PEER_ID = Hex.toHexString(HashUtil.randomPeerId());
-	
-	public final static PingMessage PING_MESSAGE 						= new PingMessage();
-	public final static PongMessage PONG_MESSAGE 						= new PongMessage();
-	public final static HelloMessage HELLO_MESSAGE 						= generateHelloMessage();
-	public final static GetPeersMessage GET_PEERS_MESSAGE 				= new GetPeersMessage();
-	public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
+    public static final String PEER_ID = Hex.toHexString(HashUtil.randomPeerId());
+    
+    public final static PingMessage PING_MESSAGE                        = new PingMessage();
+    public final static PongMessage PONG_MESSAGE                        = new PongMessage();
+    public final static HelloMessage HELLO_MESSAGE                      = generateHelloMessage();
+    public final static GetPeersMessage GET_PEERS_MESSAGE               = new GetPeersMessage();
+    public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
 
-	public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
+    public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
 
-	private static HelloMessage generateHelloMessage() {
-		String helloAnnouncement = buildHelloAnnouncement();
-		byte p2pVersion = P2pHandler.VERSION;
-		List<Capability> capabilities = Arrays.asList(
-				new Capability(Capability.ETH, EthHandler.VERSION),
-				new Capability(Capability.SHH, ShhHandler.VERSION));
-		int listenPort = SystemProperties.CONFIG.listenPort();
+    private static HelloMessage generateHelloMessage() {
+        String helloAnnouncement = buildHelloAnnouncement();
+        byte p2pVersion = P2pHandler.VERSION;
+        List<Capability> capabilities = Arrays.asList(
+                new Capability(Capability.ETH, EthHandler.VERSION),
+                new Capability(Capability.SHH, ShhHandler.VERSION));
+        int listenPort = SystemProperties.CONFIG.listenPort();
 
-		return new HelloMessage(p2pVersion, helloAnnouncement, 
-				capabilities, listenPort, PEER_ID);
-	}
+        return new HelloMessage(p2pVersion, helloAnnouncement, 
+                capabilities, listenPort, PEER_ID);
+    }
 
-	private static String buildHelloAnnouncement() {
-		String version = SystemProperties.CONFIG.projectVersion();
-		String system = System.getProperty("os.name");
-		if (system.contains(" "))
-			system = system.substring(0, system.indexOf(" "));
-		if (System.getProperty("java.vm.vendor").contains("Android"))
-			system = "Android";
-		String phrase = SystemProperties.CONFIG.helloPhrase();
+    private static String buildHelloAnnouncement() {
+        String version = SystemProperties.CONFIG.projectVersion();
+        String system = System.getProperty("os.name");
+        if (system.contains(" "))
+            system = system.substring(0, system.indexOf(" "));
+        if (System.getProperty("java.vm.vendor").contains("Android"))
+            system = "Android";
+        String phrase = SystemProperties.CONFIG.helloPhrase();
 
-		return String.format("Ethereum(J)/v%s/%s/%s/Java", version, phrase, system);
-	}
+        return String.format("Ethereum(J)/v%s/%s/%s/Java", version, phrase, system);
+    }
 }

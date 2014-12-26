@@ -36,8 +36,8 @@ public class SerpentCompiler {
     }
 
     public static String compileFullNotion(String code) {
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse_init_code_block();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -87,22 +87,22 @@ public class SerpentCompiler {
 
             String lexa  = lexaList.get(i);
 
-			{ // skiping the [asm asm] block
-				if (lexa.equals("asm]")) {
-					skiping = false;
-					lexaList.remove(i);
-					--i;
-					continue;
-				}
-				if (lexa.equals("[asm")) {
-					skiping = true;
-					lexaList.remove(i);
-					--i;
-					continue;
-				}
-				if (skiping)
-					continue;
-			}
+            { // skiping the [asm asm] block
+                if (lexa.equals("asm]")) {
+                    skiping = false;
+                    lexaList.remove(i);
+                    --i;
+                    continue;
+                }
+                if (lexa.equals("[asm")) {
+                    skiping = true;
+                    lexaList.remove(i);
+                    --i;
+                    continue;
+                }
+                if (skiping)
+                    continue;
+            }
 
             if (OpCode.contains(lexa) ||
                 lexa.contains("REF_") ||
@@ -124,7 +124,7 @@ public class SerpentCompiler {
 
         // encode ref for 5 bytes
         for (int i = 0; i < lexaList.size(); ++i) {
-        	
+            
             String lexa  = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
             lexaList.add(i + 1, lexa);

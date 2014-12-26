@@ -101,7 +101,7 @@ public class EthereumImpl implements Ethereum {
         final Set<PeerInfo> peers = worldManager.getPeerDiscovery().getPeers();
         synchronized (peers) {
             for (PeerInfo peer : peers) { // it blocks until a peer is available.
-				if (peer.isOnline() && !excludePeers.contains(peer)) {
+                if (peer.isOnline() && !excludePeers.contains(peer)) {
                     logger.info("Found peer: {}", peer.toString());
                     if (listener != null)
                         listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
@@ -115,14 +115,14 @@ public class EthereumImpl implements Ethereum {
     @Override
     public PeerInfo waitForOnlinePeer() {
         PeerInfo peer = null;
-		while (peer == null) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			peer = this.findOnlinePeer();
-		}
+        while (peer == null) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            peer = this.findOnlinePeer();
+        }
         return peer;
     }
 
@@ -148,11 +148,11 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public void connect(String ip, int port) {
-		logger.info("Connecting to: {}:{}", ip, port);
+        logger.info("Connecting to: {}:{}", ip, port);
 
         PeerClient peerClient = worldManager.getActivePeer();
         if (peerClient == null)
-		    peerClient = ctx.getBean(PeerClient.class);
+            peerClient = ctx.getBean(PeerClient.class);
         worldManager.setActivePeer(peerClient);
 
         peerClient.connect(ip, port);

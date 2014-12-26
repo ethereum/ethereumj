@@ -30,10 +30,10 @@ public class Value {
             this.value = obj;
         }
     }
-	
-	/* *****************
-	 * 		Convert
-	 * *****************/
+    
+    /* *****************
+     *      Convert
+     * *****************/
 
     public Object asObj() {
         return value;
@@ -102,10 +102,10 @@ public class Value {
         // If this wasn't a slice you probably shouldn't be using this function
         return new Value(null);
     }
-	
-	/* *****************
-	 * 		Utility
-	 * *****************/
+    
+    /* *****************
+     *      Utility
+     * *****************/
 
     public byte[] encode() {
         return RLP.encode(value);
@@ -114,10 +114,10 @@ public class Value {
     public boolean cmp(Value o) {
         return DeepEquals.deepEquals(this, o);
     }
-	
-	/* *****************
-	 * 		Checks
-	 * *****************/
+    
+    /* *****************
+     *      Checks
+     * *****************/
 
     public boolean isList() {
         return value != null && value.getClass().isArray() && !value.getClass().getComponentType().isPrimitive();
@@ -169,12 +169,12 @@ public class Value {
         int hexChars = 0;
         byte[] data = (byte[])value;
 
-		for (int i = 0; i < data.length; ++i) {
+        for (int i = 0; i < data.length; ++i) {
 
-			if ((data[i] >= 48 && data[i] <= 57)
-					|| (data[i] >= 97 && data[i] <= 102))
-				++hexChars;
-		}
+            if ((data[i] >= 48 && data[i] <= 57)
+                    || (data[i] >= 97 && data[i] <= 102))
+                ++hexChars;
+        }
 
         if ((double) hexChars / (double) data.length > 0.9)
             return true;
@@ -242,7 +242,7 @@ public class Value {
             for (int i = 0; i < list.length; ++i){
                 Value val = new Value(list[i]);
                 if (val.isString() || val.isEmpty()){
-					buffer.append("'").append(val.toString()).append("'");
+                    buffer.append("'").append(val.toString()).append("'");
                 } else {
                     buffer.append(val.toString());
                 }

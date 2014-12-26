@@ -74,10 +74,10 @@ public class PeerServer {
             logger.debug("Connection is closed");
 
         } catch (Exception e) {
-        	logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
             throw new Error("Server Disconnnected");
         } finally {
-        	workerGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
 
         }
     }

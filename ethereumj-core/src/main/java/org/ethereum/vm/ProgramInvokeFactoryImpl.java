@@ -190,7 +190,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         }
         
         if (program.invokeData.getCallDeep() >= MAX_DEPTH)
-        	throw program.new OutOfGasException();
+            throw program.new OutOfGasException();
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,

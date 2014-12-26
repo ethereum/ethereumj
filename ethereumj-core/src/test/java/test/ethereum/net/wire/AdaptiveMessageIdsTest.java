@@ -92,9 +92,9 @@ public class AdaptiveMessageIdsTest {
 
         P2pHandler p2pHandler = new P2pHandler();
 
-		List<Capability> capabilities = Arrays.asList(
-				new Capability(Capability.ETH, EthHandler.VERSION),
-				new Capability(Capability.SHH, ShhHandler.VERSION));
+        List<Capability> capabilities = Arrays.asList(
+                new Capability(Capability.ETH, EthHandler.VERSION),
+                new Capability(Capability.SHH, ShhHandler.VERSION));
         p2pHandler.adaptMessageIds(capabilities);
 
         Assert.assertEquals(0x10 + 0, EthMessageCodes.STATUS.asByte());
@@ -119,9 +119,9 @@ public class AdaptiveMessageIdsTest {
 
         P2pHandler p2pHandler = new P2pHandler();
 
-		List<Capability> capabilities = Arrays.asList(
-				new Capability(Capability.SHH, ShhHandler.VERSION),
-				new Capability(Capability.ETH, EthHandler.VERSION));
+        List<Capability> capabilities = Arrays.asList(
+                new Capability(Capability.SHH, ShhHandler.VERSION),
+                new Capability(Capability.ETH, EthHandler.VERSION));
         p2pHandler.adaptMessageIds(capabilities);
 
         Assert.assertEquals(0x10 + 0, EthMessageCodes.STATUS.asByte());

@@ -25,12 +25,12 @@ import com.maxmind.geoip.Location;
  */
 public class PeersTableModel extends AbstractTableModel {
 
-	private List<PeerInfo> peerInfoList = new ArrayList<>();
+    private List<PeerInfo> peerInfoList = new ArrayList<>();
     Timer updater = new Timer();
 
-	public PeersTableModel() {
-		updater.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
+    public PeersTableModel() {
+        updater.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
                 SwingUtilities.invokeLater(
                         new Runnable() {
                             @Override
@@ -39,9 +39,9 @@ public class PeersTableModel extends AbstractTableModel {
                             }
                         }
                 );
-			}
-		}, 0, 100);
-	}
+            }
+        }, 0, 100);
+    }
 
     public String getColumnName(int column) {
         if (column == 0) return "Location";
@@ -78,7 +78,7 @@ public class PeersTableModel extends AbstractTableModel {
             return flagIcon;
         }
         if (column == 1) 
-        	return peerInfo.getIp().getHostAddress();
+            return peerInfo.getIp().getHostAddress();
 
         if (column == 2) {
 
@@ -142,8 +142,8 @@ public class PeersTableModel extends AbstractTableModel {
         HelloMessage handshakeHelloMessage;
         StatusMessage handshakeStatusMessage;
 
-		private PeerInfo(Location location, InetAddress ip,
-				boolean isConnected, long lastAccessed, HelloMessage helloMessage, StatusMessage statusMessage) {
+        private PeerInfo(Location location, InetAddress ip,
+                boolean isConnected, long lastAccessed, HelloMessage helloMessage, StatusMessage statusMessage) {
 
             if (location == null)
                 this.location = new Location();

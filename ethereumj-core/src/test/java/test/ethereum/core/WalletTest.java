@@ -116,8 +116,8 @@ public class WalletTest {
         Wallet wallet = new Wallet();
         wallet.setWorldManager(worldManager);
 
-		ECKey cowKey = ECKey.fromPrivate(HashUtil.sha3("cow".getBytes()));
-		ECKey catKey = ECKey.fromPrivate(HashUtil.sha3("cat".getBytes()));
+        ECKey cowKey = ECKey.fromPrivate(HashUtil.sha3("cow".getBytes()));
+        ECKey catKey = ECKey.fromPrivate(HashUtil.sha3("cat".getBytes()));
 
         wallet.importKey(cowKey.getPrivKeyBytes());
         wallet.importKey(catKey.getPrivKeyBytes());
@@ -129,8 +129,8 @@ public class WalletTest {
 
     @Test
     @Ignore
-	public void testLoad1() throws TransformerException,
-			ParserConfigurationException, IOException, SAXException {
+    public void testLoad1() throws TransformerException,
+            ParserConfigurationException, IOException, SAXException {
         Wallet wallet = new Wallet();
         wallet.load();
     }

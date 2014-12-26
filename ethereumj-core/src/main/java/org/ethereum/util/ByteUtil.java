@@ -32,8 +32,8 @@ public class ByteUtil {
      * @return numBytes byte long array.
      */
     public static byte[] bigIntegerToBytes(BigInteger b, int numBytes) {
-		if (b == null)
-			return null;
+        if (b == null)
+            return null;
         byte[] bytes = new byte[numBytes];
         byte[] biBytes = b.toByteArray();
         int start = (biBytes.length == numBytes + 1) ? 1 : 0;
@@ -50,7 +50,7 @@ public class ByteUtil {
      *
      * @param value - any big integer number. A <code>null</code>-value will return <code>null</code>
      * @return A byte array without a leading zero byte if present in the signed encoding. 
-     * 		BigInteger.ZERO will return an array with length 1 and byte-value 0.
+     *      BigInteger.ZERO will return an array with length 1 and byte-value 0.
      */
     public static byte[] bigIntegerToBytes(BigInteger value) {
         if (value == null)
@@ -68,7 +68,7 @@ public class ByteUtil {
 
     /** 
      * Returns the amount of nibbles that match each other from 0 ...
-     * 	amount will never be larger than smallest input
+     *  amount will never be larger than smallest input
      * 
      * @param a - first input
      * @param b - second input
@@ -78,8 +78,8 @@ public class ByteUtil {
         int i = 0;
         int length = a.length < b.length ? a.length : b.length;
         while (i < length) {
-        	if (a[i] != b[i])
-        		break;
+            if (a[i] != b[i])
+                break;
             i++;
         }
         return i;
@@ -92,7 +92,7 @@ public class ByteUtil {
      * @return <code>byte[]</code> of length 8, representing the long value
      */
     public static byte[] longToBytes(long val) {
-    	return ByteBuffer.allocate(8).putLong(val).array();
+        return ByteBuffer.allocate(8).putLong(val).array();
     }
     
     /**
@@ -102,7 +102,7 @@ public class ByteUtil {
      * 
      * @param data - byte-array to convert to a hex-string
      * @return hex representation of the data.<br>
-     * 		Returns an empty String if the input is <code>null</code>
+     *      Returns an empty String if the input is <code>null</code>
      *
      * @see Hex#toHexString
      */
@@ -125,19 +125,19 @@ public class ByteUtil {
         return len;
     }
     
-	/**
-	 * Cast hex encoded value from byte[] to int
-	 * 
-	 * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
-	 * 
-	 * @param b array contains the values
-	 * @return unsigned positive int value. 
-	 */
-	public static int byteArrayToInt(byte[] b) {
-		if (b == null || b.length == 0)
-			return 0;
-		return new BigInteger(1, b).intValue();
-	}
+    /**
+     * Cast hex encoded value from byte[] to int
+     * 
+     * Limited to Integer.MAX_VALUE: 2^32-1 (4 bytes)
+     * 
+     * @param b array contains the values
+     * @return unsigned positive int value. 
+     */
+    public static int byteArrayToInt(byte[] b) {
+        if (b == null || b.length == 0)
+            return 0;
+        return new BigInteger(1, b).intValue();
+    }
 
     /**
      * Cast hex encoded value from byte[] to int
@@ -153,11 +153,11 @@ public class ByteUtil {
         return new BigInteger(1, b).longValue();
     }
 
-	
+    
     /**
      * Turn nibbles to a pretty looking output string
-     * 		
-     * 	Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
+     *      
+     *  Example. [ 1, 2, 3, 4, 5 ] becomes '\x11\x23\x45'
      *
      * @param nibbles - getting byte of data [ 04 ] and turning
      *                  it to a '\x04' representation
@@ -202,50 +202,50 @@ public class ByteUtil {
      * @param arg - not more that 32 bits
      * @return - bytes of the value pad with complete to 32 zeroes
      */
-	public static byte[] encodeValFor32Bits(Object arg) {
+    public static byte[] encodeValFor32Bits(Object arg) {
 
-		byte[] data;
+        byte[] data;
 
-		// check if the string is numeric
-		if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?"))
-			data = new BigInteger(arg.toString().trim()).toByteArray();
-		// check if it's hex number
-		else if (arg.toString().trim().matches("0[xX][0-9a-fA-F]+"))
+        // check if the string is numeric
+        if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?"))
+            data = new BigInteger(arg.toString().trim()).toByteArray();
+        // check if it's hex number
+        else if (arg.toString().trim().matches("0[xX][0-9a-fA-F]+"))
             data = new BigInteger(arg.toString().trim().substring(2), 16).toByteArray();
         else
-			data = arg.toString().trim().getBytes();
+            data = arg.toString().trim().getBytes();
 
-		
-		if (data.length > 32)
-			throw new RuntimeException("values can't be more than 32 byte");
+        
+        if (data.length > 32)
+            throw new RuntimeException("values can't be more than 32 byte");
 
-		byte[] val = new byte[32];
+        byte[] val = new byte[32];
 
-		int j = 0;
-		for (int i = data.length; i > 0; --i) {
-			val[31 - j] = data[i - 1];
-			++j;
-		}
-		return val;
-	}
+        int j = 0;
+        for (int i = data.length; i > 0; --i) {
+            val[31 - j] = data[i - 1];
+            ++j;
+        }
+        return val;
+    }
 
-	/**
-	 * encode the values and concatenate together
+    /**
+     * encode the values and concatenate together
      * @param args Object
      * @return byte[]
-	 */
-	public static byte[] encodeDataList(Object... args) {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		for (Object arg : args) {
-			byte[] val = encodeValFor32Bits(arg);
-			try {
-				baos.write(val);
-			} catch (IOException e) {
-				throw new Error("Happen something that should never happen ", e);
-			}
-		}
-		return baos.toByteArray();
-	}
+     */
+    public static byte[] encodeDataList(Object... args) {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        for (Object arg : args) {
+            byte[] val = encodeValFor32Bits(arg);
+            try {
+                baos.write(val);
+            } catch (IOException e) {
+                throw new Error("Happen something that should never happen ", e);
+            }
+        }
+        return baos.toByteArray();
+    }
 
     public static int firstNonZeroByte(byte[] data){
         int firstNonZero = -1;
@@ -259,29 +259,29 @@ public class ByteUtil {
         return firstNonZero;
     }
 
-	public static byte[] stripLeadingZeroes(byte[] data) {
+    public static byte[] stripLeadingZeroes(byte[] data) {
 
-		if (data == null)
-			return null;
+        if (data == null)
+            return null;
 
-		int firstNonZero = firstNonZeroByte(data);
-		int i = 0;
-		for (; i < data.length; ++i) {
-			if (data[i] != 0) {
-				firstNonZero = i;
-				break;
-			}
-		}
-		if (i == data.length)
-			return new byte[1];
-		if (firstNonZero == 0)
-			return data;
+        int firstNonZero = firstNonZeroByte(data);
+        int i = 0;
+        for (; i < data.length; ++i) {
+            if (data[i] != 0) {
+                firstNonZero = i;
+                break;
+            }
+        }
+        if (i == data.length)
+            return new byte[1];
+        if (firstNonZero == 0)
+            return data;
 
-		byte[] result = new byte[data.length - firstNonZero];
-		System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
+        byte[] result = new byte[data.length - firstNonZero];
+        System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
 
-		return result;
-	}
+        return result;
+    }
 
     /**
      * increment byte array as a number until max is reached
@@ -311,10 +311,10 @@ public class ByteUtil {
      * @return Byte array of given size with a copy of the <code>src</code>
      */
     public static byte[] copyToArray(BigInteger value) {
-		byte[] src = ByteUtil.bigIntegerToBytes(value);
-    	byte[] dest = ByteBuffer.allocate(32).array();
-    	System.arraycopy(src, 0, dest, dest.length - src.length, src.length);
-    	return dest;
+        byte[] src = ByteUtil.bigIntegerToBytes(value);
+        byte[] dest = ByteBuffer.allocate(32).array();
+        System.arraycopy(src, 0, dest, dest.length - src.length, src.length);
+        return dest;
     }
 
 

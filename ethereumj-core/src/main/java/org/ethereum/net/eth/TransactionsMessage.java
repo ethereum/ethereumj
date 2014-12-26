@@ -18,7 +18,7 @@ import java.util.Set;
  * @see org.ethereum.net.eth.EthMessageCodes#TRANSACTIONS
  */
 public class TransactionsMessage extends EthMessage {
-	
+    
     private Set<Transaction> transactions;
 
     public TransactionsMessage(byte[] encoded) {
@@ -38,9 +38,9 @@ public class TransactionsMessage extends EthMessage {
     }
     
     private void parse() {
-		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-		transactions = new HashSet<>();
+        transactions = new HashSet<>();
         for (int i = 1; i < paramsList.size(); ++i) {
             RLPList rlpTxData = (RLPList) paramsList.get(i);
             Transaction tx = new Transaction(rlpTxData.getRLPData());
@@ -50,19 +50,19 @@ public class TransactionsMessage extends EthMessage {
     }
     
     private void encode() {
-    	List<byte[]> encodedElements = new ArrayList<>();
-    	encodedElements.add(RLP.encodeByte(TRANSACTIONS.asByte()));
-    	for (Transaction tx : transactions)
+        List<byte[]> encodedElements = new ArrayList<>();
+        encodedElements.add(RLP.encodeByte(TRANSACTIONS.asByte()));
+        for (Transaction tx : transactions)
             encodedElements.add(tx.getEncoded());
-		byte[][] encodedElementArray = encodedElements
-				.toArray(new byte[encodedElements.size()][]);
+        byte[][] encodedElementArray = encodedElements
+                .toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
     }
     
     @Override
     public byte[] getEncoded() {
-    	if (encoded == null) encode();
-    	return encoded;
+        if (encoded == null) encode();
+        return encoded;
     }
 
 

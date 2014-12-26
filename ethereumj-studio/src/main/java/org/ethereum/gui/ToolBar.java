@@ -24,7 +24,7 @@ public class ToolBar extends JFrame {
     private Logger introLogger = LoggerFactory.getLogger("Intro");
 
     private ConnectionConsoleWindow connectionConsoleWindow = null;
-    private PeersTableWindow mainFrame	= null;
+    private PeersTableWindow mainFrame  = null;
     private BlockChainTable blockchainWindow = null;
     private WalletWindow walletWindow = null;
     private SerpentEditor serpentEditor = null;
@@ -165,7 +165,7 @@ public class ToolBar extends JFrame {
                     SwingUtilities.invokeLater(new Runnable() {
                         public void run() {
                             if (mainFrame == null)
-                                mainFrame	= new PeersTableWindow(ToolBar.this);
+                                mainFrame   = new PeersTableWindow(ToolBar.this);
                             mainFrame.setVisible( true );
                         }
                     });
@@ -244,12 +244,12 @@ public class ToolBar extends JFrame {
                             SwingUtilities.invokeLater(new Runnable() {
                                 public void run() {
                                     if (stateExplorerWindow == null)
-                                    	stateExplorerWindow = new StateExplorerWindow(ToolBar.this);
+                                        stateExplorerWindow = new StateExplorerWindow(ToolBar.this);
                                     stateExplorerWindow.setVisible(true);
                                 }
                             });
                         } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        	stateExplorerWindow.setVisible(false);
+                            stateExplorerWindow.setVisible(false);
                         }
                     }
                 }

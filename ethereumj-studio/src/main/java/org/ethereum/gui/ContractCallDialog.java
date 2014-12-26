@@ -32,22 +32,22 @@ import java.util.Map;
  */
 class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
-	private static final long serialVersionUID = -7561153561155037293L;
+    private static final long serialVersionUID = -7561153561155037293L;
 
-	private Logger logger = LoggerFactory.getLogger("ui");
+    private Logger logger = LoggerFactory.getLogger("ui");
 
-	private ContractCallDialog dialog;
-	private JComboBox<AccountWrapper> creatorAddressCombo;
-	private final JTextField gasInput;
-	private final JTextField contractAddrInput;
+    private ContractCallDialog dialog;
+    private JComboBox<AccountWrapper> creatorAddressCombo;
+    private final JTextField gasInput;
+    private final JTextField contractAddrInput;
 
-	private JScrollPane contractDataInput;
-	private JTextArea   msgDataTA;
+    private JScrollPane contractDataInput;
+    private JTextArea   msgDataTA;
 
-	private JLabel statusMsg = null;
-	private JLabel playLabel = null;
-	private JLabel rejectLabel = null;
-	private JLabel approveLabel = null;
+    private JLabel statusMsg = null;
+    private JLabel playLabel = null;
+    private JLabel rejectLabel = null;
+    private JLabel approveLabel = null;
 
     public ContractCallDialog(Frame parent) {
         super(parent, "Call Contract: ", false);
@@ -123,12 +123,12 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         rejectLabel.setBounds(260, 325, 45, 45);
         this.getContentPane().add(rejectLabel);
         rejectLabel.setVisible(true);
-		rejectLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				dialog.dispose();
-			}
-		});
+        rejectLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dialog.dispose();
+            }
+        });
 
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
         ImageIcon approveIcon = new ImageIcon(approveIconURL);
@@ -151,13 +151,13 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
         gasInput.setText("1000");
 
-		JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>() {
-			private static final long serialVersionUID = -3748305421049121671L;
-			@Override
-			public ComboBoxUI getUI() {
-				return super.getUI();
-			}
-		};
+        JComboBox<AccountWrapper> creatorAddressCombo = new JComboBox<AccountWrapper>() {
+            private static final long serialVersionUID = -3748305421049121671L;
+            @Override
+            public ComboBoxUI getUI() {
+                return super.getUI();
+            }
+        };
         creatorAddressCombo.setOpaque(true);
         creatorAddressCombo.setEnabled(true);
 
@@ -177,18 +177,18 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             creatorAddressCombo.addItem(new AccountWrapper(account));
         }
 
-		creatorAddressCombo.setRenderer(new DefaultListCellRenderer() {
-			private static final long serialVersionUID = 6100091092527477892L;
+        creatorAddressCombo.setRenderer(new DefaultListCellRenderer() {
+            private static final long serialVersionUID = 6100091092527477892L;
 
-			@Override
-			public void paint(Graphics g) {
-				setBackground(Color.WHITE);
-				setForeground(new Color(143, 170, 220));
-				setFont(new Font("Monospaced", 0, 13));
-				setBorder(BorderFactory.createEmptyBorder());
-				super.paint(g);
-			}
-		});
+            @Override
+            public void paint(Graphics g) {
+                setBackground(Color.WHITE);
+                setForeground(new Color(143, 170, 220));
+                setFont(new Font("Monospaced", 0, 13));
+                setBorder(BorderFactory.createEmptyBorder());
+                super.paint(g);
+            }
+        });
 
         creatorAddressCombo.setPopupVisible(false);
 
@@ -199,7 +199,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         list.setSelectionBackground(Color.cyan);
         list.setBorder(null);
 
-		for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++) {
+        for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++) {
             if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
                 CellRendererPane crp = ((CellRendererPane) (creatorAddressCombo.getComponent(i)));
             }
@@ -218,14 +218,14 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
     }
 
     private void populateContractDetails() {
-		byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
-		if(addr == null) {
-			alertStatusMsg("Not a valid contract address");
-        	return;
-		}
-			
-		ContractDetails contractDetails = UIEthereumManager.ethereum
-				.getRepository().getContractDetails(addr);
+        byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
+        if(addr == null) {
+            alertStatusMsg("Not a valid contract address");
+            return;
+        }
+            
+        ContractDetails contractDetails = UIEthereumManager.ethereum
+                .getRepository().getContractDetails(addr);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
@@ -308,15 +308,15 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         this.repaint();
     }
     
-    private void playContractCall() {   	
+    private void playContractCall() {       
         byte[] addr = Utils.addressStringToBytes(contractAddrInput.getText());
-		if(addr == null) {
-			alertStatusMsg("Not a valid contract address");
-        	return;
-		}
-		
-		ContractDetails contractDetails = UIEthereumManager.ethereum
-				.getRepository().getContractDetails(addr);
+        if(addr == null) {
+            alertStatusMsg("Not a valid contract address");
+            return;
+        }
+        
+        ContractDetails contractDetails = UIEthereumManager.ethereum
+                .getRepository().getContractDetails(addr);
         if (contractDetails == null) {
             alertStatusMsg("No contract for that address");
             return;
@@ -389,15 +389,15 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         worker.execute();
     }
 
-	private Transaction createTransaction() {
+    private Transaction createTransaction() {
 
-		byte[] data;
-		if (!msgDataTA.getText().trim().equals("")) {
-			Object[] lexaList = msgDataTA.getText().split(",");
-			data = ByteUtil.encodeDataList(lexaList);
-		} else {
-			data = new byte[] {};
-		}
+        byte[] data;
+        if (!msgDataTA.getText().trim().equals("")) {
+            Object[] lexaList = msgDataTA.getText().split(",");
+            data = ByteUtil.encodeDataList(lexaList);
+        } else {
+            data = new byte[] {};
+        }
 
         byte[] contractAddress = Hex.decode( contractAddrInput.getText());
 
@@ -436,9 +436,9 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
         return tx;
     }
 
-	public class AccountWrapper {
+    public class AccountWrapper {
 
-		private Account account;
+        private Account account;
 
         public AccountWrapper(Account account) {
             this.account = account;
@@ -448,17 +448,17 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             return account;
         }
 
-		@Override
-		public String toString() {
-			String addressShort =
+        @Override
+        public String toString() {
+            String addressShort =
                     Utils.getAddressShortString(account.getEcKey().getAddress());
 
             String valueShort = "0";
 
-			String result = String.format(" By: [%s] %s", addressShort,
-					valueShort);
-			return result;
-		}
+            String result = String.format(" By: [%s] %s", addressShort,
+                    valueShort);
+            return result;
+        }
     }
 
     private class JTableStorageModel extends DefaultTableModel {

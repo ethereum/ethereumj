@@ -82,7 +82,7 @@ public class TrieImpl implements Trie {
 
     @Override
     public void setRoot(byte[] root) {
-    	this.root = root;
+        this.root = root;
     }
 
     /**************************************
@@ -102,7 +102,7 @@ public class TrieImpl implements Trie {
     @Override
     public byte[] get(byte[] key) {
         if (logger.isDebugEnabled()) 
-        	logger.debug("Retrieving key {}", Hex.toHexString(key));
+            logger.debug("Retrieving key {}", Hex.toHexString(key));
         byte[] k = binToNibbles(key);
         Value c = new Value(this.get(this.root, k));
 
@@ -166,7 +166,7 @@ public class TrieImpl implements Trie {
     }
 
     /****************************************
-     * 			Private functions			*
+     *          Private functions           *
      ****************************************/
 
     private Object get(Object node, byte[] key) {
@@ -389,10 +389,10 @@ public class TrieImpl implements Trie {
     // Simple compare function which compares two tries based on their stateRoot
     @Override
     public boolean equals(Object trie) {
-    	if (this == trie) return true;
-    	if (trie instanceof Trie)
-    		return Arrays.equals(this.getRootHash(), ((Trie) trie).getRootHash());
-    	return false;
+        if (this == trie) return true;
+        if (trie instanceof Trie)
+            return Arrays.equals(this.getRootHash(), ((Trie) trie).getRootHash());
+        return false;
     }
 
     @Override
@@ -418,7 +418,7 @@ public class TrieImpl implements Trie {
     }
 
     /********************************
-     *  	Utility functions		*
+     *      Utility functions       *
      *******************************/
 
     // Created an array of empty elements of required length

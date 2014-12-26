@@ -21,12 +21,12 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
-	public final static byte VERSION = 1;
+    public final static byte VERSION = 1;
     private MessageQueue msgQueue = null;
 
     private boolean active = false;
 
-	private final static Logger logger = LoggerFactory.getLogger("net");
+    private final static Logger logger = LoggerFactory.getLogger("net");
 
     @Autowired
     WorldManager worldManager;
@@ -34,12 +34,12 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     public ShhHandler(){
     }
 
-	public ShhHandler(MessageQueue msgQueue) {
+    public ShhHandler(MessageQueue msgQueue) {
         this.msgQueue = msgQueue;
-	}
+    }
 
-	@Override
-	public void channelRead0(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
+    @Override
+    public void channelRead0(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
 
         if (!isActive()) return;
 
@@ -48,7 +48,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
         worldManager.getListener().trace(String.format( "ShhHandler invoke: [%s]", msg.getCommand()));
 
-		switch (msg.getCommand()) {
+        switch (msg.getCommand()) {
             case STATUS:
                 break;
             case MESSAGE:
@@ -60,10 +60,10 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
             case PACKET_COUNT:
                 break;
             default:
-				break;
-		}
-	}
-	
+                break;
+        }
+    }
+    
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error(cause.getCause().toString());
@@ -74,7 +74,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         active = false;
-    	logger.debug("handlerRemoved: ... ");
+        logger.debug("handlerRemoved: ... ");
     }
 
     public void activate(){

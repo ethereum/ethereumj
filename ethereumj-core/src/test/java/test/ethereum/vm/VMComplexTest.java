@@ -29,19 +29,19 @@ public class VMComplexTest {
     @Test // contract call recursive
     public void test1() {
 
-		/**
-		 *       #The code will run
-		 *       ------------------
-		
-		         a = contract.storage[999]
-		         if a > 0:
-		             contract.storage[999] = a - 1
-		
-		             # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
-		             send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
-		         else:
-		             stop
-		 */
+        /**
+         *       #The code will run
+         *       ------------------
+        
+                 a = contract.storage[999]
+                 if a > 0:
+                     contract.storage[999] = a - 1
+        
+                     # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
+                     send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
+                 else:
+                     stop
+         */
 
         int expectedGas = 438;
 
@@ -299,7 +299,7 @@ public class VMComplexTest {
          */
 
         // Set contract into Database
-    	byte[] caller_addr_bytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
+        byte[] caller_addr_bytes = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
 
         byte[] contractA_addr_bytes = Hex.decode("77045e71a7a2c50903d88e564cd72fab11e82051");
 
@@ -324,12 +324,12 @@ public class VMComplexTest {
         VM vm = new VM();
         Program program = new Program(codeA, pi);
 
-		try {
-			while (!program.isStopped())
-				vm.step(program);
-		} catch (RuntimeException e) {
-			program.setRuntimeFailure(e);
-		}
+        try {
+            while (!program.isStopped())
+                vm.step(program);
+        } catch (RuntimeException e) {
+            program.setRuntimeFailure(e);
+        }
 
         System.out.println();
         System.out.println("============ Results ============");
@@ -342,7 +342,7 @@ public class VMComplexTest {
     @Test // CALL contract with too much gas
     @Ignore
     public void test5() {
-    	// TODO CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
+        // TODO CALL contract with gas > gasRemaining && gas > Long.MAX_VALUE
     }
     
     @Test // contractB call itself with code from contractA
@@ -353,9 +353,9 @@ public class VMComplexTest {
 
          contract A: 945304eb96065b2a98b57a48a06ae28d285a71b5
          ---------------
-		
-		 PUSH1 0 CALLDATALOAD SLOAD NOT PUSH1 9 JUMPI STOP 
-		 PUSH1 32 CALLDATALOAD PUSH1 0 CALLDATALOAD SSTORE
+        
+         PUSH1 0 CALLDATALOAD SLOAD NOT PUSH1 9 JUMPI STOP 
+         PUSH1 32 CALLDATALOAD PUSH1 0 CALLDATALOAD SSTORE
 
          contract B: 0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6
          -----------
@@ -365,13 +365,13 @@ public class VMComplexTest {
              }
          */
 
-    	// Set contract into Database
-    	byte[] caller_addr_bytes = Hex.decode("cd1722f3947def4cf144679da39c4c32bdc35681");
+        // Set contract into Database
+        byte[] caller_addr_bytes = Hex.decode("cd1722f3947def4cf144679da39c4c32bdc35681");
 
-    	byte[] contractA_addr_bytes = Hex.decode("945304eb96065b2a98b57a48a06ae28d285a71b5");
-    	byte[] contractB_addr_bytes = Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6");
+        byte[] contractA_addr_bytes = Hex.decode("945304eb96065b2a98b57a48a06ae28d285a71b5");
+        byte[] contractB_addr_bytes = Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6");
 
-    	byte[] codeA = Hex.decode("60003554156009570060203560003555");
+        byte[] codeA = Hex.decode("60003554156009570060203560003555");
         byte[] codeB = Hex.decode("7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff6000527faaffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffaa6020526000604060406000601773945304eb96065b2a98b57a48a06ae28d285a71b5620f4240f3600055");
 
         ProgramInvokeMockImpl pi =  new ProgramInvokeMockImpl();

@@ -15,61 +15,61 @@ import java.util.List;
  */
 public class PeerInfo {
 
-	private InetAddress address;
-	private int port;
-	private String peerId;
+    private InetAddress address;
+    private int port;
+    private String peerId;
 
-	private List<Capability> capabilities;
+    private List<Capability> capabilities;
     private HelloMessage  handshakeHelloMessage;
     private StatusMessage statusMessage;
 
-	private transient boolean isOnline = false;
-	private transient long lastCheckTime = 0;
+    private transient boolean isOnline = false;
+    private transient long lastCheckTime = 0;
 
-	public PeerInfo(InetAddress ip, int port, String peerId) {
-		this.address = ip;
-		this.port = port;
-		this.peerId = peerId;
-		this.capabilities = new ArrayList<>();
-	}
+    public PeerInfo(InetAddress ip, int port, String peerId) {
+        this.address = ip;
+        this.port = port;
+        this.peerId = peerId;
+        this.capabilities = new ArrayList<>();
+    }
 
-	public InetAddress getAddress() {
-		return address;
-	}
+    public InetAddress getAddress() {
+        return address;
+    }
 
-	public int getPort() {
-		return port;
-	}
+    public int getPort() {
+        return port;
+    }
 
-	public String getPeerId() {
-		return peerId == null ? "" : peerId;
-	}
+    public String getPeerId() {
+        return peerId == null ? "" : peerId;
+    }
 
-	public boolean isOnline() {
-		if (getCapabilities().size() < 0)
-			return false;
-		return isOnline;
-	}
+    public boolean isOnline() {
+        if (getCapabilities().size() < 0)
+            return false;
+        return isOnline;
+    }
 
-	public void setOnline(boolean online) {
-		isOnline = online;
-	}
+    public void setOnline(boolean online) {
+        isOnline = online;
+    }
 
-	public long getLastCheckTime() {
-		return lastCheckTime;
-	}
+    public long getLastCheckTime() {
+        return lastCheckTime;
+    }
 
-	public void setLastCheckTime(long lastCheckTime) {
-		this.lastCheckTime = lastCheckTime;
-	}
+    public void setLastCheckTime(long lastCheckTime) {
+        this.lastCheckTime = lastCheckTime;
+    }
 
-	public List<Capability> getCapabilities() {
-		return capabilities;
-	}
+    public List<Capability> getCapabilities() {
+        return capabilities;
+    }
 
 
-	@Override
-	public String toString() {
+    @Override
+    public String toString() {
 
         StringBuilder sb = new StringBuilder();
 
@@ -80,14 +80,14 @@ public class PeerInfo {
                 .append(this.statusMessage == null         ? "" : statusMessage + "\n");
 
         return sb.toString();
-	}
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (obj == null) return false;
-		PeerInfo peerData = (PeerInfo) obj;
-		return peerData.hashCode() == this.hashCode();
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) return false;
+        PeerInfo peerData = (PeerInfo) obj;
+        return peerData.hashCode() == this.hashCode();
+    }
 
 
     @Override

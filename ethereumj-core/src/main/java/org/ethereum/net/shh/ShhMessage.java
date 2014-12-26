@@ -4,7 +4,7 @@ import org.ethereum.net.message.Message;
 
 public abstract class ShhMessage extends Message {
 
-	public ShhMessage() {}
+    public ShhMessage() {}
 
     public ShhMessage(byte[] encoded) {
         super(encoded);

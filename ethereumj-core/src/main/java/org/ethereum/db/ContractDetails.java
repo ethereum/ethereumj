@@ -32,15 +32,15 @@ public class ContractDetails {
 
     public ContractDetails() {
     }
-	
+    
     public ContractDetails(byte[] rlpCode) {
         decode(rlpCode);
     }
 
-	public ContractDetails(Map<DataWord, DataWord> storage, byte[] code) {
-	}
+    public ContractDetails(Map<DataWord, DataWord> storage, byte[] code) {
+    }
 
-	public void put(DataWord key, DataWord value) {
+    public void put(DataWord key, DataWord value) {
 
         if (value.equals(DataWord.ZERO)) {
 
@@ -64,21 +64,21 @@ public class ContractDetails {
 
         this.setDirty(true);
         this.rlpEncoded = null;
-	}
+    }
 
-	public DataWord get(DataWord key) {
+    public DataWord get(DataWord key) {
 
-		if (storageKeys.size() == 0)
-			return null;
+        if (storageKeys.size() == 0)
+            return null;
 
-		int foundIndex = storageKeys.indexOf(key);
-		if (foundIndex != -1) {
+        int foundIndex = storageKeys.indexOf(key);
+        if (foundIndex != -1) {
             DataWord value = storageValues.get(foundIndex);
             return value.clone();
         }
-		else
-			return null;
-	}
+        else
+            return null;
+    }
 
     public byte[] getCode() {
         return code;
@@ -92,47 +92,47 @@ public class ContractDetails {
 
     public byte[] getStorageHash() {
 
-    	storageTrie = new TrieImpl(null);
+        storageTrie = new TrieImpl(null);
         // calc the trie for root hash
         for (int i = 0; i < storageKeys.size(); ++i){
-			storageTrie.update(storageKeys.get(i).getData(), RLP
-					.encodeElement(storageValues.get(i).getNoLeadZeroesData()));
+            storageTrie.update(storageKeys.get(i).getData(), RLP
+                    .encodeElement(storageValues.get(i).getNoLeadZeroesData()));
         }
         return storageTrie.getRootHash();
     }
 
-	public void decode(byte[] rlpCode) {
-		RLPList data = RLP.decode2(rlpCode);
-		RLPList rlpList = (RLPList) data.get(0);
+    public void decode(byte[] rlpCode) {
+        RLPList data = RLP.decode2(rlpCode);
+        RLPList rlpList = (RLPList) data.get(0);
 
-		RLPList keys = (RLPList) rlpList.get(0);
-		RLPList values = (RLPList) rlpList.get(1);
-		RLPElement code = (RLPElement) rlpList.get(2);
+        RLPList keys = (RLPList) rlpList.get(0);
+        RLPList values = (RLPList) rlpList.get(1);
+        RLPElement code = (RLPElement) rlpList.get(2);
 
-		if (keys.size() > 0) {
-			storageKeys = new ArrayList<>();
-			storageValues = new ArrayList<>();
-		}
+        if (keys.size() > 0) {
+            storageKeys = new ArrayList<>();
+            storageValues = new ArrayList<>();
+        }
 
-		for (int i = 0; i < keys.size(); ++i) {
-			RLPItem rlpItem = (RLPItem) keys.get(i);
-			storageKeys.add(new DataWord(rlpItem.getRLPData()));
-		}
+        for (int i = 0; i < keys.size(); ++i) {
+            RLPItem rlpItem = (RLPItem) keys.get(i);
+            storageKeys.add(new DataWord(rlpItem.getRLPData()));
+        }
 
-		for (int i = 0; i < values.size(); ++i) {
-			RLPItem rlpItem = (RLPItem) values.get(i);
-			storageValues.add(new DataWord(rlpItem.getRLPData()));
-		}
+        for (int i = 0; i < values.size(); ++i) {
+            RLPItem rlpItem = (RLPItem) values.get(i);
+            storageValues.add(new DataWord(rlpItem.getRLPData()));
+        }
 
-		for (int i = 0; i < keys.size(); ++i) {
-			DataWord key = storageKeys.get(i);
-			DataWord value = storageValues.get(i);
+        for (int i = 0; i < keys.size(); ++i) {
+            DataWord key = storageKeys.get(i);
+            DataWord value = storageValues.get(i);
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
-		}
+        }
 
-		this.code = (code.getRLPData() == null) ? ByteUtil.EMPTY_BYTE_ARRAY : code.getRLPData();
-		this.rlpEncoded = rlpCode;
-	}
+        this.code = (code.getRLPData() == null) ? ByteUtil.EMPTY_BYTE_ARRAY : code.getRLPData();
+        this.rlpEncoded = rlpCode;
+    }
 
     public void setDirty(boolean dirty) {
         this.dirty = dirty;
@@ -151,38 +151,38 @@ public class ContractDetails {
     }
 
 
-	public byte[] getEncoded() {
+    public byte[] getEncoded() {
 
-		if (rlpEncoded == null) {
+        if (rlpEncoded == null) {
 
-			int size = storageKeys == null ? 0 : storageKeys.size();
+            int size = storageKeys == null ? 0 : storageKeys.size();
 
-			byte[][] keys = new byte[size][];
-			byte[][] values = new byte[size][];
+            byte[][] keys = new byte[size][];
+            byte[][] values = new byte[size][];
 
-			for (int i = 0; i < size; ++i) {
-				DataWord key = storageKeys.get(i);
-				keys[i] = RLP.encodeElement(key.getData());
-			}
-			for (int i = 0; i < size; ++i) {
-				DataWord value = storageValues.get(i);
-				values[i] = RLP.encodeElement(value.getNoLeadZeroesData());
-			}
+            for (int i = 0; i < size; ++i) {
+                DataWord key = storageKeys.get(i);
+                keys[i] = RLP.encodeElement(key.getData());
+            }
+            for (int i = 0; i < size; ++i) {
+                DataWord value = storageValues.get(i);
+                values[i] = RLP.encodeElement(value.getNoLeadZeroesData());
+            }
 
-			byte[] rlpKeysList = RLP.encodeList(keys);
-			byte[] rlpValuesList = RLP.encodeList(values);
-			byte[] rlpCode = RLP.encodeElement(code);
+            byte[] rlpKeysList = RLP.encodeList(keys);
+            byte[] rlpValuesList = RLP.encodeList(values);
+            byte[] rlpCode = RLP.encodeElement(code);
 
-			this.rlpEncoded = RLP.encodeList(rlpKeysList, rlpValuesList, rlpCode);
-		}
-		return rlpEncoded;
-	}
+            this.rlpEncoded = RLP.encodeList(rlpKeysList, rlpValuesList, rlpCode);
+        }
+        return rlpEncoded;
+    }
 
     public Map<DataWord, DataWord> getStorage() {
         Map<DataWord, DataWord> storage = new HashMap<>();
-		for (int i = 0; storageKeys != null && i < storageKeys.size(); ++i) {
-			storage.put(storageKeys.get(i), storageValues.get(i));
-		}
+        for (int i = 0; storageKeys != null && i < storageKeys.size(); ++i) {
+            storage.put(storageKeys.get(i), storageValues.get(i));
+        }
         return Collections.unmodifiableMap(storage);
     }
 

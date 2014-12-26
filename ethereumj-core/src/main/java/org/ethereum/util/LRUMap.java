@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class LRUMap<K,V> extends ConcurrentHashMap<K,V> {
 
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	protected final int maxEntries;
+    protected final int maxEntries;
     
     public LRUMap(int initialEntries, int maxEntries) {
         super(initialEntries, 0.8f, 3);

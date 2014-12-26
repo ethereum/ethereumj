@@ -18,36 +18,36 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Scope("prototype")
 public class WorkerThread implements Runnable {
 
-	private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    private final static Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-	private PeerInfo peerInfo;
-	private ThreadPoolExecutor poolExecutor;
+    private PeerInfo peerInfo;
+    private ThreadPoolExecutor poolExecutor;
     private boolean running = true;
 
     @Autowired
     ApplicationContext ctx;
 
-	public WorkerThread() {
-	}
+    public WorkerThread() {
+    }
 
     public void init(PeerInfo peer, ThreadPoolExecutor poolExecutor){
         this.peerInfo = peer;
         this.poolExecutor = poolExecutor;
     }
 
-	@Override
-	public void run() {
-		logger.debug("{} start", Thread.currentThread().getName());
+    @Override
+    public void run() {
+        logger.debug("{} start", Thread.currentThread().getName());
         processCommand();
-		logger.debug("{} end", Thread.currentThread().getName());
+        logger.debug("{} end", Thread.currentThread().getName());
 
         sleep(1000);
-		poolExecutor.execute(this);
-	}
+        poolExecutor.execute(this);
+    }
 
-	private void processCommand() {
+    private void processCommand() {
 
-		try {
+        try {
 
             DiscoveryChannel discoveryChannel = ctx.getBean(DiscoveryChannel.class);
             discoveryChannel.connect(peerInfo.getAddress().getHostAddress(), peerInfo.getPort());
@@ -59,18 +59,18 @@ public class WorkerThread implements Runnable {
             logger.info("Peer is online: [{}] ", peerInfo);
 
 
-		} catch (Throwable e) {
-			if (peerInfo.isOnline())
-				logger.info("Peer: [{}] went offline, due to: [{}]", peerInfo
-						.getAddress().getHostAddress(), e);
-			peerInfo.setOnline(false);
-		} finally {
-			logger.info("Peer: " + peerInfo.toString() + " is "
-					+ (peerInfo.isOnline() ? "online" : "offline"));
-			peerInfo.setLastCheckTime(System.currentTimeMillis());
+        } catch (Throwable e) {
+            if (peerInfo.isOnline())
+                logger.info("Peer: [{}] went offline, due to: [{}]", peerInfo
+                        .getAddress().getHostAddress(), e);
+            peerInfo.setOnline(false);
+        } finally {
+            logger.info("Peer: " + peerInfo.toString() + " is "
+                    + (peerInfo.isOnline() ? "online" : "offline"));
+            peerInfo.setLastCheckTime(System.currentTimeMillis());
 
-		}
-	}
+        }
+    }
 
     private void sleep(long milliseconds){
 
@@ -82,8 +82,8 @@ public class WorkerThread implements Runnable {
 
     }
 
-	@Override
-	public String toString() {
-		return "Worker for: " + this.peerInfo.toString();
-	}
+    @Override
+    public String toString() {
+        return "Worker for: " + this.peerInfo.toString();
+    }
 }

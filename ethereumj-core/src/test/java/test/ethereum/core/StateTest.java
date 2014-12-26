@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 public class StateTest {
 
-	private static final String GENESIS_STATE_ROOT = "c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718c";
+    private static final String GENESIS_STATE_ROOT = "c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718c";
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -116,8 +116,8 @@ public class StateTest {
         Trie trie = new TrieImpl(new MockDB());
         for (String address : Genesis.getPremine()) {
             AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-            trie.update(Hex.decode(address), acct.getEncoded());			
-		}
+            trie.update(Hex.decode(address), acct.getEncoded());            
+        }
         return trie;
     }
 }

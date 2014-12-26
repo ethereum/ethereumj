@@ -35,26 +35,26 @@ import org.springframework.stereotype.Component;
  * 
  * Peers can send/receive
  * <ul>
- * 	<li>HELLO		:	Announce themselves to the network</li>
- * 	<li>DISCONNECT	: 	Disconnect themselves from the network</li>
- * 	<li>GET_PEERS	: 	Request a list of other knows peers</li>
- * 	<li>PEERS		:	Send a list of known peers</li>
- * 	<li>PING		: 	Check if another peer is still alive</li>
- * 	<li>PONG		:	Confirm that they themselves are still alive</li>
+ *  <li>HELLO       :   Announce themselves to the network</li>
+ *  <li>DISCONNECT  :   Disconnect themselves from the network</li>
+ *  <li>GET_PEERS   :   Request a list of other knows peers</li>
+ *  <li>PEERS       :   Send a list of known peers</li>
+ *  <li>PING        :   Check if another peer is still alive</li>
+ *  <li>PONG        :   Confirm that they themselves are still alive</li>
  * </ul>
  */
 @Component
 @Scope("prototype")
 public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
-	public final static byte VERSION = 2;
-	
-	private final static Logger logger = LoggerFactory.getLogger("net");
+    public final static byte VERSION = 2;
+    
+    private final static Logger logger = LoggerFactory.getLogger("net");
 
-	private final Timer timer = new Timer("MessageTimer");
+    private final Timer timer = new Timer("MessageTimer");
 
-	private MessageQueue msgQueue;
-	private boolean tearDown = false;
+    private MessageQueue msgQueue;
+    private boolean tearDown = false;
 
     private boolean active = false;
     private boolean peerDiscoveryMode = false;
@@ -70,10 +70,10 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.peerDiscoveryMode = false;
     }
     
-	public P2pHandler(MessageQueue msgQueue, boolean peerDiscoveryMode) {
-		this.msgQueue = msgQueue;
-		this.peerDiscoveryMode = peerDiscoveryMode;
-	}
+    public P2pHandler(MessageQueue msgQueue, boolean peerDiscoveryMode) {
+        this.msgQueue = msgQueue;
+        this.peerDiscoveryMode = peerDiscoveryMode;
+    }
 
     public void setWorldManager(WorldManager worldManager) {
         this.worldManager = worldManager;
@@ -84,13 +84,13 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     }
 
     @Override
-	public void channelActive(ChannelHandlerContext ctx) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
         active = true;
         msgQueue.activate(ctx);
-		// Send HELLO once when channel connection has been established
-		msgQueue.sendMessage(HELLO_MESSAGE);
-		startTimers();
-	}
+        // Send HELLO once when channel connection has been established
+        msgQueue.sendMessage(HELLO_MESSAGE);
+        startTimers();
+    }
 
     public void activate(){
 
@@ -104,8 +104,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         return active;
     }
 
-	@Override
-	public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
+    @Override
+    public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
 
         if (!isActive()) return;
 
@@ -114,29 +114,29 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
         worldManager.getListener().trace(String.format( "P2PHandler invoke: [%s]", msg.getCommand()));
 
-		switch (msg.getCommand()) {
-			case HELLO:
-				msgQueue.receivedMessage(msg);
+        switch (msg.getCommand()) {
+            case HELLO:
+                msgQueue.receivedMessage(msg);
                 setHandshake((HelloMessage) msg, ctx);
                 sendGetPeers();
-				break;
-			case DISCONNECT:
-				msgQueue.receivedMessage(msg);
-				break;
-			case PING:
-				msgQueue.receivedMessage(msg);
+                break;
+            case DISCONNECT:
+                msgQueue.receivedMessage(msg);
+                break;
+            case PING:
+                msgQueue.receivedMessage(msg);
                 ctx.writeAndFlush(PONG_MESSAGE);
-				break;
-			case PONG:
-				msgQueue.receivedMessage(msg);
-				break;
-			case GET_PEERS:
-				msgQueue.receivedMessage(msg);
+                break;
+            case PONG:
+                msgQueue.receivedMessage(msg);
+                break;
+            case GET_PEERS:
+                msgQueue.receivedMessage(msg);
                 sendPeers(); // todo: implement session management for peer request
-				break;
-			case PEERS:
-				msgQueue.receivedMessage(msg);
-				processPeers(ctx, (PeersMessage) msg);
+                break;
+            case PEERS:
+                msgQueue.receivedMessage(msg);
+                processPeers(ctx, (PeersMessage) msg);
 
                 if (peerDiscoveryMode &&
                     !handshakeHelloMessage.getCapabilities().contains(Capability.ETH)){
@@ -146,18 +146,18 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                     ctx.disconnect().sync();
                 }
                 break;
-			default:
-				ctx.fireChannelRead(msg);
-				break;
-		}
-	}
+            default:
+                ctx.fireChannelRead(msg);
+                break;
+        }
+    }
 
-	@Override
-	public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         logger.info("channel inactive: ", ctx.toString());
         active = false;
-		this.killTimers();
-	}
+        this.killTimers();
+    }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
@@ -170,7 +170,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
         worldManager.getPeerDiscovery().addPeers(peersMessage.getPeers());
-	}
+    }
 
     private void sendGetPeers(){
         msgQueue.sendMessage( StaticMessages.GET_PEERS_MESSAGE );
@@ -190,22 +190,22 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             new Peer(peer.getAddress(), peer.getPort(), peer.getPeerId());
         }
 
-    	PeersMessage msg = new PeersMessage(peerSet);
+        PeersMessage msg = new PeersMessage(peerSet);
         lastPeersSent = peers;
-    	msgQueue.sendMessage(msg);
+        msgQueue.sendMessage(msg);
     }
 
 
-	private void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
+    private void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
 
         this.handshakeHelloMessage = msg;
-		if (msg.getP2PVersion() != P2pHandler.VERSION)
-			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
-		else {
-			List<Capability> capInCommon = new ArrayList<>();
-			for (Capability capability : msg.getCapabilities()) {
-				if (HELLO_MESSAGE.getCapabilities().contains(capability)) {
-	    			if (capability.getName().equals(Capability.ETH)){
+        if (msg.getP2PVersion() != P2pHandler.VERSION)
+            msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
+        else {
+            List<Capability> capInCommon = new ArrayList<>();
+            for (Capability capability : msg.getCapabilities()) {
+                if (HELLO_MESSAGE.getCapabilities().contains(capability)) {
+                    if (capability.getName().equals(Capability.ETH)){
 
                         // Activate EthHandler for this peer
                         EthHandler ethHandler =
@@ -221,21 +221,21 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                                 (ShhHandler)ctx.pipeline().get(Capability.SHH);
                         shhHandler.activate();
                     }
-					capInCommon.add(capability);
-				}
-			}
+                    capInCommon.add(capability);
+                }
+            }
             adaptMessageIds(capInCommon);
 
-			InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
-			int port = msg.getListenPort();
-			PeerInfo confirmedPeer = new PeerInfo(address, port, msg.getPeerId());
-			confirmedPeer.setOnline(false);
-			confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
+            InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();
+            int port = msg.getListenPort();
+            PeerInfo confirmedPeer = new PeerInfo(address, port, msg.getPeerId());
+            confirmedPeer.setOnline(false);
+            confirmedPeer.getCapabilities().addAll(msg.getCapabilities());
 
             //todo calculate the Offsets
             worldManager.getPeerDiscovery().getPeers().add(confirmedPeer);
-		}
-	}
+        }
+    }
 
     /**
      * submit transaction to the network
@@ -256,7 +256,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public void adaptMessageIds(List<Capability> capabilities) {
 
-    	Collections.sort(capabilities);
+        Collections.sort(capabilities);
         byte offset = (byte) (P2pMessageCodes.USER.asByte() + 1);
 
         for (Capability capability : capabilities) {
@@ -290,12 +290,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 /*
         timer.scheduleAtFixedRate(new TimerTask() {
             public void run() {
-            	msgQueue.sendMessage(GET_PEERS_MESSAGE);
+                msgQueue.sendMessage(GET_PEERS_MESSAGE);
             }
         }, 500, 25000);
 */
     }
-	
+    
     public void killTimers(){
         timer.cancel();
         timer.purge();

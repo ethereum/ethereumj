@@ -12,41 +12,41 @@ import org.ethereum.net.message.Message;
  */
 public class MessageRoundtrip {
 
-	private Message msg = null;
-	long lastTimestamp = 0;
-	long retryTimes = 0;
-	boolean answered = false;
+    private Message msg = null;
+    long lastTimestamp = 0;
+    long retryTimes = 0;
+    boolean answered = false;
 
-	public MessageRoundtrip(Message msg) {
-		this.msg = msg;
-		saveTime();
-	}
+    public MessageRoundtrip(Message msg) {
+        this.msg = msg;
+        saveTime();
+    }
 
-	public boolean isAnswered() {
-		return answered;
-	}
+    public boolean isAnswered() {
+        return answered;
+    }
 
-	public void answer() {
-		answered = true;
-	}
+    public void answer() {
+        answered = true;
+    }
 
-	public long getRetryTimes() {
-		return retryTimes;
-	}
+    public long getRetryTimes() {
+        return retryTimes;
+    }
 
-	public void incRetryTimes() {
-		++retryTimes;
-	}
+    public void incRetryTimes() {
+        ++retryTimes;
+    }
 
-	public void saveTime() {
-		lastTimestamp = System.currentTimeMillis();
-	}
+    public void saveTime() {
+        lastTimestamp = System.currentTimeMillis();
+    }
 
-	public boolean hasToRetry() {
-		return 20000 < System.currentTimeMillis() - lastTimestamp;
-	}
+    public boolean hasToRetry() {
+        return 20000 < System.currentTimeMillis() - lastTimestamp;
+    }
 
-	public Message getMsg() {
-		return msg;
-	}
+    public Message getMsg() {
+        return msg;
+    }
 }

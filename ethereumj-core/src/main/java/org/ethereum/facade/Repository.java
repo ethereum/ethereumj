@@ -19,13 +19,13 @@ import java.util.HashMap;
 
 public interface Repository {
 
-	/**
-	 * Create a new account in the database
-	 *  
-	 * @param addr of the contract
-	 * @return newly created account state
-	 */
-	public AccountState createAccount(byte[] addr);
+    /**
+     * Create a new account in the database
+     *  
+     * @param addr of the contract
+     * @return newly created account state
+     */
+    public AccountState createAccount(byte[] addr);
 
 
     /**
@@ -34,13 +34,13 @@ public interface Repository {
      *           false otherwise
      */
     public boolean isExist(byte[] addr);
-	
-	/**
-	 * Retrieve an account
-	 * 
-	 * @param addr of the account
-	 * @return account state as stored in the database
-	 */
+    
+    /**
+     * Retrieve an account
+     * 
+     * @param addr of the account
+     * @return account state as stored in the database
+     */
     public AccountState getAccountState(byte[] addr);
     
     /**
@@ -143,7 +143,7 @@ public interface Repository {
      * @param gasUsed the amount of gas used in the block until that point
      * @param txNumber is the number of the transaction for which the dump has to be made
      * @param txHash is the hash of the given transaction. 
-     * 		If null, the block state post coinbase reward is dumped.
+     *      If null, the block state post coinbase reward is dumped.
      */
     public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash);
 

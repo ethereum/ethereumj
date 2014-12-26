@@ -25,8 +25,8 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class SerpentEditor extends JFrame {
 
-	private Logger logger = LoggerFactory.getLogger("gui");
-	
+    private Logger logger = LoggerFactory.getLogger("gui");
+    
     private String codeSample = "\n\n\n" +
                                 "" +
                                 "if !contract.storage[msg.data[0]]:\n" +
@@ -181,11 +181,11 @@ public class SerpentEditor extends JFrame {
             if (matcher.find()) {
                 asmResult = SerpentCompiler.compileFullNotion(codeArea.getText());
                 asmResult = GUIUtils.getStyledAsmCode(asmResult);
-			} else {
+            } else {
                 asmResult = SerpentCompiler.compile(codeArea.getText());
             }
         } catch (Throwable th) {
-        	logger.error(th.getMessage(), th);
+            logger.error(th.getMessage(), th);
 
             splitPanel.setDividerLocation(0.8);
             result.setVisible(true);
@@ -216,13 +216,13 @@ public class SerpentEditor extends JFrame {
             if (matcher.find()) {
                 asmResult = SerpentCompiler.compileFullNotion(codeArea.getText());
                 machineCode = SerpentCompiler.compileFullNotionAssemblyToMachine(asmResult);
-			} else {
+            } else {
                 asmResult = SerpentCompiler.compile(codeArea.getText());
                 machineCode = SerpentCompiler.compileAssemblyToMachine(asmResult);
                 machineCode = SerpentCompiler.encodeMachineCodeForVMRun(machineCode, null);
             }
         } catch (Throwable th) {
-        	logger.error(th.getMessage(), th);
+            logger.error(th.getMessage(), th);
             splitPanel.setDividerLocation(0.7);
             result.setVisible(true);
             result.setText(th.getMessage());
@@ -260,23 +260,23 @@ public class SerpentEditor extends JFrame {
 
             mainContentPane.getActionMap().put("OpenFileButton",openFile);
 
-			button.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					File file = callFileChooser();
-					try {
-						if (file == null)
-							return;
-						String content = new Scanner(file).useDelimiter("\\Z").next();
-						codeArea.setText(content);
-					} catch (FileNotFoundException e1) {
-						logger.error(e1.getMessage(), e1);
-					} catch (java.util.NoSuchElementException e2) {
-						// don't worry it's just the file is empty
-						codeArea.setText("");
-					}
-				}
-			});
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    File file = callFileChooser();
+                    try {
+                        if (file == null)
+                            return;
+                        String content = new Scanner(file).useDelimiter("\\Z").next();
+                        codeArea.setText(content);
+                    } catch (FileNotFoundException e1) {
+                        logger.error(e1.getMessage(), e1);
+                    } catch (java.util.NoSuchElementException e2) {
+                        // don't worry it's just the file is empty
+                        codeArea.setText("");
+                    }
+                }
+            });
             toolbar.add(button);
         }
 
@@ -301,12 +301,12 @@ public class SerpentEditor extends JFrame {
 
             mainContentPane.getActionMap().put("OpenSaveButtonAlways",saveNewFile);
 
-			Action saveFile = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					button.doClick();
-				}
-			};
+            Action saveFile = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
 
             mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
                     put(KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
@@ -314,34 +314,34 @@ public class SerpentEditor extends JFrame {
 
             mainContentPane.getActionMap().put("OpenSaveButton",saveFile);
 
-			button.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
 
-					File file = null;
+                    File file = null;
 
-					if (e.getModifiers() == (InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK)) {
-						file = callFileChooser();
-						if (file == null)
-							return;
-					} else if (fileChooser == null
-							|| fileChooser.getSelectedFile() == null) {
-						file = callFileChooser();
-						if (file == null)
-							return;
-					} else {
-						file = fileChooser.getSelectedFile();
-					}
+                    if (e.getModifiers() == (InputEvent.CTRL_MASK | InputEvent.SHIFT_MASK)) {
+                        file = callFileChooser();
+                        if (file == null)
+                            return;
+                    } else if (fileChooser == null
+                            || fileChooser.getSelectedFile() == null) {
+                        file = callFileChooser();
+                        if (file == null)
+                            return;
+                    } else {
+                        file = fileChooser.getSelectedFile();
+                    }
 
-					try {
-						BufferedWriter out = new BufferedWriter(new FileWriter(file), 32768);
-						out.write(codeArea.getText());
-						out.close();
-					} catch (IOException e1) {
-						logger.error(e1.getMessage(), e1);
-					}
-				}
-			});
+                    try {
+                        BufferedWriter out = new BufferedWriter(new FileWriter(file), 32768);
+                        out.write(codeArea.getText());
+                        out.close();
+                    } catch (IOException e1) {
+                        logger.error(e1.getMessage(), e1);
+                    }
+                }
+            });
             toolbar.add(button);
         }
         toolbar.addSeparator();
@@ -354,12 +354,12 @@ public class SerpentEditor extends JFrame {
             final JButton button = new JButton(imageIcon);
             button.setToolTipText("Compile the contract < Ctrl + F9 >");
 
-			Action compile = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					button.doClick();
-				}
-			};
+            Action compile = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
 
             mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
                     put(KeyStroke.getKeyStroke(KeyEvent.VK_F9, InputEvent.CTRL_DOWN_MASK),
@@ -367,12 +367,12 @@ public class SerpentEditor extends JFrame {
 
             mainContentPane.getActionMap().put("CompileButton",compile);
 
-			button.addActionListener(new ActionListener() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					compileCode();
-				}
-			});
+            button.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    compileCode();
+                }
+            });
             toolbar.add(button);
         }
 
@@ -418,12 +418,12 @@ public class SerpentEditor extends JFrame {
             final JButton button = new JButton(imageIcon);
             button.setToolTipText("Call contract <Ctrl + F8>");
 
-			Action call = new AbstractAction() {
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					button.doClick();
-				}
-			};
+            Action call = new AbstractAction() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    button.doClick();
+                }
+            };
 
             mainContentPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).
                     put(KeyStroke.getKeyStroke(KeyEvent.VK_F8,
@@ -432,43 +432,43 @@ public class SerpentEditor extends JFrame {
 
             mainContentPane.getActionMap().put("CallButton", call);
 
-			button.addActionListener(new ActionListener() {
-				public void actionPerformed(ActionEvent e) {
-					ContractCallDialog payOutDialog = new ContractCallDialog(
-							(Frame) SwingUtilities.getAncestorOfClass(
-									JFrame.class, contentPane));
-				}
-			});
+            button.addActionListener(new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    ContractCallDialog payOutDialog = new ContractCallDialog(
+                            (Frame) SwingUtilities.getAncestorOfClass(
+                                    JFrame.class, contentPane));
+                }
+            });
             toolbar.add(button);
         }
         this.contentPane.add(toolbar, BorderLayout.EAST);
     }
 
 
-	protected File callFileChooser() {
+    protected File callFileChooser() {
 
-		File file = null;
+        File file = null;
 
-		if (fileChooser == null) {
-			fileChooser = new JFileChooser(CONFIG.samplesDir());
-			fileChooser.setMultiSelectionEnabled(false);
-		}
+        if (fileChooser == null) {
+            fileChooser = new JFileChooser(CONFIG.samplesDir());
+            fileChooser.setMultiSelectionEnabled(false);
+        }
 
-		switch (fileChooser.showOpenDialog(SerpentEditor.this)) {
-		case JFileChooser.APPROVE_OPTION:
-			file = fileChooser.getSelectedFile();
-			break;
-		}
-		return file;
-	}
+        switch (fileChooser.showOpenDialog(SerpentEditor.this)) {
+        case JFileChooser.APPROVE_OPTION:
+            file = fileChooser.getSelectedFile();
+            break;
+        }
+        return file;
+    }
 
-	public void addCloseAction() {
-		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				toolBar.editorToggle.setSelected(false);
-			}
-		});
-	}
+    public void addCloseAction() {
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                toolBar.editorToggle.setSelected(false);
+            }
+        });
+    }
 
     public static void main(String[] args) {
         // Start all Swing applications on the EDT.

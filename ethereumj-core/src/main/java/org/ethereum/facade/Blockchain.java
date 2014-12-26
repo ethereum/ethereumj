@@ -13,7 +13,7 @@ import org.ethereum.core.Genesis;
 
 public interface Blockchain  {
 
-	public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
+    public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
 
     public long getSize();
     public void add(Block block);
@@ -26,10 +26,10 @@ public interface Blockchain  {
     public boolean hasParentOnTheChain(Block block);
     public void reset();
     public void close();
-	public void updateTotalDifficulty(Block block);
+    public void updateTotalDifficulty(Block block);
     public BigInteger getTotalDifficulty();
     public void setTotalDifficulty(BigInteger totalDifficulty);
-	public byte[] getBestBlockHash();
+    public byte[] getBestBlockHash();
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty);
 
     TransactionReceipt getTransactionReceiptByHash(byte[] hash);

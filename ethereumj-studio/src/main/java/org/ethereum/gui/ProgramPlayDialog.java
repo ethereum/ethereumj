@@ -23,7 +23,7 @@ import java.util.List;
  */
 
 public class ProgramPlayDialog extends JPanel implements ActionListener,
-		ChangeListener, Program.ProgramListener {
+        ChangeListener, Program.ProgramListener {
 
     private List<String> outputList;
     private JTextArea console;
@@ -32,18 +32,18 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     private ProgramInvoke pi;
     
     public ProgramPlayDialog(byte[] code) {
-    	this(code, new ProgramInvokeMockImpl());
+        this(code, new ProgramInvokeMockImpl());
     }
     
     public ProgramPlayDialog(byte[] code, Transaction tx, Block lastBlock) {
-//		this(code, ProgramInvokeFactory.createProgramInvoke(tx, lastBlock,
+//      this(code, ProgramInvokeFactory.createProgramInvoke(tx, lastBlock,
 //                UIEthereumManager.ethereum.getRepository()));
     }
     
     public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke) {
-    	pi = programInvoke;
-    	
-    	outputList = new ArrayList<String>();
+        pi = programInvoke;
+        
+        outputList = new ArrayList<String>();
         VM vm = new VM();
 
         Program program = new Program(code, programInvoke);
@@ -52,13 +52,13 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         vm.play(program);
 
         if(programInvoke.getRepository() != null)
-        	programInvoke.getRepository().rollback();
+            programInvoke.getRepository().rollback();
 
         doGUI();
     }
     
     public void doGUI() {
-    	
+        
         setLayout(new BoxLayout(this, BoxLayout.PAGE_AXIS));
 
         //Create the slider.
@@ -157,10 +157,10 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
         frame.addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent windowEvent) {
-            	if (tx == null) {
-            		ppd.pi.getRepository().close();
-                	ppd.pi = null;
-            	}
+                if (tx == null) {
+                    ppd.pi.getRepository().close();
+                    ppd.pi = null;
+                }
             }
         });
 

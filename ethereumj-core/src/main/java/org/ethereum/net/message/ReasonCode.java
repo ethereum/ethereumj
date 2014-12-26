@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public enum ReasonCode {
 
-	/** [0x00] Disconnect request by other peer */
+    /** [0x00] Disconnect request by other peer */
     REQUESTED(0x00),
     
     /** [0x01] */
@@ -37,7 +37,7 @@ public enum ReasonCode {
     PEER_QUITING(0x08),
     
     /** [0xFF] Reason not specified */
-	UNKNOWN(0xFF);
+    UNKNOWN(0xFF);
 
     private int reason;
     
@@ -53,13 +53,13 @@ public enum ReasonCode {
     }
         
     public static ReasonCode fromInt(int i) {
-    	ReasonCode type = intToTypeMap.get(Integer.valueOf(i));
+        ReasonCode type = intToTypeMap.get(Integer.valueOf(i));
         if (type == null) 
             return ReasonCode.UNKNOWN;
         return type;
     }
     
     public byte asByte() {
-    	return (byte) reason;
+        return (byte) reason;
     }
 }

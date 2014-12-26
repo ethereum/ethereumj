@@ -23,8 +23,8 @@ public class HelloMessageTest {
 
     @Test
     public void test1() {
-    	String helloMessageRaw = "f87a8002a5457468657265756d282b2b292f76302e372e392f52656c656173652f4c696e75782f672b2bccc58365746827c583736868018203e0b8401fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a77f9b86eb14669fe7a8a46a2dd1b7d070b94e463f4ecd5b337c8b4d31bbf8dd5646";
-    	    	
+        String helloMessageRaw = "f87a8002a5457468657265756d282b2b292f76302e372e392f52656c656173652f4c696e75782f672b2bccc58365746827c583736868018203e0b8401fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a77f9b86eb14669fe7a8a46a2dd1b7d070b94e463f4ecd5b337c8b4d31bbf8dd5646";
+                
         byte[] payload = Hex.decode(helloMessageRaw);
         HelloMessage helloMessage = new HelloMessage(payload);
         logger.info(helloMessage.toString());

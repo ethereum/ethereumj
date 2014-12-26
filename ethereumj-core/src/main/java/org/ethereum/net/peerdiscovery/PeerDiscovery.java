@@ -22,38 +22,38 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 @Component
 public class PeerDiscovery {
 
-	private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-	private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<PeerInfo>());
-	
-	private PeerMonitorThread monitor;
-	private ThreadFactory threadFactory;
-	private ThreadPoolExecutor executorPool;
-	private RejectedExecutionHandler rejectionHandler;
+    private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<PeerInfo>());
+    
+    private PeerMonitorThread monitor;
+    private ThreadFactory threadFactory;
+    private ThreadPoolExecutor executorPool;
+    private RejectedExecutionHandler rejectionHandler;
 
     @Autowired
     private ApplicationContext ctx;
 
 
-	private final AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
-	public void start() {
+    public void start() {
 
-		// RejectedExecutionHandler implementation
-		rejectionHandler = new RejectionLogger();
+        // RejectedExecutionHandler implementation
+        rejectionHandler = new RejectionLogger();
 
-		// Get the ThreadFactory implementation to use
-		threadFactory = Executors.defaultThreadFactory();
+        // Get the ThreadFactory implementation to use
+        threadFactory = Executors.defaultThreadFactory();
 
-		// creating the ThreadPoolExecutor
-		executorPool = new ThreadPoolExecutor(CONFIG.peerDiscoveryWorkers(),
+        // creating the ThreadPoolExecutor
+        executorPool = new ThreadPoolExecutor(CONFIG.peerDiscoveryWorkers(),
                 CONFIG.peerDiscoveryWorkers(), 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(
-						1000), threadFactory, rejectionHandler);
+                        1000), threadFactory, rejectionHandler);
 
-		// start the monitoring thread
-		monitor = new PeerMonitorThread(executorPool, 1, this);
-		Thread monitorThread = new Thread(monitor);
-		monitorThread.start();
+        // start the monitoring thread
+        monitor = new PeerMonitorThread(executorPool, 1, this);
+        Thread monitorThread = new Thread(monitor);
+        monitorThread.start();
 
         // Initialize PeerData
         List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
@@ -65,23 +65,23 @@ public class PeerDiscovery {
             executorPool.execute(workerThread);
         }
 
-		started.set(true);
-	}
+        started.set(true);
+    }
 
-	public void stop() {
-		executorPool.shutdown();
-		monitor.shutdown();
-		started.set(false);
-	}
+    public void stop() {
+        executorPool.shutdown();
+        monitor.shutdown();
+        started.set(false);
+    }
 
-	public boolean isStarted() {
-		return started.get();
-	}
-	
+    public boolean isStarted() {
+        return started.get();
+    }
+    
     public Set<PeerInfo> getPeers() {
-		return peers;
-	}
-		
+        return peers;
+    }
+        
     /**
      * Update list of known peers with new peers
      * This method checks for duplicate peer id's and addresses
@@ -90,7 +90,7 @@ public class PeerDiscovery {
      */
     public void addPeers(Set<Peer> newPeers) {
         synchronized (peers) {
-			for (final Peer newPeer : newPeers) {
+            for (final Peer newPeer : newPeers) {
                 PeerInfo peerInfo =
                         new PeerInfo(newPeer.getAddress(), newPeer.getPort(), newPeer.getPeerId());
                 if (started.get() && !peers.contains(peerInfo )){
@@ -107,13 +107,13 @@ public class PeerDiscovery {
             }
     }
 
-	private void startWorker(PeerInfo peerInfo) {
+    private void startWorker(PeerInfo peerInfo) {
 
-		logger.debug("Add new peer for discovery: {}", peerInfo);
+        logger.debug("Add new peer for discovery: {}", peerInfo);
         WorkerThread workerThread = ctx.getBean(WorkerThread.class);
         workerThread.init(peerInfo, executorPool);
         executorPool.execute(workerThread);
-	}
+    }
 
     public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
 

@@ -30,7 +30,7 @@ public class PeersMessageTest {
 
         assertEquals(P2pMessageCodes.GET_PEERS, getPeersMessage.getCommand());
     }
-	
+    
     /* PEERS */
 
     @Test /* PeersMessage 1 from RLP */
@@ -51,7 +51,7 @@ public class PeersMessageTest {
         assertEquals("/104.148.216.72", peer.getAddress().toString());
         assertEquals(112, peer.getPort());
         assertEquals("36659c3656c488437cceb11abeb9b9fc69b8055144a7e7db3584d03e606083f90e17a1d3021d674579407cdaaafdfeef485872ab719db9f2b6283f498bb90a71",
-        		peer.getPeerId());
+                peer.getPeerId());
     }
 
 

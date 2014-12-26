@@ -19,7 +19,7 @@ import java.util.List;
 public class MinerThread implements Runnable {
 
 
-	private final static Logger logger = LoggerFactory.getLogger("miner");
+    private final static Logger logger = LoggerFactory.getLogger("miner");
     private final byte[] coinbase;
 
     private MineSwarm   mineSwarm;
@@ -34,7 +34,7 @@ public class MinerThread implements Runnable {
 
     private Block announcedBlock = null;
 
-	public MinerThread(String name,  MineSwarm mineSwarm, byte[] coinbase) {
+    public MinerThread(String name,  MineSwarm mineSwarm, byte[] coinbase) {
         this.name = name;
         this.mineSwarm = mineSwarm;
         this.coinbase = coinbase;
@@ -42,14 +42,14 @@ public class MinerThread implements Runnable {
         Block genesis = Genesis.getInstance();
         mainChain.add(genesis);
 
-	}
+    }
 
-	@Override
-	public void run() {
-		logger.debug("{} start", name);
+    @Override
+    public void run() {
+        logger.debug("{} start", name);
         doRun();
-		logger.debug("{} end", name);
-	}
+        logger.debug("{} end", name);
+    }
 
     public void onNewBlock(Block foundBlock){
 
@@ -88,7 +88,7 @@ public class MinerThread implements Runnable {
         mineSwarm.announceBlock(block);
     }
 
-	private void doRun() {
+    private void doRun() {
 
         Block genesis = mainChain.getLast();
         tmpBlock = createBlock(genesis, coinbase);

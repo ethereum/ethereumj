@@ -25,8 +25,8 @@ import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
  */
 public class Transaction {
 
-	private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
-	
+    private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
+    
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
 
@@ -107,9 +107,9 @@ public class Transaction {
         this.data =           transaction.get(5).getRLPData();
         // only parse signature in case tx is signed
         if(transaction.get(6).getRLPData() != null) {
-            byte v =		transaction.get(6).getRLPData()[0];
-            byte[] r =		transaction.get(7).getRLPData();
-            byte[] s =		transaction.get(8).getRLPData();
+            byte v =        transaction.get(6).getRLPData()[0];
+            byte[] r =      transaction.get(7).getRLPData();
+            byte[] s =      transaction.get(8).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
         } else {
             logger.debug("RLP encoded tx is not signed!");
@@ -215,16 +215,16 @@ public class Transaction {
     }
 
     public byte[] getSender() {
-		try {
+        try {
             if (sendAddress == null) {
                 ECKey key = ECKey.signatureToKey(getRawHash(), getSignature().toBase64());
                 sendAddress = key.getAddress();
             }
-			return sendAddress;
-		} catch (SignatureException e) {
-			logger.error(e.getMessage(), e);
-		}
-		return null;
+            return sendAddress;
+        } catch (SignatureException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
     }
 
     public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
@@ -262,18 +262,18 @@ public class Transaction {
         // parse null as 0 for nonce
         byte[] nonce = null;
         if ( this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0){
-            nonce 				= RLP.encodeElement(null);
+            nonce               = RLP.encodeElement(null);
         } else {
-            nonce 				= RLP.encodeElement(this.nonce);
+            nonce               = RLP.encodeElement(this.nonce);
         }
-        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
-        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
-        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
-        byte[] value 				= RLP.encodeElement(this.value);
-        byte[] data 				= RLP.encodeElement(this.data);
+        byte[] gasPrice             = RLP.encodeElement(this.gasPrice);
+        byte[] gasLimit             = RLP.encodeElement(this.gasLimit);
+        byte[] receiveAddress       = RLP.encodeElement(this.receiveAddress);
+        byte[] value                = RLP.encodeElement(this.value);
+        byte[] data                 = RLP.encodeElement(this.data);
 
-		rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
-				value, data);
+        rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
+                value, data);
         return rlpRaw;
     }
 
@@ -284,15 +284,15 @@ public class Transaction {
         // parse null as 0 for nonce
         byte[] nonce = null;
         if (this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0){
-            nonce 				= RLP.encodeElement(null);
+            nonce               = RLP.encodeElement(null);
         } else {
-            nonce 				= RLP.encodeElement(this.nonce);
+            nonce               = RLP.encodeElement(this.nonce);
         }
-        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
-        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
-        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
-        byte[] value 				= RLP.encodeElement(this.value);
-        byte[] data 				= RLP.encodeElement(this.data);
+        byte[] gasPrice             = RLP.encodeElement(this.gasPrice);
+        byte[] gasLimit             = RLP.encodeElement(this.gasLimit);
+        byte[] receiveAddress       = RLP.encodeElement(this.receiveAddress);
+        byte[] value                = RLP.encodeElement(this.value);
+        byte[] data                 = RLP.encodeElement(this.data);
 
         byte[] v, r, s;
         
@@ -301,13 +301,13 @@ public class Transaction {
             r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
             s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
         } else {
-        	v = RLP.encodeElement(EMPTY_BYTE_ARRAY);
-        	r = RLP.encodeElement(EMPTY_BYTE_ARRAY);
-        	s = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            v = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            r = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            s = RLP.encodeElement(EMPTY_BYTE_ARRAY);
         }
 
-		this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,
-				receiveAddress, value, data, v, r, s);
+        this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,
+                receiveAddress, value, data, v, r, s);
 
         this.hash  = this.getHash();
 

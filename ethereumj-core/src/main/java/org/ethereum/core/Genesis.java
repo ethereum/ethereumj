@@ -28,26 +28,26 @@ import org.spongycastle.util.encoders.Hex;
  */
 public class Genesis extends Block {
 
-	public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
-	
+    public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
+    
     private static String[] premine = new String[] {
             "51ba59315b3a95761d0863b05ccc7a7f54703d99",
-            "e6716f9544a56c530d868e4bfbacb172315bdead",		// # (J)
-            "b9c015918bdaba24b4ff057a92a3873d6eb201be",		// # (V)
-            "1a26338f0d905e295fccb71fa9ea849ffa12aaf4",		// # (A)
-            "2ef47100e0787b915105fd5e3f4ff6752079d5cb", 	// # (M)
+            "e6716f9544a56c530d868e4bfbacb172315bdead",     // # (J)
+            "b9c015918bdaba24b4ff057a92a3873d6eb201be",     // # (V)
+            "1a26338f0d905e295fccb71fa9ea849ffa12aaf4",     // # (A)
+            "2ef47100e0787b915105fd5e3f4ff6752079d5cb",     // # (M)
             "cd2a3d9f938e13cd947ec05abc7fe734df8dd826",     // # (R)
-            "6c386a4b26f73c802f34673f7248bb118f97424a",		// # (HH)
-            "e4157b34ea9615cfbde6b4fda419828124b70c78",		// # (CH)
+            "6c386a4b26f73c802f34673f7248bb118f97424a",     // # (HH)
+            "e4157b34ea9615cfbde6b4fda419828124b70c78",     // # (CH)
     };
 
-	private static byte[] zeroHash256 = new byte[32];
-	private static byte[] zeroHash160 = new byte[20];
-	private static byte[] zeroHash512 = new byte[64];
+    private static byte[] zeroHash256 = new byte[32];
+    private static byte[] zeroHash160 = new byte[20];
+    private static byte[] zeroHash512 = new byte[64];
 
-	public static byte[] PARENT_HASH = zeroHash256;
-	public static byte[] UNCLES_HASH = EMPTY_LIST_HASH;
-	public static byte[] COINBASE = zeroHash160;
+    public static byte[] PARENT_HASH = zeroHash256;
+    public static byte[] UNCLES_HASH = EMPTY_LIST_HASH;
+    public static byte[] COINBASE = zeroHash160;
     public static byte[] LOG_BLOOM = zeroHash512;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long   NUMBER = 0;
@@ -59,30 +59,30 @@ public class Genesis extends Block {
     
     private static Block instance;
     
-	private Genesis() {
-		super(PARENT_HASH, UNCLES_HASH, COINBASE, LOG_BLOOM, DIFFICULTY,
-				NUMBER, GAS_LIMIT, GAS_USED, TIMESTAMP,
-				EXTRA_DATA, NONCE, null, null);
-		
-		Trie state = new TrieImpl(null);
+    private Genesis() {
+        super(PARENT_HASH, UNCLES_HASH, COINBASE, LOG_BLOOM, DIFFICULTY,
+                NUMBER, GAS_LIMIT, GAS_USED, TIMESTAMP,
+                EXTRA_DATA, NONCE, null, null);
+        
+        Trie state = new TrieImpl(null);
         // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
-		for (String address : premine) {
-			AccountState acctState = new AccountState(BigInteger.ZERO, PREMINE_AMOUNT);
-			state.update(Hex.decode(address), acctState.getEncoded());
+        for (String address : premine) {
+            AccountState acctState = new AccountState(BigInteger.ZERO, PREMINE_AMOUNT);
+            state.update(Hex.decode(address), acctState.getEncoded());
         }
 
-		setStateRoot(state.getRootHash());
+        setStateRoot(state.getRootHash());
     }
-	
-	public static Block getInstance() {
-		if (instance == null) {
-			instance = new Genesis();
-		}
-		return instance;
-	}
-	
-	public final static String[] getPremine() {
-		return premine;
-	}
+    
+    public static Block getInstance() {
+        if (instance == null) {
+            instance = new Genesis();
+        }
+        return instance;
+    }
+    
+    public final static String[] getPremine() {
+        return premine;
+    }
 }

@@ -25,12 +25,12 @@ import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMCustomTest {
-	
-	private ProgramInvokeMockImpl invoke;
-	private Program program;
-	
-	@Before
-	public void setup() {
+    
+    private ProgramInvokeMockImpl invoke;
+    private Program program;
+    
+    @Before
+    public void setup() {
         byte[] ownerAddress = Hex.decode("77045E71A7A2C50903D88E564CD72FAB11E82051");
         byte[] msgData = Hex.decode("00000000000000000000000000000000000000000000000000000000000000A1" +
                                     "00000000000000000000000000000000000000000000000000000000000000B1");
@@ -40,13 +40,13 @@ public class VMCustomTest {
 
         invoke.getRepository().createAccount(ownerAddress);
         invoke.getRepository().addBalance(ownerAddress, BigInteger.valueOf(1000L));
-	}
-	
-	@After
-	public void tearDown() {
-		invoke.getRepository().close();
-	}
-	
+    }
+    
+    @After
+    public void tearDown() {
+        invoke.getRepository().close();
+    }
+    
     @Test // CALLDATASIZE OP
     public void testCALLDATASIZE_1() {
 

@@ -1,12 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.ethereum</groupId>
-	<artifactId>ethereumj</artifactId>
-	<packaging>jar</packaging>
-	<version>0.7.14</version>
-	<name>EthereumJ</name>
-	<url>http://www.ethereumj.org</url>
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.ethereum</groupId>
+    <artifactId>ethereumj</artifactId>
+    <packaging>jar</packaging>
+    <version>0.7.14</version>
+    <name>EthereumJ</name>
+    <url>http://www.ethereumj.org</url>
 
 <!--
  * Install jar with sources to the local maven repository
@@ -17,64 +17,64 @@
 
 -->
 
-	<developers>
-		<developer>
-			<name>Roman Mandeleil</name>
-		</developer>
-		<developer>
-			<name>Nick Savers</name>
-		</developer>
-	</developers>
+    <developers>
+        <developer>
+            <name>Roman Mandeleil</name>
+        </developer>
+        <developer>
+            <name>Nick Savers</name>
+        </developer>
+    </developers>
 
-	<scm>
-		<connection>scm:git:git://github.com/ethereum/ethereumj.git</connection>
-		<developerConnection>scm:git:ssh://git@github.com/ethereum/ethereumj.git</developerConnection>
-		<url>https://github.com/ethereum/ethereumj</url>
-	</scm>
+    <scm>
+        <connection>scm:git:git://github.com/ethereum/ethereumj.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/ethereum/ethereumj.git</developerConnection>
+        <url>https://github.com/ethereum/ethereumj</url>
+    </scm>
 
 
-	<properties>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<!-- Third-party dependencies -->
-		<junit.version>4.11</junit.version>
-		<slf4j.version>1.7.7</slf4j.version>
-		<leveldb.version>0.7</leveldb.version>
-		<spongycastle.version>1.51.0.0</spongycastle.version>
-		<generated.sourceDirectory>gen</generated.sourceDirectory>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <!-- Third-party dependencies -->
+        <junit.version>4.11</junit.version>
+        <slf4j.version>1.7.7</slf4j.version>
+        <leveldb.version>0.7</leveldb.version>
+        <spongycastle.version>1.51.0.0</spongycastle.version>
+        <generated.sourceDirectory>gen</generated.sourceDirectory>
 
         <github.global.server>github</github.global.server>
-	</properties>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>io.netty</groupId>
-			<artifactId>netty-all</artifactId>
-			<version>4.0.23.Final</version>
-		</dependency>
-		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>${junit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<!-- Spongy Castle for SHA3 and SECP256K1 -->
-		<dependency>
-			<groupId>com.madgag.spongycastle</groupId>
-			<artifactId>core</artifactId>
-			<version>${spongycastle.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.iq80.leveldb</groupId>
-		    <artifactId>leveldb</artifactId>
-		    <version>${leveldb.version}</version>
-		</dependency>
-		<!-- Added Cedarsoft for DeepEquals function  -->
-		<dependency>
-		  <groupId>com.cedarsoftware</groupId>
-		  <artifactId>java-util</artifactId>
-		  <version>1.8.0</version>
-		</dependency>
-		<!-- For Serpent compile -->
+    <dependencies>
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.0.23.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Spongy Castle for SHA3 and SECP256K1 -->
+        <dependency>
+            <groupId>com.madgag.spongycastle</groupId>
+            <artifactId>core</artifactId>
+            <version>${spongycastle.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.iq80.leveldb</groupId>
+            <artifactId>leveldb</artifactId>
+            <version>${leveldb.version}</version>
+        </dependency>
+        <!-- Added Cedarsoft for DeepEquals function  -->
+        <dependency>
+          <groupId>com.cedarsoftware</groupId>
+          <artifactId>java-util</artifactId>
+          <version>1.8.0</version>
+        </dependency>
+        <!-- For Serpent compile -->
         <dependency>
             <groupId>org.antlr</groupId>
             <artifactId>antlr4-runtime</artifactId>
@@ -228,10 +228,10 @@
     </dependencies>
 
 
-	<build>
+    <build>
 
 
-		<plugins>
+        <plugins>
 
             <plugin>
                 <groupId>com.google.code.maven-replacer-plugin</groupId>
@@ -322,30 +322,30 @@
             </plugin>
 
 
-			<plugin>
-				<groupId>org.eluder.coveralls</groupId>
-				<artifactId>coveralls-maven-plugin</artifactId>
-				<version>2.2.0</version>
-			</plugin>
-			<plugin>
-			    <groupId>org.jacoco</groupId>
-			    <artifactId>jacoco-maven-plugin</artifactId>
-			    <version>0.7.1.201405082137</version>
-			    <executions>
-			        <execution>
-			            <id>prepare-agent</id>
-			            <goals>
-			                <goal>prepare-agent</goal>
-			            </goals>
-			        </execution>
-			    </executions>
-			    <configuration>
-				    <excludes>
-				    	<exclude>org/ethereum/gui/**/*.class</exclude>
-						<exclude>org/ethereum/**/*Test.class</exclude>
-				    </excludes>
-			    </configuration>
-			</plugin>
+            <plugin>
+                <groupId>org.eluder.coveralls</groupId>
+                <artifactId>coveralls-maven-plugin</artifactId>
+                <version>2.2.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.7.1.201405082137</version>
+                <executions>
+                    <execution>
+                        <id>prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <excludes>
+                        <exclude>org/ethereum/gui/**/*.class</exclude>
+                        <exclude>org/ethereum/**/*Test.class</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
 
 <!--
             <plugin>
@@ -401,8 +401,8 @@
 
 
 
-		</plugins>
-		 <pluginManagement>
+        </plugins>
+         <pluginManagement>
             <plugins>
                 <!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
                 <plugin>
@@ -418,7 +418,7 @@
                                         <artifactId>maven-dependency-plugin</artifactId>
                                         <versionRange>[2.0,)</versionRange>
                                         <goals>
-                                        	<goal>copy-dependencies</goal>
+                                            <goal>copy-dependencies</goal>
                                             <goal>unpack</goal>
                                         </goals>
                                     </pluginExecutionFilter>
@@ -427,17 +427,17 @@
                                     </action>
                                 </pluginExecution>
                                 <pluginExecution>
-                                	<pluginExecutionFilter>
-                                		<groupId>org.jacoco</groupId>
-                                		<artifactId>jacoco-maven-plugin</artifactId>
-                                		<versionRange>[0.7.1.201405082137,)</versionRange>
-                                		<goals>
-                                			<goal>prepare-agent</goal>
-                                		</goals>
-                                	</pluginExecutionFilter>
-                                	<action>
-                                		<ignore></ignore>
-                                	</action>
+                                    <pluginExecutionFilter>
+                                        <groupId>org.jacoco</groupId>
+                                        <artifactId>jacoco-maven-plugin</artifactId>
+                                        <versionRange>[0.7.1.201405082137,)</versionRange>
+                                        <goals>
+                                            <goal>prepare-agent</goal>
+                                        </goals>
+                                    </pluginExecutionFilter>
+                                    <action>
+                                        <ignore></ignore>
+                                    </action>
                                 </pluginExecution>
                             </pluginExecutions>
                         </lifecycleMappingMetadata>
@@ -445,6 +445,6 @@
                 </plugin>
             </plugins>
         </pluginManagement>
-	</build>
-	
+    </build>
+    
 </project>

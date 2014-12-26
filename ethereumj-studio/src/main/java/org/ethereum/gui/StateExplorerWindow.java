@@ -45,21 +45,21 @@ import java.awt.Component;
 import java.awt.FlowLayout;
 
 public class StateExplorerWindow extends JFrame {
-	
-	private ToolBar toolBar = null;
-	private JTextField txfAccountAddress;
-	private WindowTextArea txaPrinter;
-	private JButton btnPlayCode;
-	private AccountsListWindow accountsListWindow;
-	ProgramPlayDialog codePanel;
-	
-	private JTable tblStateDataTable;
-	private StateDataTableModel dataModel;
-	String[] dataTypes = {"String", "Hex", "Number"};
-	
-	public StateExplorerWindow(ToolBar toolBar) {
-		this.toolBar = toolBar;
-		
+    
+    private ToolBar toolBar = null;
+    private JTextField txfAccountAddress;
+    private WindowTextArea txaPrinter;
+    private JButton btnPlayCode;
+    private AccountsListWindow accountsListWindow;
+    ProgramPlayDialog codePanel;
+    
+    private JTable tblStateDataTable;
+    private StateDataTableModel dataModel;
+    String[] dataTypes = {"String", "Hex", "Number"};
+    
+    public StateExplorerWindow(ToolBar toolBar) {
+        this.toolBar = toolBar;
+        
         URL url = ClassLoader.getSystemResource("ethereum-icon.png");
         Toolkit kit = Toolkit.getDefaultToolkit();
         Image img = kit.createImage(url);
@@ -91,10 +91,10 @@ public class StateExplorerWindow extends JFrame {
         btnListAccounts.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(ItemEvent e) {
-            	SwingUtilities.invokeLater(new Runnable() {
+                SwingUtilities.invokeLater(new Runnable() {
                     public void run() {
                        if(accountsListWindow == null)
-                    	   accountsListWindow = new AccountsListWindow();
+                           accountsListWindow = new AccountsListWindow();
                        accountsListWindow.setVisible(true);
                     }
                 });
@@ -110,27 +110,27 @@ public class StateExplorerWindow extends JFrame {
         JButton btnSearch = new JButton("Search");
         horizontalBox.add(btnSearch);
         btnSearch.addMouseListener(new MouseAdapter(){
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
-				if(addr != null)
-					searchAccount(addr);
-			}			
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
+                if(addr != null)
+                    searchAccount(addr);
+            }           
         });
         
         btnPlayCode = new JButton("Play Code");
         horizontalBox.add(btnPlayCode);
         btnPlayCode.addMouseListener(new MouseAdapter(){
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
-				if(addr != null) {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                byte[] addr = Utils.addressStringToBytes(txfAccountAddress.getText());
+                if(addr != null) {
                     Repository repository = UIEthereumManager.ethereum.getRepository();
-					byte[] code = repository.getCode(addr);
-					if(code != null)
-						ProgramPlayDialog.createAndShowGUI(code, null, null);
-				}
-			}			
+                    byte[] code = repository.getCode(addr);
+                    if(code != null)
+                        ProgramPlayDialog.createAndShowGUI(code, null, null);
+                }
+            }           
         });
         
         /*
@@ -155,12 +155,12 @@ public class StateExplorerWindow extends JFrame {
         JComboBox cmbKey = new JComboBox(dataTypes);
         cmbKey.setSelectedIndex(1);
         cmbKey.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JComboBox cmb = (JComboBox) e.getSource();
-				DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
-				dataModel.setKeyEncoding(t);
-			}
-		});
+            public void actionPerformed(ActionEvent e) {
+                JComboBox cmb = (JComboBox) e.getSource();
+                DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
+                dataModel.setKeyEncoding(t);
+            }
+        });
         VBox1.add(l1);
         VBox1.add(cmbKey);
         
@@ -171,12 +171,12 @@ public class StateExplorerWindow extends JFrame {
         JComboBox cmbValue = new JComboBox(dataTypes);
         cmbValue.setSelectedIndex(1);
         cmbValue.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				JComboBox cmb = (JComboBox) e.getSource();
-				DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
-				dataModel.setValueEncoding(t);
-			}
-		});
+            public void actionPerformed(ActionEvent e) {
+                JComboBox cmb = (JComboBox) e.getSource();
+                DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
+                dataModel.setValueEncoding(t);
+            }
+        });
         VBox2.add(l2);
         VBox2.add(cmbValue);
         
@@ -197,150 +197,150 @@ public class StateExplorerWindow extends JFrame {
         JScrollPane scrollPane = new JScrollPane(tblStateDataTable);
         scrollPane.setPreferredSize(new Dimension(600,200));
         panel.add(scrollPane);
-	}
-	
-	private void searchAccount(byte[] add){
-		txaPrinter.clean();
-		txaPrinter.println(accountDetailsString(add, dataModel));
-	}
-	
-	private String accountDetailsString(byte[] account, StateDataTableModel dataModel){	
-		String ret = "";
-		// 1) print account address
-		ret = "Account: " + Hex.toHexString(account) + "\n";
-		
-		//2) print state
+    }
+    
+    private void searchAccount(byte[] add){
+        txaPrinter.clean();
+        txaPrinter.println(accountDetailsString(add, dataModel));
+    }
+    
+    private String accountDetailsString(byte[] account, StateDataTableModel dataModel){ 
+        String ret = "";
+        // 1) print account address
+        ret = "Account: " + Hex.toHexString(account) + "\n";
+        
+        //2) print state
         Repository repository = UIEthereumManager.ethereum.getRepository();
-		AccountState state = repository.getAccountState(account);
-		if(state != null)
-			ret += state.toString() + "\n";
-		
-		//3) print storage
-		ContractDetails contractDetails = repository.getContractDetails(account);
-		if(contractDetails != null) {
-			Map<DataWord, DataWord> accountStorage = contractDetails.getStorage();
-			dataModel.setData(accountStorage);
-		}
-		
-		//4) code print
-		byte[] code = repository.getCode(account);
-		if(code != null) {
-			ret += "\n\nCode:\n";
-			ret += Program.stringify(code, 0, "");
-		}
-		
-		return ret;
-	}
-	
-	private class StateDataTableModel extends AbstractTableModel {
+        AccountState state = repository.getAccountState(account);
+        if(state != null)
+            ret += state.toString() + "\n";
+        
+        //3) print storage
+        ContractDetails contractDetails = repository.getContractDetails(account);
+        if(contractDetails != null) {
+            Map<DataWord, DataWord> accountStorage = contractDetails.getStorage();
+            dataModel.setData(accountStorage);
+        }
+        
+        //4) code print
+        byte[] code = repository.getCode(account);
+        if(code != null) {
+            ret += "\n\nCode:\n";
+            ret += Program.stringify(code, 0, "");
+        }
+        
+        return ret;
+    }
+    
+    private class StateDataTableModel extends AbstractTableModel {
 
-		Map<DataWord, DataWord> data;
-		DataEncodingType keyEncodingType = DataEncodingType.HEX;
-		DataEncodingType valueEncodingType = DataEncodingType.HEX;
-		String[] columns = new String[]{ "Key", "Value"};
-		
-		public StateDataTableModel() { }
-		
-		public StateDataTableModel(Map<DataWord, DataWord> initData) {
-			setData(initData);
-		}
-		
-		public void setData(Map<DataWord, DataWord> initData) {
-			data = initData;
-			fireTableDataChanged();
-		}
-		
-		public void setKeyEncoding(DataEncodingType type) {
-			keyEncodingType  = type;
-			fireTableDataChanged();
-		}
-		
-		public void setValueEncoding(DataEncodingType type) {
-			valueEncodingType  = type;
-			fireTableDataChanged();
-		}
-		
-		@Override
-		public String getColumnName(int column) {
-			return columns[column];
-		}
-		
-		@Override
-		public int getRowCount() {
-			return data == null? 0:data.size();
-		}
+        Map<DataWord, DataWord> data;
+        DataEncodingType keyEncodingType = DataEncodingType.HEX;
+        DataEncodingType valueEncodingType = DataEncodingType.HEX;
+        String[] columns = new String[]{ "Key", "Value"};
+        
+        public StateDataTableModel() { }
+        
+        public StateDataTableModel(Map<DataWord, DataWord> initData) {
+            setData(initData);
+        }
+        
+        public void setData(Map<DataWord, DataWord> initData) {
+            data = initData;
+            fireTableDataChanged();
+        }
+        
+        public void setKeyEncoding(DataEncodingType type) {
+            keyEncodingType  = type;
+            fireTableDataChanged();
+        }
+        
+        public void setValueEncoding(DataEncodingType type) {
+            valueEncodingType  = type;
+            fireTableDataChanged();
+        }
+        
+        @Override
+        public String getColumnName(int column) {
+            return columns[column];
+        }
+        
+        @Override
+        public int getRowCount() {
+            return data == null? 0:data.size();
+        }
 
-		@Override
-		public int getColumnCount() {
-			return columns.length;
-		}
+        @Override
+        public int getColumnCount() {
+            return columns.length;
+        }
 
-		@Override
-		public Object getValueAt(int rowIndex, int columnIndex) {
-			DataWord key = (DataWord) this.data.keySet().toArray()[rowIndex];
-			
-			if(columnIndex == 0) {
-				return getDataWithEncoding(key.getData(), keyEncodingType);
-			}
-			else {
-				DataWord value = this.data.get(key);
-				return getDataWithEncoding(value.getData(), valueEncodingType);
-			}
-		}
-		
-		private String getDataWithEncoding(byte[] data, DataEncodingType enc) {
-			switch(enc) {
-			case STRING:
-				return new String(data);
-			case HEX:
-				return Hex.toHexString(data);
-			case NUMBER:
-				return new BigInteger(data).toString();
-			}
-			
-			return data.toString();
-		}
-	}
-	
-	private enum DataEncodingType{
-		STRING,
-		HEX,
-		NUMBER;
-		
-		static public DataEncodingType getTypeFromString(String value) {
-			switch(value){
-			case "String":
-				return STRING;
-			case "Hex":
-				return HEX;
-			case "Number":
-				return NUMBER;
-			}
-			return STRING;
-		}
-	}
-	
-	private class WindowTextArea extends TextArea {
-		
-		public WindowTextArea() {
-			super();
-		}
-		
-		public void println(String txt) {
-			setText(getText() + txt + "\n");
-		}
-		
-		public void clean() {
-			setText("");
-		}
-	}
-	
-	public static void main(String[] args) {
+        @Override
+        public Object getValueAt(int rowIndex, int columnIndex) {
+            DataWord key = (DataWord) this.data.keySet().toArray()[rowIndex];
+            
+            if(columnIndex == 0) {
+                return getDataWithEncoding(key.getData(), keyEncodingType);
+            }
+            else {
+                DataWord value = this.data.get(key);
+                return getDataWithEncoding(value.getData(), valueEncodingType);
+            }
+        }
+        
+        private String getDataWithEncoding(byte[] data, DataEncodingType enc) {
+            switch(enc) {
+            case STRING:
+                return new String(data);
+            case HEX:
+                return Hex.toHexString(data);
+            case NUMBER:
+                return new BigInteger(data).toString();
+            }
+            
+            return data.toString();
+        }
+    }
+    
+    private enum DataEncodingType{
+        STRING,
+        HEX,
+        NUMBER;
+        
+        static public DataEncodingType getTypeFromString(String value) {
+            switch(value){
+            case "String":
+                return STRING;
+            case "Hex":
+                return HEX;
+            case "Number":
+                return NUMBER;
+            }
+            return STRING;
+        }
+    }
+    
+    private class WindowTextArea extends TextArea {
+        
+        public WindowTextArea() {
+            super();
+        }
+        
+        public void println(String txt) {
+            setText(getText() + txt + "\n");
+        }
+        
+        public void clean() {
+            setText("");
+        }
+    }
+    
+    public static void main(String[] args) {
         // Start all Swing applications on the EDT.
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 new StateExplorerWindow(null).setVisible(true);
             }
         });
-	}
+    }
 }

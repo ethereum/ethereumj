@@ -6,7 +6,7 @@ package org.ethereum.gui;
  */
 public interface MessageAwareDialog {
 
-	public void infoStatusMsg(final String text);
+    public void infoStatusMsg(final String text);
 
-	public void alertStatusMsg(final String text);
+    public void alertStatusMsg(final String text);
 }

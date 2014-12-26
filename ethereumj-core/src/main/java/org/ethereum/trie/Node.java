@@ -6,9 +6,9 @@ import org.ethereum.util.Value;
 /** 
  * A Node in a Merkle Patricia Tree is one of the following:
  * 
- * 	- NULL (represented as the empty string)
- * 	- A two-item array [ key, value ] (1 key for 2-item array)
- * 	- A 17-item array [ v0 ... v15, vt ] (16 keys for 17-item array)
+ *  - NULL (represented as the empty string)
+ *  - A two-item array [ key, value ] (1 key for 2-item array)
+ *  - A 17-item array [ v0 ... v15, vt ] (16 keys for 17-item array)
  * 
  * The idea is that in the event that there is a long path of nodes 
  * each with only one element, we shortcut the descent by setting up 
@@ -16,12 +16,12 @@ import org.ethereum.util.Value;
  * to descend, in the compact encoding described above, and the value 
  * is just the hash of the node like in the standard radix tree.
  * 
- * 								 R
- * 								/ \
- * 							   /   \
- * 							  N     N
- * 							 / \   / \
- * 							L   L L   L
+ *                               R
+ *                              / \
+ *                             /   \
+ *                            N     N
+ *                           / \   / \
+ *                          L   L L   L
  *  *  
  * Also, we add another conceptual change: internal nodes can no longer 
  * have values, only leaves with no children of their own can; however, 
@@ -32,7 +32,7 @@ import org.ethereum.util.Value;
  * 
  * Where a node is referenced inside a node, what is included is:
  * 
- *  	H(rlp.encode(x)) where H(x) = sha3(x) if len(x) &gt;= 32 else x
+ *      H(rlp.encode(x)) where H(x) = sha3(x) if len(x) &gt;= 32 else x
  * 
  * Note that when updating a trie, you will need to store the key/value pair (sha3(x), x) 
  * in a persistent lookup table when you create a node with length &gt;= 32,
@@ -45,32 +45,32 @@ import org.ethereum.util.Value;
  */
 public class Node {
 
-	/* RLP encoded value of the Trie-node */
-	private Value value;
-	private boolean dirty;
+    /* RLP encoded value of the Trie-node */
+    private Value value;
+    private boolean dirty;
 
-	public Node(Value val) {
-		this(val, false);
-	}
-	
-	public Node(Value val, boolean dirty) {
-		this.value = val;
-		this.dirty = dirty;
-	}
+    public Node(Value val) {
+        this(val, false);
+    }
+    
+    public Node(Value val, boolean dirty) {
+        this.value = val;
+        this.dirty = dirty;
+    }
 
-	public Node copy() {
-		return new Node(this.value, this.dirty);
-	}
+    public Node copy() {
+        return new Node(this.value, this.dirty);
+    }
 
-	public boolean isDirty() {
-		return dirty;
-	}
-	
-	public void setDirty(boolean ditry) {
-		this.dirty = ditry;
-	}
-	
-	public Value getValue() {
-		return value;
-	}
+    public boolean isDirty() {
+        return dirty;
+    }
+    
+    public void setDirty(boolean ditry) {
+        this.dirty = ditry;
+    }
+    
+    public Value getValue() {
+        return value;
+    }
 }

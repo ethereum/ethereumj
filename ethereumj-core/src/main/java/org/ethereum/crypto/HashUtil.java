@@ -35,10 +35,10 @@ public class HashUtil {
     }
     
     public static byte[] sha256(byte[] input) {
-    	return sha256digest.digest(input);
+        return sha256digest.digest(input);
     }
 
-	public static byte[] sha3(byte[] input) {
+    public static byte[] sha3(byte[] input) {
         ByteArrayWrapper inputByteArray = new ByteArrayWrapper(input);
         byte[] result = sha3Cache.get(inputByteArray);
         if(result != null)
@@ -46,17 +46,17 @@ public class HashUtil {
         result = SHA3Helper.sha3(input);
         sha3Cache.put(inputByteArray, result);
         return result;
-	}
-	
+    }
+    
     public static byte[] ripemd160(byte[] message) {
-    	Digest digest = new RIPEMD160Digest();
+        Digest digest = new RIPEMD160Digest();
         if (message != null) {
-	        byte[] resBuf = new byte[digest.getDigestSize()];
-	        digest.update(message, 0, message.length);
-	        digest.doFinal(resBuf, 0);
-	        return resBuf;
-    	}
-    	throw new NullPointerException("Can't hash a NULL value");
+            byte[] resBuf = new byte[digest.getDigestSize()];
+            digest.update(message, 0, message.length);
+            digest.doFinal(resBuf, 0);
+            return resBuf;
+        }
+        throw new NullPointerException("Can't hash a NULL value");
     }
 
 
@@ -64,8 +64,8 @@ public class HashUtil {
      * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations.
      */
     public static byte[] sha3omit12(byte[] input) {
-    	byte[] hash = sha3(input);
-    	return copyOfRange(hash, 12, hash.length);
+        byte[] hash = sha3(input);
+        return copyOfRange(hash, 12, hash.length);
     }
 
     /**

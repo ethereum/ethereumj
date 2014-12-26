@@ -69,21 +69,21 @@ public class PeerInfoWindow extends JFrame {
         
         if (CONFIG.peerDiscovery())
             UIEthereumManager.ethereum.startPeerDiscovery();
-		
+        
     }
 
 
-	public void addCloseAction() {
-		this.addWindowListener(new WindowAdapter() {
-		});
-	}
+    public void addCloseAction() {
+        this.addWindowListener(new WindowAdapter() {
+        });
+    }
 
-	public static void main(String[] args) {
-		// Start all Swing applications on the EDT.
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new PeerInfoWindow(null).setVisible(true);
-			}
-		});
-	}
+    public static void main(String[] args) {
+        // Start all Swing applications on the EDT.
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new PeerInfoWindow(null).setVisible(true);
+            }
+        });
+    }
 }

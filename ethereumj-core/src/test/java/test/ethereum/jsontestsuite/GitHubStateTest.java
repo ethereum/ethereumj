@@ -15,8 +15,8 @@ public class GitHubStateTest {
     @Test
     public void stSingleTest() throws ParseException {
 
-    	String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
-    	GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createNameRegistrator");
+        String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
+        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createNameRegistrator");
     }
 
     @Test

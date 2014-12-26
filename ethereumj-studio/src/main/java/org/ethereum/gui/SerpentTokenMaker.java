@@ -19,13 +19,13 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
     private int currentTokenStart;
     private int currentTokenType;
 
-    private boolean bracketVariable;			// Whether a variable is of the format %{...}
+    private boolean bracketVariable;            // Whether a variable is of the format %{...}
 
     /**
      * Constructor.
      */
     public SerpentTokenMaker() {
-        super();	// Initializes tokensToHighlight.
+        super();    // Initializes tokensToHighlight.
     }
 
     /**
@@ -39,7 +39,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
      * @param startOffset The offset in the document at which the token occurs.
      */
     @Override
-	public void addToken(Segment segment, int start, int end, int tokenType, int startOffset) {
+    public void addToken(Segment segment, int start, int end, int tokenType, int startOffset) {
 
         switch (tokenType) {
             // Since reserved words, functions, and data types are all passed
@@ -98,40 +98,40 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         TokenMap tokenMap = new TokenMap(false); // Ignore case.
 
         int reservedWord = Token.RESERVED_WORD;
-        tokenMap.put("set",		reservedWord);
-        tokenMap.put("if",		reservedWord);
-        tokenMap.put("else",		reservedWord);
-        tokenMap.put("elif",		reservedWord);
-        tokenMap.put("seq",		reservedWord);
-        tokenMap.put("while",		reservedWord);
-        tokenMap.put("byte",		reservedWord);
-        tokenMap.put("access",		reservedWord);
-        tokenMap.put("arrset",		reservedWord);
-        tokenMap.put("set_and_inc",		reservedWord);
-        tokenMap.put("array",		reservedWord);
-        tokenMap.put("getch",		reservedWord);
-        tokenMap.put("setch",		reservedWord);
-        tokenMap.put("string",		reservedWord);
-        tokenMap.put("send",		reservedWord);
-        tokenMap.put("create",		reservedWord);
-        tokenMap.put("sha3",		reservedWord);
-        tokenMap.put("sha3bytes",		reservedWord);
-        tokenMap.put("sload",		reservedWord);
-        tokenMap.put("sstore",		reservedWord);
-        tokenMap.put("calldataload",		reservedWord);
-        tokenMap.put("id",		reservedWord);
-        tokenMap.put("return",		reservedWord);
-        tokenMap.put("suicide",		reservedWord);
+        tokenMap.put("set",     reservedWord);
+        tokenMap.put("if",      reservedWord);
+        tokenMap.put("else",        reservedWord);
+        tokenMap.put("elif",        reservedWord);
+        tokenMap.put("seq",     reservedWord);
+        tokenMap.put("while",       reservedWord);
+        tokenMap.put("byte",        reservedWord);
+        tokenMap.put("access",      reservedWord);
+        tokenMap.put("arrset",      reservedWord);
+        tokenMap.put("set_and_inc",     reservedWord);
+        tokenMap.put("array",       reservedWord);
+        tokenMap.put("getch",       reservedWord);
+        tokenMap.put("setch",       reservedWord);
+        tokenMap.put("string",      reservedWord);
+        tokenMap.put("send",        reservedWord);
+        tokenMap.put("create",      reservedWord);
+        tokenMap.put("sha3",        reservedWord);
+        tokenMap.put("sha3bytes",       reservedWord);
+        tokenMap.put("sload",       reservedWord);
+        tokenMap.put("sstore",      reservedWord);
+        tokenMap.put("calldataload",        reservedWord);
+        tokenMap.put("id",      reservedWord);
+        tokenMap.put("return",      reservedWord);
+        tokenMap.put("suicide",     reservedWord);
 
-        tokenMap.put("stop",			reservedWord);
+        tokenMap.put("stop",            reservedWord);
 
         int function = Token.FUNCTION;
-        tokenMap.put("msg",		        	function);
-        tokenMap.put("data",		        	function);
-        tokenMap.put("contract",			function);
-        tokenMap.put("storage",			function);
-        tokenMap.put("block",			function);
-        tokenMap.put("tx",			function);
+        tokenMap.put("msg",                 function);
+        tokenMap.put("data",                    function);
+        tokenMap.put("contract",            function);
+        tokenMap.put("storage",         function);
+        tokenMap.put("block",           function);
+        tokenMap.put("tx",          function);
 
         // ALL the assembly tokens
         int reservedWord2 = Token.RESERVED_WORD_2;
@@ -142,8 +142,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
         }
 
         int dataType = Token.ANNOTATION;
-        tokenMap.put("init",			dataType);
-        tokenMap.put("code",			dataType);
+        tokenMap.put("init",            dataType);
+        tokenMap.put("code",            dataType);
 
         return tokenMap;
     }
@@ -184,7 +184,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                 case Token.NULL:
 
-                    currentTokenStart = i;	// Starting a new token here.
+                    currentTokenStart = i;  // Starting a new token here.
 
                     switch (c) {
 
@@ -220,8 +220,8 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         case ':':
                             // If this will be the first token added, it is
                             // a new-style comment or a label
-                        	if (firstToken == null) {
-                            	if (i < end - 1 && array[i + 1] == ':') { // new-style comment
+                            if (firstToken == null) {
+                                if (i < end - 1 && array[i + 1] == ':') { // new-style comment
                                     currentTokenType = Token.COMMENT_EOL;
                                 }
                                 else { // Label
@@ -266,7 +266,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             break;
                         case ' ':
                         case '\t':
-                            break;	// Still whitespace.
+                            break;  // Still whitespace.
 
                         case '"':
                             addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
@@ -298,7 +298,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             // If the previous (whitespace) token was the first token
                             // added, this is a new-style comment or a label
                             if (firstToken.getNextToken() == null) {
-                            	if (i < end - 1 && array[i + 1] == ':') { // new-style comment
+                                if (i < end - 1 && array[i + 1] == ':') { // new-style comment
                                     currentTokenType = Token.COMMENT_EOL;
                                 }
                                 else { // Label
@@ -310,7 +310,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                             }
                             break;
 
-                        default:	// Add the whitespace token and start anew.
+                        default:    // Add the whitespace token and start anew.
                             addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
                             currentTokenStart = i;
 
@@ -372,7 +372,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
 //                        case '.':
                         case '_':
-                            break;	// Characters good for identifiers.
+                            break;  // Characters good for identifiers.
 
                         // The "separators".
                         case '(':
@@ -410,7 +410,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                 case Token.COMMENT_EOL:
 
-                	if (i + 1 >= array.length)
+                    if (i + 1 >= array.length)
                         break;
 
                     char nextC = array[i+1];
@@ -432,7 +432,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                 case Token.ERROR_STRING_DOUBLE:
 
-                	if (c == '"') {
+                    if (c == '"') {
                         addToken(text, currentTokenStart,i, Token.LITERAL_STRING_DOUBLE_QUOTE, newStartOffset+currentTokenStart);
                         currentTokenStart = i + 1;
                         currentTokenType = Token.NULL;
@@ -442,7 +442,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
 
                 case Token.VARIABLE:
 
-                	if (i == currentTokenStart + 1) { // first character after '%'.
+                    if (i == currentTokenStart + 1) { // first character after '%'.
                         bracketVariable = false;
                         switch (c) {
                             case '{':
@@ -466,10 +466,10 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                         } // End of switch (c).
                     }
                     else { // Character other than first after the '%'.
-                    	if (bracketVariable == true) {
-                    		if (c == '}') {
-                    			addToken(text, currentTokenStart, i, Token.VARIABLE, newStartOffset + currentTokenStart);
-								currentTokenType = Token.NULL;
+                        if (bracketVariable == true) {
+                            if (c == '}') {
+                                addToken(text, currentTokenStart, i, Token.VARIABLE, newStartOffset + currentTokenStart);
+                                currentTokenType = Token.NULL;
                             }
                         }
                         break;

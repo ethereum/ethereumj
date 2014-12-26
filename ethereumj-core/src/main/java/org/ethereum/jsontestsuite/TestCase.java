@@ -60,24 +60,24 @@ public class TestCase {
             JSONObject preJSON = (JSONObject)testCaseJSONObj.get("pre");
             JSONObject postJSON = new JSONObject();
             if(testCaseJSONObj.containsKey("post")) // in cases where there is no post dictionary (when testing for exceptions for example)
-            	postJSON = (JSONObject)testCaseJSONObj.get("post");
+                postJSON = (JSONObject)testCaseJSONObj.get("post");
             JSONArray  callCreates = new JSONArray();
             if(testCaseJSONObj.containsKey("callcreates"))
-            	callCreates = (JSONArray)testCaseJSONObj.get("callcreates");
+                callCreates = (JSONArray)testCaseJSONObj.get("callcreates");
             
             JSONArray logsJSON = new JSONArray();
             if(testCaseJSONObj.containsKey("logs"))
-            	logsJSON = (JSONArray)testCaseJSONObj.get("logs");
+                logsJSON = (JSONArray)testCaseJSONObj.get("logs");
             logs = new Logs(logsJSON);
 
             String  gasString = "0";
             if(testCaseJSONObj.containsKey("gas"))
-            	gasString = testCaseJSONObj.get("gas").toString();
+                gasString = testCaseJSONObj.get("gas").toString();
             this.gas    = ByteUtil.bigIntegerToBytes(new BigInteger(gasString));
             
             String outString = null;
             if(testCaseJSONObj.containsKey("out"))
-            	outString = testCaseJSONObj.get("out").toString();
+                outString = testCaseJSONObj.get("out").toString();
             if (outString != null && outString.length() > 2)
                 this.out    = Hex.decode(outString.substring(2));
             else
@@ -124,7 +124,7 @@ public class TestCase {
     }
     
     public Logs getLogs() {
-    	return logs;
+        return logs;
     }
 
     public byte[] getGas() {

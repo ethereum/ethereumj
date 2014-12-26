@@ -126,7 +126,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         // check if there is 'else'
         if (ctx.block(i) != null) {
 
-        	// body
+            // body
             String elseBlockCode = visitBlock(ctx.block(i));
 
             // append to general retCode
@@ -194,7 +194,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         // msg assigned has two arrays to calc
         if (ctx.msg_func() != null) {
 
-        	String msgCode = visitMsg_func(ctx.msg_func(), varName);
+            String msgCode = visitMsg_func(ctx.msg_func(), varName);
             return msgCode;
         } else if (ctx.arr_def() != null) {
             // if it's an array the all management is different
@@ -701,7 +701,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
     private Integer getMsgOutputArraySize(String code) {
 
-    	String result = "0";
+        String result = "0";
         Pattern pattern = Pattern.compile("<out_size ([0-9])* out_size>");
         Matcher matcher = pattern.matcher(code.trim());
         if (matcher.find()) {

@@ -45,7 +45,7 @@ import static org.ethereum.core.Denomination.SZABO;
  * <li>Check that the proof of work on the block is valid.</li>
  * <li>Let S[0] be the STATE_ROOT of the previous block.</li>
  * <li>Let TX be the block's transaction list, with n transactions. 
- * 	For all in in 0...n-1, set S[i+1] = APPLY(S[i],TX[i]). 
+ *  For all in in 0...n-1, set S[i+1] = APPLY(S[i],TX[i]). 
  * If any applications returns an error, or if the total gas consumed in the block 
  * up until this point exceeds the GASLIMIT, return an error.</li>
  * <li>Let S_FINAL be S[n], but adding the block reward paid to the miner.</li>
@@ -64,14 +64,14 @@ public class BlockchainImpl implements Blockchain {
     /* A scalar value equal to the mininum limit of gas expenditure per block */
     private static long MIN_GAS_LIMIT = 125000L;
 
-	private static final Logger logger = LoggerFactory.getLogger("blockchain");
-	private static final Logger stateLogger = LoggerFactory.getLogger("state");
-	
-	// to avoid using minGasPrice=0 from Genesis for the wallet
-	private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+    private static final Logger logger = LoggerFactory.getLogger("blockchain");
+    private static final Logger stateLogger = LoggerFactory.getLogger("state");
+    
+    // to avoid using minGasPrice=0 from Genesis for the wallet
+    private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
     @Autowired
-	private Repository repository;
+    private Repository repository;
     private Repository track;
 
     @Autowired
@@ -115,8 +115,8 @@ public class BlockchainImpl implements Blockchain {
 
     @Override
     public Block getBlockByNumber(long blockNr) {
-    	return blockStore.getBlockByNumber(blockNr);
-	}
+        return blockStore.getBlockByNumber(blockNr);
+    }
 
     @Override
     public TransactionReceipt getTransactionReceiptByHash(byte[] hash){
@@ -193,8 +193,8 @@ public class BlockchainImpl implements Blockchain {
     public void add(Block block) {
 
         track = repository.startTracking();
-		if (block == null)
-			return;
+        if (block == null)
+            return;
 
         // keep chain continuity
         if (!Arrays.equals(getBestBlock().getHash(),
@@ -300,7 +300,7 @@ public class BlockchainImpl implements Blockchain {
     private void processBlock(Block block) {
 
         List<TransactionReceipt> receipts = new ArrayList<>();
-    	if(isValid(block)) {
+        if(isValid(block)) {
             if (!block.isGenesis()) {
                 if (!CONFIG.blockChainOnly()) {
                     wallet.addTransactions(block.getTransactionsList());
@@ -309,26 +309,26 @@ public class BlockchainImpl implements Blockchain {
                 }
             }
             this.storeBlock(block, receipts);
-    	} else {
-    		logger.warn("Invalid block with nr: {}", block.getNumber());
-    	}
+        } else {
+            logger.warn("Invalid block with nr: {}", block.getNumber());
+        }
     }
     
-	private List<TransactionReceipt> applyBlock(Block block) {
+    private List<TransactionReceipt> applyBlock(Block block) {
 
-		int i = 1;
-		long totalGasUsed = 0;
+        int i = 1;
+        long totalGasUsed = 0;
         List<TransactionReceipt> reciepts = new ArrayList<>();
 
-		for (Transaction tx : block.getTransactionsList()) {
-			stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
+        for (Transaction tx : block.getTransactionsList()) {
+            stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(), track,
                     programInvokeFactory, block);
             executor.execute();
 
             TransactionReceipt receipt = executor.getReceipt();
-			totalGasUsed += receipt.getCumulativeGasLong();
+            totalGasUsed += receipt.getCumulativeGasLong();
 
             track.commit();
             receipt.setCumulativeGas(totalGasUsed);
@@ -347,42 +347,42 @@ public class BlockchainImpl implements Blockchain {
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
             reciepts.add(receipt);
-		}
+        }
 
-		this.addReward(block);
+        this.addReward(block);
         this.updateTotalDifficulty(block);
 
         track.commit();
 
         if(block.getNumber() >= CONFIG.traceStartBlock())
-        	repository.dumpState(block, totalGasUsed, 0, null);
+            repository.dumpState(block, totalGasUsed, 0, null);
 
         return reciepts;
-	}
+    }
 
-	/**
-	 * Add reward to block- and every uncle coinbase
-	 * assuming the entire block is valid.
-	 * 
-	 * @param block object containing the header and uncles
-	 */
-	private void addReward(Block block) {
+    /**
+     * Add reward to block- and every uncle coinbase
+     * assuming the entire block is valid.
+     * 
+     * @param block object containing the header and uncles
+     */
+    private void addReward(Block block) {
 
-		// Add standard block reward
-		BigInteger totalBlockReward = Block.BLOCK_REWARD;
-		
-		// Add extra rewards based on number of uncles		
-		if(block.getUncleList().size() > 0) {
-			for (BlockHeader uncle : block.getUncleList()) {
-				track.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
-			}
-			totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD
-					.multiply(BigInteger.valueOf(block.getUncleList().size())));
-		}
+        // Add standard block reward
+        BigInteger totalBlockReward = Block.BLOCK_REWARD;
+        
+        // Add extra rewards based on number of uncles      
+        if(block.getUncleList().size() > 0) {
+            for (BlockHeader uncle : block.getUncleList()) {
+                track.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
+            }
+            totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD
+                    .multiply(BigInteger.valueOf(block.getUncleList().size())));
+        }
         track.addBalance(block.getCoinbase(), totalBlockReward);
-	}
+    }
     
-	@Override
+    @Override
     public void storeBlock(Block block, List<TransactionReceipt> receipts) {
 
         /* Debug check to see if the state is still as expected */
@@ -391,7 +391,7 @@ public class BlockchainImpl implements Blockchain {
             String worldStateRootHash = Hex.toHexString(repository.getRoot());
             if(!blockStateRootHash.equals(worldStateRootHash)){
 
-            	stateLogger.info("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+                stateLogger.info("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
                 adminInfo.lostConsensus();
 
                 // in case of rollback hard move the root
@@ -402,12 +402,12 @@ public class BlockchainImpl implements Blockchain {
         }
 
         blockStore.saveBlock(block, receipts);
-		this.setBestBlock(block);
+        this.setBestBlock(block);
 
         if (logger.isDebugEnabled())
-			logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
+            logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
         if (block.getNumber() % 100 == 0)
-        	logger.info("*** Last block added [ #{} ]", block.getNumber());
+            logger.info("*** Last block added [ #{} ]", block.getNumber());
     }    
     
 
@@ -426,8 +426,8 @@ public class BlockchainImpl implements Blockchain {
     }
 
 
-	@Override
-	public BlockQueue getQueue() {
+    @Override
+    public BlockQueue getQueue() {
         return blockQueue;
     }
 
@@ -453,15 +453,15 @@ public class BlockchainImpl implements Blockchain {
         blockQueue.close();
     }
 
-	@Override
-	public BigInteger getTotalDifficulty() {
-		return totalDifficulty;
-	}
+    @Override
+    public BigInteger getTotalDifficulty() {
+        return totalDifficulty;
+    }
 
-	@Override
-	public void updateTotalDifficulty(Block block) {
-	    this.totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
-	}
+    @Override
+    public void updateTotalDifficulty(Block block) {
+        this.totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
+    }
 
     @Override
     public void setTotalDifficulty(BigInteger totalDifficulty) {

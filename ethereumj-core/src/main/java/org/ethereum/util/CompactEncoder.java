@@ -48,7 +48,7 @@ import java.util.Map;
  */
 public class CompactEncoder {
 
-	private final static byte TERMINATOR = 16;
+    private final static byte TERMINATOR = 16;
     private final static Map<Character, Byte> hexMap = new HashMap<>();
     static {
         hexMap.put('0', (byte)0x0);
@@ -69,70 +69,70 @@ public class CompactEncoder {
         hexMap.put('f', (byte)0xf);
     }
 
-	/**
-	 * Pack nibbles to binary
-	 *
-	 * @param nibbles sequence. may have a terminator
-	 * @return hex-encoded byte array
-	 */
-	public static byte[] packNibbles(byte[] nibbles) {
-		int terminator = 0;
-		
-		if (nibbles[nibbles.length-1] == TERMINATOR) {
-			terminator = 1;
-			nibbles = copyOf(nibbles, nibbles.length-1);
-		}
-		int oddlen = nibbles.length % 2;
-		int flag = 2*terminator + oddlen;
-		if (oddlen != 0) {
-			byte[] flags = new byte[] { (byte) flag};
-			nibbles = concatenate(flags, nibbles);
-		} else {
-			byte[] flags = new byte[] { (byte) flag, 0};
-			nibbles = concatenate(flags, nibbles);
-		}
-		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-		for (int i = 0; i < nibbles.length; i += 2) {
-			buffer.write(16*nibbles[i] + nibbles[i+1]);
-		}
-		return buffer.toByteArray();
-	}
+    /**
+     * Pack nibbles to binary
+     *
+     * @param nibbles sequence. may have a terminator
+     * @return hex-encoded byte array
+     */
+    public static byte[] packNibbles(byte[] nibbles) {
+        int terminator = 0;
+        
+        if (nibbles[nibbles.length-1] == TERMINATOR) {
+            terminator = 1;
+            nibbles = copyOf(nibbles, nibbles.length-1);
+        }
+        int oddlen = nibbles.length % 2;
+        int flag = 2*terminator + oddlen;
+        if (oddlen != 0) {
+            byte[] flags = new byte[] { (byte) flag};
+            nibbles = concatenate(flags, nibbles);
+        } else {
+            byte[] flags = new byte[] { (byte) flag, 0};
+            nibbles = concatenate(flags, nibbles);
+        }
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        for (int i = 0; i < nibbles.length; i += 2) {
+            buffer.write(16*nibbles[i] + nibbles[i+1]);
+        }
+        return buffer.toByteArray();
+    }
 
-	/**
-	 * Unpack a binary string to its nibbles equivalent
-	 * 
-	 * @param str of binary data
-	 * @return array of nibbles in byte-format  
-	 */
-	public static byte[] unpackToNibbles(byte[] str) {
-		byte[] base = binToNibbles(str);
-		base = copyOf(base, base.length - 1);
-		if (base[0] >= 2) {
-			base = appendByte(base, TERMINATOR);
-		}
-		if (base[0] % 2 == 1) {
-			base = copyOfRange(base, 1, base.length);
-		} else {
-			base = copyOfRange(base, 2, base.length);
-		}
-		return base;
-	}
+    /**
+     * Unpack a binary string to its nibbles equivalent
+     * 
+     * @param str of binary data
+     * @return array of nibbles in byte-format  
+     */
+    public static byte[] unpackToNibbles(byte[] str) {
+        byte[] base = binToNibbles(str);
+        base = copyOf(base, base.length - 1);
+        if (base[0] >= 2) {
+            base = appendByte(base, TERMINATOR);
+        }
+        if (base[0] % 2 == 1) {
+            base = copyOfRange(base, 1, base.length);
+        } else {
+            base = copyOfRange(base, 2, base.length);
+        }
+        return base;
+    }
 
-	/**
-	 * Transforms a binary array to hexadecimal format + terminator
-	 *
+    /**
+     * Transforms a binary array to hexadecimal format + terminator
+     *
      * @param str byte[]
-	 * @return array with each individual nibble adding a terminator at the end 
-	 */
-	public static byte[] binToNibbles(byte[] str) {
-		byte[] hexEncoded = encode(str);
-		ByteBuffer slice = ByteBuffer.allocate(hexEncoded.length + 1);
-		for (byte b : hexEncoded) {
-			slice.put(hexMap.get((char)b));
-		}
-		slice.put(TERMINATOR);
-		return slice.array();
-	}
+     * @return array with each individual nibble adding a terminator at the end 
+     */
+    public static byte[] binToNibbles(byte[] str) {
+        byte[] hexEncoded = encode(str);
+        ByteBuffer slice = ByteBuffer.allocate(hexEncoded.length + 1);
+        for (byte b : hexEncoded) {
+            slice.put(hexMap.get((char)b));
+        }
+        slice.put(TERMINATOR);
+        return slice.array();
+    }
 
     public static byte[] binToNibblesNoTerminator(byte[] str) {
         byte[] hexEncoded = encode(str);

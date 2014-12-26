@@ -16,58 +16,58 @@ import static org.ethereum.net.message.ReasonCode.REQUESTED;
  */
 public class DisconnectMessage extends P2pMessage {
 
-	private ReasonCode reason;
+    private ReasonCode reason;
 
-	public DisconnectMessage(byte[] encoded) {
-		super(encoded);
-	}
+    public DisconnectMessage(byte[] encoded) {
+        super(encoded);
+    }
 
-	public DisconnectMessage(ReasonCode reason) {
-		this.reason = reason;
-		parsed = true;
-	}
+    public DisconnectMessage(ReasonCode reason) {
+        this.reason = reason;
+        parsed = true;
+    }
 
-	private void parse() {
-		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+    private void parse() {
+        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-		byte[] reasonBytes = ((RLPItem) paramsList.get(1)).getRLPData();
-		if (reasonBytes == null)
-			this.reason = REQUESTED;
-		else
-			this.reason = ReasonCode.fromInt(reasonBytes[0]);
+        byte[] reasonBytes = ((RLPItem) paramsList.get(1)).getRLPData();
+        if (reasonBytes == null)
+            this.reason = REQUESTED;
+        else
+            this.reason = ReasonCode.fromInt(reasonBytes[0]);
 
-		parsed = true;
-	}
+        parsed = true;
+    }
 
-	private void encode() {
-		byte[] encodedCommand = RLP.encodeByte(DISCONNECT.asByte());
-		byte[] encodedReason = RLP.encodeByte(this.reason.asByte());
-		this.encoded = RLP.encodeList(encodedCommand, encodedReason);
-	}
+    private void encode() {
+        byte[] encodedCommand = RLP.encodeByte(DISCONNECT.asByte());
+        byte[] encodedReason = RLP.encodeByte(this.reason.asByte());
+        this.encoded = RLP.encodeList(encodedCommand, encodedReason);
+    }
 
-	@Override
-	public byte[] getEncoded() {
-		if (encoded == null) encode();
-		return encoded;
-	}
+    @Override
+    public byte[] getEncoded() {
+        if (encoded == null) encode();
+        return encoded;
+    }
 
     @Override
     public P2pMessageCodes getCommand(){
         return P2pMessageCodes.DISCONNECT;
     }
 
-	@Override
-	public Class<?> getAnswerMessage() {
-		return null;
-	}
+    @Override
+    public Class<?> getAnswerMessage() {
+        return null;
+    }
 
-	public ReasonCode getReason() {
-		if (!parsed) parse();
-		return reason;
-	}
+    public ReasonCode getReason() {
+        if (!parsed) parse();
+        return reason;
+    }
 
-	public String toString() {
-		if (!parsed) parse();
-		return "[" + this.getCommand().name() + " reason=" + reason + "]";
-	}
+    public String toString() {
+        if (!parsed) parse();
+        return "[" + this.getCommand().name() + " reason=" + reason + "]";
+    }
 }

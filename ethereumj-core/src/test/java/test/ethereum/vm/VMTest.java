@@ -25,20 +25,20 @@ import static org.junit.Assert.*;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMTest {
-	
-	private ProgramInvokeMockImpl invoke;
-	private Program program;
-	
-	@Before
-	public void setup() {
-		invoke = new ProgramInvokeMockImpl();
-	}
-	
-	@After
-	public void tearDown() {
-		invoke.getRepository().close();
-	}
-	
+    
+    private ProgramInvokeMockImpl invoke;
+    private Program program;
+    
+    @Before
+    public void setup() {
+        invoke = new ProgramInvokeMockImpl();
+    }
+    
+    @After
+    public void tearDown() {
+        invoke.getRepository().close();
+    }
+    
     @Test  // PUSH1 OP
     public void testPUSH1() {
 
@@ -477,10 +477,10 @@ public class VMTest {
         program =  new Program(Hex.decode("7fAABB"), invoke);
         String expected = "AABB000000000000000000000000000000000000000000000000000000000000";
 
-		program.fullTrace();
-		vm.step(program);
+        program.fullTrace();
+        vm.step(program);
 
-		assertTrue(program.isStopped());
+        assertTrue(program.isStopped());
         assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
@@ -857,7 +857,7 @@ public class VMTest {
         VM vm = new VM();
         program =  new Program(Hex.decode("7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF56" + // -170
                                                 "7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF57" + // -169
-                								"13"), invoke);
+                                                "13"), invoke);
 
         String expected = "0000000000000000000000000000000000000000000000000000000000000001";
 
@@ -1105,9 +1105,9 @@ public class VMTest {
 
     @Test // DUP1...DUP16 OP
     public void testDUPS() {
-    	for (int i = 1; i < 17; i++) {
-    		testDUPN_1(i);
-		}
+        for (int i = 1; i < 17; i++) {
+            testDUPN_1(i);
+        }
     }
     
     /**
@@ -1121,21 +1121,21 @@ public class VMTest {
         byte operation = (byte) (OpCode.DUP1.val() + n - 1);
         String programCode = "";
         for (int i = 0; i < n; i++) {
-			programCode += "60" + (12 + i);
-		}
+            programCode += "60" + (12 + i);
+        }
         program =  new Program(ByteUtil.appendByte(Hex.decode(programCode.getBytes()), operation), invoke);
         String expected     = "0000000000000000000000000000000000000000000000000000000000000012";
         int    expectedLen  = n + 1;
 
         for (int i = 0; i < expectedLen; i++) {
-        	vm.step(program);
-		}
+            vm.step(program);
+        }
 
         assertEquals(expectedLen, program.getStack().toArray().length);
         assertEquals(expected, Hex.toHexString(program.stackPop().getData()).toUpperCase());
         for (int i = 0; i < expectedLen-2; i++) {
-        	assertNotEquals(expected, Hex.toHexString(program.stackPop().getData()).toUpperCase());
-		}
+            assertNotEquals(expected, Hex.toHexString(program.stackPop().getData()).toUpperCase());
+        }
         assertEquals(expected, Hex.toHexString(program.stackPop().getData()).toUpperCase());
     }
 
@@ -1145,7 +1145,7 @@ public class VMTest {
         VM vm = new VM();
         program =  new Program(Hex.decode("80"), invoke);
         try {
-        	vm.step(program);
+            vm.step(program);
         } finally {
             assertTrue(program.isStopped());
         }
@@ -1153,9 +1153,9 @@ public class VMTest {
     
     @Test // SWAP1...SWAP16 OP
     public void testSWAPS() {
-    	for (int i = 1; i < 17; i++) {
-    		testSWAPN_1(i);
-		}
+        for (int i = 1; i < 17; i++) {
+            testSWAPN_1(i);
+        }
     }
     
     /**
@@ -1170,21 +1170,21 @@ public class VMTest {
         String[] expected = new String[n + 1];
         String programCode = "";
         for (int i = 0; i < expected.length; i++) {
-        	programCode += "60" + (11+i);
-        	expected[i] = "00000000000000000000000000000000000000000000000000000000000000" + (11+i);
-		}
+            programCode += "60" + (11+i);
+            expected[i] = "00000000000000000000000000000000000000000000000000000000000000" + (11+i);
+        }
         program =  new Program(ByteUtil.appendByte(Hex.decode(programCode), operation), invoke);
 
-		for (int i = 0; i <= expected.length; i++) {
-			vm.step(program);
-		}
-		
-		assertEquals(expected.length, program.getStack().toArray().length);
-		assertEquals(expected[0], Hex.toHexString(program.stackPop().getData()).toUpperCase());
-		for (int i = expected.length-2; i > 0; i--) {
-			assertEquals(expected[i], Hex.toHexString(program.stackPop().getData()).toUpperCase());
-		}
-		assertEquals(expected[expected.length-1], Hex.toHexString(program.stackPop().getData()).toUpperCase());
+        for (int i = 0; i <= expected.length; i++) {
+            vm.step(program);
+        }
+        
+        assertEquals(expected.length, program.getStack().toArray().length);
+        assertEquals(expected[0], Hex.toHexString(program.stackPop().getData()).toUpperCase());
+        for (int i = expected.length-2; i > 0; i--) {
+            assertEquals(expected[i], Hex.toHexString(program.stackPop().getData()).toUpperCase());
+        }
+        assertEquals(expected[expected.length-1], Hex.toHexString(program.stackPop().getData()).toUpperCase());
     }
 
     @Test(expected=StackTooSmallException.class)  // SWAPN OP mal data
@@ -1194,7 +1194,7 @@ public class VMTest {
         program =  new Program(Hex.decode("90"), invoke);
 
         try {
-        	vm.step(program);
+            vm.step(program);
         } finally {
             assertTrue(program.isStopped());
         }
@@ -1784,7 +1784,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -1800,7 +1800,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
     
@@ -1818,11 +1818,11 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
         vm.step(program);
-            	
+                
         DataWord key = new DataWord(Hex.decode(s_expected_key));
         DataWord val = program.getResult().getRepository().getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(), key);
-    	
-    	assertTrue(program.isStopped());
+        
+        assertTrue(program.isStopped());
         assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
     }
     
@@ -1845,8 +1845,8 @@ public class VMTest {
 
         DataWord key = new DataWord(Hex.decode(s_expected_key));
         DataWord val = program.getResult().getRepository().getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(), key);
-    	
-    	assertTrue(program.isStopped());
+        
+        assertTrue(program.isStopped());
         assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
     }
 
@@ -1904,7 +1904,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
     
@@ -1964,7 +1964,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -2022,7 +2022,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
     
@@ -2079,7 +2079,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -2169,7 +2169,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -2228,7 +2228,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -2286,7 +2286,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -2401,7 +2401,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -2593,7 +2593,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 
@@ -2685,7 +2685,7 @@ public class VMTest {
             vm.step(program);
             vm.step(program);
         } finally {
-        	assertTrue(program.isStopped());
+            assertTrue(program.isStopped());
         }
     }
 

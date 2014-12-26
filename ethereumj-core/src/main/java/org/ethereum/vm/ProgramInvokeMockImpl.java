@@ -34,11 +34,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         
         this.repository.createAccount(contractAddress);
         this.repository.saveCode(contractAddress, 
-        		Hex.decode("385E60076000396000605f556014600054601e60"
-        		+ "205463abcddcba6040545b51602001600a525451"
-        		+ "6040016014525451606001601e52545160800160"
-        		+ "28525460a052546016604860003960166000f260"
-        		+ "00603f556103e75660005460005360200235"));
+                Hex.decode("385E60076000396000605f556014600054601e60"
+                + "205463abcddcba6040545b51602001600a525451"
+                + "6040016014525451606001601e52545160800160"
+                + "28525460a052546016604860003960166000f260"
+                + "00603f556103e75660005460005360200235"));
     }
 
     public ProgramInvokeMockImpl(boolean defaults){
@@ -84,7 +84,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     /*           GAS op       */
     public DataWord getGas() {
-    	
+        
         return new DataWord(gasLimit);
     }
 
@@ -192,7 +192,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
     
     public void setGasLimit(long gasLimit) {
-    	this.gasLimit = gasLimit;
+        this.gasLimit = gasLimit;
     }    
 
     public void setOwnerAddress(byte[] ownerAddress) {

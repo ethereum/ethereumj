@@ -13,22 +13,22 @@ import java.util.Map;
  */
 public enum ShhMessageCodes {
 
-	/* Whisper Protocol */
+    /* Whisper Protocol */
 
     /** [+0x00] */
-	STATUS(0x00),
+    STATUS(0x00),
 
-	/** [+0x01] */
-	MESSAGE(0x01),
+    /** [+0x01] */
+    MESSAGE(0x01),
 
-	/** [+0x02] */
-	ADD_FILTER(0x02),
+    /** [+0x02] */
+    ADD_FILTER(0x02),
 
-	/** [+0x03] */
-	REMOVE_FILTER(0x03),
+    /** [+0x03] */
+    REMOVE_FILTER(0x03),
 
-	/** [+0x04] */
-	PACKET_COUNT(0x04);
+    /** [+0x04] */
+    PACKET_COUNT(0x04);
 
     static byte OFFSET = 0;
     private int cmd;
@@ -45,7 +45,7 @@ public enum ShhMessageCodes {
     }
 
     public static ShhMessageCodes fromByte(byte i) {
-    	ShhMessageCodes type = intToTypeMap.get(i - OFFSET);
+        ShhMessageCodes type = intToTypeMap.get(i - OFFSET);
         return type;
     }
 
@@ -62,6 +62,6 @@ public enum ShhMessageCodes {
     }
 
     public byte asByte() {
-    	return (byte) (cmd +  OFFSET);
+        return (byte) (cmd +  OFFSET);
     }
 }

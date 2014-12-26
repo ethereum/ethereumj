@@ -27,22 +27,22 @@ public class TransactionsMessageTest {
     @Test  /* GetTransactions message 1 */
     public void testGetTransactions() {
 
-    	GetTransactionsMessage getTransactionsMessage = new GetTransactionsMessage();
+        GetTransactionsMessage getTransactionsMessage = new GetTransactionsMessage();
         System.out.println(getTransactionsMessage);
 
         assertEquals(EthMessageCodes.GET_TRANSACTIONS, getTransactionsMessage.getCommand());
         assertEquals(TransactionsMessage.class, getTransactionsMessage.getAnswerMessage());
     }
-	
+    
     /* TRANSACTIONS */
     
     @Test  /* Transactions message 1 */
     public void test_1() {
 
         String txsPacketRaw = "f86e12f86b04648609184e72a00094cd2a3d9f938e13cd947ec05abc7fe734df8dd826"
-        		+ "881bc16d674ec80000801ba05c89ebf2b77eeab88251e553f6f9d53badc1d800"
-        		+ "bbac02d830801c2aa94a4c9fa00b7907532b1f29c79942b75fff98822293bf5f"
-        		+ "daa3653a8d9f424c6a3265f06c";
+                + "881bc16d674ec80000801ba05c89ebf2b77eeab88251e553f6f9d53badc1d800"
+                + "bbac02d830801c2aa94a4c9fa00b7907532b1f29c79942b75fff98822293bf5f"
+                + "daa3653a8d9f424c6a3265f06c";
         
         byte[] payload = Hex.decode(txsPacketRaw);
 
@@ -52,19 +52,19 @@ public class TransactionsMessageTest {
         assertEquals(EthMessageCodes.TRANSACTIONS, transactionsMessage.getCommand());
         assertEquals(1, transactionsMessage.getTransactions().size());
 
-		Transaction tx = transactionsMessage.getTransactions().iterator().next();
+        Transaction tx = transactionsMessage.getTransactions().iterator().next();
 
-		assertEquals("5d2aee0490a9228024158433d650335116b4af5a30b8abb10e9b7f9f7e090fd8", Hex.toHexString(tx.getHash()));
-		assertEquals("04", Hex.toHexString(tx.getNonce()));
-		assertEquals("1bc16d674ec80000", Hex.toHexString(tx.getValue()));
-		assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(tx.getReceiveAddress()));
-		assertEquals("64", Hex.toHexString(tx.getGasPrice()));
-		assertEquals("09184e72a000", Hex.toHexString(tx.getGasLimit()));
-		assertEquals("", ByteUtil.toHexString(tx.getData()));
+        assertEquals("5d2aee0490a9228024158433d650335116b4af5a30b8abb10e9b7f9f7e090fd8", Hex.toHexString(tx.getHash()));
+        assertEquals("04", Hex.toHexString(tx.getNonce()));
+        assertEquals("1bc16d674ec80000", Hex.toHexString(tx.getValue()));
+        assertEquals("cd2a3d9f938e13cd947ec05abc7fe734df8dd826", Hex.toHexString(tx.getReceiveAddress()));
+        assertEquals("64", Hex.toHexString(tx.getGasPrice()));
+        assertEquals("09184e72a000", Hex.toHexString(tx.getGasLimit()));
+        assertEquals("", ByteUtil.toHexString(tx.getData()));
 
-		assertEquals("1b", Hex.toHexString(new byte[] { tx.getSignature().v }));
-		assertEquals("5c89ebf2b77eeab88251e553f6f9d53badc1d800bbac02d830801c2aa94a4c9f", Hex.toHexString(tx.getSignature().r.toByteArray()));
-		assertEquals("0b7907532b1f29c79942b75fff98822293bf5fdaa3653a8d9f424c6a3265f06c", Hex.toHexString(tx.getSignature().s.toByteArray()));
+        assertEquals("1b", Hex.toHexString(new byte[] { tx.getSignature().v }));
+        assertEquals("5c89ebf2b77eeab88251e553f6f9d53badc1d800bbac02d830801c2aa94a4c9f", Hex.toHexString(tx.getSignature().r.toByteArray()));
+        assertEquals("0b7907532b1f29c79942b75fff98822293bf5fdaa3653a8d9f424c6a3265f06c", Hex.toHexString(tx.getSignature().s.toByteArray()));
     }
     
     @Test  /* Transactions message 2 */
@@ -104,61 +104,61 @@ public class TransactionsMessageTest {
         Transaction tx3 = txIter.next();
         
         assertEquals("1b9d9456293cbcbc2f28a0fdc67028128ea571b033fb0e21d0ee00bcd6167e5d",
-        		Hex.toHexString(tx3.getHash()));
+                Hex.toHexString(tx3.getHash()));
 
         assertEquals("00",
-        		Hex.toHexString(tx3.getNonce()));
+                Hex.toHexString(tx3.getNonce()));
 
         assertEquals("2710",
-        		Hex.toHexString(tx3.getValue()));
+                Hex.toHexString(tx3.getValue()));
 
         assertEquals("09184e72a000",
-        		Hex.toHexString(tx3.getReceiveAddress()));
+                Hex.toHexString(tx3.getReceiveAddress()));
 
         assertNull(tx3.getGasPrice());
 
         assertEquals("0000000000000000000000000000000000000000",
-        		Hex.toHexString(tx3.getGasLimit()));
+                Hex.toHexString(tx3.getGasLimit()));
 
         assertEquals("606956330c0d630000003359366000530a0d630000003359602060005301356000533557604060005301600054630000000c58",
-        		Hex.toHexString(tx3.getData()));
+                Hex.toHexString(tx3.getData()));
 
         assertEquals("33",
-        		Hex.toHexString(new byte[] {tx3.getSignature().v}));
+                Hex.toHexString(new byte[] {tx3.getSignature().v}));
 
         assertEquals("1c",
-        		Hex.toHexString(tx3.getSignature().r.toByteArray()));
+                Hex.toHexString(tx3.getSignature().r.toByteArray()));
 
         assertEquals("7f6eb94576346488c6253197bde6a7e59ddc36f2773672c849402aa9c402c3c4",
-        		Hex.toHexString(tx3.getSignature().s.toByteArray()));
+                Hex.toHexString(tx3.getSignature().s.toByteArray()));
 
         // Transaction #2
         
         assertEquals("dde9543921850f41ca88e5401322cd7651c78a1e4deebd5ee385af8ac343f0ad",
-        		Hex.toHexString(tx1.getHash()));
+                Hex.toHexString(tx1.getHash()));
 
         assertEquals("02",
-        		Hex.toHexString(tx1.getNonce()));
+                Hex.toHexString(tx1.getNonce()));
 
         assertEquals("2710",
-        		Hex.toHexString(tx1.getValue()));
+                Hex.toHexString(tx1.getValue()));
 
         assertEquals("09184e72a000",
-        		Hex.toHexString(tx1.getReceiveAddress()));
+                Hex.toHexString(tx1.getReceiveAddress()));
 
         assertNull(tx1.getGasPrice());
 
         assertEquals("ccdeac59d35627b7de09332e819d5159e7bb7250",
-        		Hex.toHexString(tx1.getGasLimit()));
+                Hex.toHexString(tx1.getGasLimit()));
 
         assertEquals("00000000000000000000000000000000000000000000000000000000000000000000000000000000000000002d0aceee7e5ab874e22ccf8d1a649f59106d74e8",
-        		Hex.toHexString(tx1.getData()));
+                Hex.toHexString(tx1.getData()));
 
         assertEquals("1b",
-        		Hex.toHexString(new byte[] {tx1.getSignature().v}));
+                Hex.toHexString(new byte[] {tx1.getSignature().v}));
 
         assertEquals("00d05887574456c6de8f7a0d172342c2cbdd4cf7afe15d9dbb8b75b748ba6791c9",
-        		Hex.toHexString(tx1.getSignature().r.toByteArray()));
+                Hex.toHexString(tx1.getSignature().r.toByteArray()));
 
         assertEquals("1e87172a861f6c37b5a9e3a5d0d7393152a7fbe41530e5bb8ac8f35433e5931b",
                 Hex.toHexString(tx1.getSignature().s.toByteArray()));

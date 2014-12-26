@@ -30,13 +30,13 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
  * <p>
  * Peers with 'eth' capability can send/receive:
  * <ul>
- * <li>STATUS				:	Announce their status to the peer</li>
- * <li>GET_TRANSACTIONS   	: 	Request a list of pending transactions</li>
- * <li>TRANSACTIONS		    :	Send a list of pending transactions</li>
- * <li>GET_BLOCK_HASHES	    : 	Request a list of known block hashes</li>
- * <li>BLOCK_HASHES		    :	Send a list of known block hashes</li>
- * <li>GET_BLOCKS			: 	Request a list of blocks</li>
- * <li>BLOCKS				:	Send a list of blocks</li>
+ * <li>STATUS               :   Announce their status to the peer</li>
+ * <li>GET_TRANSACTIONS     :   Request a list of pending transactions</li>
+ * <li>TRANSACTIONS         :   Send a list of pending transactions</li>
+ * <li>GET_BLOCK_HASHES     :   Request a list of known block hashes</li>
+ * <li>BLOCK_HASHES         :   Send a list of known block hashes</li>
+ * <li>GET_BLOCKS           :   Request a list of blocks</li>
+ * <li>BLOCKS               :   Send a list of blocks</li>
  * </ul>
  */
 @Component
@@ -78,7 +78,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     public EthHandler(MessageQueue msgQueue, boolean peerDiscoveryMode) {
-    	this.peerDiscoveryMode = peerDiscoveryMode;
+        this.peerDiscoveryMode = peerDiscoveryMode;
         this.msgQueue = msgQueue;
     }
 
@@ -112,7 +112,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         switch (msg.getCommand()) {
             case STATUS:
                 msgQueue.receivedMessage(msg);
-				processStatus((StatusMessage) msg, ctx);
+                processStatus((StatusMessage) msg, ctx);
                 break;
             case GET_TRANSACTIONS:
                 // todo: eventually get_transaction is going deprecated
@@ -181,7 +181,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      * <ul>
      *   <li>checking if peer is using the same genesis, protocol and network</li>
      *   <li>seeing if total difficulty is higher than total difficulty from all other peers</li>
-     * 	 <li>send GET_BLOCK_HASHES to this peer based on bestHash</li>
+     *   <li>send GET_BLOCK_HASHES to this peer based on bestHash</li>
      * </ul>
      *
      * @param msg is the StatusMessage
@@ -201,7 +201,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
                 || msg.getProtocolVersion() != EthHandler.VERSION) {
             logger.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
-//			msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
+//          msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
             ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
         } else if (msg.getNetworkId() != EthHandler.NETWORK_ID)
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));

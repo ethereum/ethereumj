@@ -14,12 +14,12 @@ public interface Trie {
      */
     public byte[] get(byte[] key);
 
-	/**
-	 * Insert or update a value in the trie for a specified key
-	 * 
-	 * @param key - any length byte array
-	 * @param value rlp encoded byte array of the object to store
-	 */
+    /**
+     * Insert or update a value in the trie for a specified key
+     * 
+     * @param key - any length byte array
+     * @param value rlp encoded byte array of the object to store
+     */
     public void update(byte[] key, byte[] value);
     
     /**

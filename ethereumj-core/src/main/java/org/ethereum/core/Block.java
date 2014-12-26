@@ -29,25 +29,25 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class Block {
 
-	private static final Logger logger = LoggerFactory.getLogger("block");
-	
+    private static final Logger logger = LoggerFactory.getLogger("block");
+    
     public  static BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
-	public static BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
-			BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
-	public static BigInteger INCLUSION_REWARD = Block.BLOCK_REWARD
-			.divide(BigInteger.valueOf(32));
+    public static BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
+            BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
+    public static BigInteger INCLUSION_REWARD = Block.BLOCK_REWARD
+            .divide(BigInteger.valueOf(32));
 
-	private BlockHeader header;
-	
+    private BlockHeader header;
+    
     /* Transactions */
-	private List<Transaction> transactionsList = new CopyOnWriteArrayList<>();
-	
-	/* Uncles */
+    private List<Transaction> transactionsList = new CopyOnWriteArrayList<>();
+    
+    /* Uncles */
     private List<BlockHeader> uncleList = new CopyOnWriteArrayList<>();
 
-    /* Private */ 	
-	
-	private byte[] rlpEncoded;
+    /* Private */   
+    
+    private byte[] rlpEncoded;
     private boolean parsed = false;
     
     private Trie txsState;
@@ -55,20 +55,20 @@ public class Block {
     /* Constructors */
     
     public Block(byte[] rawData) {
-    	logger.debug("new from [" + Hex.toHexString(rawData) + "]");
+        logger.debug("new from [" + Hex.toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
         this.parsed = false;
     }
     
-	public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-			byte[] difficulty, long number, long gasLimit,
-			long gasUsed, long timestamp, byte[] extraData, byte[] nonce,
-			List<Transaction> transactionsList, List<BlockHeader> uncleList) {
-		this.header = new BlockHeader(parentHash, unclesHash, coinbase, logsBloom,
-				difficulty, number,  gasLimit, gasUsed,
-				timestamp, extraData, nonce);
+    public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
+            byte[] difficulty, long number, long gasLimit,
+            long gasUsed, long timestamp, byte[] extraData, byte[] nonce,
+            List<Transaction> transactionsList, List<BlockHeader> uncleList) {
+        this.header = new BlockHeader(parentHash, unclesHash, coinbase, logsBloom,
+                difficulty, number,  gasLimit, gasUsed,
+                timestamp, extraData, nonce);
 
-		this.transactionsList = transactionsList;
+        this.transactionsList = transactionsList;
         if (this.transactionsList == null){
             this.transactionsList = new CopyOnWriteArrayList<Transaction>();
         }
@@ -112,24 +112,24 @@ public class Block {
 
     public byte[] getHash() {
         if (!parsed) parseRLP();
-       	return HashUtil.sha3(this.header.getEncoded());
+        return HashUtil.sha3(this.header.getEncoded());
     }
 
 
-	public byte[] calcDifficulty() {
-		if (!parsed) parseRLP();
-		return this.header.calcDifficulty();
-	}
+    public byte[] calcDifficulty() {
+        if (!parsed) parseRLP();
+        return this.header.calcDifficulty();
+    }
 
-	public boolean validateNonce() {
-		if (!parsed) parseRLP();
+    public boolean validateNonce() {
+        if (!parsed) parseRLP();
         BigInteger max = BigInteger.valueOf(2).pow(256);
         byte[] target = BigIntegers.asUnsignedByteArray(32, max.divide(new BigInteger(1, this.getDifficulty())));
         byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
         byte[] concat = Arrays.concatenate(hash, this.getNonce());
         byte[] result = HashUtil.sha3(concat);
         return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
-	}
+    }
 
     
     public byte[] getParentHash() {
@@ -174,10 +174,10 @@ public class Block {
 
     public BigInteger getCumulativeDifficulty() {
         if (!parsed) parseRLP();
-		BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
+        BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
         for (BlockHeader uncle : uncleList) {
             calcDifficulty = calcDifficulty.add(new BigInteger(1, uncle.getDifficulty()));
-		}
+        }
         return calcDifficulty;
     }
     
@@ -187,21 +187,21 @@ public class Block {
     }
     
     public long getNumber() {
-    	if (!parsed) parseRLP();
-		return this.header.getNumber();
-	}
+        if (!parsed) parseRLP();
+        return this.header.getNumber();
+    }
 
-	public long getGasLimit() {
-		if (!parsed) parseRLP();
-		return this.header.getGasLimit();
-	}
+    public long getGasLimit() {
+        if (!parsed) parseRLP();
+        return this.header.getGasLimit();
+    }
 
-	public long getGasUsed() {
-		if (!parsed) parseRLP();
-		return this.header.getGasUsed();
-	}
+    public long getGasUsed() {
+        if (!parsed) parseRLP();
+        return this.header.getGasUsed();
+    }
 
-	public byte[] getExtraData() {
+    public byte[] getExtraData() {
         if (!parsed) parseRLP();
         return this.header.getExtraData();
     }
@@ -227,9 +227,9 @@ public class Block {
     }
 
     private StringBuffer toStringBuff = new StringBuffer();
-	// [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
-	// difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
-	// extradata, nonce]
+    // [parent_hash, uncles_hash, coinbase, state_root, tx_trie_root,
+    // difficulty, number, minGasPrice, gasLimit, gasUsed, timestamp,  
+    // extradata, nonce]
 
     @Override
     public String toString() {
@@ -275,14 +275,14 @@ public class Block {
 
         this.txsState = new TrieImpl(null);
         for (int i = 0; i < txTransactions.size(); i++) {
-        	RLPElement transactionRaw = txTransactions.get(i);
+            RLPElement transactionRaw = txTransactions.get(i);
             this.transactionsList.add(new Transaction(transactionRaw.getRLPData()));
             this.txsState.update(RLP.encodeInt(i) , transactionRaw.getRLPData());
         }
 
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
         if(!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
-			logger.error("Added tx receipts don't match the given txsStateRoot");
+            logger.error("Added tx receipts don't match the given txsStateRoot");
     }
 
     /**
@@ -294,9 +294,9 @@ public class Block {
         return Arrays.areEqual(this.getHash(), block.getParentHash());
     }
 
-	public boolean isGenesis() {
-		return this.header.isGenesis();
-	}
+    public boolean isGenesis() {
+        return this.header.isGenesis();
+    }
 
     public boolean isEqual(Block block){
         return Arrays.areEqual(this.getHash(), block.getHash());
@@ -318,22 +318,22 @@ public class Block {
         this.getHeader().setUnclesHash(  SHA3Helper.sha3( getUnclesEncoded() ));
         rlpEncoded = null;
     }
-	
-	public byte[] getEncoded() {
-		if(rlpEncoded == null) {
-			byte[] header = this.header.getEncoded();
-			byte[] transactions = RLP.encodeList();
-			byte[] uncles = getUnclesEncoded();
-			this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
-		}
-		return rlpEncoded;
-	}
-	
-	public byte[] getEncodedWithoutNonce() {
-		if (!parsed) parseRLP();
-		byte[] header = this.header.getEncodedWithoutNonce();
+    
+    public byte[] getEncoded() {
+        if(rlpEncoded == null) {
+            byte[] header = this.header.getEncoded();
+            byte[] transactions = RLP.encodeList();
+            byte[] uncles = getUnclesEncoded();
+            this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
+        }
+        return rlpEncoded;
+    }
+    
+    public byte[] getEncodedWithoutNonce() {
+        if (!parsed) parseRLP();
+        byte[] header = this.header.getEncodedWithoutNonce();
         return header;
-	}
+    }
 
     public String getShortHash(){
         if (!parsed) parseRLP();

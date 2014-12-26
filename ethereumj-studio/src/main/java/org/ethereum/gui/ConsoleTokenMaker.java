@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory;
  * Created on: 24/04/14 11:52
  */
 public class ConsoleTokenMaker extends AbstractTokenMaker {
-	
-	private Logger logger = LoggerFactory.getLogger("gui");
+    
+    private Logger logger = LoggerFactory.getLogger("gui");
 
     protected final String operators = "+-*/%!=<>^&|?:";
 
     protected final String separators = "()[]{}";
 
-    protected final String separators2 = ".,;";	// Characters you don't want syntax highlighted but separate identifiers.
+    protected final String separators2 = ".,;"; // Characters you don't want syntax highlighted but separate identifiers.
 
     protected final String hexCharacters = "0123456789ABCDEFabcdef";
 
@@ -35,7 +35,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
      * Constructor.
      */
     public ConsoleTokenMaker() {
-        super();	// Initializes tokensToHighlight.
+        super();    // Initializes tokensToHighlight.
     }
 
 
@@ -79,7 +79,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                 break;
 
             default:
-            	logger.error("Unknown tokenType: '" + tokenType + "'");
+                logger.error("Unknown tokenType: '" + tokenType + "'");
                 tokenType = Token.IDENTIFIER;
                 break;
 
@@ -114,14 +114,14 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
         TokenMap tokenMap = new TokenMap(52);
 
         int reservedWord = Token.RESERVED_WORD;
-        tokenMap.put("connecting",						reservedWord);
+        tokenMap.put("connecting",                      reservedWord);
 
         int literalBoolean = Token.LITERAL_BOOLEAN;
-        tokenMap.put("false",						literalBoolean);
-        tokenMap.put("true",						literalBoolean);
+        tokenMap.put("false",                       literalBoolean);
+        tokenMap.put("true",                        literalBoolean);
 
         int dataType = Token.DATA_TYPE;
-        tokenMap.put("boolean",						dataType);
+        tokenMap.put("boolean",                     dataType);
 
         return tokenMap;
 
@@ -184,7 +184,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                 case Token.NULL:
 
-                    currentTokenStart = i;	// Starting a new token here.
+                    currentTokenStart = i;  // Starting a new token here.
 
                     switch (c) {
 
@@ -262,7 +262,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case ' ':
                         case '\t':
-                            break;	// Still whitespace.
+                            break;  // Still whitespace.
 
                         case '\\':
                             addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
@@ -285,7 +285,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                             backslash = false;
                             break;
 
-                        default:	// Add the whitespace token and start anew.
+                        default:    // Add the whitespace token and start anew.
 
                             addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
                             currentTokenStart = i;
@@ -361,7 +361,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         default:
 
-                            if (c=='e') {	// Exponent.
+                            if (c=='e') {   // Exponent.
                                 if (numContainsExponent==false) {
                                     numContainsExponent = true;
                                 }
@@ -372,10 +372,10 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                             }
                             int indexOf = hexCharacters.indexOf(c);
                             if (indexOf>-1) {
-                                break;	// Still a hexadecimal number.
+                                break;  // Still a hexadecimal number.
                             }
                             indexOf = numberEndChars.indexOf(c);
-                            if (indexOf>-1) {	// Numbers can end in 'f','F','l','L', etc.
+                            if (indexOf>-1) {   // Numbers can end in 'f','F','l','L', etc.
                                 if (numContainsEndCharacter==true) {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 }
@@ -451,7 +451,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         default:
                             if (RSyntaxUtilities.isLetterOrDigit(c) || c=='_') {
-                                break;	// Still an identifier of some type.
+                                break;  // Still an identifier of some type.
                             }
                             int indexOf = operators.indexOf(c);
                             if (indexOf>-1) {
@@ -524,9 +524,9 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                         default:
 
                             if (RSyntaxUtilities.isDigit(c)) {
-                                break;	// Still a literal number.
+                                break;  // Still a literal number.
                             }
-                            else if (c=='e') {	// Exponent.
+                            else if (c=='e') {  // Exponent.
                                 if (numContainsExponent==false) {
                                     numContainsExponent = true;
                                 }
@@ -545,7 +545,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                                 break;
                             }
                             int indexOf = numberEndChars.indexOf(c);
-                            if (indexOf>-1) {	// Numbers can end in 'f','F','l','L', etc.
+                            if (indexOf>-1) {   // Numbers can end in 'f','F','l','L', etc.
                                 if (numContainsEndCharacter==true) {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 }
@@ -618,9 +618,9 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                         default:
 
                             if (RSyntaxUtilities.isDigit(c)) {
-                                break;	// Still a literal number.
+                                break;  // Still a literal number.
                             }
-                            else if (c=='e') {	// Exponent.
+                            else if (c=='e') {  // Exponent.
                                 if (numContainsExponent==false) {
                                     numContainsExponent = true;
                                 }
@@ -634,7 +634,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                                 break;
                             }
                             int indexOf = numberEndChars.indexOf(c);
-                            if (indexOf>-1) {	// Numbers can end in 'f','F','l','L', etc.
+                            if (indexOf>-1) {   // Numbers can end in 'f','F','l','L', etc.
                                 if (numContainsEndCharacter==true) {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 }
@@ -709,7 +709,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         else if (c=='/') {
                             currentTokenType = Token.COMMENT_EOL;
-                            i = end - 1;	// Since we know the rest of the line is in this token.
+                            i = end - 1;    // Since we know the rest of the line is in this token.
                         }
 
                         else {

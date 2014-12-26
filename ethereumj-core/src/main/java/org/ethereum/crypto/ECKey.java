@@ -69,8 +69,8 @@ import org.spongycastle.util.encoders.Hex;
  * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey.java">bitcoinj on GitHub</a>
  */
 public class ECKey implements Serializable {
-	private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
-	
+    private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
+    
     /** The parameters of the secp256k1 curve that Ethereum uses. */
     public static final ECDomainParameters CURVE;
 
@@ -126,7 +126,7 @@ public class ECKey implements Serializable {
     public ECKey(@Nullable BigInteger priv, ECPoint pub) {
         this.priv = priv;
         if(pub == null)
-        	throw new IllegalArgumentException("Public key may not be null");
+            throw new IllegalArgumentException("Public key may not be null");
         this.pub = pub;
     }
     
@@ -237,8 +237,8 @@ public class ECKey implements Serializable {
     /** Gets the hash160 form of the public key (as seen in addresses). */
     public byte[] getAddress() {
         if (pubKeyHash == null) {
-        	byte[] pubBytes = this.pub.getEncoded(false);
-        	pubKeyHash = HashUtil.sha3omit12(Arrays.copyOfRange(pubBytes, 1, pubBytes.length));
+            byte[] pubBytes = this.pub.getEncoded(false);
+            pubKeyHash = HashUtil.sha3omit12(Arrays.copyOfRange(pubBytes, 1, pubBytes.length));
         }
         return pubKeyHash;
     }
@@ -317,9 +317,9 @@ public class ECKey implements Serializable {
         }
         
         public static ECDSASignature fromComponents(byte[] r, byte[] s, byte v) {
-        	ECDSASignature signature = fromComponents(r, s);
-        	signature.v = v;
-        	return signature;
+            ECDSASignature signature = fromComponents(r, s);
+            signature.v = v;
+            return signature;
         }
 
         /**
@@ -343,11 +343,11 @@ public class ECKey implements Serializable {
         }
         
         public String toBase64() {
-	        byte[] sigData = new byte[65];  // 1 header + 32 bytes for R + 32 bytes for S
-	        sigData[0] = v;
-	        System.arraycopy(bigIntegerToBytes(this.r, 32), 0, sigData, 1, 32);
-	        System.arraycopy(bigIntegerToBytes(this.s, 32), 0, sigData, 33, 32);
-	        return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
+            byte[] sigData = new byte[65];  // 1 header + 32 bytes for R + 32 bytes for S
+            sigData[0] = v;
+            System.arraycopy(bigIntegerToBytes(this.r, 32), 0, sigData, 1, 32);
+            System.arraycopy(bigIntegerToBytes(this.s, 32), 0, sigData, 33, 32);
+            return new String(Base64.encode(sigData), Charset.forName("UTF-8"));
         }
         
         @Override
@@ -472,7 +472,7 @@ public class ECKey implements Serializable {
             return signer.verifySignature(data, signature.r, signature.s);
         } catch (NullPointerException npe) {
             // Bouncy Castle contains a bug that can cause NPEs given specially crafted signatures. 
-        	// Those signatures are inherently invalid/attack sigs so we just fail them here rather than crash the thread.
+            // Those signatures are inherently invalid/attack sigs so we just fail them here rather than crash the thread.
             logger.error("Caught NPE inside bouncy castle", npe);
             return false;
         }

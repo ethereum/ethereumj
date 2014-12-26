@@ -43,10 +43,10 @@ public class RepositoryImpl implements Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
 
-    private Trie 			worldState;
+    private Trie            worldState;
 
-    private DatabaseImpl detailsDB 	= null;
-    private DatabaseImpl stateDB 	= null;
+    private DatabaseImpl detailsDB  = null;
+    private DatabaseImpl stateDB    = null;
 
     public RepositoryImpl() {
         this(DETAILS_DB, STATE_DB);
@@ -54,8 +54,8 @@ public class RepositoryImpl implements Repository {
 
     public RepositoryImpl(String detailsDbName, String stateDbName) {
         detailsDB   = new DatabaseImpl(detailsDbName);
-        stateDB 	= new DatabaseImpl(stateDbName);
-        worldState 	= new TrieImpl(stateDB.getDb());
+        stateDB     = new DatabaseImpl(stateDbName);
+        worldState  = new TrieImpl(stateDB.getDb());
     }
 
 
@@ -63,8 +63,8 @@ public class RepositoryImpl implements Repository {
     public void reset() {
         close();
         detailsDB   = new DatabaseImpl(DETAILS_DB);
-        stateDB 	= new DatabaseImpl(STATE_DB);
-        worldState 	= new TrieImpl(stateDB.getDb());
+        stateDB     = new DatabaseImpl(STATE_DB);
+        worldState  = new TrieImpl(stateDB.getDb());
     }
 
     @Override

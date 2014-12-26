@@ -35,12 +35,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class Wallet {
 
-	private Logger logger = LoggerFactory.getLogger("wallet");
+    private Logger logger = LoggerFactory.getLogger("wallet");
 
     // TODO: a) the values I need to keep for address state is balance & nonce & ECKey
     // TODO: b) keep it to be easy accessed by the toAddress()
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
-	
+    
     // This map of transaction designed
     // to approve the tx by external trusted peer
     private Map<String, WalletTransaction> walletTransactions = new ConcurrentHashMap<>();
@@ -119,7 +119,7 @@ public class Wallet {
     }
 
     /***********************************************************************
-     *	1) the dialog put a pending transaction on the list
+     *  1) the dialog put a pending transaction on the list
      *  2) the dialog send the transaction to a net
      *  3) wherever the transaction got in from the wire it will change to approve state
      *  4) only after the approve a) Wallet state changes
@@ -130,12 +130,12 @@ public class Wallet {
         logger.info("pending transaction placed hash: {}", hash );
 
         WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
-		if (walletTransaction != null)
-			walletTransaction.incApproved();
-		else {
-			walletTransaction = new WalletTransaction(transaction);
-			this.walletTransactions.put(hash, walletTransaction);
-		}
+        if (walletTransaction != null)
+            walletTransaction.incApproved();
+        else {
+            walletTransaction = new WalletTransaction(transaction);
+            this.walletTransactions.put(hash, walletTransaction);
+        }
 
         this.applyTransaction(transaction);
 
@@ -143,17 +143,17 @@ public class Wallet {
     }
     
     public void addTransactions(List<Transaction> transactions) {
-    	for (Transaction transaction : transactions) {
-			this.addTransaction(transaction);
-		}
+        for (Transaction transaction : transactions) {
+            this.addTransaction(transaction);
+        }
     }
     
     public void removeTransactions(List<Transaction> transactions) {
-	    for (Transaction tx : transactions) {
-	        if (logger.isDebugEnabled())
-	            logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString(tx.getHash()));
-	        this.removeTransaction(tx);
-	    }
+        for (Transaction tx : transactions) {
+            if (logger.isDebugEnabled())
+                logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString(tx.getHash()));
+            this.removeTransaction(tx);
+        }
     }
 
     public void removeTransaction(Transaction transaction) {
@@ -179,15 +179,15 @@ public class Wallet {
 
         byte[] receiveAddress = transaction.getReceiveAddress();
         if(receiveAddress != null) {
-	        Account receiver =  rows.get(Hex.toHexString(receiveAddress));
-	        if (receiver != null) {
-	            receiver.addPendingTransaction(transaction);
-	
-	            logger.info("Pending transaction added to " +
-	                            "\n account: [{}], " +
-	                            "\n tx: [{}]",
-	                    Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
-	        }
+            Account receiver =  rows.get(Hex.toHexString(receiveAddress));
+            if (receiver != null) {
+                receiver.addPendingTransaction(transaction);
+    
+                logger.info("Pending transaction added to " +
+                                "\n account: [{}], " +
+                                "\n tx: [{}]",
+                        Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
+            }
         }
         this.notifyListeners();
     }
@@ -207,7 +207,7 @@ public class Wallet {
      */
     public void load() throws IOException, SAXException, ParserConfigurationException {
 
-    	/**
+        /**
 
          <wallet high="8933">
              <row id=1>
@@ -330,8 +330,8 @@ public class Wallet {
     }
 
     private void notifyListeners() {
-		for (WalletListener listener : listeners)
-			listener.valueChanged();
+        for (WalletListener listener : listeners)
+            listener.valueChanged();
     }
 
     public interface WalletListener{

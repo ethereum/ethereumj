@@ -62,7 +62,7 @@ public class TransactionExecutor {
 
         // VALIDATE THE SENDER
         byte[] senderAddress = tx.getSender();
-//		AccountState senderAccount = repository.getAccountState(senderAddress);
+//      AccountState senderAccount = repository.getAccountState(senderAddress);
         logger.info("tx.sender: [{}]", Hex.toHexString(tx.getSender()));
 
         // VALIDATE THE NONCE

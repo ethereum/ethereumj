@@ -19,7 +19,7 @@ public class SerpentCompileTest {
         String code = "a=2";
         String expected = "2 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
                 SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
@@ -37,8 +37,8 @@ public class SerpentCompileTest {
                       "b=6";
         String expected = "2 0 MSTORE 6 32 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -56,8 +56,8 @@ public class SerpentCompileTest {
                       "c=b";
         String expected = "2 0 MSTORE 6 32 MSTORE 32 MLOAD 64 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -76,8 +76,8 @@ public class SerpentCompileTest {
                       "a=c";
         String expected = "2 0 MSTORE 6 32 MSTORE 32 MLOAD 64 MSTORE 64 MLOAD 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -96,8 +96,8 @@ public class SerpentCompileTest {
                 "a=c\n" +
                 "a=d";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         new SerpentToAssemblyCompiler().visit(tree);
@@ -110,8 +110,8 @@ public class SerpentCompileTest {
         String code = "a = 2 * 2";
         String expected = "2 2 MUL 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -127,8 +127,8 @@ public class SerpentCompileTest {
         String code = "a = 2 * 2 xor 2 * 2";
         String expected = "2 2 MUL 2 2 MUL XOR 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -144,8 +144,8 @@ public class SerpentCompileTest {
         String code = "a = 2 | 2 xor 2 * 2";
         String expected = "2 2 MUL 2 XOR 2 OR 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -161,8 +161,8 @@ public class SerpentCompileTest {
         String code = "a = (2 | 2) xor (2 * 2)";
         String expected = "2 2 MUL 2 2 OR XOR 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -178,8 +178,8 @@ public class SerpentCompileTest {
         String code = "a = !(2 | 2 xor 2 * 2)";
         String expected = "2 2 MUL 2 XOR 2 OR NOT 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -195,8 +195,8 @@ public class SerpentCompileTest {
         String code = "a = 2 + 2 * 2 + 2";
         String expected = "2 2 2 MUL 2 ADD ADD 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -212,8 +212,8 @@ public class SerpentCompileTest {
         String code = "a = 2 / 1 * 2 + 2";
         String expected = "2 2 1 2 DIV MUL ADD 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -229,8 +229,8 @@ public class SerpentCompileTest {
         String code = "a = 2 - 0x1a * 5 + 0xA";
         String expected = "10 5 26 MUL 2 SUB ADD 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -246,8 +246,8 @@ public class SerpentCompileTest {
         String code = "a = 1 > 2 > 3 > 4";
         String expected = "4 3 2 1 GT GT GT 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -263,8 +263,8 @@ public class SerpentCompileTest {
         String code = "a =     !(   1    + 2     *    9 | 8 == 2)";
         String expected = "2 8 EQ 9 2 MUL 1 ADD OR NOT 0 MSTORE";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -316,8 +316,8 @@ public class SerpentCompileTest {
 
           */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -345,8 +345,8 @@ public class SerpentCompileTest {
             LABEL_0
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -376,8 +376,8 @@ public class SerpentCompileTest {
             LABEL_0
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -413,8 +413,8 @@ public class SerpentCompileTest {
             LABEL_0
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -462,8 +462,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -516,8 +516,8 @@ public class SerpentCompileTest {
              LABEL_0
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -570,8 +570,8 @@ public class SerpentCompileTest {
             LABEL_0
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -607,8 +607,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -647,8 +647,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -680,8 +680,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -712,8 +712,8 @@ public class SerpentCompileTest {
                LABEL_4 LABEL_3 REF_2 JUMP LABEL_5 LABEL_2 REF_1 JUMP LABEL_6 LABEL_1 REF_0 JUMP LABEL_7 LABEL_0
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -749,8 +749,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -768,10 +768,10 @@ public class SerpentCompileTest {
                         "           \n" +
                         "           \n";
         
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
 
-		parser.parse();
+        parser.parse();
         fail("Should be indent error thrown");
     }
 
@@ -783,10 +783,10 @@ public class SerpentCompileTest {
                         "  else:  \n" +
                         "    a=40   \n";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
 
-		parser.parse();
+        parser.parse();
         fail("Should be indent error thrown");
     }
 
@@ -800,8 +800,8 @@ public class SerpentCompileTest {
                         "else:      \n" +
                         "    a=40   \n";
         
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
 
         parser.parse();
         fail("Should be indent error thrown");
@@ -830,8 +830,8 @@ public class SerpentCompileTest {
              LABEL_1 REF_0 JUMP LABEL_5 LABEL_0
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -851,10 +851,10 @@ public class SerpentCompileTest {
                         "    else:          \n" +
                         "                   \n";
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
 
-		parser.parse();
+        parser.parse();
         fail("Should be indent error thrown");
     }
 
@@ -890,8 +890,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -934,8 +934,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -965,8 +965,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -1005,8 +1005,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -1043,8 +1043,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -1062,8 +1062,8 @@ public class SerpentCompileTest {
                         "x = x +2\n" +
                         "x = 3 * x + 1"  ;
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
 
         parser.parse();
         fail("Should be indent error thrown");
@@ -1089,8 +1089,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -1137,8 +1137,8 @@ public class SerpentCompileTest {
 
          */
 
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);

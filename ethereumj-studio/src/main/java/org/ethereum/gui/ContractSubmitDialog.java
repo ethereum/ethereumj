@@ -25,8 +25,8 @@ import java.util.Collection;
 class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
 
     private static final long serialVersionUID = -3622984456084608996L;
-	
-	ContractSubmitDialog dialog;
+    
+    ContractSubmitDialog dialog;
     JComboBox<AccountWrapper> creatorAddressCombo;
     final JTextField gasInput;
     final JTextField contractAddrInput;
@@ -192,16 +192,16 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         list.setSelectionBackground(Color.cyan);
         list.setBorder(null);
 
-		for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++) {
-			if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
-				CellRendererPane crp = ((CellRendererPane) 
-						(creatorAddressCombo.getComponent(i)));
-			}
-			if (creatorAddressCombo.getComponent(i) instanceof AbstractButton) {
-				((AbstractButton) creatorAddressCombo.getComponent(i))
-						.setBorder(line);
-			}
-		}
+        for (int i = 0; i < creatorAddressCombo.getComponentCount(); i++) {
+            if (creatorAddressCombo.getComponent(i) instanceof CellRendererPane) {
+                CellRendererPane crp = ((CellRendererPane) 
+                        (creatorAddressCombo.getComponent(i)));
+            }
+            if (creatorAddressCombo.getComponent(i) instanceof AbstractButton) {
+                ((AbstractButton) creatorAddressCombo.getComponent(i))
+                        .setBorder(line);
+            }
+        }
         creatorAddressCombo.setBounds(73, 267, 230, 36);
         this.getContentPane().add(creatorAddressCombo);
         this.getContentPane().revalidate();
@@ -341,7 +341,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
                     UIEthereumManager.ethereum.getRepository().getBalance(account.getAddress())
             );
 
-			String result = String.format(" By: [%s] %s", addressShort, valueShort);
+            String result = String.format(" By: [%s] %s", addressShort, valueShort);
             return result;
         }
     }

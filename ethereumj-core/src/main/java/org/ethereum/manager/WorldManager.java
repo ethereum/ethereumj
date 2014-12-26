@@ -35,13 +35,13 @@ public class WorldManager {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     @Autowired
-	private Blockchain blockchain;
+    private Blockchain blockchain;
 
     @Autowired
-	private Repository repository;
+    private Repository repository;
 
     @Autowired
-	private Wallet wallet;
+    private Wallet wallet;
 
     @Autowired
     private PeerClient activePeer;
@@ -72,7 +72,7 @@ public class WorldManager {
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());
         wallet.importKey(cbAddr);
     }
-	
+    
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
         ((EthereumListenerWrapper)this.listener).addListener(listener);
@@ -109,7 +109,7 @@ public class WorldManager {
     }
 
     public PeerDiscovery getPeerDiscovery() {
-    	return peerDiscovery;
+        return peerDiscovery;
     }
 
     public EthereumListener getListener() {
@@ -117,20 +117,20 @@ public class WorldManager {
     }
     
     public void setWallet(Wallet wallet)  {
-    	this.wallet = wallet;
+        this.wallet = wallet;
     }
 
-	public Repository getRepository() {
-		return repository;
-	}
-	
-	public Blockchain getBlockchain() {
-		return blockchain;
-	}
-	
-	public Wallet getWallet() {
-		return wallet;
-	}
+    public Repository getRepository() {
+        return repository;
+    }
+    
+    public Blockchain getBlockchain() {
+        return blockchain;
+    }
+    
+    public Wallet getWallet() {
+        return wallet;
+    }
 
     public void setActivePeer(PeerClient peer) {
         this.activePeer = peer;
@@ -141,10 +141,10 @@ public class WorldManager {
     }
 
     public Set<Transaction> getPendingTransactions() {
-    	return pendingTransactions;
+        return pendingTransactions;
     }
 
-	public boolean isBlockchainLoading(){
+    public boolean isBlockchainLoading(){
         return blockchain.getQueue().size() > 2;
     }
 

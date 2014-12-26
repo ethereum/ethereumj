@@ -16,13 +16,13 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /*** TRANSACTION  env ***/
     private DataWord address;
     private DataWord  origin, caller,
-    		balance, gas, gasPrice, callValue;
+            balance, gas, gasPrice, callValue;
 
     byte[] msgData;
 
     /*** BLOCK  env ***/
     private DataWord prevHash, coinbase, timestamp, 
-    		number, difficulty, gaslimit;
+            number, difficulty, gaslimit;
 
     Map<DataWord, DataWord> storage;
 
@@ -146,11 +146,11 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         int index = tempIndex.intValue(); // possible overflow is caught below
         int size = 32; // maximum datavalue size
 
-		if (msgData == null || index >= msgData.length
-				|| tempIndex.compareTo(MAX_MSG_DATA) == 1)
-        	return new DataWord();
+        if (msgData == null || index >= msgData.length
+                || tempIndex.compareTo(MAX_MSG_DATA) == 1)
+            return new DataWord();
         if (index + size > msgData.length)
-        	size = msgData.length - index;
+            size = msgData.length - index;
         
         byte[] data = new byte[32];
         System.arraycopy(msgData, index, data, 0, size);

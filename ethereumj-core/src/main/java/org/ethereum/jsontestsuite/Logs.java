@@ -14,9 +14,9 @@ import org.json.simple.JSONObject;
 import org.spongycastle.util.encoders.Hex;
 
 public class Logs {
-	List<LogInfo> logs = new ArrayList<>();
-	
-	public Logs(JSONArray jLogs) {
+    List<LogInfo> logs = new ArrayList<>();
+    
+    public Logs(JSONArray jLogs) {
 
         for (int i = 0; i < jLogs.size(); ++i){
 
@@ -35,7 +35,7 @@ public class Logs {
             LogInfo li = new LogInfo(address, topics, data);
             logs.add(li);
         }
-	}
+    }
 
 
     public Iterator<LogInfo> getIterator(){

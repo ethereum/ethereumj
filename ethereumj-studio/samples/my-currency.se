@@ -16,12 +16,12 @@ code:
     // support two functions
     if msg.datasize == 1:
 
-    	// 1. balance check
+        // 1. balance check
         addr = msg.data[0]
         return(contract.storage[addr])
     else:
 
-    	// 2. balance manipulation
+        // 2. balance manipulation
         from = msg.sender
         fromvalue = contract.storage[from]
         to = msg.data[0]

@@ -18,8 +18,8 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class Account  {
 
-	private ECKey ecKey;
-	private byte[] address;
+    private ECKey ecKey;
+    private byte[] address;
 
     private Set<Transaction> pendingTransactions =
             Collections.synchronizedSet(new HashSet<Transaction>());
@@ -27,18 +27,18 @@ public class Account  {
     @Autowired
     WorldManager worldManager;
 
-	public Account() {
-	}
+    public Account() {
+    }
 
     public void init(){
         this.ecKey = new ECKey(Utils.getRandom());
         address = this.ecKey.getAddress();
     }
 
-	public void init(ECKey ecKey) {
-		this.ecKey = ecKey;
+    public void init(ECKey ecKey) {
+        this.ecKey = ecKey;
         address = this.ecKey.getAddress();
-	}
+    }
 
     public BigInteger getNonce(){
         AccountState accountState =
@@ -82,16 +82,16 @@ public class Account  {
         return ecKey;
     }
 
-	public byte[] getAddress() {
-		return address;
-	}
+    public byte[] getAddress() {
+        return address;
+    }
 
-	public void setAddress(byte[] address) {
-		this.address = address;
-	}
+    public void setAddress(byte[] address) {
+        this.address = address;
+    }
 
     public Set<Transaction> getPendingTransactins() {
-    	return this.pendingTransactions;
+        return this.pendingTransactions;
     }
 
     public void addPendingTransaction(Transaction transaction){

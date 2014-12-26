@@ -12,7 +12,7 @@ public abstract class Message {
     protected byte[]  encoded;
     protected byte code;
 
-	public Message() {}
+    public Message() {}
 
     public Message(byte[] encoded) {
         this.encoded = encoded;
@@ -24,14 +24,14 @@ public abstract class Message {
      * 
      * @return RLP encoded byte array representation of this message
      */
-	public abstract byte[] getEncoded();
-	
-	public abstract Class<?> getAnswerMessage();
-	
-	/**
-	 * Returns the message in String format
-	 * 
-	 * @return A string with all attributes of the message
-	 */
-	public abstract String toString();
+    public abstract byte[] getEncoded();
+    
+    public abstract Class<?> getAnswerMessage();
+    
+    /**
+     * Returns the message in String format
+     * 
+     * @return A string with all attributes of the message
+     */
+    public abstract String toString();
 }

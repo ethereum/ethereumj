@@ -49,20 +49,20 @@ public class TrackDatabase implements Database {
 
     public void put(byte[] key, byte[] value) {
         if (trackingChanges) {
-        	ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-			changes.put(wKey, value);
+            ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+            changes.put(wKey, value);
         } else {
             db.put(key, value);
         }
     }
 
     public byte[] get(byte[] key) {
-    	if(trackingChanges) {
-    		ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+        if(trackingChanges) {
+            ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             if (deletes.contains(wKey)) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
         }
-       	return db.get(key);
+        return db.get(key);
     }
 
     /** Delete object (key) from db **/

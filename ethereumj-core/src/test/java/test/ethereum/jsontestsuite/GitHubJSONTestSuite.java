@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  */
 @RunWith(Suite.class)
 @SuiteClasses({
-	GitHubVMTest.class,
+    GitHubVMTest.class,
 })
 public class GitHubJSONTestSuite {
 

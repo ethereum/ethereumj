@@ -15,10 +15,10 @@ import java.util.concurrent.ThreadPoolExecutor;
  */
 public class RejectionLogger implements RejectedExecutionHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger("wire");
+    private static final Logger logger = LoggerFactory.getLogger("wire");
 
-	@Override
-	public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
-		logger.warn(r.toString() + " is rejected");
-	}
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        logger.warn(r.toString() + " is rejected");
+    }
 }

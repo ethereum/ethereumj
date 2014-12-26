@@ -38,9 +38,9 @@ public class Utils {
      * @return String formatted as - yyyy.MM.dd HH:mm:ss
      */
     public static String longToDateTime(long timestamp) {
-    	Date date = new Date(timestamp * 1000);
-    	DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
-    	return formatter.format(date);
+        Date date = new Date(timestamp * 1000);
+        DateFormat formatter = new SimpleDateFormat("yyyy.MM.dd HH:mm:ss");
+        return formatter.format(date);
     }
     
     public static ImageIcon getImageIcon(String resource) {
@@ -67,17 +67,17 @@ public class Utils {
      * @return - decode and validated address byte[]
      */
     public static byte[] addressStringToBytes(String hex) {
-    	byte[] addr = null;
-		try { addr = Hex.decode(hex); }
-    	catch(DecoderException addressIsNotValid) { return null; }
-		
-		if(isValidAddress(addr))
-			return addr;
-		return null;
+        byte[] addr = null;
+        try { addr = Hex.decode(hex); }
+        catch(DecoderException addressIsNotValid) { return null; }
+        
+        if(isValidAddress(addr))
+            return addr;
+        return null;
     }
     
     public static boolean isValidAddress(byte[] addr) {
-    	return addr != null && addr.length == 20;
+        return addr != null && addr.length == 20;
     }
 
     /**
@@ -115,15 +115,15 @@ public class Utils {
         return Double.parseDouble (version.substring (0, pos - 1));
     }
 
-	public static StringBuffer getHashlistShort(List<byte[]> blockHashes) {
+    public static StringBuffer getHashlistShort(List<byte[]> blockHashes) {
 
         StringBuffer sb = new StringBuffer();
 
         if (blockHashes.isEmpty()) return sb.append("[]");
 
         String firstHash = Hex.toHexString(blockHashes.get(0));
-		String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size()-1));
-		return sb.append(" ").append(firstHash).append("...").append(lastHash);
-	}
+        String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size()-1));
+        return sb.append(" ").append(firstHash).append("...").append(lastHash);
+    }
 
 }

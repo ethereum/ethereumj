@@ -54,7 +54,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         Wallet wallet = UIEthereumManager.ethereum.getWallet();
 
         for (Account account : wallet.getAccountCollection()) {
-			WalletAddressPanel rowPanel = new WalletAddressPanel(account);
+            WalletAddressPanel rowPanel = new WalletAddressPanel(account);
             contentPane.add(rowPanel);
         }
 
@@ -72,7 +72,7 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
             public void mouseClicked(MouseEvent e) {
 
                 Wallet wallet = UIEthereumManager.ethereum.getWallet();
-				if (wallet.getAccountCollection().size() >= 5) {
+                if (wallet.getAccountCollection().size() >= 5) {
                     JOptionPane.showMessageDialog(walletWindow,
                             "Hey do you really need more than 5 address for a demo wallet");
                     return;
@@ -92,13 +92,13 @@ public class WalletWindow extends JFrame implements Wallet.WalletListener{
         contentPane.repaint();
     }
 
-	public void addCloseAction() {
-		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				toolBar.walletToggle.setSelected(false);
-			}
-		});
-	}
+    public void addCloseAction() {
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                toolBar.walletToggle.setSelected(false);
+            }
+        });
+    }
 
     @Override
     public void valueChanged() {
