@@ -303,8 +303,7 @@ class ContractSubmitDialog extends JDialog implements MessageAwareDialog {
         BigInteger currentBalance =
                 UIEthereumManager.ethereum.getRepository().getBalance(account.getAddress());
 
-        long currGasPrice = UIEthereumManager.ethereum.getBlockchain().getGasPrice();
-        BigInteger gasPrice = BigInteger.valueOf(currGasPrice);
+        BigInteger gasPrice = BigInteger.valueOf(42);
         BigInteger gasInput = new BigInteger(this.gasInput.getText());
 
         boolean canAfford = currentBalance.compareTo(gasPrice.multiply(gasInput)) >= 0;

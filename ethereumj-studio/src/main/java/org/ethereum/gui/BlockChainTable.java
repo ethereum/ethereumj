@@ -633,7 +633,7 @@ public class BlockChainTable extends JFrame implements ActionListener {
         Block block = blockchain.getBlockByNumber(blockNum);
         blockN.setText("" + block.getNumber());
         highlightText(blockN);
-        minGasPrice.setText("" + block.getMinGasPrice());
+        minGasPrice.setText("" + 42);
         highlightText(minGasPrice);
         gasLimit.setText("" + block.getGasLimit());
         highlightText(gasLimit);
