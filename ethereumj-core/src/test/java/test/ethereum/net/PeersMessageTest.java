@@ -2,12 +2,7 @@ package test.ethereum.net;
 
 import static org.junit.Assert.assertEquals;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
-
 import org.ethereum.net.p2p.GetPeersMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.Peer;

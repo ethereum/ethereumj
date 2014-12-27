@@ -13,7 +13,6 @@ import org.ethereum.geo.IpGeoDB;
 
 import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;

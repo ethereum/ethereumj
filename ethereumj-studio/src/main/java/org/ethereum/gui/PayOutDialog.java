@@ -2,9 +2,6 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Account;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.Wallet;
-import org.ethereum.util.ByteUtil;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 

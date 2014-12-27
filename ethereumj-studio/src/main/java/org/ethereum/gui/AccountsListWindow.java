@@ -16,7 +16,6 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Denomination;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Repository;
-import org.ethereum.manager.WorldManager;
 import org.iq80.leveldb.DBIterator;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;

@@ -3,7 +3,6 @@ package org.ethereum.core;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**

@@ -2,7 +2,6 @@ package org.ethereum.gui;
 
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
-import org.ethereum.facade.EthereumImpl;
 
 /**
  * @author Roman Mandeleil

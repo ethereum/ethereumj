@@ -2,7 +2,6 @@ package org.ethereum.net.peerdiscovery;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
-import io.netty.channel.Channel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -13,7 +12,6 @@ import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
-import org.ethereum.net.server.*;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;

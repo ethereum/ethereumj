@@ -9,7 +9,6 @@ import java.awt.event.WindowEvent;
 import javax.swing.*;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.fife.ui.rsyntaxtextarea.*;
 import org.fife.ui.rtextarea.RTextScrollPane;

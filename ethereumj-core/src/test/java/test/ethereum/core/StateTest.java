@@ -2,18 +2,13 @@ package test.ethereum.core;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.RLP;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import test.ethereum.db.MockDB;
 
 import java.math.BigInteger;

@@ -1,17 +1,13 @@
 package org.ethereum.vm;
 
-import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Bloom;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**

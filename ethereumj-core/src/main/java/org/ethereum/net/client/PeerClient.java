@@ -8,8 +8,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.eth.StatusMessage;
-import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.EthereumChannelInitializer;
 import org.slf4j.Logger;

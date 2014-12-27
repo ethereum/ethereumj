@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;

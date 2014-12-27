@@ -1,6 +1,5 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
@@ -9,7 +8,6 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.regex.Pattern;
 
 /**
  * @author Roman Mandeleil

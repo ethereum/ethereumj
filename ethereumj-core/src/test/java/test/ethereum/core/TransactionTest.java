@@ -15,24 +15,13 @@ import org.ethereum.core.Bloom;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.vm.LogInfo;
 import org.junit.Ignore;
-import test.ethereum.TestContext;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.manager.WorldManager;
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 @Ignore
 public class TransactionTest {

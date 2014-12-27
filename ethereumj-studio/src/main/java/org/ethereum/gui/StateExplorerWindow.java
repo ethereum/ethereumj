@@ -35,7 +35,6 @@ import javax.swing.table.AbstractTableModel;
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.Program;

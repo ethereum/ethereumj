@@ -13,8 +13,6 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 /**
  * @author Roman Mandeleil
  * @since 25.04.14

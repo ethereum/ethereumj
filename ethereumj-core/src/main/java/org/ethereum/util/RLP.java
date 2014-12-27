@@ -16,7 +16,6 @@ import java.util.List;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * Recursive Length Prefix (RLP) encoding.

@@ -6,7 +6,6 @@ import java.util.*;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;

@@ -1,6 +1,5 @@
 package org.ethereum.cli;
 
-import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

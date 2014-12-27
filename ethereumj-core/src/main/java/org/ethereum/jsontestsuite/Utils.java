@@ -1,7 +1,6 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
 import org.spongycastle.util.encoders.Hex;
 
 /**

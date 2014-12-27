@@ -8,7 +8,6 @@ import java.util.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * Utility class to retrieve property values from the system.properties files

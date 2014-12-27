@@ -5,7 +5,6 @@ import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryDummy;
-import org.ethereum.db.RepositoryTrack;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;

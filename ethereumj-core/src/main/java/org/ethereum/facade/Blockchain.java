@@ -2,12 +2,9 @@ package org.ethereum.facade;
 
 import java.math.BigInteger;
 import java.util.List;
-import java.util.Map;
-
 import org.ethereum.core.Block;
 import org.ethereum.core.Chain;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.core.Genesis;
 

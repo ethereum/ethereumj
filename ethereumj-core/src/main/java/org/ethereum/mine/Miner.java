@@ -8,8 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
-
 import java.math.BigInteger;
 
 /**

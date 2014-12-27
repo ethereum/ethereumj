@@ -1,7 +1,6 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Account;
-import org.ethereum.facade.Ethereum;
 import org.ethereum.util.Utils;
 import org.spongycastle.util.encoders.Hex;
 

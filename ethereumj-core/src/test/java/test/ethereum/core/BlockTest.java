@@ -6,8 +6,6 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Genesis;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -33,8 +31,6 @@ import java.nio.file.Files;
 import java.util.List;
 
 import static org.junit.Assert.*;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)

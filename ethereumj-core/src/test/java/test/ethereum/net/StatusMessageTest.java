@@ -2,7 +2,6 @@ package test.ethereum.net;
 
 import static org.junit.Assert.assertEquals;
 
-import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.eth.StatusMessage;
 import org.junit.Test;
 import org.slf4j.Logger;
