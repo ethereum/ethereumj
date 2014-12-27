@@ -72,8 +72,8 @@ import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
  * can usually ignore the compressed/uncompressed distinction.</p>
  *
  * This code is borrowed from the bitcoinj project and altered to fit Ethereum.<br>
- * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey
- * .java">bitcoinj on GitHub</a>
+ * See <a href="https://github.com/bitcoinj/bitcoinj/blob/master/core/src/main/java/com/google/bitcoin/core/ECKey.java">
+ * bitcoinj on GitHub</a>.
  */
 public class ECKey implements Serializable {
     private static final Logger logger = LoggerFactory.getLogger(ECKey.class);
