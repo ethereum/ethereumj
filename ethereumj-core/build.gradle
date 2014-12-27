@@ -69,6 +69,7 @@ dependencies {
 javadoc {
     options.author = true
     options.header = project.name
+    options.addStringOption('Xdoclint:all,-missing', '-quiet')
     options.links(
         "http://docs.oracle.com/javase/8/docs/api/",
         "http://netty.io/4.0/api/"
