@@ -9,7 +9,7 @@ credentials.properties
 build
 
 # IDEA
-.idea/
+.idea
 *.iml
 *.iws
 
@@ -17,14 +17,13 @@ build
 .project
 .classpath
 .settings/
-/bin
+bin
 
 # Maven
 log/
 target/
 
 # Output
-ethereumj-*.zip
 database
 logs
 test_db
