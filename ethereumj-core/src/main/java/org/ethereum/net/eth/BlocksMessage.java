@@ -7,6 +7,7 @@ import org.ethereum.util.RLPList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.stream.Collectors;
 
 import static org.ethereum.net.eth.EthMessageCodes.BLOCKS;
 
@@ -45,9 +46,10 @@ public class BlocksMessage extends EthMessage {
         List<byte[]> encodedElements = new Vector<>();
         encodedElements.add(RLP.encodeByte(BLOCKS.asByte()));
 
-        for (Block block : blocks) {
-            encodedElements.add(block.getEncoded());
-        }
+        encodedElements.addAll(
+                blocks.stream()
+                        .map(Block::getEncoded)
+                        .collect(Collectors.toList()));
 
         byte[][] encodedElementArray = encodedElements
                 .toArray(new byte[encodedElements.size()][]);

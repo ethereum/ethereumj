@@ -15,6 +15,7 @@ import java.math.BigInteger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author Roman Mandeleil
@@ -73,9 +74,7 @@ public class BlockStore {
                 setParameter("limit", block.getNumber() - qty).
                 setMaxResults(qty).list();
 
-        for (byte[] h : result) {
-            hashes.add(h);
-        }
+        hashes.addAll(result.stream().collect(Collectors.toList()));
 
         return hashes;
     }

@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.ethereum.net.eth.EthMessageCodes.TRANSACTIONS;
 
@@ -51,8 +52,10 @@ public class TransactionsMessage extends EthMessage {
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
         encodedElements.add(RLP.encodeByte(TRANSACTIONS.asByte()));
-        for (Transaction tx : transactions)
-            encodedElements.add(tx.getEncoded());
+        encodedElements.addAll(
+                transactions.stream()
+                        .map(Transaction::getEncoded)
+                        .collect(Collectors.toList()));
         byte[][] encodedElementArray = encodedElements
                 .toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);

@@ -7,6 +7,7 @@ import org.ethereum.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.ethereum.net.eth.EthMessageCodes.BLOCK_HASHES;
 
@@ -45,8 +46,10 @@ public class BlockHashesMessage extends EthMessage {
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
         encodedElements.add(RLP.encodeByte(BLOCK_HASHES.asByte()));
-        for (byte[] blockHash : blockHashes)
-            encodedElements.add(RLP.encodeElement(blockHash));
+        encodedElements.addAll(
+                blockHashes.stream()
+                        .map(RLP::encodeElement)
+                        .collect(Collectors.toList()));
         byte[][] encodedElementArray = encodedElements
                 .toArray(new byte[encodedElements.size()][]);
         this.encoded = RLP.encodeList(encodedElementArray);
