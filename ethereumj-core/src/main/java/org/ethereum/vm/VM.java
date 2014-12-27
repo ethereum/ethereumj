@@ -1163,7 +1163,7 @@ public class VM {
                     ContractDetails details = program.getResult().getRepository()
                             .getContractDetails(program.getOwnerAddress().getLast20Bytes());
                     List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
-                    Collections.sort((List<DataWord>) storageKeys);
+                    Collections.sort(storageKeys);
 
                     for (DataWord key : storageKeys) {
                         dumpLogger.trace("{} {}",
@@ -1193,7 +1193,7 @@ public class VM {
             ContractDetails details = program.getResult().getRepository()
                     .getContractDetails(program.getOwnerAddress().getLast20Bytes());
             List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
-            Collections.sort((List<DataWord>) storageKeys);
+            Collections.sort(storageKeys);
 
             for (DataWord key : storageKeys) {
                 dumpLogger.trace("{}: {}",

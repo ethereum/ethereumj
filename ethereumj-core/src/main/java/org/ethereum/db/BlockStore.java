@@ -152,7 +152,7 @@ public class BlockStore {
                 createQuery("from BlockVO").list();
 
         ArrayList<Block> blocks = new ArrayList<>();
-        for (BlockVO blockVO : (List<BlockVO>) result) {
+        for (BlockVO blockVO : result) {
             blocks.add(new Block(blockVO.getRlp()));
         }
 

@@ -117,7 +117,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     @Override
     public void stateChanged(ChangeEvent e) {
         JSlider source = (JSlider) e.getSource();
-        int step = (int) source.getValue();
+        int step = source.getValue();
 
         int i = source.getValue();
         String out = outputList.get(i);

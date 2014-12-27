@@ -2,7 +2,6 @@ package org.ethereum.net.eth;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 import org.spongycastle.util.encoders.Hex;
@@ -49,12 +48,12 @@ public class StatusMessage extends EthMessage {
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        this.protocolVersion = ((RLPItem) paramsList.get(1)).getRLPData()[0];
-        byte[] networkIdBytes = ((RLPItem) paramsList.get(2)).getRLPData();
+        this.protocolVersion = paramsList.get(1).getRLPData()[0];
+        byte[] networkIdBytes = paramsList.get(2).getRLPData();
         this.networkId = networkIdBytes == null ? 0 : networkIdBytes[0];
-        this.totalDifficulty = ((RLPItem) paramsList.get(3)).getRLPData();
-        this.bestHash = ((RLPItem) paramsList.get(4)).getRLPData();
-        this.genesisHash = ((RLPItem) paramsList.get(5)).getRLPData();
+        this.totalDifficulty = paramsList.get(3).getRLPData();
+        this.bestHash = paramsList.get(4).getRLPData();
+        this.genesisHash = paramsList.get(5).getRLPData();
 
         parsed = true;
     }

@@ -158,7 +158,7 @@ public class TrieImpl implements Trie {
     public byte[] getRootHash() {
         if (root == null
                 || (root instanceof byte[] && ((byte[]) root).length == 0)
-                || (root instanceof String && "".equals((String) root))) {
+                || (root instanceof String && "".equals(root))) {
             return EMPTY_TRIE_HASH;
         } else if (root instanceof byte[]) {
             return (byte[]) this.getRoot();

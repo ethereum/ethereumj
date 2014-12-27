@@ -135,7 +135,7 @@ public class DatabaseImpl implements Database {
             ByteArrayWrapper key = new ByteArrayWrapper(iterator.next().getKey());
             keys.add(key);
         }
-        Collections.sort((List<ByteArrayWrapper>) keys);
+        Collections.sort(keys);
         return keys;
     }
 }

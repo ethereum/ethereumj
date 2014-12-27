@@ -48,7 +48,7 @@ public class JSONHelper {
     public static void dumpState(ObjectNode statesNode, String address, AccountState state, ContractDetails details) {
 
         List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
-        Collections.sort((List<DataWord>) storageKeys);
+        Collections.sort(storageKeys);
 
         ObjectNode account = statesNode.objectNode();
         ObjectNode storage = statesNode.objectNode();

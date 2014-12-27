@@ -691,7 +691,7 @@ public class Program {
             StringBuilder storageData = new StringBuilder();
             if (contractDetails != null) {
                 List<DataWord> storageKeys = new ArrayList<>(contractDetails.getStorage().keySet());
-                Collections.sort((List<DataWord>) storageKeys);
+                Collections.sort(storageKeys);
                 for (DataWord key : storageKeys) {
                     storageData.append(" ").append(key).append(" -> ").
                             append(contractDetails.getStorage().get(key)).append("\n");

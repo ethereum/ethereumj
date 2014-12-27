@@ -119,11 +119,11 @@ public class RLP {
         }
         // single byte item
         if ((data[index] & 0xFF) < OFFSET_SHORT_ITEM) {
-            return (byte) (data[index]);
+            return data[index];
         }
         // single byte item
         if ((data[index] & 0xFF) == OFFSET_SHORT_ITEM + 1) {
-            return (byte) (data[index + 1]);
+            return data[index + 1];
         }
         return 0;
     }
@@ -528,7 +528,7 @@ public class RLP {
         byte command = 0;
         int index = getFirstListElement(data, 0);
         command = data[index];
-        command = ((int) (command & 0xFF) == OFFSET_SHORT_ITEM) ? 0 : command;
+        command = ((command & 0xFF) == OFFSET_SHORT_ITEM) ? 0 : command;
         return command;
     }
 

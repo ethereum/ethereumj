@@ -1,7 +1,6 @@
 package org.ethereum.net.eth;
 
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
@@ -36,7 +35,7 @@ public class GetBlocksMessage extends EthMessage {
 
         blockHashes = new ArrayList<>();
         for (int i = 1; i < paramsList.size(); ++i) {
-            blockHashes.add(((RLPItem) paramsList.get(i)).getRLPData());
+            blockHashes.add(paramsList.get(i).getRLPData());
         }
         parsed = true;
     }

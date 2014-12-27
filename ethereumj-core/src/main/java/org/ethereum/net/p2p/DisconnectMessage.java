@@ -2,7 +2,6 @@ package org.ethereum.net.p2p;
 
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
 import static org.ethereum.net.message.ReasonCode.REQUESTED;
@@ -29,7 +28,7 @@ public class DisconnectMessage extends P2pMessage {
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        byte[] reasonBytes = ((RLPItem) paramsList.get(1)).getRLPData();
+        byte[] reasonBytes = paramsList.get(1).getRLPData();
         if (reasonBytes == null)
             this.reason = REQUESTED;
         else

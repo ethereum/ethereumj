@@ -706,7 +706,7 @@ public class RLPTest {
         String element2 = "Lorem ipsum dolor sit amet, consectetur adipisicing elit";
         String[] test = new String[] { element1, element2 };
         String expected = "f83e83636174b8384c6f72656d20697073756d20646f6c6f722073697420616d65742c20636f6e7365637465747572206164697069736963696e6720656c6974";
-        byte[] encoderesult = (byte[]) RLP.encode(test);
+        byte[] encoderesult = RLP.encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
 
         Object[] decodeResult = (Object[]) RLP.decode(encoderesult, 0).getDecoded();

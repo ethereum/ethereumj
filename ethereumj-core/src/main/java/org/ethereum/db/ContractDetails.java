@@ -111,7 +111,7 @@ public class ContractDetails {
 
         RLPList keys = (RLPList) rlpList.get(0);
         RLPList values = (RLPList) rlpList.get(1);
-        RLPElement code = (RLPElement) rlpList.get(2);
+        RLPElement code = rlpList.get(2);
 
         if (keys.size() > 0) {
             storageKeys = new ArrayList<>();
