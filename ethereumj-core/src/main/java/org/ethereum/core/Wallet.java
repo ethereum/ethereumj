@@ -120,10 +120,7 @@ public class Wallet {
     /**
      * The wallet will call this method once transaction been send to the network,
      * once the the GET_TRANSACTION will be answered with that particular transaction
-     * it will be considered as received by the net
-     *
-     * @param transaction
-     * @return
+     * it will be considered as received by the net.
      */
     public WalletTransaction addByWalletTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
@@ -133,12 +130,14 @@ public class Wallet {
         return walletTransaction;
     }
 
-    /***********************************************************************
-     *  1) the dialog put a pending transaction on the list
-     *  2) the dialog send the transaction to a net
-     *  3) wherever the transaction got in from the wire it will change to approve state
-     *  4) only after the approve a) Wallet state changes
-     *  5) After the block is received with that tx the pending been clean up
+    /**
+     * <ol>
+     * <li> the dialog put a pending transaction on the list
+     * <li> the dialog send the transaction to a net
+     * <li> wherever the transaction got in from the wire it will change to approve state
+     * <li> only after the approve a) Wallet state changes
+     * <li> after the block is received with that tx the pending been clean up
+     * </ol>
      */
     public WalletTransaction addTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());

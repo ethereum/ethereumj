@@ -90,27 +90,21 @@ public class Program {
     }
 
     /**
-     * Last Op can only be set publicly (no getLastOp method), is used for logging
-     *
-     * @param op
+     * Last Op can only be set publicly (no getLastOp method), is used for logging.
      */
     public void setLastOp(byte op) {
         this.lastOp = op;
     }
 
     /**
-     * Should be set only after the OP is fully executed
-     *
-     * @param op
+     * Should be set only after the OP is fully executed.
      */
     public void setPreviouslyExecutedOp(byte op) {
         this.previouslyExecutedOp = op;
     }
 
     /**
-     * returns the last fully executed OP
-     *
-     * @return
+     * Returns the last fully executed OP.
      */
     public byte getPreviouslyExecutedOp() {
         return this.previouslyExecutedOp;

@@ -713,7 +713,6 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
     /**
      * @param hexNum should be in form '0x34fabd34....'
-     * @return
      */
     private String hexStringToDecimalString(String hexNum) {
         String digits = hexNum.substring(2);

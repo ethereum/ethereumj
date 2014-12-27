@@ -106,13 +106,10 @@ public interface Ethereum {
                                          BigInteger value, byte[] data);
 
 
-                                         /**
-                                          *
-                                          * @param transaction - submit transaction to the net, return
-                                          *                      option to wait for net return this transaction
-                                          *                      as approved
-                                          * @return
-                                          */
+    /**
+     * @param transaction submit transaction to the net, return option to wait for net
+     *                    return this transaction as approved
+     */
     public Future<Transaction> submitTransaction(Transaction transaction);
 
 

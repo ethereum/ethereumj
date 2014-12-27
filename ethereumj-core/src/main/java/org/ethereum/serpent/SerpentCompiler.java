@@ -197,9 +197,7 @@ public class SerpentCompiler {
     }
 
     /**
-     * @param code
-     * @param init
-     * @return encoded bytes
+     * Return encoded bytes.
      */
     public static byte[] encodeMachineCodeForVMRun(byte[] code, byte[] init) {
 

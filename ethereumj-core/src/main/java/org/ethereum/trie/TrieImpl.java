@@ -94,10 +94,7 @@ public class TrieImpl implements Trie {
      **************************************/
 
     /**
-     * Retrieve a value from a key as String
-     *
-     * @param key
-     * @return value
+     * Retrieve a value from a key as String.
      */
     public byte[] get(String key) {
         return this.get(key.getBytes());
@@ -114,10 +111,7 @@ public class TrieImpl implements Trie {
     }
 
     /**
-     * Insert key/value pair into trie
-     *
-     * @param key
-     * @param value
+     * Insert key/value pair into trie.
      */
     public void update(String key, String value) {
         this.update(key.getBytes(), value.getBytes());
@@ -137,9 +131,7 @@ public class TrieImpl implements Trie {
     }
 
     /**
-     * Delete a key/value pair from the trie
-     *
-     * @param key
+     * Delete a key/value pair from the trie.
      */
     public void delete(String key) {
         this.update(key.getBytes(), "".getBytes());
@@ -207,8 +199,8 @@ public class TrieImpl implements Trie {
     }
 
     /**
-     * Update or add the item inside a node
-     * return the updated node with rlp encoded
+     * Update or add the item inside a node.
+     * @return the updated node with rlp encoded
      */
     private Object insert(Object node, byte[] key, Object value) {
 
@@ -345,12 +337,8 @@ public class TrieImpl implements Trie {
     }
 
     /**
-     * Helper method to retrieve the actual node
-     * If the node is not a list and length is > 32
-     * bytes get the actual node from the db
-     *
-     * @param node -
-     * @return
+     * Helper method to retrieve the actual node. If the node is not a list and length
+     * is > 32 bytes get the actual node from the db.
      */
     private Value getNode(Object node) {
 
