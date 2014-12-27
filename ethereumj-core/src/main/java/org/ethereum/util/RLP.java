@@ -420,7 +420,7 @@ public class RLP {
             while (pos < endPos) {
 
                 if (level == levelToIndex)
-                    index.add(new Integer(pos));
+                    index.add(pos);
 
                 // It's a list with a payload more than 55 bytes
                 // data[0] - 0xF7 = how many next bytes allocated
@@ -925,7 +925,7 @@ public class RLP {
             return (inputLong == 0) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(inputLong));
         } else if (input instanceof Integer) {
             Integer inputInt = (Integer) input;
-            return (inputInt == 0) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(inputInt.intValue()));
+            return (inputInt == 0) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(BigInteger.valueOf(inputInt));
         } else if (input instanceof BigInteger) {
             BigInteger inputBigInt = (BigInteger) input;
             return (inputBigInt == BigInteger.ZERO) ? ByteUtil.EMPTY_BYTE_ARRAY : asUnsignedByteArray(inputBigInt);

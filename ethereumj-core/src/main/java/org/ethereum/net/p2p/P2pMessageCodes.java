@@ -79,7 +79,7 @@ public enum P2pMessageCodes {
     }
 
     public static P2pMessageCodes fromByte(byte i) {
-        P2pMessageCodes type = intToTypeMap.get(Integer.valueOf(i));
+        P2pMessageCodes type = intToTypeMap.get((int) i);
         return type;
     }
 

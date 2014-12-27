@@ -614,7 +614,7 @@ public class RLPTest {
 
     @Test
     public void testEncodeZero() {
-        Integer test = new Integer(0);
+        Integer test = 0;
         String expected = "80";
         byte[] encoderesult = RLP.encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
@@ -625,7 +625,7 @@ public class RLPTest {
 
     @Test
     public void testEncodeSmallInteger() {
-        Integer test = new Integer(15);
+        Integer test = 15;
         String expected = "0f";
         byte[] encoderesult = RLP.encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
@@ -637,7 +637,7 @@ public class RLPTest {
 
     @Test
     public void testEncodeMediumInteger() {
-        Integer test = new Integer(1000);
+        Integer test = 1000;
         String expected = "8203e8";
         byte[] encoderesult = RLP.encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
@@ -646,7 +646,7 @@ public class RLPTest {
         int result = byteArrayToInt(decodeResult);
         assertEquals(test, Integer.valueOf(result));
 
-        test = new Integer(1024);
+        test = 1024;
         expected = "820400";
         encoderesult = RLP.encode(test);
         assertEquals(expected, Hex.toHexString(encoderesult));
