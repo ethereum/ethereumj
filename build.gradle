@@ -1,5 +1,9 @@
 wrapper.gradleVersion = '2.2.1'
 
+allprojects {
+    apply plugin: 'eclipse'
+}
+
 subprojects {
     apply plugin: 'java'
 

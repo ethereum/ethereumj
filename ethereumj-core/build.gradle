@@ -1,6 +1,5 @@
 plugins {
     id 'application'
-    id 'eclipse'
     id 'jacoco'
     id 'maven'
     id 'com.github.johnrengelman.shadow' version '1.2.0'
