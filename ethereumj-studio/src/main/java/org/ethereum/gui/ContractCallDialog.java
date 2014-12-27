@@ -70,11 +70,7 @@ class ContractCallDialog extends JDialog implements MessageAwareDialog {
             @Override
             public void focusLost(FocusEvent e) {
 
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        populateContractDetails();
-                    }
-                });
+                SwingUtilities.invokeLater(ContractCallDialog.this::populateContractDetails);
 
             }
         });

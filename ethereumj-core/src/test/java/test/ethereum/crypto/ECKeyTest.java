@@ -26,7 +26,6 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.Executors;
 
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -175,12 +174,7 @@ public class ECKeyTest {
         final ECKey key = new ECKey();
         for (byte i = 0; i < ITERATIONS; i++) {
             final byte[] hash = HashUtil.sha3(new byte[]{i});
-            sigFutures.add(executor.submit(new Callable<ECKey.ECDSASignature>() {
-                @Override
-                public ECKey.ECDSASignature call() throws Exception {
-                    return key.doSign(hash);
-                }
-            }));
+            sigFutures.add(executor.submit(() -> key.doSign(hash)));
         }
         List<ECKey.ECDSASignature> sigs = Futures.allAsList(sigFutures).get();
         for (ECKey.ECDSASignature signature : sigs) {

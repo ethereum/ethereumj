@@ -81,10 +81,6 @@ public class PeerInfoWindow extends JFrame {
 
     public static void main(String[] args) {
         // Start all Swing applications on the EDT.
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                new PeerInfoWindow(null).setVisible(true);
-            }
-        });
+        SwingUtilities.invokeLater(() -> new PeerInfoWindow(null).setVisible(true));
     }
 }

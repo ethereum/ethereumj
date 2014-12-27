@@ -64,11 +64,7 @@ public class PeersTableWindow extends JFrame {
                 PeersTableModel model = (PeersTableModel) table.getModel();
                 if (me.getClickCount() == 2) {
                     final PeersTableModel.PeerInfo peerInfo = model.getPeerInfo(row);
-                    SwingUtilities.invokeLater(new Runnable() {
-                        public void run() {
-                            new PeerInfoWindow(peerInfo).setVisible(true);
-                        }
-                    });
+                    SwingUtilities.invokeLater(() -> new PeerInfoWindow(peerInfo).setVisible(true));
                     System.out.println(peerInfo);
                 }
             }
