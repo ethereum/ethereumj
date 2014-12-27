@@ -26,9 +26,7 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
 
             RLPList rlpList = (RLPList) element;
             System.out.print("[");
-            for (RLPElement singleElement : rlpList) {
-                recursivePrint(singleElement);
-            }
+            rlpList.forEach(org.ethereum.util.RLPList::recursivePrint);
             System.out.print("]");
         } else {
             String hex = ByteUtil.toHexString(element.getRLPData());

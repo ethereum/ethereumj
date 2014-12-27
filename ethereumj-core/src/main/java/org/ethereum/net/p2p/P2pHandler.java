@@ -211,26 +211,24 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
         else {
             List<Capability> capInCommon = new ArrayList<>();
-            for (Capability capability : msg.getCapabilities()) {
-                if (HELLO_MESSAGE.getCapabilities().contains(capability)) {
-                    if (capability.getName().equals(Capability.ETH)) {
+            msg.getCapabilities().stream()
+                    .filter(capability -> HELLO_MESSAGE.getCapabilities().contains(capability))
+                    .forEach(capability -> {
+                        if (capability.getName().equals(Capability.ETH)) {
+                            // Activate EthHandler for this peer
+                            EthHandler ethHandler =
+                                    (EthHandler) ctx.pipeline().get(Capability.ETH);
 
-                        // Activate EthHandler for this peer
-                        EthHandler ethHandler =
-                                (EthHandler) ctx.pipeline().get(Capability.ETH);
-
-                        ethHandler.setPeerId(msg.getPeerId());
-                        ethHandler.activate();
-                    } else if (capability.getName().equals(Capability.SHH)) {
-
-                        // Activate ShhHandler for this peer
-                        ShhHandler shhHandler =
-                                (ShhHandler) ctx.pipeline().get(Capability.SHH);
-                        shhHandler.activate();
-                    }
-                    capInCommon.add(capability);
-                }
-            }
+                            ethHandler.setPeerId(msg.getPeerId());
+                            ethHandler.activate();
+                        } else if (capability.getName().equals(Capability.SHH)) {
+                            // Activate ShhHandler for this peer
+                            ShhHandler shhHandler =
+                                    (ShhHandler) ctx.pipeline().get(Capability.SHH);
+                            shhHandler.activate();
+                        }
+                        capInCommon.add(capability);
+                    });
             adaptMessageIds(capInCommon);
 
             InetAddress address = ((InetSocketAddress) ctx.channel().remoteAddress()).getAddress();

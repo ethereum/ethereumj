@@ -78,9 +78,7 @@ public class GitHubJSONTestSuite {
         List<String> result = runner.runTestCase(testCase);
 
         if (!result.isEmpty()) {
-            for (String single : result) {
-                logger.info(single);
-            }
+            result.forEach(logger::info);
         }
 
         Assert.assertTrue(result.isEmpty());
@@ -110,9 +108,7 @@ public class GitHubJSONTestSuite {
             List<String> result = runner.runTestCase(testCase);
 
             if (!result.isEmpty()) {
-                for (String single : result) {
-                    logger.info(single);
-                }
+                result.forEach(logger::info);
             }
 
             Assert.assertTrue(result.isEmpty());
@@ -136,9 +132,7 @@ public class GitHubJSONTestSuite {
             List<String> result = runner.runTestCase(testCase);
 
             if (!result.isEmpty()) {
-                for (String single : result) {
-                    logger.info(single);
-                }
+                result.forEach(logger::info);
             }
 
             Assert.assertTrue(result.isEmpty());
