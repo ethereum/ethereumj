@@ -65,3 +65,12 @@ dependencies {
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
 }
+
+javadoc {
+    options.author = true
+    options.header = project.name
+    options.links(
+        "http://docs.oracle.com/javase/8/docs/api/",
+        "http://netty.io/4.0/api/"
+    )
+}
