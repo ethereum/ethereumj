@@ -22,7 +22,11 @@ The Ethereum protocol is under heavy development, thus so is this implementation
 Chat with us via [Gitter](https://gitter.im/ethereum/ethereumj) or [#ethereumj](webchat.freenode.net/?channels=ethereumj) on Freenode.
 
 # Building from source
-Clone this repository and run `./gradlew build`. Import all sources into IntelliJ IDEA (14+) with `File->Import project` and point to the top-level `build.gradle` file.
+
+ - Clone this repository and run `./gradlew build` (or at least `./gradlew antlr4` to generate sources).
+ - Import all sources into IntelliJ IDEA (14+) with `File->Import project` and point to the top-level `build.gradle` file.
+ - Make sure to set your language level in `File->Project Structure...` to JDK 8.
+ - Run `Build->Make Project`. When complete, there should be no errors.
 
 # Usage
 For complete details on downloading, building and using [etherumj-core](ethereumj-core) and [ethereumj-studio](ethereumj-studio), see their respective readme files.
