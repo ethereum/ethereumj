@@ -217,8 +217,8 @@ public class ContractDetails {
         ContractDetails contractDetails = new ContractDetails();
 
         contractDetails.setCode(this.getCode());
-        contractDetails.setStorage(new ArrayList<DataWord>(this.storageKeys),
-                new ArrayList<DataWord>(this.storageValues));
+        contractDetails.setStorage(new ArrayList<>(this.storageKeys),
+                new ArrayList<>(this.storageValues));
         return contractDetails;
     }
 

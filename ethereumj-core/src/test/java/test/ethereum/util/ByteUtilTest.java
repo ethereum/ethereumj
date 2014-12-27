@@ -298,7 +298,7 @@ public class ByteUtilTest {
         ByteUtil.setBit(data, 25, 1);
         ByteUtil.setBit(data, 2, 1);
 
-        List<Integer> found = new ArrayList<Integer>();
+        List<Integer> found = new ArrayList<>();
         for (int i = 0; i < (data.length * 8); i++) {
             int res = ByteUtil.getBit(data, i);
             if (res == 1)

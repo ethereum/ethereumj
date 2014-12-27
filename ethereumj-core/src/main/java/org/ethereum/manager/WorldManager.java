@@ -3,7 +3,6 @@ package org.ethereum.manager;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
@@ -71,7 +70,7 @@ public class WorldManager {
     @Autowired
     private AdminInfo adminInfo;
 
-    private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
+    private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
     private EthereumListener listener;
@@ -171,7 +170,7 @@ public class WorldManager {
                 repository.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
             }
 
-            blockStore.saveBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>());
+            blockStore.saveBlock(Genesis.getInstance(), new ArrayList<>());
 
             blockchain.setBestBlock(Genesis.getInstance());
             blockchain.setTotalDifficulty(BigInteger.ZERO);

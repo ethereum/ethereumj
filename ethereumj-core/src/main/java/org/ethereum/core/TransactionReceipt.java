@@ -29,7 +29,7 @@ public class TransactionReceipt {
     private byte[] postTxState = EMPTY_BYTE_ARRAY;
     private byte[] cumulativeGas = EMPTY_BYTE_ARRAY;
     private Bloom bloomFilter = new Bloom();
-    private List<LogInfo> logInfoList = new ArrayList<LogInfo>();
+    private List<LogInfo> logInfoList = new ArrayList<>();
 
     /* Tx Receipt in encoded form */
     private byte[] rlpEncoded;

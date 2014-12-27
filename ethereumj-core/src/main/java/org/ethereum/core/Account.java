@@ -26,7 +26,7 @@ public class Account {
     private byte[] address;
 
     private Set<Transaction> pendingTransactions =
-            Collections.synchronizedSet(new HashSet<Transaction>());
+            Collections.synchronizedSet(new HashSet<>());
 
     @Autowired
     WorldManager worldManager;

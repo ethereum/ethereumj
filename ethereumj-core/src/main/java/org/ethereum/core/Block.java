@@ -76,12 +76,12 @@ public class Block {
 
         this.transactionsList = transactionsList;
         if (this.transactionsList == null) {
-            this.transactionsList = new CopyOnWriteArrayList<Transaction>();
+            this.transactionsList = new CopyOnWriteArrayList<>();
         }
 
         this.uncleList = uncleList;
         if (this.uncleList == null) {
-            this.uncleList = new CopyOnWriteArrayList<BlockHeader>();
+            this.uncleList = new CopyOnWriteArrayList<>();
         }
 
         this.parsed = true;

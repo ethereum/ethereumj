@@ -19,7 +19,7 @@ import java.util.List;
 public class LogInfo {
 
     byte[] address = new byte[]{};
-    List<DataWord> topics = new ArrayList<DataWord>();
+    List<DataWord> topics = new ArrayList<>();
     byte[] data = new byte[]{};
 
     /* Log info in encoded form */
@@ -47,7 +47,7 @@ public class LogInfo {
 
     public LogInfo(byte[] address, List<DataWord> topics, byte[] data) {
         this.address = (address != null) ? address : new byte[]{};
-        this.topics = (topics != null) ? topics : new ArrayList<DataWord>();
+        this.topics = (topics != null) ? topics : new ArrayList<>();
         this.data = (data != null) ? data : new byte[]{};
     }
 

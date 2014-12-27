@@ -32,7 +32,7 @@ public class ChannelManager {
     private static final Logger logger = LoggerFactory.getLogger("net");
 
     Timer inactivesCollector = new Timer("inactivesCollector");
-    List<Channel> channels = Collections.synchronizedList(new ArrayList<Channel>());
+    List<Channel> channels = Collections.synchronizedList(new ArrayList<>());
 
     Map<ByteArrayWrapper, Block> blockCache = new HashMap<>();
 

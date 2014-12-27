@@ -26,7 +26,7 @@ public class TransactionsMessage extends EthMessage {
 
     public TransactionsMessage(Transaction transaction) {
 
-        transactions = new HashSet<Transaction>();
+        transactions = new HashSet<>();
         transactions.add(transaction);
         parsed = true;
     }

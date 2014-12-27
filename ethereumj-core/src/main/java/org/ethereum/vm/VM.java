@@ -816,7 +816,7 @@ public class VM {
 
                     int nTopics = op.val() - OpCode.LOG0.val();
 
-                    List<DataWord> topics = new ArrayList<DataWord>();
+                    List<DataWord> topics = new ArrayList<>();
                     for (int i = 0; i < nTopics; ++i) {
                         DataWord topic = stack.pop();
                         topics.add(topic);

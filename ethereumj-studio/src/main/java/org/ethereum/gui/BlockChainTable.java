@@ -108,7 +108,7 @@ public class BlockChainTable extends JFrame implements ActionListener {
         this.toolBar = toolBar;
         addCloseAction();
 
-        foundBlocks = new ArrayList<Long>();
+        foundBlocks = new ArrayList<>();
         painter = new DefaultHighlighter.DefaultHighlightPainter(HILIT_COLOR);
 
         setTitle("Block Chain Table");

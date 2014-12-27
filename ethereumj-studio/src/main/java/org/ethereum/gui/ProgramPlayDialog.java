@@ -45,7 +45,7 @@ public class ProgramPlayDialog extends JPanel implements ActionListener,
     public ProgramPlayDialog(byte[] code, ProgramInvoke programInvoke) {
         pi = programInvoke;
 
-        outputList = new ArrayList<String>();
+        outputList = new ArrayList<>();
         VM vm = new VM();
 
         Program program = new Program(code, programInvoke);
