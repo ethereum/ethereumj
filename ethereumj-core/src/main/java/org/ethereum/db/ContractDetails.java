@@ -118,13 +118,13 @@ public class ContractDetails {
             storageValues = new ArrayList<>();
         }
 
-        for (int i = 0; i < keys.size(); ++i) {
-            RLPItem rlpItem = (RLPItem) keys.get(i);
+        for (Object key : keys) {
+            RLPItem rlpItem = (RLPItem) key;
             storageKeys.add(new DataWord(rlpItem.getRLPData()));
         }
 
-        for (int i = 0; i < values.size(); ++i) {
-            RLPItem rlpItem = (RLPItem) values.get(i);
+        for (Object value : values) {
+            RLPItem rlpItem = (RLPItem) value;
             storageValues.add(new DataWord(rlpItem.getRLPData()));
         }
 

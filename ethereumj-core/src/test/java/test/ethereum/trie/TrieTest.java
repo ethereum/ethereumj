@@ -606,9 +606,9 @@ public class TrieTest {
         // 1. load the data from massive-upload.dmp
         //    which includes deletes/upadtes (5000 operations)
         TrieImpl trieSingle = new TrieImpl(mockDb_2);
-        for (int i = 0; i < strData.size(); ++i) {
+        for (String aStrData : strData) {
 
-            String[] keyVal = strData.get(i).split("=");
+            String[] keyVal = aStrData.split("=");
 
             if (keyVal[0].equals("*"))
                 trieSingle.delete(keyVal[1].trim());
@@ -822,9 +822,9 @@ public class TrieTest {
 
         DatabaseImpl db = new DatabaseImpl("testState");
 
-        for (int i = 0; i < dbDumpJSONArray.size(); ++i) {
+        for (Object aDbDumpJSONArray : dbDumpJSONArray) {
 
-            JSONObject obj = (JSONObject) dbDumpJSONArray.get(i);
+            JSONObject obj = (JSONObject) aDbDumpJSONArray;
             byte[] key = Hex.decode(obj.get("key").toString());
             byte[] val = Hex.decode(obj.get("val").toString());
 

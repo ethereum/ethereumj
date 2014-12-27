@@ -73,10 +73,10 @@ public class HelloMessage extends P2pMessage {
 
         RLPList capabilityList = (RLPList) paramsList.get(3);
         this.capabilities = new ArrayList<>();
-        for (int i = 0; i < capabilityList.size(); i++) {
+        for (Object aCapabilityList : capabilityList) {
 
-            RLPElement capId = ((RLPList) capabilityList.get(i)).get(0);
-            RLPElement capVersion = ((RLPList) capabilityList.get(i)).get(1);
+            RLPElement capId = ((RLPList) aCapabilityList).get(0);
+            RLPElement capVersion = ((RLPList) aCapabilityList).get(1);
 
             String name = new String(capId.getRLPData());
             byte version = capVersion.getRLPData() == null ? 0 : capVersion.getRLPData()[0];

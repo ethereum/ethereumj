@@ -156,8 +156,8 @@ public class Value {
             return true;
         }
 
-        for (int i = 0; i < data.length; ++i) {
-            if (data[i] > 32 && data[i] < 126) ++readableChars;
+        for (byte aData : data) {
+            if (aData > 32 && aData < 126) ++readableChars;
         }
 
         if ((double) readableChars / (double) data.length > 0.55)
@@ -172,10 +172,10 @@ public class Value {
         int hexChars = 0;
         byte[] data = (byte[]) value;
 
-        for (int i = 0; i < data.length; ++i) {
+        for (byte aData : data) {
 
-            if ((data[i] >= 48 && data[i] <= 57)
-                    || (data[i] >= 97 && data[i] <= 102))
+            if ((aData >= 48 && aData <= 57)
+                    || (aData >= 97 && aData <= 102))
                 ++hexChars;
         }
 

@@ -3,6 +3,7 @@ package org.ethereum.vm;
 import org.ethereum.core.Bloom;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
@@ -36,9 +37,8 @@ public class LogInfo {
         this.address = address.getRLPData() != null ? address.getRLPData() : new byte[]{};
         this.data = data.getRLPData() != null ? data.getRLPData() : new byte[]{};
 
-        for (int i = 0; i < topics.size(); ++i) {
-
-            byte[] topic = topics.get(i).getRLPData();
+        for (RLPElement topic1 : topics) {
+            byte[] topic = topic1.getRLPData();
             this.topics.add(new DataWord(topic));
         }
 

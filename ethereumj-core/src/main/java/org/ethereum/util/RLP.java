@@ -904,9 +904,9 @@ public class RLP {
 
             copyPos = lenBytes.length + 1;
         }
-        for (int i = 0; i < elements.length; ++i) {
-            System.arraycopy(elements[i], 0, data, copyPos, elements[i].length);
-            copyPos += elements[i].length;
+        for (byte[] element : elements) {
+            System.arraycopy(element, 0, data, copyPos, element.length);
+            copyPos += element.length;
         }
         return data;
     }

@@ -105,9 +105,9 @@ public class TestCase {
                 post.put(new ByteArrayWrapper(keyBytes), accountState);
             }
 
-            for (int i = 0; i < callCreates.size(); ++i) {
+            for (Object callCreate : callCreates) {
 
-                CallCreate cc = new CallCreate((JSONObject) callCreates.get(i));
+                CallCreate cc = new CallCreate((JSONObject) callCreate);
                 this.callCreateList.add(cc);
             }
 

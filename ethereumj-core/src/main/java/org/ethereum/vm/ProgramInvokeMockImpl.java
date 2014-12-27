@@ -154,9 +154,9 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public int countNonZeroData() {
 
         int counter = 0;
-        for (int i = 0; i < msgData.length; ++i) {
+        for (byte aMsgData : msgData) {
 
-            if (msgData[i] != 0) ++counter;
+            if (aMsgData != 0) ++counter;
         }
         return counter;
     }

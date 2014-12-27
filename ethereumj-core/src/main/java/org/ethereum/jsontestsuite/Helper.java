@@ -32,9 +32,8 @@ public class Helper {
         //   3. "239472398472" - big number
 
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        for (int i = 0; i < valArray.size(); ++i) {
+        for (Object val : valArray) {
 
-            Object val = valArray.get(i);
             if (val instanceof String) {
 
                 // Hex num

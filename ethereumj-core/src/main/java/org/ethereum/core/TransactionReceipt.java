@@ -51,9 +51,8 @@ public class TransactionReceipt {
         cumulativeGas = cumulativeGasRLP.getRLPData();
         bloomFilter = new Bloom(bloomRLP.getRLPData());
 
-        for (int i = 0; i < logs.size(); i++) {
-            RLPElement logRLP = logs.get(i);
-            LogInfo logInfo = new LogInfo(logRLP.getRLPData());
+        for (RLPElement log : logs) {
+            LogInfo logInfo = new LogInfo(log.getRLPData());
             logInfoList.add(logInfo);
         }
 

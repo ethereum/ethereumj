@@ -209,8 +209,8 @@ public class SerpentCompiler {
         byte[] lenBytes = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(code.length));
 
         StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < lenBytes.length; ++i) {
-            sb.append(lenBytes[i]).append(" ");
+        for (byte lenByte : lenBytes) {
+            sb.append(lenByte).append(" ");
         }
 
         // calc real code start position (after the init header)

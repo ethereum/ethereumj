@@ -17,9 +17,9 @@ public class Logs {
 
     public Logs(JSONArray jLogs) {
 
-        for (int i = 0; i < jLogs.size(); ++i) {
+        for (Object jLog1 : jLogs) {
 
-            JSONObject jLog = (JSONObject) jLogs.get(i);
+            JSONObject jLog = (JSONObject) jLog1;
             byte[] address = Hex.decode((String) jLog.get("address"));
             byte[] data = Hex.decode(((String) jLog.get("data")).substring(2));
 
