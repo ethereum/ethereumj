@@ -1,21 +1,30 @@
 package org.ethereum.gui;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Account;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
+import org.ethereum.core.Transaction;
+import org.ethereum.core.Wallet;
 import org.ethereum.util.Utils;
+
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import java.math.BigInteger;
+
+import java.net.URL;
+
+import java.util.Collection;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.Collection;
 
 /**
  * @author Roman Mandeleil

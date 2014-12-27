@@ -1,10 +1,14 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.ProgramInvokeImpl;
 
 import java.math.BigInteger;
 

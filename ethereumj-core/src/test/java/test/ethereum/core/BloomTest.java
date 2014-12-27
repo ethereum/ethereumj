@@ -2,7 +2,9 @@ package test.ethereum.core;
 
 import org.ethereum.core.Bloom;
 import org.ethereum.crypto.SHA3Helper;
+
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
 
 /**

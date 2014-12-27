@@ -1,20 +1,27 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.Files;
-import java.util.List;
-
 import org.ethereum.core.Block;
 import org.ethereum.net.eth.BlocksMessage;
+
 import org.junit.Ignore;
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.net.URISyntaxException;
+import java.net.URL;
+
+import java.nio.file.Files;
+
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 @Ignore
 public class BlocksMessageTest {

@@ -7,13 +7,17 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
 
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * JSON Helper class to format data into ObjectNodes

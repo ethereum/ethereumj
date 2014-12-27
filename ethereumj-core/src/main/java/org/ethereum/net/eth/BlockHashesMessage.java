@@ -1,15 +1,14 @@
 package org.ethereum.net.eth;
 
-import static org.ethereum.net.eth.EthMessageCodes.BLOCK_HASHES;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import org.ethereum.net.eth.EthMessage;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.ethereum.net.eth.EthMessageCodes.BLOCK_HASHES;
 
 /**
  * Wrapper around an Ethereum BlockHashes message on the network

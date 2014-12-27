@@ -1,21 +1,28 @@
 package test.ethereum.jsontestsuite;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import org.ethereum.jsontestsuite.StateTestCase;
+import org.ethereum.jsontestsuite.StateTestSuite;
+import org.ethereum.jsontestsuite.TestCase;
+import org.ethereum.jsontestsuite.TestRunner;
+import org.ethereum.jsontestsuite.TestSuite;
 
-import org.ethereum.jsontestsuite.*;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
 /**
  * Test file specific for tests maintained in the GitHub repository

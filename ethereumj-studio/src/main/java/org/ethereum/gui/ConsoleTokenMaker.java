@@ -1,10 +1,14 @@
 package org.ethereum.gui;
 
-import javax.swing.text.Segment;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMaker;
+import org.fife.ui.rsyntaxtextarea.RSyntaxUtilities;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMap;
 
-import org.fife.ui.rsyntaxtextarea.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.swing.text.Segment;
 
 
 /**

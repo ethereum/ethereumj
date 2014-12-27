@@ -1,6 +1,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.util.ByteUtil;
+
 import org.spongycastle.util.encoders.Hex;
 
 /**

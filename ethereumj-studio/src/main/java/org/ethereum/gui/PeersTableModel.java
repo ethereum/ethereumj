@@ -1,21 +1,23 @@
 package org.ethereum.gui;
 
-import java.net.InetAddress;
-import java.net.URL;
-import java.util.*;
-import java.util.Timer;
-
-import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
-
-
 import org.ethereum.geo.IpGeoDB;
-
 import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;
+
+import java.net.InetAddress;
+import java.net.URL;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 
 /**
  * @author Roman Mandeleil

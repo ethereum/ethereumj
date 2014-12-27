@@ -1,16 +1,16 @@
 package org.ethereum.util;
 
-import static java.util.Arrays.copyOf;
-import static java.util.Arrays.copyOfRange;
+import java.io.ByteArrayOutputStream;
 
+import java.nio.ByteBuffer;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import static java.util.Arrays.*;
 import static org.ethereum.util.ByteUtil.appendByte;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.encoders.Hex.encode;
-
-import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Compact encoding of hex sequence with optional terminator

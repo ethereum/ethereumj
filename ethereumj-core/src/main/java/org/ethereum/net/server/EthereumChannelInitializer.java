@@ -1,15 +1,18 @@
 package org.ethereum.net.server;
 
+import org.ethereum.facade.Blockchain;
+import org.ethereum.manager.WorldManager;
+import org.ethereum.net.client.Capability;
+
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-import org.ethereum.facade.Blockchain;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.Capability;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;

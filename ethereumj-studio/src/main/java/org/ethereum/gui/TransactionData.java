@@ -2,10 +2,11 @@ package org.ethereum.gui;
 
 import org.ethereum.util.ByteUtil;
 
+import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
-import java.awt.*;
 
 /**
  * @author Adrian Benko

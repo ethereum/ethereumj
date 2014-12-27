@@ -1,18 +1,30 @@
 package org.ethereum.net;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 import org.ethereum.core.Block;
 import org.ethereum.facade.Blockchain;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-import java.util.*;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The processing queue for blocks to be validated and added to the blockchain.

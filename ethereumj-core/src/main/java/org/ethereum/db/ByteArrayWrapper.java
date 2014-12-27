@@ -1,9 +1,10 @@
 package org.ethereum.db;
 
-import java.util.Arrays;
-
 import org.ethereum.util.FastByteComparisons;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.util.Arrays;
 
 /**
  * @author Roman Mandeleil

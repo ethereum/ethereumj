@@ -15,19 +15,9 @@ package org.ethereum.crypto;
  * limitations under the License.
  */
 
-import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
-
-import java.io.Serializable;
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.security.SecureRandom;
-import java.security.SignatureException;
-import java.util.Arrays;
-
-import javax.annotation.Nullable;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.asn1.sec.SECNamedCurves;
 import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
@@ -45,6 +35,21 @@ import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.Serializable;
+
+import java.math.BigInteger;
+
+import java.nio.charset.Charset;
+
+import java.security.SecureRandom;
+import java.security.SignatureException;
+
+import java.util.Arrays;
+
+import javax.annotation.Nullable;
+
+import static org.ethereum.util.ByteUtil.bigIntegerToBytes;
 
 /**
  * <p>Represents an elliptic curve public and (optionally) private key, usable for digital signatures but not encryption.

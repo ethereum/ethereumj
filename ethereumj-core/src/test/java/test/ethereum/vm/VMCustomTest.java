@@ -6,11 +6,13 @@ import org.ethereum.vm.Program.OutOfGasException;
 import org.ethereum.vm.Program.StackTooSmallException;
 import org.ethereum.vm.ProgramInvokeMockImpl;
 import org.ethereum.vm.VM;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;

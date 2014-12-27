@@ -1,12 +1,14 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-
 import org.ethereum.net.eth.BlockHashesMessage;
 import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.eth.GetBlockHashesMessage;
+
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
+
+import static org.junit.Assert.assertEquals;
 
 public class GetBlockHashesMessageTest {
 

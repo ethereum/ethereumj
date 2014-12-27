@@ -1,13 +1,17 @@
 package org.ethereum.util;
 
+import org.ethereum.db.ByteArrayWrapper;
+
+import org.spongycastle.util.encoders.Hex;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.Arrays;
 
-import org.ethereum.db.ByteArrayWrapper;
-import org.spongycastle.util.encoders.Hex;
+import java.math.BigInteger;
+
+import java.nio.ByteBuffer;
+
+import java.util.Arrays;
 
 public class ByteUtil {
 

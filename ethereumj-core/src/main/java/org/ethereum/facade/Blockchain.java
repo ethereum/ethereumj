@@ -1,12 +1,14 @@
 package org.ethereum.facade;
 
-import java.math.BigInteger;
-import java.util.List;
 import org.ethereum.core.Block;
 import org.ethereum.core.Chain;
+import org.ethereum.core.Genesis;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.BlockQueue;
-import org.ethereum.core.Genesis;
+
+import java.math.BigInteger;
+
+import java.util.List;
 
 public interface Blockchain {
 

@@ -1,15 +1,16 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.List;
-
 import org.ethereum.net.eth.BlockHashesMessage;
 import org.ethereum.net.eth.EthMessageCodes;
+
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
 
 public class BlockHashesMessageTest {
 

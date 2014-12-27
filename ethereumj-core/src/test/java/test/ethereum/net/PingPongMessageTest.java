@@ -1,11 +1,12 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.p2p.PongMessage;
+
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 public class PingPongMessageTest {
 

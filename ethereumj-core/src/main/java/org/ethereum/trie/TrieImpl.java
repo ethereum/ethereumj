@@ -1,22 +1,27 @@
 package org.ethereum.trie;
 
-import static java.util.Arrays.copyOfRange;
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.util.ByteUtil.matchingNibbleLength;
-import static org.ethereum.util.CompactEncoder.binToNibbles;
-import static org.ethereum.util.CompactEncoder.packNibbles;
-import static org.ethereum.util.CompactEncoder.unpackToNibbles;
-import static org.spongycastle.util.Arrays.concatenate;
-
-import java.util.*;
-
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
+
 import org.iq80.leveldb.DB;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static java.util.Arrays.copyOfRange;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.ByteUtil.matchingNibbleLength;
+import static org.ethereum.util.CompactEncoder.*;
+import static org.spongycastle.util.Arrays.concatenate;
 
 /**
  * The modified Merkle Patricia tree (trie) provides a persistent data structure

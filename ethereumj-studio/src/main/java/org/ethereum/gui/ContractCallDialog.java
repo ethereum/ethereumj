@@ -7,10 +7,28 @@ import org.ethereum.core.Wallet;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import java.math.BigInteger;
+
+import java.net.URL;
+
+import java.util.Collection;
+import java.util.Map;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -18,13 +36,6 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.plaf.ComboBoxUI;
 import javax.swing.plaf.basic.BasicComboPopup;
 import javax.swing.table.DefaultTableModel;
-
-import java.awt.*;
-import java.awt.event.*;
-import java.math.BigInteger;
-import java.net.URL;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * @author Roman Mandeleil

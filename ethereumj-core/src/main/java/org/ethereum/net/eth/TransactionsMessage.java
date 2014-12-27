@@ -1,9 +1,6 @@
 package org.ethereum.net.eth;
 
-import static org.ethereum.net.eth.EthMessageCodes.TRANSACTIONS;
-
 import org.ethereum.core.Transaction;
-import org.ethereum.net.eth.EthMessage;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
@@ -11,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import static org.ethereum.net.eth.EthMessageCodes.TRANSACTIONS;
 
 /**
  * Wrapper around an Ethereum Transactions message on the network

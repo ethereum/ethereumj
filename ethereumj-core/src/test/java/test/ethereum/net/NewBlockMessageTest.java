@@ -2,9 +2,12 @@ package test.ethereum.net;
 
 import org.ethereum.core.Block;
 import org.ethereum.net.eth.NewBlockMessage;
+
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
 
 public class NewBlockMessageTest {

@@ -1,21 +1,25 @@
 package org.ethereum.db;
 
-import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.ethereum.config.SystemProperties;
+
 import org.iq80.leveldb.CompressionType;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 /**
  * Generic interface for Ethereum database

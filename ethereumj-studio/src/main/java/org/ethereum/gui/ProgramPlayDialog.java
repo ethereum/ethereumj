@@ -2,18 +2,23 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.vm.*;
-import org.spongycastle.util.encoders.Hex;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeMockImpl;
+import org.ethereum.vm.VM;
 
-import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import org.spongycastle.util.encoders.Hex;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 /**
  * @author Roman Mandeleil

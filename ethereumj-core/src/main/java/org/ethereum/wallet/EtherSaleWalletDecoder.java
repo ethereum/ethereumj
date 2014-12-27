@@ -1,6 +1,10 @@
 package org.ethereum.wallet;
 
-import org.spongycastle.crypto.*;
+import org.spongycastle.crypto.BufferedBlockCipher;
+import org.spongycastle.crypto.CipherParameters;
+import org.spongycastle.crypto.ExtendedDigest;
+import org.spongycastle.crypto.InvalidCipherTextException;
+import org.spongycastle.crypto.PBEParametersGenerator;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.crypto.engines.AESEngine;

@@ -3,19 +3,20 @@ package test.ethereum.db;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.facade.Repository;
 import org.ethereum.db.RepositoryImpl;
+import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
+
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * @author Roman Mandeleil

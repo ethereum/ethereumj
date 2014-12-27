@@ -2,12 +2,22 @@ package org.ethereum.vmtrace;
 
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 /**
  * Data to for one program step to save.

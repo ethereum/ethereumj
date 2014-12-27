@@ -1,21 +1,18 @@
 package org.ethereum.util;
 
 import java.math.BigInteger;
+
 import java.nio.ByteBuffer;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Queue;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
-
-import java.util.List;
-
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
-import org.ethereum.util.RLPList;
 
 /**
  * Recursive Length Prefix (RLP) encoding.

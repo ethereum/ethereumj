@@ -1,29 +1,34 @@
 package test.ethereum.util;
 
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.DecodeResult;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.junit.Ignore;
-import org.spongycastle.util.encoders.Hex;
-import org.ethereum.crypto.HashUtil;
-import org.junit.Test;
 
 import com.cedarsoftware.util.DeepEquals;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+
 import java.math.BigInteger;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static test.ethereum.util.RlpTestData.*;
 import static org.junit.Assert.*;
+import static test.ethereum.util.RlpTestData.*;
 
 public class RLPTest {
 

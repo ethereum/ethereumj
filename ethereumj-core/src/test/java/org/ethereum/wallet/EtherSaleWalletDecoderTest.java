@@ -1,14 +1,19 @@
 package org.ethereum.wallet;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.crypto.ECKey;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.Before;
 import org.junit.Test;
+
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
+
 import java.math.BigInteger;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 

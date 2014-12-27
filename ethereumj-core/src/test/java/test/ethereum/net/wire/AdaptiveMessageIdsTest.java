@@ -7,6 +7,7 @@ import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

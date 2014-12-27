@@ -1,16 +1,21 @@
 package org.ethereum.db;
 
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
+import org.ethereum.vm.DataWord;
+
+import org.spongycastle.util.encoders.Hex;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.*;
-import org.ethereum.vm.DataWord;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

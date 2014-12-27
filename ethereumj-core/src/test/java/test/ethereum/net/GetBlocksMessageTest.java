@@ -1,15 +1,17 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
+import org.ethereum.net.eth.BlocksMessage;
+import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.eth.GetBlocksMessage;
+
+import org.junit.Test;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
 import java.util.List;
 
-import org.ethereum.net.eth.BlocksMessage;
-import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.eth.GetBlocksMessage;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
 
 public class GetBlocksMessageTest {
 

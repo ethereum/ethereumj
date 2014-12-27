@@ -7,17 +7,30 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryDummy;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.ProgramInvokeImpl;
+import org.ethereum.vm.VM;
 import org.ethereum.vmtrace.ProgramTrace;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.*;
 
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.wrap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.ethereum.util.ByteUtil.*;
 
 /**
  * @author Roman Mandeleil

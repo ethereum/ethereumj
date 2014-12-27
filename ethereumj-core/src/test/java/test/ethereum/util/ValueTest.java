@@ -1,13 +1,16 @@
 package test.ethereum.util;
 
-import static org.junit.Assert.*;
+import org.ethereum.util.Value;
+
+import org.junit.Test;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
 import java.util.Arrays;
 
-import org.ethereum.util.Value;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.*;
 
 public class ValueTest {
 

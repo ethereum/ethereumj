@@ -1,18 +1,22 @@
 package test.ethereum.util;
 
-import static org.junit.Assert.*;
+import org.ethereum.util.ByteUtil;
+import org.ethereum.util.FastByteComparisons;
+
+import org.junit.Assert;
+import org.junit.Test;
+
+import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
 import java.nio.ByteBuffer;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.junit.Assert;
-import org.junit.Test;
-import org.spongycastle.util.BigIntegers;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.*;
 
 public class ByteUtilTest {
 

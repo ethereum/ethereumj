@@ -1,12 +1,22 @@
 package org.ethereum.core;
 
 import org.ethereum.facade.Repository;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.GasCost;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.ProgramResult;
+import org.ethereum.vm.VM;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
 import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;

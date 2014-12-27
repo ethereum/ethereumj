@@ -1,7 +1,5 @@
 package org.ethereum.net.eth;
 
-import org.ethereum.net.eth.EthMessage;
-import org.ethereum.net.eth.TransactionsMessage;
 import org.spongycastle.util.encoders.Hex;
 
 /**

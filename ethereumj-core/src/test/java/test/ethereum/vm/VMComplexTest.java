@@ -7,10 +7,12 @@ import org.ethereum.vm.DataWord;
 import org.ethereum.vm.Program;
 import org.ethereum.vm.ProgramInvokeMockImpl;
 import org.ethereum.vm.VM;
+
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;

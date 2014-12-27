@@ -1,10 +1,12 @@
 package test.ethereum.serpent;
 
-import static org.junit.Assert.*;
-
 import org.ethereum.serpent.SerpentCompiler;
+
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Roman Mandeleil

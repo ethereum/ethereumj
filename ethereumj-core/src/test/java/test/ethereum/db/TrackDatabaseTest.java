@@ -1,19 +1,20 @@
 package test.ethereum.db;
 
-import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
+import org.ethereum.db.DatabaseImpl;
+import org.ethereum.db.TrackDatabase;
+
+import org.iq80.leveldb.Options;
+
+import org.junit.AfterClass;
+import org.junit.Test;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.IOException;
 
-import org.ethereum.db.DatabaseImpl;
-import org.ethereum.db.TrackDatabase;
-import org.iq80.leveldb.Options;
-import org.junit.AfterClass;
-
+import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 import static org.junit.Assert.*;
-
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil

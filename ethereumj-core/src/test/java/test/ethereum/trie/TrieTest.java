@@ -1,35 +1,47 @@
 package test.ethereum.trie;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.*;
+import test.ethereum.db.MockDB;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.DatabaseImpl;
-import org.junit.Ignore;
-import test.ethereum.db.MockDB;
 import org.ethereum.trie.TrieImpl;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.math.BigInteger;
+
+import java.net.URISyntaxException;
+import java.net.URL;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.junit.Assert.*;
 
 public class TrieTest {
 

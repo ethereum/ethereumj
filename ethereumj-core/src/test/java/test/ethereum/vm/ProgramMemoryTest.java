@@ -1,15 +1,16 @@
 package test.ethereum.vm;
 
-import static org.junit.Assert.*;
-
-import java.nio.ByteBuffer;
-
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.Program;
 import org.ethereum.vm.ProgramInvokeMockImpl;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.nio.ByteBuffer;
+
+import static org.junit.Assert.*;
 
 public class ProgramMemoryTest {
 

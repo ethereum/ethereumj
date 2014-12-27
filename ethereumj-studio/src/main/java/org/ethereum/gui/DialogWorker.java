@@ -1,14 +1,16 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Transaction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+
+import javax.swing.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 

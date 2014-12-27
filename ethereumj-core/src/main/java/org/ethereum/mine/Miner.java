@@ -4,10 +4,13 @@ import org.ethereum.core.Block;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
+
 import java.math.BigInteger;
 
 /**

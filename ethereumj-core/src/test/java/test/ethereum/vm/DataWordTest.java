@@ -1,12 +1,14 @@
 package test.ethereum.vm;
 
-import static org.junit.Assert.*;
+import org.ethereum.vm.DataWord;
+
+import org.junit.Test;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import org.ethereum.vm.DataWord;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
 
 public class DataWordTest {
 

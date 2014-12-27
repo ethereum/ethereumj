@@ -1,10 +1,11 @@
 package org.ethereum.db;
 
+import java.math.BigInteger;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-import java.math.BigInteger;
 
 /**
  * @author Roman Mandeleil

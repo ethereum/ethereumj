@@ -2,11 +2,13 @@ package org.ethereum.vm;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
+
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
 import java.math.BigDecimal;
+import java.math.BigInteger;
+
 import java.nio.ByteBuffer;
 
 /**

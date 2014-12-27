@@ -1,17 +1,22 @@
 package org.ethereum.util;
 
+import org.spongycastle.util.encoders.DecoderException;
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
+
 import java.net.URL;
+
 import java.security.SecureRandom;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
-import javax.swing.ImageIcon;
 
-import org.spongycastle.util.encoders.DecoderException;
-import org.spongycastle.util.encoders.Hex;
+import javax.swing.*;
 
 public class Utils {
 

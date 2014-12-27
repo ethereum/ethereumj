@@ -2,9 +2,12 @@ package test.ethereum;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
+
 import org.hibernate.SessionFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
@@ -12,6 +15,7 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 
 import java.sql.SQLException;
+
 import java.util.Properties;
 
 /**

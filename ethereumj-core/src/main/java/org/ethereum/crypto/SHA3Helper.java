@@ -1,9 +1,9 @@
 package org.ethereum.crypto;
 
-import java.math.BigInteger;
-
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.util.encoders.Hex;
+
+import java.math.BigInteger;
 
 public class SHA3Helper {
 

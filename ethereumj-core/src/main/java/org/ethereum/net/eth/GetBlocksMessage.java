@@ -1,12 +1,12 @@
 package org.ethereum.net.eth;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCKS;
 

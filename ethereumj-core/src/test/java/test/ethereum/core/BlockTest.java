@@ -1,33 +1,42 @@
 package test.ethereum.core;
 
+import test.ethereum.TestContext;
+
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Genesis;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
+
 import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
-import test.ethereum.TestContext;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.math.BigInteger;
+
 import java.net.URISyntaxException;
 import java.net.URL;
+
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+
 import java.util.List;
 
 import static org.junit.Assert.*;

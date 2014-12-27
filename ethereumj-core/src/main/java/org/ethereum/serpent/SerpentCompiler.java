@@ -1,13 +1,17 @@
 package org.ethereum.serpent;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.OpCode;
+
+import org.antlr.v4.runtime.tree.ParseTree;
+
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 
 import java.io.ByteArrayOutputStream;
+
 import java.math.BigInteger;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;

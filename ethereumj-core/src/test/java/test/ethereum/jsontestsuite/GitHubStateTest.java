@@ -1,7 +1,9 @@
 package test.ethereum.jsontestsuite;
 
 import org.ethereum.jsontestsuite.JSONReader;
+
 import org.json.simple.parser.ParseException;
+
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;

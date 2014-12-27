@@ -1,6 +1,7 @@
 package org.ethereum.trie;
 
 import org.ethereum.util.Value;
+
 import org.spongycastle.util.encoders.Hex;
 
 /**

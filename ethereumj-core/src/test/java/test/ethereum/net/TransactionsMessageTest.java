@@ -1,13 +1,5 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
-import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
@@ -15,11 +7,20 @@ import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.eth.GetTransactionsMessage;
 import org.ethereum.net.eth.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
+
 import org.junit.Ignore;
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
+
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import static org.junit.Assert.*;
 
 public class TransactionsMessageTest {
 

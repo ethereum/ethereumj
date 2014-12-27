@@ -5,9 +5,10 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
+
+import javax.swing.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 

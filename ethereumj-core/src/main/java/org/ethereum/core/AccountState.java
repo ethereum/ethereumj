@@ -2,12 +2,12 @@ package org.ethereum.core;
 
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.HashUtil.*;
 
 public class AccountState {
 

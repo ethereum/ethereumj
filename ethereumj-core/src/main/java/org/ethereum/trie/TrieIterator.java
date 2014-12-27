@@ -1,8 +1,8 @@
 package org.ethereum.trie;
 
-import java.util.List;
-
 import org.ethereum.util.Value;
+
+import java.util.List;
 
 import static org.ethereum.util.CompactEncoder.unpackToNibbles;
 

@@ -1,11 +1,16 @@
 package test.ethereum.serpent;
 
+import org.ethereum.serpent.ParserUtils;
+import org.ethereum.serpent.SerpentCompiler;
+import org.ethereum.serpent.SerpentLexer;
+import org.ethereum.serpent.SerpentParser;
+import org.ethereum.serpent.SerpentToAssemblyCompiler;
+
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import static org.junit.Assert.*;
-
-import org.ethereum.serpent.*;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Roman Mandeleil

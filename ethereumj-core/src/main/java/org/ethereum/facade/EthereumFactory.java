@@ -3,9 +3,12 @@ package org.ethereum.facade;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.shh.ShhHandler;
+
 import org.hibernate.SessionFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -18,6 +21,7 @@ import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.sql.SQLException;
+
 import java.util.Properties;
 
 /**

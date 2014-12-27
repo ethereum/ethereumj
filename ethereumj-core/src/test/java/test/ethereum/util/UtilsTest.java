@@ -1,7 +1,9 @@
 package test.ethereum.util;
 
 import org.ethereum.util.Utils;
+
 import org.junit.Test;
+
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 

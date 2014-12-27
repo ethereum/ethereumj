@@ -1,16 +1,5 @@
 package org.ethereum.net.p2p;
 
-import static org.ethereum.net.message.StaticMessages.PING_MESSAGE;
-import static org.ethereum.net.message.StaticMessages.PONG_MESSAGE;
-import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
-
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.util.*;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
@@ -20,15 +9,34 @@ import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.eth.NewBlockMessage;
 import org.ethereum.net.eth.TransactionsMessage;
+import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.shh.ShhHandler;
-import org.ethereum.net.message.*;
 import org.ethereum.net.shh.ShhMessageCodes;
+
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import static org.ethereum.net.message.StaticMessages.*;
 
 /**
  * Process the basic protocol messages between every peer on the network.

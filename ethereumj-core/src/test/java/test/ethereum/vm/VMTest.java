@@ -2,14 +2,21 @@ package test.ethereum.vm;
 
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.*;
-import org.ethereum.vm.Program.StackTooSmallException;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.OpCode;
+import org.ethereum.vm.Program;
 import org.ethereum.vm.Program.BadJumpDestinationException;
+import org.ethereum.vm.Program.StackTooSmallException;
+import org.ethereum.vm.ProgramInvokeMockImpl;
+import org.ethereum.vm.VM;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;

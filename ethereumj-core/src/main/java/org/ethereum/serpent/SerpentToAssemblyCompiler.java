@@ -1,10 +1,13 @@
 package org.ethereum.serpent;
 
-import org.antlr.v4.runtime.misc.NotNull;
 import org.ethereum.crypto.HashUtil;
+
+import org.antlr.v4.runtime.misc.NotNull;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

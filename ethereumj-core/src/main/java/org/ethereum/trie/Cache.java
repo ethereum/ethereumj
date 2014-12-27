@@ -1,13 +1,15 @@
 package org.ethereum.trie;
 
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
+
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.WriteBatch;
+
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Nick Savers

@@ -1,9 +1,11 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.db.ByteArrayWrapper;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;

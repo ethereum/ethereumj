@@ -1,6 +1,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.json.simple.JSONObject;
+
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**

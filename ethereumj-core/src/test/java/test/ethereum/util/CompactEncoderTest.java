@@ -1,9 +1,10 @@
 package test.ethereum.util;
 
-import static org.junit.Assert.*;
-
 import org.ethereum.util.CompactEncoder;
+
 import org.junit.Test;
+
+import static org.junit.Assert.assertArrayEquals;
 
 public class CompactEncoderTest {
 

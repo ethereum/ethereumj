@@ -4,6 +4,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Repository;
+
 import org.spongycastle.util.encoders.Hex;
 
 /**

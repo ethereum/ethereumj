@@ -1,13 +1,12 @@
 package org.ethereum.net.p2p;
 
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.p2p.P2pMessage;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 
-import static org.ethereum.net.p2p.P2pMessageCodes.DISCONNECT;
 import static org.ethereum.net.message.ReasonCode.REQUESTED;
+import static org.ethereum.net.p2p.P2pMessageCodes.DISCONNECT;
 
 /**
  * Wrapper around an Ethereum Disconnect message on the network

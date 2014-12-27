@@ -1,6 +1,14 @@
 package org.ethereum.gui;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.listener.EthereumListenerAdapter;
+
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -8,10 +16,7 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.*;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.listener.EthereumListenerAdapter;
-import org.fife.ui.rsyntaxtextarea.*;
-import org.fife.ui.rtextarea.RTextScrollPane;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * A simple example showing how to modify the fonts and colors used in an

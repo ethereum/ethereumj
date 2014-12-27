@@ -3,13 +3,15 @@ package org.ethereum.gui;
 import org.ethereum.core.Account;
 import org.ethereum.core.Wallet;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+
 import java.net.URL;
+
+import javax.swing.*;
 
 /**
  * @author Roman Mandeleil

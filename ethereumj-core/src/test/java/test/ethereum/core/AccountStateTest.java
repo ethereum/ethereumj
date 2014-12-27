@@ -1,12 +1,14 @@
 package test.ethereum.core;
 
-import static org.junit.Assert.*;
+import org.ethereum.core.AccountState;
+
+import org.junit.Test;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import org.ethereum.core.AccountState;
-import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
 
 public class AccountStateTest {
 

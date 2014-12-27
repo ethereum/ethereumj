@@ -1,8 +1,5 @@
 package org.ethereum.net.message;
 
-import java.util.Arrays;
-import java.util.List;
-
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.client.Capability;
@@ -14,7 +11,11 @@ import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.p2p.PongMessage;
 import org.ethereum.net.shh.ShhHandler;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * This class contains static values of messages on the network. These message

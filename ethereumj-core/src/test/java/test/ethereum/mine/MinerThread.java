@@ -5,8 +5,10 @@ import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Chain;
 import org.ethereum.core.Genesis;
 import org.ethereum.mine.Miner;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;

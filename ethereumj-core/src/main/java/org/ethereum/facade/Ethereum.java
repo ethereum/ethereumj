@@ -9,7 +9,9 @@ import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.server.ChannelManager;
 
 import java.math.BigInteger;
+
 import java.net.InetAddress;
+
 import java.util.Set;
 import java.util.concurrent.Future;
 

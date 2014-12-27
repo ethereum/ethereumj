@@ -1,13 +1,13 @@
 package org.ethereum.core;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
-import static org.ethereum.crypto.HashUtil.sha3;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import org.ethereum.trie.Trie;
-import org.ethereum.trie.TrieImpl;
-import org.spongycastle.util.encoders.Hex;
+import static org.ethereum.crypto.HashUtil.*;
 
 /**
  * The genesis block is the first block in the chain and has fixed values according to

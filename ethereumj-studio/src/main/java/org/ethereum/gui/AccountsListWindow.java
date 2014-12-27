@@ -1,24 +1,22 @@
 package org.ethereum.gui;
 
-import java.awt.Dimension;
-import java.awt.Image;
-import java.awt.Toolkit;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.table.AbstractTableModel;
-
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Denomination;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Repository;
+
 import org.iq80.leveldb.DBIterator;
+
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
+
+import java.awt.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
 
 public class AccountsListWindow extends JFrame {
 

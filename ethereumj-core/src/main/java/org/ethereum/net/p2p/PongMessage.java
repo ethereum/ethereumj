@@ -1,6 +1,5 @@
 package org.ethereum.net.p2p;
 
-import org.ethereum.net.p2p.P2pMessage;
 import org.spongycastle.util.encoders.Hex;
 
 /**

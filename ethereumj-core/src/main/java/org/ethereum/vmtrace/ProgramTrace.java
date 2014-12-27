@@ -1,6 +1,7 @@
 package org.ethereum.vmtrace;
 
 import org.json.simple.JSONArray;
+
 import java.util.ArrayList;
 import java.util.List;
 

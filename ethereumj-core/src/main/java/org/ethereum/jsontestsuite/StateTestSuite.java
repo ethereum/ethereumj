@@ -2,10 +2,13 @@ package org.ethereum.jsontestsuite;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author Roman Mandeleil
