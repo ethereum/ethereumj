@@ -17,7 +17,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -158,10 +157,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             case NEW_BLOCK:
                 msgQueue.receivedMessage(msg);
                 procesNewBlock((NewBlockMessage) msg);
+            case PACKET_COUNT:
+                break;
             default:
                 break;
         }
     }
+
+
 
     private void processTransactions(TransactionsMessage msg) {
 
@@ -246,6 +249,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
+
+//        receivedHashes.forEach(hash -> System.out.println(Hex.toHexString(hash)));
+
         BlockQueue chainQueue = blockchain.getQueue();
 
         // result is empty, peer has no more hashes
@@ -279,8 +285,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         List<Block> blockList = blocksMessage.getBlocks();
 
-        if (!blockList.isEmpty())
-            lastBlock = blockList.get(blockList.size() - 1);
+        if (!blockList.isEmpty()){
+            Block block = blockList.get(blockList.size()-1);
+            if (block.getNumber() > lastBlock.getNumber())
+                lastBlock = blockList.get(blockList.size()-1);
+        }
 
         // check if you got less blocks than you asked
         if (blockList.size() < sentHashes.size()) {
@@ -318,7 +327,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void procesNewBlock(NewBlockMessage newBlockMessage) {
 
         Block newBlock = newBlockMessage.getBlock();
-        this.lastBlock = newBlock;
+
+        if (newBlock.getNumber() > this.lastBlock.getNumber())
+            this.lastBlock = newBlock;
 
         // If the hashes still being downloaded ignore the NEW_BLOCKs
         // that block hash will be retrieved by the others and letter the block itself
@@ -502,8 +513,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         blockchain.getQueue().addHash(hash);
     }
 
-    public void doSync() {
-        logger.info("Sync force activated");
+    public void doSync(){
+        logger.info("Sync force activated, block: {}", lastBlock);
         syncStatus = SyncSatus.HASH_RETRIEVING;
         setBestHash(lastBlock.getHash());
         sendGetBlockHashes();

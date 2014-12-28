@@ -65,29 +65,32 @@ public class BlockQueue {
     @Autowired
     Blockchain blockchain;
 
-    public BlockQueue() {
-        timer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                nudgeQueue();
+	public BlockQueue() {
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				nudgeQueue();
+			}
+		}, 10, 10);
+	}
+
+	/**
+	 * Processing the queue adding blocks to the chain.
+	 */
+	private void nudgeQueue() {
+        try {
+            if (blockReceivedQueue.isEmpty())
+                return;
+
+            logger.info("BlockQueue size: {}", blockReceivedQueue.size());
+            while(!blockReceivedQueue.isEmpty()){
+                Block block = blockReceivedQueue.poll();
+
+                logger.info("Processing block index: {}", block.getNumber());
+                blockchain.tryToConnect(block);
             }
-        }, 10, 10);
-    }
-
-    /**
-     * Processing the queue adding blocks to the chain.
-     */
-    private void nudgeQueue() {
-        if (blockReceivedQueue.isEmpty())
-            return;
-
-        logger.info("BlockQueue size: {}", blockReceivedQueue.size());
-        while (!blockReceivedQueue.isEmpty()) {
-            Block block = blockReceivedQueue.poll();
-
-            logger.info("Processing block index: {}", block.getNumber());
-            blockchain.tryToConnect(block);
+        } catch (Throwable e) {
+            logger.error("Error: ", e.getMessage());
         }
-
     }
 
     /**

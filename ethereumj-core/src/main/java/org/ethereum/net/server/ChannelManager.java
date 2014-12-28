@@ -107,6 +107,12 @@ public class ChannelManager {
         }, 2000, 5000);
     }
 
+    public void reconnect(){
+        for (Channel channel : channels){
+            channel.p2pHandler.sendDisconnect();
+        }
+    }
+
     public void ethSync() {
 
         Channel bestChannel = channels.get(0);

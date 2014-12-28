@@ -1,5 +1,7 @@
 package org.ethereum.net.p2p;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
@@ -14,29 +16,18 @@ import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 
 import static org.ethereum.net.message.StaticMessages.*;
+
 
 /**
  * Process the basic protocol messages between every peer on the network.
@@ -259,6 +250,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         msgQueue.sendMessage(msg);
     }
 
+    public void sendDisconnect(){
+        msgQueue.disconnect();
+    }
 
     public void adaptMessageIds(List<Capability> capabilities) {
 
@@ -282,6 +276,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public HelloMessage getHandshakeHelloMessage() {
         return handshakeHelloMessage;
     }
+
+
 
     private void startTimers() {
         // sample for pinging in background

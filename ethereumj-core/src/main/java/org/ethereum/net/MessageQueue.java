@@ -19,6 +19,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static org.ethereum.net.message.StaticMessages.DISCONNECT_MESSAGE;
+
 /**
  * This class contains the logic for sending messages in a queue
  *
@@ -70,7 +72,12 @@ public class MessageQueue {
         messageQueue.add(new MessageRoundtrip(msg));
     }
 
-    public void receivedMessage(Message msg) throws InterruptedException {
+    public void disconnect(){
+        ctx.writeAndFlush(DISCONNECT_MESSAGE);
+        ctx.close();
+    }
+
+	public void receivedMessage(Message msg) throws InterruptedException {
 
         worldManager.getListener().trace("[Recv: " + msg + "]");
 
