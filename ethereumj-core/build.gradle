@@ -1,0 +1,92 @@
+plugins {
+    id 'application'
+    id 'jacoco'
+    id 'maven'
+    id 'com.github.johnrengelman.shadow' version '1.2.0'
+    id 'me.champeau.gradle.antlr4' version '0.1'
+    id 'com.github.kt3k.coveralls' version '2.0.1x'
+}
+
+mainClassName = 'org.ethereum.Start'
+
+ext.generatedSrcDir = file('src/gen/java')
+
+sourceSets.main.java.srcDirs += generatedSrcDir
+
+antlr4 {
+  extraArgs = ['-package', 'org.ethereum.serpent']
+  output = file("${generatedSrcDir}/org/ethereum/serpent")
+}
+
+compileJava.dependsOn antlr4
+
+configurations {
+   compile.extendsFrom antlr4
+}
+
+ext {
+    slf4jVersion = '1.7.7'
+    leveldbVersion = '0.7'
+    scastleVersion = '1.51.0.0'
+    log4jVersion = '1.2.17'
+    springVersion = '4.1.2.RELEASE'
+    hibernateVersion = '4.3.7.Final'
+    junitVersion = '4.11'
+}
+
+dependencies {
+    compile "io.netty:netty-all:4.0.23.Final"
+    compile "com.madgag.spongycastle:core:${scastleVersion}" // for SHA3 and SECP256K1
+    compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
+    compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
+    compile "org.antlr:antlr4-runtime:4.3" // for serpent compilation
+    compile "com.yuvalshavit:antlr-denter:1.1"
+    compile "org.javassist:javassist:3.15.0-GA"
+    compile "commons-logging:commons-logging:1.0" // TODO: provided scope
+    compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    compile "org.slf4j:jcl-over-slf4j:${slf4jVersion}" // TODO: runtime scope
+    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}" // TODO: runtime scope
+    compile "log4j:log4j:${log4jVersion}"
+    compile "log4j:apache-log4j-extras:${log4jVersion}"
+    compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
+    compile "com.google.code.findbugs:jsr305:3.0.0"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.2.0"
+    compile "org.apache.commons:commons-collections4:4.0"
+    compile "org.springframework:spring-context:${springVersion}"
+    compile "org.springframework:spring-tx:${springVersion}"
+    compile "org.springframework:spring-orm:${springVersion}"
+    compile "org.hsqldb:hsqldb:1.8.0.10" // best performance - do not upgrade!
+    compile "org.hibernate:hibernate-core:${hibernateVersion}"
+    compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
+    compile "commons-dbcp:commons-dbcp:1.4"
+    compile("com.googlecode.json-simple:json-simple:1.1.1") {
+        exclude group:'junit', module:'junit'
+    }
+    testCompile "junit:junit:${junitVersion}"
+    testCompile "org.springframework:spring-test:${springVersion}"
+}
+
+javadoc {
+    options.author = true
+    options.header = project.name
+    options.addStringOption('Xdoclint:all,-missing', '-quiet')
+    options.links(
+        "http://docs.oracle.com/javase/8/docs/api/",
+        "http://netty.io/4.0/api/"
+    )
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar) {
+    classifier = "javadoc"
+    from javadoc
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}

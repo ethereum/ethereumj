@@ -1,8 +1,5 @@
 package org.ethereum.db;
 
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import org.codehaus.plexus.util.FileUtils;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.facade.Repository;
@@ -11,17 +8,27 @@ import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.vm.DataWord;
+
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 import org.iq80.leveldb.DBIterator;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
 import org.springframework.stereotype.Component;
+import org.springframework.util.FileSystemUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
 import java.math.BigInteger;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -30,10 +37,8 @@ import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 17/11/2014 21:15
+ * @author Roman Mandeleil
+ * @since 17.11.2014
  */
 @Component
 public class RepositoryImpl implements Repository {
@@ -43,37 +48,37 @@ public class RepositoryImpl implements Repository {
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
 
-    private Trie 			worldState;
+    private Trie worldState;
 
-    private DatabaseImpl detailsDB 	= null;
-    private DatabaseImpl stateDB 	= null;
+    private DatabaseImpl detailsDB = null;
+    private DatabaseImpl stateDB = null;
 
     public RepositoryImpl() {
         this(DETAILS_DB, STATE_DB);
     }
 
     public RepositoryImpl(String detailsDbName, String stateDbName) {
-        detailsDB   = new DatabaseImpl(detailsDbName);
-        stateDB 	= new DatabaseImpl(stateDbName);
-        worldState 	= new TrieImpl(stateDB.getDb());
+        detailsDB = new DatabaseImpl(detailsDbName);
+        stateDB = new DatabaseImpl(stateDbName);
+        worldState = new TrieImpl(stateDB.getDb());
     }
 
 
     @Override
     public void reset() {
         close();
-        detailsDB   = new DatabaseImpl(DETAILS_DB);
-        stateDB 	= new DatabaseImpl(STATE_DB);
-        worldState 	= new TrieImpl(stateDB.getDb());
+        detailsDB = new DatabaseImpl(DETAILS_DB);
+        stateDB = new DatabaseImpl(STATE_DB);
+        worldState = new TrieImpl(stateDB.getDb());
     }
 
     @Override
     public void close() {
-        if (this.detailsDB != null){
+        if (this.detailsDB != null) {
             detailsDB.close();
             detailsDB = null;
         }
-        if (this.stateDB != null){
+        if (this.stateDB != null) {
             stateDB.close();
             stateDB = null;
         }
@@ -93,21 +98,21 @@ public class RepositoryImpl implements Repository {
             AccountState accountState = stateCache.get(hash);
             ContractDetails contractDetails = detailsCache.get(hash);
 
-            if (accountState.isDeleted()){
+            if (accountState.isDeleted()) {
                 worldState.delete(hash.getData());
                 detailsDB.delete(hash.getData());
 
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
 
-            } else{
+            } else {
 
-                if (accountState.isDirty() ||  contractDetails.isDirty()){
+                if (accountState.isDirty() || contractDetails.isDirty()) {
                     detailsDB.put(hash.getData(), contractDetails.getEncoded());
                     accountState.setStateRoot(contractDetails.getStorageHash());
                     accountState.setCodeHash(sha3(contractDetails.getCode()));
                     worldState.update(hash.getData(), accountState.getEncoded());
-                    if (logger.isDebugEnabled()){
+                    if (logger.isDebugEnabled()) {
                         logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
                                 Hex.toHexString(hash.getData()),
                                 accountState.getNonce(),
@@ -126,7 +131,7 @@ public class RepositoryImpl implements Repository {
     }
 
     @Override
-    public void flush(){
+    public void flush() {
         logger.info("flush to disk");
         worldState.sync();
     }
@@ -134,12 +139,12 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void rollback() {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public void commit() {
-        throw  new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -163,8 +168,7 @@ public class RepositoryImpl implements Repository {
 
         if (block.getNumber() == 0 && txNumber == 0)
             if (CONFIG.dumpCleanOnRestart()) {
-                try {
-                    FileUtils.deleteDirectory(CONFIG.dumpDir());} catch (IOException e) {}
+                FileSystemUtils.deleteRecursively(new File(CONFIG.dumpDir()));
             }
 
         String dir = CONFIG.dumpDir() + "/";
@@ -212,7 +216,7 @@ public class RepositoryImpl implements Repository {
         }
     }
 
-    public void dumpTrie(Block block){
+    public void dumpTrie(Block block) {
 
         if (!(CONFIG.dumpFull() || CONFIG.dumpBlock() == block.getNumber()))
             return;
@@ -239,9 +243,11 @@ public class RepositoryImpl implements Repository {
             logger.error(e.getMessage(), e);
         } finally {
             try {
-                if (bw != null)bw.close();
-                if (fw != null)fw.close();
-            } catch (IOException e) {e.printStackTrace();}
+                if (bw != null) bw.close();
+                if (fw != null) fw.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -279,7 +285,7 @@ public class RepositoryImpl implements Repository {
     @Override
     public DataWord getStorageValue(byte[] addr, DataWord key) {
 
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
         if (details == null)
             return null;
@@ -290,11 +296,11 @@ public class RepositoryImpl implements Repository {
     @Override
     public void addStorageRow(byte[] addr, DataWord key, DataWord value) {
 
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
-        if (details == null){
+        if (details == null) {
             createAccount(addr);
-            details =  getContractDetails(addr);
+            details = getContractDetails(addr);
         }
 
         details.put(key, value);
@@ -304,7 +310,7 @@ public class RepositoryImpl implements Repository {
     @Override
     public byte[] getCode(byte[] addr) {
 
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
         if (details == null)
             return null;
@@ -314,11 +320,11 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void saveCode(byte[] addr, byte[] code) {
-        ContractDetails details =  getContractDetails(addr);
+        ContractDetails details = getContractDetails(addr);
 
-        if (details == null){
+        if (details == null) {
             createAccount(addr);
-            details =  getContractDetails(addr);
+            details = getContractDetails(addr);
         }
 
         details.setCode(code);
@@ -363,8 +369,6 @@ public class RepositoryImpl implements Repository {
 
         return account.getNonce();
     }
-
-
 
 
     @Override
@@ -419,8 +423,8 @@ public class RepositoryImpl implements Repository {
                             HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                             HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
 
-        AccountState    account =  getAccountState(addr);
-        ContractDetails details =  getContractDetails(addr);
+        AccountState account = getAccountState(addr);
+        ContractDetails details = getContractDetails(addr);
 
         if (account == null)
             account = new AccountState();

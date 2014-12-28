@@ -1,47 +1,42 @@
 package org.ethereum.gui;
 
-import java.net.InetAddress;
-import java.net.URL;
-import java.util.*;
-import java.util.Timer;
-
-import javax.swing.*;
-import javax.swing.table.AbstractTableModel;
-
-
 import org.ethereum.geo.IpGeoDB;
-
 import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.util.Utils;
 
 import com.maxmind.geoip.Location;
 
+import java.net.InetAddress;
+import java.net.URL;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.swing.*;
+import javax.swing.table.AbstractTableModel;
+
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 25/04/14 07:04
+ * @author Roman Mandeleil
+ * @since 25.04.14
  */
 public class PeersTableModel extends AbstractTableModel {
 
-	private List<PeerInfo> peerInfoList = new ArrayList<>();
+    private List<PeerInfo> peerInfoList = new ArrayList<>();
     Timer updater = new Timer();
 
-	public PeersTableModel() {
-		updater.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
+    public PeersTableModel() {
+        updater.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
                 SwingUtilities.invokeLater(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                updateModel();
-                            }
-                        }
+                        PeersTableModel.this::updateModel
                 );
-			}
-		}, 0, 100);
-	}
+            }
+        }, 0, 100);
+    }
 
     public String getColumnName(int column) {
         if (column == 0) return "Location";
@@ -71,14 +66,14 @@ public class PeersTableModel extends AbstractTableModel {
             String countryCode = peerInfo.getLocation().countryCode;
 
             ImageIcon flagIcon = null;
-            if (countryCode != null){
+            if (countryCode != null) {
                 URL flagURL = ClassLoader.getSystemResource("flags/" + countryCode.toLowerCase() + ".png");
                 flagIcon = new ImageIcon(flagURL);
             }
             return flagIcon;
         }
-        if (column == 1) 
-        	return peerInfo.getIp().getHostAddress();
+        if (column == 1)
+            return peerInfo.getIp().getHostAddress();
 
         if (column == 2) {
 
@@ -97,8 +92,7 @@ public class PeersTableModel extends AbstractTableModel {
                 flagIcon = Utils.getImageIcon("disconnected.png");
             }
             return flagIcon;
-        }
-        else return "";
+        } else return "";
     }
 
     public int getRowCount() {
@@ -115,7 +109,7 @@ public class PeersTableModel extends AbstractTableModel {
 
             final Set<org.ethereum.net.peerdiscovery.PeerInfo> peers = UIEthereumManager.ethereum.getPeers();
 
-            synchronized (peers){
+            synchronized (peers) {
 
                 for (org.ethereum.net.peerdiscovery.PeerInfo peer : peers) {
                     InetAddress addr = peer.getAddress();
@@ -127,23 +121,24 @@ public class PeersTableModel extends AbstractTableModel {
         }
     }
 
-    public PeerInfo getPeerInfo(int index){
+    public PeerInfo getPeerInfo(int index) {
         return peerInfoList.get(index);
     }
 
 
     public class PeerInfo {
 
-        Location         location;
-        InetAddress      ip;
-        boolean          connected;
+        Location location;
+        InetAddress ip;
+        boolean connected;
         long lastAccessed = 0;
 
         HelloMessage handshakeHelloMessage;
         StatusMessage handshakeStatusMessage;
 
-		private PeerInfo(Location location, InetAddress ip,
-				boolean isConnected, long lastAccessed, HelloMessage helloMessage, StatusMessage statusMessage) {
+        private PeerInfo(Location location, InetAddress ip,
+                         boolean isConnected, long lastAccessed, HelloMessage helloMessage, StatusMessage
+                statusMessage) {
 
             if (location == null)
                 this.location = new Location();
@@ -181,8 +176,8 @@ public class PeersTableModel extends AbstractTableModel {
                     ", ip=" + ip +
                     ", connected=" + connected +
                     ", lastAccessed=" + lastAccessed +
-                    '}' + "\n -->" + (handshakeHelloMessage == null ?"" :  handshakeHelloMessage.toString())
-                        + "\n -->" + (handshakeStatusMessage == null?"" :  handshakeStatusMessage.toString());
+                    '}' + "\n -->" + (handshakeHelloMessage == null ? "" : handshakeHelloMessage.toString())
+                    + "\n -->" + (handshakeStatusMessage == null ? "" : handshakeStatusMessage.toString());
         }
     }
 }

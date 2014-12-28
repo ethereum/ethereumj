@@ -1,18 +1,17 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.util.ByteUtil;
+
 import org.json.simple.JSONObject;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil
- * Created on: 28/06/2014 10:23
+ * @author Roman Mandeleil
+ * @since 28.06.2014
  */
-
 public class Exec {
 
     private byte[] address;
@@ -42,36 +41,36 @@ public class Exec {
    */
     public Exec(JSONObject exec) {
 
-        String address  = exec.get("address").toString();
-        String caller   = exec.get("caller").toString();
+        String address = exec.get("address").toString();
+        String caller = exec.get("caller").toString();
 
-        String code  = exec.get("code").toString();
-        String data  = exec.get("data").toString();
+        String code = exec.get("code").toString();
+        String data = exec.get("data").toString();
 
-        String gas      = exec.get("gas").toString();
+        String gas = exec.get("gas").toString();
         String gasPrice = exec.get("gasPrice").toString();
-        String origin   = exec.get("origin").toString();
+        String origin = exec.get("origin").toString();
 
-        String value    = exec.get("value").toString();
+        String value = exec.get("value").toString();
 
         this.address = Hex.decode(address);
-        this.caller  = Hex.decode(caller);
+        this.caller = Hex.decode(caller);
 
         if (code != null && code.length() > 2)
-            this.code    = Hex.decode(code.substring(2));
+            this.code = Hex.decode(code.substring(2));
         else
             this.code = ByteUtil.EMPTY_BYTE_ARRAY;
 
         if (data != null && data.length() > 2)
-            this.data    = Hex.decode(data.substring(2));
+            this.data = Hex.decode(data.substring(2));
         else
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
 
-        this.gas      = ByteUtil.bigIntegerToBytes(new BigInteger(gas));
+        this.gas = ByteUtil.bigIntegerToBytes(new BigInteger(gas));
         this.gasPrice = ByteUtil.bigIntegerToBytes(new BigInteger(gasPrice));
 
-        this.origin  = Hex.decode(origin);
-        this.value   = ByteUtil.bigIntegerToBytes(new BigInteger(value));
+        this.origin = Hex.decode(origin);
+        this.value = ByteUtil.bigIntegerToBytes(new BigInteger(value));
     }
 
 
@@ -86,6 +85,7 @@ public class Exec {
     public byte[] getData() {
         return data;
     }
+
     public byte[] getCode() {
         return code;
     }

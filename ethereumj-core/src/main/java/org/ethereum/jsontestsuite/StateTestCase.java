@@ -1,9 +1,11 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.db.ByteArrayWrapper;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
@@ -11,18 +13,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 15/12/2014 12:24
+ * @author Roman Mandeleil
+ * @since 15.12.2014
  */
-
 public class StateTestCase {
 
     private String name = "";
 
-    private Env    env;
-    private Logs   logs;
+    private Env env;
+    private Logs logs;
     private byte[] out;
 
     //            "pre": { ... },
@@ -39,44 +38,44 @@ public class StateTestCase {
         this.name = name;
     }
 
-    public StateTestCase(JSONObject testCaseJSONObj) throws ParseException{
+    public StateTestCase(JSONObject testCaseJSONObj) throws ParseException {
 
         try {
 
-            JSONObject envJSON  = (JSONObject)testCaseJSONObj.get("env");
-            JSONArray  logsJSON = (JSONArray)testCaseJSONObj.get("logs");
-            String     outStr  =   testCaseJSONObj.get("out").toString();
-            JSONObject txJSON   = (JSONObject)testCaseJSONObj.get("transaction");
+            JSONObject envJSON = (JSONObject) testCaseJSONObj.get("env");
+            JSONArray logsJSON = (JSONArray) testCaseJSONObj.get("logs");
+            String outStr = testCaseJSONObj.get("out").toString();
+            JSONObject txJSON = (JSONObject) testCaseJSONObj.get("transaction");
 
-            JSONObject preJSON  = (JSONObject)testCaseJSONObj.get("pre");
-            JSONObject postJSON = (JSONObject)testCaseJSONObj.get("post");
+            JSONObject preJSON = (JSONObject) testCaseJSONObj.get("pre");
+            JSONObject postJSON = (JSONObject) testCaseJSONObj.get("post");
 
-            this.env  = new Env(envJSON);
+            this.env = new Env(envJSON);
             this.logs = new Logs(logsJSON);
-            this.out  = Utils.parseData(outStr);
-            this.transaction  = new Transaction(txJSON);
+            this.out = Utils.parseData(outStr);
+            this.transaction = new Transaction(txJSON);
 
-            for (Object key : preJSON.keySet()){
+            for (Object key : preJSON.keySet()) {
 
                 byte[] keyBytes = Hex.decode(key.toString());
                 AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject)  preJSON.get(key));
+                        new AccountState(keyBytes, (JSONObject) preJSON.get(key));
 
                 pre.put(new ByteArrayWrapper(keyBytes), accountState);
             }
 
-            for (Object key : postJSON.keySet()){
+            for (Object key : postJSON.keySet()) {
 
                 byte[] keyBytes = Hex.decode(key.toString());
                 AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject)  postJSON.get(key));
+                        new AccountState(keyBytes, (JSONObject) postJSON.get(key));
 
                 post.put(new ByteArrayWrapper(keyBytes), accountState);
             }
 
 
         } catch (Throwable e) {
-            throw  new ParseException(0, e);
+            throw new ParseException(0, e);
         }
     }
 

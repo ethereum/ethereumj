@@ -7,19 +7,17 @@ import org.ethereum.facade.Repository;
 import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 19/12/2014 12:14
+ * @author Roman Mandeleil
+ * @since 19.12.2014
  */
-
 public interface ProgramInvokeFactory {
 
     public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository);
+
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
-                                                    DataWord inValue, DataWord inGas,
-                                                    BigInteger balanceInt,  byte[] dataIn,
-                                                    Repository repository);
+                                             DataWord inValue, DataWord inGas,
+                                             BigInteger balanceInt, byte[] dataIn,
+                                             Repository repository);
 
 
 }

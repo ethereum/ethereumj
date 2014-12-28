@@ -1,11 +1,13 @@
 package org.ethereum.util;
 
+import com.cedarsoftware.util.DeepEquals;
+
+import org.spongycastle.util.encoders.Hex;
+
 import java.math.BigInteger;
+
 import java.util.Arrays;
 import java.util.List;
-
-import com.cedarsoftware.util.DeepEquals;
-import org.spongycastle.util.encoders.Hex;
 
 /**
  * Class to encapsulate an object and provide utilities for conversion
@@ -17,7 +19,8 @@ public class Value {
     public static Value fromRlpEncoded(byte[] data) {
         if (data != null && data.length != 0) {
             return new Value(RLP.decode(data, 0).getDecoded());
-        } return null;
+        }
+        return null;
     }
 
     public Value(Object obj) {
@@ -30,10 +33,10 @@ public class Value {
             this.value = obj;
         }
     }
-	
-	/* *****************
-	 * 		Convert
-	 * *****************/
+
+    /* *****************
+     *      Convert
+     * *****************/
 
     public Object asObj() {
         return value;
@@ -76,9 +79,9 @@ public class Value {
     }
 
     public byte[] asBytes() {
-        if(isBytes()) {
+        if (isBytes()) {
             return (byte[]) value;
-        } else if(isString()) {
+        } else if (isString()) {
             return asString().getBytes();
         }
         return ByteUtil.EMPTY_BYTE_ARRAY;
@@ -89,7 +92,7 @@ public class Value {
     }
 
     public Value get(int index) {
-        if(isList()) {
+        if (isList()) {
             // Guard for OutOfBounds
             if (asList().size() <= index) {
                 return new Value(null);
@@ -102,10 +105,10 @@ public class Value {
         // If this wasn't a slice you probably shouldn't be using this function
         return new Value(null);
     }
-	
-	/* *****************
-	 * 		Utility
-	 * *****************/
+
+    /* *****************
+     *      Utility
+     * *****************/
 
     public byte[] encode() {
         return RLP.encode(value);
@@ -114,10 +117,10 @@ public class Value {
     public boolean cmp(Value o) {
         return DeepEquals.deepEquals(this, o);
     }
-	
-	/* *****************
-	 * 		Checks
-	 * *****************/
+
+    /* *****************
+     *      Checks
+     * *****************/
 
     public boolean isList() {
         return value != null && value.getClass().isArray() && !value.getClass().getComponentType().isPrimitive();
@@ -144,37 +147,37 @@ public class Value {
     }
 
     // it's only if the isBytes() = true;
-    public boolean isReadbleString(){
+    public boolean isReadbleString() {
 
         int readableChars = 0;
-        byte[] data = (byte[])value;
+        byte[] data = (byte[]) value;
 
-        if (data.length == 1 && data[0] > 31 && data[0] < 126){
+        if (data.length == 1 && data[0] > 31 && data[0] < 126) {
             return true;
         }
 
-        for (int i = 0; i < data.length; ++i){
-            if (data[i] > 32 && data[i] < 126) ++readableChars;
+        for (byte aData : data) {
+            if (aData > 32 && aData < 126) ++readableChars;
         }
 
-        if ((double)readableChars / (double)data.length > 0.55)
+        if ((double) readableChars / (double) data.length > 0.55)
             return true;
         else
             return false;
     }
 
     // it's only if the isBytes() = true;
-    public boolean isHexString(){
+    public boolean isHexString() {
 
         int hexChars = 0;
-        byte[] data = (byte[])value;
+        byte[] data = (byte[]) value;
 
-		for (int i = 0; i < data.length; ++i) {
+        for (byte aData : data) {
 
-			if ((data[i] >= 48 && data[i] <= 57)
-					|| (data[i] >= 97 && data[i] <= 102))
-				++hexChars;
-		}
+            if ((aData >= 48 && aData <= 57)
+                    || (aData >= 97 && aData <= 102))
+                ++hexChars;
+        }
 
         if ((double) hexChars / (double) data.length > 0.9)
             return true;
@@ -182,7 +185,7 @@ public class Value {
             return false;
     }
 
-    public boolean isHashCode(){
+    public boolean isHashCode() {
         return this.asBytes().length == 32;
     }
 
@@ -239,10 +242,10 @@ public class Value {
             }
             buffer.append(" [");
 
-            for (int i = 0; i < list.length; ++i){
+            for (int i = 0; i < list.length; ++i) {
                 Value val = new Value(list[i]);
-                if (val.isString() || val.isEmpty()){
-					buffer.append("'").append(val.toString()).append("'");
+                if (val.isString() || val.isEmpty()) {
+                    buffer.append("'").append(val.toString()).append("'");
                 } else {
                     buffer.append(val.toString());
                 }
@@ -265,14 +268,14 @@ public class Value {
                     if (oneByte < 16) {
                         output.append("\\x").append(ByteUtil.oneByteToHexString(oneByte));
                     } else {
-                        output.append(Character.valueOf((char)oneByte));
+                        output.append(Character.valueOf((char) oneByte));
                     }
                 }
                 output.append("'");
                 return output.toString();
             }
             return Hex.toHexString(this.asBytes());
-        } else if (isString()){
+        } else if (isString()) {
             return asString();
         }
         return "Unexpected type";

@@ -4,21 +4,21 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.util.ByteUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil
- * Created on: 08/06/2014 09:59
+ * @author Roman Mandeleil
+ * @since 08.06.2014
  */
 @Component("ProgramInvokeFactory")
 public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
@@ -28,15 +28,15 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     @Autowired
     private Blockchain blockchain;
 
-    /** 
+    /**
      * This attribute defines the number of recursive calls allowed in the EVM
      * Note: For the JVM to reach this level without a StackOverflow exception,
-     * ethereumj may need to be started with a JVM argument to increase 
+     * ethereumj may need to be started with a JVM argument to increase
      * the stack size. For example: -Xss10m
      */
-    private static final int MAX_DEPTH = 1024; 
-    
-        // Invocation by the wire tx
+    private static final int MAX_DEPTH = 1024;
+
+    // Invocation by the wire tx
     @Override
     public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
 
@@ -45,11 +45,11 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
-        byte[] address  =  tx.isContractCreation() ? tx.getContractAddress(): tx.getReceiveAddress();
+        byte[] address = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
 
         /***         ORIGIN op       ***/
         // YP: This is the sender of original transaction; it is never a contract.
-        byte[] origin  = tx.getSender();
+        byte[] origin = tx.getSender();
 
         /***         CALLER op       ***/
         // YP: This is the address of the account that is directly responsible for this execution.
@@ -92,20 +92,20 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
         if (logger.isInfoEnabled()) {
             logger.info("Top level call: \n" +
-                    "address={}\n" +
-                    "origin={}\n"  +
-                    "caller={}\n"  +
-                    "balance={}\n" +
-                    "gasPrice={}\n" +
-                    "gas={}\n" +
-                    "callValue={}\n" +
-                    "data={}\n" +
-                    "lastHash={}\n" +
-                    "coinbase={}\n" +
-                    "timestamp={}\n" +
-                    "blockNumber={}\n" +
-                    "difficulty={}\n" +
-                    "gaslimit={}\n",
+                            "address={}\n" +
+                            "origin={}\n" +
+                            "caller={}\n" +
+                            "balance={}\n" +
+                            "gasPrice={}\n" +
+                            "gas={}\n" +
+                            "callValue={}\n" +
+                            "data={}\n" +
+                            "lastHash={}\n" +
+                            "coinbase={}\n" +
+                            "timestamp={}\n" +
+                            "blockNumber={}\n" +
+                            "difficulty={}\n" +
+                            "gaslimit={}\n",
 
                     Hex.toHexString(address),
                     Hex.toHexString(origin),
@@ -124,9 +124,9 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         }
 
         ProgramInvoke programInvoke =
-            new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
-                    lastHash,  coinbase,  timestamp,  number,  difficulty,  gaslimit,
-                    repository);
+                new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
+                        lastHash, coinbase, timestamp, number, difficulty, gaslimit,
+                        repository);
 
         return programInvoke;
     }
@@ -136,9 +136,9 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
      */
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
-                                                    DataWord inValue, DataWord inGas,
-                                                    BigInteger balanceInt,  byte[] dataIn,
-                                                    Repository repository) {
+                                             DataWord inValue, DataWord inGas,
+                                             BigInteger balanceInt, byte[] dataIn,
+                                             Repository repository) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
@@ -150,18 +150,18 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         DataWord callValue = inValue;
 
         byte[] data = dataIn;
-        DataWord lastHash =  program.getPrevHash();
-        DataWord coinbase =  program.getCoinbase();
+        DataWord lastHash = program.getPrevHash();
+        DataWord coinbase = program.getCoinbase();
         DataWord timestamp = program.getTimestamp();
-        DataWord number =  program.getNumber();
+        DataWord number = program.getNumber();
         DataWord difficulty = program.getDifficulty();
         DataWord gasLimit = program.getGaslimit();
 
         if (logger.isInfoEnabled()) {
             logger.info("Internal call: \n" +
                             "address={}\n" +
-                            "origin={}\n"  +
-                            "caller={}\n"  +
+                            "origin={}\n" +
+                            "caller={}\n" +
                             "balance={}\n" +
                             "gasPrice={}\n" +
                             "gas={}\n" +
@@ -180,7 +180,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                     gasPrice.longValue(),
                     gas.longValue(),
                     callValue.toString(),
-                    data == null ? "": Hex.toHexString(data),
+                    data == null ? "" : Hex.toHexString(data),
                     Hex.toHexString(lastHash.getData()),
                     Hex.toHexString(coinbase.getLast20Bytes()),
                     timestamp.longValue(),
@@ -188,12 +188,12 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                     Hex.toHexString(difficulty.getNoLeadZeroesData()),
                     gasLimit.longValue());
         }
-        
+
         if (program.invokeData.getCallDeep() >= MAX_DEPTH)
-        	throw program.new OutOfGasException();
+            throw program.new OutOfGasException();
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, program.invokeData.getCallDeep()+1);
+                repository, program.invokeData.getCallDeep() + 1);
     }
 }

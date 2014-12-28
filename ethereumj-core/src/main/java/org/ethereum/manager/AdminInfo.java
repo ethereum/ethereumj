@@ -5,10 +5,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.PostConstruct;
 
 /**
- * www.ethergit.com
- *
- * @author: Roman Mandeleil
- * Created on: 11/12/2014 11:24
+ * @author Roman Mandeleil
+ * @since 11.12.2014
  */
 @Component
 public class AdminInfo {
@@ -31,7 +29,7 @@ public class AdminInfo {
         return consensus;
     }
 
-    public void lostConsensus(){
+    public void lostConsensus() {
         consensus = false;
     }
 }

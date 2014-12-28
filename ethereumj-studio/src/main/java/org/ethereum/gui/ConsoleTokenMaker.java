@@ -1,27 +1,29 @@
-
 package org.ethereum.gui;
 
-import javax.swing.text.Segment;
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMaker;
+import org.fife.ui.rsyntaxtextarea.RSyntaxUtilities;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMap;
 
-import org.fife.ui.rsyntaxtextarea.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.text.Segment;
+
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 24/04/14 11:52
+ * @author Roman Mandeleil
+ * @since 24.04.14
  */
 public class ConsoleTokenMaker extends AbstractTokenMaker {
-	
-	private Logger logger = LoggerFactory.getLogger("gui");
+
+    private Logger logger = LoggerFactory.getLogger("gui");
 
     protected final String operators = "+-*/%!=<>^&|?:";
 
     protected final String separators = "()[]{}";
 
-    protected final String separators2 = ".,;";	// Characters you don't want syntax highlighted but separate identifiers.
+    protected final String separators2 = ".,;"; // Characters you don't want syntax highlighted but separate identifiers.
 
     protected final String hexCharacters = "0123456789ABCDEFabcdef";
 
@@ -35,7 +37,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
      * Constructor.
      */
     public ConsoleTokenMaker() {
-        super();	// Initializes tokensToHighlight.
+        super();    // Initializes tokensToHighlight.
     }
 
 
@@ -56,8 +58,8 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
             // into here as "identifiers," we have to see what the token
             // really is...
             case Token.IDENTIFIER:
-                int value = wordsToHighlight.get(segment, start,end);
-                if (value!=-1)
+                int value = wordsToHighlight.get(segment, start, end);
+                if (value != -1)
                     tokenType = value;
                 break;
             case Token.WHITESPACE:
@@ -79,7 +81,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                 break;
 
             default:
-            	logger.error("Unknown tokenType: '" + tokenType + "'");
+                logger.error("Unknown tokenType: '" + tokenType + "'");
                 tokenType = Token.IDENTIFIER;
                 break;
 
@@ -95,10 +97,10 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
      * line to "comment" it in a this programming language.
      *
      * @return The start and end strings to add to a line to "comment"
-     *         it out.
+     * it out.
      */
     public String[] getLineCommentStartAndEnd() {
-        return new String[] { "//", null };
+        return new String[]{"//", null};
     }
 
 
@@ -106,7 +108,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
      * Returns the words to highlight for the JavaScript programming language.
      *
      * @return A <code>TokenMap</code> containing the words to highlight for
-     *         the JavaScript programming language.
+     * the JavaScript programming language.
      * @see org.fife.ui.rsyntaxtextarea.AbstractTokenMaker#getWordsToHighlight
      */
     public TokenMap getWordsToHighlight() {
@@ -114,14 +116,14 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
         TokenMap tokenMap = new TokenMap(52);
 
         int reservedWord = Token.RESERVED_WORD;
-        tokenMap.put("connecting",						reservedWord);
+        tokenMap.put("connecting", reservedWord);
 
         int literalBoolean = Token.LITERAL_BOOLEAN;
-        tokenMap.put("false",						literalBoolean);
-        tokenMap.put("true",						literalBoolean);
+        tokenMap.put("false", literalBoolean);
+        tokenMap.put("true", literalBoolean);
 
         int dataType = Token.DATA_TYPE;
-        tokenMap.put("boolean",						dataType);
+        tokenMap.put("boolean", dataType);
 
         return tokenMap;
 
@@ -139,7 +141,6 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
     }
 
 
-
     /**
      * Returns the first token in the linked list of tokens generated
      * from <code>text</code>.  This method must be implemented by
@@ -148,9 +149,9 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
      * @param text The text from which to get tokens.
      * @param initialTokenType The token type we should start with.
      * @param startOffset The offset into the document at which
-     *        <code>text</code> starts.
+     * <code>text</code> starts.
      * @return The first <code>Token</code> in a linked list representing
-     *         the syntax highlighted text.
+     * the syntax highlighted text.
      */
     public Token getTokenList(Segment text, int initialTokenType,
                               int startOffset) {
@@ -171,12 +172,12 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
         int newStartOffset = startOffset - offset;
 
         currentTokenStart = offset;
-        currentTokenType  = initialTokenType;
+        currentTokenType = initialTokenType;
         boolean backslash = false;
         boolean numContainsExponent = false;
         boolean numContainsEndCharacter = false;
 
-        for (int i=offset; i<end; i++) {
+        for (int i = offset; i < end; i++) {
 
             char c = array[i];
 
@@ -184,7 +185,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                 case Token.NULL:
 
-                    currentTokenStart = i;	// Starting a new token here.
+                    currentTokenStart = i;  // Starting a new token here.
 
                     switch (c) {
 
@@ -195,26 +196,26 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case '"':
                             if (backslash) { // Escaped double quote => call '"' an identifier..
-                                addToken(text, currentTokenStart,i, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                                addToken(text, currentTokenStart, i, Token.IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
                                 backslash = false;
-                            }
-                            else {
+                            } else {
                                 currentTokenType = Token.ERROR_STRING_DOUBLE;
                             }
                             break;
 
                         case '\'':
                             if (backslash) { // Escaped single quote => call '\'' an identifier.
-                                addToken(text, currentTokenStart,i, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                                addToken(text, currentTokenStart, i, Token.IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
                                 backslash = false;
-                            }
-                            else {
+                            } else {
                                 currentTokenType = Token.ERROR_CHAR;
                             }
                             break;
 
                         case '\\':
-                            addToken(text, currentTokenStart,i, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i, Token.IDENTIFIER, newStartOffset + currentTokenStart);
                             currentTokenType = Token.NULL;
                             backslash = !backslash;
                             break;
@@ -224,30 +225,30 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                             if (RSyntaxUtilities.isDigit(c)) {
                                 currentTokenType = Token.LITERAL_NUMBER_DECIMAL_INT;
                                 break;
-                            }
-                            else if (RSyntaxUtilities.isLetter(c) || c=='_') {
+                            } else if (RSyntaxUtilities.isLetter(c) || c == '_') {
                                 currentTokenType = Token.IDENTIFIER;
                                 break;
                             }
-                            int indexOf = operators.indexOf(c,0);
-                            if (indexOf>-1) {
+                            int indexOf = operators.indexOf(c, 0);
+                            if (indexOf > -1) {
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                                 break;
                             }
-                            indexOf = separators.indexOf(c,0);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i, Token.SEPARATOR, newStartOffset+currentTokenStart);
+                            indexOf = separators.indexOf(c, 0);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i, Token.SEPARATOR, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
-                            indexOf = separators2.indexOf(c,0);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            indexOf = separators2.indexOf(c, 0);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i, Token.IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenType = Token.NULL;
                                 break;
-                            }
-                            else {
+                            } else {
                                 currentTokenType = Token.ERROR_IDENTIFIER;
                                 break;
                             }
@@ -262,61 +263,63 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case ' ':
                         case '\t':
-                            break;	// Still whitespace.
+                            break;  // Still whitespace.
 
                         case '\\':
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             backslash = true; // Previous char whitespace => this must be first backslash.
                             break;
 
                         case '"': // Don't need to worry about backslashes as previous char is space.
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             backslash = false;
                             break;
 
                         case '\'': // Don't need to worry about backslashes as previous char is space.
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_CHAR;
                             backslash = false;
                             break;
 
-                        default:	// Add the whitespace token and start anew.
+                        default:    // Add the whitespace token and start anew.
 
-                            addToken(text, currentTokenStart,i-1, Token.WHITESPACE, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.WHITESPACE, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
 
                             if (RSyntaxUtilities.isDigit(c)) {
                                 currentTokenType = Token.LITERAL_NUMBER_DECIMAL_INT;
                                 break;
-                            }
-                            else if (RSyntaxUtilities.isLetter(c) || c=='_') {
+                            } else if (RSyntaxUtilities.isLetter(c) || c == '_') {
                                 currentTokenType = Token.IDENTIFIER;
                                 break;
                             }
-                            int indexOf = operators.indexOf(c,0);
-                            if (indexOf>-1) {
+                            int indexOf = operators.indexOf(c, 0);
+                            if (indexOf > -1) {
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                                 break;
                             }
-                            indexOf = separators.indexOf(c,0);
-                            if (indexOf>-1) {
-                                addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            indexOf = separators.indexOf(c, 0);
+                            if (indexOf > -1) {
+                                addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
-                            indexOf = separators2.indexOf(c,0);
-                            if (indexOf>-1) {
-                                addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            indexOf = separators2.indexOf(c, 0);
+                            if (indexOf > -1) {
+                                addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
-                            }
-                            else {
+                            } else {
                                 currentTokenType = Token.ERROR_IDENTIFIER;
                             }
 
@@ -333,75 +336,80 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case ' ':
                         case '\t':
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset
+                                    + currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.WHITESPACE;
                             break;
 
                         case '"': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset
+                                    + currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             backslash = false;
                             break;
 
                         case '\'': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset
+                                    + currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_CHAR;
                             backslash = false;
                             break;
 
                         case '\\':
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset
+                                    + currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             backslash = true;
                             break;
 
                         default:
 
-                            if (c=='e') {	// Exponent.
-                                if (numContainsExponent==false) {
+                            if (c == 'e') {   // Exponent.
+                                if (numContainsExponent == false) {
                                     numContainsExponent = true;
-                                }
-                                else {
+                                } else {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 }
                                 break;
                             }
                             int indexOf = hexCharacters.indexOf(c);
-                            if (indexOf>-1) {
-                                break;	// Still a hexadecimal number.
+                            if (indexOf > -1) {
+                                break;  // Still a hexadecimal number.
                             }
                             indexOf = numberEndChars.indexOf(c);
-                            if (indexOf>-1) {	// Numbers can end in 'f','F','l','L', etc.
-                                if (numContainsEndCharacter==true) {
+                            if (indexOf > -1) {   // Numbers can end in 'f','F','l','L', etc.
+                                if (numContainsEndCharacter == true) {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
-                                }
-                                else {
+                                } else {
                                     numContainsEndCharacter = true;
                                 }
                                 break;
                             }
                             indexOf = operators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset+currentTokenStart);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_HEXADECIMAL,
+                                        newStartOffset + currentTokenStart);
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                                 break;
                             }
                             indexOf = separators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_HEXADECIMAL,
+                                        newStartOffset + currentTokenStart);
+                                addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
                             indexOf = separators2.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_HEXADECIMAL, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_HEXADECIMAL,
+                                        newStartOffset + currentTokenStart);
+                                addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
@@ -414,67 +422,70 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                     break;
 
 
-
-
-
                 case Token.IDENTIFIER:
 
                     switch (c) {
 
                         case ' ':
                         case '\t':
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.WHITESPACE;
                             break;
 
                         case '"': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             backslash = false;
                             break;
 
                         case '\'': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_CHAR;
                             backslash = false;
                             break;
 
                         case '\\':
-                            addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             backslash = true;
                             break;
 
                         default:
-                            if (RSyntaxUtilities.isLetterOrDigit(c) || c=='_') {
-                                break;	// Still an identifier of some type.
+                            if (RSyntaxUtilities.isLetterOrDigit(c) || c == '_') {
+                                break;  // Still an identifier of some type.
                             }
                             int indexOf = operators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                                 break;
                             }
-                            indexOf = separators.indexOf(c,0);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            indexOf = separators.indexOf(c, 0);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
-                            indexOf = separators2.indexOf(c,0);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.IDENTIFIER, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            indexOf = separators2.indexOf(c, 0);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
-                            }
-                            else {
+                            } else {
                                 currentTokenType = Token.ERROR_IDENTIFIER;
                             }
 
@@ -486,7 +497,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                     // Reset our boolean states if we only have one digit char before
                     // the current one.
-                    if (currentTokenStart==i-1) {
+                    if (currentTokenStart == i - 1) {
                         numContainsExponent = false;
                         numContainsEndCharacter = false;
                     }
@@ -495,28 +506,32 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case ' ':
                         case '\t':
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset
+                                    + currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.WHITESPACE;
                             break;
 
                         case '"': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset
+                                    + currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             backslash = false;
                             break;
 
                         case '\'': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset
+                                    + currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_CHAR;
                             backslash = false;
                             break;
 
                         case '\\':
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset
+                                    + currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             backslash = true;
                             break;
@@ -524,54 +539,52 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                         default:
 
                             if (RSyntaxUtilities.isDigit(c)) {
-                                break;	// Still a literal number.
-                            }
-                            else if (c=='e') {	// Exponent.
-                                if (numContainsExponent==false) {
+                                break;  // Still a literal number.
+                            } else if (c == 'e') {  // Exponent.
+                                if (numContainsExponent == false) {
                                     numContainsExponent = true;
-                                }
-                                else {
+                                } else {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 }
                                 break;
-                            }
-                            else if (c=='.') { // Decimal point.
-                                if (numContainsExponent==true) {
+                            } else if (c == '.') { // Decimal point.
+                                if (numContainsExponent == true) {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
-                                }
-                                else {
+                                } else {
                                     currentTokenType = Token.LITERAL_NUMBER_FLOAT;
                                 }
                                 break;
                             }
                             int indexOf = numberEndChars.indexOf(c);
-                            if (indexOf>-1) {	// Numbers can end in 'f','F','l','L', etc.
-                                if (numContainsEndCharacter==true) {
+                            if (indexOf > -1) {   // Numbers can end in 'f','F','l','L', etc.
+                                if (numContainsEndCharacter == true) {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
-                                }
-                                else {
+                                } else {
                                     numContainsEndCharacter = true;
                                 }
                                 break;
                             }
                             indexOf = operators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset+currentTokenStart);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT,
+                                        newStartOffset + currentTokenStart);
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                                 break;
                             }
                             indexOf = separators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT,
+                                        newStartOffset + currentTokenStart);
+                                addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
                             indexOf = separators2.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_DECIMAL_INT, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_DECIMAL_INT,
+                                        newStartOffset + currentTokenStart);
+                                addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
@@ -589,28 +602,32 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case ' ':
                         case '\t':
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_FLOAT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_FLOAT, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.WHITESPACE;
                             break;
 
                         case '"': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_FLOAT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_FLOAT, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             backslash = false;
                             break;
 
                         case '\'': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_FLOAT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_FLOAT, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_CHAR;
                             backslash = false;
                             break;
 
                         case '\\':
-                            addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_FLOAT, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_FLOAT, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             backslash = true;
                             break;
@@ -618,49 +635,49 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                         default:
 
                             if (RSyntaxUtilities.isDigit(c)) {
-                                break;	// Still a literal number.
-                            }
-                            else if (c=='e') {	// Exponent.
-                                if (numContainsExponent==false) {
+                                break;  // Still a literal number.
+                            } else if (c == 'e') {  // Exponent.
+                                if (numContainsExponent == false) {
                                     numContainsExponent = true;
-                                }
-                                else {
+                                } else {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 }
                                 break;
-                            }
-                            else if (c=='.') { // Second decimal point; must catch now because it's a "separator" below.
+                            } else if (c == '.') { // Second decimal point; must catch now because it's a "separator"
+                            // below.
                                 currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 break;
                             }
                             int indexOf = numberEndChars.indexOf(c);
-                            if (indexOf>-1) {	// Numbers can end in 'f','F','l','L', etc.
-                                if (numContainsEndCharacter==true) {
+                            if (indexOf > -1) {   // Numbers can end in 'f','F','l','L', etc.
+                                if (numContainsEndCharacter == true) {
                                     currentTokenType = Token.ERROR_NUMBER_FORMAT;
-                                }
-                                else {
+                                } else {
                                     numContainsEndCharacter = true;
                                 }
                                 break;
                             }
                             indexOf = operators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_FLOAT, newStartOffset+currentTokenStart);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_FLOAT, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                                 break;
                             }
                             indexOf = separators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_FLOAT, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_FLOAT, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
                             indexOf = separators2.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.LITERAL_NUMBER_FLOAT, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.LITERAL_NUMBER_FLOAT, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                                 break;
                             }
@@ -676,9 +693,10 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                 case Token.COMMENT_MULTILINE:
 
                     // Find either end of MLC or end of the current line.
-                    while (i < end-1) {
-                        if (array[i]=='*' && array[i+1]=='/') {
-                            addToken(text, currentTokenStart,i+1, Token.COMMENT_MULTILINE, newStartOffset+currentTokenStart);
+                    while (i < end - 1) {
+                        if (array[i] == '*' && array[i + 1] == '/') {
+                            addToken(text, currentTokenStart, i + 1, Token.COMMENT_MULTILINE, newStartOffset +
+                                    currentTokenStart);
                             i = i + 1;
                             currentTokenType = Token.NULL;
                             backslash = false; // Backslashes can't accumulate before and after a comment...
@@ -691,7 +709,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                 case Token.COMMENT_EOL:
                     i = end - 1;
-                    addToken(text, currentTokenStart,i, Token.COMMENT_EOL, newStartOffset+currentTokenStart);
+                    addToken(text, currentTokenStart, i, Token.COMMENT_EOL, newStartOffset + currentTokenStart);
                     // We need to set token type to null so at the bottom we don't add one more token.
                     currentTokenType = Token.NULL;
                     break;
@@ -700,32 +718,27 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                 // Note that when we enter this state, the PREVIOUS character was an operator.
                 case Token.OPERATOR:
 
-                    if (array[i-1]=='/') { // Possibility of comments.
+                    if (array[i - 1] == '/') { // Possibility of comments.
 
-                        if (c=='*') {
+                        if (c == '*') {
                             currentTokenType = Token.COMMENT_MULTILINE;
                             break;
-                        }
-
-                        else if (c=='/') {
+                        } else if (c == '/') {
                             currentTokenType = Token.COMMENT_EOL;
-                            i = end - 1;	// Since we know the rest of the line is in this token.
-                        }
-
-                        else {
+                            i = end - 1;    // Since we know the rest of the line is in this token.
+                        } else {
                             // We MUST add the token at the previous char now; if we don't and let
                             // operators accumulate before we print them, we will mess up syntax
                             // highlighting if we get an end-of-line comment.
-                            addToken(text, currentTokenStart,i-1, Token.OPERATOR, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.OPERATOR, newStartOffset +
+                                    currentTokenStart);
                             currentTokenType = Token.NULL;
                             i = i - 1;
                         }
 
-                    }
+                    } else {
 
-                    else {
-
-                        addToken(text, currentTokenStart,i-1, Token.OPERATOR, newStartOffset+currentTokenStart);
+                        addToken(text, currentTokenStart, i - 1, Token.OPERATOR, newStartOffset + currentTokenStart);
 
                         // Hack to keep code size down...
                         i--;
@@ -741,55 +754,64 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case ' ':
                         case '\t':
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.WHITESPACE;
                             break;
 
                         case '"': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             backslash = false;
                             break;
 
                         case '\'': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_CHAR;
                             backslash = false;
                             break;
 
                         case ';':
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             break;
 
                         case '\\':
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
-                            backslash = true; // Must be first backslash in a row since previous character is identifier char.
+                            backslash = true; // Must be first backslash in a row since previous character
+                            // identifier char.
                             break;
 
                         default:
                             int indexOf = operators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                             }
                             indexOf = separators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                             }
                             indexOf = separators2.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.ERROR_IDENTIFIER, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.ERROR_IDENTIFIER, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                             }
 
@@ -803,63 +825,72 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                         case ' ':
                         case '\t':
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.WHITESPACE;
                             break;
 
                         case '"': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_STRING_DOUBLE;
                             backslash = false;
                             break;
 
                         case '\'': // Don't need to worry about backslashes as previous char is non-backslash.
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                    currentTokenStart);
                             currentTokenStart = i;
                             currentTokenType = Token.ERROR_CHAR;
                             backslash = false;
                             break;
 
                         case ';':
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
                             break;
 
                         case '\\':
-                            addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
-                            addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                    currentTokenStart);
+                            addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                             currentTokenType = Token.NULL;
-                            backslash = true; // Must be first backslash in a row since previous char is a number char.
+                            backslash = true; // Must be first backslash in a row since previous char is a number
                             break;
 
                         default:
 
                             // Could be going into hexadecimal.
                             int indexOf = hexCharacters.indexOf(c);
-                            if (indexOf>-1 && (i-currentTokenStart==2 && array[i-1]=='x' && array[i-2]=='0')) {
+                            if (indexOf > -1 && (i - currentTokenStart == 2 && array[i - 1] == 'x' && array[i - 2] ==
+                                    '0')) {
                                 currentTokenType = Token.LITERAL_NUMBER_HEXADECIMAL;
                                 break;
                             }
 
                             indexOf = operators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                        currentTokenStart);
                                 currentTokenStart = i;
                                 currentTokenType = Token.OPERATOR;
                             }
                             indexOf = separators.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.SEPARATOR, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.SEPARATOR, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                             }
                             indexOf = separators2.indexOf(c);
-                            if (indexOf>-1) {
-                                addToken(text, currentTokenStart,i-1, Token.ERROR_NUMBER_FORMAT, newStartOffset+currentTokenStart);
-                                addToken(text, i,i, Token.IDENTIFIER, newStartOffset+i);
+                            if (indexOf > -1) {
+                                addToken(text, currentTokenStart, i - 1, Token.ERROR_NUMBER_FORMAT, newStartOffset +
+                                        currentTokenStart);
+                                addToken(text, i, i, Token.IDENTIFIER, newStartOffset + i);
                                 currentTokenType = Token.NULL;
                             }
 
@@ -869,13 +900,13 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                 case Token.ERROR_CHAR:
 
-                    if (c=='\\') {
+                    if (c == '\\') {
                         backslash = !backslash; // Okay because if we got in here, backslash was initially false.
-                    }
-                    else {
+                    } else {
 
-                        if (c=='\'' && !backslash) {
-                            addToken(text, currentTokenStart,i, Token.LITERAL_CHAR, newStartOffset+currentTokenStart);
+                        if (c == '\'' && !backslash) {
+                            addToken(text, currentTokenStart, i, Token.LITERAL_CHAR, newStartOffset +
+                                    currentTokenStart);
                             currentTokenType = Token.NULL;
                             // backslash is definitely false when we leave.
                         }
@@ -889,12 +920,12 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
                 case Token.ERROR_STRING_DOUBLE:
 
-                    if (c=='\\') {
+                    if (c == '\\') {
                         backslash = !backslash; // Okay because if we got in here, backslash was initially false.
-                    }
-                    else {
-                        if (c=='"' && !backslash) {
-                            addToken(text, currentTokenStart,i, Token.LITERAL_STRING_DOUBLE_QUOTE, newStartOffset+currentTokenStart);
+                    } else {
+                        if (c == '"' && !backslash) {
+                            addToken(text, currentTokenStart, i, Token.LITERAL_STRING_DOUBLE_QUOTE, newStartOffset +
+                                    currentTokenStart);
                             currentTokenType = Token.NULL;
                             // backslash is definitely false when we leave.
                         }
@@ -912,9 +943,9 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
 
         // Deal with the (possibly there) last token.
         if (currentTokenType != Token.NULL) {
-            addToken(text, currentTokenStart,end-1, currentTokenType, newStartOffset+currentTokenStart);
+            addToken(text, currentTokenStart, end - 1, currentTokenType, newStartOffset + currentTokenStart);
         }
-        if (currentTokenType!=Token.COMMENT_MULTILINE) {
+        if (currentTokenType != Token.COMMENT_MULTILINE) {
             addNullToken();
         }
 

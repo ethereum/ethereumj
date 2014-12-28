@@ -3,23 +3,22 @@ package test.ethereum.mine;
 
 import org.ethereum.core.Block;
 import org.ethereum.mine.Miner;
+
 import org.junit.Ignore;
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 09/11/2014 09:21
+ * @author Roman Mandeleil
+ * @since 09.11.2014
  */
-
 public class ForkGenTest {
 
 
     @Test
     @Ignore
-    public void mineOnBlock(){
+    public void mineOnBlock() {
 
         byte[] blockRaw = Hex.decode("f90139f90134a077702830ce2f66cdbf82cabd600ddb760a68b73c93739bdd439309989b22f93ba01dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d4934794907a0f5f767664ac77c8e431b99e74abc9288a40a0a2deb803ea8704997ae17efd0adf038df2833505da8776f095e32174dcb8e4aba056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421a056e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421b840000000000000000000000000000000000000000000002000000000004000000000000020000000000000000000000000000000000000000000000000000000008301f2363c8609184e72a000830e63bb80845461623980a05643fd40385c6520e3320109adc71917fdbbcdffe61f0b476ccb3b34111af194c0c0");
         byte[] coinbase = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
@@ -40,14 +39,14 @@ public class ForkGenTest {
 
     @Test
     @Ignore
-    public void makeFork(){
+    public void makeFork() {
 
 
-        MineSwarm swarm = new MineSwarm ();
+        MineSwarm swarm = new MineSwarm();
         swarm.start();
 
 
-        while(swarm.started.get()){
+        while (swarm.started.get()) {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {

@@ -3,8 +3,8 @@ package org.ethereum.net.submit;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.server.ChannelManager;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,40 +14,40 @@ import static java.lang.Thread.sleep;
 
 /**
  * @author Roman Mandeleil
- * Created on: 23/05/2014 18:33
+ * @since 23.05.2014
  */
 public class TransactionTask implements Callable<Transaction> {
 
-	private static final Logger logger = LoggerFactory.getLogger(TransactionTask.class);
+    private static final Logger logger = LoggerFactory.getLogger(TransactionTask.class);
 
-	private Transaction tx;
+    private Transaction tx;
     private WorldManager worldManager;
 
-	public TransactionTask(Transaction tx, WorldManager worldManager) {
-		this.tx = tx;
+    public TransactionTask(Transaction tx, WorldManager worldManager) {
+        this.tx = tx;
         this.worldManager = worldManager;
-	}
+    }
 
-	@Override
-	public Transaction call() throws Exception {
+    @Override
+    public Transaction call() throws Exception {
 
-		try {
-			logger.info("Call() tx: {}", tx.toString());
+        try {
+            logger.info("Call() tx: {}", tx.toString());
 
             Wallet wallet = worldManager.getWallet();
             ChannelManager channelManager = worldManager.getChannelManager();
 
-			WalletTransaction walletTransaction = wallet.addByWalletTransaction(tx);
-			channelManager.sendTransaction(tx);
+            WalletTransaction walletTransaction = wallet.addByWalletTransaction(tx);
+            channelManager.sendTransaction(tx);
 
-			while (walletTransaction.getApproved() < 1) {
-				sleep(10);
-			}
-			logger.info("return approved: {}", walletTransaction.getApproved());
-		} catch (Throwable th) {
-			logger.warn("Exception caught: {}", th);
+            while (walletTransaction.getApproved() < 1) {
+                sleep(10);
+            }
+            logger.info("return approved: {}", walletTransaction.getApproved());
+        } catch (Throwable th) {
+            logger.warn("Exception caught: {}", th);
             worldManager.getWallet().removeTransaction(tx);
-		}
-		return null;
-	}
+        }
+        return null;
+    }
 }

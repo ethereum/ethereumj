@@ -5,14 +5,14 @@ rem *
 
 @echo off
 :getConfirmation
-set /p command=What to do with lame properties [track/untrack] ?: 
+set /p command=What to do with lame properties [track/untrack] ?:
 
 if %command%==track goto :trackProps
 if %command%==untrack goto :untrackProps
 goto :end
 
 
-rem # I use this to stop push every local propertie change 
+rem # I use this to stop push every local propertie change
 :untrackProps
 @echo on
 git update-index --assume-unchanged ./src/main/resources/log4j.properties

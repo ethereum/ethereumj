@@ -1,20 +1,19 @@
 package test.ethereum.core;
 
+import test.ethereum.db.MockDB;
+
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.RLP;
+
 import org.junit.Test;
-import org.junit.runner.RunWith;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import test.ethereum.db.MockDB;
 
 import java.math.BigInteger;
 
@@ -23,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 public class StateTest {
 
-	private static final String GENESIS_STATE_ROOT = "c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718c";
+    private static final String GENESIS_STATE_ROOT = "c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718c";
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -70,8 +69,8 @@ public class StateTest {
         byte[] minerAddress = Hex.decode("4c5f4d519dff3c16f0d54b6866e256fbbbc1a600");
         AccountState account_3 = new AccountState(BigInteger.ZERO, new BigInteger("1506260000000000000"));
         trie.update(minerAddress, account_3.getEncoded());
-        
-        assertEquals(expected,  Hex.toHexString(trie.getRootHash()));
+
+        assertEquals(expected, Hex.toHexString(trie.getRootHash()));
 
 
         /* *** GROSS DATA ***
@@ -116,8 +115,8 @@ public class StateTest {
         Trie trie = new TrieImpl(new MockDB());
         for (String address : Genesis.getPremine()) {
             AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-            trie.update(Hex.decode(address), acct.getEncoded());			
-		}
+            trie.update(Hex.decode(address), acct.getEncoded());
+        }
         return trie;
     }
 }

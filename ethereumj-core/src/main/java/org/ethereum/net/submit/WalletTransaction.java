@@ -4,22 +4,22 @@ import org.ethereum.core.Transaction;
 
 /**
  * @author Roman Mandeleil
- * Created on: 23/05/2014 18:41
+ * @since 23.05.2014
  */
 public class WalletTransaction {
 
-	private Transaction tx;
-	int approved = 0; // each time the tx got from the wire this value increased
+    private Transaction tx;
+    int approved = 0; // each time the tx got from the wire this value increased
 
-	public WalletTransaction(Transaction tx) {
-		this.tx = tx;
-	}
+    public WalletTransaction(Transaction tx) {
+        this.tx = tx;
+    }
 
-	public void incApproved() {
-		++this.approved;
-	}
+    public void incApproved() {
+        ++this.approved;
+    }
 
-	public int getApproved() {
-		return approved;
-	}
+    public int getApproved() {
+        return approved;
+    }
 }

@@ -1,11 +1,5 @@
 package org.ethereum.net.peerdiscovery;
 
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.*;
-import io.netty.channel.Channel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
@@ -13,12 +7,24 @@ import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
-import org.ethereum.net.server.*;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
+
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.DefaultMessageSizeEstimator;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.FixedRecvByteBufAllocator;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
@@ -30,6 +36,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * This class creates the connection to an remote address using the Netty framework
+ *
  * @see <a href="http://netty.io">http://netty.io</a>
  */
 @Component
@@ -65,14 +72,14 @@ public class DiscoveryChannel {
 
     public void connect(String host, int port) {
 
-    	EventLoopGroup workerGroup = new NioEventLoopGroup();
+        EventLoopGroup workerGroup = new NioEventLoopGroup();
         worldManager.getListener().trace("Connecting to: " + host + ":" + port);
 
         try {
             Bootstrap b = new Bootstrap();
             b.group(workerGroup);
             b.channel(NioSocketChannel.class);
-            
+
             b.option(ChannelOption.SO_KEEPALIVE, true);
             b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
             b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerConnectionTimeout());
@@ -93,7 +100,7 @@ public class DiscoveryChannel {
 
             b.handler(
 
-                    new ChannelInitializer<NioSocketChannel>(){
+                    new ChannelInitializer<NioSocketChannel>() {
                         @Override
                         protected void initChannel(NioSocketChannel ch) throws Exception {
 
@@ -123,12 +130,12 @@ public class DiscoveryChannel {
             logger.debug("Connection is closed");
 
         } catch (Exception e) {
-        	logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
             throw new Error("Disconnnected");
         } finally {
-        	workerGroup.shutdownGracefully();
+            workerGroup.shutdownGracefully();
 
-            if (!peerDiscoveryMode){
+            if (!peerDiscoveryMode) {
 //                EthereumListener listener =  WorldManager.getInstance().getListener();
 //                listener.onPeerDisconnect(host, port);
             }
@@ -136,12 +143,11 @@ public class DiscoveryChannel {
         }
     }
 
-    public HelloMessage getHelloHandshake(){
+    public HelloMessage getHelloHandshake() {
         return p2pHandler.getHandshakeHelloMessage();
     }
 
-    public StatusMessage getStatusHandshake()
-    {
+    public StatusMessage getStatusHandshake() {
         return ethHandler.getHandshakeStatusMessage();
     }
 }

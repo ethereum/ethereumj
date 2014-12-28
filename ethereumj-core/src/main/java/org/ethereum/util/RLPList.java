@@ -3,9 +3,8 @@ package org.ethereum.util;
 import java.util.ArrayList;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 21/04/14 16:26
+ * @author Roman Mandeleil
+ * @since 21.04.14
  */
 public class RLPList extends ArrayList<RLPElement> implements RLPElement {
 
@@ -19,21 +18,19 @@ public class RLPList extends ArrayList<RLPElement> implements RLPElement {
         return rlpData;
     }
 
-	public static void recursivePrint(RLPElement element) {
+    public static void recursivePrint(RLPElement element) {
 
-		if (element == null)
-			throw new RuntimeException("RLPElement object can't be null");
-		if (element instanceof RLPList) {
+        if (element == null)
+            throw new RuntimeException("RLPElement object can't be null");
+        if (element instanceof RLPList) {
 
-			RLPList rlpList = (RLPList) element;
-			System.out.print("[");			
-			for (RLPElement singleElement : rlpList) {
-				recursivePrint(singleElement);
-			}
-			System.out.print("]");
-		} else {
-			String hex = ByteUtil.toHexString(((RLPItem) element).getRLPData());
-			System.out.print(hex + ", ");
-		}
-	}
+            RLPList rlpList = (RLPList) element;
+            System.out.print("[");
+            rlpList.forEach(org.ethereum.util.RLPList::recursivePrint);
+            System.out.print("]");
+        } else {
+            String hex = ByteUtil.toHexString(element.getRLPData());
+            System.out.print(hex + ", ");
+        }
+    }
 }

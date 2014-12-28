@@ -1,8 +1,11 @@
 package test.ethereum.jsontestsuite;
 
 import org.ethereum.jsontestsuite.JSONReader;
+
 import org.json.simple.parser.ParseException;
+
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
@@ -15,10 +18,11 @@ public class GitHubStateTest {
     @Test
     public void stSingleTest() throws ParseException {
 
-    	String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
-    	GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createNameRegistrator");
+        String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
+        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createNameRegistrator");
     }
 
+    @Ignore
     @Test
     public void runWithExcludedTest() throws ParseException {
 
@@ -37,6 +41,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
+    @Ignore
     @Test
     public void stInitCodeTest() throws ParseException { // [V]
 
@@ -51,6 +56,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
+    @Ignore
     @Test
     public void stPreCompiledContracts() throws ParseException {
 
@@ -58,6 +64,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
+    @Ignore
     @Test
     public void stRecursiveCreate() throws ParseException { // [V]
 
@@ -80,6 +87,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
+    @Ignore
     @Test
     public void stSystemOperationsTest() throws ParseException {
 
@@ -88,6 +96,7 @@ public class GitHubStateTest {
     }
 
 
+    @Ignore
     @Test
     public void stTransactionTest() throws ParseException {
 
@@ -96,7 +105,5 @@ public class GitHubStateTest {
     }
 
 
-
-    
 }
 

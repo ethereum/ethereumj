@@ -2,15 +2,25 @@ package org.ethereum.vmtrace;
 
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
+
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 /**
- *  Data to for one program step to save.
+ * Data to for one program step to save.
  *
  *   {
  *    'op': 'CODECOPY'
@@ -21,19 +31,17 @@ import java.util.*;
  *    'stack': ['15', '15', '14', '0'],
  *   }
  *
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 28/10/2014 23:39
+ * @author Roman Mandeleil
+ * @since 28.10.2014
  */
 
 public class Op {
 
-    byte     op;
-    int      pc;
+    byte op;
+    int pc;
     DataWord gas;
     Map<String, String> storage;
-    byte[]   memory;
+    byte[] memory;
     List<String> stack;
 
     public void setOp(byte op) {
@@ -60,7 +68,7 @@ public class Op {
         }
     }
 
-    public void saveMemory(ByteBuffer memory){
+    public void saveMemory(ByteBuffer memory) {
         if (memory != null)
             this.memory = Arrays.copyOf(memory.array(), memory.array().length);
     }
@@ -69,12 +77,12 @@ public class Op {
 
         this.stack = new ArrayList<>();
 
-        for(DataWord element : stack){
+        for (DataWord element : stack) {
             this.stack.add(0, Hex.toHexString(element.getNoLeadZeroesData()));
         }
     }
 
-    public String toString(){
+    public String toString() {
 
         Map<Object, Object> jsonData = new LinkedHashMap<>();
 
@@ -83,7 +91,7 @@ public class Op {
         jsonData.put("gas", gas.value().toString());
         jsonData.put("stack", stack);
         jsonData.put("memory", memory == null ? "" : Hex.toHexString(memory));
-        jsonData.put("storage", new JSONObject(storage)  );
+        jsonData.put("storage", new JSONObject(storage));
 
         return JSONValue.toJSONString(jsonData);
     }

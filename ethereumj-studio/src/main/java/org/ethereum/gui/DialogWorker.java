@@ -1,22 +1,22 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Transaction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import javax.swing.*;
+
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil
- * Created on: 26/05/2014 12:27
+ * @author Roman Mandeleil
+ * @since 26.05.2014
  */
 public class DialogWorker extends SwingWorker<Transaction, Object> {
 

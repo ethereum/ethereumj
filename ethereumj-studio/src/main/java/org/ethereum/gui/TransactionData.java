@@ -2,16 +2,15 @@ package org.ethereum.gui;
 
 import org.ethereum.util.ByteUtil;
 
+import java.awt.*;
+
 import javax.swing.*;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Highlighter;
-import java.awt.*;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Adrian Benko
- * Created on: 27/08/14 18:22
+ * @author Adrian Benko
+ * @since 27.08.14
  */
 public class TransactionData extends JFrame {
 

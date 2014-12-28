@@ -3,12 +3,9 @@ package org.ethereum.trie;
 import org.ethereum.util.Value;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil
- * Created on: 29/08/2014 10:46
+ * @author Roman Mandeleil
+ * @since 29.08.2014
  */
-
 public class CountAllNodes implements TrieImpl.ScanAction {
 
     int counted = 0;
@@ -18,5 +15,7 @@ public class CountAllNodes implements TrieImpl.ScanAction {
         ++counted;
     }
 
-    public int getCounted(){return counted;}
+    public int getCounted() {
+        return counted;
+    }
 }

@@ -3,25 +3,33 @@ package org.ethereum.gui;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Blockchain;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
+
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+
+import java.util.ArrayList;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import javax.swing.text.*;
-import java.awt.*;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.StringSelection;
-import java.awt.event.*;
-import java.util.ArrayList;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DefaultHighlighter;
+import javax.swing.text.DocumentFilter;
+import javax.swing.text.Highlighter;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Adrian Benko
- * Created on: 27/08/14 18:22
+ * @author Adrian Benko
+ * @since 27.08.14
  */
 public class BlockChainTable extends JFrame implements ActionListener {
 
@@ -100,7 +108,7 @@ public class BlockChainTable extends JFrame implements ActionListener {
         this.toolBar = toolBar;
         addCloseAction();
 
-        foundBlocks = new ArrayList<Long>();
+        foundBlocks = new ArrayList<>();
         painter = new DefaultHighlighter.DefaultHighlightPainter(HILIT_COLOR);
 
         setTitle("Block Chain Table");
@@ -635,7 +643,7 @@ public class BlockChainTable extends JFrame implements ActionListener {
         Block block = blockchain.getBlockByNumber(blockNum);
         blockN.setText("" + block.getNumber());
         highlightText(blockN);
-        minGasPrice.setText("" + block.getMinGasPrice());
+        minGasPrice.setText("" + 42);
         highlightText(minGasPrice);
         gasLimit.setText("" + block.getGasLimit());
         highlightText(gasLimit);
@@ -786,7 +794,8 @@ public class BlockChainTable extends JFrame implements ActionListener {
         c.insets = new Insets(0, 10, 0, 0);
         transactionPanel.add(valueLabel, c);
 
-        JTextField value = new JTextField(transaction.getValue() != null ? ByteUtil.toHexString(transaction.getValue()) : "");
+        JTextField value = new JTextField(transaction.getValue() != null ? ByteUtil.toHexString(transaction.getValue
+                ()) : "");
         highlightText(value);
         value.setEditable(false);
         value.setBorder(null);
@@ -814,19 +823,16 @@ public class BlockChainTable extends JFrame implements ActionListener {
         transactionPanel.add(nonce, c);
 
         JButton data = new JButton("Data");
-        data.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent event) {
-                if (transactionDataWindow == null)
-                    transactionDataWindow = new TransactionData(blockchainTable);
-                transactionDataWindow.setData(transaction.getData());
-                transactionDataWindow.setVisible(true);
-                transactionDataWindow.highlightText(findText.getText(), painter);
-            }
-
+        data.addActionListener(event -> {
+            if (transactionDataWindow == null)
+                transactionDataWindow = new TransactionData(blockchainTable);
+            transactionDataWindow.setData(transaction.getData());
+            transactionDataWindow.setVisible(true);
+            transactionDataWindow.highlightText(findText.getText(), painter);
         });
         data.setFont(plain);
-        if (findText.getText().length() > 0 && ByteUtil.toHexString(transaction.getData()).contains(findText.getText())) {
+        if (findText.getText().length() > 0 && ByteUtil.toHexString(transaction.getData()).contains(findText.getText
+                ())) {
             data.setBackground(HILIT_COLOR);
         }
         c.gridx = 3;

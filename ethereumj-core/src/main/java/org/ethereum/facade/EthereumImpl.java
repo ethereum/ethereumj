@@ -1,13 +1,5 @@
 package org.ethereum.facade;
 
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
@@ -20,21 +12,30 @@ import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.util.ByteUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
+
+import java.math.BigInteger;
+
+import java.net.InetAddress;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.annotation.PostConstruct;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil
- * Created on: 27/07/2014 09:12
+ * @author Roman Mandeleil
+ * @since 27.07.2014
  */
 @Component
 public class EthereumImpl implements Ethereum {
@@ -60,19 +61,18 @@ public class EthereumImpl implements Ethereum {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         worldManager.loadBlockchain();
-        if (CONFIG.listenPort() > 0){
+        if (CONFIG.listenPort() > 0) {
             Executors.newSingleThreadExecutor().submit(
-                    new Runnable() { public void run() {
-                        peerServer.start(CONFIG.listenPort());
-                    }}
+                    () -> peerServer.start(CONFIG.listenPort())
             );
         }
     }
 
     /**
      * Find a peer but not this one
+     *
      * @param peer - peer to exclude
      * @return online peer
      */
@@ -90,7 +90,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeers)  {
+    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeers) {
         logger.info("Looking for online peers...");
 
         final EthereumListener listener = worldManager.getListener();
@@ -101,7 +101,7 @@ public class EthereumImpl implements Ethereum {
         final Set<PeerInfo> peers = worldManager.getPeerDiscovery().getPeers();
         synchronized (peers) {
             for (PeerInfo peer : peers) { // it blocks until a peer is available.
-				if (peer.isOnline() && !excludePeers.contains(peer)) {
+                if (peer.isOnline() && !excludePeers.contains(peer)) {
                     logger.info("Found peer: {}", peer.toString());
                     if (listener != null)
                         listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
@@ -115,14 +115,14 @@ public class EthereumImpl implements Ethereum {
     @Override
     public PeerInfo waitForOnlinePeer() {
         PeerInfo peer = null;
-		while (peer == null) {
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			peer = this.findOnlinePeer();
-		}
+        while (peer == null) {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            peer = this.findOnlinePeer();
+        }
         return peer;
     }
 
@@ -132,7 +132,7 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public void startPeerDiscovery(){
+    public void startPeerDiscovery() {
         worldManager.startPeerDiscovery();
     }
 
@@ -148,11 +148,11 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public void connect(String ip, int port) {
-		logger.info("Connecting to: {}:{}", ip, port);
+        logger.info("Connecting to: {}:{}", ip, port);
 
         PeerClient peerClient = worldManager.getActivePeer();
         if (peerClient == null)
-		    peerClient = ctx.getBean(PeerClient.class);
+            peerClient = ctx.getBean(PeerClient.class);
         worldManager.setActivePeer(peerClient);
 
         peerClient.connect(ip, port);
@@ -179,10 +179,10 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public PeerClient getDefaultPeer(){
+    public PeerClient getDefaultPeer() {
 
         PeerClient peer = worldManager.getActivePeer();
-        if (peer == null){
+        if (peer == null) {
 
             peer = new PeerClient();
             worldManager.setActivePeer(peer);
@@ -200,12 +200,12 @@ public class EthereumImpl implements Ethereum {
                                          BigInteger gasPrice,
                                          BigInteger gas,
                                          byte[] recieveAddress,
-                                         BigInteger value, byte[] data ){
+                                         BigInteger value, byte[] data) {
 
-        byte[] nonceBytes    =  ByteUtil.bigIntegerToBytes(nonce);
-        byte[] gasPriceBytes =  ByteUtil.bigIntegerToBytes(gasPrice);
-        byte[] gasBytes      =  ByteUtil.bigIntegerToBytes(gas);
-        byte[] valueBytes    =  ByteUtil.bigIntegerToBytes(value);
+        byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce);
+        byte[] gasPriceBytes = ByteUtil.bigIntegerToBytes(gasPrice);
+        byte[] gasBytes = ByteUtil.bigIntegerToBytes(gas);
+        byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
 
         Transaction tx = new Transaction(nonceBytes, gasPriceBytes, gasBytes,
                 recieveAddress, valueBytes, data);
@@ -215,7 +215,7 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Future<Transaction> submitTransaction(Transaction transaction){
+    public Future<Transaction> submitTransaction(Transaction transaction) {
 
         TransactionTask transactionTask = new TransactionTask(transaction, worldManager);
         Future<Transaction> future = TransactionExecutor.instance.submitTransaction(transactionTask);
@@ -225,13 +225,13 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Wallet getWallet(){
+    public Wallet getWallet() {
         return worldManager.getWallet();
     }
 
 
     @Override
-    public Repository getRepository(){
+    public Repository getRepository() {
         return worldManager.getRepository();
     }
 

@@ -2,15 +2,15 @@ package org.ethereum.net.eth;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
-import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
+
 import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.net.eth.EthMessageCodes.STATUS;
 
 /**
- * Wrapper around an Ethereum Status message on the network 
- * 
+ * Wrapper around an Ethereum Status message on the network
+ *
  * @see org.ethereum.net.eth.EthMessageCodes#STATUS
  */
 public class StatusMessage extends EthMessage {
@@ -18,11 +18,17 @@ public class StatusMessage extends EthMessage {
     private byte protocolVersion;
     private byte networkId;
 
-    /** Total difficulty of the best chain as found in block header. */
+    /**
+     * Total difficulty of the best chain as found in block header.
+     */
     private byte[] totalDifficulty;
-    /** The hash of the best (i.e. highest TD) known block. */
+    /**
+     * The hash of the best (i.e. highest TD) known block.
+     */
     private byte[] bestHash;
-    /** The hash of the Genesis block */
+    /**
+     * The hash of the Genesis block
+     */
     private byte[] genesisHash;
 
     public StatusMessage(byte[] encoded) {
@@ -30,7 +36,7 @@ public class StatusMessage extends EthMessage {
     }
 
     public StatusMessage(byte protocolVersion, byte networkId,
-                       byte[] totalDifficulty, byte[] bestHash, byte[] genesisHash) {
+                         byte[] totalDifficulty, byte[] bestHash, byte[] genesisHash) {
         this.protocolVersion = protocolVersion;
         this.networkId = networkId;
         this.totalDifficulty = totalDifficulty;
@@ -42,23 +48,23 @@ public class StatusMessage extends EthMessage {
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        this.protocolVersion	= ((RLPItem) paramsList.get(1)).getRLPData()[0];
-        byte[] networkIdBytes	= ((RLPItem) paramsList.get(2)).getRLPData();
-        this.networkId			= networkIdBytes == null ? 0 : networkIdBytes[0];
-        this.totalDifficulty	= ((RLPItem) paramsList.get(3)).getRLPData();
-        this.bestHash 			= ((RLPItem) paramsList.get(4)).getRLPData();
-        this.genesisHash 		= ((RLPItem) paramsList.get(5)).getRLPData();
+        this.protocolVersion = paramsList.get(1).getRLPData()[0];
+        byte[] networkIdBytes = paramsList.get(2).getRLPData();
+        this.networkId = networkIdBytes == null ? 0 : networkIdBytes[0];
+        this.totalDifficulty = paramsList.get(3).getRLPData();
+        this.bestHash = paramsList.get(4).getRLPData();
+        this.genesisHash = paramsList.get(5).getRLPData();
 
         parsed = true;
     }
 
     private void encode() {
-        byte[] command			= RLP.encodeByte(STATUS.asByte());
-        byte[] protocolVersion	= RLP.encodeByte(this.protocolVersion);
-        byte[] networkId		= RLP.encodeByte(this.networkId);
-        byte[] totalDifficulty	= RLP.encodeElement(this.totalDifficulty);
-        byte[] bestHash			= RLP.encodeElement(this.bestHash);
-        byte[] genesisHash		= RLP.encodeElement(this.genesisHash);
+        byte[] command = RLP.encodeByte(STATUS.asByte());
+        byte[] protocolVersion = RLP.encodeByte(this.protocolVersion);
+        byte[] networkId = RLP.encodeByte(this.networkId);
+        byte[] totalDifficulty = RLP.encodeElement(this.totalDifficulty);
+        byte[] bestHash = RLP.encodeElement(this.bestHash);
+        byte[] genesisHash = RLP.encodeElement(this.genesisHash);
 
         this.encoded = RLP.encodeList(command, protocolVersion, networkId,
                 totalDifficulty, bestHash, genesisHash);
@@ -101,7 +107,7 @@ public class StatusMessage extends EthMessage {
     }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return STATUS;
     }
 

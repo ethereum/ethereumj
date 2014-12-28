@@ -2,22 +2,24 @@ package org.ethereum.gui;
 
 import org.ethereum.util.Utils;
 
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import java.math.BigInteger;
+
+import java.net.URL;
+
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.math.BigInteger;
-import java.net.URL;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 17/05/14 12:32
+ * @author Roman Mandeleil
+ * @since 17.05.14
  */
-public class WalletSumPanel extends JPanel{
+public class WalletSumPanel extends JPanel {
 
     public WalletSumPanel(BigInteger balance) {
 

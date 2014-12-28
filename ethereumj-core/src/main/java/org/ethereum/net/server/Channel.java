@@ -8,6 +8,7 @@ import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -15,10 +16,8 @@ import org.springframework.stereotype.Component;
 import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 01/11/2014 17:01
+ * @author Roman Mandeleil
+ * @since 01.11.2014
  */
 @Component
 @Scope("prototype")
@@ -52,7 +51,7 @@ public class Channel {
     public Channel() {
     }
 
-    public void init(){
+    public void init() {
         p2pHandler.setMsgQueue(msgQueue);
         ethHandler.setMsgQueue(msgQueue);
         shhHandler.setMsgQueue(msgQueue);
@@ -80,27 +79,27 @@ public class Channel {
         return messageEncoder;
     }
 
-    public void sendTransaction(Transaction tx){
+    public void sendTransaction(Transaction tx) {
         ethHandler.sendTransaction(tx);
     }
 
-    public void sendNewBlock(Block block){
+    public void sendNewBlock(Block block) {
 
         // 1. check by best block send or not to send
         ethHandler.sendNewBlock(block);
 
     }
 
-    public boolean isSync(){
+    public boolean isSync() {
         return ethHandler.getSyncStatus() == EthHandler.SyncSatus.SYNC_DONE;
     }
 
 
-    public BigInteger getTotalDifficulty(){
+    public BigInteger getTotalDifficulty() {
         return ethHandler.getTotalDifficulty();
     }
 
-    public void ethSync(){
+    public void ethSync() {
         ethHandler.doSync();
     }
 

@@ -4,14 +4,35 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.submit.WalletTransaction;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
-import org.w3c.dom.*;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
 import org.xml.sax.SAXException;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.math.BigInteger;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -22,12 +43,6 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * The Wallet handles the management of accounts with addresses and private keys.
  * New accounts can be generated and added to the wallet and existing accounts can be queried.
@@ -35,12 +50,12 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class Wallet {
 
-	private Logger logger = LoggerFactory.getLogger("wallet");
+    private Logger logger = LoggerFactory.getLogger("wallet");
 
     // TODO: a) the values I need to keep for address state is balance & nonce & ECKey
     // TODO: b) keep it to be easy accessed by the toAddress()
 //    private HashMap<Address, BigInteger> rows = new HashMap<>();
-	
+
     // This map of transaction designed
     // to approve the tx by external trusted peer
     private Map<String, WalletTransaction> walletTransactions = new ConcurrentHashMap<>();
@@ -67,7 +82,7 @@ public class Wallet {
         Account account = new Account();
         String address = Hex.toHexString(account.getEcKey().getAddress());
         rows.put(address, account);
-        for (WalletListener listener : listeners) listener.valueChanged();
+        listeners.forEach(Wallet.WalletListener::valueChanged);
     }
 
     public void importKey(byte[] privKey) {
@@ -105,12 +120,9 @@ public class Wallet {
     /**
      * The wallet will call this method once transaction been send to the network,
      * once the the GET_TRANSACTION will be answered with that particular transaction
-     * it will be considered as received by the net
-     *
-     * @param transaction
-     * @return
+     * it will be considered as received by the net.
      */
-    public WalletTransaction addByWalletTransaction(Transaction transaction){
+    public WalletTransaction addByWalletTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
         WalletTransaction walletTransaction = new WalletTransaction(transaction);
         this.walletTransactions.put(hash, walletTransaction);
@@ -118,47 +130,47 @@ public class Wallet {
         return walletTransaction;
     }
 
-    /***********************************************************************
-     *	1) the dialog put a pending transaction on the list
-     *  2) the dialog send the transaction to a net
-     *  3) wherever the transaction got in from the wire it will change to approve state
-     *  4) only after the approve a) Wallet state changes
-     *  5) After the block is received with that tx the pending been clean up
+    /**
+     * <ol>
+     * <li> the dialog put a pending transaction on the list
+     * <li> the dialog send the transaction to a net
+     * <li> wherever the transaction got in from the wire it will change to approve state
+     * <li> only after the approve a) Wallet state changes
+     * <li> after the block is received with that tx the pending been clean up
+     * </ol>
      */
     public WalletTransaction addTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction placed hash: {}", hash );
+        logger.info("pending transaction placed hash: {}", hash);
 
-        WalletTransaction walletTransaction =  this.walletTransactions.get(hash);
-		if (walletTransaction != null)
-			walletTransaction.incApproved();
-		else {
-			walletTransaction = new WalletTransaction(transaction);
-			this.walletTransactions.put(hash, walletTransaction);
-		}
+        WalletTransaction walletTransaction = this.walletTransactions.get(hash);
+        if (walletTransaction != null)
+            walletTransaction.incApproved();
+        else {
+            walletTransaction = new WalletTransaction(transaction);
+            this.walletTransactions.put(hash, walletTransaction);
+        }
 
         this.applyTransaction(transaction);
 
         return walletTransaction;
     }
-    
+
     public void addTransactions(List<Transaction> transactions) {
-    	for (Transaction transaction : transactions) {
-			this.addTransaction(transaction);
-		}
+        transactions.forEach(this::addTransaction);
     }
-    
+
     public void removeTransactions(List<Transaction> transactions) {
-	    for (Transaction tx : transactions) {
-	        if (logger.isDebugEnabled())
-	            logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString(tx.getHash()));
-	        this.removeTransaction(tx);
-	    }
+        for (Transaction tx : transactions) {
+            if (logger.isDebugEnabled())
+                logger.debug("pending cleanup: tx.hash: [{}]", Hex.toHexString(tx.getHash()));
+            this.removeTransaction(tx);
+        }
     }
 
     public void removeTransaction(Transaction transaction) {
         String hash = Hex.toHexString(transaction.getHash());
-        logger.info("pending transaction removed with hash: {} ",  hash);
+        logger.info("pending transaction removed with hash: {} ", hash);
         walletTransactions.remove(hash);
     }
 
@@ -167,7 +179,7 @@ public class Wallet {
         transactionMap.put(new ByteArrayWrapper(transaction.getHash()), transaction);
 
         byte[] senderAddress = transaction.getSender();
-        Account sender =  rows.get(Hex.toHexString(senderAddress));
+        Account sender = rows.get(Hex.toHexString(senderAddress));
         if (sender != null) {
             sender.addPendingTransaction(transaction);
 
@@ -178,16 +190,16 @@ public class Wallet {
         }
 
         byte[] receiveAddress = transaction.getReceiveAddress();
-        if(receiveAddress != null) {
-	        Account receiver =  rows.get(Hex.toHexString(receiveAddress));
-	        if (receiver != null) {
-	            receiver.addPendingTransaction(transaction);
-	
-	            logger.info("Pending transaction added to " +
-	                            "\n account: [{}], " +
-	                            "\n tx: [{}]",
-	                    Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
-	        }
+        if (receiveAddress != null) {
+            Account receiver = rows.get(Hex.toHexString(receiveAddress));
+            if (receiver != null) {
+                receiver.addPendingTransaction(transaction);
+
+                logger.info("Pending transaction added to " +
+                                "\n account: [{}], " +
+                                "\n tx: [{}]",
+                        Hex.toHexString(receiver.getAddress()), Hex.toHexString(transaction.getHash()));
+            }
         }
         this.notifyListeners();
     }
@@ -195,9 +207,7 @@ public class Wallet {
 
     public void processBlock(Block block) {
 
-        for (Account account : getAccountCollection()){
-            account.clearAllPendingTransactions();
-        }
+        getAccountCollection().forEach(org.ethereum.core.Account::clearAllPendingTransactions);
 
         notifyListeners();
     }
@@ -207,7 +217,7 @@ public class Wallet {
      */
     public void load() throws IOException, SAXException, ParserConfigurationException {
 
-    	/**
+        /**
 
          <wallet high="8933">
              <row id=1>
@@ -221,7 +231,7 @@ public class Wallet {
                  <value>900099909<value/>
              </row>
          </wallet>
-         
+
          */
 
         String dir = System.getProperty("user.dir");
@@ -237,11 +247,11 @@ public class Wallet {
 
         NodeList rowNodes = walletNode.getChildNodes();
 
-        for (int i = 0; i <  rowNodes.getLength(); ++i ) {
+        for (int i = 0; i < rowNodes.getLength(); ++i) {
 
-            Node rowNode   = rowNodes.item(i);
-            Node addrNode  = rowNode.getChildNodes().item(0);
-            Node privNode  = rowNode.getChildNodes().item(1);
+            Node rowNode = rowNodes.item(i);
+            Node addrNode = rowNode.getChildNodes().item(0);
+            Node privNode = rowNode.getChildNodes().item(1);
             Node valueNode = rowNode.getChildNodes().item(2);
 
             // TODO: complete load func
@@ -287,11 +297,11 @@ public class Wallet {
         doc.appendChild(walletElement);
 
         Attr high = doc.createAttribute("high");
-        high.setValue(Long.toString( this.high ));
+        high.setValue(Long.toString(this.high));
         walletElement.setAttributeNode(high);
 
         int i = 0;
-        for (Account account :  getAccountCollection()) {
+        for (Account account : getAccountCollection()) {
 
             Element raw = doc.createElement("raw");
             Attr id = doc.createAttribute("id");
@@ -308,7 +318,7 @@ public class Wallet {
             Element privKey = doc.createElement("privkey");
             privKey.setTextContent(Hex.toHexString(account.getEcKey().getPrivKeyBytes()));
 
-            Element value   = doc.createElement("value");
+            Element value = doc.createElement("value");
             value.setTextContent(account.getBalance().toString());
 
             raw.appendChild(addressE);
@@ -330,11 +340,10 @@ public class Wallet {
     }
 
     private void notifyListeners() {
-		for (WalletListener listener : listeners)
-			listener.valueChanged();
+        listeners.forEach(Wallet.WalletListener::valueChanged);
     }
 
-    public interface WalletListener{
+    public interface WalletListener {
         public void valueChanged();
     }
 

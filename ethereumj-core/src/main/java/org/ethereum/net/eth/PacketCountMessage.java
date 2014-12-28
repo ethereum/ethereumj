@@ -5,7 +5,6 @@ import org.ethereum.util.RLP;
 
 /**
  * Wrapper around an Ethereum Ping message on the network
- *
  */
 public class PacketCountMessage extends EthMessage {
 
@@ -20,25 +19,25 @@ public class PacketCountMessage extends EthMessage {
 
     public byte[] getEncoded() {
         return this.encoded;
-	}
+    }
 
     private void encode() {
-        this.encoded = RLP.encodeList(new byte[] {EthMessageCodes.STATUS.asByte()} );
+        this.encoded = RLP.encodeList(new byte[]{EthMessageCodes.STATUS.asByte()});
     }
 
 
-	@Override
-	public Class<PongMessage> getAnswerMessage() {
-		return PongMessage.class;
-	}
+    @Override
+    public Class<PongMessage> getAnswerMessage() {
+        return PongMessage.class;
+    }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.PACKET_COUNT;
     }
 
-	@Override
-	public String toString() {
-		return "[" + getCommand().name() + "]";
-	}
+    @Override
+    public String toString() {
+        return "[" + getCommand().name() + "]";
+    }
 }

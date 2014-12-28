@@ -4,13 +4,10 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 14/11/2014 09:59
+ * @author Roman Mandeleil
+ * @since 14.11.2014
  */
 @Entity
 @Table(name = "transaction_receipt")
@@ -26,8 +23,8 @@ public class TransactionReceiptVO {
     }
 
     public TransactionReceiptVO(byte[] hash, byte[] rlp) {
-        this.hash   = hash;
-        this.rlp    = rlp;
+        this.hash = hash;
+        this.rlp = rlp;
     }
 
     public byte[] getHash() {

@@ -1,10 +1,7 @@
 package test.ethereum.db;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.ethereum.db.ByteArrayWrapper;
+
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBException;
 import org.iq80.leveldb.DBIterator;
@@ -13,6 +10,11 @@ import org.iq80.leveldb.ReadOptions;
 import org.iq80.leveldb.Snapshot;
 import org.iq80.leveldb.WriteBatch;
 import org.iq80.leveldb.WriteOptions;
+
+import java.io.IOException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class MockDB implements DB {
 

@@ -2,9 +2,7 @@ package org.ethereum.gui;
 
 import org.ethereum.core.Account;
 import org.ethereum.core.Transaction;
-import org.ethereum.core.Wallet;
-import org.ethereum.util.ByteUtil;
-import org.spongycastle.pqc.math.linearalgebra.ByteUtils;
+
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
@@ -12,22 +10,24 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+
 import java.math.BigInteger;
+
 import java.net.URL;
+
 import java.util.regex.Pattern;
 
 import javax.swing.*;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 18/05/14 22:21
+ * @author Roman Mandeleil
+ * @since 18.05.14
  */
 class PayOutDialog extends JDialog implements MessageAwareDialog {
 
-	private static final long serialVersionUID = -2838121935782110981L;
+    private static final long serialVersionUID = -2838121935782110981L;
 
-	private PayOutDialog dialog;
+    private PayOutDialog dialog;
 
     private Account account = null;
     private JLabel statusMsg = null;
@@ -36,11 +36,11 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
     private final JTextField amountInput;
     private final JTextField feeInput;
 
-	public PayOutDialog(Frame parent, final Account account) {
-		super(parent, "Payout details: ", false);
-		dialog = this;
+    public PayOutDialog(Frame parent, final Account account) {
+        super(parent, "Payout details: ", false);
+        dialog = this;
 
-		this.account = account;
+        this.account = account;
 
         receiverInput = new JTextField(18);
         GUIUtils.addStyle(receiverInput, "Pay to:");
@@ -78,12 +78,12 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         rejectLabel.setBounds(260, 145, 45, 45);
         this.getContentPane().add(rejectLabel);
         rejectLabel.setVisible(true);
-		rejectLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				dialog.dispose();
-			}
-		});
+        rejectLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dialog.dispose();
+            }
+        });
 
         URL approveIconURL = ClassLoader.getSystemResource("buttons/approve.png");
         ImageIcon approveIcon = new ImageIcon(approveIconURL);
@@ -95,9 +95,9 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         this.getContentPane().add(approveLabel);
         approveLabel.setVisible(true);
 
-		approveLabel.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
+        approveLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
 
                 if (!validInput()) {
                     return;
@@ -108,36 +108,36 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
                 byte[] address = Hex.decode(receiverInput.getText());
 
 
-				if (!UIEthereumManager.ethereum.isConnected()) {
-					dialog.alertStatusMsg("Not connected to any peer");
-					return;
-				}
+                if (!UIEthereumManager.ethereum.isConnected()) {
+                    dialog.alertStatusMsg("Not connected to any peer");
+                    return;
+                }
 
 
-				byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
+                byte[] senderPrivKey = account.getEcKey().getPrivKeyBytes();
 
                 BigInteger nonce = account.getNonce();
 
-                byte[] gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockchain().getGasPrice()).toByteArray();
+                byte[] gasPrice = BigInteger.valueOf(42).toByteArray();
 
-				Transaction tx = new Transaction(
+                Transaction tx = new Transaction(
                         BigIntegers.asUnsignedByteArray(nonce),
-                         gasPrice,
+                        gasPrice,
                         BigIntegers.asUnsignedByteArray(fee), address,
                         BigIntegers.asUnsignedByteArray(value), null);
 
-				try {
-					tx.sign(senderPrivKey);
-				} catch (Exception e1) {
-					dialog.alertStatusMsg("Failed to sign the transaction");
-					return;
-				}
+                try {
+                    tx.sign(senderPrivKey);
+                } catch (Exception e1) {
+                    dialog.alertStatusMsg("Failed to sign the transaction");
+                    return;
+                }
 
-				// SwingWorker
-				DialogWorker worker = new DialogWorker(tx, dialog);
-				worker.execute();
-			}
-		});
+                // SwingWorker
+                DialogWorker worker = new DialogWorker(tx, dialog);
+                worker.execute();
+            }
+        });
 
         feeInput.setText("1000");
         amountInput.setText("0");
@@ -149,7 +149,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
     private boolean validInput() {
 
-        if (UIEthereumManager.ethereum.isBlockchainLoading()){
+        if (UIEthereumManager.ethereum.isBlockchainLoading()) {
             alertStatusMsg("No transaction is allowed during block chain downloading.");
             return false;
         }
@@ -202,7 +202,7 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         // check if the tx is affordable
         BigInteger ammountValue = new BigInteger(amountText);
         BigInteger feeValue = new BigInteger(feeText);
-        BigInteger gasPrice = BigInteger.valueOf(UIEthereumManager.ethereum.getBlockchain().getGasPrice());
+        BigInteger gasPrice = BigInteger.valueOf(42);
         BigInteger currentBalance = account.getBalance();
 
         boolean canAfford = gasPrice.multiply(feeValue).add(ammountValue).compareTo(currentBalance) != 1;
@@ -235,13 +235,11 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         inputMap.put(stroke, "ESCAPE");
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
-        SwingUtilities.invokeLater(new Runnable() {
-        	  public void run() {
-        		  setSize(500, 255);
-        	      setVisible(true);
-        	  }
+        SwingUtilities.invokeLater(() -> {
+            setSize(500, 255);
+            setVisible(true);
         });
-       
+
 
         return rootPane;
     }
@@ -250,26 +248,22 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
         final PayOutDialog dialog = this;
 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                dialog.statusMsg.setForeground(Color.GREEN.darker().darker());
-                dialog.statusMsg.setText(text);
-                dialog.revalidate();
-                dialog.repaint();
-            }
+        SwingUtilities.invokeLater(() -> {
+            dialog.statusMsg.setForeground(Color.GREEN.darker().darker());
+            dialog.statusMsg.setText(text);
+            dialog.revalidate();
+            dialog.repaint();
         });
     }
 
     public void alertStatusMsg(final String text) {
         final PayOutDialog dialog = this;
 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                dialog.statusMsg.setForeground(Color.RED);
-                dialog.statusMsg.setText(text);
-                dialog.revalidate();
-                dialog.repaint();
-            }
+        SwingUtilities.invokeLater(() -> {
+            dialog.statusMsg.setForeground(Color.RED);
+            dialog.statusMsg.setText(text);
+            dialog.revalidate();
+            dialog.repaint();
         });
     }
 

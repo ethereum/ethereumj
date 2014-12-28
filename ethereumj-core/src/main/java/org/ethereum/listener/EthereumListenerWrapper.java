@@ -3,18 +3,17 @@ package org.ethereum.listener;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.message.Message;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 12/11/2014 08:34
+ * @author Roman Mandeleil
+ * @since 12.11.2014
  */
-@Component(value="EthereumListener")
-public class EthereumListenerWrapper implements EthereumListener{
+@Component(value = "EthereumListener")
+public class EthereumListenerWrapper implements EthereumListener {
 
     EthereumListener listener;
 
@@ -64,12 +63,12 @@ public class EthereumListenerWrapper implements EthereumListener{
 
 
     @Override
-    public void onNoConnections(){
+    public void onNoConnections() {
         if (listener != null)
             listener.onNoConnections();
     }
 
-    public void addListener(EthereumListener listener){
+    public void addListener(EthereumListener listener) {
         if (listener != null)
             this.listener = listener;
     }

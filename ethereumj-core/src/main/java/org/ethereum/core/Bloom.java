@@ -1,28 +1,26 @@
 package org.ethereum.core;
 
 import org.ethereum.util.ByteUtil;
+
 import org.spongycastle.util.encoders.Hex;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 /**
- * www.etherj.com
+ * See http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html.
  *
- * @author: Roman Mandeleil
- * Created on: 20/11/2014 11:10
- *
- * http://www.herongyang.com/Java/Bit-String-Set-Bit-to-Byte-Array.html
+ * @author Roman Mandeleil
+ * @since 20.11.2014
  */
 
-public class  Bloom {
+public class Bloom {
 
     byte[] data = new byte[64];
 
     public Bloom() {
     }
 
-    public Bloom(byte[] data){
+    public Bloom(byte[] data) {
         this.data = data;
     }
 
@@ -41,8 +39,8 @@ public class  Bloom {
         return bloom;
     }
 
-    public void or(Bloom bloom){
-        for (int i = 0; i < data.length; ++i){
+    public void or(Bloom bloom) {
+        for (int i = 0; i < data.length; ++i) {
             data[i] |= bloom.data[i];
         }
     }

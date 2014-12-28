@@ -1,6 +1,14 @@
 package org.ethereum.gui;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+import org.ethereum.config.SystemProperties;
+import org.ethereum.listener.EthereumListenerAdapter;
+
+import org.fife.ui.rsyntaxtextarea.AbstractTokenMakerFactory;
+import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
+import org.fife.ui.rsyntaxtextarea.SyntaxScheme;
+import org.fife.ui.rsyntaxtextarea.Token;
+import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
+import org.fife.ui.rtextarea.RTextScrollPane;
 
 import java.awt.*;
 import java.awt.event.WindowAdapter;
@@ -8,11 +16,7 @@ import java.awt.event.WindowEvent;
 
 import javax.swing.*;
 
-import org.ethereum.config.SystemProperties;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerAdapter;
-import org.fife.ui.rsyntaxtextarea.*;
-import org.fife.ui.rtextarea.RTextScrollPane;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * A simple example showing how to modify the fonts and colors used in an
@@ -75,24 +79,22 @@ public class ConnectionConsoleWindow extends JFrame {
             UIEthereumManager.ethereum.startPeerDiscovery();
 
         Thread t = new Thread() {
-			public void run() {
+            public void run() {
 
                 UIEthereumManager.ethereum.connect(SystemProperties.CONFIG.activePeerIP(),
                         SystemProperties.CONFIG.activePeerPort());
-			}
-		};
+            }
+        };
 
-        UIEthereumManager.ethereum.addListener(new EthereumListenerAdapter(){
+        UIEthereumManager.ethereum.addListener(new EthereumListenerAdapter() {
             @Override
             public void trace(final String output) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    public void run() {
-                        textArea.append(output);
-                        textArea.append("\n");
+                SwingUtilities.invokeLater(() -> {
+                    textArea.append(output);
+                    textArea.append("\n");
 
-                        if (autoScroll)
-                            textArea.setCaretPosition(textArea.getText().length());
-                    }
+                    if (autoScroll)
+                        textArea.setCaretPosition(textArea.getText().length());
                 });
             }
         });
@@ -135,22 +137,18 @@ public class ConnectionConsoleWindow extends JFrame {
         }
     }
 
-	public void addCloseAction() {
-		this.addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
-				toolBar.logToggle.setSelected(false);
-			}
-		});
-	}
+    public void addCloseAction() {
+        this.addWindowListener(new WindowAdapter() {
+            public void windowClosing(WindowEvent e) {
+                toolBar.logToggle.setSelected(false);
+            }
+        });
+    }
 
-	public static void main(String[] args) {
-		// Start all Swing applications on the EDT.
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new ConnectionConsoleWindow(null).setVisible(true);
-			}
-		});
-	}
+    public static void main(String[] args) {
+        // Start all Swing applications on the EDT.
+        SwingUtilities.invokeLater(() -> new ConnectionConsoleWindow(null).setVisible(true));
+    }
 
 
 }

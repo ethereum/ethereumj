@@ -1,15 +1,16 @@
 package test.ethereum.serpent;
 
-import static org.junit.Assert.*;
-
 import org.ethereum.serpent.SerpentCompiler;
+
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
 
+import static org.junit.Assert.assertEquals;
+
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 28/05/2014 20:05
+ * @author Roman Mandeleil
+ * @since 28.05.2014
  */
 public class MachineCompileTest {
 

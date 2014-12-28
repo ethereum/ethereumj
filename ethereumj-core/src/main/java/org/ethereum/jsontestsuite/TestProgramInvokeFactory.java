@@ -1,25 +1,26 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.ProgramInvokeImpl;
 
 import java.math.BigInteger;
 
 /**
- * www.ethergit.com
- *
- * @author: Roman Mandeleil
- * Created on: 19/12/2014 12:22
+ * @author Roman Mandeleil
+ * @since 19.12.2014
  */
-
-public class TestProgramInvokeFactory implements ProgramInvokeFactory{
+public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
     Env env;
 
-    TestProgramInvokeFactory(Env env){
+    TestProgramInvokeFactory(Env env) {
         this.env = env;
     }
 
@@ -36,15 +37,15 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory{
     }
 
 
-    private ProgramInvoke generalInvoke(Transaction tx, Repository repository){
+    private ProgramInvoke generalInvoke(Transaction tx, Repository repository) {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
-        byte[] address  =  tx.isContractCreation() ? tx.getContractAddress(): tx.getReceiveAddress();
+        byte[] address = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
 
         /***         ORIGIN op       ***/
         // YP: This is the sender of original transaction; it is never a contract.
-        byte[] origin  = tx.getSender();
+        byte[] origin = tx.getSender();
 
         /***         CALLER op       ***/
         // YP: This is the address of the account that is directly responsible for this execution.
@@ -80,10 +81,10 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory{
         long number = ByteUtil.byteArrayToLong(env.getCurrentNumber());
 
         /*** DIFFICULTY  op  ***/
-        byte[] difficulty =  env.getCurrentDifficlty();
+        byte[] difficulty = env.getCurrentDifficlty();
 
         /*** GASLIMIT op ***/
-        long gaslimit = ByteUtil.byteArrayToLong( env.getCurrentGasLimit() );
+        long gaslimit = ByteUtil.byteArrayToLong(env.getCurrentGasLimit());
 
         return new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, data, lastHash, coinbase,

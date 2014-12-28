@@ -1,27 +1,27 @@
 package test.ethereum.core;
 
 import org.ethereum.core.TransactionReceipt;
+
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
 
 import static org.junit.Assert.assertEquals;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 05/12/2014 16:26
+ * @author Roman Mandeleil
+ * @since 05.12.2014
  */
-
 public class TransactionReceiptTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
 
     @Test // rlp decode
-    public void test_1(){
+    public void test_1() {
 
         byte[] rlp = Hex.decode("f8c4a0966265cc49fa1f10f0445f035258d116563931022a3570a640af5d73a214a8da822b6fb84000000010000000010000000000008000000000000000000000000000000000000000000000000000000000020000000000000014000000000400000000000440f85cf85a94d5ccd26ba09ce1d85148b5081fa3ed77949417bef842a0000000000000000000000000459d3a7595df9eba241365f4676803586d7d199ca0436f696e7300000000000000000000000000000000000000000000000000000080");
         TransactionReceipt txReceipt = new TransactionReceipt(rlp);

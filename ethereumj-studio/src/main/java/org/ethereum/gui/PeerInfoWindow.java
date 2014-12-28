@@ -5,9 +5,10 @@ import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.TokenMakerFactory;
 import org.fife.ui.rtextarea.RTextScrollPane;
 
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
+
+import javax.swing.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -66,24 +67,20 @@ public class PeerInfoWindow extends JFrame {
 //        setDefaultCloseOperation(EXIT_ON_CLOSE);
         pack();
         setLocation(802, 460);
-        
+
         if (CONFIG.peerDiscovery())
             UIEthereumManager.ethereum.startPeerDiscovery();
-		
+
     }
 
 
-	public void addCloseAction() {
-		this.addWindowListener(new WindowAdapter() {
-		});
-	}
+    public void addCloseAction() {
+        this.addWindowListener(new WindowAdapter() {
+        });
+    }
 
-	public static void main(String[] args) {
-		// Start all Swing applications on the EDT.
-		SwingUtilities.invokeLater(new Runnable() {
-			public void run() {
-				new PeerInfoWindow(null).setVisible(true);
-			}
-		});
-	}
+    public static void main(String[] args) {
+        // Start all Swing applications on the EDT.
+        SwingUtilities.invokeLater(() -> new PeerInfoWindow(null).setVisible(true));
+    }
 }

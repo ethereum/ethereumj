@@ -1,19 +1,20 @@
 package org.ethereum.gui;
 
 import org.ethereum.serpent.SerpentCompiler;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.awt.*;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
-import java.awt.*;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 23/05/2014 13:51
+ * @author Roman Mandeleil
+ * @since 23.05.2014
  */
 public class GUIUtils {
 

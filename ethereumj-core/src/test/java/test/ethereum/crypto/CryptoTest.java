@@ -2,13 +2,15 @@ package test.ethereum.crypto;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.spongycastle.util.encoders.Hex;
 import org.ethereum.util.Utils;
+
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
+import static org.junit.Assert.assertEquals;
 
 public class CryptoTest {
 

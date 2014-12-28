@@ -6,10 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil
- * Created on: 11/06/2014 14:09
+ * @author Roman Mandeleil
+ * @since 11.06.2014
  */
 public class TrackDatabase implements Database {
 
@@ -30,10 +28,10 @@ public class TrackDatabase implements Database {
     }
 
     public void commitTrack() {
-        for(ByteArrayWrapper key : changes.keySet()) {
+        for (ByteArrayWrapper key : changes.keySet()) {
             db.put(key.getData(), changes.get(key));
         }
-        for(ByteArrayWrapper key : deletes) {
+        for (ByteArrayWrapper key : deletes) {
             db.delete(key.getData());
         }
         changes = null;
@@ -49,23 +47,25 @@ public class TrackDatabase implements Database {
 
     public void put(byte[] key, byte[] value) {
         if (trackingChanges) {
-        	ByteArrayWrapper wKey = new ByteArrayWrapper(key);
-			changes.put(wKey, value);
+            ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+            changes.put(wKey, value);
         } else {
             db.put(key, value);
         }
     }
 
     public byte[] get(byte[] key) {
-    	if(trackingChanges) {
-    		ByteArrayWrapper wKey = new ByteArrayWrapper(key);
+        if (trackingChanges) {
+            ByteArrayWrapper wKey = new ByteArrayWrapper(key);
             if (deletes.contains(wKey)) return null;
             if (changes.get(wKey) != null) return changes.get(wKey);
         }
-       	return db.get(key);
+        return db.get(key);
     }
 
-    /** Delete object (key) from db **/
+    /**
+     * Delete object (key) from db *
+     */
     public void delete(byte[] key) {
         if (trackingChanges) {
             ByteArrayWrapper wKey = new ByteArrayWrapper(key);
@@ -76,7 +76,7 @@ public class TrackDatabase implements Database {
     }
 
     @Override
-    public void close(){
+    public void close() {
         db.close();
     }
 }

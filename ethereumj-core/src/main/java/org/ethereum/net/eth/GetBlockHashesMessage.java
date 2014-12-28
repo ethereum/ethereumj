@@ -1,87 +1,92 @@
 package org.ethereum.net.eth;
 
-import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCK_HASHES;
-
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+
 import org.spongycastle.util.encoders.Hex;
+
+import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCK_HASHES;
 
 /**
  * Wrapper around an Ethereum GetBlockHashes message on the network
- * 
+ *
  * @see org.ethereum.net.eth.EthMessageCodes#GET_BLOCK_HASHES
  */
 public class GetBlockHashesMessage extends EthMessage {
 
-	/** The newest block hash from which to start sending older hashes */
-	private byte[] bestHash;
-	
-	/** The maximum number of blocks to return. 
-	 * <b>Note:</b> the peer could return fewer. */
-	private int maxBlocks;
+    /**
+     * The newest block hash from which to start sending older hashes
+     */
+    private byte[] bestHash;
 
-	public GetBlockHashesMessage(byte[] encoded) {
-		super(encoded);
-	}
+    /**
+     * The maximum number of blocks to return.
+     * <b>Note:</b> the peer could return fewer.
+     */
+    private int maxBlocks;
 
-	public GetBlockHashesMessage(byte[] hash, int maxBlocks) {
-		this.bestHash = hash;
-		this.maxBlocks = maxBlocks;
-		parsed = true;
-		encode();
-	}
+    public GetBlockHashesMessage(byte[] encoded) {
+        super(encoded);
+    }
 
-	private void encode() {
-		byte[] command = RLP.encodeByte(GET_BLOCK_HASHES.asByte());
-		byte[] hash = RLP.encodeElement(this.bestHash);
-		byte[] maxBlocks = RLP.encodeInt(this.maxBlocks);
-		this.encoded = RLP.encodeList(command, hash, maxBlocks);
-	}
+    public GetBlockHashesMessage(byte[] hash, int maxBlocks) {
+        this.bestHash = hash;
+        this.maxBlocks = maxBlocks;
+        parsed = true;
+        encode();
+    }
 
-	private void parse() {
-		RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+    private void encode() {
+        byte[] command = RLP.encodeByte(GET_BLOCK_HASHES.asByte());
+        byte[] hash = RLP.encodeElement(this.bestHash);
+        byte[] maxBlocks = RLP.encodeInt(this.maxBlocks);
+        this.encoded = RLP.encodeList(command, hash, maxBlocks);
+    }
 
-		this.bestHash = paramsList.get(1).getRLPData();
-		byte[] maxBlocksBytes = paramsList.get(2).getRLPData();
-		this.maxBlocks = ByteUtil.byteArrayToInt(maxBlocksBytes);
+    private void parse() {
+        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-		parsed = true;
-	}
+        this.bestHash = paramsList.get(1).getRLPData();
+        byte[] maxBlocksBytes = paramsList.get(2).getRLPData();
+        this.maxBlocks = ByteUtil.byteArrayToInt(maxBlocksBytes);
 
-	@Override
-	public byte[] getEncoded() {
-		if(encoded == null) encode();
-		return encoded;
-	}
-
-
-	@Override
-	public Class<BlockHashesMessage> getAnswerMessage() {
-		return BlockHashesMessage.class;
-	}
-
-	public byte[] getBestHash() {
-		if (!parsed) parse();
-		return bestHash;
-	}
-
-	public int getMaxBlocks() {
-		if (!parsed) parse();
-		return maxBlocks;
-	}
+        parsed = true;
+    }
 
     @Override
-    public EthMessageCodes getCommand(){
+    public byte[] getEncoded() {
+        if (encoded == null) encode();
+        return encoded;
+    }
+
+
+    @Override
+    public Class<BlockHashesMessage> getAnswerMessage() {
+        return BlockHashesMessage.class;
+    }
+
+    public byte[] getBestHash() {
+        if (!parsed) parse();
+        return bestHash;
+    }
+
+    public int getMaxBlocks() {
+        if (!parsed) parse();
+        return maxBlocks;
+    }
+
+    @Override
+    public EthMessageCodes getCommand() {
         return EthMessageCodes.GET_BLOCK_HASHES;
     }
 
 
-	@Override
-	public String toString() {
-		if (!parsed) parse();
-		return "[" + this.getCommand().name() + 
-				" bestHash=" + Hex.toHexString(bestHash) + 
-				" maxBlocks=" + maxBlocks + "]";
-	}
+    @Override
+    public String toString() {
+        if (!parsed) parse();
+        return "[" + this.getCommand().name() +
+                " bestHash=" + Hex.toHexString(bestHash) +
+                " maxBlocks=" + maxBlocks + "]";
+    }
 }

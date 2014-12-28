@@ -1,16 +1,15 @@
 package org.ethereum.db;
 
+import java.math.BigInteger;
+
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Lob;
 import javax.persistence.Table;
-import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 14/11/2014 09:59
+ * @author Roman Mandeleil
+ * @since 14.11.2014
  */
 @Entity
 @Table(name = "block")
@@ -19,7 +18,7 @@ public class BlockVO {
     @Id
     byte[] hash;
 
-    Long   number;
+    Long number;
 
     @Lob
     byte[] rlp;
@@ -31,8 +30,8 @@ public class BlockVO {
 
     public BlockVO(Long number, byte[] hash, byte[] rlp, BigInteger cummulativeDifficulty) {
         this.number = number;
-        this.hash   = hash;
-        this.rlp    = rlp;
+        this.hash = hash;
+        this.rlp = rlp;
         this.cummulativeDifficulty = cummulativeDifficulty;
     }
 

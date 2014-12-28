@@ -1,18 +1,17 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.util.ByteUtil;
+
 import org.json.simple.JSONObject;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 28/06/2014 10:25
+ * @author Roman Mandeleil
+ * @since 28.06.2014
  */
-
 public class CallCreate {
 
     byte[] data;
@@ -30,19 +29,19 @@ public class CallCreate {
 
     public CallCreate(JSONObject callCreateJSON) {
 
-        String data        = callCreateJSON.get("data").toString();
+        String data = callCreateJSON.get("data").toString();
         String destination = callCreateJSON.get("destination").toString();
-        String gasLimit    = callCreateJSON.get("gasLimit").toString();
-        String value       = callCreateJSON.get("value").toString();
+        String gasLimit = callCreateJSON.get("gasLimit").toString();
+        String value = callCreateJSON.get("value").toString();
 
         if (data != null && data.length() > 2)
-            this.data    = Hex.decode(data.substring(2));
+            this.data = Hex.decode(data.substring(2));
         else
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
 
         this.destination = Hex.decode(destination);
-        this.gasLimit    = ByteUtil.bigIntegerToBytes(new BigInteger(gasLimit));
-        this.value       = ByteUtil.bigIntegerToBytes(new BigInteger(value));
+        this.gasLimit = ByteUtil.bigIntegerToBytes(new BigInteger(gasLimit));
+        this.value = ByteUtil.bigIntegerToBytes(new BigInteger(value));
     }
 
     public byte[] getData() {
@@ -64,10 +63,10 @@ public class CallCreate {
     @Override
     public String toString() {
         return "CallCreate{" +
-                "data="          + Hex.toHexString(data) +
+                "data=" + Hex.toHexString(data) +
                 ", destination=" + Hex.toHexString(destination) +
-                ", gasLimit="    + Hex.toHexString(gasLimit) +
-                ", value="       + Hex.toHexString(value) +
+                ", gasLimit=" + Hex.toHexString(gasLimit) +
+                ", value=" + Hex.toHexString(value) +
                 '}';
     }
 }

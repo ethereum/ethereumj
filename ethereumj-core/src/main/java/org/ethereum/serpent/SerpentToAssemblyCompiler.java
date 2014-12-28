@@ -1,10 +1,13 @@
 package org.ethereum.serpent;
 
-import org.antlr.v4.runtime.misc.NotNull;
 import org.ethereum.crypto.HashUtil;
+
+import org.antlr.v4.runtime.misc.NotNull;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,14 +16,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 05/05/14 13:41
+ * @author Roman Mandeleil
+ * @since 05.05.14
  */
 public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
     private int labelIndex = 0;
-    private List<String> vars   = new ArrayList<>();
+    private List<String> vars = new ArrayList<>();
 
     private Map<String, Integer> arraysSize = new HashMap<>();
     private List<String> arraysIndex = new ArrayList<>();
@@ -29,51 +31,51 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     public String visitParse(@NotNull SerpentParser.ParseContext ctx) {
 
         String codeBlock = visit(ctx.block());
-        int memSize = vars.size() * 32 - ( vars.size() > 0 ? 1 : 0);
+        int memSize = vars.size() * 32 - (vars.size() > 0 ? 1 : 0);
 
         String initMemCodeBlock = "";
-        if ( ! arraysSize.isEmpty() && vars.size() > 0)
+        if (!arraysSize.isEmpty() && vars.size() > 0)
             initMemCodeBlock = String.format(" 0 %d MSTORE8 ", memSize);
 
         if (memSize == 0)
-            codeBlock= codeBlock.replace("@vars_table@", "0");
+            codeBlock = codeBlock.replace("@vars_table@", "0");
         else
-            codeBlock= codeBlock.replace("@vars_table@", memSize + 1 + "");
+            codeBlock = codeBlock.replace("@vars_table@", memSize + 1 + "");
 
-        return  initMemCodeBlock + codeBlock;
+        return initMemCodeBlock + codeBlock;
     }
 
     @Override
     public String visitParse_init_code_block(@NotNull SerpentParser.Parse_init_code_blockContext ctx) {
 
         String initBlock = visit(ctx.block(0));
-        int memSize = vars.size() * 32 - ( vars.size() > 0 ? 1 : 0);
+        int memSize = vars.size() * 32 - (vars.size() > 0 ? 1 : 0);
 
         String initMemInitBlock = "";
-        if ( ! arraysSize.isEmpty() && vars.size() > 0)
+        if (!arraysSize.isEmpty() && vars.size() > 0)
             initMemInitBlock = String.format(" 0 %d MSTORE8 ", memSize);
 
         if (memSize == 0)
-            initBlock= initBlock.replace("@vars_table@", "0");
+            initBlock = initBlock.replace("@vars_table@", "0");
         else
-            initBlock= initBlock.replace("@vars_table@", memSize + 1 + "");
+            initBlock = initBlock.replace("@vars_table@", memSize + 1 + "");
 
         vars.clear();
         String codeBlock = visit(ctx.block(1));
-        memSize = vars.size() * 32 - ( vars.size() > 0 ? 1 : 0);
+        memSize = vars.size() * 32 - (vars.size() > 0 ? 1 : 0);
 
         if (memSize == 0)
-            codeBlock= codeBlock.replace("@vars_table@", "0");
+            codeBlock = codeBlock.replace("@vars_table@", "0");
         else
-            codeBlock= codeBlock.replace("@vars_table@", memSize + 1 + "");
+            codeBlock = codeBlock.replace("@vars_table@", memSize + 1 + "");
 
 
         String initMemCodeBlock = "";
-        if ( ! arraysSize.isEmpty() && vars.size() > 0)
+        if (!arraysSize.isEmpty() && vars.size() > 0)
             initMemCodeBlock = String.format(" 0 %d MSTORE8 ", memSize);
 
         return String.format(" [init %s %s init] [code %s %s code] ", initMemInitBlock, initBlock,
-                initMemCodeBlock,  codeBlock);
+                initMemCodeBlock, codeBlock);
     }
 
     @Override
@@ -81,7 +83,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         StringBuffer retCode = new StringBuffer();
 
-        int endOfStmtLabel = labelIndex++ ;
+        int endOfStmtLabel = labelIndex++;
 
         // if body
         SerpentParser.BlockContext ifBlock = (SerpentParser.BlockContext) ctx.getChild(4);
@@ -126,7 +128,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         // check if there is 'else'
         if (ctx.block(i) != null) {
 
-        	// body
+            // body
             String elseBlockCode = visitBlock(ctx.block(i));
 
             // append to general retCode
@@ -155,7 +157,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         String retCode =
                 String.format(" LABEL_%d %s NOT REF_%d JUMPI %s REF_%d JUMP LABEL_%d ",
-                            whileStartRef, visitCondition(whileCondition), whileEndRef, visitBlock(whileBlock), whileStartRef, whileEndRef);
+                        whileStartRef, visitCondition(whileCondition), whileEndRef, visitBlock(whileBlock),
+                        whileStartRef, whileEndRef);
         return retCode;
     }
 
@@ -180,9 +183,9 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         addr = vars.indexOf(varName);
         if (addr == -1) {
-            throw  new UnassignVarException(varName);
+            throw new UnassignVarException(varName);
         }
-        return String.format(" %d MLOAD ",  addr * 32);
+        return String.format(" %d MLOAD ", addr * 32);
     }
 
     @Override
@@ -194,7 +197,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         // msg assigned has two arrays to calc
         if (ctx.msg_func() != null) {
 
-        	String msgCode = visitMsg_func(ctx.msg_func(), varName);
+            String msgCode = visitMsg_func(ctx.msg_func(), varName);
             return msgCode;
         } else if (ctx.arr_def() != null) {
             // if it's an array the all management is different
@@ -281,20 +284,20 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             i += 32;
         }
 
-       return String.format(" MSIZE 32 ADD MSIZE %s %d SWAP MSTORE ", arrayInit, arraySize);
+        return String.format(" MSIZE 32 ADD MSIZE %s %d SWAP MSTORE ", arrayInit, arraySize);
     }
 
     @Override
     public String visitArray_assign(@NotNull SerpentParser.Array_assignContext ctx) {
 
-        int order = this.arraysIndex.indexOf( ctx.VAR().toString());
+        int order = this.arraysIndex.indexOf(ctx.VAR().toString());
         if (order == -1) {
             throw new Error("array with that name was not defined");
         }
 
         //calcAllocatedBefore();
         int allocSize = 0;
-        for (int i = 0; i < order; ++i ) {
+        for (int i = 0; i < order; ++i) {
             String var = arraysIndex.get(i);
             allocSize += arraysSize.get(var);
         }
@@ -308,20 +311,20 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
     @Override
     public String visitArray_retreive(@NotNull SerpentParser.Array_retreiveContext ctx) {
 
-        int order = this.arraysIndex.indexOf( ctx.VAR().toString());
+        int order = this.arraysIndex.indexOf(ctx.VAR().toString());
         if (order == -1) {
             throw new Error("array with that name was not defined");
         }
 
         int allocSize = 32;
-        for (int i = 0; i < order; ++i ) {
+        for (int i = 0; i < order; ++i) {
             String var = arraysIndex.get(i);
             allocSize += arraysSize.get(var);
         }
 
         String index = visit(ctx.int_val());
 
-        return String.format(" 32 %s MUL %d ADD @vars_table@ ADD MLOAD ", index, allocSize );
+        return String.format(" 32 %s MUL %d ADD @vars_table@ ADD MLOAD ", index, allocSize);
     }
 
     @Override
@@ -332,13 +335,20 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.mul_expr());
 
         switch (ctx.OP_MUL().getText().toLowerCase()) {
-            case "*": return operand0 + " " + operand1 + " MUL";
-            case "/": return operand0 + " " + operand1 + " DIV";
-            case "^": return operand0 + " " + operand1 + " EXP";
-            case "%": return operand0 + " " + operand1 + " MOD";
-            case "#/": return operand0 + " " + operand1 + " SDIV";
-            case "#%": return operand0 + " " + operand1 + " SMOD";
-            default: throw new UnknownOperandException(ctx.OP_MUL().getText());
+            case "*":
+                return operand0 + " " + operand1 + " MUL";
+            case "/":
+                return operand0 + " " + operand1 + " DIV";
+            case "^":
+                return operand0 + " " + operand1 + " EXP";
+            case "%":
+                return operand0 + " " + operand1 + " MOD";
+            case "#/":
+                return operand0 + " " + operand1 + " SDIV";
+            case "#%":
+                return operand0 + " " + operand1 + " SMOD";
+            default:
+                throw new UnknownOperandException(ctx.OP_MUL().getText());
         }
     }
 
@@ -351,9 +361,12 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.add_expr());
 
         switch (ctx.OP_ADD().getText().toLowerCase()) {
-            case "+": return operand0 + " " + operand1 + " ADD";
-            case "-": return operand0 + " " + operand1 + " SUB";
-            default: throw new UnknownOperandException(ctx.OP_ADD().getText());
+            case "+":
+                return operand0 + " " + operand1 + " ADD";
+            case "-":
+                return operand0 + " " + operand1 + " SUB";
+            default:
+                throw new UnknownOperandException(ctx.OP_ADD().getText());
         }
     }
 
@@ -366,11 +379,16 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.add_expr());
 
         switch (ctx.OP_REL().getText().toLowerCase()) {
-            case "<":  return operand1 + " " + operand0 + " LT";
-            case ">":  return operand1 + " " + operand0 + " GT";
-            case ">=": return operand1 + " " + operand0 + " LT NOT";
-            case "<=": return operand1 + " " + operand0 + " GT NOT";
-            default: throw new UnknownOperandException(ctx.OP_REL().getText());
+            case "<":
+                return operand1 + " " + operand0 + " LT";
+            case ">":
+                return operand1 + " " + operand0 + " GT";
+            case ">=":
+                return operand1 + " " + operand0 + " LT NOT";
+            case "<=":
+                return operand1 + " " + operand0 + " GT NOT";
+            default:
+                throw new UnknownOperandException(ctx.OP_REL().getText());
         }
     }
 
@@ -383,9 +401,12 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.eq_exp());
 
         switch (ctx.OP_EQ().getText().toLowerCase()) {
-            case "==":  return operand0 + " " + operand1 + " EQ";
-            case "!=":  return operand0 + " " + operand1 + " EQ NOT";
-            default: throw new UnknownOperandException(ctx.OP_EQ().getText());
+            case "==":
+                return operand0 + " " + operand1 + " EQ";
+            case "!=":
+                return operand0 + " " + operand1 + " EQ NOT";
+            default:
+                throw new UnknownOperandException(ctx.OP_EQ().getText());
         }
     }
 
@@ -398,8 +419,10 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.and_exp());
 
         switch (ctx.OP_AND().getText().toLowerCase()) {
-            case "&":  return operand0 + " " + operand1 + " AND";
-            default: throw new UnknownOperandException(ctx.OP_AND().getText());
+            case "&":
+                return operand0 + " " + operand1 + " AND";
+            default:
+                throw new UnknownOperandException(ctx.OP_AND().getText());
         }
     }
 
@@ -412,8 +435,10 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.ex_or_exp());
 
         switch (ctx.OP_EX_OR().getText().toLowerCase()) {
-            case "xor":  return operand0 + " " + operand1 + " XOR";
-            default: throw new UnknownOperandException(ctx.OP_EX_OR().getText());
+            case "xor":
+                return operand0 + " " + operand1 + " XOR";
+            default:
+                throw new UnknownOperandException(ctx.OP_EX_OR().getText());
         }
     }
 
@@ -426,8 +451,10 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.in_or_exp());
 
         switch (ctx.OP_IN_OR().getText().toLowerCase()) {
-            case "|":  return operand0 + " " + operand1 + " OR";
-            default: throw new UnknownOperandException(ctx.OP_IN_OR().getText());
+            case "|":
+                return operand0 + " " + operand1 + " OR";
+            default:
+                throw new UnknownOperandException(ctx.OP_IN_OR().getText());
         }
     }
 
@@ -440,9 +467,12 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.log_and_exp());
 
         switch (ctx.OP_LOG_AND().getText().toLowerCase()) {
-            case "and":  return operand0 + " " + operand1 + " NOT NOT MUL";
-            case "&&":   return operand0 + " " + operand1 + " NOT NOT MUL";
-            default: throw new UnknownOperandException(ctx.OP_LOG_AND().getText());
+            case "and":
+                return operand0 + " " + operand1 + " NOT NOT MUL";
+            case "&&":
+                return operand0 + " " + operand1 + " NOT NOT MUL";
+            default:
+                throw new UnknownOperandException(ctx.OP_LOG_AND().getText());
         }
     }
 
@@ -455,9 +485,12 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand1 = visit(ctx.log_or_exp());
 
         switch (ctx.OP_LOG_OR().getText().toLowerCase()) {
-            case "||":  return operand0 + " " + operand1 + " DUP 4 PC ADD JUMPI POP SWAP POP";
-            case "or":   return operand0 + " " + operand1 + " DUP 4 PC ADD JUMPI POP SWAP POP";
-            default: throw new UnknownOperandException(ctx.OP_LOG_OR().getText());
+            case "||":
+                return operand0 + " " + operand1 + " DUP 4 PC ADD JUMPI POP SWAP POP";
+            case "or":
+                return operand0 + " " + operand1 + " DUP 4 PC ADD JUMPI POP SWAP POP";
+            default:
+                throw new UnknownOperandException(ctx.OP_LOG_OR().getText());
         }
     }
 
@@ -536,7 +569,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         String operand0 = visit(ctx.expression());
 
-        return  String.format(" %s MSIZE SWAP MSIZE MSTORE 32 SWAP RETURN ", operand0);
+        return String.format(" %s MSIZE SWAP MSIZE MSTORE 32 SWAP RETURN ", operand0);
     }
 
     @Override
@@ -566,7 +599,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         String operand0 = visit(ctx.expression());
 
-        return String.format("%s 32 MUL CALLDATALOAD ",  operand0);
+        return String.format("%s 32 MUL CALLDATALOAD ", operand0);
     }
 
     public String visitMsg_func(@NotNull SerpentParser.Msg_funcContext ctx, String varName) {
@@ -574,22 +607,22 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 //        msg_func: 'msg' '(' int_val ',' int_val ',' int_val ',' arr_def ',' int_val  ',' int_val')' ;
 //        msg_func: 'msg' '(' [gas] ',' [to] ',' [value] ',' arr_def ',' [in_len]  ',' [out_len]')' ;
 
-        String operand0   = visit(ctx.int_val(0));
-        String operand1   = visit(ctx.int_val(1));
-        String operand2   = visit(ctx.int_val(2));
+        String operand0 = visit(ctx.int_val(0));
+        String operand1 = visit(ctx.int_val(1));
+        String operand2 = visit(ctx.int_val(2));
 
         String loadInData = visit(ctx.arr_def());
 
-        String inSizeCallParam   = visit(ctx.int_val(3));
-        String outSizeCallParam   = visit(ctx.int_val(4));
+        String inSizeCallParam = visit(ctx.int_val(3));
+        String outSizeCallParam = visit(ctx.int_val(4));
 
         // TODO: 1. allocate out_memory and push ptr
         // TODO: 2. push ptr for in_memory allocated
 
         String randomArrayName = new String(HashUtil.randomPeerId());
 
-        int inSize = Integer.parseInt( inSizeCallParam );
-        int outSize = Integer.parseInt( outSizeCallParam );
+        int inSize = Integer.parseInt(inSizeCallParam);
+        int outSize = Integer.parseInt(outSizeCallParam);
 
         arraysSize.put(randomArrayName, inSize * 32 + 32);
         arraysIndex.add(randomArrayName);
@@ -604,10 +637,10 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
         // this code allocates the memory block for the out data,
         // and saves the size in typical array format [size, element_1, element_2, ...]
-        String outArrSet = String.format( " %d MSIZE MSTORE   0 %d MSIZE ADD MSTORE8 ", outSizeVal, outSizeVal - 32 );
+        String outArrSet = String.format(" %d MSIZE MSTORE   0 %d MSIZE ADD MSTORE8 ", outSizeVal, outSizeVal - 32);
 
-        return  String.format("%d MSIZE %s %d %s %s %s %s CALL ",
-                outSizeVal, outArrSet ,inSize * 32, loadInData, operand2, operand1, operand0);
+        return String.format("%d MSIZE %s %d %s %s %s %s CALL ",
+                outSizeVal, outArrSet, inSize * 32, loadInData, operand2, operand1, operand0);
     }
 
     @Override
@@ -618,7 +651,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand2 = visit(ctx.int_val(2));
 
 //        OUTDATASIZE OUTDATASTART INDATASIZE INDATASTART VALUE TO GAS CALL
-        return  String.format("0 0 0 0 %s %s %s CALL ", operand2, operand1, operand0);
+        return String.format("0 0 0 0 %s %s %s CALL ", operand2, operand1, operand0);
     }
 
     @Override
@@ -628,7 +661,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         String operand2 = visit(ctx.int_val(2));
 
 //        MEM_SIZE MEM_START GAS CREATE
-        return  String.format(" %s %s %s CREATE ", operand2, operand1, operand0);
+        return String.format(" %s %s %s CREATE ", operand2, operand1, operand0);
     }
 
     @Override
@@ -637,7 +670,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         int size = ctx.asm_symbol().getChildCount();
         StringBuffer sb = new StringBuffer();
 
-        for (int i = 0; i < size ; ++i) {
+        for (int i = 0; i < size; ++i) {
 
             String symbol = ctx.asm_symbol().children.get(i).toString();
             symbol = symbol.trim();
@@ -649,14 +682,16 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
             if (match) {
 
                 int byteVal = Integer.parseInt(symbol);
-                if (byteVal > 255 || byteVal < 0) throw new Error("In the [asm asm] block should be placed only byte range numbers");
+                if (byteVal > 255 || byteVal < 0)
+                    throw new Error("In the [asm asm] block should be placed only byte range numbers");
             }
 
             match = Pattern.matches("0[xX][0-9a-fA-F]+", symbol);
             if (match) {
 
                 int byteVal = Integer.parseInt(symbol.substring(2), 16);
-                if (byteVal > 255 || byteVal < 0) throw new Error("In the [asm asm] block should be placed only byte range numbers");
+                if (byteVal > 255 || byteVal < 0)
+                    throw new Error("In the [asm asm] block should be placed only byte range numbers");
                 symbol = byteVal + "";
             }
 
@@ -678,7 +713,6 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
     /**
      * @param hexNum should be in form '0x34fabd34....'
-     * @return
      */
     private String hexStringToDecimalString(String hexNum) {
         String digits = hexNum.substring(2);
@@ -701,7 +735,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
 
     private Integer getMsgOutputArraySize(String code) {
 
-    	String result = "0";
+        String result = "0";
         Pattern pattern = Pattern.compile("<out_size ([0-9])* out_size>");
         Matcher matcher = pattern.matcher(code.trim());
         if (matcher.find()) {
@@ -725,12 +759,12 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return Integer.parseInt(result);
     }
 
-    private String cleanMsgString (String code) {
+    private String cleanMsgString(String code) {
 
         String result = "";
 
         Pattern pattern = Pattern.compile("<(.*?)>");
-        result= code.replaceAll("<(.*?)>", "");
+        result = code.replaceAll("<(.*?)>", "");
 
         return result;
     }

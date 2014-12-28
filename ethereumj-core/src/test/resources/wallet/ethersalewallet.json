@@ -1,6 +1,6 @@
 {
-	"encseed" : "957e46d54c10da45351554eb60d731b164043743dfb212ccf1827491a01cf344b390e4ac5af640e4f54ff28b046e48dc84094b99011d72ca79f2da9aa2792f4d2b8545455ca8dbba15d69048b3f95eccfed2d19427abcb2c9483e7491163eb1b",
-	"ethaddr" : "ba73facb4f8291f09f27f90fe1213537b910065e",
-	"email" : "foo@bar.com",
-	"btcaddr" : "1JEQr5LHrY8yVmWFaB31BVa9Y6sLQ9Kg41"
+    "encseed" : "957e46d54c10da45351554eb60d731b164043743dfb212ccf1827491a01cf344b390e4ac5af640e4f54ff28b046e48dc84094b99011d72ca79f2da9aa2792f4d2b8545455ca8dbba15d69048b3f95eccfed2d19427abcb2c9483e7491163eb1b",
+    "ethaddr" : "ba73facb4f8291f09f27f90fe1213537b910065e",
+    "email" : "foo@bar.com",
+    "btcaddr" : "1JEQr5LHrY8yVmWFaB31BVa9Y6sLQ9Kg41"
 }

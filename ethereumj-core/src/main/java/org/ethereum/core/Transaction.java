@@ -1,32 +1,34 @@
 package org.ethereum.core;
 
-import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.crypto.ECKey.ECDSASignature;
 import org.ethereum.crypto.ECKey.MissingPrivateKeyException;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.BigIntegers;
+
 import java.security.SignatureException;
 
-import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.ZERO_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.*;
 
 /**
- * A transaction (formally, T) is a single cryptographically 
- * signed instruction sent by an actor external to Ethereum. 
- * An external actor can be a person (via a mobile device or desktop computer) 
- * or could be from a piece of automated software running on a server. 
- * There are two types of transactions: those which result in message calls 
+ * A transaction (formally, T) is a single cryptographically
+ * signed instruction sent by an actor external to Ethereum.
+ * An external actor can be a person (via a mobile device or desktop computer)
+ * or could be from a piece of automated software running on a server.
+ * There are two types of transactions: those which result in message calls
  * and those which result in the creation of new contracts.
  */
 public class Transaction {
 
-	private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
-	
+    private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
+
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
 
@@ -64,7 +66,7 @@ public class Transaction {
     /* Tx in encoded form */
     private byte[] rlpEncoded;
     private byte[] rlpRaw;
-    /* Indicates if this transaction has been parsed 
+    /* Indicates if this transaction has been parsed
      * from the RLP-encoded data */
     private boolean parsed = false;
 
@@ -86,7 +88,7 @@ public class Transaction {
         this.value = value;
         this.data = data;
 
-        if(receiveAddress == null) {
+        if (receiveAddress == null) {
             this.receiveAddress = ByteUtil.EMPTY_BYTE_ARRAY;
         }
 
@@ -97,25 +99,25 @@ public class Transaction {
     public void rlpParse() {
 
         RLPList decodedTxList = RLP.decode2(rlpEncoded);
-        RLPList transaction =  (RLPList) decodedTxList.get(0);
+        RLPList transaction = (RLPList) decodedTxList.get(0);
 
-        this.nonce =          transaction.get(0).getRLPData();
-        this.gasPrice =       transaction.get(1).getRLPData();
-        this.gasLimit =       transaction.get(2).getRLPData();
+        this.nonce = transaction.get(0).getRLPData();
+        this.gasPrice = transaction.get(1).getRLPData();
+        this.gasLimit = transaction.get(2).getRLPData();
         this.receiveAddress = transaction.get(3).getRLPData();
-        this.value =          transaction.get(4).getRLPData();
-        this.data =           transaction.get(5).getRLPData();
+        this.value = transaction.get(4).getRLPData();
+        this.data = transaction.get(5).getRLPData();
         // only parse signature in case tx is signed
-        if(transaction.get(6).getRLPData() != null) {
-            byte v =		transaction.get(6).getRLPData()[0];
-            byte[] r =		transaction.get(7).getRLPData();
-            byte[] s =		transaction.get(8).getRLPData();
+        if (transaction.get(6).getRLPData() != null) {
+            byte v = transaction.get(6).getRLPData()[0];
+            byte[] r = transaction.get(7).getRLPData();
+            byte[] s = transaction.get(8).getRLPData();
             this.signature = ECDSASignature.fromComponents(r, s, v);
         } else {
             logger.debug("RLP encoded tx is not signed!");
         }
         this.parsed = true;
-        this.hash  = getHash();
+        this.hash = getHash();
     }
 
     public boolean isParsed() {
@@ -158,7 +160,7 @@ public class Transaction {
 
     public byte[] getGasPrice() {
         if (!parsed) rlpParse();
-        return gasPrice== null ? ZERO_BYTE_ARRAY : gasPrice;
+        return gasPrice == null ? ZERO_BYTE_ARRAY : gasPrice;
     }
 
     public byte[] getGasLimit() {
@@ -166,7 +168,7 @@ public class Transaction {
         return gasLimit;
     }
 
-    public long nonZeroDataBytes(){
+    public long nonZeroDataBytes() {
         if (data == null) return 0;
         int counter = 0;
         for (final byte aData : data) {
@@ -175,7 +177,7 @@ public class Transaction {
         return counter;
     }
 
-    public long zeroDataBytes(){
+    public long zeroDataBytes() {
         if (data == null) return 0;
         int counter = 0;
         for (final byte aData : data) {
@@ -215,16 +217,16 @@ public class Transaction {
     }
 
     public byte[] getSender() {
-		try {
+        try {
             if (sendAddress == null) {
                 ECKey key = ECKey.signatureToKey(getRawHash(), getSignature().toBase64());
                 sendAddress = key.getAddress();
             }
-			return sendAddress;
-		} catch (SignatureException e) {
-			logger.error(e.getMessage(), e);
-		}
-		return null;
+            return sendAddress;
+        } catch (SignatureException e) {
+            logger.error(e.getMessage(), e);
+        }
+        return null;
     }
 
     public void sign(byte[] privKeyBytes) throws MissingPrivateKeyException {
@@ -237,7 +239,7 @@ public class Transaction {
     @Override
     public String toString() {
         if (!parsed) rlpParse();
-        return "TransactionData [" +  "hash=" + ByteUtil.toHexString(hash) +
+        return "TransactionData [" + "hash=" + ByteUtil.toHexString(hash) +
                 "  nonce=" + ByteUtil.toHexString(nonce) +
                 ", gasPrice=" + ByteUtil.toHexString(gasPrice) +
                 ", gas=" + ByteUtil.toHexString(gasLimit) +
@@ -251,8 +253,8 @@ public class Transaction {
     }
 
     /**
-     *  For signatures you have to keep also
-     *  RLP of the transaction without any signature data
+     * For signatures you have to keep also
+     * RLP of the transaction without any signature data
      */
     public byte[] getEncodedRaw() {
 
@@ -261,55 +263,55 @@ public class Transaction {
 
         // parse null as 0 for nonce
         byte[] nonce = null;
-        if ( this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0){
-            nonce 				= RLP.encodeElement(null);
+        if (this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0) {
+            nonce = RLP.encodeElement(null);
         } else {
-            nonce 				= RLP.encodeElement(this.nonce);
+            nonce = RLP.encodeElement(this.nonce);
         }
-        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
-        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
-        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
-        byte[] value 				= RLP.encodeElement(this.value);
-        byte[] data 				= RLP.encodeElement(this.data);
+        byte[] gasPrice = RLP.encodeElement(this.gasPrice);
+        byte[] gasLimit = RLP.encodeElement(this.gasLimit);
+        byte[] receiveAddress = RLP.encodeElement(this.receiveAddress);
+        byte[] value = RLP.encodeElement(this.value);
+        byte[] data = RLP.encodeElement(this.data);
 
-		rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
-				value, data);
+        rlpRaw = RLP.encodeList(nonce, gasPrice, gasLimit, receiveAddress,
+                value, data);
         return rlpRaw;
     }
 
     public byte[] getEncoded() {
 
-        if(rlpEncoded != null) return rlpEncoded;
+        if (rlpEncoded != null) return rlpEncoded;
 
         // parse null as 0 for nonce
         byte[] nonce = null;
-        if (this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0){
-            nonce 				= RLP.encodeElement(null);
+        if (this.nonce == null || this.nonce.length == 1 && this.nonce[0] == 0) {
+            nonce = RLP.encodeElement(null);
         } else {
-            nonce 				= RLP.encodeElement(this.nonce);
+            nonce = RLP.encodeElement(this.nonce);
         }
-        byte[] gasPrice 			= RLP.encodeElement(this.gasPrice);
-        byte[] gasLimit 			= RLP.encodeElement(this.gasLimit);
-        byte[] receiveAddress 		= RLP.encodeElement(this.receiveAddress);
-        byte[] value 				= RLP.encodeElement(this.value);
-        byte[] data 				= RLP.encodeElement(this.data);
+        byte[] gasPrice = RLP.encodeElement(this.gasPrice);
+        byte[] gasLimit = RLP.encodeElement(this.gasLimit);
+        byte[] receiveAddress = RLP.encodeElement(this.receiveAddress);
+        byte[] value = RLP.encodeElement(this.value);
+        byte[] data = RLP.encodeElement(this.data);
 
         byte[] v, r, s;
-        
-        if(signature != null) {
-            v = RLP.encodeByte( signature.v );
+
+        if (signature != null) {
+            v = RLP.encodeByte(signature.v);
             r = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.r));
             s = RLP.encodeElement(BigIntegers.asUnsignedByteArray(signature.s));
         } else {
-        	v = RLP.encodeElement(EMPTY_BYTE_ARRAY);
-        	r = RLP.encodeElement(EMPTY_BYTE_ARRAY);
-        	s = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            v = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            r = RLP.encodeElement(EMPTY_BYTE_ARRAY);
+            s = RLP.encodeElement(EMPTY_BYTE_ARRAY);
         }
 
-		this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,
-				receiveAddress, value, data, v, r, s);
+        this.rlpEncoded = RLP.encodeList(nonce, gasPrice, gasLimit,
+                receiveAddress, value, data, v, r, s);
 
-        this.hash  = this.getHash();
+        this.hash = this.getHash();
 
         return rlpEncoded;
     }
@@ -331,7 +333,7 @@ public class Transaction {
     public boolean equals(Object obj) {
 
         if (!(obj instanceof Transaction)) return false;
-        Transaction tx = (Transaction)obj;
+        Transaction tx = (Transaction) obj;
 
         return tx.hashCode() == this.hashCode();
     }

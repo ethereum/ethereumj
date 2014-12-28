@@ -1,23 +1,29 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import org.ethereum.core.Block;
+import org.ethereum.net.eth.BlocksMessage;
+
+import org.junit.Ignore;
+import org.junit.Test;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.IOException;
+
 import java.net.URISyntaxException;
 import java.net.URL;
+
 import java.nio.file.Files;
+
 import java.util.List;
 
-import org.ethereum.core.Block;
-import org.ethereum.net.eth.BlocksMessage;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
+import static org.junit.Assert.assertEquals;
 
+@Ignore
 public class BlocksMessageTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
@@ -59,7 +65,7 @@ public class BlocksMessageTest {
         assertEquals(1, block.getTransactionsList().size());
         assertEquals(3911, block.getNumber());
         assertEquals("140446b9f55bbbe9bad9fe963157cf0fc6ab2d068433eb95e161847f197362b2",
-               Hex.toHexString(block.getHash()));
+                Hex.toHexString(block.getHash()));
         assertEquals("396d2ff722ae3811cb5deb69270933c8016f2397a5189aac429bc6fc466607bb",
                 Hex.toHexString(block.getStateRoot()));
     }
@@ -85,7 +91,7 @@ public class BlocksMessageTest {
                 Hex.toHexString(block.getStateRoot()));
 
     }
-    
+
     @Ignore
     @Test /* Block msg decode - found bug tool */
     public void test_4() throws URISyntaxException, IOException {
@@ -102,7 +108,7 @@ public class BlocksMessageTest {
         BlocksMessage blocksMessage = new BlocksMessage(data);
 
         int size = blocksMessage.getBlocks().size();
-        for (int i = 0; i < size; ++i){
+        for (int i = 0; i < size; ++i) {
 
             Block block = blocksMessage.getBlocks().get(i);
 

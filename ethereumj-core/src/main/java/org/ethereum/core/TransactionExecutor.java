@@ -1,24 +1,31 @@
 package org.ethereum.core;
 
 import org.ethereum.facade.Repository;
-import org.ethereum.vm.*;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.GasCost;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.ProgramResult;
+import org.ethereum.vm.VM;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
 import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
- * www.ethergit.com
- *
- * @author: Roman Mandeleil
- * Created on: 19/12/2014 12:56
+ * @author Roman Mandeleil
+ * @since 19.12.2014
  */
-
 public class TransactionExecutor {
 
     private static final Logger logger = LoggerFactory.getLogger("execute");
@@ -38,7 +45,7 @@ public class TransactionExecutor {
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
         this.tx = tx;
-        this.coinbase  = coinbase;
+        this.coinbase = coinbase;
         this.track = track;
         this.programInvokeFactory = programInvokeFactory;
         this.currentBlock = currentBlock;
@@ -53,7 +60,7 @@ public class TransactionExecutor {
 //        https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L55
 
 
-    public void execute(){
+    public void execute() {
 
 
         logger.info("applyTransaction: [{}]", Hex.toHexString(tx.getHash()));
@@ -62,7 +69,7 @@ public class TransactionExecutor {
 
         // VALIDATE THE SENDER
         byte[] senderAddress = tx.getSender();
-//		AccountState senderAccount = repository.getAccountState(senderAddress);
+//      AccountState senderAccount = repository.getAccountState(senderAddress);
         logger.info("tx.sender: [{}]", Hex.toHexString(tx.getSender()));
 
         // VALIDATE THE NONCE
@@ -166,8 +173,8 @@ public class TransactionExecutor {
             try {
 
                 // CREATE NEW CONTRACT ADDRESS AND ADD TX VALUE
-                if(isContractCreation) {
-                    if(stateLogger.isDebugEnabled())
+                if (isContractCreation) {
+                    if (stateLogger.isDebugEnabled())
                         stateLogger.debug("new contract created address={}",
                                 Hex.toHexString(receiverAddress));
                 }
@@ -199,9 +206,9 @@ public class TransactionExecutor {
             trackTx.commit();
         } else {
             // REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TX_NO_ZERO_DATA)
-            long dataCost = tx.getData() == null ? 0:
+            long dataCost = tx.getData() == null ? 0 :
                     tx.nonZeroDataBytes() * GasCost.TX_NO_ZERO_DATA +
-                    tx.zeroDataBytes()    * GasCost.TX_ZERO_DATA;
+                            tx.zeroDataBytes() * GasCost.TX_ZERO_DATA;
             gasUsed = GasCost.TRANSACTION + dataCost;
 
             BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));
@@ -218,13 +225,8 @@ public class TransactionExecutor {
     }
 
     /**
-     * After any contract code finish the run the certain result should take
-     * place, according the given circumstances
-     *
-     * @param result
-     * @param gasDebit
-     * @param senderAddress
-     * @param contractAddress
+     * After any contract code finish the run the certain result should take place,
+     * according to the given circumstances.
      */
     private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
                                     BigInteger gasPrice, Repository repository, byte[] senderAddress,
@@ -253,7 +255,7 @@ public class TransactionExecutor {
             repository.addBalance(coinbase, refund.negate());
         }
 
-        if (result.getFutureRefund() > 0){
+        if (result.getFutureRefund() > 0) {
 
             long futureRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
             BigInteger futureRefundBI = BigInteger.valueOf(futureRefund);
@@ -284,11 +286,12 @@ public class TransactionExecutor {
                                     Hex.toHexString(contractAddress),
                                     Hex.toHexString(bodyCode));
 
-                BigInteger storageCost =  gasPrice.multiply( BigInteger.valueOf( bodyCode.length * GasCost.CREATE_DATA_BYTE)  );
+                BigInteger storageCost = gasPrice.multiply(BigInteger.valueOf(bodyCode.length * GasCost
+                        .CREATE_DATA_BYTE));
                 BigInteger balance = repository.getBalance(senderAddress);
 
                 // check if can be charged for the contract data save
-                if (storageCost.compareTo(balance) > 1){
+                if (storageCost.compareTo(balance) > 1) {
                     bodyCode = EMPTY_BYTE_ARRAY;
                 } else {
                     repository.addBalance(coinbase, storageCost);
@@ -301,7 +304,7 @@ public class TransactionExecutor {
 
         // delete the marked to die accounts
         if (result.getDeleteAccounts() == null) return;
-        for (DataWord address : result.getDeleteAccounts()){
+        for (DataWord address : result.getDeleteAccounts()) {
             repository.delete(address.getNoLeadZeroesData());
         }
     }

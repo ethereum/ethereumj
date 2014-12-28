@@ -1,13 +1,17 @@
 package org.ethereum.serpent;
 
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.OpCode;
+
+import org.antlr.v4.runtime.tree.ParseTree;
+
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 
 import java.io.ByteArrayOutputStream;
+
 import java.math.BigInteger;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -17,9 +21,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * www.ethereumJ.com
  * @author Roman Mandeleil
- * Created on: 13/05/14 19:37
+ * @since 13.05.14
  */
 public class SerpentCompiler {
 
@@ -36,8 +39,8 @@ public class SerpentCompiler {
     }
 
     public static String compileFullNotion(String code) {
-		SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
-				SerpentParser.class, code);
+        SerpentParser parser = ParserUtils.getParser(SerpentLexer.class,
+                SerpentParser.class, code);
         ParseTree tree = parser.parse_init_code_block();
 
         String result = new SerpentToAssemblyCompiler().visit(tree);
@@ -85,28 +88,28 @@ public class SerpentCompiler {
         boolean skiping = false;
         for (int i = 0; i < lexaList.size(); ++i) {
 
-            String lexa  = lexaList.get(i);
+            String lexa = lexaList.get(i);
 
-			{ // skiping the [asm asm] block
-				if (lexa.equals("asm]")) {
-					skiping = false;
-					lexaList.remove(i);
-					--i;
-					continue;
-				}
-				if (lexa.equals("[asm")) {
-					skiping = true;
-					lexaList.remove(i);
-					--i;
-					continue;
-				}
-				if (skiping)
-					continue;
-			}
+            { // skiping the [asm asm] block
+                if (lexa.equals("asm]")) {
+                    skiping = false;
+                    lexaList.remove(i);
+                    --i;
+                    continue;
+                }
+                if (lexa.equals("[asm")) {
+                    skiping = true;
+                    lexaList.remove(i);
+                    --i;
+                    continue;
+                }
+                if (skiping)
+                    continue;
+            }
 
             if (OpCode.contains(lexa) ||
-                lexa.contains("REF_") ||
-                lexa.contains("LABEL_")) continue;
+                    lexa.contains("REF_") ||
+                    lexa.contains("LABEL_")) continue;
 
             int bytesNum = ByteUtil.numBytes(lexa);
 
@@ -124,8 +127,8 @@ public class SerpentCompiler {
 
         // encode ref for 5 bytes
         for (int i = 0; i < lexaList.size(); ++i) {
-        	
-            String lexa  = lexaList.get(i);
+
+            String lexa = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
             lexaList.add(i + 1, lexa);
             lexaList.add(i + 2, lexa);
@@ -139,7 +142,7 @@ public class SerpentCompiler {
 
         for (int i = 0; i < lexaList.size(); ++i) {
 
-            String lexa  = lexaList.get(i);
+            String lexa = lexaList.get(i);
             if (!lexa.contains("LABEL_")) continue;
 
             String label = lexaList.remove(i);
@@ -154,7 +157,7 @@ public class SerpentCompiler {
         // encode all ref occurrence
         for (int i = 0; i < lexaList.size(); ++i) {
 
-            String lexa  = lexaList.get(i);
+            String lexa = lexaList.get(i);
             if (!lexa.contains("REF_")) continue;
 
             String ref = lexaList.remove(i);
@@ -169,7 +172,7 @@ public class SerpentCompiler {
 
             lexaList.add(i, pos.toString());
 
-            for (int j = 0; j < (4 - bytesNum) ; ++j)
+            for (int j = 0; j < (4 - bytesNum); ++j)
                 lexaList.add(i, "0");
 
             lexaList.add(i, "PUSH4");
@@ -194,10 +197,7 @@ public class SerpentCompiler {
     }
 
     /**
-     *
-     * @param code
-     * @param init
-     * @return encoded bytes
+     * Return encoded bytes.
      */
     public static byte[] encodeMachineCodeForVMRun(byte[] code, byte[] init) {
 
@@ -207,17 +207,17 @@ public class SerpentCompiler {
         byte[] lenBytes = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(code.length));
 
         StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < lenBytes.length; ++i) {
-            sb.append(lenBytes[i]).append(" ");
+        for (byte lenByte : lenBytes) {
+            sb.append(lenByte).append(" ");
         }
 
         // calc real code start position (after the init header)
-        int pos = 10  + numBytes * 2;
-        if (init != null) pos+=init.length;
+        int pos = 10 + numBytes * 2;
+        if (init != null) pos += init.length;
 
         // @push_len @len PUSH1 @src_start  PUSH1 0 CODECOPY @push_len @len 0 PUSH1 0 RETURN
-        String header =  String.format("[asm %s %s PUSH1 %d  PUSH1 0 CODECOPY %s %s PUSH1 0 RETURN asm]",
-                "PUSH" + numBytes, sb.toString(), pos , "PUSH" + numBytes, sb.toString());
+        String header = String.format("[asm %s %s PUSH1 %d  PUSH1 0 CODECOPY %s %s PUSH1 0 RETURN asm]",
+                "PUSH" + numBytes, sb.toString(), pos, "PUSH" + numBytes, sb.toString());
 
         byte[] headerMachine = compileAssemblyToMachine(header);
 

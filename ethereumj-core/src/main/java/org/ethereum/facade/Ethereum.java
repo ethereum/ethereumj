@@ -9,25 +9,25 @@ import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.server.ChannelManager;
 
 import java.math.BigInteger;
+
 import java.net.InetAddress;
+
 import java.util.Set;
 import java.util.concurrent.Future;
 
 /**
- * www.ethereumJ.com
- *
- * @author: Roman Mandeleil
- * Created on: 27/07/2014 09:11
+ * @author Roman Mandeleil
+ * @since 27.07.2014
  */
-
 public interface Ethereum {
 
     /**
      * Find a peer but not this one
+     *
      * @param excludePeer - peer to exclude
      * @return online peer if available otherwise null
      */
-    public PeerInfo findOnlinePeer(PeerInfo excludePeer) ;
+    public PeerInfo findOnlinePeer(PeerInfo excludePeer);
 
     /**
      * Find an online peer but not from excluded list
@@ -35,7 +35,7 @@ public interface Ethereum {
      * @param excludePeerSet - peers to exclude
      * @return online peer if available otherwise null
      */
-    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeerSet) ;
+    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeerSet);
 
     /**
      * @return online peer if available
@@ -64,9 +64,11 @@ public interface Ethereum {
     public Set<PeerInfo> getPeers();
 
     public void startPeerDiscovery();
+
     public void stopPeerDiscovery();
 
     public void connect(InetAddress addr, int port);
+
     public void connect(String ip, int port);
 
     public Blockchain getBlockchain();
@@ -104,13 +106,10 @@ public interface Ethereum {
                                          BigInteger value, byte[] data);
 
 
-                                         /**
-                                          *
-                                          * @param transaction - submit transaction to the net, return
-                                          *                      option to wait for net return this transaction
-                                          *                      as approved
-                                          * @return
-                                          */
+    /**
+     * @param transaction submit transaction to the net, return option to wait for net
+     *                    return this transaction as approved
+     */
     public Future<Transaction> submitTransaction(Transaction transaction);
 
 

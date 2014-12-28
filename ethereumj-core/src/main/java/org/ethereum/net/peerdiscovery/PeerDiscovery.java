@@ -1,59 +1,73 @@
 package org.ethereum.net.peerdiscovery;
 
 import org.ethereum.net.p2p.Peer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
-import java.util.*;
-import java.util.concurrent.*;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Roman Mandeleil
- * Created on: 22/05/2014 09:10
+ * @since 22.05.2014
  */
 @Component
 public class PeerDiscovery {
 
-	private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
+    private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-	private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<PeerInfo>());
-	
-	private PeerMonitorThread monitor;
-	private ThreadFactory threadFactory;
-	private ThreadPoolExecutor executorPool;
-	private RejectedExecutionHandler rejectionHandler;
+    private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<>());
+
+    private PeerMonitorThread monitor;
+    private ThreadFactory threadFactory;
+    private ThreadPoolExecutor executorPool;
+    private RejectedExecutionHandler rejectionHandler;
 
     @Autowired
     private ApplicationContext ctx;
 
 
-	private final AtomicBoolean started = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
 
-	public void start() {
+    public void start() {
 
-		// RejectedExecutionHandler implementation
-		rejectionHandler = new RejectionLogger();
+        // RejectedExecutionHandler implementation
+        rejectionHandler = new RejectionLogger();
 
-		// Get the ThreadFactory implementation to use
-		threadFactory = Executors.defaultThreadFactory();
+        // Get the ThreadFactory implementation to use
+        threadFactory = Executors.defaultThreadFactory();
 
-		// creating the ThreadPoolExecutor
-		executorPool = new ThreadPoolExecutor(CONFIG.peerDiscoveryWorkers(),
-                CONFIG.peerDiscoveryWorkers(), 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(
-						1000), threadFactory, rejectionHandler);
+        // creating the ThreadPoolExecutor
+        executorPool = new ThreadPoolExecutor(CONFIG.peerDiscoveryWorkers(),
+                CONFIG.peerDiscoveryWorkers(), 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(
+                        1000), threadFactory, rejectionHandler);
 
-		// start the monitoring thread
-		monitor = new PeerMonitorThread(executorPool, 1, this);
-		Thread monitorThread = new Thread(monitor);
-		monitorThread.start();
+        // start the monitoring thread
+        monitor = new PeerMonitorThread(executorPool, 1, this);
+        Thread monitorThread = new Thread(monitor);
+        monitorThread.start();
 
         // Initialize PeerData
         List<PeerInfo> peerDataList = parsePeerDiscoveryIpList(CONFIG.peerDiscoveryIPList());
@@ -65,23 +79,23 @@ public class PeerDiscovery {
             executorPool.execute(workerThread);
         }
 
-		started.set(true);
-	}
+        started.set(true);
+    }
 
-	public void stop() {
-		executorPool.shutdown();
-		monitor.shutdown();
-		started.set(false);
-	}
+    public void stop() {
+        executorPool.shutdown();
+        monitor.shutdown();
+        started.set(false);
+    }
 
-	public boolean isStarted() {
-		return started.get();
-	}
-	
+    public boolean isStarted() {
+        return started.get();
+    }
+
     public Set<PeerInfo> getPeers() {
-		return peers;
-	}
-		
+        return peers;
+    }
+
     /**
      * Update list of known peers with new peers
      * This method checks for duplicate peer id's and addresses
@@ -90,10 +104,10 @@ public class PeerDiscovery {
      */
     public void addPeers(Set<Peer> newPeers) {
         synchronized (peers) {
-			for (final Peer newPeer : newPeers) {
+            for (final Peer newPeer : newPeers) {
                 PeerInfo peerInfo =
                         new PeerInfo(newPeer.getAddress(), newPeer.getPort(), newPeer.getPeerId());
-                if (started.get() && !peers.contains(peerInfo )){
+                if (started.get() && !peers.contains(peerInfo)) {
                     startWorker(peerInfo);
                 }
                 peers.add(peerInfo);
@@ -103,24 +117,24 @@ public class PeerDiscovery {
 
     public void addPeers(Collection<PeerInfo> newPeers) {
         synchronized (peers) {
-                peers.addAll(newPeers);
-            }
+            peers.addAll(newPeers);
+        }
     }
 
-	private void startWorker(PeerInfo peerInfo) {
+    private void startWorker(PeerInfo peerInfo) {
 
-		logger.debug("Add new peer for discovery: {}", peerInfo);
+        logger.debug("Add new peer for discovery: {}", peerInfo);
         WorkerThread workerThread = ctx.getBean(WorkerThread.class);
         workerThread.init(peerInfo, executorPool);
         executorPool.execute(workerThread);
-	}
+    }
 
-    public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList){
+    public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
 
-        final List<String> ipList = Arrays.asList( peerDiscoveryIpList.split(",") );
+        final List<String> ipList = Arrays.asList(peerDiscoveryIpList.split(","));
         final List<PeerInfo> peers = new ArrayList<>();
 
-        for (String ip : ipList){
+        for (String ip : ipList) {
             String[] addr = ip.trim().split(":");
             String ip_trim = addr[0];
             String port_trim = addr[1];

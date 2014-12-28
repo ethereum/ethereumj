@@ -1,14 +1,14 @@
 package org.ethereum.crypto;
 
-import java.math.BigInteger;
-
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
+
 public class SHA3Helper {
-	
-	private static int DEFAULT_SIZE = 256;
-	
+
+    private static int DEFAULT_SIZE = 256;
+
     public static String sha3String(String message) {
         return sha3String(message, new SHA3Digest(DEFAULT_SIZE), true);
     }
@@ -75,23 +75,23 @@ public class SHA3Helper {
         digest.doFinal(hash, 0);
         return hash;
     }
-	
+
     public enum Size {
-        
+
         S224(224),
         S256(256),
         S384(384),
         S512(512);
-        
+
         int bits = 0;
-        
+
         Size(int bits) {
             this.bits = bits;
         }
-        
+
         public int getValue() {
             return this.bits;
         }
     }
-            
+
 }

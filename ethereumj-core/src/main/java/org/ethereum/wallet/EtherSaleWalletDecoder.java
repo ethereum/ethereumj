@@ -1,6 +1,10 @@
 package org.ethereum.wallet;
 
-import org.spongycastle.crypto.*;
+import org.spongycastle.crypto.BufferedBlockCipher;
+import org.spongycastle.crypto.CipherParameters;
+import org.spongycastle.crypto.ExtendedDigest;
+import org.spongycastle.crypto.InvalidCipherTextException;
+import org.spongycastle.crypto.PBEParametersGenerator;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.crypto.engines.AESEngine;
@@ -51,7 +55,8 @@ public class EtherSaleWalletDecoder {
         return result;
     }
 
-    protected byte[] decryptSeed(byte[] pbkdf2PasswordHash, byte[] encseedBytesWithIV) throws InvalidCipherTextException {
+    protected byte[] decryptSeed(byte[] pbkdf2PasswordHash, byte[] encseedBytesWithIV) throws
+            InvalidCipherTextException {
 
         // first 16 bytes are the IV (0-15)
         byte[] ivBytes = Arrays.copyOf(encseedBytesWithIV, IV_LENGTH);

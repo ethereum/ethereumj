@@ -1,27 +1,28 @@
 package org.ethereum.gui;
 
 import org.ethereum.core.Account;
-import org.ethereum.facade.Ethereum;
 import org.ethereum.util.Utils;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+import java.math.BigInteger;
+
+import java.net.URL;
 
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.border.CompoundBorder;
 import javax.swing.border.EmptyBorder;
 
-import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.math.BigInteger;
-import java.net.URL;
-
 /**
- * www.ethereumJ.com
- * @author: Roman Mandeleil
- * Created on: 17/05/14 12:32
+ * @author Roman Mandeleil
+ * @since 17.05.14
  */
-public class WalletAddressPanel extends JPanel{
+public class WalletAddressPanel extends JPanel {
 
     public WalletAddressPanel(final Account account) {
 
@@ -68,7 +69,7 @@ public class WalletAddressPanel extends JPanel{
             public void mouseClicked(MouseEvent e) {
 
                 PayOutDialog payOutDialog =
-                        new PayOutDialog((Frame)SwingUtilities.getAncestorOfClass(JFrame.class,
+                        new PayOutDialog((Frame) SwingUtilities.getAncestorOfClass(JFrame.class,
                                 walletAddressPanel), account);
             }
         });

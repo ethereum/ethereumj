@@ -2,21 +2,23 @@ package test.ethereum.mine;
 
 import org.ethereum.core.Block;
 import org.ethereum.net.peerdiscovery.RejectionLogger;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * www.etherj.com
- *
- * @author: Roman Mandeleil
- * Created on: 08/11/2014 12:21
+ * @author Roman Mandeleil
+ * @since 08.11.2014
  */
-
 public class MineSwarm {
 
     public AtomicBoolean started = new AtomicBoolean(false);
@@ -54,11 +56,15 @@ public class MineSwarm {
         miner3.start();
         workers.add(mt3);
 
-        while(!mt1.isDone() || !mt2.isDone() || !mt3.isDone()){
-            try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+        while (!mt1.isDone() || !mt2.isDone() || !mt3.isDone()) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
 
-        while(!blockAppearQueue.isEmpty()){
+        while (!blockAppearQueue.isEmpty()) {
             System.out.println(
                     Hex.toHexString(blockAppearQueue.poll().getEncoded())
             );
@@ -77,12 +83,12 @@ public class MineSwarm {
 
 
     public void announceBlock(Block block) {
-        for(MinerThread mt : workers){
-           mt.onNewBlock(block);
+        for (MinerThread mt : workers) {
+            mt.onNewBlock(block);
         }
     }
 
-    public void addToQueue(Block block){
+    public void addToQueue(Block block) {
         synchronized (blockAppearQueue) {
             blockAppearQueue.add(block);
         }

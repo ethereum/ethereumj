@@ -1,24 +1,26 @@
 package org.ethereum.core;
 
-import org.ethereum.util.*;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.vm.LogInfo;
+
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
- * The transaction receipt is a tuple of three items 
- * comprising the transaction, together with the post-transaction state, 
- * and the cumulative gas used in the block containing the transaction receipt 
+ * The transaction receipt is a tuple of three items
+ * comprising the transaction, together with the post-transaction state,
+ * and the cumulative gas used in the block containing the transaction receipt
  * as of immediately after the transaction has happened,
- *
- *
  */
 public class TransactionReceipt {
 
@@ -26,8 +28,8 @@ public class TransactionReceipt {
 
     private byte[] postTxState = EMPTY_BYTE_ARRAY;
     private byte[] cumulativeGas = EMPTY_BYTE_ARRAY;
-    private Bloom  bloomFilter = new Bloom();
-    private List<LogInfo> logInfoList = new ArrayList<LogInfo>();
+    private Bloom bloomFilter = new Bloom();
+    private List<LogInfo> logInfoList = new ArrayList<>();
 
     /* Tx Receipt in encoded form */
     private byte[] rlpEncoded;
@@ -40,18 +42,17 @@ public class TransactionReceipt {
         RLPList params = RLP.decode2(rlp);
         RLPList receipt = (RLPList) params.get(0);
 
-        RLPItem postTxStateRLP   = (RLPItem) receipt.get(0);
+        RLPItem postTxStateRLP = (RLPItem) receipt.get(0);
         RLPItem cumulativeGasRLP = (RLPItem) receipt.get(1);
-        RLPItem bloomRLP         = (RLPItem) receipt.get(2);
-        RLPList logs             = (RLPList) receipt.get(3);
+        RLPItem bloomRLP = (RLPItem) receipt.get(2);
+        RLPList logs = (RLPList) receipt.get(3);
 
         postTxState = postTxStateRLP.getRLPData();
         cumulativeGas = cumulativeGasRLP.getRLPData();
         bloomFilter = new Bloom(bloomRLP.getRLPData());
 
-        for (int i = 0; i < logs.size(); i++) {
-            RLPElement logRLP = logs.get(i);
-            LogInfo logInfo = new LogInfo(logRLP.getRLPData());
+        for (RLPElement log : logs) {
+            LogInfo logInfo = new LogInfo(log.getRLPData());
             logInfoList.add(logInfo);
         }
 
@@ -92,11 +93,11 @@ public class TransactionReceipt {
     /* [postTxState, cumulativeGas, bloomFilter, logInfoList] */
     public byte[] getEncoded() {
 
-        if(rlpEncoded != null) return rlpEncoded;
+        if (rlpEncoded != null) return rlpEncoded;
 
-        byte[] postTxStateRLP   = RLP.encodeElement(this.postTxState);
+        byte[] postTxStateRLP = RLP.encodeElement(this.postTxState);
         byte[] cumulativeGasRLP = RLP.encodeElement(this.cumulativeGas);
-        byte[] bloomRLP         = RLP.encodeElement(this.bloomFilter.data);
+        byte[] bloomRLP = RLP.encodeElement(this.bloomFilter.data);
 
         byte[] logInfoListRLP = null;
         if (logInfoList != null) {
@@ -104,11 +105,11 @@ public class TransactionReceipt {
 
             int i = 0;
             for (LogInfo logInfo : logInfoList) {
-                logInfoListE[i] = logInfo.getEncoded() ;
+                logInfoListE[i] = logInfo.getEncoded();
                 ++i;
             }
             logInfoListRLP = RLP.encodeList(logInfoListE);
-        } else{
+        } else {
             logInfoListRLP = RLP.encodeList();
         }
 
@@ -122,7 +123,7 @@ public class TransactionReceipt {
     }
 
     public void setCumulativeGas(long cumulativeGas) {
-        this.cumulativeGas = BigIntegers.asUnsignedByteArray(  BigInteger.valueOf( cumulativeGas ) );
+        this.cumulativeGas = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(cumulativeGas));
     }
 
     public void setCumulativeGas(byte[] cumulativeGas) {
@@ -135,16 +136,16 @@ public class TransactionReceipt {
         this.rlpEncoded = null;
         this.logInfoList = logInfoList;
 
-        for (LogInfo loginfo : logInfoList){
+        for (LogInfo loginfo : logInfoList) {
             bloomFilter.or(loginfo.getBloom());
         }
     }
 
-    public void setTransaction(Transaction transaction){
+    public void setTransaction(Transaction transaction) {
         this.transaction = transaction;
     }
 
-    public Transaction getTransaction(){
+    public Transaction getTransaction() {
         return transaction;
     }
 

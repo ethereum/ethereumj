@@ -1,34 +1,47 @@
 package test.ethereum.trie;
 
-import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.*;
+import test.ethereum.db.MockDB;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.DatabaseImpl;
-import test.ethereum.db.MockDB;
 import org.ethereum.trie.TrieImpl;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.File;
+import java.io.IOException;
+
+import java.math.BigInteger;
+
+import java.net.URISyntaxException;
+import java.net.URL;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.junit.Assert.*;
 
 public class TrieTest {
 
@@ -48,14 +61,14 @@ public class TrieTest {
     private MockDB mockDb = new MockDB();
     private MockDB mockDb_2 = new MockDB();
 
-//		ROOT: [ '\x16', A ]
-//		A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
-//		B: [ '\x00\x6f', D ]
-//		D: [ '', '', '', '', '', '', E, '', '', '', '', '', '', '', '', '', 'verb' ]
-//		E: [ '\x17', F ]
-//		F: [ '', '', '', '', '', '', G, '', '', '', '', '', '', '', '', '', 'puppy' ]
-//		G: [ '\x35', 'coin' ]
-//		C: [ '\x20\x6f\x72\x73\x65', 'stallion' ]
+//      ROOT: [ '\x16', A ]
+//      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
+//      B: [ '\x00\x6f', D ]
+//      D: [ '', '', '', '', '', '', E, '', '', '', '', '', '', '', '', '', 'verb' ]
+//      E: [ '\x17', F ]
+//      F: [ '', '', '', '', '', '', G, '', '', '', '', '', '', '', '', '', 'puppy' ]
+//      G: [ '\x35', 'coin' ]
+//      C: [ '\x20\x6f\x72\x73\x65', 'stallion' ]
 
     @After
     public void closeMockDb() throws IOException {
@@ -147,8 +160,8 @@ public class TrieTest {
         trie.update(cat, dog);
         assertEquals(dog, new String(trie.get(cat)));
 
-        trie.update(cat, dog+"1");
-        assertEquals(dog+"1", new String(trie.get(cat)));
+        trie.update(cat, dog + "1");
+        assertEquals(dog + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -156,8 +169,8 @@ public class TrieTest {
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update(cat, LONG_STRING);
         assertEquals(LONG_STRING, new String(trie.get(cat)));
-        trie.update(cat, LONG_STRING+"1");
-        assertEquals(LONG_STRING+"1", new String(trie.get(cat)));
+        trie.update(cat, LONG_STRING + "1");
+        assertEquals(LONG_STRING + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -167,8 +180,8 @@ public class TrieTest {
         trie.update(cat, dog);
         assertEquals(dog, new String(trie.get(cat)));
 
-        trie.update(cat, LONG_STRING+"1");
-        assertEquals(LONG_STRING+"1", new String(trie.get(cat)));
+        trie.update(cat, LONG_STRING + "1");
+        assertEquals(LONG_STRING + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -178,8 +191,8 @@ public class TrieTest {
         trie.update(cat, LONG_STRING);
         assertEquals(LONG_STRING, new String(trie.get(cat)));
 
-        trie.update(cat, dog+"1");
-        assertEquals(dog+"1", new String(trie.get(cat)));
+        trie.update(cat, dog + "1");
+        assertEquals(dog + "1", new String(trie.get(cat)));
     }
 
     @Test
@@ -381,6 +394,7 @@ public class TrieTest {
         assertNotEquals(Hex.toHexString(trie1.getRootHash()), Hex.toHexString(trie2.getRootHash()));
     }
 
+    @Ignore
     @Test
     public void testTrieSync() {
         TrieImpl trie = new TrieImpl(mockDb);
@@ -392,6 +406,7 @@ public class TrieTest {
         assertNotEquals("Expected data to be persisted", mockDb.getAddedItems(), 0);
     }
 
+    @Ignore
     @Test
     public void TestTrieDirtyTracking() {
         TrieImpl trie = new TrieImpl(mockDb);
@@ -521,60 +536,61 @@ public class TrieTest {
         trie.update("te", "testy");
         assertEquals("8452568af70d8d140f58d941338542f645fcca50094b20f3c3d8c3df49337928", Hex.toHexString(trie.getRootHash()));
     }
-    
-	private final String randomDictionary = "spinneries, archipenko, prepotency, herniotomy, preexpress, relaxative, insolvably, debonnaire, apophysate, virtuality, cavalryman, utilizable, diagenesis, vitascopic, governessy, abranchial, cyanogenic, gratulated, signalment, predicable, subquality, crystalize, prosaicism, oenologist, repressive, impanelled, cockneyism, bordelaise, compigne, konstantin, predicated, unsublimed, hydrophane, phycomyces, capitalise, slippingly, untithable, unburnable, deoxidizer, misteacher, precorrect, disclaimer, solidified, neuraxitis, caravaning, betelgeuse, underprice, uninclosed, acrogynous, reirrigate, dazzlingly, chaffiness, corybantes, intumesced, intentness, superexert, abstrusely, astounding, pilgrimage, posttarsal, prayerless, nomologist, semibelted, frithstool, unstinging, ecalcarate, amputating, megascopic, graphalloy, platteland, adjacently, mingrelian, valentinus, appendical, unaccurate, coriaceous, waterworks, sympathize, doorkeeper, overguilty, flaggingly, admonitory, aeriferous, normocytic, parnellism, catafalque, odontiasis, apprentice, adulterous, mechanisma, wilderness, undivorced, reinterred, effleurage, pretrochal, phytogenic, swirlingly, herbarized, unresolved, classifier, diosmosing, microphage, consecrate, astarboard, predefying, predriving, lettergram, ungranular, overdozing, conferring, unfavorite, peacockish, coinciding, erythraeum, freeholder, zygophoric, imbitterer, centroidal, appendixes, grayfishes, enological, indiscreet, broadcloth, divulgated, anglophobe, stoopingly, bibliophil, laryngitis, separatist, estivating, bellarmine, greasiness, typhlology, xanthation, mortifying, endeavorer, aviatrices, unequalise, metastatic, leftwinger, apologizer, quatrefoil, nonfouling, bitartrate, outchiding, undeported, poussetted, haemolysis, asantehene, montgomery, unjoinable, cedarhurst, unfastener, nonvacuums, beauregard, animalized, polyphides, cannizzaro, gelatinoid, apologised, unscripted, tracheidal, subdiscoid, gravelling, variegated, interabang, inoperable, immortelle, laestrygon, duplicatus, proscience, deoxidised, manfulness, channelize, nondefense, ectomorphy, unimpelled, headwaiter, hexaemeric, derivation, prelexical, limitarian, nonionized, prorefugee, invariably, patronizer, paraplegia, redivision, occupative, unfaceable, hypomnesia, psalterium, doctorfish, gentlefolk, overrefine, heptastich, desirously, clarabelle, uneuphonic, autotelism, firewarden, timberjack, fumigation, drainpipes, spathulate, novelvelle, bicorporal, grisliness, unhesitant, supergiant, unpatented, womanpower, toastiness, multichord, paramnesia, undertrick, contrarily, neurogenic, gunmanship, settlement, brookville, gradualism, unossified, villanovan, ecospecies, organising, buckhannon, prefulfill, johnsonese, unforegone, unwrathful, dunderhead, erceldoune, unwadeable, refunction, understuff, swaggering, freckliest, telemachus, groundsill, outslidden, bolsheviks, recognizer, hemangioma, tarantella, muhammedan, talebearer, relocation, preemption, chachalaca, septuagint, ubiquitous, plexiglass, humoresque, biliverdin, tetraploid, capitoline, summerwood, undilating, undetested, meningitic, petrolatum, phytotoxic, adiphenine, flashlight, protectory, inwreathed, rawishness, tendrillar, hastefully, bananaquit, anarthrous, unbedimmed, herborized, decenniums, deprecated, karyotypic, squalidity, pomiferous, petroglyph, actinomere, peninsular, trigonally, androgenic, resistance, unassuming, frithstool, documental, eunuchised, interphone, thymbraeus, confirmand, expurgated, vegetation, myographic, plasmagene, spindrying, unlackeyed, foreknower, mythically, albescence, rebudgeted, implicitly, unmonastic, torricelli, mortarless, labialized, phenacaine, radiometry, sluggishly, understood, wiretapper, jacobitely, unbetrayed, stadholder, directress, emissaries, corelation, sensualize, uncurbable, permillage, tentacular, thriftless, demoralize, preimagine, iconoclast, acrobatism, firewarden, transpired, bluethroat, wanderjahr, groundable, pedestrian, unulcerous, preearthly, freelanced, sculleries, avengingly, visigothic, preharmony, bressummer, acceptable, unfoolable, predivider, overseeing, arcosolium, piriformis, needlecord, homebodies, sulphation, phantasmic, unsensible, unpackaged, isopiestic, cytophagic, butterlike, frizzliest, winklehawk, necrophile, mesothorax, cuchulainn, unrentable, untangible, unshifting, unfeasible, poetastric, extermined, gaillardia, nonpendent, harborside, pigsticker, infanthood, underrower, easterling, jockeyship, housebreak, horologium, undepicted, dysacousma, incurrable, editorship, unrelented, peritricha, interchaff, frothiness, underplant, proafrican, squareness, enigmatise, reconciled, nonnumeral, nonevident, hamantasch, victualing, watercolor, schrdinger, understand, butlerlike, hemiglobin, yankeeland";
+
+    private final String randomDictionary = "spinneries, archipenko, prepotency, herniotomy, preexpress, relaxative, insolvably, debonnaire, apophysate, virtuality, cavalryman, utilizable, diagenesis, vitascopic, governessy, abranchial, cyanogenic, gratulated, signalment, predicable, subquality, crystalize, prosaicism, oenologist, repressive, impanelled, cockneyism, bordelaise, compigne, konstantin, predicated, unsublimed, hydrophane, phycomyces, capitalise, slippingly, untithable, unburnable, deoxidizer, misteacher, precorrect, disclaimer, solidified, neuraxitis, caravaning, betelgeuse, underprice, uninclosed, acrogynous, reirrigate, dazzlingly, chaffiness, corybantes, intumesced, intentness, superexert, abstrusely, astounding, pilgrimage, posttarsal, prayerless, nomologist, semibelted, frithstool, unstinging, ecalcarate, amputating, megascopic, graphalloy, platteland, adjacently, mingrelian, valentinus, appendical, unaccurate, coriaceous, waterworks, sympathize, doorkeeper, overguilty, flaggingly, admonitory, aeriferous, normocytic, parnellism, catafalque, odontiasis, apprentice, adulterous, mechanisma, wilderness, undivorced, reinterred, effleurage, pretrochal, phytogenic, swirlingly, herbarized, unresolved, classifier, diosmosing, microphage, consecrate, astarboard, predefying, predriving, lettergram, ungranular, overdozing, conferring, unfavorite, peacockish, coinciding, erythraeum, freeholder, zygophoric, imbitterer, centroidal, appendixes, grayfishes, enological, indiscreet, broadcloth, divulgated, anglophobe, stoopingly, bibliophil, laryngitis, separatist, estivating, bellarmine, greasiness, typhlology, xanthation, mortifying, endeavorer, aviatrices, unequalise, metastatic, leftwinger, apologizer, quatrefoil, nonfouling, bitartrate, outchiding, undeported, poussetted, haemolysis, asantehene, montgomery, unjoinable, cedarhurst, unfastener, nonvacuums, beauregard, animalized, polyphides, cannizzaro, gelatinoid, apologised, unscripted, tracheidal, subdiscoid, gravelling, variegated, interabang, inoperable, immortelle, laestrygon, duplicatus, proscience, deoxidised, manfulness, channelize, nondefense, ectomorphy, unimpelled, headwaiter, hexaemeric, derivation, prelexical, limitarian, nonionized, prorefugee, invariably, patronizer, paraplegia, redivision, occupative, unfaceable, hypomnesia, psalterium, doctorfish, gentlefolk, overrefine, heptastich, desirously, clarabelle, uneuphonic, autotelism, firewarden, timberjack, fumigation, drainpipes, spathulate, novelvelle, bicorporal, grisliness, unhesitant, supergiant, unpatented, womanpower, toastiness, multichord, paramnesia, undertrick, contrarily, neurogenic, gunmanship, settlement, brookville, gradualism, unossified, villanovan, ecospecies, organising, buckhannon, prefulfill, johnsonese, unforegone, unwrathful, dunderhead, erceldoune, unwadeable, refunction, understuff, swaggering, freckliest, telemachus, groundsill, outslidden, bolsheviks, recognizer, hemangioma, tarantella, muhammedan, talebearer, relocation, preemption, chachalaca, septuagint, ubiquitous, plexiglass, humoresque, biliverdin, tetraploid, capitoline, summerwood, undilating, undetested, meningitic, petrolatum, phytotoxic, adiphenine, flashlight, protectory, inwreathed, rawishness, tendrillar, hastefully, bananaquit, anarthrous, unbedimmed, herborized, decenniums, deprecated, karyotypic, squalidity, pomiferous, petroglyph, actinomere, peninsular, trigonally, androgenic, resistance, unassuming, frithstool, documental, eunuchised, interphone, thymbraeus, confirmand, expurgated, vegetation, myographic, plasmagene, spindrying, unlackeyed, foreknower, mythically, albescence, rebudgeted, implicitly, unmonastic, torricelli, mortarless, labialized, phenacaine, radiometry, sluggishly, understood, wiretapper, jacobitely, unbetrayed, stadholder, directress, emissaries, corelation, sensualize, uncurbable, permillage, tentacular, thriftless, demoralize, preimagine, iconoclast, acrobatism, firewarden, transpired, bluethroat, wanderjahr, groundable, pedestrian, unulcerous, preearthly, freelanced, sculleries, avengingly, visigothic, preharmony, bressummer, acceptable, unfoolable, predivider, overseeing, arcosolium, piriformis, needlecord, homebodies, sulphation, phantasmic, unsensible, unpackaged, isopiestic, cytophagic, butterlike, frizzliest, winklehawk, necrophile, mesothorax, cuchulainn, unrentable, untangible, unshifting, unfeasible, poetastric, extermined, gaillardia, nonpendent, harborside, pigsticker, infanthood, underrower, easterling, jockeyship, housebreak, horologium, undepicted, dysacousma, incurrable, editorship, unrelented, peritricha, interchaff, frothiness, underplant, proafrican, squareness, enigmatise, reconciled, nonnumeral, nonevident, hamantasch, victualing, watercolor, schrdinger, understand, butlerlike, hemiglobin, yankeeland";
 
     @Test
     public void testMasiveUpdate(){
-    	boolean massiveUpdateTestEnabled = false;
-    	
-    	if(massiveUpdateTestEnabled) {
-	        List<String> randomWords = Arrays.asList(randomDictionary.split(","));
-	        HashMap<String, String> testerMap = new HashMap<>();
-	
-	        TrieImpl trie = new TrieImpl(mockDb);
-	        Random generator = new Random();
-	
-	        // Random insertion
-	        for (int i = 0; i < 100000; ++i ){
-	
-	            int randomIndex1 = generator.nextInt(randomWords.size());
-	            int randomIndex2 = generator.nextInt(randomWords.size());
-	
-	            String word1 = randomWords.get(randomIndex1).trim();
-	            String word2 = randomWords.get(randomIndex2).trim();
-	
-	            trie.update(word1, word2);
-	            testerMap.put(word1, word2);
-	        }
-	
-	        int half = testerMap.size() / 2;
-	        for (int r = 0; r < half; ++r){
-	
-	            int randomIndex = generator.nextInt(randomWords.size());
-	            String word1 = randomWords.get(randomIndex).trim();
-	
-	            testerMap.remove(word1);
-	            trie.delete(word1);
-	        }
-	
-	        trie.cleanCache();
-	        trie.sync();
-	
-	        // Assert the result now
-	        Iterator<String> keys = testerMap.keySet().iterator();
-	        while (keys.hasNext()){
-	
-	            String mapWord1 = keys.next();
-	            String mapWord2 = testerMap.get(mapWord1);
-	            String treeWord2 = new String(trie.get(mapWord1));
-	
-	            Assert.assertEquals(mapWord2, treeWord2);
-	        }
-    	}
+        boolean massiveUpdateTestEnabled = false;
+
+        if (massiveUpdateTestEnabled) {
+            List<String> randomWords = Arrays.asList(randomDictionary.split(","));
+            HashMap<String, String> testerMap = new HashMap<>();
+
+            TrieImpl trie = new TrieImpl(mockDb);
+            Random generator = new Random();
+
+            // Random insertion
+            for (int i = 0; i < 100000; ++i) {
+
+                int randomIndex1 = generator.nextInt(randomWords.size());
+                int randomIndex2 = generator.nextInt(randomWords.size());
+
+                String word1 = randomWords.get(randomIndex1).trim();
+                String word2 = randomWords.get(randomIndex2).trim();
+
+                trie.update(word1, word2);
+                testerMap.put(word1, word2);
+            }
+
+            int half = testerMap.size() / 2;
+            for (int r = 0; r < half; ++r) {
+
+                int randomIndex = generator.nextInt(randomWords.size());
+                String word1 = randomWords.get(randomIndex).trim();
+
+                testerMap.remove(word1);
+                trie.delete(word1);
+            }
+
+            trie.cleanCache();
+            trie.sync();
+
+            // Assert the result now
+            Iterator<String> keys = testerMap.keySet().iterator();
+            while (keys.hasNext()) {
+
+                String mapWord1 = keys.next();
+                String mapWord2 = testerMap.get(mapWord1);
+                String treeWord2 = new String(trie.get(mapWord1));
+
+                Assert.assertEquals(mapWord2, treeWord2);
+            }
+        }
     }
 
 
+    @Ignore
     @Test
     public void testMasiveDetermenisticUpdate() throws IOException, URISyntaxException {
 
@@ -590,9 +606,9 @@ public class TrieTest {
         // 1. load the data from massive-upload.dmp
         //    which includes deletes/upadtes (5000 operations)
         TrieImpl trieSingle = new TrieImpl(mockDb_2);
-        for (int i = 0; i < strData.size() ; ++i){
+        for (String aStrData : strData) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = aStrData.split("=");
 
             if (keyVal[0].equals("*"))
                 trieSingle.delete(keyVal[1].trim());
@@ -611,9 +627,9 @@ public class TrieTest {
         // 3. the rest of the data loaded with part of the trie not in the cache
         TrieImpl trie = new TrieImpl(mockDb);
 
-        for (int i = 0; i < 2000; ++i){
+        for (int i = 0; i < 2000; ++i) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = strData.get(i).split("=");
 
             if (keyVal[0].equals("*"))
                 trie.delete(keyVal[1].trim());
@@ -626,9 +642,9 @@ public class TrieTest {
 
         TrieImpl trie2 = new TrieImpl(mockDb, trie.getRootHash());
 
-        for (int i = 2000; i < strData.size(); ++i){
+        for (int i = 2000; i < strData.size(); ++i) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = strData.get(i).split("=");
 
             if (keyVal[0].equals("*"))
                 trie2.delete(keyVal[1].trim());
@@ -636,63 +652,63 @@ public class TrieTest {
                 trie2.update(keyVal[0].trim(), keyVal[1].trim());
         }
 
-        System.out.println("root_2:  => " + Hex.toHexString( trie2.getRootHash()));
+        System.out.println("root_2:  => " + Hex.toHexString(trie2.getRootHash()));
 
         assertEquals(trieSingle.getRootHash(), trie2.getRootHash());
 
     }
-    
-    @Test  //  tests saving keys to the file  //
-    public void testMasiveUpdateFromDB(){
-    	boolean massiveUpdateFromDBEnabled = false;
-    	
-    	if(massiveUpdateFromDBEnabled) {
-	        List<String> randomWords = Arrays.asList(randomDictionary.split(","));
-	        Map<String, String> testerMap = new HashMap<>();
 
-	        TrieImpl trie = new TrieImpl(mockDb);
-	        Random generator = new Random();
-	
-	        // Random insertion
-	        for (int i = 0; i < 50000; ++i ){
-	
-	            int randomIndex1 = generator.nextInt(randomWords.size());
-	            int randomIndex2 = generator.nextInt(randomWords.size());
-	
-	            String word1 = randomWords.get(randomIndex1).trim();
-	            String word2 = randomWords.get(randomIndex2).trim();
-	
-	            trie.update(word1, word2);
-	            testerMap.put(word1, word2);
-	        }
-	
-	        trie.cleanCache();
-	        trie.sync();
-	
-	        // Assert the result now
-	        Iterator<String> keys = testerMap.keySet().iterator();
-	        while (keys.hasNext()){
-	
-	            String mapWord1 = keys.next();
-	            String mapWord2 = testerMap.get(mapWord1);
-	            String treeWord2 = new String(trie.get(mapWord1));
-	
-	            Assert.assertEquals(mapWord2, treeWord2);
-	        }
-	
-	        TrieImpl trie2 = new TrieImpl(mockDb, trie.getRootHash());
-	
-	        // Assert the result now
-	        keys = testerMap.keySet().iterator();
-	        while (keys.hasNext()){
-	
-	            String mapWord1 = keys.next();
-	            String mapWord2 = testerMap.get(mapWord1);
-	            String treeWord2 = new String(trie2.get(mapWord1));
-	
-	            Assert.assertEquals(mapWord2, treeWord2);
-	        }
-    	}
+    @Test  //  tests saving keys to the file  //
+    public void testMasiveUpdateFromDB() {
+        boolean massiveUpdateFromDBEnabled = false;
+
+        if (massiveUpdateFromDBEnabled) {
+            List<String> randomWords = Arrays.asList(randomDictionary.split(","));
+            Map<String, String> testerMap = new HashMap<>();
+
+            TrieImpl trie = new TrieImpl(mockDb);
+            Random generator = new Random();
+
+            // Random insertion
+            for (int i = 0; i < 50000; ++i) {
+
+                int randomIndex1 = generator.nextInt(randomWords.size());
+                int randomIndex2 = generator.nextInt(randomWords.size());
+
+                String word1 = randomWords.get(randomIndex1).trim();
+                String word2 = randomWords.get(randomIndex2).trim();
+
+                trie.update(word1, word2);
+                testerMap.put(word1, word2);
+            }
+
+            trie.cleanCache();
+            trie.sync();
+
+            // Assert the result now
+            Iterator<String> keys = testerMap.keySet().iterator();
+            while (keys.hasNext()) {
+
+                String mapWord1 = keys.next();
+                String mapWord2 = testerMap.get(mapWord1);
+                String treeWord2 = new String(trie.get(mapWord1));
+
+                Assert.assertEquals(mapWord2, treeWord2);
+            }
+
+            TrieImpl trie2 = new TrieImpl(mockDb, trie.getRootHash());
+
+            // Assert the result now
+            keys = testerMap.keySet().iterator();
+            while (keys.hasNext()) {
+
+                String mapWord1 = keys.next();
+                String mapWord2 = testerMap.get(mapWord1);
+                String treeWord2 = new String(trie2.get(mapWord1));
+
+                Assert.assertEquals(mapWord2, treeWord2);
+            }
+        }
     }
 
 
@@ -710,9 +726,9 @@ public class TrieTest {
         List<byte[]> roots = new ArrayList<>();
         Map<String, String> trieDumps = new HashMap<>();
 
-        for (int i = 0; i < 100; ++i){
+        for (int i = 0; i < 100; ++i) {
 
-            String[] keyVal= strData.get(i).split("=");
+            String[] keyVal = strData.get(i).split("=");
 
             if (keyVal[0].equals("*"))
                 trieSingle.delete(keyVal[1].trim());
@@ -722,17 +738,17 @@ public class TrieTest {
             byte[] hash = trieSingle.getRootHash();
             roots.add(hash);
 
-            String key =  Hex.toHexString(hash);
+            String key = Hex.toHexString(hash);
             String dump = trieSingle.getTrieDump();
             trieDumps.put(key, dump);
         }
 
         // compare all 100 rollback dumps and
         // the originaly saved dumps
-        for (int i = 1; i < roots.size(); ++i){
+        for (int i = 1; i < roots.size(); ++i) {
 
             byte[] root = roots.get(i);
-            logger.info("rollback over root : {}", Hex.toHexString(root) );
+            logger.info("rollback over root : {}", Hex.toHexString(root));
 
             trieSingle.setRoot(root);
             String currDump = trieSingle.getTrieDump();
@@ -744,6 +760,7 @@ public class TrieTest {
     }
 
 
+    @Ignore
     @Test
     public void testGetFromRootNode() {
         TrieImpl trie1 = new TrieImpl(mockDb);
@@ -763,7 +780,7 @@ public class TrieTest {
 */
 
     @Test
-    public void storageHashCalc_1(){
+    public void storageHashCalc_1() {
 
         byte[] key1 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000010");
         byte[] key2 = Hex.decode("0000000000000000000000000000000000000000000000000000000000000014");
@@ -801,13 +818,13 @@ public class TrieTest {
         String testSrc = new String(testData);
 
         JSONParser parser = new JSONParser();
-        JSONArray dbDumpJSONArray = (JSONArray)parser.parse(testSrc);
+        JSONArray dbDumpJSONArray = (JSONArray) parser.parse(testSrc);
 
         DatabaseImpl db = new DatabaseImpl("testState");
 
-        for (int i = 0; i < dbDumpJSONArray.size(); ++i){
+        for (Object aDbDumpJSONArray : dbDumpJSONArray) {
 
-            JSONObject obj = (JSONObject)dbDumpJSONArray.get(i);
+            JSONObject obj = (JSONObject) aDbDumpJSONArray;
             byte[] key = Hex.decode(obj.get("key").toString());
             byte[] val = Hex.decode(obj.get("val").toString());
 
@@ -840,10 +857,9 @@ public class TrieTest {
     }
 
 
-
     @Test // update the trie with blog key/val
           // each time dump the entire trie
-    public void testSample_1(){
+    public void testSample_1() {
 
         TrieImpl trie = new TrieImpl(mockDb);
 
