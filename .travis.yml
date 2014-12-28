@@ -6,3 +6,15 @@ env:
 
 after_success:
   - ./gradlew jacocoTestReport coveralls
+
+notifications:
+  irc:
+    channels: chat.freenode.net#ethereumj
+    template:
+      - '%{message} (%{repository}#%{build_number}, %{duration})'
+      - '%{repository}/%{branch} %{commit} %{author}: %{commit_message}'
+      - '%{build_url}'
+    on_success: change
+    on_failure: always
+    use_notice: true
+    skip_join: false
