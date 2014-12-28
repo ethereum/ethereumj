@@ -1,8 +1,8 @@
 language: java
+jdk: oraclejdk8
 
 env:
   - JAVA_OPTS ="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256M -XX:MaxPermSize=512M"
 
-script:
-  - cd  ethereumj-core
-  - mvn clean test jacoco:report coveralls:jacoco
+after_success:
+  - ./gradlew jacocoTestReport coveralls
