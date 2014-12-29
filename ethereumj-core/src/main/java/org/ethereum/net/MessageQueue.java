@@ -77,7 +77,7 @@ public class MessageQueue {
         ctx.close();
     }
 
-	public void receivedMessage(Message msg) throws InterruptedException {
+    public void receivedMessage(Message msg) throws InterruptedException {
 
         worldManager.getListener().trace("[Recv: " + msg + "]");
 
