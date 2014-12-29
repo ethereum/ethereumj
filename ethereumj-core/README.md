@@ -3,8 +3,29 @@
 
 ### Include ethereum-core in your project
 
- 1. Add http://dl.bintray.com/ethereum/maven as a repository to your build script
- 2. Add a dependency on `org.ethereum:ethereumj:$version`, where `$version` is one of those listed at https://bintray.com/ethereum/maven/org.ethereum/view
+#### For snapshot builds:
+
+ - Add https://oss.jfrog.org/libs-snapshot/ as a repository to your build script
+ - Add a dependency on `org.ethereum:ethereumj-core:${VERSION}`, where `${VERSION}` is of the form `0.7.14-SNAPSHOT`.
+
+Example:
+
+    <repository>
+        <id>jfrog-snapshots</id>
+        <name>oss.jfrog.org</name>
+        <url>https://oss.jfrog.org/libs-snapshot/</url>
+        <snapshots><enabled>true</enabled></snapshots>
+    </repository>
+    <!-- ... -->
+    <dependency>
+       <groupId>org.ethereum</groupId>
+       <artifactId>ethereumj-core</artifactId>
+       <version>0.7.14-SNAPSHOT</version>
+    </dependency>
+
+#### For release builds:
+
+_There are no release builds at this time. Use snapshots in the meantime._
 
 
 ### Examples
@@ -38,4 +59,6 @@ Run `../gradlew install`.
 
 #### Publish ethereumj-core builds
 
-_TODO: integrate bintray gradle plugin_
+Push to master.
+
+Run `../gradlew release`. Snapshots will be published to oss.jfrog.org; releases will be published to Bintray. You must supply the `bintrayUser` and `bintrayKey` properties to the Gradle build in order to authenticate. Do this in $HOME/.gradle/gradle.properties for greatest convenience and security.
