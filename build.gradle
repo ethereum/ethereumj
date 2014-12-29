@@ -10,7 +10,7 @@ subprojects {
     sourceCompatibility = 1.8
 
     group = 'org.ethereum'
-    version = '0.7.15-SNAPSHOT'
+    version = '0.7.14-SNAPSHOT'
 
     repositories {
         jcenter()
