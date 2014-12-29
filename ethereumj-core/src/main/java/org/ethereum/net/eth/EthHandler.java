@@ -164,8 +164,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
     }
 
-
-
     private void processTransactions(TransactionsMessage msg) {
 
         Set<Transaction> txSet = msg.getTransactions();
@@ -249,9 +247,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
-
-//        receivedHashes.forEach(hash -> System.out.println(Hex.toHexString(hash)));
-
         BlockQueue chainQueue = blockchain.getQueue();
 
         // result is empty, peer has no more hashes
@@ -285,7 +280,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         List<Block> blockList = blocksMessage.getBlocks();
 
-        if (!blockList.isEmpty()){
+        if (!blockList.isEmpty()) {
             Block block = blockList.get(blockList.size()-1);
             if (block.getNumber() > lastBlock.getNumber())
                 lastBlock = blockList.get(blockList.size()-1);
@@ -513,7 +508,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         blockchain.getQueue().addHash(hash);
     }
 
-    public void doSync(){
+    public void doSync() {
         logger.info("Sync force activated, block: {}", lastBlock);
         syncStatus = SyncSatus.HASH_RETRIEVING;
         setBestHash(lastBlock.getHash());
