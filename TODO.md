@@ -3,6 +3,7 @@
 ##### TODO list:
 ----------------
 
+- [ ] just test for some change
 - [ ] **GUI screen** a screen that will hold table with full state representation
 - [ ] **SerpentCompiler** compile create(gas, mem_start, import("examples/mul2.se"))
   https://github.com/ethereum/wiki/wiki/Serpent
