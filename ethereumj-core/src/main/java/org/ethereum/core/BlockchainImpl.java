@@ -9,9 +9,12 @@ import org.ethereum.net.BlockQueue;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.vm.ProgramInvokeFactory;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
@@ -20,7 +23,9 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+
 import java.math.BigInteger;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -162,14 +167,15 @@ public class BlockchainImpl implements Blockchain {
         }
 
         // cut on the chain got lastBlock + 1 > n
-        if (block.getNumber() > bestBlock.getNumber() + 1){
+        if (block.getNumber() > bestBlock.getNumber() + 1) {
             channelManager.ethSync();
         }
 
+        if (!hasParentOnTheChain(block) && block.getNumber() > bestBlock.getNumber()) {
 
-        if (!hasParentOnTheChain(block) && block.getNumber() > bestBlock.getNumber()){
+            if (1 == 1)
+                return; // todo: temporary cancel the rollback
 
-            if (1==1)return; // todo: temporary cancel the rollback
             logger.info("*** Blockchain will rollback and resynchronise now ");
 
             long rollbackIdx = bestBlock.getNumber() - 30;
@@ -233,7 +239,6 @@ public class BlockchainImpl implements Blockchain {
 
             logger.info("Sync done");
             syncDoneCalled = true;
-
             listener.onSyncDone();
         }
     }
@@ -416,9 +421,8 @@ public class BlockchainImpl implements Blockchain {
         if (logger.isDebugEnabled())
             logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
         if (block.getNumber() % 100 == 0)
-        	logger.info("*** Last block added [ #{} ]", block.getNumber());
-
-    }    
+            logger.info("*** Last block added [ #{} ]", block.getNumber());
+    }
 
 
     public boolean hasParentOnTheChain(Block block) {

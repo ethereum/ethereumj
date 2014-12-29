@@ -8,8 +8,8 @@ INDENT, DEDENT }
 @lexer::header {
   import com.yuvalshavit.antlr4.DenterHelper;
 }
-  
- 
+
+
 @lexer::members {
   private final DenterHelper denter = new DenterHelper(NL, SerpentParser.INDENT, SerpentParser.DEDENT) {
     @Override

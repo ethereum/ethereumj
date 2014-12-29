@@ -65,18 +65,18 @@ public class BlockQueue {
     @Autowired
     Blockchain blockchain;
 
-	public BlockQueue() {
-		timer.scheduleAtFixedRate(new TimerTask() {
-			public void run() {
-				nudgeQueue();
-			}
-		}, 10, 10);
-	}
+    public BlockQueue() {
+        timer.scheduleAtFixedRate(new TimerTask() {
+            public void run() {
+                nudgeQueue();
+            }
+        }, 10, 10);
+    }
 
-	/**
-	 * Processing the queue adding blocks to the chain.
-	 */
-	private void nudgeQueue() {
+    /**
+     * Processing the queue adding blocks to the chain.
+     */
+    private void nudgeQueue() {
         try {
             if (blockReceivedQueue.isEmpty())
                 return;
