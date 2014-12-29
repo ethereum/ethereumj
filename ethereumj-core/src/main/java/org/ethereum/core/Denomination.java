@@ -9,7 +9,7 @@ public enum Denomination {
     BABBAGE(newBigInt(6)),
     SHANNON(newBigInt(9)),
     SZABO(newBigInt(12)),
-    FINNY(newBigInt(15)),
+    FINNEY(newBigInt(15)),
     ETHER(newBigInt(18)),
     EINSTEIN(newBigInt(21)),
     DOUGLAS(newBigInt(42));
@@ -42,8 +42,8 @@ public enum Denomination {
         else if(value.compareTo(ETHER.value()) == 1 || value.compareTo(ETHER.value()) == 0) {
             return Float.toString(value.divide(ETHER.value()).floatValue()) +  " ETHER";
         }
-        else if(value.compareTo(FINNY.value()) == 1 || value.compareTo(FINNY.value()) == 0) {
-            return Float.toString(value.divide(FINNY.value()).floatValue()) +  " FINNY";
+        else if(value.compareTo(FINNEY.value()) == 1 || value.compareTo(FINNEY.value()) == 0) {
+            return Float.toString(value.divide(FINNEY.value()).floatValue()) +  " FINNEY";
         }
         else if(value.compareTo(SZABO.value()) == 1 || value.compareTo(SZABO.value()) == 0) {
             return Float.toString(value.divide(SZABO.value()).floatValue()) +  " SZABO";
