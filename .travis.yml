@@ -1,9 +1,6 @@
 language: java
 jdk: oraclejdk8
 
-env:
-  - JAVA_OPTS ="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256M -XX:MaxPermSize=512M"
-
 script:
   - ./gradlew build publish
 
@@ -27,7 +24,6 @@ notifications:
 # authenticating against oss.jfrog.org and/or Bintray repositories. See http://docs.travis-ci.com/user/encryption-keys
 # http://www.gradle.org/docs/current/userguide/tutorial_this_and_that.html#sec:gradle_properties_and_system_properties
 env:
-  global:
-    secure:
-     - "BSdfBQsJi5VFcIF7Z50ddfjex60OZpd8OM7AxN+h93wxzBx/GD2bsWA9elwvrLFImByw5RIqE9xRvL4CioKZLgFiJCSFuPkf6I+6R6PsUhqklPvAJSXHlQXOM6bJD23rZewyfudh5JtqADVavY7vlXnmYXFeWKh8XdPYtRPlJV0="
-     - "iZcZikUHrdaxsc5at1KT0M/6D4OHdU2WTd/aFIBKERXteGw+okq+s+VWghnELEq3YsKfYRJrkslcA6Mpcxq7KrUMsSSX1kZ1ifsk2151sU3+fJpIYQ9pCeWboLWSF//A7IdEe+zHpRVFuHVGU05OAalNCmJ52TEe3/M0YkY5+e8="
+  - secure: "BSdfBQsJi5VFcIF7Z50ddfjex60OZpd8OM7AxN+h93wxzBx/GD2bsWA9elwvrLFImByw5RIqE9xRvL4CioKZLgFiJCSFuPkf6I+6R6PsUhqklPvAJSXHlQXOM6bJD23rZewyfudh5JtqADVavY7vlXnmYXFeWKh8XdPYtRPlJV0="
+  - secure: "iZcZikUHrdaxsc5at1KT0M/6D4OHdU2WTd/aFIBKERXteGw+okq+s+VWghnELEq3YsKfYRJrkslcA6Mpcxq7KrUMsSSX1kZ1ifsk2151sU3+fJpIYQ9pCeWboLWSF//A7IdEe+zHpRVFuHVGU05OAalNCmJ52TEe3/M0YkY5+e8="
+  - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -XX:PermSize=256M -XX:MaxPermSize=512M"
