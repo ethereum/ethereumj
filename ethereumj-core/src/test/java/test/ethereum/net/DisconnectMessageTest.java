@@ -48,5 +48,17 @@ public class DisconnectMessageTest {
 
         assertEquals(ReasonCode.INCOMPATIBLE_NETWORK, disconnectMessage.getReason());
     }
+
+    @Test //handling unknown codes properly
+    public void test_4() {
+
+        String disconnectMessageRaw = "C25555";
+        byte[] payload = Hex.decode(disconnectMessageRaw);
+
+        DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
+        System.out.println(disconnectMessage);
+
+        assertEquals(disconnectMessage.getReason(), ReasonCode.UNKNOWN);
+    }
 }
 
