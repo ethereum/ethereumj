@@ -154,7 +154,7 @@ bintrayUpload.onlyIf {
     (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
 }
 
-task release {
-    description = "Releases snapshot versions to oss.jfrog.org and releases to Bintray"
+publish {
+    description = "Releases snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }
