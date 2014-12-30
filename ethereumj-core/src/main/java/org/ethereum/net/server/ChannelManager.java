@@ -108,9 +108,8 @@ public class ChannelManager {
     }
 
     public void reconnect(){
-        for (Channel channel : channels){
+        for (Channel channel : channels)
             channel.p2pHandler.sendDisconnect();
-        }
     }
 
     public void ethSync() {

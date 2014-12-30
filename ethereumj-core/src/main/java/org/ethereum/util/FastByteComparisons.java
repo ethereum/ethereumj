@@ -130,24 +130,24 @@ public abstract class FastByteComparisons {
              */
             static final int BYTE_ARRAY_BASE_OFFSET;
 
-      static {
-        theUnsafe = (Unsafe) AccessController.doPrivileged(
-            new PrivilegedAction<Object>() {
-              @Override
-              public Object run() {
-                try {
-                  Field f = Unsafe.class.getDeclaredField("theUnsafe");
-                  f.setAccessible(true);
-                  return f.get(null);
-                } catch (NoSuchFieldException e) {
-                  // It doesn't matter what we throw;
-                  // it's swallowed in getBestComparer().
-                  throw new Error();
-                } catch (IllegalAccessException e) {
-                  throw new Error();
-                }
-              }
-            });
+            static {
+                theUnsafe = (Unsafe) AccessController.doPrivileged(
+                        new PrivilegedAction<Object>() {
+                            @Override
+                            public Object run() {
+                                try {
+                                    Field f = Unsafe.class.getDeclaredField("theUnsafe");
+                                    f.setAccessible(true);
+                                    return f.get(null);
+                                } catch (NoSuchFieldException e) {
+                                    // It doesn't matter what we throw;
+                                    // it's swallowed in getBestComparer().
+                                    throw new Error();
+                                } catch (IllegalAccessException e) {
+                                    throw new Error();
+                                }
+                            }
+                        });
 
                 BYTE_ARRAY_BASE_OFFSET = theUnsafe.arrayBaseOffset(byte[].class);
 

@@ -82,7 +82,8 @@ public class Wallet {
         Account account = new Account();
         String address = Hex.toHexString(account.getEcKey().getAddress());
         rows.put(address, account);
-        for (WalletListener listener : listeners) listener.valueChanged();
+        for (WalletListener listener : listeners)
+            listener.valueChanged();
     }
 
     public void importKey(byte[] privKey) {
@@ -157,9 +158,9 @@ public class Wallet {
     }
 
     public void addTransactions(List<Transaction> transactions) {
-    	for (Transaction transaction : transactions) {
-			this.addTransaction(transaction);
-		}
+        for (Transaction transaction : transactions) {
+            this.addTransaction(transaction);
+        }
     }
 
     public void removeTransactions(List<Transaction> transactions) {
@@ -209,7 +210,7 @@ public class Wallet {
 
     public void processBlock(Block block) {
 
-        for (Account account : getAccountCollection()){
+        for (Account account : getAccountCollection()) {
             account.clearAllPendingTransactions();
         }
 
@@ -344,8 +345,8 @@ public class Wallet {
     }
 
     private void notifyListeners() {
-		for (WalletListener listener : listeners)
-			listener.valueChanged();
+        for (WalletListener listener : listeners)
+            listener.valueChanged();
     }
 
     public interface WalletListener {

@@ -41,15 +41,14 @@ public class GetBlocksMessage extends EthMessage {
         parsed = true;
     }
 
-	private void encode() {
-		List<byte[]> encodedElements = new ArrayList<>();
-		encodedElements.add(RLP.encodeByte(GET_BLOCKS.asByte()));
-		for (byte[] hash : blockHashes)
-			encodedElements.add(RLP.encodeElement(hash));
-		byte[][] encodedElementArray = encodedElements
-				.toArray(new byte[encodedElements.size()][]);
-		this.encoded = RLP.encodeList(encodedElementArray);
-	}
+    private void encode() {
+        List<byte[]> encodedElements = new ArrayList<>();
+        encodedElements.add(RLP.encodeByte(GET_BLOCKS.asByte()));
+        for (byte[] hash : blockHashes)
+            encodedElements.add(RLP.encodeElement(hash));
+        byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
+        this.encoded = RLP.encodeList(encodedElementArray);
+    }
 
     @Override
     public byte[] getEncoded() {

@@ -11,8 +11,11 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
@@ -434,17 +437,14 @@ public class TrieImpl implements Trie {
         this.scanTree(this.getRootHash(), collectAction);
 
         Set<byte[]> hashSet = collectAction.getCollectedHashes();
-        Map<ByteArrayWrapper, Node> nodes =  this.getCache().getNodes();
+        Map<ByteArrayWrapper, Node> nodes = this.getCache().getNodes();
         Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
 
-        for (ByteArrayWrapper key : nodes.keySet()) {
-            if (!hashSet.contains(key.getData())) {
+        for (ByteArrayWrapper key : nodes.keySet())
+            if (!hashSet.contains(key.getData()))
                 toRemoveSet.add(key);
-            }
-        }
 
         for (ByteArrayWrapper key : toRemoveSet) {
-
             this.getCache().delete(key.getData());
 
             if (logger.isTraceEnabled())

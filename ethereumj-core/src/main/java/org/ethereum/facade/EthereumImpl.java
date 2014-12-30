@@ -61,9 +61,9 @@ public class EthereumImpl implements Ethereum {
     }
 
     @PostConstruct
-    public void init(){
+    public void init() {
         worldManager.loadBlockchain();
-        if (CONFIG.listenPort() > 0){
+        if (CONFIG.listenPort() > 0) {
             Executors.newSingleThreadExecutor().submit(
                     new Runnable() { public void run() {
                         peerServer.start(CONFIG.listenPort());

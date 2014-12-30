@@ -153,8 +153,8 @@ public class AccountState {
             checked.add(key);
         }
 
-        for (DataWord key : expectedKeys){
-            if (!checked.contains(key)){
+        for (DataWord key : expectedKeys) {
+            if (!checked.contains(key)) {
                 String formatedString = String.format("Account: %s: doesn't exist expected storage key: %s",
                         Hex.toHexString(this.address), key.toString());
                 results.add(formatedString);
