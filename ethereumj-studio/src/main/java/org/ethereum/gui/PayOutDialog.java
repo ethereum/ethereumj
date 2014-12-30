@@ -235,11 +235,9 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
         inputMap.put(stroke, "ESCAPE");
         rootPane.getActionMap().put("ESCAPE", actionListener);
 
-        SwingUtilities.invokeLater(new Runnable() {
-        	  public void run() {
-        		  setSize(500, 255);
-        	      setVisible(true);
-        	  }
+        SwingUtilities.invokeLater(() -> {
+            setSize(500, 255);
+            setVisible(true);
         });
 
 
@@ -250,26 +248,22 @@ class PayOutDialog extends JDialog implements MessageAwareDialog {
 
         final PayOutDialog dialog = this;
 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                dialog.statusMsg.setForeground(Color.GREEN.darker().darker());
-                dialog.statusMsg.setText(text);
-                dialog.revalidate();
-                dialog.repaint();
-            }
+        SwingUtilities.invokeLater(() -> {
+            dialog.statusMsg.setForeground(Color.GREEN.darker().darker());
+            dialog.statusMsg.setText(text);
+            dialog.revalidate();
+            dialog.repaint();
         });
     }
 
     public void alertStatusMsg(final String text) {
         final PayOutDialog dialog = this;
 
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-                dialog.statusMsg.setForeground(Color.RED);
-                dialog.statusMsg.setText(text);
-                dialog.revalidate();
-                dialog.repaint();
-            }
+        SwingUtilities.invokeLater(() -> {
+            dialog.statusMsg.setForeground(Color.RED);
+            dialog.statusMsg.setText(text);
+            dialog.revalidate();
+            dialog.repaint();
         });
     }
 

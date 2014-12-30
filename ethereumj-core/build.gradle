@@ -11,6 +11,8 @@ plugins {
 
 }
 
+sourceCompatibility = 1.7
+
 mainClassName = 'org.ethereum.Start'
 
 ext.generatedSrcDir = file('src/gen/java')

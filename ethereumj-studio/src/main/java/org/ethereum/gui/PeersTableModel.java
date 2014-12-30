@@ -32,16 +32,11 @@ public class PeersTableModel extends AbstractTableModel {
         updater.scheduleAtFixedRate(new TimerTask() {
             public void run() {
                 SwingUtilities.invokeLater(
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                updateModel();
-                            }
-                        }
+                        PeersTableModel.this::updateModel
                 );
-			}
-		}, 0, 100);
-	}
+            }
+        }, 0, 100);
+    }
 
     public String getColumnName(int column) {
         if (column == 0) return "Location";

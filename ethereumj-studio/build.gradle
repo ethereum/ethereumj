@@ -3,6 +3,8 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.0'
 }
 
+sourceCompatibility = 1.8
+
 mainClassName = 'org.ethereum.gui.ToolBar'
 
 dependencies {
