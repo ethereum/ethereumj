@@ -98,6 +98,13 @@ artifacts {
     archives javadocJar
 }
 
+jacocoTestReport {
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {

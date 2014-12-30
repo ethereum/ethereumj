@@ -7,6 +7,7 @@ env:
 script:
   - ./gradlew build publish
 
+# publish coverage report to https://coveralls.io/r/ethereum/ethereumj
 after_success:
   - ./gradlew jacocoTestReport coveralls
 
