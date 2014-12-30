@@ -32,7 +32,7 @@ public class ChannelManager {
     private static final Logger logger = LoggerFactory.getLogger("net");
 
     Timer inactivesCollector = new Timer("inactivesCollector");
-    List<Channel> channels = Collections.synchronizedList(new ArrayList<>());
+    List<Channel> channels = Collections.synchronizedList(new ArrayList<Channel>());
 
     Map<ByteArrayWrapper, Block> blockCache = new HashMap<>();
 
@@ -108,7 +108,9 @@ public class ChannelManager {
     }
 
     public void reconnect(){
-        channels.forEach(c -> c.p2pHandler.sendDisconnect());
+        for (Channel channel : channels){
+            channel.p2pHandler.sendDisconnect();
+        }
     }
 
     public void ethSync() {

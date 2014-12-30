@@ -38,7 +38,7 @@ public class AccountsListWindow extends JFrame {
 
         tblAccountsDataTable = new JTable();
 
-        adapter = new AccountsDataAdapter(new ArrayList<>());
+        adapter = new AccountsDataAdapter(new ArrayList<DataClass>());
         tblAccountsDataTable.setModel(adapter);
 
         JScrollPane scrollPane = new JScrollPane(tblAccountsDataTable);

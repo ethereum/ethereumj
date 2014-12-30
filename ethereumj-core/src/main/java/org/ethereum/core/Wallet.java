@@ -82,7 +82,7 @@ public class Wallet {
         Account account = new Account();
         String address = Hex.toHexString(account.getEcKey().getAddress());
         rows.put(address, account);
-        listeners.forEach(Wallet.WalletListener::valueChanged);
+        for (WalletListener listener : listeners) listener.valueChanged();
     }
 
     public void importKey(byte[] privKey) {
@@ -157,7 +157,9 @@ public class Wallet {
     }
 
     public void addTransactions(List<Transaction> transactions) {
-        transactions.forEach(this::addTransaction);
+    	for (Transaction transaction : transactions) {
+			this.addTransaction(transaction);
+		}
     }
 
     public void removeTransactions(List<Transaction> transactions) {
@@ -207,7 +209,9 @@ public class Wallet {
 
     public void processBlock(Block block) {
 
-        getAccountCollection().forEach(org.ethereum.core.Account::clearAllPendingTransactions);
+        for (Account account : getAccountCollection()){
+            account.clearAllPendingTransactions();
+        }
 
         notifyListeners();
     }
@@ -340,7 +344,8 @@ public class Wallet {
     }
 
     private void notifyListeners() {
-        listeners.forEach(Wallet.WalletListener::valueChanged);
+		for (WalletListener listener : listeners)
+			listener.valueChanged();
     }
 
     public interface WalletListener {

@@ -43,17 +43,15 @@ public class BlockHashesMessage extends EthMessage {
         parsed = true;
     }
 
-    private void encode() {
-        List<byte[]> encodedElements = new ArrayList<>();
-        encodedElements.add(RLP.encodeByte(BLOCK_HASHES.asByte()));
-        encodedElements.addAll(
-                blockHashes.stream()
-                        .map(RLP::encodeElement)
-                        .collect(Collectors.toList()));
-        byte[][] encodedElementArray = encodedElements
-                .toArray(new byte[encodedElements.size()][]);
-        this.encoded = RLP.encodeList(encodedElementArray);
-    }
+	private void encode() {
+		List<byte[]> encodedElements = new ArrayList<>();
+		encodedElements.add(RLP.encodeByte(BLOCK_HASHES.asByte()));
+		for (byte[] blockHash : blockHashes)
+			encodedElements.add(RLP.encodeElement(blockHash));
+		byte[][] encodedElementArray = encodedElements
+				.toArray(new byte[encodedElements.size()][]);
+		this.encoded = RLP.encodeList(encodedElementArray);
+	}
 
 
     @Override

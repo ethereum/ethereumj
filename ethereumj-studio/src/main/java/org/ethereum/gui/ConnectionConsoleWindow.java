@@ -89,12 +89,14 @@ public class ConnectionConsoleWindow extends JFrame {
         UIEthereumManager.ethereum.addListener(new EthereumListenerAdapter() {
             @Override
             public void trace(final String output) {
-                SwingUtilities.invokeLater(() -> {
-                    textArea.append(output);
-                    textArea.append("\n");
+                SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                        textArea.append(output);
+                        textArea.append("\n");
 
-                    if (autoScroll)
-                        textArea.setCaretPosition(textArea.getText().length());
+                        if (autoScroll)
+                            textArea.setCaretPosition(textArea.getText().length());
+                    }
                 });
             }
         });
@@ -145,10 +147,14 @@ public class ConnectionConsoleWindow extends JFrame {
         });
     }
 
-    public static void main(String[] args) {
-        // Start all Swing applications on the EDT.
-        SwingUtilities.invokeLater(() -> new ConnectionConsoleWindow(null).setVisible(true));
-    }
+	public static void main(String[] args) {
+		// Start all Swing applications on the EDT.
+		SwingUtilities.invokeLater(new Runnable() {
+			public void run() {
+				new ConnectionConsoleWindow(null).setVisible(true);
+			}
+		});
+	}
 
 
 }

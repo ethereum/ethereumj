@@ -823,16 +823,19 @@ public class BlockChainTable extends JFrame implements ActionListener {
         transactionPanel.add(nonce, c);
 
         JButton data = new JButton("Data");
-        data.addActionListener(event -> {
-            if (transactionDataWindow == null)
-                transactionDataWindow = new TransactionData(blockchainTable);
-            transactionDataWindow.setData(transaction.getData());
-            transactionDataWindow.setVisible(true);
-            transactionDataWindow.highlightText(findText.getText(), painter);
+        data.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent event) {
+                if (transactionDataWindow == null)
+                    transactionDataWindow = new TransactionData(blockchainTable);
+                transactionDataWindow.setData(transaction.getData());
+                transactionDataWindow.setVisible(true);
+                transactionDataWindow.highlightText(findText.getText(), painter);
+            }
+
         });
         data.setFont(plain);
-        if (findText.getText().length() > 0 && ByteUtil.toHexString(transaction.getData()).contains(findText.getText
-                ())) {
+        if (findText.getText().length() > 0 && ByteUtil.toHexString(transaction.getData()).contains(findText.getText())) {
             data.setBackground(HILIT_COLOR);
         }
         c.gridx = 3;

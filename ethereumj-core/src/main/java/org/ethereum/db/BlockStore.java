@@ -74,7 +74,9 @@ public class BlockStore {
                 setParameter("limit", block.getNumber() - qty).
                 setMaxResults(qty).list();
 
-        hashes.addAll(result.stream().collect(Collectors.toList()));
+        for (byte[] h : result){
+            hashes.add(h);
+        }
 
         return hashes;
     }

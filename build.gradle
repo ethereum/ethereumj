@@ -7,7 +7,7 @@ allprojects {
 subprojects {
     apply plugin: 'java'
 
-    sourceCompatibility = 1.8
+    sourceCompatibility = 1.7
 
     group = 'org.ethereum'
     version = '0.7.14-SNAPSHOT'

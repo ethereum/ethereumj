@@ -38,7 +38,7 @@ public class PeerDiscovery {
 
     private static final Logger logger = LoggerFactory.getLogger("peerdiscovery");
 
-    private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<>());
+    private final Set<PeerInfo> peers = Collections.synchronizedSet(new HashSet<PeerInfo>());
 
     private PeerMonitorThread monitor;
     private ThreadFactory threadFactory;
@@ -59,10 +59,10 @@ public class PeerDiscovery {
         // Get the ThreadFactory implementation to use
         threadFactory = Executors.defaultThreadFactory();
 
-        // creating the ThreadPoolExecutor
-        executorPool = new ThreadPoolExecutor(CONFIG.peerDiscoveryWorkers(),
-                CONFIG.peerDiscoveryWorkers(), 10, TimeUnit.SECONDS, new ArrayBlockingQueue<>(
-                        1000), threadFactory, rejectionHandler);
+		// creating the ThreadPoolExecutor
+		executorPool = new ThreadPoolExecutor(CONFIG.peerDiscoveryWorkers(),
+                CONFIG.peerDiscoveryWorkers(), 10, TimeUnit.SECONDS, new ArrayBlockingQueue<Runnable>(
+						1000), threadFactory, rejectionHandler);
 
         // start the monitoring thread
         monitor = new PeerMonitorThread(executorPool, 1, this);

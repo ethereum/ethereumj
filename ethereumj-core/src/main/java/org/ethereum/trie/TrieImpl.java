@@ -11,10 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.copyOfRange;
@@ -437,10 +434,14 @@ public class TrieImpl implements Trie {
         this.scanTree(this.getRootHash(), collectAction);
 
         Set<byte[]> hashSet = collectAction.getCollectedHashes();
-        Map<ByteArrayWrapper, Node> nodes = this.getCache().getNodes();
-        Set<ByteArrayWrapper> toRemoveSet = nodes.keySet().stream()
-                .filter(key -> !hashSet.contains(key.getData()))
-                .collect(Collectors.toSet());
+        Map<ByteArrayWrapper, Node> nodes =  this.getCache().getNodes();
+        Set<ByteArrayWrapper> toRemoveSet = new HashSet<>();
+
+        for (ByteArrayWrapper key : nodes.keySet()) {
+            if (!hashSet.contains(key.getData())) {
+                toRemoveSet.add(key);
+            }
+        }
 
         for (ByteArrayWrapper key : toRemoveSet) {
 

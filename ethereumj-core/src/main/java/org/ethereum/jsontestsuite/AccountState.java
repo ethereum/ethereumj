@@ -153,13 +153,13 @@ public class AccountState {
             checked.add(key);
         }
 
-        expectedKeys.stream()
-                .filter(key -> !checked.contains(key))
-                .forEach(key -> {
-                    String formatedString = String.format("Account: %s: doesn't exist expected storage key: %s",
-                            Hex.toHexString(this.address), key.toString());
-                    results.add(formatedString);
-                });
+        for (DataWord key : expectedKeys){
+            if (!checked.contains(key)){
+                String formatedString = String.format("Account: %s: doesn't exist expected storage key: %s",
+                        Hex.toHexString(this.address), key.toString());
+                results.add(formatedString);
+            }
+        }
 
         return results;
     }

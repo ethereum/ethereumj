@@ -10,8 +10,7 @@ import org.ethereum.vm.Program;
 import org.spongycastle.util.encoders.Hex;
 
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 
 import java.math.BigInteger;
 
@@ -66,11 +65,18 @@ public class StateExplorerWindow extends JFrame {
         btnListAccounts.setBorderPainted(false);
         btnListAccounts.setFocusPainted(false);
         btnListAccounts.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btnListAccounts.addItemListener(e -> SwingUtilities.invokeLater(() -> {
-            if (accountsListWindow == null)
-                accountsListWindow = new AccountsListWindow();
-            accountsListWindow.setVisible(true);
-        }));
+        btnListAccounts.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+            	SwingUtilities.invokeLater(new Runnable() {
+                    public void run() {
+                       if(accountsListWindow == null)
+                    	   accountsListWindow = new AccountsListWindow();
+                       accountsListWindow.setVisible(true);
+                    }
+                });
+            }
+        });
         horizontalBox.add(btnListAccounts);
 
 
@@ -125,11 +131,13 @@ public class StateExplorerWindow extends JFrame {
         l1.setAlignmentX(Component.CENTER_ALIGNMENT);
         JComboBox cmbKey = new JComboBox(dataTypes);
         cmbKey.setSelectedIndex(1);
-        cmbKey.addActionListener(e -> {
-            JComboBox cmb = (JComboBox) e.getSource();
-            DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
-            dataModel.setKeyEncoding(t);
-        });
+        cmbKey.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JComboBox cmb = (JComboBox) e.getSource();
+				DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
+				dataModel.setKeyEncoding(t);
+			}
+		});
         VBox1.add(l1);
         VBox1.add(cmbKey);
 
@@ -139,11 +147,13 @@ public class StateExplorerWindow extends JFrame {
         l2.setAlignmentX(Component.CENTER_ALIGNMENT);
         JComboBox cmbValue = new JComboBox(dataTypes);
         cmbValue.setSelectedIndex(1);
-        cmbValue.addActionListener(e -> {
-            JComboBox cmb = (JComboBox) e.getSource();
-            DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
-            dataModel.setValueEncoding(t);
-        });
+        cmbValue.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				JComboBox cmb = (JComboBox) e.getSource();
+				DataEncodingType t = DataEncodingType.getTypeFromString((String) cmb.getSelectedItem());
+				dataModel.setValueEncoding(t);
+			}
+		});
         VBox2.add(l2);
         VBox2.add(cmbValue);
 
@@ -304,6 +314,10 @@ public class StateExplorerWindow extends JFrame {
 
     public static void main(String[] args) {
         // Start all Swing applications on the EDT.
-        SwingUtilities.invokeLater(() -> new StateExplorerWindow(null).setVisible(true));
-    }
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new StateExplorerWindow(null).setVisible(true);
+            }
+        });
+	}
 }

@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -107,15 +108,20 @@ public class ToolBar extends JFrame {
         editorToggle.setBorderPainted(false);
         editorToggle.setFocusPainted(false);
         editorToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        editorToggle.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                SwingUtilities.invokeLater(() -> {
-                    if (serpentEditor == null)
-                        serpentEditor = new SerpentEditor(ToolBar.this);
-                    serpentEditor.setVisible(true);
-                });
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                serpentEditor.setVisible(false);
+        editorToggle.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            if (serpentEditor == null)
+                                serpentEditor = new SerpentEditor(ToolBar.this);
+                            serpentEditor.setVisible(true);
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    serpentEditor.setVisible(false);
+                }
             }
         });
 
@@ -127,15 +133,20 @@ public class ToolBar extends JFrame {
         logToggle.setBorderPainted(false);
         logToggle.setFocusPainted(false);
         logToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        logToggle.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                SwingUtilities.invokeLater(() -> {
-                    if (connectionConsoleWindow == null)
-                        connectionConsoleWindow = new ConnectionConsoleWindow(ToolBar.this);
-                    connectionConsoleWindow.setVisible(true);
-                });
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                connectionConsoleWindow.setVisible(false);
+        logToggle.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                        if (connectionConsoleWindow == null)
+                            connectionConsoleWindow =  new ConnectionConsoleWindow(ToolBar.this);
+                        connectionConsoleWindow.setVisible(true);
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                        connectionConsoleWindow.setVisible(false);
+                }
             }
         });
 
@@ -147,15 +158,20 @@ public class ToolBar extends JFrame {
         peersToggle.setBorderPainted(false);
         peersToggle.setFocusPainted(false);
         peersToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        peersToggle.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                SwingUtilities.invokeLater(() -> {
-                    if (mainFrame == null)
-                        mainFrame = new PeersTableWindow(ToolBar.this);
-                    mainFrame.setVisible(true);
-                });
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                mainFrame.setVisible(false);
+        peersToggle.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
+                            if (mainFrame == null)
+                                mainFrame	= new PeersTableWindow(ToolBar.this);
+                            mainFrame.setVisible( true );
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    mainFrame.setVisible( false );
+                }
             }
         });
 
@@ -167,16 +183,21 @@ public class ToolBar extends JFrame {
         chainToggle.setBorderPainted(false);
         chainToggle.setFocusPainted(false);
         chainToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        chainToggle.addItemListener(e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                SwingUtilities.invokeLater(() -> {
+        chainToggle.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (e.getStateChange() == ItemEvent.SELECTED) {
+                    SwingUtilities.invokeLater(new Runnable() {
+                        public void run() {
 
-                    if (blockchainWindow == null)
-                        blockchainWindow = new BlockChainTable(ToolBar.this);
-                    blockchainWindow.setVisible(true);
-                });
-            } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                blockchainWindow.setVisible(false);
+                            if (blockchainWindow == null)
+                                blockchainWindow = new BlockChainTable(ToolBar.this);
+                            blockchainWindow.setVisible(true);
+                        }
+                    });
+                } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                    blockchainWindow.setVisible(false);
+                }
             }
         });
 
@@ -189,15 +210,20 @@ public class ToolBar extends JFrame {
         walletToggle.setFocusPainted(false);
         walletToggle.setCursor(new Cursor(Cursor.HAND_CURSOR));
         walletToggle.addItemListener(
-                e -> {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        SwingUtilities.invokeLater(() -> {
-                            if (walletWindow == null)
-                                walletWindow = new WalletWindow(ToolBar.this);
-                            walletWindow.setVisible(true);
-                        });
-                    } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        walletWindow.setVisible(false);
+                new ItemListener() {
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == ItemEvent.SELECTED) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    if (walletWindow == null)
+                                        walletWindow = new WalletWindow(ToolBar.this);
+                                    walletWindow.setVisible(true);
+                                }
+                            });
+                        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                            walletWindow.setVisible(false);
+                        }
                     }
                 }
         );
@@ -211,15 +237,20 @@ public class ToolBar extends JFrame {
         stateExplorer.setFocusPainted(false);
         stateExplorer.setCursor(new Cursor(Cursor.HAND_CURSOR));
         stateExplorer.addItemListener(
-                e -> {
-                    if (e.getStateChange() == ItemEvent.SELECTED) {
-                        SwingUtilities.invokeLater(() -> {
-                            if (stateExplorerWindow == null)
-                                stateExplorerWindow = new StateExplorerWindow(ToolBar.this);
-                            stateExplorerWindow.setVisible(true);
-                        });
-                    } else if (e.getStateChange() == ItemEvent.DESELECTED) {
-                        stateExplorerWindow.setVisible(false);
+                new ItemListener() {
+                    @Override
+                    public void itemStateChanged(ItemEvent e) {
+                        if (e.getStateChange() == ItemEvent.SELECTED) {
+                            SwingUtilities.invokeLater(new Runnable() {
+                                public void run() {
+                                    if (stateExplorerWindow == null)
+                                    	stateExplorerWindow = new StateExplorerWindow(ToolBar.this);
+                                    stateExplorerWindow.setVisible(true);
+                                }
+                            });
+                        } else if (e.getStateChange() == ItemEvent.DESELECTED) {
+                        	stateExplorerWindow.setVisible(false);
+                        }
                     }
                 }
         );
@@ -237,6 +268,10 @@ public class ToolBar extends JFrame {
     }
 
     public static void main(String args[]) {
-        SwingUtilities.invokeLater(() -> new ToolBar().setVisible(true));
+        SwingUtilities.invokeLater(new Runnable() {
+            public void run() {
+                new ToolBar().setVisible(true);
+            }
+        });
     }
 }
