@@ -1,10 +1,5 @@
 package test.ethereum.net;
 
-<<<<<<< HEAD
-import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.p2p.P2pMessageCodes;
-
-=======
 import static org.junit.Assert.assertEquals;
 
 import java.util.Arrays;
@@ -17,7 +12,6 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.shh.ShhHandler;
->>>>>>> 0266dac... Added fail tests, constructor tests
 import org.junit.Test;
 
 import org.slf4j.Logger;

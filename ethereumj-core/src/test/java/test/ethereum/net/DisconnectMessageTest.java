@@ -1,5 +1,11 @@
 package test.ethereum.net;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
+
+import java.lang.System;
+
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 
@@ -49,16 +55,58 @@ public class DisconnectMessageTest {
         assertEquals(ReasonCode.INCOMPATIBLE_NETWORK, disconnectMessage.getReason());
     }
 
-    @Test //handling unknown codes properly
+    @Test //handling boundary-high
     public void test_4() {
 
-        String disconnectMessageRaw = "C25555";
+        String disconnectMessageRaw = "C28080";
         byte[] payload = Hex.decode(disconnectMessageRaw);
 
         DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
         System.out.println(disconnectMessage);
 
-        assertEquals(disconnectMessage.getReason(), ReasonCode.UNKNOWN);
+        assertEquals(disconnectMessage.getReason(), ReasonCode.REQUESTED); //high numbers are zeroed
+    }
+
+    @Test //handling boundary-low
+    public void test_5() {
+
+        String disconnectMessageRaw = "C20000";
+        byte[] payload = Hex.decode(disconnectMessageRaw);
+
+        DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
+        System.out.println(disconnectMessage);
+
+        assertEquals(disconnectMessage.getReason(), ReasonCode.REQUESTED);
+    }
+
+    @Test //handling boundary-low minus 1 (error)
+    public void test_6() {
+
+        String disconnectMessageRaw = "C19999";
+        byte[] payload = Hex.decode(disconnectMessageRaw);
+
+        try{
+          DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
+          disconnectMessage.toString(); //throws exception
+          assertTrue("Valid raw encoding for disconnectMessage", false);
+        } catch (RuntimeException e) {
+          assertTrue("Invalid raw encoding for disconnectMessage", true);
+        }
+    }
+
+    @Test //handling boundary-high plus 1 (error)
+    public void test_7() {
+
+        String disconnectMessageRaw = "C28081";
+        byte[] payload = Hex.decode(disconnectMessageRaw);
+
+        try{
+          DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
+          disconnectMessage.toString(); //throws exception
+          assertTrue("Valid raw encoding for disconnectMessage", false);
+        } catch (RuntimeException e) {
+          assertTrue("Invalid raw encoding for disconnectMessage", true);
+        }
     }
 }
 
