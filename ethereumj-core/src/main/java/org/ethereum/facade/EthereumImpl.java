@@ -16,7 +16,7 @@ import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -42,19 +42,19 @@ public class EthereumImpl implements Ethereum {
 
     private static final Logger logger = LoggerFactory.getLogger("facade");
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
-    @Autowired
+    @Inject
     AdminInfo adminInfo;
 
-    @Autowired
+    @Inject
     ChannelManager channelManager;
 
-    @Autowired
+    @Inject
     PeerServer peerServer;
 
-    @Autowired
+    @Inject
     ApplicationContext ctx;
 
     public EthereumImpl() {

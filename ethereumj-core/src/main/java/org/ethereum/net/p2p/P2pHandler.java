@@ -21,7 +21,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -70,7 +70,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private HelloMessage handshakeHelloMessage = null;
     private Set<PeerInfo> lastPeersSent;
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
     public P2pHandler() {

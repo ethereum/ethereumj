@@ -5,7 +5,7 @@ import org.ethereum.net.p2p.Peer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +45,7 @@ public class PeerDiscovery {
     private ThreadPoolExecutor executorPool;
     private RejectedExecutionHandler rejectionHandler;
 
-    @Autowired
+    @Inject
     private ApplicationContext ctx;
 
 

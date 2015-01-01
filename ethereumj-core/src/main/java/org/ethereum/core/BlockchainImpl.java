@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
 
@@ -74,34 +74,34 @@ public class BlockchainImpl implements Blockchain {
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
-    @Autowired
+    @Inject
     private Repository repository;
     private Repository track;
 
-    @Autowired
+    @Inject
     private BlockStore blockStore;
 
     private Block bestBlock;
     private BigInteger totalDifficulty = BigInteger.ZERO;
 
-    @Autowired
+    @Inject
     Wallet wallet;
 
-    @Autowired
+    @Inject
     private EthereumListener listener;
 
-    @Autowired
+    @Inject
     private BlockQueue blockQueue;
 
-    @Autowired
+    @Inject
     private ChannelManager channelManager;
 
     private boolean syncDoneCalled = false;
 
-    @Autowired
+    @Inject
     ProgramInvokeFactory programInvokeFactory;
 
-    @Autowired
+    @Inject
     private AdminInfo adminInfo;
 
     private List<Chain> altChains = new ArrayList<>();

@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -64,10 +64,10 @@ public class Wallet {
     private Map<String, Account> rows = new HashMap<>();
     private long high;
 
-    @Autowired
+    @Inject
     private WorldManager worldManager;
 
-    @Autowired
+    @Inject
     private ApplicationContext context;
 
     private List<WalletListener> listeners = new ArrayList<>();

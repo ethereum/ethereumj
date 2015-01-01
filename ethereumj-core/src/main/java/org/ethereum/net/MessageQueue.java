@@ -10,7 +10,7 @@ import io.netty.channel.ChannelHandlerContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +46,7 @@ public class MessageQueue {
     private ChannelHandlerContext ctx = null;
     private final Timer timer = new Timer("MessageQueue");
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
     boolean hasPing = false;
 

@@ -14,7 +14,7 @@ import io.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.stereotype.Component;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -31,13 +31,13 @@ public class PeerServer {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    @Autowired
+    @Inject
     public ChannelManager channelManager;
 
-    @Autowired
+    @Inject
     public EthereumChannelInitializer ethereumChannelInitializer;
 
-    @Autowired
+    @Inject
     WorldManager worldManger;
 
     public PeerServer() {

@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -47,33 +47,33 @@ public class WorldManager {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-    @Autowired
+    @Inject
     private Blockchain blockchain;
 
-    @Autowired
+    @Inject
     private Repository repository;
 
-    @Autowired
+    @Inject
     private Wallet wallet;
 
-    @Autowired
+    @Inject
     private PeerClient activePeer;
 
-    @Autowired
+    @Inject
     private PeerDiscovery peerDiscovery;
 
-    @Autowired
+    @Inject
     private BlockStore blockStore;
 
-    @Autowired
+    @Inject
     private ChannelManager channelManager;
 
-    @Autowired
+    @Inject
     private AdminInfo adminInfo;
 
     private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
-    @Autowired
+    @Inject
     private EthereumListener listener;
 
     @PostConstruct

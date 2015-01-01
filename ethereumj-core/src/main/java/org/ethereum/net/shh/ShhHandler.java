@@ -9,7 +9,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +29,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
     public ShhHandler() {

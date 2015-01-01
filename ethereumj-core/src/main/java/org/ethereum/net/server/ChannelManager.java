@@ -8,7 +8,7 @@ import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public class ChannelManager {
 
     Map<ByteArrayWrapper, Block> blockCache = new HashMap<>();
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
     public ChannelManager() {

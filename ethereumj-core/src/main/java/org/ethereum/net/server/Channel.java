@@ -10,7 +10,7 @@ import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -24,25 +24,25 @@ import java.math.BigInteger;
 @Scope("prototype")
 public class Channel {
 
-    @Autowired
+    @Inject
     ChannelManager channelManager;
 
-    @Autowired
+    @Inject
     MessageQueue msgQueue;
 
-    @Autowired
+    @Inject
     P2pHandler p2pHandler;
 
-    @Autowired
+    @Inject
     EthHandler ethHandler;
 
-    @Autowired
+    @Inject
     ShhHandler shhHandler;
 
-    @Autowired
+    @Inject
     MessageDecoder messageDecoder;
 
-    @Autowired
+    @Inject
     MessageEncoder messageEncoder;
 
 

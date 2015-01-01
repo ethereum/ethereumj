@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -62,7 +62,7 @@ public class BlockQueue {
 
     private Timer timer = new Timer("BlockQueueTimer");
 
-    @Autowired
+    @Inject
     Blockchain blockchain;
 
     public BlockQueue() {
