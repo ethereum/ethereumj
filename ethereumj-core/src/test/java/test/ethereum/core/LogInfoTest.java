@@ -48,4 +48,22 @@ public class LogInfoTest {
     }
 
 
+    @Test // rlp decode
+    public void test_3() {
+
+        //   LogInfo{address=f2b1a404bcb6112a0ff2c4197cb02f3de40018b3, topics=[5a360139cff27713da0fe18a2100048a7ce1b7700c953a82bc3ff011437c8c2a 588d7ddcc06c14843ea68e690dfd4ec91ba09a8ada15c5b7fa6fead9c8befe4b ], data=}
+        byte[] rlp = Hex.decode("f85a94f2b1a404bcb6112a0ff2c4197cb02f3de40018b3f842a05a360139cff27713da0fe18a2100048a7ce1b7700c953a82bc3ff011437c8c2aa0588d7ddcc06c14843ea68e690dfd4ec91ba09a8ada15c5b7fa6fead9c8befe4b80");
+        LogInfo logInfo = new LogInfo(rlp);
+
+        assertEquals("f2b1a404bcb6112a0ff2c4197cb02f3de40018b3",
+                Hex.toHexString(logInfo.getAddress()));
+
+        assertEquals("00800000000000000010000000000000000000000000002000000000000000000012000000100000000050000020000000000000000000000000000000000000",
+                logInfo.getBloom().toString());
+
+        assertEquals("f85a94f2b1a404bcb6112a0ff2c4197cb02f3de40018b3f842a05a360139cff27713da0fe18a2100048a7ce1b7700c953a82bc3ff011437c8c2aa0588d7ddcc06c14843ea68e690dfd4ec91ba09a8ada15c5b7fa6fead9c8befe4b80",
+                Hex.toHexString(logInfo.getEncoded()));
+
+        logger.info("{}", logInfo);
+    }
 }
