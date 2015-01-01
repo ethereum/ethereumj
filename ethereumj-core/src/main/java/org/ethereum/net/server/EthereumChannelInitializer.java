@@ -13,7 +13,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -30,16 +30,16 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    @Autowired
+    @Inject
     private ApplicationContext ctx;
 
-    @Autowired
+    @Inject
     Blockchain blockchain;
 
-    @Autowired
+    @Inject
     ChannelManager channelManager;
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
     public EthereumChannelInitializer() {

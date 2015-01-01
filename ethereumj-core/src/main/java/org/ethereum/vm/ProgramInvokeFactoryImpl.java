@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
@@ -25,7 +25,6 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("VM");
 
-    @Autowired
     private Blockchain blockchain;
 
     /**

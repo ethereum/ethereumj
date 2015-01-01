@@ -25,7 +25,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -47,22 +47,22 @@ public class DiscoveryChannel {
 
     private boolean peerDiscoveryMode = false;
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
-    @Autowired
+    @Inject
     MessageQueue messageQueue;
 
-    @Autowired
+    @Inject
     P2pHandler p2pHandler;
 
-    @Autowired
+    @Inject
     EthHandler ethHandler;
 
-    @Autowired
+    @Inject
     ShhHandler shhHandler;
 
-    @Autowired
+    @Inject
     ApplicationContext ctx;
 
 

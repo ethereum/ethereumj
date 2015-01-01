@@ -15,7 +15,7 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -34,13 +34,13 @@ public class PeerClient {
 
     private boolean peerDiscoveryMode = false;
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
-    @Autowired
+    @Inject
     public ChannelManager channelManager;
 
-    @Autowired
+    @Inject
     public EthereumChannelInitializer ethereumChannelInitializer;
 
     public void connect(String host, int port) {

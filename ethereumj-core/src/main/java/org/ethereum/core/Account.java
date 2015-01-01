@@ -4,7 +4,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -28,7 +28,7 @@ public class Account {
     private Set<Transaction> pendingTransactions =
             Collections.synchronizedSet(new HashSet<Transaction>());
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
     public Account() {

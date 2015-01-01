@@ -5,7 +5,7 @@ import org.ethereum.core.TransactionReceipt;
 
 import org.hibernate.SessionFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 @Transactional(propagation = Propagation.SUPPORTS)
 public class BlockStore {
 
-    @Autowired
+    @Inject
     private SessionFactory sessionFactory;
 
-    @Autowired
+    @Inject
     ApplicationContext ctx;
 
 

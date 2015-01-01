@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
@@ -61,7 +61,7 @@ public class ForkTest {
         }
     }
 
-    @Autowired
+    @Inject
     WorldManager worldManager;
 
     @After

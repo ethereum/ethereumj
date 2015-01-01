@@ -9,7 +9,7 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
@@ -94,7 +94,7 @@ public class EthereumFactory {
     }
 
 
-    @Autowired
+    @Inject
     Ethereum eth;
 
     private static ApplicationContext context;

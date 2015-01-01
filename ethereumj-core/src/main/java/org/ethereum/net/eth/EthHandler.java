@@ -17,7 +17,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import javax.inject.Inject;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -75,10 +75,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
     private Timer getTxTimer = new Timer("GetTransactionsTimer");
 
-    @Autowired
+    @Inject
     private Blockchain blockchain;
 
-    @Autowired
+    @Inject
     private WorldManager worldManager;
     private List<byte[]> sentHashes;
     private Block lastBlock = Genesis.getInstance();
