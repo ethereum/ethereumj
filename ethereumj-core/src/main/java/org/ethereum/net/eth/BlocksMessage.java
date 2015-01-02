@@ -7,7 +7,6 @@ import org.ethereum.util.RLPList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
-import java.util.stream.Collectors;
 
 import static org.ethereum.net.eth.EthMessageCodes.BLOCKS;
 

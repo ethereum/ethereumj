@@ -6,7 +6,6 @@ import org.ethereum.util.Utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCKS;
 
