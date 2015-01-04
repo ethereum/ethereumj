@@ -88,7 +88,7 @@ public class HelloMessageTest {
         String peerId = ""; //null id
 
         HelloMessage helloMessage = new HelloMessage(version, clientStr, capabilities, listenPort, peerId);
-        logger.info(helloMessage.toString());
+        //logger.info(helloMessage.toString());
 
         assertEquals(P2pMessageCodes.HELLO, helloMessage.getCommand());
         assertEquals(version, helloMessage.getP2PVersion());
