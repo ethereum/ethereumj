@@ -1,3 +1,12 @@
+buildscript {
+    repositories {
+        maven { url 'http://repo.spring.io/plugins-release' }
+    }
+    dependencies {
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.6'
+   }
+}
+
 plugins {
     id 'application'
     id 'jacoco'
@@ -8,8 +17,10 @@ plugins {
     id 'com.github.kt3k.coveralls' version '2.0.1x'
     id 'com.jfrog.artifactory' version '3.0.1'
     id 'com.jfrog.bintray' version '1.0'
-
 }
+
+apply plugin: 'propdeps'
+apply plugin: 'propdeps-maven'
 
 sourceCompatibility = 1.7
 
@@ -48,12 +59,8 @@ dependencies {
     compile "org.antlr:antlr4-runtime:4.3" // for serpent compilation
     compile "com.yuvalshavit:antlr-denter:1.1"
     compile "org.javassist:javassist:3.15.0-GA"
-    compile "commons-logging:commons-logging:1.0" // TODO: provided scope
     compile "org.slf4j:slf4j-api:${slf4jVersion}"
-    runtime "org.slf4j:jcl-over-slf4j:${slf4jVersion}" // TODO: runtime scope
-    runtime "org.slf4j:slf4j-log4j12:${slf4jVersion}" // TODO: runtime scope
     compile "log4j:log4j:${log4jVersion}"
-    compile "log4j:apache-log4j-extras:${log4jVersion}"
     compile "org.codehaus.jackson:jackson-mapper-asl:1.9.13"
     compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.2.0"
@@ -68,6 +75,10 @@ dependencies {
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group:'junit', module:'junit'
     }
+    optional "commons-logging:commons-logging:1.0"
+    optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+    optional "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    optional "log4j:apache-log4j-extras:${log4jVersion}"
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
 }
