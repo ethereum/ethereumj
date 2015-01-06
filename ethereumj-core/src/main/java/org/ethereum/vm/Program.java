@@ -44,6 +44,14 @@ public class Program {
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger gasLogger = LoggerFactory.getLogger("gas");
 
+    /**
+     * This attribute defines the number of recursive calls allowed in the EVM
+     * Note: For the JVM to reach this level without a StackOverflow exception,
+     * ethereumj may need to be started with a JVM argument to increase
+     * the stack size. For example: -Xss10m
+     */
+    private static final int MAX_DEPTH = 1024;
+
     ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
 
     private int invokeHash;
@@ -295,6 +303,11 @@ public class Program {
 
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
 
+        if (invokeData.getCallDeep() == MAX_DEPTH){
+            stackPushZero();
+            return;
+        }
+
         // [1] FETCH THE CODE FROM THE MEMORY
         byte[] programCode = memoryChunk(memStart, memSize).array();
 
@@ -351,7 +364,7 @@ public class Program {
         }
 
         if (result != null &&
-                result.getException() != null) {
+            result.getException() != null) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
                     result.getException());
@@ -403,6 +416,11 @@ public class Program {
      */
     public void callToAddress(MessageCall msg) {
 
+        if (invokeData.getCallDeep() == MAX_DEPTH){
+            stackPushZero();
+            return;
+        }
+        
         byte[] data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
 
         // FETCH THE SAVED STORAGE

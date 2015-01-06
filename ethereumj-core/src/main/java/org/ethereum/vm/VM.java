@@ -68,6 +68,7 @@ public class VM {
 
     private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
 
+
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
