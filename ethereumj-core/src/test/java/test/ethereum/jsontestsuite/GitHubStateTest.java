@@ -15,6 +15,7 @@ import java.util.Set;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
+    @Ignore
     @Test
     public void stSingleTest() throws ParseException {
 
@@ -87,7 +88,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    @Ignore
+
     @Test
     public void stSystemOperationsTest() throws ParseException {
 
