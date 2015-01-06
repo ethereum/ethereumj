@@ -94,9 +94,11 @@ public class TestRunner {
         track.commit();
 
         logger.info("compare results");
-
-        // todo: perform logs comparision
-        List<LogInfo> logs = executor.getResult().getLogInfoList();
+        
+        List<LogInfo> logs = null;
+        if (executor.getResult() != null)
+            logs = executor.getResult().getLogInfoList();
+        
         List<String> logResults = testCase.getLogs().compareToReal(logs);
         results.addAll(logResults);
 
