@@ -171,7 +171,62 @@ bintrayUpload.onlyIf {
     (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
 }
 
+install {
+    repositories.mavenInstaller {
+        customizePom(pom, project)
+    }
+}
+
 publish {
     description = "Releases snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
+}
+
+
+def customizePom(pom, gradleProject) {
+    pom.whenConfigured { generatedPom ->
+        // eliminate test-scoped dependencies (no need in maven central poms)
+        generatedPom.dependencies.removeAll { dep ->
+            dep.scope == "test"
+        }
+
+        // sort to make pom dependencies order consistent to ease comparison of older poms
+        generatedPom.dependencies = generatedPom.dependencies.sort { dep ->
+            "$dep.scope:$dep.groupId:$dep.artifactId"
+        }
+
+        // add all items necessary for maven central publication
+        generatedPom.project {
+            name = "ethereumj"
+            description = "Java implementation of the Ethereum protocol"
+            url = "https://github.com/ethereum/ethereumj"
+            organization {
+                name = "Ethereum"
+                url = "https://ethereum.org"
+            }
+            licenses {
+                license {
+                    name "The MIT License"
+                    url "http://mit-license.org/"
+                    distribution "repo"
+                }
+            }
+            scm {
+                url = "https://github.com/ethereum/ethereumj"
+                connection = "scm:git:git://github.com/ethereum/ethereumj"
+                developerConnection = "scm:git:git://github.com/ethereum/ethereumj"
+            }
+            developers {
+                developer {
+                    id = "rmandeleil"
+                    name = "Roman Mandeleil"
+                    email = "roman.mandeleil@gmail.com"
+                }
+            }
+            issueManagement {
+                system = "GitHub Issues"
+                url = "https://github.com/ethereum/ethereumj/issues"
+            }
+        }
+    }
 }
