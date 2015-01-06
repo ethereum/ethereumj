@@ -136,6 +136,7 @@ public class GitHubJSONTestSuite {
                     logger.info(single);
 
             Assert.assertTrue(result.isEmpty());
+            logger.info(" *** Passed: " + testCase.getName());
         }
     }
 
