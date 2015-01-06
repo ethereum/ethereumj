@@ -1,5 +1,18 @@
 package test.ethereum.net;
 
+import static org.junit.Assert.assertEquals;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.GetPeersMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.Peer;
@@ -54,4 +67,58 @@ public class PeersMessageTest {
     }
 
 
+    @Test /* PeersMessage 1 from constructor */
+    public void testPeers_2() {
+        //Init
+        InetAddress address = InetAddress.getLoopbackAddress();
+        List<Capability> capabilities = new ArrayList<>(); 
+        int port = 112;
+        String peerId = "36659c3656c488437cceb11abeb9b9fc69b8055144a7e7db3584d03e606083f90e" +
+          "17a1d3021d674579407cdaaafdfeef485872ab719db9f2b6283f498bb90a71";
+         
+        Set<Peer> peers = new HashSet<>();
+        peers.add(new Peer(address, port, peerId )); 
+        
+        PeersMessage peersMessage= new PeersMessage(peers);
+        logger.info(peersMessage.toString());
+
+        assertEquals(1, peersMessage.getPeers().size());
+
+        Iterator<Peer> it = peersMessage.getPeers().iterator();
+        Peer peer = it.next();
+
+        assertEquals(P2pMessageCodes.PEERS, peersMessage.getCommand());
+        assertEquals("127.0.0.1", peer.getAddress().getHostAddress());
+        assertEquals(112, peer.getPort());
+        assertEquals("36659c3656c488437cceb11abeb9b9fc69b8055144a7e7db3584d03e6" +
+        "06083f90e17a1d3021d674579407cdaaafdfeef485872ab719db9f2b6283f498bb90a71", peer.getPeerId());
+    }
+
+    @Test /* failing test */
+    public void testPeers_3() {
+        //Init
+        InetAddress address = InetAddress.getLoopbackAddress();
+        List<Capability> capabilities = Arrays.asList(
+          new Capability( null, (byte) 0 ), 
+          null //null here can cause NullPointerException when using toString
+          ); //encoding null capabilities
+        int port = -1; //invalid port
+        String peerId = ""; //invalid peerid
+         
+        Set<Peer> peers = new HashSet<>();
+        peers.add(new Peer(address, port, peerId )); 
+        
+        PeersMessage peersMessage= new PeersMessage(peers);
+        logger.info(peersMessage.toString());
+
+        assertEquals(1, peersMessage.getPeers().size());
+
+        Iterator<Peer> it = peersMessage.getPeers().iterator();
+        Peer peer = it.next();
+
+        assertEquals(P2pMessageCodes.PEERS, peersMessage.getCommand());
+        assertEquals("127.0.0.1", peer.getAddress().getHostAddress());
+        assertEquals(-1, peer.getPort());
+        assertEquals( "" , peer.getPeerId());
+    }
 }
