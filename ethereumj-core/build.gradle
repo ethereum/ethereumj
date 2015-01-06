@@ -1,26 +1,25 @@
 buildscript {
     repositories {
-        maven { url 'http://repo.spring.io/plugins-release' }
+        jcenter()
+        maven { url 'http://repo.spring.io/plugins-release-local' }
     }
     dependencies {
-        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.6'
-   }
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
+        classpath 'org.jfrog.buildinfo:build-info-extractor-gradle:3.0.1'
+    }
 }
 
 plugins {
     id 'application'
     id 'jacoco'
-    id 'maven'
-    id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '1.2.0'
     id 'me.champeau.gradle.antlr4' version '0.1'
     id 'com.github.kt3k.coveralls' version '2.0.1x'
-    id 'com.jfrog.artifactory' version '3.0.1'
     id 'com.jfrog.bintray' version '1.0'
 }
 
-apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
+apply plugin: 'com.jfrog.artifactory-upload'
 
 sourceCompatibility = 1.7
 
@@ -116,16 +115,6 @@ jacocoTestReport {
     }
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-            artifact sourcesJar
-            artifact javadocJar
-        }
-    }
-}
-
 def bintrayUsername = project.hasProperty('bintrayUser') ? project.bintrayUser : ''
 def bintrayPassword = project.hasProperty('bintrayKey') ? project.bintrayKey : ''
 def pullRequest = System.getenv('TRAVIS_PULL_REQUEST')
@@ -137,9 +126,6 @@ artifactory {
             repoKey =  'oss-snapshot-local'
             username = bintrayUsername
             password = bintrayPassword
-        }
-        defaults {
-            publications ('mavenJava')
         }
     }
     resolve {
@@ -158,7 +144,8 @@ bintray {
     user = bintrayUsername
     key = bintrayPassword
 
-    publications = ['mavenJava']
+    configurations = ['archives']
+
     dryRun = false //Whether to run this as dry-run, without deploying
     publish = true //If version should be auto published after an upload
     pkg {
@@ -172,7 +159,62 @@ bintrayUpload.onlyIf {
     (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
 }
 
-publish {
-    description = "Releases snapshots to oss.jfrog.org and releases to Bintray/JCenter"
+install {
+    repositories.mavenInstaller {
+        customizePom(pom, project)
+    }
+}
+
+task publish {
+    description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
+}
+
+
+def customizePom(pom, gradleProject) {
+    pom.whenConfigured { generatedPom ->
+        // eliminate test-scoped dependencies (no need in maven central poms)
+        generatedPom.dependencies.removeAll { dep ->
+            dep.scope == "test"
+        }
+
+        // sort to make pom dependencies order consistent to ease comparison of older poms
+        generatedPom.dependencies = generatedPom.dependencies.sort { dep ->
+            "$dep.scope:$dep.groupId:$dep.artifactId"
+        }
+
+        // add all items necessary for maven central publication
+        generatedPom.project {
+            name = "ethereumj"
+            description = "Java implementation of the Ethereum protocol"
+            url = "https://github.com/ethereum/ethereumj"
+            organization {
+                name = "Ethereum"
+                url = "https://ethereum.org"
+            }
+            licenses {
+                license {
+                    name "The MIT License"
+                    url "http://mit-license.org/"
+                    distribution "repo"
+                }
+            }
+            scm {
+                url = "https://github.com/ethereum/ethereumj"
+                connection = "scm:git:git://github.com/ethereum/ethereumj"
+                developerConnection = "scm:git:git://github.com/ethereum/ethereumj"
+            }
+            developers {
+                developer {
+                    id = "rmandeleil"
+                    name = "Roman Mandeleil"
+                    email = "roman.mandeleil@gmail.com"
+                }
+            }
+            issueManagement {
+                system = "GitHub Issues"
+                url = "https://github.com/ethereum/ethereumj/issues"
+            }
+        }
+    }
 }

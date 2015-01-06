@@ -1,23 +1,21 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.ArrayList;
-
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pHandler;
+import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.shh.ShhHandler;
+
 import org.junit.Test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,12 +39,10 @@ public class HelloMessageTest {
         assertEquals(2, helloMessage.getCapabilities().size());
         assertEquals(992, helloMessage.getListenPort());
         assertEquals(
-            "1fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a77f9b86eb14669fe7a8a46a2dd1b7d070b94e463f4ecd5b337c8b4d31bbf8dd5646",
-            helloMessage.getPeerId());
-
-
+                "1fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a77f9b86eb14669fe7a8a46a2dd1b7d070b94e463f4ecd5b337c8b4d31bbf8dd5646",
+                helloMessage.getPeerId());
     }
-    
+
     //Instantiate from constructor
     @Test
     public void test2() {
@@ -54,9 +50,9 @@ public class HelloMessageTest {
         byte version = 2;
         String clientStr = "Ethereum(++)/v0.7.9/Release/Linux/g++";
         List<Capability> capabilities = Arrays.asList(
-          new Capability( Capability.ETH, EthHandler.VERSION),
-          new Capability( Capability.SHH, ShhHandler.VERSION),
-          new Capability( Capability.P2P, P2pHandler.VERSION) );
+                new Capability(Capability.ETH, EthHandler.VERSION),
+                new Capability(Capability.SHH, ShhHandler.VERSION),
+                new Capability(Capability.P2P, P2pHandler.VERSION));
         int listenPort = 992;
         String peerId = "1fbf1e41f08078918c9f7b6734594ee56d7f538614f602c71194db0a1af5a";
 
@@ -66,10 +62,10 @@ public class HelloMessageTest {
         assertEquals(P2pMessageCodes.HELLO, helloMessage.getCommand());
         assertEquals(version, helloMessage.getP2PVersion());
         assertEquals(clientStr, helloMessage.getClientId());
-        assertEquals( 3 ,   helloMessage.getCapabilities().size());
-        assertEquals( listenPort , helloMessage.getListenPort());
-        assertEquals( peerId , helloMessage.getPeerId());
-    
+        assertEquals(3, helloMessage.getCapabilities().size());
+        assertEquals(listenPort, helloMessage.getListenPort());
+        assertEquals(peerId, helloMessage.getPeerId());
+
         //TODO tostring?
     }
 
@@ -80,21 +76,20 @@ public class HelloMessageTest {
         byte version = -1; //invalid version
         String clientStr = ""; //null id
         List<Capability> capabilities = Arrays.asList(
-          new Capability( null, (byte) 0 ), 
-          new Capability( null, (byte) 0 ), 
-          null, //null here causes NullPointerException when using toString
-          new Capability( null, (byte) 0 ) ); //encoding null capabilities
+                new Capability(null, (byte) 0),
+                new Capability(null, (byte) 0),
+                null, //null here causes NullPointerException when using toString
+                new Capability(null, (byte) 0)); //encoding null capabilities
         int listenPort = 99999; //invalid port
         String peerId = ""; //null id
 
         HelloMessage helloMessage = new HelloMessage(version, clientStr, capabilities, listenPort, peerId);
-        //logger.info(helloMessage.toString());
 
         assertEquals(P2pMessageCodes.HELLO, helloMessage.getCommand());
         assertEquals(version, helloMessage.getP2PVersion());
         assertEquals(clientStr, helloMessage.getClientId());
-        assertEquals( 4 ,   helloMessage.getCapabilities().size());
-        assertEquals( listenPort , helloMessage.getListenPort());
-        assertEquals( peerId , helloMessage.getPeerId());
+        assertEquals(4, helloMessage.getCapabilities().size());
+        assertEquals(listenPort, helloMessage.getListenPort());
+        assertEquals(peerId, helloMessage.getPeerId());
     }
 }

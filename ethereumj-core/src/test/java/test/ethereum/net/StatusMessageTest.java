@@ -2,14 +2,14 @@ package test.ethereum.net;
 
 import org.ethereum.net.eth.StatusMessage;
 
-import java.math.BigInteger;
-
 import org.junit.Test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
+
+import java.math.BigInteger;
 
 import static org.junit.Assert.assertEquals;
 
@@ -35,21 +35,22 @@ public class StatusMessageTest {
     }
 
     @Test //from constructor
-    public void test2(){
+    public void test2() {
         //Init
         byte version = 39;
         byte netId = 0;
         byte[] difficulty = new BigInteger("25c60144", 16).toByteArray();
-        byte[] bestHash = new BigInteger("832056d3c93ff2739ace7199952e5365aa29f18805be05634c4db125c5340216",16).toByteArray();
-        byte[] genesisHash = new BigInteger("955f36d073ccb026b78ab3424c15cf966a7563aa270413859f78702b9e8e22cb",16).toByteArray();
+        byte[] bestHash =
+                new BigInteger("832056d3c93ff2739ace7199952e5365aa29f18805be05634c4db125c5340216", 16).toByteArray();
+        byte[] genesisHash =
+                new BigInteger("955f36d073ccb026b78ab3424c15cf966a7563aa270413859f78702b9e8e22cb", 16).toByteArray();
 
         StatusMessage statusMessage = new StatusMessage(version, netId, difficulty, bestHash, genesisHash);
 
         logger.info(statusMessage.toString());
 
         assertEquals(39, statusMessage.getProtocolVersion());
-        assertEquals("25c60144",
-                Hex.toHexString(statusMessage.getTotalDifficulty()));
+        assertEquals("25c60144", Hex.toHexString(statusMessage.getTotalDifficulty()));
         assertEquals("00832056d3c93ff2739ace7199952e5365aa29f18805be05634c4db125c5340216",
                 Hex.toHexString(statusMessage.getBestHash()));
         assertEquals("00955f36d073ccb026b78ab3424c15cf966a7563aa270413859f78702b9e8e22cb",
@@ -57,25 +58,22 @@ public class StatusMessageTest {
     }
 
     @Test //fail test
-    public void test3(){
+    public void test3() {
         //Init
         byte version = -1; //invalid version
         byte netId = -1;  //invalid netid
         byte[] difficulty = new BigInteger("-1000000", 16).toByteArray(); //negative difficulty
-        byte[] bestHash = new BigInteger("-100000000000000000000000000",16).toByteArray(); //invalid hash
-        byte[] genesisHash = new BigInteger("-1000000000000000000000000000000",16).toByteArray(); //invalid hash
+        byte[] bestHash = new BigInteger("-100000000000000000000000000", 16).toByteArray(); //invalid hash
+        byte[] genesisHash = new BigInteger("-1000000000000000000000000000000", 16).toByteArray(); //invalid hash
 
         StatusMessage statusMessage = new StatusMessage(version, netId, difficulty, bestHash, genesisHash);
 
         logger.info(statusMessage.toString());
 
         assertEquals(-1, statusMessage.getProtocolVersion());
-        assertEquals("ff000000",
-                Hex.toHexString(statusMessage.getTotalDifficulty()));
-        assertEquals("ff00000000000000000000000000",
-                Hex.toHexString(statusMessage.getBestHash()));
-        assertEquals("ff000000000000000000000000000000",
-                Hex.toHexString(statusMessage.getGenesisHash()));
+        assertEquals("ff000000", Hex.toHexString(statusMessage.getTotalDifficulty()));
+        assertEquals("ff00000000000000000000000000", Hex.toHexString(statusMessage.getBestHash()));
+        assertEquals("ff000000000000000000000000000000", Hex.toHexString(statusMessage.getGenesisHash()));
     }
 }
 
