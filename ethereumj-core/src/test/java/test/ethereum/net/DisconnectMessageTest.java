@@ -1,11 +1,5 @@
 package test.ethereum.net;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertFalse;
-
-import java.lang.System;
-
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 
@@ -13,7 +7,7 @@ import org.junit.Test;
 
 import org.spongycastle.util.encoders.Hex;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class DisconnectMessageTest {
 
@@ -85,12 +79,12 @@ public class DisconnectMessageTest {
         String disconnectMessageRaw = "C19999";
         byte[] payload = Hex.decode(disconnectMessageRaw);
 
-        try{
-          DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
-          disconnectMessage.toString(); //throws exception
-          assertTrue("Valid raw encoding for disconnectMessage", false);
+        try {
+            DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
+            disconnectMessage.toString(); //throws exception
+            assertTrue("Valid raw encoding for disconnectMessage", false);
         } catch (RuntimeException e) {
-          assertTrue("Invalid raw encoding for disconnectMessage", true);
+            assertTrue("Invalid raw encoding for disconnectMessage", true);
         }
     }
 
@@ -100,12 +94,12 @@ public class DisconnectMessageTest {
         String disconnectMessageRaw = "C28081";
         byte[] payload = Hex.decode(disconnectMessageRaw);
 
-        try{
-          DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
-          disconnectMessage.toString(); //throws exception
-          assertTrue("Valid raw encoding for disconnectMessage", false);
+        try {
+            DisconnectMessage disconnectMessage = new DisconnectMessage(payload);
+            disconnectMessage.toString(); //throws exception
+            assertTrue("Valid raw encoding for disconnectMessage", false);
         } catch (RuntimeException e) {
-          assertTrue("Invalid raw encoding for disconnectMessage", true);
+            assertTrue("Invalid raw encoding for disconnectMessage", true);
         }
     }
 }
