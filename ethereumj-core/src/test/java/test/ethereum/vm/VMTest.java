@@ -1715,7 +1715,7 @@ public class VMTest {
         assertEquals(s_expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
-    @Test // JUMP OP
+    @Test(expected = BadJumpDestinationException.class) // JUMP OP mal data
     public void testJUMP_1() {
 
         VM vm = new VM();
@@ -1737,6 +1737,7 @@ public class VMTest {
         VM vm = new VM();
         program = new Program(Hex.decode("600C600C905660CC60DD60EE60FF"), invoke);
         try {
+            vm.step(program);
             vm.step(program);
             vm.step(program);
             vm.step(program);
@@ -1813,7 +1814,7 @@ public class VMTest {
         }
     }
 
-    @Test // JUMPDEST OP for JUMP
+    @Test(expected = BadJumpDestinationException.class) // JUMP OP mal data
     public void testJUMPDEST_1() {
 
         VM vm = new VM();
