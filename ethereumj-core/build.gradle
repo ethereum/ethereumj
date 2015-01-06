@@ -3,7 +3,7 @@ buildscript {
         maven { url 'http://repo.spring.io/plugins-release' }
     }
     dependencies {
-        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.6'
+        classpath 'org.springframework.build.gradle:propdeps-plugin:0.0.7'
    }
 }
 
@@ -19,7 +19,6 @@ plugins {
     id 'com.jfrog.bintray' version '1.0'
 }
 
-apply plugin: 'propdeps'
 apply plugin: 'propdeps-maven'
 
 sourceCompatibility = 1.7
