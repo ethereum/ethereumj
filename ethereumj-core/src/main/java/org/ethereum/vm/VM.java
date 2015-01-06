@@ -892,11 +892,7 @@ public class VM {
                 case JUMP: {
                     DataWord pos = program.stackPop();
                     int nextPC = pos.intValue(); // possible overflow
-                    if (program.getPreviouslyExecutedOp() < OpCode.PUSH1.val() || program.getPreviouslyExecutedOp() >
-                            OpCode.PUSH32.val()) {
-                        if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
-                            throw program.new BadJumpDestinationException();
-                    }
+                    if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
 
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
@@ -910,15 +906,10 @@ public class VM {
                     DataWord cond = program.stackPop();
 
                     if (!cond.isZero()) {
-                        int nextPC = pos.intValue(); // possible overflow
-                        if (program.getPreviouslyExecutedOp() < OpCode.PUSH1.val() || program.getPreviouslyExecutedOp
-                                () > OpCode.PUSH32.val()) {
-                            if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
-                                throw program.new BadJumpDestinationException();
-                        }
 
-                        // todo: in case destination is not JUMPDEST, check if prev was strict push
-                        // todo: in EP: (ii) If a jump is preceded by a push, no jumpdest required;
+                        int nextPC = pos.intValue(); // possible overflow
+                        if (nextPC != 0 && program.getOp(nextPC) != OpCode.JUMPDEST.val())
+                            throw program.new BadJumpDestinationException();
 
                         if (logger.isInfoEnabled())
                             hint = "~> " + nextPC;
