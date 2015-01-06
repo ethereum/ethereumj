@@ -15,6 +15,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '1.2.0'
     id 'me.champeau.gradle.antlr4' version '0.1'
     id 'com.github.kt3k.coveralls' version '2.0.1x'
+    id 'com.jfrog.bintray' version '1.0'
 }
 
 apply plugin: 'propdeps-maven'
@@ -139,6 +140,25 @@ artifactoryPublish.onlyIf {
     (!pullRequest || pullRequest == 'false') && project.version.endsWith('-SNAPSHOT')
 }
 
+bintray {
+    user = bintrayUsername
+    key = bintrayPassword
+
+    configurations = ['archives']
+
+    dryRun = false //Whether to run this as dry-run, without deploying
+    publish = true //If version should be auto published after an upload
+    pkg {
+        userOrg = 'ethereum' //An optional organization name when the repo belongs to one of the user's orgs
+        repo = 'maven'
+        name = 'org.ethereum'
+    }
+}
+
+bintrayUpload.onlyIf {
+    (!pullRequest || pullRequest == 'false') && !project.version.endsWith('-SNAPSHOT')
+}
+
 install {
     repositories.mavenInstaller {
         customizePom(pom, project)
@@ -146,9 +166,10 @@ install {
 }
 
 task publish {
-    description = "Publishes snapshots to oss.jfrog.org"
-    dependsOn artifactoryPublish
+    description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
+    dependsOn artifactoryPublish, bintrayUpload
 }
+
 
 def customizePom(pom, gradleProject) {
     pom.whenConfigured { generatedPom ->
