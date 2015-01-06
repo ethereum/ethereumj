@@ -1,6 +1,9 @@
 language: java
 jdk: oraclejdk8
 
+before_script:
+  - 'export JAVA_OPTS= -Xss16M'
+
 script:
   - ./gradlew build publish
 
