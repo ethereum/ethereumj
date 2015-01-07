@@ -89,6 +89,7 @@ public class GitHubStateTest {
     }
 
 
+    @Ignore
     @Test
     public void stSystemOperationsTest() throws ParseException {
 
