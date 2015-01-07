@@ -11,6 +11,11 @@ script:
 after_success:
   - ./gradlew jacocoTestReport coveralls
 
+cache:
+  directories:
+    - .gradle
+    - $HOME/.gradle
+
 notifications:
   irc:
     channels: chat.freenode.net#ethereumj
