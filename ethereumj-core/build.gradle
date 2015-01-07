@@ -36,6 +36,10 @@ antlr4 {
 
 compileJava.dependsOn antlr4
 
+test {
+    jvmArgs '-Xss16m'
+}
+
 configurations {
    compile.extendsFrom antlr4
 }

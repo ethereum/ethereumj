@@ -37,6 +37,6 @@ notifications:
 # http://www.gradle.org/docs/current/userguide/tutorial_this_and_that.html#sec:gradle_properties_and_system_properties
 env:
   global:
-    - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled -Xss32M"
+    - JAVA_OPTS="-XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
     - secure: "BSdfBQsJi5VFcIF7Z50ddfjex60OZpd8OM7AxN+h93wxzBx/GD2bsWA9elwvrLFImByw5RIqE9xRvL4CioKZLgFiJCSFuPkf6I+6R6PsUhqklPvAJSXHlQXOM6bJD23rZewyfudh5JtqADVavY7vlXnmYXFeWKh8XdPYtRPlJV0="
     - secure: "iZcZikUHrdaxsc5at1KT0M/6D4OHdU2WTd/aFIBKERXteGw+okq+s+VWghnELEq3YsKfYRJrkslcA6Mpcxq7KrUMsSSX1kZ1ifsk2151sU3+fJpIYQ9pCeWboLWSF//A7IdEe+zHpRVFuHVGU05OAalNCmJ52TEe3/M0YkY5+e8="
