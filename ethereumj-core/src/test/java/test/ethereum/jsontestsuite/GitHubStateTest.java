@@ -64,7 +64,6 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    @Ignore
     @Test
     public void stRecursiveCreate() throws ParseException { // [V]
 
