@@ -27,11 +27,7 @@ import java.math.BigInteger;
 
 import java.nio.ByteBuffer;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -70,6 +66,8 @@ public class Program {
     byte lastOp = 0;
     byte previouslyExecutedOp = 0;
     boolean stopped = false;
+    
+    private Set<Integer> jumpdest = new HashSet<>();
 
     ProgramInvoke invokeData;
 
@@ -83,6 +81,7 @@ public class Program {
             this.programAddress = invokeData.getOwnerAddress();
             this.invokeHash = invokeData.hashCode();
             this.result.setRepository(invokeData.getRepository());
+            precompile();
         }
     }
 
@@ -856,6 +855,21 @@ public class Program {
         return programTrace;
     }
 
+    public void precompile(){
+        for (int i = 0; i < ops.length; ++i){
+
+            OpCode op = OpCode.code(ops[i]);
+            if (op == null) continue;
+            
+            if (op.equals(OpCode.JUMPDEST)) jumpdest.add(i);
+            
+            if (op.asInt() >= OpCode.PUSH1.asInt() && op.asInt() <= OpCode.PUSH32.asInt()){
+                i += op.asInt() - OpCode.PUSH1.asInt() + 1;
+            }
+        }
+    }
+    
+    
     public static String stringify(byte[] code, int index, String result) {
         if (code == null || code.length == 0)
             return result;
@@ -887,6 +901,10 @@ public class Program {
 
     public void addListener(ProgramListener listener) {
         this.listener = listener;
+    }
+
+    public void vallidateJumpDest(int nextPC) {
+        if (!jumpdest.contains(nextPC)) throw new BadJumpDestinationException();
     }
 
     public interface ProgramListener {

@@ -399,14 +399,15 @@ public class VMCustomTest {
         }
     }
 
-    @Test // PREVHASH OP
-    public void testPREVHASH_1() {
+    @Test // BLOCKHASH OP
+    public void testBLOCKHASH_1() {
 
         VM vm = new VM();
         program =
-                new Program(Hex.decode("40"), invoke);
-        String s_expected_1 = "961CB117ABA86D1E596854015A1483323F18883C2D745B0BC03E87F146D2BB1C";
+                new Program(Hex.decode("600140"), invoke);
+        String s_expected_1 = "C89EFDAA54C0F20C7ADF612882DF0950F5A951637E0307CDCB4C672F298B8BC6";
 
+        vm.step(program);
         vm.step(program);
 
         DataWord item1 = program.stackPop();

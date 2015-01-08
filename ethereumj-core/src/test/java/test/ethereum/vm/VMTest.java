@@ -1,5 +1,6 @@
 package test.ethereum.vm;
 
+import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
@@ -2732,6 +2733,7 @@ public class VMTest {
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 
+    @Ignore // todo: test is not testing EXTCODESIZE
     @Test // EXTCODESIZE OP
     public void testEXTCODESIZE_1() {
         VM vm = new VM();

@@ -21,7 +21,7 @@ import java.util.List;
  * @author Roman Mandeleil
  * @since 12.11.2014
  */
-@Repository
+@Repository("blockStore")
 @Transactional(propagation = Propagation.SUPPORTS)
 public class BlockStoreImpl implements BlockStore{
 
@@ -31,14 +31,18 @@ public class BlockStoreImpl implements BlockStore{
     @Autowired
     ApplicationContext ctx;
 
+    public BlockStoreImpl() {
+    }
+
     @Override
     public byte[] getBlockHashByNumber(long blockNumber) {
-        
+
         Block block = getBlockByNumber(blockNumber);
         if (block != null) return block.getHash();
         return ByteUtil.EMPTY_BYTE_ARRAY;
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Block getBlockByNumber(long blockNumber) {
 
@@ -52,6 +56,7 @@ public class BlockStoreImpl implements BlockStore{
         return new Block(vo.rlp);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public Block getBlockByHash(byte[] hash) {
 
@@ -65,6 +70,7 @@ public class BlockStoreImpl implements BlockStore{
         return new Block(vo.rlp);
     }
 
+    @Override
     @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
@@ -87,6 +93,7 @@ public class BlockStoreImpl implements BlockStore{
         return hashes;
     }
 
+    @Override
     @Transactional
     public void deleteBlocksSince(long number) {
 
@@ -97,6 +104,7 @@ public class BlockStoreImpl implements BlockStore{
     }
 
 
+    @Override
     @Transactional
     public void saveBlock(Block block, List<TransactionReceipt> receipts) {
 
@@ -115,6 +123,7 @@ public class BlockStoreImpl implements BlockStore{
         sessionFactory.getCurrentSession().persist(blockVO);
     }
 
+    @Override
     @Transactional(readOnly = true)
     public BigInteger getTotalDifficultySince(long number) {
 
@@ -127,6 +136,7 @@ public class BlockStoreImpl implements BlockStore{
     }
 
 
+    @Override
     @Transactional(readOnly = true)
     public BigInteger getTotalDifficulty() {
 
@@ -137,6 +147,7 @@ public class BlockStoreImpl implements BlockStore{
     }
 
 
+    @Override
     @Transactional(readOnly = true)
     public Block getBestBlock() {
 
@@ -151,6 +162,7 @@ public class BlockStoreImpl implements BlockStore{
         return new Block(vo.rlp);
     }
 
+    @Override
     @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
     public List<Block> getAllBlocks() {
@@ -166,12 +178,14 @@ public class BlockStoreImpl implements BlockStore{
         return blocks;
     }
 
+    @Override
     @Transactional
     public void reset() {
         sessionFactory.getCurrentSession().
                 createQuery("delete from BlockVO").executeUpdate();
     }
 
+    @Override
     public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
 
         List result = sessionFactory.getCurrentSession().

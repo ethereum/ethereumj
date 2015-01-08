@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.db.BlockStoreImpl;
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -9,12 +9,9 @@ import org.ethereum.net.BlockQueue;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.vm.ProgramInvokeFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
@@ -23,9 +20,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -79,7 +74,7 @@ public class BlockchainImpl implements Blockchain {
     private Repository track;
 
     @Autowired
-    private BlockStoreImpl blockStore;
+    private BlockStore blockStore;
 
     private Block bestBlock;
     private BigInteger totalDifficulty = BigInteger.ZERO;

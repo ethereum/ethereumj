@@ -29,9 +29,6 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
     @Autowired
     private Blockchain blockchain;
-    
-    @Autowired
-    private BlockStoreImpl blockStore;
 
 
     // Invocation by the wire tx
