@@ -122,7 +122,8 @@ public class TransactionExecutor {
         // the purchased gas will be available for
         // the contract in the execution state,
         // it can be retrieved using GAS op
-        if (track.getBalance(senderAddress).compareTo(gasDebit) == -1) {
+        BigInteger txValue = new BigInteger(1, tx.getValue());
+        if (track.getBalance(senderAddress).compareTo(gasDebit.add(txValue)) == -1) {
             logger.debug("No gas to start the execution: sender={}",
                     Hex.toHexString(senderAddress));
 
@@ -133,7 +134,6 @@ public class TransactionExecutor {
 
 
         // THE SIMPLE VALUE/BALANCE CHANGE
-        BigInteger txValue = new BigInteger(1, tx.getValue());
         if (track.getBalance(senderAddress).compareTo(txValue) >= 0) {
 
             track.addBalance(receiverAddress, txValue); // balance will be read again below
