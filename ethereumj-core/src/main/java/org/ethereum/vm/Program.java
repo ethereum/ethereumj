@@ -576,13 +576,6 @@ public class Program {
 
     public DataWord getBlockHash(int index) {
 
-        // todo:
-        /// Hash of a block if within the last 256 blocks, or h256() otherwise.
-//        h256 blockhash(u256 _number) {return
-//        _number < currentBlock.number && _number >= (std::max<u256>(256, currentBlock.number) - 256) ?
-//                    lastHashes[(unsigned)(currentBlock.number - 1 - _number)] :
-//                    h256(); }
-
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256?
                 new DataWord(this.invokeData.getBlockStore().getBlockHashByNumber(index)):
                 DataWord.ZERO;
