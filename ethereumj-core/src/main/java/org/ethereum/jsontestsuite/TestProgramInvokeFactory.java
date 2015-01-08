@@ -2,6 +2,7 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
@@ -26,18 +27,19 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
 
     @Override
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
-        return generalInvoke(tx, repository);
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository, BlockStore blockStore) {
+        return generalInvoke(tx, repository, blockStore);
     }
 
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord inValue, DataWord inGas,
-                                             BigInteger balanceInt, byte[] dataIn, Repository repository) {
+                                             BigInteger balanceInt, byte[] dataIn, 
+                                             Repository repository, BlockStore blockStore) {
         return null;
     }
 
 
-    private ProgramInvoke generalInvoke(Transaction tx, Repository repository) {
+    private ProgramInvoke generalInvoke(Transaction tx, Repository repository ,BlockStore blockStore) {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.
@@ -88,7 +90,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
         return new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, data, lastHash, coinbase,
-                timestamp, number, difficulty, gaslimit, repository);
+                timestamp, number, difficulty, gaslimit, repository, blockStore);
     }
 
 }

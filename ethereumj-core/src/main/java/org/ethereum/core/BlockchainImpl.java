@@ -1,6 +1,6 @@
 package org.ethereum.core;
 
-import org.ethereum.db.BlockStore;
+import org.ethereum.db.BlockStoreImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -79,7 +79,7 @@ public class BlockchainImpl implements Blockchain {
     private Repository track;
 
     @Autowired
-    private BlockStore blockStore;
+    private BlockStoreImpl blockStore;
 
     private Block bestBlock;
     private BigInteger totalDifficulty = BigInteger.ZERO;
@@ -337,7 +337,8 @@ public class BlockchainImpl implements Blockchain {
         for (Transaction tx : block.getTransactionsList()) {
             stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
 
-            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(), track,
+            TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(), 
+                    track, blockStore,
                     programInvokeFactory, block);
             executor.execute();
 

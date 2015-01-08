@@ -1,6 +1,7 @@
 package org.ethereum.vm;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
@@ -350,7 +351,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
-                newBalance, null, track);
+                newBalance, null, track, this.invokeData.getBlockStore());
 
         ProgramResult result = null;
 
@@ -466,7 +467,7 @@ public class Program {
         Repository trackRepository = result.getRepository().startTracking();
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(contextAddress), msg.getEndowment(),
-                msg.getGas(), contextBalance, data, trackRepository);
+                msg.getGas(), contextBalance, data, trackRepository, this.invokeData.getBlockStore());
 
         ProgramResult result = null;
 
@@ -573,6 +574,22 @@ public class Program {
         if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
         return this.programAddress.clone();
     }
+
+    public DataWord getBlockHash(int index) {
+
+        // todo:
+        /// Hash of a block if within the last 256 blocks, or h256() otherwise.
+//        h256 blockhash(u256 _number) {return
+//        _number < currentBlock.number && _number >= (std::max<u256>(256, currentBlock.number) - 256) ?
+//                    lastHashes[(unsigned)(currentBlock.number - 1 - _number)] :
+//                    h256(); }
+
+        return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256?
+                new DataWord(this.invokeData.getBlockStore().getBlockHashByNumber(index)):
+                DataWord.ZERO;
+        
+    }
+
 
     public DataWord getBalance(DataWord address) {
         if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;

@@ -190,7 +190,7 @@ public enum OpCode {
      * (0x40) Get hash of most recent
      * complete block
      */
-    PREVHASH(0x40, 0),
+    BLOCKHASH(0x40, 1),
     /**
      * (0x41) Get the block’s coinbase address
      */

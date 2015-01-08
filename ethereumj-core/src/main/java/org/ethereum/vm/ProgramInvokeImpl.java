@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
 
 import java.math.BigInteger;
@@ -13,6 +14,7 @@ import java.util.Map;
  */
 public class ProgramInvokeImpl implements ProgramInvoke {
 
+    private BlockStore blockStore;
     /**
      * TRANSACTION  env **
      */
@@ -39,7 +41,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
                              DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord
                                      difficulty,
-                             DataWord gaslimit, Repository repository, int callDeep) {
+                             DataWord gaslimit, Repository repository, int callDeep, BlockStore blockStore) {
 
         // Transaction env
         this.address = address;
@@ -62,15 +64,16 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.repository = repository;
         this.byTransaction = false;
         this.callDeep = callDeep;
+        this.blockStore = blockStore;
     }
 
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
                              long gaslimit,
-                             Repository repository, boolean byTestingSuite) {
+                             Repository repository, BlockStore blockStore,boolean byTestingSuite) {
         this(address, origin, caller, balance, gasPrice, gas, callValue, msgData, lastHash, coinbase,
-                timestamp, number, difficulty, gaslimit, repository);
+                timestamp, number, difficulty, gaslimit, repository, blockStore);
         this.byTestingSuite = byTestingSuite;
     }
 
@@ -79,7 +82,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
                              long gaslimit,
-                             Repository repository) {
+                             Repository repository, BlockStore blockStore) {
 
         // Transaction env
         this.address = new DataWord(address);
@@ -100,6 +103,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.gaslimit = new DataWord(gaslimit);
 
         this.repository = repository;
+        this.blockStore = blockStore;
     }
 
     /*           ADDRESS op         */
@@ -237,6 +241,11 @@ public class ProgramInvokeImpl implements ProgramInvoke {
 
     public Repository getRepository() {
         return repository;
+    }
+
+    @Override
+    public BlockStore getBlockStore() {
+        return blockStore;
     }
 
     @Override

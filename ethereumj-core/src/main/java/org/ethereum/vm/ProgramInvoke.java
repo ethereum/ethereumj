@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
 
 /**
@@ -41,12 +42,15 @@ public interface ProgramInvoke {
     public DataWord getDifficulty();
 
     public DataWord getGaslimit();
-
-    public Repository getRepository();
-
+    
     public boolean byTransaction();
 
     boolean byTestingSuite();
 
     public int getCallDeep();
+
+    public Repository getRepository();
+    
+    public BlockStore getBlockStore();
+
 }

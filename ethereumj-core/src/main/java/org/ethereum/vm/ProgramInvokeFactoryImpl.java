@@ -2,6 +2,8 @@ package org.ethereum.vm;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.BlockStore;
+import org.ethereum.db.BlockStoreImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
@@ -27,11 +29,15 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
     @Autowired
     private Blockchain blockchain;
+    
+    @Autowired
+    private BlockStoreImpl blockStore;
 
 
     // Invocation by the wire tx
     @Override
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository) {
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository, 
+                                             BlockStore blockStore) {
 
         // https://ethereum.etherpad.mozilla.org/26
         Block lastBlock = blockchain.getBestBlock();
@@ -119,7 +125,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         ProgramInvoke programInvoke =
                 new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
                         lastHash, coinbase, timestamp, number, difficulty, gaslimit,
-                        repository);
+                        repository, blockStore);
 
         return programInvoke;
     }
@@ -131,7 +137,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
                                              DataWord inValue, DataWord inGas,
                                              BigInteger balanceInt, byte[] dataIn,
-                                             Repository repository) {
+                                             Repository repository, BlockStore blockStore) {
 
         DataWord address = toAddress;
         DataWord origin = program.getOriginAddress();
@@ -184,6 +190,6 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, program.invokeData.getCallDeep() + 1);
+                repository, program.invokeData.getCallDeep() + 1, blockStore);
     }
 }

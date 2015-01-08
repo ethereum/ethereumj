@@ -18,9 +18,8 @@ public class GitHubStateTest {
     @Ignore
     @Test
     public void stSingleTest() throws ParseException {
-
         String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
-        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createNameRegistrator");
+        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "CallToReturn1ForDynamicJump1");
     }
 
     @Ignore
@@ -28,7 +27,7 @@ public class GitHubStateTest {
     public void runWithExcludedTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("createNameRegistratorValueTooHigh");
+        excluded.add("CallToReturn1ForDynamicJump1");
 
         String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
@@ -89,6 +88,14 @@ public class GitHubStateTest {
     }
 
 
+    @Test
+    public void stBlockHashTest() throws ParseException {
+
+        String json = JSONReader.loadJSON("StateTests/stBlockHashTest.json");
+        GitHubJSONTestSuite.runGitHubJsonStateTest(json);
+    }
+
+    
     @Test
     public void stSystemOperationsTest() throws ParseException {
 

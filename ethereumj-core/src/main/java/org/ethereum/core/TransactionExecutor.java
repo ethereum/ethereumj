@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
@@ -33,6 +34,8 @@ public class TransactionExecutor {
 
     private Transaction tx;
     private Repository track;
+    private BlockStore blockStore;
+    
     private ProgramInvokeFactory programInvokeFactory;
     private byte[] coinbase;
 
@@ -41,12 +44,13 @@ public class TransactionExecutor {
     private Block currentBlock;
 
 
-    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track,
+    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track,BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
         this.tx = tx;
         this.coinbase = coinbase;
         this.track = track;
+        this.blockStore = blockStore;
         this.programInvokeFactory = programInvokeFactory;
         this.currentBlock = currentBlock;
     }
@@ -180,7 +184,7 @@ public class TransactionExecutor {
                 }
 
                 ProgramInvoke programInvoke =
-                        programInvokeFactory.createProgramInvoke(tx, currentBlock, trackTx);
+                        programInvokeFactory.createProgramInvoke(tx, currentBlock, trackTx, blockStore);
 
                 VM vm = new VM();
                 Program program = new Program(code, programInvoke);

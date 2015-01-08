@@ -2,6 +2,7 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.TransactionExecutor;
+import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryDummy;
@@ -88,8 +89,9 @@ public class TestRunner {
         blockchain.startTracking();
 
         Repository track = repository.startTracking();
-        TransactionExecutor executor = new TransactionExecutor(tx, coinbase, track,
-                invokeFactory, null);
+        TransactionExecutor executor = 
+                new TransactionExecutor(tx, coinbase,  track, new BlockStoreDummy(),  
+                        invokeFactory, blockchain.getBestBlock());
         executor.execute();
         track.commit();
 
@@ -179,7 +181,7 @@ public class TestRunner {
 
             ProgramInvoke programInvoke = new ProgramInvokeImpl(address, origin, caller, balance,
                     gasPrice, gas, callValue, msgData, lastHash, coinbase,
-                    timestamp, number, difficulty, gaslimit, repository, true);
+                    timestamp, number, difficulty, gaslimit, repository, null, true);
 
             /* 3. Create Program - exec.code */
             /* 4. run VM */

@@ -2,6 +2,8 @@ package org.ethereum.vm;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.db.BlockStore;
+import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Repository;
 
@@ -212,6 +214,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     @Override
     public Repository getRepository() {
         return this.repository;
+    }
+
+    @Override
+    public BlockStore getBlockStore() {
+        return new BlockStoreDummy();
     }
 
     public void setRepository(Repository repository) {

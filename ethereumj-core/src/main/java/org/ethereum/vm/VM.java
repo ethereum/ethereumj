@@ -716,13 +716,16 @@ public class VM {
                 /**
                  * Block Information
                  */
-                case PREVHASH: {
-                    DataWord prevHash = program.getPrevHash();
+                case BLOCKHASH: {
+
+                    int blockIndex = program.stackPop().intValue();
+
+                    DataWord blockHash = program.getBlockHash(blockIndex);
 
                     if (logger.isInfoEnabled())
-                        hint = "prevHash: " + prevHash;
+                        hint = "blockHash: " + blockHash;
 
-                    program.stackPush(prevHash);
+                    program.stackPush(blockHash);
                     program.step();
                 }
                 break;
