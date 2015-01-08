@@ -3,16 +3,15 @@ sudo: false
 language: java
 jdk: oraclejdk8
 
+# publish snapshots to https://oss.jfrog.org/libs-snapshot/org/ethereum/ethereumj-core
+# publish releases to http://jcenter.bintray.com/org/ethereum/ethereumj-core
+# publish coverage to https://coveralls.io/r/ethereum/ethereumj
 script:
-  - ./gradlew build publish
+  - ./gradlew clean build publish jacocoTestReport coveralls
 
-# publish coverage report to https://coveralls.io/r/ethereum/ethereumj
-after_success:
-  - ./gradlew jacocoTestReport coveralls
 
 cache:
   directories:
-    - .gradle
     - $HOME/.gradle
 
 notifications:
