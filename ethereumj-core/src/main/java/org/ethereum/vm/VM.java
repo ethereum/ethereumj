@@ -1058,9 +1058,7 @@ public class VM {
                     else
                         program.callToAddress(msg);
 
-                    
                     program.step();
-                    
                 }
                 break;
                 case RETURN: {

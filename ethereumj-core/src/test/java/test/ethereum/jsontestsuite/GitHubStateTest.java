@@ -16,14 +16,14 @@ import java.util.Set;
 public class GitHubStateTest {
 
     @Ignore
-    @Test
+    @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException {
         String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, "CallRecursiveBombLog2");
     }
 
     @Ignore
-    @Test
+    @Test // this method is mostly for hands-on convenient testing
     public void runWithExcludedTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
