@@ -1042,14 +1042,25 @@ public class VM {
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
                     }
+                    
+                    program.memoryExpand(outDataOffs, outDataSize);
 
                     MessageCall msg = new MessageCall(
                             op.equals(CALL) ? MsgType.CALL : MsgType.STATELESS,
                             gas, codeAddress, value, inDataOffs, inDataSize,
                             outDataOffs, outDataSize);
-                    program.callToAddress(msg);
 
+                    PrecompiledContracts.PrecompiledContract contract =  
+                            PrecompiledContracts.getContractForAddress(codeAddress);
+                    
+                    if (contract != null)
+                        program.callToPrecompiledAddress(msg, contract);
+                    else
+                        program.callToAddress(msg);
+
+                    
                     program.step();
+                    
                 }
                 break;
                 case RETURN: {

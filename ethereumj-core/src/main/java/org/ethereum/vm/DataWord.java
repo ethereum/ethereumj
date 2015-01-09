@@ -45,6 +45,10 @@ public class DataWord implements Comparable<DataWord> {
         this.data = data.array();
     }
 
+    public DataWord(String data){
+        this(Hex.decode(data));
+    }
+    
     public DataWord(byte[] data) {
         if (data == null)
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
@@ -311,5 +315,9 @@ public class DataWord implements Comparable<DataWord> {
         int firstNonZero = ByteUtil.firstNonZeroByte(data);
         if (firstNonZero == -1) return 0;
         return 31 - firstNonZero + 1;
+    }
+    
+    public boolean isHex(String hex){
+        return Hex.toHexString(data).equals(hex);
     }
 }

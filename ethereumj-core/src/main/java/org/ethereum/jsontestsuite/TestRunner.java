@@ -133,7 +133,10 @@ public class TestRunner {
         int postRepoSize = testCase.getPost().size();
 
         if (postRepoSize > repoSize) {
-            results.add("ERROR: Post repository contains more accounts than executed repository ");
+            results.add("ERROR: Expected 'Post' repository contains more accounts than executed repository ");
+
+            logger.info("Full address set: " + fullAddressSet);
+            
         }
 
         return results;

@@ -6,6 +6,7 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.MessageCall.MsgType;
+import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
 import org.ethereum.vmtrace.Op;
 import org.ethereum.vmtrace.ProgramTrace;
 
@@ -214,6 +215,14 @@ public class Program {
     public void memorySave(int addr, byte[] value) {
         memorySave(addr, value.length, value);
     }
+    
+    public void memoryExpand(DataWord outDataOffs, DataWord outDataSize){
+
+        int maxAddress = outDataOffs.intValue() + outDataSize.intValue();
+        if (getMemSize() < maxAddress){
+            memorySave(maxAddress, new byte[]{0});
+        }
+    }
 
     /**
      * Allocates a piece of memory and stores value at given offset address
@@ -420,7 +429,7 @@ public class Program {
             stackPushZero();
             return;
         }
-        
+
         byte[] data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
 
         // FETCH THE SAVED STORAGE
@@ -898,6 +907,28 @@ public class Program {
 
     public void vallidateJumpDest(int nextPC) {
         if (!jumpdest.contains(nextPC)) throw new BadJumpDestinationException();
+    }
+
+    public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
+
+        byte[] data = this.memoryChunk( msg.getInDataOffs(), msg.getInDataSize()).array();
+
+        this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), msg.getEndowment().value().negate());
+        this.result.getRepository().addBalance(msg.getCodeAddress().getLast20Bytes(), msg.getEndowment().value());
+
+        long requiredGas =  contract.getGasForData(data);
+        if (requiredGas > msg.getGas().longValue()){
+
+            this.spendGas(msg.getGas().longValue(), "call pre-compiled");
+            this.stackPushZero();
+        } else {
+
+            this.spendGas(requiredGas, "call pre-compiled");
+            byte[] out = contract.execute(data);
+
+            this.memorySave( msg.getOutDataOffs().intValue(), out);
+            this.stackPushOne();
+        }
     }
 
     public interface ProgramListener {
