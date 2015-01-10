@@ -269,7 +269,7 @@ public class ByteUtil {
         final int firstNonZero = firstNonZeroByte(data);
         switch (firstNonZero) {
             case -1:
-                return new byte[0];
+                return ZERO_BYTE_ARRAY;
 
             case 0:
                 return data;
