@@ -32,17 +32,18 @@ public class PrecompiledContracts {
     public static abstract class PrecompiledContract{
         public abstract long getGasForData(byte[] data);
         public abstract byte[] execute(byte[] data);
+
+        protected long getGasForDataAndBase(byte[] data,int base) {
+            if (data == null) return base;
+            return base + (data.length + 31) / 32 * base;
+        }
     }
     
     public static class Identity extends PrecompiledContract{
 
-        public Identity() {
-        }
-
         @Override
         public long getGasForData(byte[] data) {
-            if (data == null) return 1;
-            return 1 + (data.length + 31) / 32 * 1;
+            return getGasForDataAndBase(data,1);
         }
 
         @Override
@@ -56,8 +57,7 @@ public class PrecompiledContracts {
 
         @Override
         public long getGasForData(byte[] data) {
-            if (data == null) return 50;
-            return 50 + (data.length + 31) / 32 * 50;
+            return getGasForDataAndBase(data,50);
         }
 
         @Override
@@ -71,17 +71,15 @@ public class PrecompiledContracts {
 
     public static class Ripempd160 extends PrecompiledContract{
 
-
         @Override
         public long getGasForData(byte[] data) {
-            if (data == null) return 50;
-            return 50 + (data.length + 31) / 32 * 50;
+            return getGasForDataAndBase(data,50);
         }
 
         @Override
         public byte[] execute(byte[] data) {
 
-            byte[] result = null;
+            final byte[] result;
             if (data == null) result = HashUtil.ripemd160(ByteUtil.EMPTY_BYTE_ARRAY);
             else result = HashUtil.ripemd160(data);
 
