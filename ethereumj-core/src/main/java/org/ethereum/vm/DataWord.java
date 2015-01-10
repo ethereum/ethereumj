@@ -32,30 +32,31 @@ public class DataWord implements Comparable<DataWord> {
     }
 
     public DataWord(int num) {
-        ByteBuffer bInt = ByteBuffer.allocate(4).putInt(num);
-        ByteBuffer data = ByteBuffer.allocate(32);
-        System.arraycopy(bInt.array(), 0, data.array(), 28, 4);
-        this.data = data.array();
+        this(ByteBuffer.allocate(4).putInt(num));
     }
 
     public DataWord(long num) {
-        ByteBuffer bLong = ByteBuffer.allocate(8).putLong(num);
-        ByteBuffer data = ByteBuffer.allocate(32);
-        System.arraycopy(bLong.array(), 0, data.array(), 24, 8);
+        this(ByteBuffer.allocate(8).putLong(num));
+    }
+
+    private DataWord(ByteBuffer buffer) {
+        final ByteBuffer data = ByteBuffer.allocate(32);
+        final byte[] array = buffer.array();
+        System.arraycopy(array, 0, data.array(), 32 - array.length, array.length);
         this.data = data.array();
     }
 
-    public DataWord(String data){
+    public DataWord(String data) {
         this(Hex.decode(data));
     }
-    
+
     public DataWord(byte[] data) {
         if (data == null)
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
         else if (data.length <= 32)
             System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
         else
-            throw new RuntimeException("Data word can't exit 32 bytes: " + data);
+            throw new RuntimeException("Data word can't exceed 32 bytes: " + data);
     }
 
     public byte[] getData() {
@@ -107,11 +108,10 @@ public class DataWord implements Comparable<DataWord> {
     }
 
     public boolean isZero() {
-        byte result = 0;
         for (byte tmp : data) {
-            result |= tmp;
+            if (tmp != 0) return false;
         }
-        return result == 0;
+        return true;
     }
 
     // only in case of signed operation
@@ -282,9 +282,8 @@ public class DataWord implements Comparable<DataWord> {
 
         DataWord dataWord = (DataWord) o;
 
-        if (!java.util.Arrays.equals(data, dataWord.data)) return false;
+        return java.util.Arrays.equals(data, dataWord.data);
 
-        return true;
     }
 
     @Override
@@ -316,8 +315,8 @@ public class DataWord implements Comparable<DataWord> {
         if (firstNonZero == -1) return 0;
         return 31 - firstNonZero + 1;
     }
-    
-    public boolean isHex(String hex){
+
+    public boolean isHex(String hex) {
         return Hex.toHexString(data).equals(hex);
     }
 }

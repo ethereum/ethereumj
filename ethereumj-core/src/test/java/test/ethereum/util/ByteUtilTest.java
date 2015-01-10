@@ -100,11 +100,21 @@ public class ByteUtilTest {
 
     @Test
     public void testStripLeadingZeroes() {
-        byte[] test1 = new byte[]{0x00, 0x01};
-        byte[] test2 = new byte[]{0x00, 0x00, 0x01};
-        byte[] expected = new byte[]{0x01};
-        assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test1));
-        assertArrayEquals(expected, ByteUtil.stripLeadingZeroes(test2));
+        byte[] test1 = null;
+        byte[] test2 = new byte[]{};
+        byte[] test3 = new byte[]{0x00};
+        byte[] test4 = new byte[]{0x00, 0x01};
+        byte[] test5 = new byte[]{0x00, 0x00, 0x01};
+        byte[] expected1 = null;
+        byte[] expected2 = new byte[]{};
+        byte[] expected3 = new byte[]{};
+        byte[] expected4 = new byte[]{0x01};
+        byte[] expected5 = new byte[]{0x01};
+        assertArrayEquals(expected1, ByteUtil.stripLeadingZeroes(test1));
+        assertArrayEquals(expected2, ByteUtil.stripLeadingZeroes(test2));
+        assertArrayEquals(expected3, ByteUtil.stripLeadingZeroes(test3));
+        assertArrayEquals(expected4, ByteUtil.stripLeadingZeroes(test4));
+        assertArrayEquals(expected5, ByteUtil.stripLeadingZeroes(test5));
     }
 
     @Test
