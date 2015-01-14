@@ -56,9 +56,9 @@ public class Logs {
 
             if (!postAddress.equals(realAddress)) {
 
-                String formatedString = String.format("Log: %s: has unexpected address, expected address: %s found address: %s",
+                String formattedString = String.format("Log: %s: has unexpected address, expected address: %s found address: %s",
                         i, postAddress, realAddress);
-                results.add(formatedString);
+                results.add(formattedString);
             }
 
             String postData = Hex.toHexString(postLog.getData());
@@ -66,9 +66,9 @@ public class Logs {
 
             if (!postData.equals(realData)) {
 
-                String formatedString = String.format("Log: %s: has unexpected data, expected data: %s found data: %s",
+                String formattedString = String.format("Log: %s: has unexpected data, expected data: %s found data: %s",
                         i, postData, realData);
-                results.add(formatedString);
+                results.add(formattedString);
             }
 
             String postBloom = Hex.toHexString(postLog.getBloom().getData());
@@ -76,9 +76,9 @@ public class Logs {
 
             if (!postData.equals(realData)){
 
-                String formatedString = String.format("Log: %s: has unexpected bloom, expected bloom: %s found bloom: %s",
+                String formattedString = String.format("Log: %s: has unexpected bloom, expected bloom: %s found bloom: %s",
                         i, postBloom, realBloom);
-                results.add(formatedString);
+                results.add(formattedString);
             }
 
             List<DataWord> postTopics = postLog.getTopics();
@@ -91,9 +91,9 @@ public class Logs {
 
                 if (!postTopic.equals(realTopic)) {
 
-                    String formatedString = String.format("Log: %s: has unexpected topic: %s, expected topic: %s found topic: %s",
+                    String formattedString = String.format("Log: %s: has unexpected topic: %s, expected topic: %s found topic: %s",
                             i, j, postTopic, realTopic);
-                    results.add(formatedString);
+                    results.add(formattedString);
                 }
                 ++j;
             }

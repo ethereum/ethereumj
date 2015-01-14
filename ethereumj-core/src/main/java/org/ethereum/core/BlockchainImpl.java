@@ -60,7 +60,7 @@ import static org.ethereum.core.Denomination.SZABO;
 @Component
 public class BlockchainImpl implements Blockchain {
 
-    /* A scalar value equal to the mininum limit of gas expenditure per block */
+    /* A scalar value equal to the minimum limit of gas expenditure per block */
     private static long MIN_GAS_LIMIT = 125000L;
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");

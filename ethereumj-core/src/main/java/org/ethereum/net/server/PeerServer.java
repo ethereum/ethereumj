@@ -76,7 +76,7 @@ public class PeerServer {
 
         } catch (Exception e) {
             logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
-            throw new Error("Server Disconnnected");
+            throw new Error("Server Disconnected");
         } finally {
             workerGroup.shutdownGracefully();
 

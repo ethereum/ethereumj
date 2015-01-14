@@ -107,7 +107,7 @@ public class TrieImpl implements Trie {
         byte[] k = binToNibbles(key);
         Value c = new Value(this.get(this.root, k));
 
-        return (c == null) ? null : c.asBytes();
+        return c.asBytes();
     }
 
     /**
@@ -414,7 +414,7 @@ public class TrieImpl implements Trie {
      *******************************/
 
     // Created an array of empty elements of required length
-    private Object[] emptyStringSlice(int l) {
+    private static Object[] emptyStringSlice(int l) {
         Object[] slice = new Object[l];
         for (int i = 0; i < l; i++) {
             slice[i] = "";
@@ -484,10 +484,10 @@ public class TrieImpl implements Trie {
 
     public String getTrieDump() {
 
-        String root = "";
         TraceAllNodes traceAction = new TraceAllNodes();
         this.scanTree(this.getRootHash(), traceAction);
 
+        final String root;
         if (this.getRoot() instanceof Value) {
             root = "root: " + Hex.toHexString(getRootHash()) + " => " + this.getRoot() + "\n";
         } else {
@@ -501,10 +501,6 @@ public class TrieImpl implements Trie {
     }
 
     public boolean validate() {
-
-        if (cache.get(getRootHash()) != null)
-            return true;
-        else
-            return false;
+        return cache.get(getRootHash()) != null;
     }
 }

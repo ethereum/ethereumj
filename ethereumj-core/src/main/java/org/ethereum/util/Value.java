@@ -160,10 +160,7 @@ public class Value {
             if (aData > 32 && aData < 126) ++readableChars;
         }
 
-        if ((double) readableChars / (double) data.length > 0.55)
-            return true;
-        else
-            return false;
+        return (double) readableChars / (double) data.length > 0.55;
     }
 
     // it's only if the isBytes() = true;
@@ -179,10 +176,7 @@ public class Value {
                 ++hexChars;
         }
 
-        if ((double) hexChars / (double) data.length > 0.9)
-            return true;
-        else
-            return false;
+        return (double) hexChars / (double) data.length > 0.9;
     }
 
     public boolean isHashCode() {

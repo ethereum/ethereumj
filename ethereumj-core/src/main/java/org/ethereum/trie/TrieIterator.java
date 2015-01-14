@@ -29,7 +29,7 @@ public class TrieIterator {
         if (currentNode.length() == 2) {
             byte[] k = unpackToNibbles(currentNode.get(0).asBytes());
 
-            if (currentNode.get(1).asString() == "") {
+            if (currentNode.get(1).asString().isEmpty()) {
                 this.workNode(currentNode.get(1));
             } else {
                 if (k[k.length - 1] == 16) {
@@ -44,11 +44,11 @@ public class TrieIterator {
                 if (i == 16 && currentNode.get(i).length() != 0) {
                     this.values.add(currentNode.get(i).asString());
                 } else {
-                    if (currentNode.get(i).asString() == "") {
+                    if (currentNode.get(i).asString().isEmpty()) {
                         this.workNode(currentNode.get(i));
                     } else {
                         String val = currentNode.get(i).asString();
-                        if (val != "") {
+                        if (!val.isEmpty()) {
                             this.shas.add(currentNode.get(1).asBytes());
                             this.getNode(val.getBytes());
                         }

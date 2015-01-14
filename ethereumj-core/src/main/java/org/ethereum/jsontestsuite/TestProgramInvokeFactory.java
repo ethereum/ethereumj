@@ -83,7 +83,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
         long number = ByteUtil.byteArrayToLong(env.getCurrentNumber());
 
         /*** DIFFICULTY  op  ***/
-        byte[] difficulty = env.getCurrentDifficlty();
+        byte[] difficulty = env.getCurrentDifficulty();
 
         /*** GASLIMIT op ***/
         long gaslimit = ByteUtil.byteArrayToLong(env.getCurrentGasLimit());

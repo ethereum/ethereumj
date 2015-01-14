@@ -29,7 +29,7 @@ public class Utils {
     public static String hexStringToDecimalString(String hexNum) {
 
         boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", hexNum);
-        if (!match) throw new Error("The string doesn't conains hex num in form 0x.. : [" + hexNum + "]");
+        if (!match) throw new Error("The string doesn't contains hex num in form 0x.. : [" + hexNum + "]");
 
         byte[] numberBytes = Hex.decode(hexNum.substring(2));
         return (new BigInteger(1, numberBytes)).toString();
@@ -73,7 +73,7 @@ public class Utils {
      * @return - decode and validated address byte[]
      */
     public static byte[] addressStringToBytes(String hex) {
-        byte[] addr = null;
+        final byte[] addr;
         try {
             addr = Hex.decode(hex);
         } catch (DecoderException addressIsNotValid) {

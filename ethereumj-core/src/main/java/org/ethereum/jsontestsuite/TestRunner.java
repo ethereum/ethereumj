@@ -173,7 +173,7 @@ public class TestRunner {
             byte[] coinbase = env.getCurrentCoinbase();
             long timestamp = new BigInteger(env.getCurrentTimestamp()).longValue();
             long number = new BigInteger(env.getCurrentNumber()).longValue();
-            byte[] difficulty = env.getCurrentDifficlty();
+            byte[] difficulty = env.getCurrentDifficulty();
             long gaslimit = new BigInteger(env.getCurrentGasLimit()).longValue();
 
             // Origin and caller need to exist in order to be able to execute
