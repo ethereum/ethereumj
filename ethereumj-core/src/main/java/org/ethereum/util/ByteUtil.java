@@ -83,7 +83,7 @@ public class ByteUtil {
         int length = a.length < b.length ? a.length : b.length;
         while (i < length) {
             if (a[i] != b[i])
-                break;
+                return i;
             i++;
         }
         return i;
@@ -122,12 +122,11 @@ public class ByteUtil {
      */
     public static byte[] calcPacketLength(byte[] msg) {
         int msgLen = msg.length;
-        byte[] len = {
+        return new byte[]{
                 (byte) ((msgLen >> 24) & 0xFF),
                 (byte) ((msgLen >> 16) & 0xFF),
                 (byte) ((msgLen >> 8) & 0xFF),
                 (byte) ((msgLen) & 0xFF)};
-        return len;
     }
 
     /**
@@ -254,15 +253,12 @@ public class ByteUtil {
     }
 
     public static int firstNonZeroByte(byte[] data) {
-        int firstNonZero = -1;
-        int i = 0;
-        for (; i < data.length; ++i) {
+        for (int i = 0; i < data.length; ++i) {
             if (data[i] != 0) {
-                firstNonZero = i;
-                break;
+                return i;
             }
         }
-        return firstNonZero;
+        return -1;
     }
 
     public static byte[] stripLeadingZeroes(byte[] data) {
@@ -270,23 +266,20 @@ public class ByteUtil {
         if (data == null)
             return null;
 
-        int firstNonZero = firstNonZeroByte(data);
-        int i = 0;
-        for (; i < data.length; ++i) {
-            if (data[i] != 0) {
-                firstNonZero = i;
-                break;
-            }
+        final int firstNonZero = firstNonZeroByte(data);
+        switch (firstNonZero) {
+            case -1:
+                return EMPTY_BYTE_ARRAY;
+
+            case 0:
+                return data;
+
+            default:
+                byte[] result = new byte[data.length - firstNonZero];
+                System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
+
+                return result;
         }
-        if (i == data.length)
-            return new byte[1];
-        if (firstNonZero == 0)
-            return data;
-
-        byte[] result = new byte[data.length - firstNonZero];
-        System.arraycopy(data, firstNonZero, result, 0, data.length - firstNonZero);
-
-        return result;
     }
 
     /**
