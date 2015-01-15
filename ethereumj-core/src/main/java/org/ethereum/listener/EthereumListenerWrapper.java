@@ -68,6 +68,12 @@ public class EthereumListenerWrapper implements EthereumListener {
             listener.onNoConnections();
     }
 
+    @Override
+    public void onHandShakePeer() {
+        if (listener != null)
+            listener.onHandShakePeer();
+    }
+
     public void addListener(EthereumListener listener) {
         if (listener != null)
             this.listener = listener;

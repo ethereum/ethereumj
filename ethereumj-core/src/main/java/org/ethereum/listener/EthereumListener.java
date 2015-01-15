@@ -15,7 +15,7 @@ public interface EthereumListener {
     public void trace(String output);
 
     public void onBlock(Block block);
-
+    
     public void onRecvMessage(Message message);
 
     public void onSendMessage(Message message);
@@ -27,4 +27,7 @@ public interface EthereumListener {
     public void onSyncDone();
 
     public void onNoConnections();
+
+    public void onHandShakePeer();
+
 }

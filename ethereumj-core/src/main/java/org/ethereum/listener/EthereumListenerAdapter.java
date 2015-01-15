@@ -42,6 +42,11 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
+    public void onHandShakePeer() {
+
+    }
+
+    @Override
     public void onNoConnections() {
 
     }
