@@ -23,16 +23,16 @@ public class BlockVO {
     @Lob
     byte[] rlp;
 
-    BigInteger cummulativeDifficulty;
+    BigInteger cumulativeDifficulty;
 
     public BlockVO() {
     }
 
-    public BlockVO(Long number, byte[] hash, byte[] rlp, BigInteger cummulativeDifficulty) {
+    public BlockVO(Long number, byte[] hash, byte[] rlp, BigInteger cumulativeDifficulty) {
         this.number = number;
         this.hash = hash;
         this.rlp = rlp;
-        this.cummulativeDifficulty = cummulativeDifficulty;
+        this.cumulativeDifficulty = cumulativeDifficulty;
     }
 
     public byte[] getHash() {
@@ -59,11 +59,11 @@ public class BlockVO {
         this.rlp = rlp;
     }
 
-    public BigInteger getCummulativeDifficulty() {
-        return cummulativeDifficulty;
+    public BigInteger getCumulativeDifficulty() {
+        return cumulativeDifficulty;
     }
 
-    public void setCummulativeDifficulty(BigInteger cummulativeDifficulty) {
-        this.cummulativeDifficulty = cummulativeDifficulty;
+    public void setCumulativeDifficulty(BigInteger cumulativeDifficulty) {
+        this.cumulativeDifficulty = cumulativeDifficulty;
     }
 }

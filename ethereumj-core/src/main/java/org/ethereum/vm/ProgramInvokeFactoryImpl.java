@@ -119,12 +119,9 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                     gaslimit);
         }
 
-        ProgramInvoke programInvoke =
-                new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
-                        lastHash, coinbase, timestamp, number, difficulty, gaslimit,
-                        repository, blockStore);
-
-        return programInvoke;
+        return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue, data,
+                lastHash, coinbase, timestamp, number, difficulty, gaslimit,
+                repository, blockStore);
     }
 
     /**

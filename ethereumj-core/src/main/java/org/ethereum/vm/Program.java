@@ -596,9 +596,8 @@ public class Program {
         if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
 
         BigInteger balance = result.getRepository().getBalance(address.getLast20Bytes());
-        DataWord balanceData = new DataWord(balance.toByteArray());
 
-        return balanceData;
+        return new DataWord(balance.toByteArray());
     }
 
     public DataWord getOriginAddress() {
@@ -905,7 +904,7 @@ public class Program {
         this.listener = listener;
     }
 
-    public void vallidateJumpDest(int nextPC) {
+    public void validateJumpDest(int nextPC) {
         if (!jumpdest.contains(nextPC)) throw new BadJumpDestinationException();
     }
 

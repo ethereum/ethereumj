@@ -9,7 +9,7 @@ public class MessageCall {
     public enum MsgType {
         CALL,
         STATELESS,
-        POST;
+        POST
     }
 
     /**

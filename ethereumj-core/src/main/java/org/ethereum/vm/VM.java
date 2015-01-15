@@ -504,7 +504,7 @@ public class VM {
                 case BYTE: {
                     DataWord word1 = program.stackPop();
                     DataWord word2 = program.stackPop();
-                    DataWord result = null;
+                    final DataWord result;
                     if (word1.value().compareTo(_32_) == -1) {
                         byte tmp = word2.getData()[word1.intValue()];
                         word2.and(DataWord.ZERO);
@@ -896,7 +896,7 @@ public class VM {
                 case JUMP: {
                     DataWord pos = program.stackPop();
                     int nextPC = pos.intValue(); // possible overflow
-                    program.vallidateJumpDest(nextPC);
+                    program.validateJumpDest(nextPC);
                     
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
@@ -912,7 +912,7 @@ public class VM {
                     if (!cond.isZero()) {
 
                         int nextPC = pos.intValue(); // possible overflow
-                        program.vallidateJumpDest(nextPC);
+                        program.validateJumpDest(nextPC);
 
                         if (logger.isInfoEnabled())
                             hint = "~> " + nextPC;

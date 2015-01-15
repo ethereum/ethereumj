@@ -97,7 +97,7 @@ public class Channel {
 
 
     public boolean isSync() {
-        return ethHandler.getSyncStatus() == EthHandler.SyncSatus.SYNC_DONE;
+        return ethHandler.getSyncStatus() == EthHandler.SyncStatus.SYNC_DONE;
     }
 
 

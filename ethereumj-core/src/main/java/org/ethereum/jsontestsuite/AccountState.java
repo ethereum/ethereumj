@@ -99,24 +99,24 @@ public class AccountState {
 
         BigInteger expectedBalance = new BigInteger(1, this.getBalance());
         if (!state.getBalance().equals(expectedBalance)) {
-            String formatedString = String.format("Account: %s: has unexpected balance, expected balance: %s found balance: %s",
+            String formattedString = String.format("Account: %s: has unexpected balance, expected balance: %s found balance: %s",
                     Hex.toHexString(this.address), expectedBalance.toString(), state.getBalance().toString());
-            results.add(formatedString);
+            results.add(formattedString);
         }
 
         BigInteger expectedNonce = new BigInteger(1, this.getNonce());
         if (!state.getNonce().equals(expectedNonce)) {
             state.getNonce();
             this.getNonce();
-            String formatedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
+            String formattedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
                     Hex.toHexString(this.address), expectedNonce.toString(), state.getNonce().toString());
-            results.add(formatedString);
+            results.add(formattedString);
         }
 
         if (!Arrays.equals(details.getCode(),this.getCode())) {
-            String formatedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
+            String formattedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
                     Hex.toHexString(this.address), Hex.toHexString(this.getCode()), Hex.toHexString(details.getCode()));
-            results.add(formatedString);
+            results.add(formattedString);
         }
 
 
@@ -131,22 +131,22 @@ public class AccountState {
             DataWord expectedValue = this.getStorage().get(key);
             if (expectedValue == null) {
 
-                String formatedString = String.format("Account: %s: has unexpected storage data: %s = %s",
+                String formattedString = String.format("Account: %s: has unexpected storage data: %s = %s",
                         Hex.toHexString(this.address),
                         key.toString(),
                         value.toString());
 
-                results.add(formatedString);
+                results.add(formattedString);
 
                 continue;
             }
 
             if (!expectedValue.equals(value)) {
 
-                String formatedString = String.format("Account: %s: has unexpected value, for key: %s , expectedValue: %s real value: %s",
+                String formattedString = String.format("Account: %s: has unexpected value, for key: %s , expectedValue: %s real value: %s",
                         Hex.toHexString(this.address), key.toString(),
                         expectedValue.toString(), value.toString());
-                results.add(formatedString);
+                results.add(formattedString);
                 continue;
             }
 
@@ -155,9 +155,9 @@ public class AccountState {
 
         for (DataWord key : expectedKeys) {
             if (!checked.contains(key)) {
-                String formatedString = String.format("Account: %s: doesn't exist expected storage key: %s",
+                String formattedString = String.format("Account: %s: doesn't exist expected storage key: %s",
                         Hex.toHexString(this.address), key.toString());
-                results.add(formatedString);
+                results.add(formattedString);
             }
         }
 

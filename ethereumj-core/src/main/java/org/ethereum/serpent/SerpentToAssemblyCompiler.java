@@ -733,7 +733,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         }
     }
 
-    private Integer getMsgOutputArraySize(String code) {
+    private static Integer getMsgOutputArraySize(String code) {
 
         String result = "0";
         Pattern pattern = Pattern.compile("<out_size ([0-9])* out_size>");
@@ -746,7 +746,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return Integer.parseInt(result);
     }
 
-    private Integer getMsgInputArraySize(String code) {
+    private static Integer getMsgInputArraySize(String code) {
 
         String result = "0";
         Pattern pattern = Pattern.compile("<in_size ([0-9])* in_size>");
@@ -759,14 +759,8 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
         return Integer.parseInt(result);
     }
 
-    private String cleanMsgString(String code) {
-
-        String result = "";
-
-        Pattern pattern = Pattern.compile("<(.*?)>");
-        result = code.replaceAll("<(.*?)>", "");
-
-        return result;
+    private static String cleanMsgString(String code) {
+        return code.replaceAll("<(.*?)>", "");
     }
 
 
@@ -774,7 +768,7 @@ public class SerpentToAssemblyCompiler extends SerpentBaseVisitor<String> {
      * After the array deff code is set
      * extract the size out of code string
      */
-    private Integer getArraySize(String code) {
+    private static Integer getArraySize(String code) {
 
         String result = "0";
         Pattern pattern = Pattern.compile(" [0-9]* SWAP MSTORE$");

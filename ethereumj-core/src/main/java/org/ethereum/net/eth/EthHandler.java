@@ -65,7 +65,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private MessageQueue msgQueue = null;
 
-    private SyncSatus syncStatus = SyncSatus.INIT;
+    private SyncStatus syncStatus = SyncStatus.INIT;
     private boolean active = false;
     private StatusMessage handshakeStatusMessage = null;
 
@@ -236,11 +236,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 hashRetrievalLock = this.peerId;
                 chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
                 chainQueue.setBestHash(msg.getBestHash());
-                syncStatus = SyncSatus.HASH_RETRIEVING;
+                syncStatus = SyncStatus.HASH_RETRIEVING;
                 sendGetBlockHashes();
             } else {
                 logger.info("The peer sync process fully complete");
-                syncStatus = SyncSatus.SYNC_DONE;
+                syncStatus = SyncStatus.SYNC_DONE;
             }
         }
     }
@@ -299,7 +299,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         if (blockchain.getQueue().isHashesEmpty()) {
             logger.info(" The peer sync process fully complete");
-            syncStatus = SyncSatus.SYNC_DONE;
+            syncStatus = SyncStatus.SYNC_DONE;
             blockchain.getQueue().addBlocks(blockList);
             blockchain.getQueue().logHashQueueSize();
         } else {
@@ -329,7 +329,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         // If the hashes still being downloaded ignore the NEW_BLOCKs
         // that block hash will be retrieved by the others and letter the block itself
-        if (syncStatus == SyncSatus.INIT || syncStatus == SyncSatus.HASH_RETRIEVING) {
+        if (syncStatus == SyncStatus.INIT || syncStatus == SyncStatus.HASH_RETRIEVING) {
             logger.debug("Sync status INIT or HASH_RETREIVING adding to hashes new block.index: [{}]",
                     newBlock.getNumber());
             blockchain.getQueue().addNewBlockHash(newBlock.getHash());
@@ -338,7 +338,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         // If the GET_BLOCKs stage started add hash to the end of the hash list
         // then the block will be retrieved in it's turn;
-        if (syncStatus == SyncSatus.BLOCK_RETRIEVING) {
+        if (syncStatus == SyncStatus.BLOCK_RETRIEVING) {
             logger.debug("Sync status BLOCK_RETREIVING add to the end of hash list: block.index: [{}]",
                     newBlock.getNumber());
             blockchain.getQueue().addNewBlockHash(newBlock.getHash());
@@ -486,11 +486,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         stopGetTxTimer();
     }
 
-    public void setSyncStatus(SyncSatus syncStatus) {
+    public void setSyncStatus(SyncStatus syncStatus) {
         this.syncStatus = syncStatus;
     }
 
-    public SyncSatus getSyncStatus() {
+    public SyncStatus getSyncStatus() {
         return syncStatus;
     }
 
@@ -498,7 +498,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         this.peerId = peerId;
     }
 
-    public enum SyncSatus {
+    public enum SyncStatus {
         INIT,
         HASH_RETRIEVING,
         BLOCK_RETRIEVING,
@@ -511,7 +511,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void doSync() {
         logger.info("Sync force activated, block: {}", lastBlock);
-        syncStatus = SyncSatus.HASH_RETRIEVING;
+        syncStatus = SyncStatus.HASH_RETRIEVING;
         setBestHash(lastBlock.getHash());
         sendGetBlockHashes();
     }

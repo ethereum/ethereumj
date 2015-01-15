@@ -92,7 +92,7 @@ public interface Ethereum {
      * @param gasPrice - gas price bid by miner , the user ask can be based on
      *                   lastr submited block
      * @param gas - the quantity of gas requested for the transaction
-     * @param recieveAddress - the target address of the transaction
+     * @param receiveAddress - the target address of the transaction
      * @param value - the ether value of the transaction
      * @param data - can be init procedure for creational transaction,
      *               also msg data for invoke transaction for only value
@@ -102,7 +102,7 @@ public interface Ethereum {
     public Transaction createTransaction(BigInteger nonce,
                                          BigInteger gasPrice,
                                          BigInteger gas,
-                                         byte[] recieveAddress,
+                                         byte[] receiveAddress,
                                          BigInteger value, byte[] data);
 
 

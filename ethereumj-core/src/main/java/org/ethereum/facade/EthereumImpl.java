@@ -201,7 +201,7 @@ public class EthereumImpl implements Ethereum {
     public Transaction createTransaction(BigInteger nonce,
                                          BigInteger gasPrice,
                                          BigInteger gas,
-                                         byte[] recieveAddress,
+                                         byte[] receiveAddress,
                                          BigInteger value, byte[] data) {
 
         byte[] nonceBytes = ByteUtil.bigIntegerToBytes(nonce);
@@ -210,7 +210,7 @@ public class EthereumImpl implements Ethereum {
         byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
 
         Transaction tx = new Transaction(nonceBytes, gasPriceBytes, gasBytes,
-                recieveAddress, valueBytes, data);
+                receiveAddress, valueBytes, data);
 
         return tx;
     }

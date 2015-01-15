@@ -13,7 +13,7 @@ import java.math.BigInteger;
 public class Env {
 
     private byte[] currentCoinbase;
-    private byte[] currentDifficlty;
+    private byte[] currentDifficulty;
     private byte[] currentGasLimit;
     private byte[] currentNumber;
     private byte[] currentTimestamp;
@@ -39,7 +39,7 @@ public class Env {
         String prevHash = env.get("previousHash").toString();
 
         this.currentCoinbase = Hex.decode(coinbase);
-        this.currentDifficlty = new BigInteger(difficulty).toByteArray();
+        this.currentDifficulty = new BigInteger(difficulty).toByteArray();
         this.currentGasLimit = new BigInteger(gasLimit).toByteArray();
         this.currentNumber = new BigInteger(number).toByteArray();
         this.currentTimestamp = new BigInteger(timestamp).toByteArray();
@@ -51,8 +51,8 @@ public class Env {
         return currentCoinbase;
     }
 
-    public byte[] getCurrentDifficlty() {
-        return currentDifficlty;
+    public byte[] getCurrentDifficulty() {
+        return currentDifficulty;
     }
 
     public byte[] getCurrentGasLimit() {
@@ -75,7 +75,7 @@ public class Env {
     public String toString() {
         return "Env{" +
                 "currentCoinbase=" + Hex.toHexString(currentCoinbase) +
-                ", currentDifficlty=" + Hex.toHexString(currentDifficlty) +
+                ", currentDifficulty=" + Hex.toHexString(currentDifficulty) +
                 ", currentGasLimit=" + Hex.toHexString(currentGasLimit) +
                 ", currentNumber=" + Hex.toHexString(currentNumber) +
                 ", currentTimestamp=" + Hex.toHexString(currentTimestamp) +
