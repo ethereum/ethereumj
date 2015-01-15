@@ -6,7 +6,7 @@
 #### For snapshot builds:
 
  - Add https://oss.jfrog.org/libs-snapshot/ as a repository to your build script
- - Add a dependency on `org.ethereum:ethereumj-core:${VERSION}`, where `${VERSION}` is of the form `0.7.14-SNAPSHOT`.
+ - Add a dependency on `org.ethereum:ethereumj-core:${VERSION}`, where `${VERSION}` is of the form `0.8.1-SNAPSHOT`.
 
 Example:
 
@@ -20,7 +20,7 @@ Example:
     <dependency>
        <groupId>org.ethereum</groupId>
        <artifactId>ethereumj-core</artifactId>
-       <version>0.7.14-SNAPSHOT</version>
+       <version>0.8.1-SNAPSHOT</version>
     </dependency>
 
 #### For release builds:
