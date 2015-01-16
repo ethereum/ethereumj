@@ -20,8 +20,8 @@ public class TransactionTask implements Callable<Transaction> {
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionTask.class);
 
-    private Transaction tx;
-    private WorldManager worldManager;
+    private final Transaction tx;
+    private final WorldManager worldManager;
 
     public TransactionTask(Transaction tx, WorldManager worldManager) {
         this.tx = tx;

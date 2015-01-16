@@ -22,7 +22,6 @@ public class WorkerThread implements Runnable {
 
     private PeerInfo peerInfo;
     private ThreadPoolExecutor poolExecutor;
-    private boolean running = true;
 
     @Autowired
     ApplicationContext ctx;

@@ -363,7 +363,7 @@ public class Program {
 
         ProgramResult result = null;
 
-        if (programCode != null && programCode.length != 0) {
+        if (programCode.length != 0) {
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke);
             vm.play(program);
@@ -876,7 +876,7 @@ public class Program {
             return result;
 
         OpCode op = OpCode.code(code[index]);
-        byte[] continuedCode = null;
+        final byte[] continuedCode;
 
         switch(op) {
             case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:

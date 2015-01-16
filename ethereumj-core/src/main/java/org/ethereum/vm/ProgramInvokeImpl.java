@@ -18,8 +18,8 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /**
      * TRANSACTION  env **
      */
-    private DataWord address;
-    private DataWord origin, caller,
+    private final DataWord address;
+    private final DataWord origin, caller,
             balance, gas, gasPrice, callValue;
 
     byte[] msgData;
@@ -27,12 +27,12 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     /**
      * BLOCK  env **
      */
-    private DataWord prevHash, coinbase, timestamp,
+    private final DataWord prevHash, coinbase, timestamp,
             number, difficulty, gaslimit;
 
-    Map<DataWord, DataWord> storage;
+    private Map<DataWord, DataWord> storage;
 
-    private Repository repository;
+    private final Repository repository;
     private boolean byTransaction = true;
     private boolean byTestingSuite = false;
     private int callDeep = 0;

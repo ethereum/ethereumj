@@ -19,7 +19,7 @@ public class JSONReader {
         String json = "";
         if (!SystemProperties.CONFIG.vmTestLoadLocal())
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/develop/" + filename);
-        return json == "" ? json = getFromLocal(filename) : json;
+        return json.isEmpty() ? getFromLocal(filename) : json;
     }
 
     public static String getFromLocal(String filename) {
@@ -58,8 +58,6 @@ public class JSONReader {
                 result += line;
             }
             rd.close();
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (Throwable e) {
             e.printStackTrace();
         }

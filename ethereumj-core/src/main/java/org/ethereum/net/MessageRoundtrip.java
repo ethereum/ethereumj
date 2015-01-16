@@ -12,7 +12,7 @@ import org.ethereum.net.message.Message;
  */
 public class MessageRoundtrip {
 
-    private Message msg = null;
+    private final Message msg;
     long lastTimestamp = 0;
     long retryTimes = 0;
     boolean answered = false;

@@ -19,7 +19,7 @@ import java.math.BigInteger;
  */
 public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
-    Env env;
+    private final Env env;
 
     TestProgramInvokeFactory(Env env) {
         this.env = env;

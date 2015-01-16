@@ -15,11 +15,10 @@ import java.util.List;
  */
 public class Peer {
 
-    private InetAddress address;
-    private int port;
-    private String peerId;
-
-    private List<Capability> capabilities;
+    private final InetAddress address;
+    private final int port;
+    private final String peerId;
+    private final List<Capability> capabilities;
 
     public Peer(InetAddress ip, int port, String peerId) {
         this.address = ip;

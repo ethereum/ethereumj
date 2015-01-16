@@ -168,12 +168,12 @@ public class ByteUtil {
      * @return pretty string of nibbles
      */
     public static String nibblesToPrettyString(byte[] nibbles) {
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         for (byte nibble : nibbles) {
-            String nibleString = oneByteToHexString(nibble);
-            buffer.append("\\x" + nibleString);
+            final String nibbleString = oneByteToHexString(nibble);
+            builder.append("\\x").append(nibbleString);
         }
-        return buffer.toString();
+        return builder.toString();
     }
 
     public static String oneByteToHexString(byte value) {

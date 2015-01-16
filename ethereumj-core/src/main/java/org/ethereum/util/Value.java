@@ -147,7 +147,7 @@ public class Value {
     }
 
     // it's only if the isBytes() = true;
-    public boolean isReadbleString() {
+    public boolean isReadableString() {
 
         int readableChars = 0;
         byte[] data = (byte[]) value;
@@ -209,7 +209,7 @@ public class Value {
 
     public String toString() {
 
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder stringBuilder = new StringBuilder();
 
         if (isList()) {
 
@@ -218,45 +218,45 @@ public class Value {
             // special case - key/value node
             if (list.length == 2) {
 
-                buffer.append("[ ");
+                stringBuilder.append("[ ");
 
                 Value key = new Value(list[0]);
 
                 byte[] keyNibbles = CompactEncoder.binToNibblesNoTerminator(key.asBytes());
                 String keyString = ByteUtil.nibblesToPrettyString(keyNibbles);
-                buffer.append(keyString);
+                stringBuilder.append(keyString);
 
-                buffer.append(",");
+                stringBuilder.append(",");
 
                 Value val = new Value(list[1]);
-                buffer.append(val.toString());
+                stringBuilder.append(val.toString());
 
-                buffer.append(" ]");
-                return buffer.toString();
+                stringBuilder.append(" ]");
+                return stringBuilder.toString();
             }
-            buffer.append(" [");
+            stringBuilder.append(" [");
 
             for (int i = 0; i < list.length; ++i) {
                 Value val = new Value(list[i]);
                 if (val.isString() || val.isEmpty()) {
-                    buffer.append("'").append(val.toString()).append("'");
+                    stringBuilder.append("'").append(val.toString()).append("'");
                 } else {
-                    buffer.append(val.toString());
+                    stringBuilder.append(val.toString());
                 }
                 if (i < list.length - 1)
-                    buffer.append(", ");
+                    stringBuilder.append(", ");
             }
-            buffer.append("] ");
+            stringBuilder.append("] ");
 
-            return buffer.toString();
+            return stringBuilder.toString();
         } else if (isEmpty()) {
             return "";
         } else if (isBytes()) {
 
-            StringBuffer output = new StringBuffer();
+            StringBuilder output = new StringBuilder();
             if (isHashCode()) {
                 output.append(Hex.toHexString(asBytes()));
-            } else if (isReadbleString()) {
+            } else if (isReadableString()) {
                 output.append("'");
                 for (byte oneByte : asBytes()) {
                     if (oneByte < 16) {

@@ -110,9 +110,9 @@ public class WorldManager {
         pendingTransactions.addAll(transactions);
     }
 
-    public void clearPendingTransactions(List<Transaction> recivedTransactions) {
+    public void clearPendingTransactions(List<Transaction> receivedTransactions) {
 
-        for (Transaction tx : recivedTransactions) {
+        for (Transaction tx : receivedTransactions) {
             logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
             pendingTransactions.remove(tx);
         }

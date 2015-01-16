@@ -12,12 +12,12 @@ import java.math.BigInteger;
  */
 public class Env {
 
-    private byte[] currentCoinbase;
-    private byte[] currentDifficulty;
-    private byte[] currentGasLimit;
-    private byte[] currentNumber;
-    private byte[] currentTimestamp;
-    private byte[] previousHash;
+    private final byte[] currentCoinbase;
+    private final byte[] currentDifficulty;
+    private final byte[] currentGasLimit;
+    private final byte[] currentNumber;
+    private final byte[] currentTimestamp;
+    private final byte[] previousHash;
 
 
     /*

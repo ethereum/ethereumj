@@ -365,7 +365,7 @@ public class TrieImpl implements Trie {
 
     private boolean isEmptyNode(Object node) {
         Value n = new Value(node);
-        return (node == null || (n.isString() && (n.asString() == "" || n.get(0).isNull())) || n.length() == 0);
+        return (node == null || (n.isString() && (n.asString().isEmpty() || n.get(0).isNull())) || n.length() == 0);
     }
 
     private Object[] copyNode(Value currentNode) {
@@ -382,9 +382,7 @@ public class TrieImpl implements Trie {
     @Override
     public boolean equals(Object trie) {
         if (this == trie) return true;
-        if (trie instanceof Trie)
-            return Arrays.equals(this.getRootHash(), ((Trie) trie).getRootHash());
-        return false;
+        return trie instanceof Trie && Arrays.equals(this.getRootHash(), ((Trie) trie).getRootHash());
     }
 
     @Override

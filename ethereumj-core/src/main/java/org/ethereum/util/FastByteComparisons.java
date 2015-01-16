@@ -139,11 +139,9 @@ public abstract class FastByteComparisons {
                                     Field f = Unsafe.class.getDeclaredField("theUnsafe");
                                     f.setAccessible(true);
                                     return f.get(null);
-                                } catch (NoSuchFieldException e) {
+                                } catch (NoSuchFieldException | IllegalAccessException e) {
                                     // It doesn't matter what we throw;
                                     // it's swallowed in getBestComparer().
-                                    throw new Error();
-                                } catch (IllegalAccessException e) {
                                     throw new Error();
                                 }
                             }

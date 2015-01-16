@@ -37,10 +37,10 @@ public class Block {
 
     private static final Logger logger = LoggerFactory.getLogger("block");
 
-    public static BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
-    public static BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
+    public static final BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
+    public static final BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
             BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
-    public static BigInteger INCLUSION_REWARD = Block.BLOCK_REWARD
+    public static final BigInteger INCLUSION_REWARD = BLOCK_REWARD
             .divide(BigInteger.valueOf(32));
 
     private BlockHeader header;
@@ -67,9 +67,9 @@ public class Block {
     }
 
     public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-            byte[] difficulty, long number, long gasLimit,
-            long gasUsed, long timestamp, byte[] extraData, byte[] nonce,
-            List<Transaction> transactionsList, List<BlockHeader> uncleList) {
+                 byte[] difficulty, long number, long gasLimit,
+                 long gasUsed, long timestamp, byte[] extraData, byte[] nonce,
+                 List<Transaction> transactionsList, List<BlockHeader> uncleList) {
         this.header = new BlockHeader(parentHash, unclesHash, coinbase, logsBloom,
                 difficulty, number, gasLimit, gasUsed,
                 timestamp, extraData, nonce);
@@ -264,7 +264,7 @@ public class Block {
 
         toStringBuff.setLength(0);
         toStringBuff.append("BlockData [");
-        toStringBuff.append("hash=" + ByteUtil.toHexString(this.getHash())).append("");
+        toStringBuff.append("hash=").append(ByteUtil.toHexString(this.getHash()));
         toStringBuff.append(header.toFlatString());
 
         for (Transaction tx : getTransactionsList()) {
@@ -338,8 +338,7 @@ public class Block {
 
     public byte[] getEncodedWithoutNonce() {
         if (!parsed) parseRLP();
-        byte[] header = this.header.getEncodedWithoutNonce();
-        return header;
+        return this.header.getEncodedWithoutNonce();
     }
 
     public String getShortHash() {

@@ -61,9 +61,8 @@ public class Bloom {
 
         Bloom bloom = (Bloom) o;
 
-        if (!Arrays.equals(data, bloom.data)) return false;
+        return Arrays.equals(data, bloom.data);
 
-        return true;
     }
 
     @Override

@@ -8,15 +8,15 @@ import org.ethereum.core.Transaction;
  */
 public class WalletTransaction {
 
-    private Transaction tx;
-    int approved = 0; // each time the tx got from the wire this value increased
+    private final Transaction tx;
+    private int approved = 0; // each time the tx got from the wire this value increased
 
     public WalletTransaction(Transaction tx) {
         this.tx = tx;
     }
 
     public void incApproved() {
-        ++this.approved;
+        approved++;
     }
 
     public int getApproved() {

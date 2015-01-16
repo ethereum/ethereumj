@@ -101,14 +101,11 @@ public class EthereumImpl implements Ethereum {
         worldManager.startPeerDiscovery();
 
         final Set<PeerInfo> peers = worldManager.getPeerDiscovery().getPeers();
-        synchronized (peers) {
-            for (PeerInfo peer : peers) { // it blocks until a peer is available.
-                if (peer.isOnline() && !excludePeers.contains(peer)) {
-                    logger.info("Found peer: {}", peer.toString());
-                    if (listener != null)
-                        listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
-                    return peer;
-                }
+        for (PeerInfo peer : peers) { // it blocks until a peer is available.
+            if (peer.isOnline() && !excludePeers.contains(peer)) {
+                logger.info("Found peer: {}", peer.toString());
+                listener.trace(String.format("Found online peer: [ %s ]", peer.toString()));
+                return peer;
             }
         }
         return null;
@@ -209,10 +206,8 @@ public class EthereumImpl implements Ethereum {
         byte[] gasBytes = ByteUtil.bigIntegerToBytes(gas);
         byte[] valueBytes = ByteUtil.bigIntegerToBytes(value);
 
-        Transaction tx = new Transaction(nonceBytes, gasPriceBytes, gasBytes,
+        return new Transaction(nonceBytes, gasPriceBytes, gasBytes,
                 receiveAddress, valueBytes, data);
-
-        return tx;
     }
 
 
@@ -220,9 +215,8 @@ public class EthereumImpl implements Ethereum {
     public Future<Transaction> submitTransaction(Transaction transaction) {
 
         TransactionTask transactionTask = new TransactionTask(transaction, worldManager);
-        Future<Transaction> future = TransactionExecutor.instance.submitTransaction(transactionTask);
 
-        return future;
+        return TransactionExecutor.instance.submitTransaction(transactionTask);
     }
 
 

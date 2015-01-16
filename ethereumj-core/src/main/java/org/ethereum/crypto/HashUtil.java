@@ -80,9 +80,8 @@ public class HashUtil {
 
         byte[] encSender = RLP.encodeElement(addr);
         byte[] encNonce = RLP.encodeBigInteger(new BigInteger(1, nonce));
-        byte[] newAddress = sha3omit12(RLP.encodeList(encSender, encNonce));
 
-        return newAddress;
+        return sha3omit12(RLP.encodeList(encSender, encNonce));
     }
 
     /**
@@ -112,7 +111,7 @@ public class HashUtil {
 
         byte[] peerIdBytes = new BigInteger(512, Utils.getRandom()).toByteArray();
 
-        String peerId = null;
+        final String peerId;
         if (peerIdBytes.length > 64)
             peerId = Hex.toHexString(peerIdBytes, 1, 64);
         else

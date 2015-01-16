@@ -11,8 +11,8 @@ import java.util.List;
  */
 public class ProgramTrace {
 
-    byte[] txHash;
-    List<Op> ops = new ArrayList<>();
+    private byte[] txHash;
+    private List<Op> ops = new ArrayList<>();
 
     public void setTxHash(byte[] txHash) {
         this.txHash = txHash;

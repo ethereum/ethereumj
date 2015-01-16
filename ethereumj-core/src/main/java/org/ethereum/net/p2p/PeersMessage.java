@@ -92,7 +92,7 @@ public class PeersMessage extends P2pMessage {
     public String toString() {
         if (!parsed) this.parse();
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (Peer peerData : peers) {
             sb.append("\n       ").append(peerData);
         }

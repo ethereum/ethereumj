@@ -61,11 +61,10 @@ public class TestRunner {
 
     public List<String> runTestCase(StateTestCase testCase) {
 
-        List<String> results = null;
+        List<String> results = new ArrayList<>();;
         logger.info("\n***");
         logger.info(" Running test case: [" + testCase.getName() + "]");
         logger.info("***\n");
-        results = new ArrayList<>();
 
         logger.info("--------- PRE ---------");
         RepositoryDummy repository = loadRepository(testCase.getPre());
@@ -119,8 +118,8 @@ public class TestRunner {
 
             AccountState expectedAccountState = testCase.getPost().get(wrap(addr));
             if (expectedAccountState == null) {
-                String formatedString = String.format("Unexpected account state: address: %s", Hex.toHexString(addr));
-                results.add(formatedString);
+                String formattedString = String.format("Unexpected account state: address: %s", Hex.toHexString(addr));
+                results.add(formattedString);
                 continue;
             }
 

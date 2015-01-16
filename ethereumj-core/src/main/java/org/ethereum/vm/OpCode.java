@@ -565,8 +565,8 @@ public enum OpCode {
      */
     SUICIDE(0xff, 1);
 
-    private byte opcode;
-    private int require;
+    private final byte opcode;
+    private final int require;
 
     private static final Map<Byte, OpCode> intToTypeMap = new HashMap<>();
     private static final Map<String, Byte> stringToByteMap = new HashMap<>();

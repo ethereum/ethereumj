@@ -45,7 +45,7 @@ import org.ethereum.util.Value;
 public class Node {
 
     /* RLP encoded value of the Trie-node */
-    private Value value;
+    private final Value value;
     private boolean dirty;
 
     public Node(Value val) {
@@ -65,8 +65,8 @@ public class Node {
         return dirty;
     }
 
-    public void setDirty(boolean ditry) {
-        this.dirty = ditry;
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 
     public Value getValue() {

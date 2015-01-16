@@ -207,7 +207,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     private void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
 
         this.handshakeHelloMessage = msg;
-        if (msg.getP2PVersion() != P2pHandler.VERSION) {
+        if (msg.getP2PVersion() != VERSION) {
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
         }
         else {

@@ -61,10 +61,10 @@ public class Account {
         if (accountState != null)
             balance = accountState.getBalance();
 
-        synchronized (getPendingTransactins()) {
-            if (!getPendingTransactins().isEmpty()) {
+        synchronized (getPendingTransactions()) {
+            if (!getPendingTransactions().isEmpty()) {
 
-                for (Transaction tx : getPendingTransactins()) {
+                for (Transaction tx : getPendingTransactions()) {
                     if (Arrays.equals(getAddress(), tx.getSender())) {
                         balance = balance.subtract(new BigInteger(1, tx.getValue()));
                     }
@@ -94,7 +94,7 @@ public class Account {
         this.address = address;
     }
 
-    public Set<Transaction> getPendingTransactins() {
+    public Set<Transaction> getPendingTransactions() {
         return this.pendingTransactions;
     }
 

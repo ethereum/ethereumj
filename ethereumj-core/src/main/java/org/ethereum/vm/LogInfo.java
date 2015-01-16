@@ -95,7 +95,7 @@ public class LogInfo {
     @Override
     public String toString() {
 
-        StringBuffer topicsStr = new StringBuffer();
+        StringBuilder topicsStr = new StringBuilder();
         topicsStr.append("[");
 
         for (DataWord topic : topics) {

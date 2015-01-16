@@ -85,25 +85,25 @@ public class SerpentCompiler {
         Collections.addAll(lexaList, lexaArr);
 
         // Encode push_n numbers
-        boolean skiping = false;
+        boolean skipping = false;
         for (int i = 0; i < lexaList.size(); ++i) {
 
             String lexa = lexaList.get(i);
 
-            { // skiping the [asm asm] block
+            { // skipping the [asm asm] block
                 if (lexa.equals("asm]")) {
-                    skiping = false;
+                    skipping = false;
                     lexaList.remove(i);
                     --i;
                     continue;
                 }
                 if (lexa.equals("[asm")) {
-                    skiping = true;
+                    skipping = true;
                     lexaList.remove(i);
                     --i;
                     continue;
                 }
-                if (skiping)
+                if (skipping)
                     continue;
             }
 
@@ -206,7 +206,7 @@ public class SerpentCompiler {
         int numBytes = ByteUtil.numBytes(code.length + "");
         byte[] lenBytes = BigIntegers.asUnsignedByteArray(BigInteger.valueOf(code.length));
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (byte lenByte : lenBytes) {
             sb.append(lenByte).append(" ");
         }
@@ -221,9 +221,7 @@ public class SerpentCompiler {
 
         byte[] headerMachine = compileAssemblyToMachine(header);
 
-        byte[] result = init != null ? Arrays.concatenate(init, headerMachine, code) :
+        return init != null ? Arrays.concatenate(init, headerMachine, code) :
                 Arrays.concatenate(headerMachine, code);
-
-        return result;
     }
 }

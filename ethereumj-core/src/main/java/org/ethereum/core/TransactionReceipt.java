@@ -99,7 +99,7 @@ public class TransactionReceipt {
         byte[] cumulativeGasRLP = RLP.encodeElement(this.cumulativeGas);
         byte[] bloomRLP = RLP.encodeElement(this.bloomFilter.data);
 
-        byte[] logInfoListRLP = null;
+        final byte[] logInfoListRLP;
         if (logInfoList != null) {
             byte[][] logInfoListE = new byte[logInfoList.size()][];
 
