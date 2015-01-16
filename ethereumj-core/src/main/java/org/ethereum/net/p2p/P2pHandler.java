@@ -243,7 +243,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
             //todo calculate the Offsets
             worldManager.getPeerDiscovery().getPeers().add(confirmedPeer);
-            worldManager.getListener().onHandShakePeer();
+            worldManager.getListener().onHandShakePeer(msg);
         }
     }
 

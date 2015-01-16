@@ -52,16 +52,12 @@ public class ChannelManager {
     public Channel getChannel(String peerId){
         
         for (Channel channel : channels){
-
-
             String tablePeerId = channel.getP2pHandler().getHandshakeHelloMessage().getPeerId();
             if (tablePeerId != null &&
                 peerId.equals(tablePeerId)){
-                
                 return channel;
             }
         }
-        
         return null;
     }
 

@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
+import java.net.InetSocketAddress;
 
 /**
  * @author Roman Mandeleil
@@ -44,6 +45,8 @@ public class Channel {
 
     @Autowired
     MessageEncoder messageEncoder;
+    
+    InetSocketAddress inetSocketAddress;
 
 
     private long startupTS;
@@ -111,5 +114,13 @@ public class Channel {
 
     public long getStartupTS() {
         return startupTS;
+    }
+
+    public InetSocketAddress getInetSocketAddress() {
+        return inetSocketAddress;
+    }
+
+    public void setInetSocketAddress(InetSocketAddress inetSocketAddress) {
+        this.inetSocketAddress = inetSocketAddress;
     }
 }

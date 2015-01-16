@@ -67,7 +67,6 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
         ch.config().setOption(ChannelOption.SO_RCVBUF, 32368);
         ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
-
     }
 
 }

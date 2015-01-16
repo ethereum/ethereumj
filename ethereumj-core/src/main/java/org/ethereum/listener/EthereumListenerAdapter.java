@@ -3,6 +3,7 @@ package org.ethereum.listener;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.message.Message;
+import org.ethereum.net.p2p.HelloMessage;
 
 import java.util.Set;
 
@@ -42,7 +43,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onHandShakePeer() {
+    public void onHandShakePeer(HelloMessage helloMessage) {
 
     }
 
