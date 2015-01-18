@@ -64,7 +64,7 @@ public enum P2pMessageCodes {
     USER(0x0F);
 
 
-    private int cmd;
+    private final int cmd;
 
     private static final Map<Integer, P2pMessageCodes> intToTypeMap = new HashMap<>();
 
@@ -79,16 +79,11 @@ public enum P2pMessageCodes {
     }
 
     public static P2pMessageCodes fromByte(byte i) {
-        P2pMessageCodes type = intToTypeMap.get((int) i);
-        return type;
+        return intToTypeMap.get((int) i);
     }
 
     public static boolean inRange(byte code) {
-
-        if (code >= HELLO.asByte() && code <= USER.asByte())
-            return true;
-        else
-            return false;
+        return code >= HELLO.asByte() && code <= USER.asByte();
     }
 
     public byte asByte() {

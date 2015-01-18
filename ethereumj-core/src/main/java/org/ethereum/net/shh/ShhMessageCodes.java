@@ -41,7 +41,7 @@ public enum ShhMessageCodes {
     PACKET_COUNT(0x04);
 
     static byte OFFSET = 0;
-    private int cmd;
+    private final int cmd;
 
     private static final Map<Integer, ShhMessageCodes> intToTypeMap = new HashMap<>();
 
@@ -56,8 +56,7 @@ public enum ShhMessageCodes {
     }
 
     public static ShhMessageCodes fromByte(byte i) {
-        ShhMessageCodes type = intToTypeMap.get(i - OFFSET);
-        return type;
+        return intToTypeMap.get(i - OFFSET);
     }
 
     public static void setOffset(byte offset) {
@@ -65,11 +64,7 @@ public enum ShhMessageCodes {
     }
 
     public static boolean inRange(byte code) {
-
-        if (code >= STATUS.asByte() && code <= PACKET_COUNT.asByte())
-            return true;
-        else
-            return false;
+        return code >= STATUS.asByte() && code <= PACKET_COUNT.asByte();
     }
 
     public byte asByte() {

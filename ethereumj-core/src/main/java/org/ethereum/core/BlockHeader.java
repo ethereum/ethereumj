@@ -29,14 +29,14 @@ public class BlockHeader {
     private byte[] stateRoot;
     /* The SHA3 256-bit hash of the root node of the trie structure
      * populated with each transaction in the transaction
-     * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_reciepe)]
+     * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_recipe)]
      * of the block */
     private byte[] txTrieRoot;
     /* The SHA3 256-bit hash of the root node of the trie structure
      * populated with each transaction recipe in the transaction recipes
-     * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_reciepe)]
+     * list portion, the trie is populate by [key, val] --> [rlp(index), rlp(tx_recipe)]
      * of the block */
-    private byte[] recieptTrieRoot;
+    private byte[] receiptTrieRoot;
 
     /*todo: comment it when you know what the fuck it is*/
     private byte[] logsBloom;
@@ -72,9 +72,9 @@ public class BlockHeader {
         if (this.txTrieRoot == null)
             this.txTrieRoot = EMPTY_TRIE_HASH;
 
-        this.recieptTrieRoot = rlpHeader.get(5).getRLPData();
-        if (this.recieptTrieRoot == null)
-            this.recieptTrieRoot = EMPTY_TRIE_HASH;
+        this.receiptTrieRoot = rlpHeader.get(5).getRLPData();
+        if (this.receiptTrieRoot == null)
+            this.receiptTrieRoot = EMPTY_TRIE_HASH;
 
         this.logsBloom = rlpHeader.get(6).getRLPData();
         this.difficulty = rlpHeader.get(7).getRLPData();
@@ -177,16 +177,16 @@ public class BlockHeader {
         this.txTrieRoot = txTrieRoot;
     }
 
-    public byte[] getRecieptTrieRoot() {
-        return recieptTrieRoot;
+    public byte[] getReceiptTrieRoot() {
+        return receiptTrieRoot;
     }
 
     public byte[] getLogsBloom() {
         return logsBloom;
     }
 
-    public void setRecieptTrieRoot(byte[] recieptTrieRoot) {
-        this.recieptTrieRoot = recieptTrieRoot;
+    public void setReceiptTrieRoot(byte[] receiptTrieRoot) {
+        this.receiptTrieRoot = receiptTrieRoot;
     }
 
     public byte[] getDifficulty() {
@@ -264,8 +264,8 @@ public class BlockHeader {
         if (txTrieRoot == null) this.txTrieRoot = EMPTY_TRIE_HASH;
         byte[] txTrieRoot = RLP.encodeElement(this.txTrieRoot);
 
-        if (recieptTrieRoot == null) this.recieptTrieRoot = EMPTY_TRIE_HASH;
-        byte[] recieptTrieRoot = RLP.encodeElement(this.recieptTrieRoot);
+        if (receiptTrieRoot == null) this.receiptTrieRoot = EMPTY_TRIE_HASH;
+        byte[] receiptTrieRoot = RLP.encodeElement(this.receiptTrieRoot);
 
         byte[] logsBloom = RLP.encodeElement(this.logsBloom);
         byte[] difficulty = RLP.encodeElement(this.difficulty);
@@ -277,51 +277,39 @@ public class BlockHeader {
         if (withNonce) {
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(parentHash, unclesHash, coinbase,
-                    stateRoot, txTrieRoot, recieptTrieRoot, logsBloom, difficulty, number,
+                    stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
                     gasLimit, gasUsed, timestamp, extraData, nonce);
         } else {
             return RLP.encodeList(parentHash, unclesHash, coinbase,
-                    stateRoot, txTrieRoot, recieptTrieRoot, logsBloom, difficulty, number,
+                    stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
                     gasLimit, gasUsed, timestamp, extraData);
         }
     }
 
-
-    private StringBuffer toStringBuff = new StringBuffer();
-
     public String toString() {
+        return toStringWithSuffix("\n");
+    }
 
-        toStringBuff.setLength(0);
-        toStringBuff.append("  parentHash=" + toHexString(parentHash)).append("\n");
-        toStringBuff.append("  unclesHash=" + toHexString(unclesHash)).append("\n");
-        toStringBuff.append("  coinbase=" + toHexString(coinbase)).append("\n");
-        toStringBuff.append("  stateRoot=" + toHexString(stateRoot)).append("\n");
-        toStringBuff.append("  txTrieHash=" + toHexString(txTrieRoot)).append("\n");
-        toStringBuff.append("  reciptsTrieHash=" + toHexString(recieptTrieRoot)).append("\n");
-        toStringBuff.append("  difficulty=" + toHexString(difficulty)).append("\n");
-        toStringBuff.append("  number=" + number).append("\n");
-        toStringBuff.append("  gasLimit=" + gasLimit).append("\n");
-        toStringBuff.append("  gasUsed=" + gasUsed).append("\n");
-        toStringBuff.append("  timestamp=" + timestamp + " (" + Utils.longToDateTime(timestamp) + ")").append("\n");
-        toStringBuff.append("  extraData=" + toHexString(extraData)).append("\n");
-        toStringBuff.append("  nonce=" + toHexString(nonce)).append("\n");
+    private String toStringWithSuffix(final String suffix) {
+        StringBuilder toStringBuff = new StringBuilder();
+        toStringBuff.append("  parentHash=").append(toHexString(parentHash)).append(suffix);
+        toStringBuff.append("  unclesHash=").append(toHexString(unclesHash)).append(suffix);
+        toStringBuff.append("  coinbase=").append(toHexString(coinbase)).append(suffix);
+        toStringBuff.append("  stateRoot=").append(toHexString(stateRoot)).append(suffix);
+        toStringBuff.append("  txTrieHash=").append(toHexString(txTrieRoot)).append(suffix);
+        toStringBuff.append("  receiptsTrieHash=").append(toHexString(receiptTrieRoot)).append(suffix);
+        toStringBuff.append("  difficulty=").append(toHexString(difficulty)).append(suffix);
+        toStringBuff.append("  number=").append(number).append(suffix);
+        toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
+        toStringBuff.append("  gasUsed=").append(gasUsed).append(suffix);
+        toStringBuff.append("  timestamp=").append(timestamp).append(" (").append(Utils.longToDateTime(timestamp)).append(")").append(suffix);
+        toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);
+        toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
         return toStringBuff.toString();
     }
 
     public String toFlatString() {
-        toStringBuff.append("  parentHash=" + toHexString(parentHash)).append("");
-        toStringBuff.append("  unclesHash=" + toHexString(unclesHash)).append("");
-        toStringBuff.append("  coinbase=" + toHexString(coinbase)).append("");
-        toStringBuff.append("  stateRoot=" + toHexString(stateRoot)).append("");
-        toStringBuff.append("  txTrieHash=" + toHexString(txTrieRoot)).append("");
-        toStringBuff.append("  difficulty=" + toHexString(difficulty)).append("");
-        toStringBuff.append("  number=" + number).append("");
-        toStringBuff.append("  gasLimit=" + gasLimit).append("");
-        toStringBuff.append("  gasUsed=" + gasUsed).append("");
-        toStringBuff.append("  timestamp=" + timestamp).append("");
-        toStringBuff.append("  extraData=" + toHexString(extraData)).append("");
-        toStringBuff.append("  nonce=" + toHexString(nonce)).append("");
-        return toStringBuff.toString();
+        return toStringWithSuffix("");
     }
 
 }

@@ -17,10 +17,9 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
 
     private byte[] msgData;
 
-
-    private Repository repository = null;
+    private Repository repository;
     private byte[] ownerAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
-    private byte[] contractAddress = Hex.decode("471fd3ad3e9eeadeec4608b92d16ce6b500704cc");
+    private final byte[] contractAddress = Hex.decode("471fd3ad3e9eeadeec4608b92d16ce6b500704cc");
 
     // default for most tests. This can be overwritten by the test
     private long gasLimit = 1000000;
@@ -100,9 +99,11 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
         return new DataWord(balance);
     }
 
-      /*****************/
-     /***  msg data ***/
     /*****************/
+    /***  msg data ***/
+    /**
+     * *************
+     */
 
     /*     CALLDATALOAD  op   */
     public DataWord getDataValue(DataWord indexData) {

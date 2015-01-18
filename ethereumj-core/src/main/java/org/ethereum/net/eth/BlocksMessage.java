@@ -79,7 +79,7 @@ public class BlocksMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (Block blockData : this.getBlocks()) {
             sb.append("\n   ").append(blockData.toFlatString());
         }

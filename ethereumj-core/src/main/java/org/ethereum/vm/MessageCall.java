@@ -15,28 +15,28 @@ public class MessageCall {
     /**
      * Type of internal call. Either CALL, STATELESS or POST
      */
-    private MsgType type;
+    private final MsgType type;
 
     /**
      * gas to pay for the call, remaining gas will be refunded to the caller
      */
-    private DataWord gas;
+    private final DataWord gas;
     /**
      * address of account which code to call
      */
-    private DataWord codeAddress;
+    private final DataWord codeAddress;
     /**
      * the value that can be transfer along with the code execution
      */
-    private DataWord endowment;
+    private final DataWord endowment;
     /**
      * start of memory to be input data to the call
      */
-    private DataWord inDataOffs;
+    private final DataWord inDataOffs;
     /**
      * size of memory to be input data to the call
      */
-    private DataWord inDataSize;
+    private final DataWord inDataSize;
     /**
      * start of memory to be output of the call
      */

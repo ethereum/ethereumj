@@ -14,16 +14,16 @@ import java.math.BigInteger;
  */
 public class Exec {
 
-    private byte[] address;
-    private byte[] caller;
-    private byte[] data;
-    private byte[] code;
+    private final byte[] address;
+    private final byte[] caller;
+    private final byte[] data;
+    private final byte[] code;
 
-    private byte[] gas;
-    private byte[] gasPrice;
+    private final byte[] gas;
+    private final byte[] gasPrice;
 
-    private byte[] origin;
-    private byte[] value;
+    private final byte[] origin;
+    private final byte[] value;
 
     /*
      e.g:

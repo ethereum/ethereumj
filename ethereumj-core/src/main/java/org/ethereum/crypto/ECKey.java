@@ -397,7 +397,6 @@ public class ECKey implements Serializable {
         // No decryption of private key required.
         if (priv == null)
             throw new MissingPrivateKeyException();
-        check(priv != null, "Private key must not be null");
         ECDSASigner signer = new ECDSASigner(new HMacDSAKCalculator(new SHA256Digest()));
         ECPrivateKeyParameters privKey = new ECPrivateKeyParameters(priv, CURVE);
         signer.init(true, privKey);

@@ -157,7 +157,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 break;
             case NEW_BLOCK:
                 msgQueue.receivedMessage(msg);
-                procesNewBlock((NewBlockMessage) msg);
+                processNewBlock((NewBlockMessage) msg);
             case PACKET_COUNT:
                 break;
             default:
@@ -212,11 +212,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
 
         if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
-                || msg.getProtocolVersion() != EthHandler.VERSION) {
+                || msg.getProtocolVersion() != VERSION) {
             logger.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
 //          msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
             ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
-        } else if (msg.getNetworkId() != EthHandler.NETWORK_ID)
+        } else if (msg.getNetworkId() != NETWORK_ID)
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
         else {
             BlockQueue chainQueue = blockchain.getQueue();
@@ -282,9 +282,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         List<Block> blockList = blocksMessage.getBlocks();
 
         if (!blockList.isEmpty()) {
-            Block block = blockList.get(blockList.size()-1);
+            Block block = blockList.get(blockList.size() - 1);
             if (block.getNumber() > lastBlock.getNumber())
-                lastBlock = blockList.get(blockList.size()-1);
+                lastBlock = blockList.get(blockList.size() - 1);
         }
 
         // check if you got less blocks than you asked
@@ -320,7 +320,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      *
      * @param newBlockMessage - new block message
      */
-    public void procesNewBlock(NewBlockMessage newBlockMessage) {
+    public void processNewBlock(NewBlockMessage newBlockMessage) {
 
         Block newBlock = newBlockMessage.getBlock();
 

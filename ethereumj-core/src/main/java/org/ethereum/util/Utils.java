@@ -125,15 +125,13 @@ public class Utils {
         return Double.parseDouble(version.substring(0, pos - 1));
     }
 
-    public static StringBuffer getHashlistShort(List<byte[]> blockHashes) {
+    public static String getHashListShort(List<byte[]> blockHashes) {
+        if (blockHashes.isEmpty()) return "[]";
 
-        StringBuffer sb = new StringBuffer();
-
-        if (blockHashes.isEmpty()) return sb.append("[]");
-
+        StringBuilder sb = new StringBuilder();
         String firstHash = Hex.toHexString(blockHashes.get(0));
         String lastHash = Hex.toHexString(blockHashes.get(blockHashes.size() - 1));
-        return sb.append(" ").append(firstHash).append("...").append(lastHash);
+        return sb.append(" ").append(firstHash).append("...").append(lastHash).toString();
     }
 
 }

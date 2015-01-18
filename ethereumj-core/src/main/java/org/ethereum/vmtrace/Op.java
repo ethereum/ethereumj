@@ -37,12 +37,12 @@ import java.util.Stack;
 
 public class Op {
 
-    byte op;
-    int pc;
-    DataWord gas;
-    Map<String, String> storage;
-    byte[] memory;
-    List<String> stack;
+    private byte op;
+    private int pc;
+    private DataWord gas;
+    private Map<String, String> storage;
+    private byte[] memory;
+    private List<String> stack;
 
     public void setOp(byte op) {
         this.op = op;

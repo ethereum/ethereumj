@@ -81,10 +81,10 @@ public class TransactionsMessage extends EthMessage {
 
     public String toString() {
         if (!parsed) parse();
-        StringBuffer sb = new StringBuffer();
+        final StringBuilder sb = new StringBuilder();
         for (Transaction transaction : transactions)
             sb.append("\n   ").append(transaction);
-        return "[" + this.getCommand().name() + " num:"
+        return "[" + getCommand().name() + " num:"
                 + transactions.size() + " " + sb.toString() + "]";
     }
 }

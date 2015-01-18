@@ -91,8 +91,8 @@ public class TransactionExecutor {
 
 
         // FIND OUT THE TRANSACTION TYPE
-        byte[] receiverAddress = null;
-        byte[] code = EMPTY_BYTE_ARRAY;
+        final byte[] receiverAddress;
+        final byte[] code;
         boolean isContractCreation = tx.isContractCreation();
         if (isContractCreation) {
             receiverAddress = tx.getContractAddress();
@@ -224,8 +224,6 @@ public class TransactionExecutor {
 
         receipt.setCumulativeGas(gasUsed);
         this.receipt = receipt;
-        return;
-
     }
 
     /**

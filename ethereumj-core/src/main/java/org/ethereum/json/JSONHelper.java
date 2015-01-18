@@ -84,7 +84,7 @@ public class JSONHelper {
             byte[] keyBytes = key.getData();
             AccountState accountState = repository.getAccountState(keyBytes);
             ContractDetails details = repository.getContractDetails(keyBytes);
-            JSONHelper.dumpState(statesNode, Hex.toHexString(keyBytes), accountState, details);
+            dumpState(statesNode, Hex.toHexString(keyBytes), accountState, details);
         }
         blockNode.put("state", statesNode);
 

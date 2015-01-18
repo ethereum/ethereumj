@@ -14,10 +14,10 @@ import java.math.BigInteger;
  */
 public class CallCreate {
 
-    byte[] data;
-    byte[] destination;
-    byte[] gasLimit;
-    byte[] value;
+    private final byte[] data;
+    private final byte[] destination;
+    private final byte[] gasLimit;
+    private final byte[] value;
 
 /* e.g.
         "data" : [

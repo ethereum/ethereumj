@@ -6,7 +6,7 @@ package org.ethereum.util;
  */
 public class RLPItem implements RLPElement {
 
-    byte[] rlpData;
+    private final byte[] rlpData;
 
     public RLPItem(byte[] rlpData) {
         this.rlpData = rlpData;

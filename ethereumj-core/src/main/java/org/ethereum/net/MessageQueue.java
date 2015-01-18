@@ -63,16 +63,15 @@ public class MessageQueue {
     }
 
     public void sendMessage(Message msg) {
-
-        if (msg instanceof PingMessage && hasPing)
-            return;
-        if (msg instanceof PingMessage && !hasPing)
+        if (msg instanceof PingMessage) {
+            if (hasPing) return;
             hasPing = true;
+        }
 
         messageQueue.add(new MessageRoundtrip(msg));
     }
 
-    public void disconnect(){
+    public void disconnect() {
         ctx.writeAndFlush(DISCONNECT_MESSAGE);
         ctx.close();
     }

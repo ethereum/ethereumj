@@ -127,12 +127,10 @@ public class BlockStoreImpl implements BlockStore{
     @Transactional(readOnly = true)
     public BigInteger getTotalDifficultySince(long number) {
 
-        BigInteger result = (BigInteger) sessionFactory.getCurrentSession().
+        return (BigInteger) sessionFactory.getCurrentSession().
                 createQuery("select sum(cumulativeDifficulty) from BlockVO where number > :number").
                 setParameter("number", number).
                 uniqueResult();
-
-        return result;
     }
 
 
@@ -140,10 +138,8 @@ public class BlockStoreImpl implements BlockStore{
     @Transactional(readOnly = true)
     public BigInteger getTotalDifficulty() {
 
-        BigInteger result = (BigInteger) sessionFactory.getCurrentSession().
+        return (BigInteger) sessionFactory.getCurrentSession().
                 createQuery("select sum(cumulativeDifficulty) from BlockVO").uniqueResult();
-
-        return result;
     }
 
 

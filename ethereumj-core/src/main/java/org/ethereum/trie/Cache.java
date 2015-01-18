@@ -17,8 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Cache {
 
+    private final DB db;
     private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
-    private DB db;
     private boolean isDirty;
 
     public Cache(DB db) {

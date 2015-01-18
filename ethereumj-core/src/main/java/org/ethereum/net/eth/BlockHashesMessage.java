@@ -77,7 +77,7 @@ public class BlockHashesMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
 
-        StringBuffer sb = Utils.getHashlistShort(this.blockHashes);
-        return "[" + this.getCommand().name() + sb.toString() + "] (" + this.blockHashes.size() + ")";
+        final String hashListShort = Utils.getHashListShort(blockHashes);
+        return "[" + this.getCommand().name() + hashListShort + "] (" + blockHashes.size() + ")";
     }
 }
