@@ -1,5 +1,7 @@
 package test.ethereum.trie;
 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 import test.ethereum.db.MockDB;
 
 import org.ethereum.core.AccountState;
@@ -32,13 +34,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.junit.Assert.*;
@@ -589,6 +585,45 @@ public class TrieTest {
         }
     }
 
+
+    @Ignore
+    @Test
+    public void reddisTest() throws URISyntaxException, IOException {
+        
+        URL massiveUpload_1 = ClassLoader
+                .getSystemResource("trie/massive-upload.dmp");
+
+        File file = new File(massiveUpload_1.toURI());
+        List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
+        String dbName = "state";
+
+        long startTime = System.currentTimeMillis();
+        
+        Jedis jedis = new Jedis("localhost");
+        jedis.flushAll();
+        Pipeline pipeline = jedis.pipelined();
+        Set<String> keys = jedis.keys("*");
+        System.out.println("before: all " + keys.size());
+
+        for (String aStrData : strData) {
+            String[] keyVal = aStrData.split("=");
+
+            if (keyVal[0].equals("*"))
+                pipeline.del(keyVal[1].getBytes());
+            else
+                pipeline.set(keyVal[0].getBytes(), keyVal[1].getBytes());
+        }
+
+        pipeline.sync();
+        keys = jedis.keys("*");
+        System.out.println("all " + keys.size());
+        for (String key : keys)
+            System.out.println(key + " -> " + jedis.get(key));
+
+
+        System.out.println("time: " + (System.currentTimeMillis() - startTime));
+    }
+    
 
     @Ignore
     @Test

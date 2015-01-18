@@ -75,6 +75,8 @@ dependencies {
     compile "org.hibernate:hibernate-core:${hibernateVersion}"
     compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
     compile "commons-dbcp:commons-dbcp:1.4"
+    compile "redis.clients:jedis:2.6.0"
+
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group:'junit', module:'junit'
     }
