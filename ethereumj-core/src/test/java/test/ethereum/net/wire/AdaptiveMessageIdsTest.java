@@ -8,6 +8,7 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,6 +24,12 @@ public class AdaptiveMessageIdsTest {
 
     @Before
     public void setUp() {
+        EthMessageCodes.setOffset((byte) 0x00);
+        ShhMessageCodes.setOffset((byte) 0x00);
+    }
+    
+    @After
+    public void tearDown() {
         EthMessageCodes.setOffset((byte) 0x00);
         ShhMessageCodes.setOffset((byte) 0x00);
     }
