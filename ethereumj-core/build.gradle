@@ -37,6 +37,7 @@ antlr4 {
 compileJava.dependsOn antlr4
 
 test {
+    systemProperty "file.encoding", "UTF-8"
     jvmArgs '-Xss16m'
 }
 
