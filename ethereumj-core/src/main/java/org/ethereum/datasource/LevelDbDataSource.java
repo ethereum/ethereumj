@@ -1,11 +1,23 @@
 package org.ethereum.datasource;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.Database;
 import org.ethereum.db.DatabaseImpl;
-import org.iq80.leveldb.DB;
+import org.ethereum.trie.Node;
+import org.iq80.leveldb.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 /**
  *
@@ -15,15 +27,49 @@ import java.util.Set;
 
 public class LevelDbDataSource implements KeyValueDataSource{
 
+    private static final Logger logger = LoggerFactory.getLogger("db");
+
     String name;
-    Database db;
+    private DB db;
     
     @Override
     public void init() {
         
         if (name == null) throw new NullPointerException("no name set to the db");
-        db = new DatabaseImpl(name);
+        
+        Options options = new Options();
+        options.createIfMissing(true);
+        options.compressionType(CompressionType.NONE);
+        try {
+            logger.debug("Opening database");
+            File dbLocation = new File(System.getProperty("user.dir") + "/" +
+                    SystemProperties.CONFIG.databaseDir() + "/");
+            File fileLocation = new File(dbLocation, name);
+
+            if (SystemProperties.CONFIG.databaseReset()) {
+                destroyDB(fileLocation);
+            }
+
+            logger.debug("Initializing new or existing database: '{}'", name);
+            db = factory.open(fileLocation, options);
+
+        } catch (IOException ioe) {
+            logger.error(ioe.getMessage(), ioe);
+            throw new RuntimeException("Can't initialize database");
+        }
     }
+
+
+    public void destroyDB(File fileLocation) {
+        logger.debug("Destroying existing database");
+        Options options = new Options();
+        try {
+            factory.destroy(fileLocation, options);
+        } catch (IOException e) {
+            logger.error(e.getMessage(), e);
+        }
+    }
+
 
     @Override
     public void setName(String name) {
@@ -47,14 +93,35 @@ public class LevelDbDataSource implements KeyValueDataSource{
 
     @Override
     public Set<byte[]> keys() {
-        
-        // todo: re-modelling DataBase for that
-        throw new UnsupportedOperationException();
+
+        DBIterator dbIterator = db.iterator();
+        Set<byte[]> keys = new HashSet<>();
+        while (dbIterator.hasNext()){
+            
+            Map.Entry<byte[], byte[]> entry = dbIterator.next();
+            keys.add(entry.getKey());
+        }
+        return keys;
     }
 
     @Override
-    public void setBatch(Map<byte[], byte[]> rows) {
-        // todo: re-modelling DataBase for that
-        throw new UnsupportedOperationException();
+    public void updateBatch(Map<byte[], byte[]> rows) {
+
+        WriteBatch batch = db.createWriteBatch();
+
+        for (Map.Entry<byte[], byte[]> row : rows.entrySet())
+                batch.put(row.getKey(), row.getValue());
+
+        db.write(batch);
+    }
+
+    @Override
+    public void close() {
+        try {
+            logger.info("Close db: {}", name);
+            db.close();
+        } catch (IOException e) {
+            logger.error("Failed to find the db file on the close: {} ", name);
+        }
     }
 }

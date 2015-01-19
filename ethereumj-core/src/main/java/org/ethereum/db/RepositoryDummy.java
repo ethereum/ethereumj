@@ -124,7 +124,7 @@ public class RepositoryDummy implements Repository {
     }
 
     @Override
-    public DBIterator getAccountsIterator() {
+    public Set<byte[]> getAccountsKeys() {
         return null;
     }
 

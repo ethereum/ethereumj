@@ -4,19 +4,15 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Denomination;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.facade.Repository;
-
-import org.iq80.leveldb.DBIterator;
-
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
-import java.awt.*;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public class AccountsListWindow extends JFrame {
 
@@ -54,11 +50,10 @@ public class AccountsListWindow extends JFrame {
             @Override
             public void run() {
                 Repository repository = UIEthereumManager.ethereum.getRepository();
-                DBIterator i = repository.getAccountsIterator();
-                while (i.hasNext()) {
+                Set<byte[]> keys = repository.getAccountsKeys();
+                for (byte[] key : keys){
                     DataClass dc = new DataClass();
-                    dc.address = i.next().getKey();
-
+                    dc.address = key;
                     AccountState state = repository.getAccountState(dc.address);
                     dc.accountState = state;
 

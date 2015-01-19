@@ -60,7 +60,7 @@ public class RedisDataSource implements KeyValueDataSource{
     }
 
     @Override
-    public void setBatch(Map<byte[], byte[]> rows) {
+    public void updateBatch(Map<byte[], byte[]> rows) {
         jedis.select(index);
         Pipeline pipeline = jedis.pipelined();
 
@@ -75,6 +75,10 @@ public class RedisDataSource implements KeyValueDataSource{
         pipeline.sync();
     }
 
+    @Override
+    public void close() {
+        jedis.close();
+    }
 
     private static Integer nameToIndex(String name) {
         Integer index = DBNameScheme.get(name);

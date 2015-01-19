@@ -18,8 +18,7 @@ public interface KeyValueDataSource {
     public void put(byte[] key, byte[] value);
     public void delete(byte[] key);
     public Set<byte[]> keys();
-    public void setBatch( Map<byte[], byte[]> rows);
-    
-    
+    public void updateBatch( Map<byte[], byte[]> rows);
 
+    public void close();
 }

@@ -1,12 +1,14 @@
 package org.ethereum.trie;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.WriteBatch;
 
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,12 +19,12 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class Cache {
 
-    private final DB db;
+    private final KeyValueDataSource dataSource;
     private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
     private boolean isDirty;
 
-    public Cache(DB db) {
-        this.db = db;
+    public Cache(KeyValueDataSource dataSource) {
+        this.dataSource = dataSource;
     }
 
     /**
@@ -51,7 +53,7 @@ public class Cache {
         }
 
         // Get the key of the database instead and cache it
-        byte[] data = this.db.get(key);
+        byte[] data = this.dataSource.get(key);
         Value value = Value.fromRlpEncoded(data);
         // Create caching node
         this.nodes.put(keyObj, new Node(value, false));
@@ -63,21 +65,21 @@ public class Cache {
         ByteArrayWrapper keyObj = new ByteArrayWrapper(key);
         this.nodes.remove(keyObj);
 
-        if (db == null) return;
-        this.db.delete(key);
+        if (dataSource == null) return;
+        this.dataSource.delete(key);
     }
 
     public void commit() {
 
-        if (db == null) return;
+        if (dataSource == null) return;
 
         // Don't try to commit if it isn't dirty
         if (!this.isDirty) {
             return;
         }
 
-        WriteBatch batch = db.createWriteBatch();
 
+        Map<byte[], byte[]> batch = new HashMap<>();
         for (ByteArrayWrapper key : this.nodes.keySet()) {
             Node node = this.nodes.get(key);
             if (node.isDirty()) {
@@ -86,7 +88,7 @@ public class Cache {
             }
         }
 
-        db.write(batch);
+        dataSource.updateBatch(batch);
         this.isDirty = false;
     }
 
@@ -112,8 +114,8 @@ public class Cache {
         return nodes;
     }
 
-    public DB getDb() {
-        return db;
+    public KeyValueDataSource getDb() {
+        return dataSource;
     }
 
     public String cacheDump() {

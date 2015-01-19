@@ -11,6 +11,8 @@ import org.iq80.leveldb.DBIterator;
 import java.math.BigInteger;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Roman Mandeleil
@@ -127,11 +129,9 @@ public interface Repository {
     public BigInteger addBalance(byte[] addr, BigInteger value);
 
     /**
-     * Returns an iterator over the accounts in this database in proper sequence
-     *
-     * @return an iterator over the accounts in this database in proper sequence
+     * @return Returns set of all the account addresses
      */
-    public DBIterator getAccountsIterator();
+    public Set<byte[]> getAccountsKeys();
 
 
     /**

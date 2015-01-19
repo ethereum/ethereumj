@@ -1,6 +1,7 @@
 package org.ethereum.trie;
 
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 
@@ -54,11 +55,11 @@ public class TrieImpl implements Trie {
     private Object root;
     private Cache cache;
 
-    public TrieImpl(DB db) {
+    public TrieImpl(KeyValueDataSource db) {
         this(db, "");
     }
 
-    public TrieImpl(DB db, Object root) {
+    public TrieImpl(KeyValueDataSource db, Object root) {
         this.cache = new Cache(db);
         this.root = root;
         this.prevRoot = root;

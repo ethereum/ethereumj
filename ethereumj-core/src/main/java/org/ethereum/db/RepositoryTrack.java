@@ -4,16 +4,11 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
-
-import org.iq80.leveldb.DBIterator;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.HashMap;
 import java.util.Set;
 
@@ -207,9 +202,10 @@ public class RepositoryTrack implements Repository {
 
 
     @Override
-    public DBIterator getAccountsIterator() {
+    public Set<byte[]> getAccountsKeys() {
         throw new UnsupportedOperationException();
     }
+
 
     public Set<ByteArrayWrapper> getFullAddressSet() {
         return cacheAccounts.keySet();

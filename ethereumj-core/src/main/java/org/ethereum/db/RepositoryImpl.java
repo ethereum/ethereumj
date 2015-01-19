@@ -1,5 +1,7 @@
 package org.ethereum.db;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.facade.Repository;
@@ -8,17 +10,9 @@ import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.vm.DataWord;
-
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
-import org.iq80.leveldb.DBIterator;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
 
@@ -26,11 +20,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.SHA3Helper.sha3;
@@ -253,8 +246,8 @@ public class RepositoryImpl implements Repository {
 
 
     @Override
-    public DBIterator getAccountsIterator() {
-        return detailsDB.iterator();
+    public Set<byte[]> getAccountsKeys() {
+        return detailsDB.getDb().keys();
     }
 
     @Override
