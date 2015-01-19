@@ -1,7 +1,9 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.datasource.RedisDataSource;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +12,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * Generic interface for Ethereum database
@@ -26,10 +30,23 @@ public class DatabaseImpl implements Database {
     private KeyValueDataSource dataSource;
 
     public DatabaseImpl(String name) {
-        // Initialize Database
-        dataSource  = new LevelDbDataSource();
-        dataSource.setName(name);
-        dataSource.init();
+        
+        if (CONFIG.getKeyValueDataSource().equals("redis") ){
+            dataSource  = new RedisDataSource();
+            dataSource.setName(name);
+            dataSource.init();
+            return;
+        }
+
+        if (CONFIG.getKeyValueDataSource().equals("leveldb") ){
+            dataSource  = new LevelDbDataSource();
+            dataSource.setName(name);
+            dataSource.init();
+            return;
+        }
+        
+        logger.info("Key/Value datasource was not configured.");
+        System.exit(-1);
     }
 
 

@@ -8,6 +8,8 @@ import redis.clients.jedis.Pipeline;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 /**
  *
  * @author: Roman Mandeleil
@@ -27,7 +29,9 @@ public class RedisDataSource implements KeyValueDataSource{
         
         if (name == null) throw new NullPointerException("no name set to the db");
         this.jedis = new Jedis("localhost"); // todo: config.redisHost, config.redisPort
-        this.jedis.flushAll(); // todo: if config.reset so reset.
+        
+        if (CONFIG.databaseReset())
+            this.jedis.flushAll();
     }
 
     @Override
