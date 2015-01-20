@@ -14,6 +14,7 @@ import org.ethereum.vm.VM;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
@@ -22,8 +23,6 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.List;
 
 import static org.junit.Assert.*;
-
-import jdk.nashorn.internal.ir.annotations.Ignore;
 
 /**
  * @author Roman Mandeleil
