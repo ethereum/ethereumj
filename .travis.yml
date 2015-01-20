@@ -30,6 +30,12 @@ notifications:
     on_failure: always
     rooms:
       - secure: "Fhaoka5w5XzIZS7ObKfVrnHaVLz7x2Owo1ygb+hXWAHiXpc3Oi1Q6yDOfye/z+Y0Gw8an8v23PIxhLoVZ6JpdurwCXo66dK2TkiNzmEWd6RtYPSZDm6f+0NjPBSOnP5rHmej7RvHeyTY/PQrGPtrHZZQTYD3AuRP1S+tGvtqikA="
+  webhooks:
+    on_success: change
+    on_failure: always
+    urls:
+      - secure: "Ir1slcCUTWEbV5e39JPGIKYYnjvszD9L7/27TUkqDxiOl6iA4BY6vvg/e0dyZHR6VwbqEedGeEbxpkifZAJ5W/PE88jFa1PHuDHuEy309hWt+u1n2wY1jANnW/VPHO7v/p7oSeMa91cmRUJaIp5TB6hBW0i4CZxTGmwowFnu9y0="
+
 
 # Encrypted values are ORG_GRADLE_PROJECT_bintrayUser and ORG_GRADLE_PROJECT_bintrayKey props for use by Travis when
 # authenticating against oss.jfrog.org and/or Bintray repositories. See http://docs.travis-ci.com/user/encryption-keys
