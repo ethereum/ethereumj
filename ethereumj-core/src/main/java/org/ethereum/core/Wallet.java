@@ -80,6 +80,7 @@ public class Wallet {
 
     public void addNewAccount() {
         Account account = new Account();
+        account.init();
         String address = Hex.toHexString(account.getEcKey().getAddress());
         rows.put(address, account);
         for (WalletListener listener : listeners)
