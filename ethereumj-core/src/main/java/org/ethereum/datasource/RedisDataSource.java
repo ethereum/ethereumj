@@ -30,7 +30,7 @@ public class RedisDataSource implements KeyValueDataSource{
         
         if (name == null) throw new NullPointerException("no name set to the db");
         
-        this.jedis = RedisPool.getResource();
+        this.jedis = RedisPool.getResource(name);
         if (jedis == null) this.jedis = new Jedis("localhost");
         
         if (CONFIG.databaseReset())
@@ -45,19 +45,16 @@ public class RedisDataSource implements KeyValueDataSource{
     
     @Override
     public byte[] get(byte[] key) {
-        jedis.select(index);
         return jedis.get(key);
     }
 
     @Override
     public void put(byte[] key, byte[] value) {
-        jedis.select(index);
         jedis.set(key, value);
     }
 
     @Override
     public void delete(byte[] key) {
-        jedis.select(index);
         jedis.del(key);
     }
 
@@ -68,7 +65,6 @@ public class RedisDataSource implements KeyValueDataSource{
 
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
-        jedis.select(index);
         Pipeline pipeline = jedis.pipelined();
 
         Iterator<Map.Entry<byte[], byte[]>> iterator = rows.entrySet().iterator();
