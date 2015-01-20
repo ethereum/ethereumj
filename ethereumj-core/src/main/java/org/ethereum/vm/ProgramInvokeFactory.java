@@ -13,7 +13,7 @@ import java.math.BigInteger;
  */
 public interface ProgramInvokeFactory {
 
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, 
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block,
                                              Repository repository, BlockStore blockStore);
 
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,

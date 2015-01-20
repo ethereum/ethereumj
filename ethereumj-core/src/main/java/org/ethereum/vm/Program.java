@@ -1,7 +1,6 @@
 package org.ethereum.vm;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
@@ -28,7 +27,13 @@ import java.math.BigInteger;
 
 import java.nio.ByteBuffer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -67,7 +72,7 @@ public class Program {
     byte lastOp = 0;
     byte previouslyExecutedOp = 0;
     boolean stopped = false;
-    
+
     private Set<Integer> jumpdest = new HashSet<>();
 
     ProgramInvoke invokeData;
@@ -215,11 +220,11 @@ public class Program {
     public void memorySave(int addr, byte[] value) {
         memorySave(addr, value.length, value);
     }
-    
-    public void memoryExpand(DataWord outDataOffs, DataWord outDataSize){
+
+    public void memoryExpand(DataWord outDataOffs, DataWord outDataSize) {
 
         int maxAddress = outDataOffs.intValue() + outDataSize.intValue();
-        if (getMemSize() < maxAddress){
+        if (getMemSize() < maxAddress) {
             memorySave(maxAddress, new byte[]{0});
         }
     }
@@ -312,7 +317,7 @@ public class Program {
 
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
 
-        if (invokeData.getCallDeep() == MAX_DEPTH){
+        if (invokeData.getCallDeep() == MAX_DEPTH) {
             stackPushZero();
             return;
         }
@@ -373,7 +378,7 @@ public class Program {
         }
 
         if (result != null &&
-            result.getException() != null) {
+                result.getException() != null) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
                     result.getException());
@@ -425,7 +430,7 @@ public class Program {
      */
     public void callToAddress(MessageCall msg) {
 
-        if (invokeData.getCallDeep() == MAX_DEPTH){
+        if (invokeData.getCallDeep() == MAX_DEPTH) {
             stackPushZero();
             return;
         }
@@ -585,10 +590,10 @@ public class Program {
 
     public DataWord getBlockHash(int index) {
 
-        return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256?
-                new DataWord(this.invokeData.getBlockStore().getBlockHashByNumber(index)):
+        return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
+                new DataWord(this.invokeData.getBlockStore().getBlockHashByNumber(index)) :
                 DataWord.ZERO;
-        
+
     }
 
 
@@ -856,21 +861,21 @@ public class Program {
         return programTrace;
     }
 
-    public void precompile(){
-        for (int i = 0; i < ops.length; ++i){
+    public void precompile() {
+        for (int i = 0; i < ops.length; ++i) {
 
             OpCode op = OpCode.code(ops[i]);
             if (op == null) continue;
-            
+
             if (op.equals(OpCode.JUMPDEST)) jumpdest.add(i);
-            
-            if (op.asInt() >= OpCode.PUSH1.asInt() && op.asInt() <= OpCode.PUSH32.asInt()){
+
+            if (op.asInt() >= OpCode.PUSH1.asInt() && op.asInt() <= OpCode.PUSH32.asInt()) {
                 i += op.asInt() - OpCode.PUSH1.asInt() + 1;
             }
         }
     }
-    
-    
+
+
     public static String stringify(byte[] code, int index, String result) {
         if (code == null || code.length == 0)
             return result;
@@ -910,13 +915,13 @@ public class Program {
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
 
-        byte[] data = this.memoryChunk( msg.getInDataOffs(), msg.getInDataSize()).array();
+        byte[] data = this.memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
 
         this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), msg.getEndowment().value().negate());
         this.result.getRepository().addBalance(msg.getCodeAddress().getLast20Bytes(), msg.getEndowment().value());
 
-        long requiredGas =  contract.getGasForData(data);
-        if (requiredGas > msg.getGas().longValue()){
+        long requiredGas = contract.getGasForData(data);
+        if (requiredGas > msg.getGas().longValue()) {
 
             this.spendGas(msg.getGas().longValue(), "call pre-compiled");
             this.stackPushZero();
@@ -925,7 +930,7 @@ public class Program {
             this.spendGas(requiredGas, "call pre-compiled");
             byte[] out = contract.execute(data);
 
-            this.memorySave( msg.getOutDataOffs().intValue(), out);
+            this.memorySave(msg.getOutDataOffs().intValue(), out);
             this.stackPushOne();
         }
     }

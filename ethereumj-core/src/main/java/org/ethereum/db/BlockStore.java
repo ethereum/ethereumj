@@ -2,16 +2,17 @@ package org.ethereum.db;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
+
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+
 import java.util.List;
 
 /**
- * @author: Roman Mandeleil
- * Created on: 08/01/2015 10:27
+ * @author Roman Mandeleil
+ * @since 08.01.2015
  */
-
 public interface BlockStore {
 
     public byte[] getBlockHashByNumber(long blockNumber);

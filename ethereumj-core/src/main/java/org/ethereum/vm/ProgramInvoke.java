@@ -42,7 +42,7 @@ public interface ProgramInvoke {
     public DataWord getDifficulty();
 
     public DataWord getGaslimit();
-    
+
     public boolean byTransaction();
 
     boolean byTestingSuite();
@@ -50,7 +50,7 @@ public interface ProgramInvoke {
     public int getCallDeep();
 
     public Repository getRepository();
-    
+
     public BlockStore getBlockStore();
 
 }

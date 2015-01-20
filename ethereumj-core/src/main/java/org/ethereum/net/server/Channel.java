@@ -15,6 +15,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
+
 import java.net.InetSocketAddress;
 
 /**
@@ -45,7 +46,7 @@ public class Channel {
 
     @Autowired
     MessageEncoder messageEncoder;
-    
+
     InetSocketAddress inetSocketAddress;
 
 
@@ -94,7 +95,7 @@ public class Channel {
 
     }
 
-    public HelloMessage getHandshakeHelloMessage(){
+    public HelloMessage getHandshakeHelloMessage() {
         return getP2pHandler().getHandshakeHelloMessage();
     }
 

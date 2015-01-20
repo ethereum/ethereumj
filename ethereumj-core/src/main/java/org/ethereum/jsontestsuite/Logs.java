@@ -74,7 +74,7 @@ public class Logs {
             String postBloom = Hex.toHexString(postLog.getBloom().getData());
             String realBloom = Hex.toHexString(realLog.getBloom().getData());
 
-            if (!postData.equals(realData)){
+            if (!postData.equals(realData)) {
 
                 String formattedString = String.format("Log: %s: has unexpected bloom, expected bloom: %s found bloom: %s",
                         i, postBloom, realBloom);

@@ -590,11 +590,11 @@ public class SerpentCompileTest {
     public void test24() {
 
         String code = "a = 20\n" +
-                      "b = 40\n" +
-                      "if a == 20: \n" +
-                      "  a = 30\n" +
-                      "if b == 40: \n" +
-                      "  b = 50\n";
+                "b = 40\n" +
+                "if a == 20: \n" +
+                "  a = 30\n" +
+                "if b == 40: \n" +
+                "  b = 50\n";
         String expected = "20 0 MSTORE 40 32 MSTORE 20 0 MLOAD EQ NOT REF_1 JUMPI 30 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0 40 32 MLOAD EQ NOT REF_3 JUMPI 50 32 MSTORE REF_2 JUMP LABEL_3 LABEL_2";
 
         /**
@@ -626,13 +626,13 @@ public class SerpentCompileTest {
     @Test    // if elif else test 10
     public void test25() {
 
-        String code =   "a = 20\n" +
-                        "b = 40\n" +
-                        "if a == 20: \n" +
-                        "  a = 30\n" +
-                        "a = 70\n" +
-                        "if b == 40: \n" +
-                        "  b = 50\n";
+        String code = "a = 20\n" +
+                "b = 40\n" +
+                "if a == 20: \n" +
+                "  a = 30\n" +
+                "a = 70\n" +
+                "if b == 40: \n" +
+                "  b = 50\n";
         String expected = "20 0 MSTORE 40 32 MSTORE 20 0 MLOAD EQ NOT REF_1 JUMPI 30 0 MSTORE REF_0 JUMP LABEL_1 LABEL_0 70 0 MSTORE 40 32 MLOAD EQ NOT REF_3 JUMPI 50 32 MSTORE REF_2 JUMP LABEL_3 LABEL_2";
 
         /**
@@ -699,7 +699,7 @@ public class SerpentCompileTest {
     @Test    // if elif else test 12
     public void test27() {
 
-        String code =   "if 2>1: \n" +
+        String code = "if 2>1: \n" +
                 " if 3>2: \n" +
                 "  if 4>3:\n" +
                 "   if 5>4:\n" +
@@ -909,14 +909,14 @@ public class SerpentCompileTest {
     @Test    // if elif else test 20
     public void test35() {
 
-        String code =   "if 2>1:    \n" +
-                        "   a=20    \n" +
-                        "elif 5<1:  \n" +
-                        "   a=30    \n" +
-                        "elif 6>6:  \n" +
-                        "   a=40    \n" +
-                        "else:      \n" +
-                        "   a=50    \n" ;
+        String code = "if 2>1:    \n" +
+                "   a=20    \n" +
+                "elif 5<1:  \n" +
+                "   a=30    \n" +
+                "elif 6>6:  \n" +
+                "   a=40    \n" +
+                "else:      \n" +
+                "   a=50    \n";
 
         String expected = "1 2 GT NOT REF_1 JUMPI 20 0 MSTORE REF_0 JUMP LABEL_1 1 5 LT NOT REF_2 JUMPI 30 0 MSTORE REF_0 JUMP LABEL_2 6 6 GT NOT REF_3 JUMPI 40 0 MSTORE REF_0 JUMP LABEL_3 50 0 MSTORE LABEL_0";
 
@@ -984,12 +984,12 @@ public class SerpentCompileTest {
     @Test    // while test 2
     public void test37() {
 
-        String code =   "x = 248              \n" +
-                        "while x > 1:         \n" +
-                        "   if (x % 2) == 0:  \n" +
-                        "       x = x / 2     \n" +
-                        "   else:             \n " +
-                        "       x = 3 * x + 1 \n"  ;
+        String code = "x = 248              \n" +
+                "while x > 1:         \n" +
+                "   if (x % 2) == 0:  \n" +
+                "       x = x / 2     \n" +
+                "   else:             \n " +
+                "       x = 3 * x + 1 \n";
 
         String expected = "248 0 MSTORE LABEL_0 1 0 MLOAD GT NOT REF_1 JUMPI 0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI 2 0 MLOAD DIV 0 MSTORE REF_2 JUMP LABEL_3 1 0 MLOAD 3 MUL ADD 0 MSTORE LABEL_2 REF_0 JUMP LABEL_1";
 
@@ -1024,12 +1024,12 @@ public class SerpentCompileTest {
     @Test    // while test 3
     public void test38() {
 
-        String code =   "x = 0xFF            \n" +
-                        "while x > 1:        \n" +
-                        "   if (x % 2) == 0: \n" +
-                        "      x = x / 2     \n" +
-                        "x = x +2            \n" +
-                        "x = 3 * x + 1        \n"  ;
+        String code = "x = 0xFF            \n" +
+                "while x > 1:        \n" +
+                "   if (x % 2) == 0: \n" +
+                "      x = x / 2     \n" +
+                "x = x +2            \n" +
+                "x = 3 * x + 1        \n";
 
         String expected = "255 0 MSTORE LABEL_0 1 0 MLOAD GT NOT REF_1 JUMPI 0 2 0 MLOAD MOD EQ NOT REF_3 JUMPI 2 0 MLOAD DIV 0 MSTORE REF_2 JUMP LABEL_3 LABEL_2 REF_0 JUMP LABEL_1 2 0 MLOAD ADD 0 MSTORE 1 0 MLOAD 3 MUL ADD 0 MSTORE";
 
@@ -1077,9 +1077,9 @@ public class SerpentCompileTest {
     @Test    // while test 5
     public void test40() {
 
-        String code =   "x = 0xFF\n" +
-                        "while (x > 1) && (x > 2) && (x >    3) && (2 <9):\n" +
-                        "   x = x -2\n"  ;
+        String code = "x = 0xFF\n" +
+                "while (x > 1) && (x > 2) && (x >    3) && (2 <9):\n" +
+                "   x = x -2\n";
 
         String expected = "255 0 MSTORE LABEL_0 9 2 LT 3 0 MLOAD GT 2 0 MLOAD GT 1 0 MLOAD GT NOT NOT MUL NOT NOT MUL NOT NOT MUL NOT REF_1 JUMPI 2 0 MLOAD SUB 0 MSTORE REF_0 JUMP LABEL_1";
 
@@ -1108,19 +1108,19 @@ public class SerpentCompileTest {
     @Test    // special functions test 1
     public void test41() {
 
-        String code =   "a = msg.datasize\n" +
-                        "b = msg.sender\n" +
-                        "c = msg.value\n" +
-                        "d = tx.gasprice\n" +
-                        "e = tx.origin\n" +
-                        "f = tx.gas\n" +
-                        "g = contract.balance\n" +
-                        "h = block.prevhash\n" +
-                        "i = block.coinbase\n" +
-                        "j = block.timestamp\n" +
-                        "k = block.number\n" +
-                        "l = block.difficulty\n" +
-                        "m = block.gaslimit\n"  ;
+        String code = "a = msg.datasize\n" +
+                "b = msg.sender\n" +
+                "c = msg.value\n" +
+                "d = tx.gasprice\n" +
+                "e = tx.origin\n" +
+                "f = tx.gas\n" +
+                "g = contract.balance\n" +
+                "h = block.prevhash\n" +
+                "i = block.coinbase\n" +
+                "j = block.timestamp\n" +
+                "k = block.number\n" +
+                "l = block.difficulty\n" +
+                "m = block.gaslimit\n";
 
         String expected = "32 CALLDATASIZE DIV 0 MSTORE CALLER 32 MSTORE CALLVALUE 64 MSTORE GASPRICE 96 MSTORE ORIGIN 128 MSTORE GAS 160 MSTORE BALANCE 192 MSTORE PREVHASH 224 MSTORE COINBASE 256 MSTORE TIMESTAMP 288 MSTORE NUMBER 320 MSTORE DIFFICULTY 352 MSTORE GASLIMIT 384 MSTORE";
 
@@ -1185,9 +1185,9 @@ public class SerpentCompileTest {
 
     @Test // test arrays 1 simple create
     public void test45() {
-        String code =   "c = 2\n" +
-                        "d = 3\n" +
-                        "a = [11, 22, 33]" ;
+        String code = "c = 2\n" +
+                "d = 3\n" +
+                "a = [11, 22, 33]";
         String expected = "0 63 MSTORE8 2 0 MSTORE 3 32 MSTORE MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
@@ -1196,8 +1196,8 @@ public class SerpentCompileTest {
 
     @Test // test arrays 2 simple set
     public void test46() {
-        String code =   "a = [11, 22, 33]\n" +
-                        "a[ 2 ] = 3" ;
+        String code = "a = [11, 22, 33]\n" +
+                "a[ 2 ] = 3";
         String expected = "MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 32 2 MUL 32 ADD 0 ADD 0 ADD MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
@@ -1206,7 +1206,7 @@ public class SerpentCompileTest {
 
     @Test // test arrays 3 simple
     public void test46_1() {
-        String code =   "a = [11, 22, 33]\n" ;
+        String code = "a = [11, 22, 33]\n";
         String expected = "MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
@@ -1215,10 +1215,10 @@ public class SerpentCompileTest {
 
     @Test // test arrays 3 complicated set after 2 arrays
     public void test47() {
-        String code =   "a = [2, 4, 6]\n" +
-                        "b = [12, 14]\n" +
-                        "c = [22, 24, 25]\n" +
-                        "c[ 0 ] = 3" ;
+        String code = "a = [2, 4, 6]\n" +
+                "b = [12, 14]\n" +
+                "c = [22, 24, 25]\n" +
+                "c[ 0 ] = 3";
         String expected = "MSIZE 32 ADD MSIZE DUP 32 ADD 2 SWAP MSTORE DUP 64 ADD 4 SWAP MSTORE DUP 96 ADD 6 SWAP MSTORE 128 SWAP MSTORE MSIZE 32 ADD MSIZE DUP 32 ADD 12 SWAP MSTORE DUP 64 ADD 14 SWAP MSTORE 96 SWAP MSTORE MSIZE 32 ADD MSIZE DUP 32 ADD 22 SWAP MSTORE DUP 64 ADD 24 SWAP MSTORE DUP 96 ADD 25 SWAP MSTORE 128 SWAP MSTORE 3 32 0 MUL 32 ADD 224 ADD 0 ADD MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
@@ -1227,10 +1227,10 @@ public class SerpentCompileTest {
 
     @Test // test arrays 4 simple set
     public void test48() {
-        String code =   "b = 1\n" +
-                        "c = 2\n" +
-                        "a = [11, 22, 33]\n" +
-                        "a[ 2 ] = 3" ;
+        String code = "b = 1\n" +
+                "c = 2\n" +
+                "a = [11, 22, 33]\n" +
+                "a[ 2 ] = 3";
         String expected = "0 63 MSTORE8 1 0 MSTORE 2 32 MSTORE MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 32 2 MUL 32 ADD 0 ADD 64 ADD MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
@@ -1239,9 +1239,9 @@ public class SerpentCompileTest {
 
     @Test // test arrays 5 simple retrieve value
     public void test49() {
-        String code =   "c = [5]\n" +
-                        "a = [11, 22, 33]\n" +
-                        "b = a [0]" ;
+        String code = "c = [5]\n" +
+                "a = [11, 22, 33]\n" +
+                "b = a [0]";
         String expected = "0 31 MSTORE8 MSIZE 32 ADD MSIZE DUP 32 ADD 5 SWAP MSTORE 64 SWAP MSTORE MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 32 0 MUL 96 ADD 32 ADD MLOAD 0 MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);
@@ -1250,9 +1250,9 @@ public class SerpentCompileTest {
 
     @Test // test msg(gas, to , val, [arr_in], in_len, out_len), and out access
     public void test50() {
-        String code =   "\n" +
+        String code = "\n" +
                 "a = msg(1, 2, 3, [11, 22, 33], 3, 6) \n" +
-                "b = a[0]\n" ;
+                "b = a[0]\n";
         String expected = "0 31 MSTORE8 224 MSIZE 224 MSIZE MSTORE 0 192 MSIZE ADD MSTORE8 96 MSIZE 32 ADD MSIZE DUP 32 ADD 11 SWAP MSTORE DUP 64 ADD 22 SWAP MSTORE DUP 96 ADD 33 SWAP MSTORE 128 SWAP MSTORE 3 2 1 CALL 32 0 MUL 160 ADD 32 ADD MLOAD 0 MSTORE";
 
         String asmResult = SerpentCompiler.compile(code);

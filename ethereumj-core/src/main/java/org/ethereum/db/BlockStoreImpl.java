@@ -2,8 +2,8 @@ package org.ethereum.db;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
-
 import org.ethereum.util.ByteUtil;
+
 import org.hibernate.SessionFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Repository("blockStore")
 @Transactional(propagation = Propagation.SUPPORTS)
-public class BlockStoreImpl implements BlockStore{
+public class BlockStoreImpl implements BlockStore {
 
     @Autowired
     private SessionFactory sessionFactory;

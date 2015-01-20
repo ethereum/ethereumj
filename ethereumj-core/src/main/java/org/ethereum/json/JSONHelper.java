@@ -68,8 +68,8 @@ public class JSONHelper {
     }
 
     public static void dumpBlock(ObjectNode blockNode, Block block,
-            long gasUsed, byte[] state, List<ByteArrayWrapper> keys,
-            Repository repository) {
+                                 long gasUsed, byte[] state, List<ByteArrayWrapper> keys,
+                                 Repository repository) {
 
         blockNode.put("coinbase", Hex.toHexString(block.getCoinbase()));
         blockNode.put("difficulty", new BigInteger(1, block.calcDifficulty()).toString());

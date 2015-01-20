@@ -213,7 +213,7 @@ public class ByteUtil {
         // check if the string is numeric
         if (arg.toString().trim().matches("-?\\d+(\\.\\d+)?"))
             data = new BigInteger(arg.toString().trim()).toByteArray();
-        // check if it's hex number
+            // check if it's hex number
         else if (arg.toString().trim().matches("0[xX][0-9a-fA-F]+"))
             data = new BigInteger(arg.toString().trim().substring(2), 16).toByteArray();
         else

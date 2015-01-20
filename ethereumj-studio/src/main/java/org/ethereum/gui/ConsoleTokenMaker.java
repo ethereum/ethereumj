@@ -644,7 +644,7 @@ public class ConsoleTokenMaker extends AbstractTokenMaker {
                                 }
                                 break;
                             } else if (c == '.') { // Second decimal point; must catch now because it's a "separator"
-                            // below.
+                                // below.
                                 currentTokenType = Token.ERROR_NUMBER_FORMAT;
                                 break;
                             }

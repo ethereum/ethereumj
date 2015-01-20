@@ -3,7 +3,6 @@ package org.ethereum.vm;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.BlockStoreImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
@@ -33,7 +32,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
     // Invocation by the wire tx
     @Override
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository, 
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository,
                                              BlockStore blockStore) {
 
         // https://ethereum.etherpad.mozilla.org/26

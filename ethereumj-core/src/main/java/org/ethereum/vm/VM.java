@@ -164,8 +164,8 @@ public class VM {
                         throw program.new OutOfGasException();
                     }
                     callGas = callGasWord.longValue();
-                    BigInteger in = memNeeded(stack.get(stack.size()-4), stack.get(stack.size()-5)); // in offset+size
-                    BigInteger out = memNeeded(stack.get(stack.size()-6), stack.get(stack.size()-7)); // out offset+size
+                    BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
+                    BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
                     newMemSize = in.max(out);
                     break;
                 case CREATE:
@@ -897,7 +897,7 @@ public class VM {
                     DataWord pos = program.stackPop();
                     int nextPC = pos.intValue(); // possible overflow
                     program.validateJumpDest(nextPC);
-                    
+
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
 
@@ -1042,7 +1042,7 @@ public class VM {
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
                     }
-                    
+
                     program.memoryExpand(outDataOffs, outDataSize);
 
                     MessageCall msg = new MessageCall(
@@ -1050,9 +1050,9 @@ public class VM {
                             gas, codeAddress, value, inDataOffs, inDataSize,
                             outDataOffs, outDataSize);
 
-                    PrecompiledContracts.PrecompiledContract contract =  
+                    PrecompiledContracts.PrecompiledContract contract =
                             PrecompiledContracts.getContractForAddress(codeAddress);
-                    
+
                     if (contract != null)
                         program.callToPrecompiledAddress(msg, contract);
                     else

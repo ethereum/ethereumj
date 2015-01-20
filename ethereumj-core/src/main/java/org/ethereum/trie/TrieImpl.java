@@ -5,8 +5,6 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 
-import org.iq80.leveldb.DB;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

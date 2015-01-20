@@ -30,8 +30,8 @@ ext.generatedSrcDir = file('src/gen/java')
 sourceSets.main.java.srcDirs += generatedSrcDir
 
 antlr4 {
-  extraArgs = ['-package', 'org.ethereum.serpent']
-  output = file("${generatedSrcDir}/org/ethereum/serpent")
+    extraArgs = ['-package', 'org.ethereum.serpent']
+    output = file("${generatedSrcDir}/org/ethereum/serpent")
 }
 
 compileJava.dependsOn antlr4
@@ -42,7 +42,7 @@ test {
 }
 
 configurations {
-   compile.extendsFrom antlr4
+    compile.extendsFrom antlr4
 }
 
 ext {
@@ -79,7 +79,7 @@ dependencies {
     compile "redis.clients:jedis:2.6.0"
 
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
-        exclude group:'junit', module:'junit'
+        exclude group: 'junit', module: 'junit'
     }
     optional "commons-logging:commons-logging:1.0"
     optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
@@ -95,8 +95,8 @@ javadoc {
     options.addStringOption('Xdoclint:all,-missing', '-quiet')
     options.encoding = "UTF-8"
     options.links(
-        "http://docs.oracle.com/javase/8/docs/api/",
-        "http://netty.io/4.0/api/"
+            "http://docs.oracle.com/javase/8/docs/api/",
+            "http://netty.io/4.0/api/"
     )
 }
 
@@ -130,7 +130,7 @@ artifactory {
     contextUrl = 'http://oss.jfrog.org/artifactory'
     publish {
         repository {
-            repoKey =  'oss-snapshot-local'
+            repoKey = 'oss-snapshot-local'
             username = bintrayUsername
             password = bintrayPassword
         }

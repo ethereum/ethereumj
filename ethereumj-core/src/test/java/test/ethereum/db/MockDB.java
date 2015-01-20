@@ -2,6 +2,7 @@ package test.ethereum.db;
 
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
+
 import org.iq80.leveldb.DBException;
 
 import java.util.HashMap;
@@ -31,7 +32,7 @@ public class MockDB implements KeyValueDataSource {
 
         storage.put(new ByteArrayWrapper(key), value);
     }
-    
+
     /**
      * Returns the number of items added to this Mock DB
      *

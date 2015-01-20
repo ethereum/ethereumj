@@ -1,21 +1,22 @@
 package test.ethereum.datasource;
 
 import org.ethereum.datasource.RedisDataSource;
+
 import org.junit.Assert;
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
+
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
- * @author: Roman Mandeleil
- * Created on: 18/01/2015 22:40
+ * @author Roman Mandeleil
  */
-
 public class RedisDataSourceTest {
-    
-   
+
+
     @Test
-    public void testSet1(){
+    public void testSet1() {
 
         try {
             RedisDataSource redis = new RedisDataSource();
@@ -26,7 +27,7 @@ public class RedisDataSourceTest {
             byte[] val = Hex.decode("b1b2b3");
 
             redis.put(key, val);
-            byte[] val2 =  redis.get(key);
+            byte[] val2 = redis.get(key);
 
             Assert.assertEquals(Hex.toHexString(val), Hex.toHexString(val2));
         } catch (JedisConnectionException e) {
@@ -35,7 +36,7 @@ public class RedisDataSourceTest {
     }
 
     @Test
-    public void testSet2(){
+    public void testSet2() {
 
         try {
             RedisDataSource redis1 = new RedisDataSource();

@@ -6,35 +6,35 @@ import org.ethereum.util.ByteUtil;
 
 /**
  * @author Roman Mandeleil
- * Created on: 09/01/2015 08:05
+ * @since 09.01.2015
  */
-
 public class PrecompiledContracts {
-    
-    private static ECRecover  ecRecover  = new ECRecover();
-    private static Sha256     sha256     = new Sha256();
-    private static Ripempd160 ripempd160 = new Ripempd160();
-    private static Identity   identity   = new Identity();
 
-    
-    public static PrecompiledContract getContractForAddress(DataWord address){
-        
+    private static ECRecover ecRecover = new ECRecover();
+    private static Sha256 sha256 = new Sha256();
+    private static Ripempd160 ripempd160 = new Ripempd160();
+    private static Identity identity = new Identity();
+
+
+    public static PrecompiledContract getContractForAddress(DataWord address) {
+
         if (address == null) return identity;
         if (address.isHex("0000000000000000000000000000000000000000000000000000000000000001")) return ecRecover;
         if (address.isHex("0000000000000000000000000000000000000000000000000000000000000002")) return sha256;
         if (address.isHex("0000000000000000000000000000000000000000000000000000000000000003")) return ripempd160;
         if (address.isHex("0000000000000000000000000000000000000000000000000000000000000004")) return identity;
-        
+
         return null;
     }
-    
-    
-    public static abstract class PrecompiledContract{
+
+
+    public static abstract class PrecompiledContract {
         public abstract long getGasForData(byte[] data);
+
         public abstract byte[] execute(byte[] data);
     }
-    
-    public static class Identity extends PrecompiledContract{
+
+    public static class Identity extends PrecompiledContract {
 
         public Identity() {
         }
@@ -53,14 +53,14 @@ public class PrecompiledContracts {
             return data;
         }
     }
-    
-    public static class Sha256 extends PrecompiledContract{
+
+    public static class Sha256 extends PrecompiledContract {
 
 
         @Override
         public long getGasForData(byte[] data) {
-            
-            // gas charge for the execution: 
+
+            // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
             if (data == null) return 50;
             return 50 + (data.length + 31) / 32 * 50;
@@ -68,14 +68,14 @@ public class PrecompiledContracts {
 
         @Override
         public byte[] execute(byte[] data) {
-            
+
             if (data == null) return HashUtil.sha256(ByteUtil.EMPTY_BYTE_ARRAY);
             return HashUtil.sha256(data);
         }
     }
 
 
-    public static class Ripempd160 extends PrecompiledContract{
+    public static class Ripempd160 extends PrecompiledContract {
 
 
         @Override
@@ -97,10 +97,10 @@ public class PrecompiledContracts {
             return new DataWord(result).getData();
         }
     }
-    
-    
-    public static class ECRecover extends PrecompiledContract{
-        
+
+
+    public static class ECRecover extends PrecompiledContract {
+
         @Override
         public long getGasForData(byte[] data) {
             return 500;
@@ -108,16 +108,16 @@ public class PrecompiledContracts {
 
         @Override
         public byte[] execute(byte[] data) {
-            
+
             byte[] h = new byte[32];
             byte[] v = new byte[32];
             byte[] r = new byte[32];
             byte[] s = new byte[32];
 
             DataWord out = null;
-            
-            try{
-                System.arraycopy(data, 0,  h, 0, 32);
+
+            try {
+                System.arraycopy(data, 0, h, 0, 32);
                 System.arraycopy(data, 32, v, 0, 32);
                 System.arraycopy(data, 64, r, 0, 32);
                 System.arraycopy(data, 96, s, 0, 32);
@@ -127,14 +127,14 @@ public class PrecompiledContracts {
 
                 ECKey key = ECKey.signatureToKey(h, signature.toBase64());
                 out = new DataWord(key.getAddress());
-            } catch (Throwable any){}
-            
+            } catch (Throwable any) {
+            }
+
             if (out == null) out = new DataWord(0);
 
             return out.getData();
         }
     }
 
-    
-    
+
 }
