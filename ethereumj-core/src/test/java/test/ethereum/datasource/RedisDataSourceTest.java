@@ -1,9 +1,12 @@
 package test.ethereum.datasource;
 
 import org.ethereum.datasource.RedisDataSource;
+
 import org.junit.Assert;
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
+
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**

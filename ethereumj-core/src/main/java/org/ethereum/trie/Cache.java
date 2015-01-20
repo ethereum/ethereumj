@@ -5,9 +5,6 @@ import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.Value;
 
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.WriteBatch;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;

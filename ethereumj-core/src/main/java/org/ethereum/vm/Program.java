@@ -1,7 +1,6 @@
 package org.ethereum.vm;
 
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.db.BlockStore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
@@ -28,7 +27,13 @@ import java.math.BigInteger;
 
 import java.nio.ByteBuffer;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.Stack;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;

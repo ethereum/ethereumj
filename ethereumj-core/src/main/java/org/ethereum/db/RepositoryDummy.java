@@ -5,8 +5,6 @@ import org.ethereum.core.Block;
 import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
 
-import org.iq80.leveldb.DBIterator;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

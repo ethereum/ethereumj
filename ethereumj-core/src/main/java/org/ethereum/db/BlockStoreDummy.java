@@ -3,9 +3,9 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.util.ByteUtil;
 
 import java.math.BigInteger;
+
 import java.util.List;
 
 /**

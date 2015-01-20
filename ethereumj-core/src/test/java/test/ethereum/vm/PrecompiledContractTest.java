@@ -4,8 +4,9 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.PrecompiledContracts;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
-import org.junit.Assert;
+
 import org.junit.Test;
+
 import org.spongycastle.util.encoders.Hex;
 
 import static org.junit.Assert.*;

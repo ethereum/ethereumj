@@ -1,6 +1,5 @@
 package test.ethereum.vm;
 
-import jdk.nashorn.internal.ir.annotations.Ignore;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
@@ -23,6 +22,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.List;
 
 import static org.junit.Assert.*;
+
+import jdk.nashorn.internal.ir.annotations.Ignore;
 
 /**
  * @author Roman Mandeleil

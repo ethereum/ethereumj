@@ -2,6 +2,7 @@ package test.ethereum.db;
 
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
+
 import org.iq80.leveldb.DBException;
 
 import java.util.HashMap;

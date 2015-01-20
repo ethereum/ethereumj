@@ -2,8 +2,8 @@ package org.ethereum.db;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
-
 import org.ethereum.util.ByteUtil;
+
 import org.hibernate.SessionFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;

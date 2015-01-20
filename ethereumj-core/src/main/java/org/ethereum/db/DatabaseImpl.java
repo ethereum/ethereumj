@@ -1,12 +1,13 @@
 package org.ethereum.db;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.RedisDataSource;
 import org.ethereum.util.ByteUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;

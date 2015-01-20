@@ -6,12 +6,9 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.DataWord;
 
-import org.iq80.leveldb.DBIterator;
-
 import java.math.BigInteger;
 
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
 
 /**

@@ -1,18 +1,19 @@
 package org.ethereum.datasource;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.Database;
-import org.ethereum.db.DatabaseImpl;
-import org.ethereum.trie.Node;
-import org.iq80.leveldb.*;
+
+import org.iq80.leveldb.CompressionType;
+import org.iq80.leveldb.DB;
+import org.iq80.leveldb.DBIterator;
+import org.iq80.leveldb.Options;
+import org.iq80.leveldb.WriteBatch;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;

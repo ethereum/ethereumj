@@ -1,7 +1,5 @@
 package test.ethereum.trie;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Pipeline;
 import test.ethereum.db.MockDB;
 
 import org.ethereum.core.AccountState;
@@ -34,10 +32,20 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.junit.Assert.*;
+
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
 public class TrieTest {
 

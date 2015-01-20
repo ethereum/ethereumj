@@ -3,8 +3,8 @@ package org.ethereum.listener;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.message.Message;
-
 import org.ethereum.net.p2p.HelloMessage;
+
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
