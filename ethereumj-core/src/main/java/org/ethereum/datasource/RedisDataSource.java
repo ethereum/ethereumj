@@ -28,7 +28,9 @@ public class RedisDataSource implements KeyValueDataSource{
     public void init() {
         
         if (name == null) throw new NullPointerException("no name set to the db");
-        this.jedis = new Jedis("localhost"); // todo: config.redisHost, config.redisPort
+        
+        this.jedis = RedisPool.getResource();
+        if (jedis == null) this.jedis = new Jedis("localhost");
         
         if (CONFIG.databaseReset())
             this.jedis.flushAll();
