@@ -164,8 +164,8 @@ public class VM {
                         throw program.new OutOfGasException();
                     }
                     callGas = callGasWord.longValue();
-                    BigInteger in = memNeeded(stack.get(stack.size()-4), stack.get(stack.size()-5)); // in offset+size
-                    BigInteger out = memNeeded(stack.get(stack.size()-6), stack.get(stack.size()-7)); // out offset+size
+                    BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
+                    BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
                     newMemSize = in.max(out);
                     break;
                 case CREATE:

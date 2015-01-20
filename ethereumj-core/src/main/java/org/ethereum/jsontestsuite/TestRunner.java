@@ -61,7 +61,7 @@ public class TestRunner {
 
     public List<String> runTestCase(StateTestCase testCase) {
 
-        List<String> results = new ArrayList<>();;
+        List<String> results = new ArrayList<>();
         logger.info("\n***");
         logger.info(" Running test case: [" + testCase.getName() + "]");
         logger.info("***\n");
@@ -89,7 +89,7 @@ public class TestRunner {
 
         Repository track = repository.startTracking();
         TransactionExecutor executor =
-                new TransactionExecutor(tx, coinbase,  track, new BlockStoreDummy(),
+                new TransactionExecutor(tx, coinbase, track, new BlockStoreDummy(),
                         invokeFactory, blockchain.getBestBlock());
         executor.execute();
         track.commit();
@@ -240,9 +240,9 @@ public class TestRunner {
                         continue;
                     }
 
-                    long       actualNonce   = repository.getNonce(key.getData()).longValue();
+                    long actualNonce = repository.getNonce(key.getData()).longValue();
                     BigInteger actualBalance = repository.getBalance(key.getData());
-                    byte[]     actualCode    = repository.getCode(key.getData());
+                    byte[] actualCode = repository.getCode(key.getData());
                     if (actualCode == null) actualCode = "".getBytes();
 
                     if (expectedNonce != actualNonce) {
@@ -487,7 +487,7 @@ public class TestRunner {
 
                     String output =
                             String.format("Gas remaining is different. Expected gas remaining: [ %s ], actual gas remaining: [ %s ]",
-                                    expectedGas.toString() ,
+                                    expectedGas.toString(),
                                     actualGas.toString());
                     logger.info(output);
                     results.add(output);

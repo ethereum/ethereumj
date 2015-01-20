@@ -49,12 +49,12 @@ public class ChannelManager {
     }
 
 
-    public Channel getChannel(String peerId){
+    public Channel getChannel(String peerId) {
 
-        for (Channel channel : channels){
+        for (Channel channel : channels) {
             String tablePeerId = channel.getP2pHandler().getHandshakeHelloMessage().getPeerId();
             if (tablePeerId != null &&
-                peerId.equals(tablePeerId)){
+                    peerId.equals(tablePeerId)) {
                 return channel;
             }
         }
@@ -120,7 +120,7 @@ public class ChannelManager {
         }, 2000, 5000);
     }
 
-    public void reconnect(){
+    public void reconnect() {
         for (Channel channel : channels)
             channel.p2pHandler.sendDisconnect();
     }

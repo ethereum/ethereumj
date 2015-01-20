@@ -113,7 +113,7 @@ public class AccountState {
             results.add(formattedString);
         }
 
-        if (!Arrays.equals(details.getCode(),this.getCode())) {
+        if (!Arrays.equals(details.getCode(), this.getCode())) {
             String formattedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
                     Hex.toHexString(this.address), Hex.toHexString(this.getCode()), Hex.toHexString(details.getCode()));
             results.add(formattedString);

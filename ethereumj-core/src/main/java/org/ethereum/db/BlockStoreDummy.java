@@ -12,7 +12,7 @@ import java.util.List;
  * @author Roman Mandeleil
  * @since 08.01.2015
  */
-public class BlockStoreDummy  implements BlockStore{
+public class BlockStoreDummy implements BlockStore {
 
     @Override
     public byte[] getBlockHashByNumber(long blockNumber) {

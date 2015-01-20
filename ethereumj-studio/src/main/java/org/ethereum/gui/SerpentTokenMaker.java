@@ -442,7 +442,7 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                 case Token.ERROR_STRING_DOUBLE:
 
                     if (c == '"') {
-                        addToken(text, currentTokenStart,i, Token.LITERAL_STRING_DOUBLE_QUOTE, newStartOffset+currentTokenStart);
+                        addToken(text, currentTokenStart, i, Token.LITERAL_STRING_DOUBLE_QUOTE, newStartOffset + currentTokenStart);
                         currentTokenStart = i + 1;
                         currentTokenType = Token.NULL;
                     }
@@ -458,16 +458,14 @@ public class SerpentTokenMaker extends AbstractTokenMaker {
                                 bracketVariable = true;
                                 break;
                             default:
-                                if (RSyntaxUtilities.isLetter(c) || c==' ') { // No tab, just space; spaces are okay in variable names.
+                                if (RSyntaxUtilities.isLetter(c) || c == ' ') { // No tab, just space; spaces are okay in variable names.
                                     break;
-                                }
-                                else if (RSyntaxUtilities.isDigit(c)) { // Single-digit command-line argument ("%1").
-                                    addToken(text, currentTokenStart,i, Token.VARIABLE, newStartOffset+currentTokenStart);
+                                } else if (RSyntaxUtilities.isDigit(c)) { // Single-digit command-line argument ("%1").
+                                    addToken(text, currentTokenStart, i, Token.VARIABLE, newStartOffset + currentTokenStart);
                                     currentTokenType = Token.NULL;
                                     break;
-                                }
-                                else { // Anything else, ???.
-                                    addToken(text, currentTokenStart,i-1, Token.VARIABLE, newStartOffset+currentTokenStart); // ???
+                                } else { // Anything else, ???.
+                                    addToken(text, currentTokenStart, i - 1, Token.VARIABLE, newStartOffset + currentTokenStart); // ???
                                     i--;
                                     currentTokenType = Token.NULL;
                                     break;

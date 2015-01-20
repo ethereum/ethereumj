@@ -39,7 +39,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
     }
 
 
-    private ProgramInvoke generalInvoke(Transaction tx, Repository repository ,BlockStore blockStore) {
+    private ProgramInvoke generalInvoke(Transaction tx, Repository repository, BlockStore blockStore) {
 
         /***         ADDRESS op       ***/
         // YP: Get address of currently executing account.

@@ -44,7 +44,7 @@ public class TransactionExecutor {
     private Block currentBlock;
 
 
-    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track,BlockStore blockStore,
+    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
         this.tx = tx;

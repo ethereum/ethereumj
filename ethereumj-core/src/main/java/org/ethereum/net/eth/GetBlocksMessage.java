@@ -73,6 +73,6 @@ public class GetBlocksMessage extends EthMessage {
 
     public String toString() {
         final String hashListShort = Utils.getHashListShort(getBlockHashes());
-        return "[" + this.getCommand().name() + hashListShort+ "] (" + blockHashes.size() + ")";
+        return "[" + this.getCommand().name() + hashListShort + "] (" + blockHashes.size() + ")";
     }
 }

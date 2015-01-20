@@ -15,7 +15,7 @@ import redis.clients.jedis.Pipeline;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-public class RedisDataSource implements KeyValueDataSource{
+public class RedisDataSource implements KeyValueDataSource {
 
     String name;
     int index;
@@ -68,7 +68,7 @@ public class RedisDataSource implements KeyValueDataSource{
         Pipeline pipeline = jedis.pipelined();
 
         Iterator<Map.Entry<byte[], byte[]>> iterator = rows.entrySet().iterator();
-        while(iterator.hasNext()){
+        while (iterator.hasNext()) {
 
             Map.Entry<byte[], byte[]> row = iterator.next();
             byte[] key = row.getKey();

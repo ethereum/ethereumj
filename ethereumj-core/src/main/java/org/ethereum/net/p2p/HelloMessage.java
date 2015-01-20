@@ -50,7 +50,7 @@ public class HelloMessage extends P2pMessage {
     }
 
     public HelloMessage(byte p2pVersion, String clientId,
-            List<Capability> capabilities, int listenPort, String peerId) {
+                        List<Capability> capabilities, int listenPort, String peerId) {
         this.p2pVersion = p2pVersion;
         this.clientId = clientId;
         this.capabilities = capabilities;

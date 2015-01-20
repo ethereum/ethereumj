@@ -24,7 +24,7 @@ import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-public class LevelDbDataSource implements KeyValueDataSource{
+public class LevelDbDataSource implements KeyValueDataSource {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 
@@ -95,7 +95,7 @@ public class LevelDbDataSource implements KeyValueDataSource{
 
         DBIterator dbIterator = db.iterator();
         Set<byte[]> keys = new HashSet<>();
-        while (dbIterator.hasNext()){
+        while (dbIterator.hasNext()) {
 
             Map.Entry<byte[], byte[]> entry = dbIterator.next();
             keys.add(entry.getKey());
@@ -109,7 +109,7 @@ public class LevelDbDataSource implements KeyValueDataSource{
         WriteBatch batch = db.createWriteBatch();
 
         for (Map.Entry<byte[], byte[]> row : rows.entrySet())
-                batch.put(row.getKey(), row.getValue());
+            batch.put(row.getKey(), row.getValue());
 
         db.write(batch);
     }

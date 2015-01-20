@@ -54,7 +54,7 @@ public class AccountsListWindow extends JFrame {
             public void run() {
                 Repository repository = UIEthereumManager.ethereum.getRepository();
                 Set<byte[]> keys = repository.getAccountsKeys();
-                for (byte[] key : keys){
+                for (byte[] key : keys) {
                     DataClass dc = new DataClass();
                     dc.address = key;
                     AccountState state = repository.getAccountState(dc.address);

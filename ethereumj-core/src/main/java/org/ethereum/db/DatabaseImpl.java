@@ -32,15 +32,15 @@ public class DatabaseImpl implements Database {
 
     public DatabaseImpl(String name) {
 
-        if (CONFIG.getKeyValueDataSource().equals("redis") ){
-            dataSource  = new RedisDataSource();
+        if (CONFIG.getKeyValueDataSource().equals("redis")) {
+            dataSource = new RedisDataSource();
             dataSource.setName(name);
             dataSource.init();
             return;
         }
 
-        if (CONFIG.getKeyValueDataSource().equals("leveldb") ){
-            dataSource  = new LevelDbDataSource();
+        if (CONFIG.getKeyValueDataSource().equals("leveldb")) {
+            dataSource = new LevelDbDataSource();
             dataSource.setName(name);
             dataSource.init();
             return;

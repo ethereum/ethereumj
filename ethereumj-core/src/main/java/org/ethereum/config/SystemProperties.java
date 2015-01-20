@@ -274,7 +274,7 @@ public class SystemProperties {
     }
 
 
-    public String getKeyValueDataSource(){
+    public String getKeyValueDataSource() {
         if (prop.isEmpty()) return DEFAULT_KEY_VALUE_DATA_SOURCE;
         return prop.getProperty("keyvalue.datasource");
     }

@@ -10,13 +10,13 @@ import org.ethereum.util.ByteUtil;
  */
 public class PrecompiledContracts {
 
-    private static ECRecover  ecRecover  = new ECRecover();
-    private static Sha256     sha256     = new Sha256();
+    private static ECRecover ecRecover = new ECRecover();
+    private static Sha256 sha256 = new Sha256();
     private static Ripempd160 ripempd160 = new Ripempd160();
-    private static Identity   identity   = new Identity();
+    private static Identity identity = new Identity();
 
 
-    public static PrecompiledContract getContractForAddress(DataWord address){
+    public static PrecompiledContract getContractForAddress(DataWord address) {
 
         if (address == null) return identity;
         if (address.isHex("0000000000000000000000000000000000000000000000000000000000000001")) return ecRecover;
@@ -28,12 +28,13 @@ public class PrecompiledContracts {
     }
 
 
-    public static abstract class PrecompiledContract{
+    public static abstract class PrecompiledContract {
         public abstract long getGasForData(byte[] data);
+
         public abstract byte[] execute(byte[] data);
     }
 
-    public static class Identity extends PrecompiledContract{
+    public static class Identity extends PrecompiledContract {
 
         public Identity() {
         }
@@ -53,7 +54,7 @@ public class PrecompiledContracts {
         }
     }
 
-    public static class Sha256 extends PrecompiledContract{
+    public static class Sha256 extends PrecompiledContract {
 
 
         @Override
@@ -74,7 +75,7 @@ public class PrecompiledContracts {
     }
 
 
-    public static class Ripempd160 extends PrecompiledContract{
+    public static class Ripempd160 extends PrecompiledContract {
 
 
         @Override
@@ -98,7 +99,7 @@ public class PrecompiledContracts {
     }
 
 
-    public static class ECRecover extends PrecompiledContract{
+    public static class ECRecover extends PrecompiledContract {
 
         @Override
         public long getGasForData(byte[] data) {
@@ -115,8 +116,8 @@ public class PrecompiledContracts {
 
             DataWord out = null;
 
-            try{
-                System.arraycopy(data, 0,  h, 0, 32);
+            try {
+                System.arraycopy(data, 0, h, 0, 32);
                 System.arraycopy(data, 32, v, 0, 32);
                 System.arraycopy(data, 64, r, 0, 32);
                 System.arraycopy(data, 96, s, 0, 32);
@@ -126,14 +127,14 @@ public class PrecompiledContracts {
 
                 ECKey key = ECKey.signatureToKey(h, signature.toBase64());
                 out = new DataWord(key.getAddress());
-            } catch (Throwable any){}
+            } catch (Throwable any) {
+            }
 
             if (out == null) out = new DataWord(0);
 
             return out.getData();
         }
     }
-
 
 
 }

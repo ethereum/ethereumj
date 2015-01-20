@@ -55,5 +55,5 @@ public class RlpTestData {
 
     public static Object[] test16 = new Object[]{"zw", new Object[]{4}, "wz"};
     public static String result16 = "c8827a77c10482777a";
-    public static Object[] expected16 = new Object[] { new byte[] { 122, 119 }, new Object[] { new byte[] { 4 } }, new byte[] { 119, 122 } };
+    public static Object[] expected16 = new Object[]{new byte[]{122, 119}, new Object[]{new byte[]{4}}, new byte[]{119, 122}};
 }

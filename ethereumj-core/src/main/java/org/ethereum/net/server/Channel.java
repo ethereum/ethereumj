@@ -95,7 +95,7 @@ public class Channel {
 
     }
 
-    public HelloMessage getHandshakeHelloMessage(){
+    public HelloMessage getHandshakeHelloMessage() {
         return getP2pHandler().getHandshakeHelloMessage();
     }
 

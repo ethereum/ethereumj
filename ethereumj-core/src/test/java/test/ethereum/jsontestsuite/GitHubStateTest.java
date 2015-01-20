@@ -119,7 +119,7 @@ public class GitHubStateTest {
 
         Set<String> excluded = new HashSet<>();
         excluded.add("EmptyTransaction");
-       //todo:    it goes OOG, because no gasLimit is given. So it does not change the state.
+        //todo:    it goes OOG, because no gasLimit is given. So it does not change the state.
 
 
         String json = JSONReader.loadJSON("StateTests/stTransactionTest.json");

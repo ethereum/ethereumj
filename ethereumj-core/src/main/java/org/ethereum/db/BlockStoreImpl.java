@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Repository("blockStore")
 @Transactional(propagation = Propagation.SUPPORTS)
-public class BlockStoreImpl implements BlockStore{
+public class BlockStoreImpl implements BlockStore {
 
     @Autowired
     private SessionFactory sessionFactory;

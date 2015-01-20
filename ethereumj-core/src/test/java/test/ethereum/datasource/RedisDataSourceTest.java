@@ -16,7 +16,7 @@ public class RedisDataSourceTest {
 
 
     @Test
-    public void testSet1(){
+    public void testSet1() {
 
         try {
             RedisDataSource redis = new RedisDataSource();
@@ -27,7 +27,7 @@ public class RedisDataSourceTest {
             byte[] val = Hex.decode("b1b2b3");
 
             redis.put(key, val);
-            byte[] val2 =  redis.get(key);
+            byte[] val2 = redis.get(key);
 
             Assert.assertEquals(Hex.toHexString(val), Hex.toHexString(val2));
         } catch (JedisConnectionException e) {
@@ -36,7 +36,7 @@ public class RedisDataSourceTest {
     }
 
     @Test
-    public void testSet2(){
+    public void testSet2() {
 
         try {
             RedisDataSource redis1 = new RedisDataSource();

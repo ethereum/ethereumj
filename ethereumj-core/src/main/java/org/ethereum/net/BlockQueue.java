@@ -82,7 +82,7 @@ public class BlockQueue {
                 return;
 
             logger.info("BlockQueue size: {}", blockReceivedQueue.size());
-            while(!blockReceivedQueue.isEmpty()){
+            while (!blockReceivedQueue.isEmpty()) {
                 Block block = blockReceivedQueue.poll();
 
                 logger.info("Processing block index: {}", block.getNumber());

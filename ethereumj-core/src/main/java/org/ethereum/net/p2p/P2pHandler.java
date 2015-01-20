@@ -264,7 +264,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         msgQueue.sendMessage(msg);
     }
 
-    public void sendDisconnect(){
+    public void sendDisconnect() {
         msgQueue.disconnect();
     }
 
