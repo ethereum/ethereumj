@@ -85,6 +85,7 @@
             <package name="" withSubpackages="true" static="true" />
           </value>
         </option>
+        <option name="ENABLE_JAVADOC_FORMATTING" value="false" />
         <XML>
           <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
         </XML>
