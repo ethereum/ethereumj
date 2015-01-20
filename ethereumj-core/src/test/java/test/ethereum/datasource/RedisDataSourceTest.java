@@ -7,10 +7,8 @@ import org.spongycastle.util.encoders.Hex;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
- * @author: Roman Mandeleil
- * Created on: 18/01/2015 22:40
+ * @author Roman Mandeleil
  */
-
 public class RedisDataSourceTest {
     
    

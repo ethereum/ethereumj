@@ -11,11 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
- *
- * @author: Roman Mandeleil
- * Created on: 18/01/2015 21:48
+ * @author Roman Mandeleil
+ * @since 18.01.2015
  */
-
 public class RedisDataSource implements KeyValueDataSource{
 
     String name;

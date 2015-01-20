@@ -4,11 +4,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- *
- * @author: Roman Mandeleil
- * Created on: 18/01/2015 21:40
+ * @author Roman Mandeleil
+ * @since 18.01.2015
  */
-
 public interface KeyValueDataSource {
 
     public void init();

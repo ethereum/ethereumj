@@ -6,9 +6,8 @@ import org.ethereum.util.ByteUtil;
 
 /**
  * @author Roman Mandeleil
- * Created on: 09/01/2015 08:05
+ * @since 09.01.2015
  */
-
 public class PrecompiledContracts {
     
     private static ECRecover  ecRecover  = new ECRecover();

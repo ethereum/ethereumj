@@ -11,10 +11,8 @@ import org.spongycastle.util.encoders.Hex;
 import static org.junit.Assert.*;
 
 /**
- * @author: Roman Mandeleil
- * Created on: 09/01/2015 08:28
+ * @author Roman Mandeleil
  */
-
 public class PrecompiledContractTest {
     
     

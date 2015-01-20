@@ -20,11 +20,9 @@ import java.util.Set;
 import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 /**
- *
- * @author: Roman Mandeleil
- * Created on: 18/01/2015 21:48
+ * @author Roman Mandeleil
+ * @since 18.01.2015
  */
-
 public class LevelDbDataSource implements KeyValueDataSource{
 
     private static final Logger logger = LoggerFactory.getLogger("db");

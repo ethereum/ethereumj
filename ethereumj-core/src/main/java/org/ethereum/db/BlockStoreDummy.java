@@ -9,15 +9,14 @@ import java.math.BigInteger;
 import java.util.List;
 
 /**
- * @author: Roman Mandeleil
- * Created on: 08/01/2015 17:33
+ * @author Roman Mandeleil
+ * @since 08.01.2015
  */
-
 public class BlockStoreDummy  implements BlockStore{
-    
+
     @Override
     public byte[] getBlockHashByNumber(long blockNumber) {
-        
+
         byte[] data = String.valueOf(blockNumber).getBytes();
         return HashUtil.sha3(data);
     }
