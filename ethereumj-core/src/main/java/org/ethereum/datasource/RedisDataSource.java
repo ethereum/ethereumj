@@ -1,11 +1,12 @@
 package org.ethereum.datasource;
 
-import org.ethereum.db.Database;
-import org.ethereum.db.DatabaseImpl;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
