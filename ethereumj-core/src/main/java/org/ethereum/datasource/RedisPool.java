@@ -25,7 +25,7 @@ public class RedisPool {
 
         try {
             if (System.getProperty("REDISCLOUD_URL") != null){
-                URI redisUri = new URI(System.getProperty("REDISCLOUD_URL"));
+                URI redisUri = new URI(System.getenv("REDISCLOUD_URL"));
                 logger.info("Init redis pool: "  + redisUri.toString());
                 pool = new JedisPool(new JedisPoolConfig(),
                         redisUri.getHost(),
