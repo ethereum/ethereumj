@@ -66,7 +66,7 @@ import static org.ethereum.core.Denomination.SZABO;
 public class BlockchainImpl implements Blockchain {
 
     /* A scalar value equal to the minimum limit of gas expenditure per block */
-    private static long MIN_GAS_LIMIT = 125000L;
+    private static final long MIN_GAS_LIMIT = 125000L;
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
@@ -137,7 +137,6 @@ public class BlockchainImpl implements Blockchain {
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
         return blockStore.getListOfHashesStartFrom(hash, qty);
     }
-
 
     public void tryToConnect(Block block) {
 
@@ -217,7 +216,7 @@ public class BlockchainImpl implements Blockchain {
             AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
         }
 
-        this.processBlock(block);
+        processBlock(block);
         stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
                 block.getNumber(),
                 Hex.toHexString(repository.getRoot()));
@@ -258,26 +257,19 @@ public class BlockchainImpl implements Blockchain {
     public long calcGasLimit(BlockHeader header) {
         if (header.isGenesis())
             return Genesis.GAS_LIMIT;
-        else {
-            Block parent = getParent(header);
-            return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
-        }
+
+        Block parent = getParent(header);
+        return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
     }
 
 
     public boolean isValid(BlockHeader header) {
-        boolean isValid = false;
-        // verify difficulty meets requirements
-        isValid = header.getDifficulty() == header.calcDifficulty();
-        // verify gasLimit meets requirements
-        isValid = isValid && header.getGasLimit() == calcGasLimit(header);
-        // verify timestamp meets requirements
-        isValid = isValid && header.getTimestamp() > getParent(header).getTimestamp();
-        // verify extraData doesn't exceed 1024 bytes
-        isValid = isValid && header.getExtraData() == null || header.getExtraData().length <= 1024;
-        return isValid;
-    }
 
+        return header.getDifficulty() == header.calcDifficulty() // difficulty meets requirements
+                && header.getGasLimit() == calcGasLimit(header) // gasLimit meets requirements
+                && header.getTimestamp() > getParent(header).getTimestamp() // timestamp meets requirements
+                && (header.getExtraData() == null || header.getExtraData().length <= 1024); // extraData doesn't exceed 1024 bytes
+    }
 
     /**
      * This mechanism enforces a homeostasis in terms of the time between blocks;
@@ -318,11 +310,11 @@ public class BlockchainImpl implements Blockchain {
             if (!block.isGenesis()) {
                 if (!CONFIG.blockChainOnly()) {
                     wallet.addTransactions(block.getTransactionsList());
-                    receipts = this.applyBlock(block);
+                    receipts = applyBlock(block);
                     wallet.processBlock(block);
                 }
             }
-            this.storeBlock(block, receipts);
+            storeBlock(block, receipts);
         } else {
             logger.warn("Invalid block with nr: {}", block.getNumber());
         }
@@ -332,7 +324,7 @@ public class BlockchainImpl implements Blockchain {
 
         int i = 1;
         long totalGasUsed = 0;
-        List<TransactionReceipt> reciepts = new ArrayList<>();
+        List<TransactionReceipt> receipts = new ArrayList<>();
 
         for (Transaction tx : block.getTransactionsList()) {
             stateLogger.info("apply block: [{}] tx: [{}] ", block.getNumber(), i);
@@ -361,18 +353,18 @@ public class BlockchainImpl implements Blockchain {
             if (block.getNumber() >= CONFIG.traceStartBlock())
                 repository.dumpState(block, totalGasUsed, i++, tx.getHash());
 
-            reciepts.add(receipt);
+            receipts.add(receipt);
         }
 
-        this.addReward(block);
-        this.updateTotalDifficulty(block);
+        addReward(block);
+        updateTotalDifficulty(block);
 
         track.commit();
 
         if (block.getNumber() >= CONFIG.traceStartBlock())
             repository.dumpState(block, totalGasUsed, 0, null);
 
-        return reciepts;
+        return receipts;
     }
 
     /**
@@ -417,7 +409,7 @@ public class BlockchainImpl implements Blockchain {
         }
 
         blockStore.saveBlock(block, receipts);
-        this.setBestBlock(block);
+        setBestBlock(block);
 
         if (logger.isDebugEnabled())
             logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
@@ -475,7 +467,7 @@ public class BlockchainImpl implements Blockchain {
 
     @Override
     public void updateTotalDifficulty(Block block) {
-        this.totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
+        totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
     }
 
     @Override
@@ -525,7 +517,6 @@ public class BlockchainImpl implements Blockchain {
         }
 
     }
-
 
     public void setRepository(Repository repository) {
         this.repository = repository;
