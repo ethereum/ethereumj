@@ -84,6 +84,8 @@ public class SystemProperties {
             // load a properties file from class path, inside static method
             prop.load(input);
 
+            overideCLIParams();
+            
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
@@ -94,6 +96,13 @@ public class SystemProperties {
                     logger.error(e.getMessage(), e);
                 }
             }
+        }
+    }
+
+    private void overideCLIParams() {
+        String value = System.getProperty("keyvalue.datasource");
+        if (value != null){
+            prop.setProperty("keyvalue.datasource", value);
         }
     }
 
