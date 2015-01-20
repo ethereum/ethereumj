@@ -47,10 +47,10 @@ public class ChannelManager {
     public void init() {
         scheduleChannelCollector();
     }
-    
-    
+
+
     public Channel getChannel(String peerId){
-        
+
         for (Channel channel : channels){
             String tablePeerId = channel.getP2pHandler().getHandshakeHelloMessage().getPeerId();
             if (tablePeerId != null &&

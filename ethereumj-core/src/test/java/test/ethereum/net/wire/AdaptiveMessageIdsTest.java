@@ -27,7 +27,7 @@ public class AdaptiveMessageIdsTest {
         EthMessageCodes.setOffset((byte) 0x00);
         ShhMessageCodes.setOffset((byte) 0x00);
     }
-    
+
     @After
     public void tearDown() {
         EthMessageCodes.setOffset((byte) 0x00);

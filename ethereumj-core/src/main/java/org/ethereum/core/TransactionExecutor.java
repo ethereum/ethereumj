@@ -35,7 +35,7 @@ public class TransactionExecutor {
     private Transaction tx;
     private Repository track;
     private BlockStore blockStore;
-    
+
     private ProgramInvokeFactory programInvokeFactory;
     private byte[] coinbase;
 

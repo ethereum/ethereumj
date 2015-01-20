@@ -30,7 +30,7 @@ public class DatabaseImpl implements Database {
     private KeyValueDataSource dataSource;
 
     public DatabaseImpl(String name) {
-        
+
         if (CONFIG.getKeyValueDataSource().equals("redis") ){
             dataSource  = new RedisDataSource();
             dataSource.setName(name);
@@ -44,7 +44,7 @@ public class DatabaseImpl implements Database {
             dataSource.init();
             return;
         }
-        
+
         logger.info("Key/Value datasource was not configured.");
         System.exit(-1);
     }
@@ -83,7 +83,7 @@ public class DatabaseImpl implements Database {
     }
 
     public List<ByteArrayWrapper> dumpKeys() {
-        
+
         ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
 
         for (byte[] key : dataSource.keys()) {

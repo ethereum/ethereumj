@@ -33,7 +33,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord inValue, DataWord inGas,
-                                             BigInteger balanceInt, byte[] dataIn, 
+                                             BigInteger balanceInt, byte[] dataIn,
                                              Repository repository, BlockStore blockStore) {
         return null;
     }

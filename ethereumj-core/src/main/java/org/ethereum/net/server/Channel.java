@@ -45,7 +45,7 @@ public class Channel {
 
     @Autowired
     MessageEncoder messageEncoder;
-    
+
     InetSocketAddress inetSocketAddress;
 
 

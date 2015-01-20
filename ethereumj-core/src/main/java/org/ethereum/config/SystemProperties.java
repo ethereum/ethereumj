@@ -272,8 +272,8 @@ public class SystemProperties {
         if (prop.isEmpty()) return DEFAULT_PEER_LISTEN_PORT;
         return Integer.parseInt(prop.getProperty("peer.listen.port"));
     }
-    
-    
+
+
     public String getKeyValueDataSource(){
         if (prop.isEmpty()) return DEFAULT_KEY_VALUE_DATA_SOURCE;
         return prop.getProperty("keyvalue.datasource");

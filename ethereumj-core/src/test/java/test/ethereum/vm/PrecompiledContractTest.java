@@ -14,9 +14,9 @@ import static org.junit.Assert.*;
  * @author Roman Mandeleil
  */
 public class PrecompiledContractTest {
-    
-    
-    
+
+
+
     @Test
     public void identityTest1(){
 
@@ -25,8 +25,8 @@ public class PrecompiledContractTest {
         byte[] data     = Hex.decode("112233445566");
         byte[] expected = Hex.decode("112233445566");
 
-        byte[] result = contract.execute(data); 
-        
+        byte[] result = contract.execute(data);
+
         assertArrayEquals(expected, result);
     }
 
@@ -83,7 +83,7 @@ public class PrecompiledContractTest {
 
         assertEquals(expected, Hex.toHexString(result));
     }
-    
+
     @Test
     public void ecRecoverTest1(){
 
@@ -93,10 +93,10 @@ public class PrecompiledContractTest {
         String expected = "000000000000000000000000ae387fcfeb723c3f5964509af111cf5a67f30661";
 
         byte[] result = contract.execute(data);
-        
+
         System.out.println(Hex.toHexString(result));
 
-        
+
     }
 
 }

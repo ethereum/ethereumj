@@ -29,12 +29,12 @@ public class LevelDbDataSource implements KeyValueDataSource{
 
     String name;
     private DB db;
-    
+
     @Override
     public void init() {
-        
+
         if (name == null) throw new NullPointerException("no name set to the db");
-        
+
         Options options = new Options();
         options.createIfMissing(true);
         options.compressionType(CompressionType.NONE);
@@ -95,7 +95,7 @@ public class LevelDbDataSource implements KeyValueDataSource{
         DBIterator dbIterator = db.iterator();
         Set<byte[]> keys = new HashSet<>();
         while (dbIterator.hasNext()){
-            
+
             Map.Entry<byte[], byte[]> entry = dbIterator.next();
             keys.add(entry.getKey());
         }

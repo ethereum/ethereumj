@@ -67,7 +67,7 @@ public class Program {
     byte lastOp = 0;
     byte previouslyExecutedOp = 0;
     boolean stopped = false;
-    
+
     private Set<Integer> jumpdest = new HashSet<>();
 
     ProgramInvoke invokeData;
@@ -215,7 +215,7 @@ public class Program {
     public void memorySave(int addr, byte[] value) {
         memorySave(addr, value.length, value);
     }
-    
+
     public void memoryExpand(DataWord outDataOffs, DataWord outDataSize){
 
         int maxAddress = outDataOffs.intValue() + outDataSize.intValue();
@@ -588,7 +588,7 @@ public class Program {
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256?
                 new DataWord(this.invokeData.getBlockStore().getBlockHashByNumber(index)):
                 DataWord.ZERO;
-        
+
     }
 
 
@@ -861,16 +861,16 @@ public class Program {
 
             OpCode op = OpCode.code(ops[i]);
             if (op == null) continue;
-            
+
             if (op.equals(OpCode.JUMPDEST)) jumpdest.add(i);
-            
+
             if (op.asInt() >= OpCode.PUSH1.asInt() && op.asInt() <= OpCode.PUSH32.asInt()){
                 i += op.asInt() - OpCode.PUSH1.asInt() + 1;
             }
         }
     }
-    
-    
+
+
     public static String stringify(byte[] code, int index, String result) {
         if (code == null || code.length == 0)
             return result;

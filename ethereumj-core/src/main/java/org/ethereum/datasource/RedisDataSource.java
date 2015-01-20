@@ -18,16 +18,16 @@ public class RedisDataSource implements KeyValueDataSource{
 
     String name;
     int index;
-    
+
     Jedis jedis;
-    
-    
+
+
     @Override
     public void init() {
-        
+
         if (name == null) throw new NullPointerException("no name set to the db");
         this.jedis = new Jedis("localhost"); // todo: config.redisHost, config.redisPort
-        
+
         if (CONFIG.databaseReset())
             this.jedis.flushAll();
     }
@@ -37,7 +37,7 @@ public class RedisDataSource implements KeyValueDataSource{
         this.name = name;
         index = nameToIndex(name);
     }
-    
+
     @Override
     public byte[] get(byte[] key) {
         jedis.select(index);
@@ -91,7 +91,7 @@ public class RedisDataSource implements KeyValueDataSource{
         }
         return index;
     }
-    
+
     private static Map<String, Integer> DBNameScheme = new HashMap<>();
     private static AtomicInteger indexCounter = new AtomicInteger(1);
 }

@@ -31,7 +31,7 @@ public class MockDB implements KeyValueDataSource {
 
         storage.put(new ByteArrayWrapper(key), value);
     }
-    
+
     /**
      * Returns the number of items added to this Mock DB
      *

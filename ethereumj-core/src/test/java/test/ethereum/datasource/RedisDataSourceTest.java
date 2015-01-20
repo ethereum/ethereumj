@@ -10,8 +10,8 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
  * @author Roman Mandeleil
  */
 public class RedisDataSourceTest {
-    
-   
+
+
     @Test
     public void testSet1(){
 

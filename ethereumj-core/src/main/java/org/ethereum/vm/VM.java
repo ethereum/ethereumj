@@ -897,7 +897,7 @@ public class VM {
                     DataWord pos = program.stackPop();
                     int nextPC = pos.intValue(); // possible overflow
                     program.validateJumpDest(nextPC);
-                    
+
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
 
@@ -1042,7 +1042,7 @@ public class VM {
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
                     }
-                    
+
                     program.memoryExpand(outDataOffs, outDataSize);
 
                     MessageCall msg = new MessageCall(
@@ -1050,9 +1050,9 @@ public class VM {
                             gas, codeAddress, value, inDataOffs, inDataSize,
                             outDataOffs, outDataSize);
 
-                    PrecompiledContracts.PrecompiledContract contract =  
+                    PrecompiledContracts.PrecompiledContract contract =
                             PrecompiledContracts.getContractForAddress(codeAddress);
-                    
+
                     if (contract != null)
                         program.callToPrecompiledAddress(msg, contract);
                     else

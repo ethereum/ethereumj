@@ -88,18 +88,18 @@ public class TestRunner {
         blockchain.startTracking();
 
         Repository track = repository.startTracking();
-        TransactionExecutor executor = 
-                new TransactionExecutor(tx, coinbase,  track, new BlockStoreDummy(),  
+        TransactionExecutor executor =
+                new TransactionExecutor(tx, coinbase,  track, new BlockStoreDummy(),
                         invokeFactory, blockchain.getBestBlock());
         executor.execute();
         track.commit();
 
         logger.info("compare results");
-        
+
         List<LogInfo> logs = null;
         if (executor.getResult() != null)
             logs = executor.getResult().getLogInfoList();
-        
+
         List<String> logResults = testCase.getLogs().compareToReal(logs);
         results.addAll(logResults);
 
@@ -135,7 +135,7 @@ public class TestRunner {
             results.add("ERROR: Expected 'Post' repository contains more accounts than executed repository ");
 
             logger.info("Full address set: " + fullAddressSet);
-            
+
         }
 
         return results;

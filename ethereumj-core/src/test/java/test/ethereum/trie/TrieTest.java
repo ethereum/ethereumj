@@ -589,7 +589,7 @@ public class TrieTest {
     @Ignore
     @Test
     public void reddisTest() throws URISyntaxException, IOException {
-        
+
         URL massiveUpload_1 = ClassLoader
                 .getSystemResource("trie/massive-upload.dmp");
 
@@ -598,7 +598,7 @@ public class TrieTest {
         String dbName = "state";
 
         long startTime = System.currentTimeMillis();
-        
+
         Jedis jedis = new Jedis("localhost");
         jedis.flushAll();
         Pipeline pipeline = jedis.pipelined();
@@ -623,7 +623,7 @@ public class TrieTest {
 
         System.out.println("time: " + (System.currentTimeMillis() - startTime));
     }
-    
+
 
     @Ignore
     @Test

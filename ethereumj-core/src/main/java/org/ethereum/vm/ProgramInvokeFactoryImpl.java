@@ -33,7 +33,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
     // Invocation by the wire tx
     @Override
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository, 
+    public ProgramInvoke createProgramInvoke(Transaction tx, Block block, Repository repository,
                                              BlockStore blockStore) {
 
         // https://ethereum.etherpad.mozilla.org/26
