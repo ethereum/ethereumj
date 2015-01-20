@@ -389,11 +389,6 @@ public class Program {
             return;
         }
 
-        if (programCode.length == 0) {
-           result = new ProgramResult();
-           result.setHReturn(new byte[] {}); 
-        }
-
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code = result.getHReturn().array();
 
