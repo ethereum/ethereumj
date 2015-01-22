@@ -23,47 +23,46 @@ public class SystemProperties {
 
     private static Logger logger = LoggerFactory.getLogger("general");
 
-    private static int DEFAULT_TX_APPROVE_TIMEOUT = 10;
-    private static String DEFAULT_DISCOVERY_PEER_LIST = "poc-7.ethdev.com:30303";
-    private static String DEFAULT_ACTIVE_PEER_IP = "poc-7.ethdev.com";
-    private static int DEFAULT_ACTIVE_PORT = 30303;
-    private static String DEFAULT_SAMPLES_DIR = "samples";
-    private static String DEFAULT_COINBASE_SECRET = "monkey";
-    private static int DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
-    private static Boolean DEFAULT_DB_RESET = false;
-    private static Boolean DEFAULT_DUMP_FULL = false;
-    private static Boolean DEFAULT_RECORD_BLOCKS = false;
-    private static String DEFAULT_DUMP_DIR = "dmp";
-    private static String DEFAULT_DUMP_STYLE = "standard+";
-    private static Integer DEFAULT_VMTRACE_BLOCK = 0;
-    private static String DEFAULT_DATABASE_DIR = System.getProperty("user.dir");
-    private static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
-    private static Boolean DEFAULT_PLAY_VM = true;
-    private static Boolean DEFAULT_BLOCKCHAIN_ONLY = false;
-    private static int DEFAULT_TRACE_STARTBLOCK = -1;
-    private static int DEFAULT_MAX_HASHES_ASK = -1; // unlimited
-    private static int DEFAULT_MAX_BLOCKS_ASK = 10;
-    private static int DEFAULT_MAX_BLOCKS_QUEUED = 300;
-    private static String DEFAULT_PROJECT_VERSION = "";
-    private static String DEFAULT_HELLO_PHRASE = "Dev";
-    private static Boolean DEFAULT_VM_TRACE = false;
-    private static String DEFAULT_VM_TRACE_DIR = "dmp";
-    private static int DEFAULT_PEER_LISTEN_PORT = 30303;
-    private static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
+    private final static int DEFAULT_TX_APPROVE_TIMEOUT = 10;
+    private final static String DEFAULT_DISCOVERY_PEER_LIST = "poc-7.ethdev.com:30303";
+    private final static String DEFAULT_ACTIVE_PEER_IP = "poc-7.ethdev.com";
+    private final static int DEFAULT_ACTIVE_PORT = 30303;
+    private final static String DEFAULT_SAMPLES_DIR = "samples";
+    private final static String DEFAULT_COINBASE_SECRET = "monkey";
+    private final static int DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
+    private final static Boolean DEFAULT_DB_RESET = false;
+    private final static Boolean DEFAULT_DUMP_FULL = false;
+    private final static Boolean DEFAULT_RECORD_BLOCKS = false;
+    private final static String DEFAULT_DUMP_DIR = "dmp";
+    private final static String DEFAULT_DUMP_STYLE = "standard+";
+    private final static Integer DEFAULT_VMTRACE_BLOCK = 0;
+    private final static String DEFAULT_DATABASE_DIR = System.getProperty("user.dir");
+    private final static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
+    private final static Boolean DEFAULT_PLAY_VM = true;
+    private final static Boolean DEFAULT_BLOCKCHAIN_ONLY = false;
+    private final static int DEFAULT_TRACE_STARTBLOCK = -1;
+    private final static int DEFAULT_MAX_HASHES_ASK = -1; // unlimited
+    private final static int DEFAULT_MAX_BLOCKS_ASK = 10;
+    private final static int DEFAULT_MAX_BLOCKS_QUEUED = 300;
+    private final static String DEFAULT_PROJECT_VERSION = "";
+    private final static String DEFAULT_HELLO_PHRASE = "Dev";
+    private final static Boolean DEFAULT_VM_TRACE = false;
+    private final static String DEFAULT_VM_TRACE_DIR = "dmp";
+    private final static int DEFAULT_PEER_LISTEN_PORT = 30303;
+    private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
 
 
     /* Testing */
-    private static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
+    private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
 
-    private static List<String> DEFAULT_PROTOCOL_LIST = Arrays.asList("eth", "shh");
+    private final static String DEFAULT_PROTOCOL_LIST = "eth,shh";
 
     public static SystemProperties CONFIG = new SystemProperties();
-    private Properties prop = new Properties();
-    private InputStream input = null;
-
+    private final Properties prop = new Properties();
 
     public SystemProperties() {
 
+        InputStream input = null;
         try {
             String userDir = System.getProperty("user.dir");
             String fileName = userDir + "/config/system.properties";
@@ -84,8 +83,8 @@ public class SystemProperties {
             // load a properties file from class path, inside static method
             prop.load(input);
 
-            overideCLIParams();
-            
+            overrideCLIParams();
+
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
@@ -99,41 +98,35 @@ public class SystemProperties {
         }
     }
 
-    private void overideCLIParams() {
+    private void overrideCLIParams() {
         String value = System.getProperty("keyvalue.datasource");
-        if (value != null){
+        if (value != null) {
             prop.setProperty("keyvalue.datasource", value);
         }
     }
 
     public boolean peerDiscovery() {
-        if (prop.isEmpty()) return true;
-        return Boolean.parseBoolean(prop.getProperty("peer.discovery"));
+        return Boolean.parseBoolean(prop.getProperty("peer.discovery", "true"));
     }
 
     public int peerDiscoveryWorkers() {
-        if (prop.isEmpty()) return 2;
-        return Integer.parseInt(prop.getProperty("peer.discovery.workers"));
+        return Integer.parseInt(prop.getProperty("peer.discovery.workers", "2"));
     }
 
     public int peerConnectionTimeout() {
-        if (prop.isEmpty()) return 10000;
-        return Integer.parseInt(prop.getProperty("peer.connection.timeout")) * 1000;
+        return Integer.parseInt(prop.getProperty("peer.connection.timeout", "10")) * 1000;
     }
 
     public int transactionApproveTimeout() {
-        if (prop.isEmpty()) return DEFAULT_TX_APPROVE_TIMEOUT;
-        return Integer.parseInt(prop.getProperty("transaction.approve.timeout"));
+        return Integer.parseInt(prop.getProperty("transaction.approve.timeout", String.valueOf("DEFAULT_TX_APPROVE_TIMEOUT")));
     }
 
     public String peerDiscoveryIPList() {
-        if (prop.isEmpty()) return DEFAULT_DISCOVERY_PEER_LIST;
-        return prop.getProperty("peer.discovery.ip.list");
+        return prop.getProperty("peer.discovery.ip.list", DEFAULT_DISCOVERY_PEER_LIST);
     }
 
     public boolean databaseReset() {
-        if (prop.isEmpty()) return DEFAULT_DB_RESET;
-        return Boolean.parseBoolean(prop.getProperty("database.reset"));
+        return Boolean.parseBoolean(prop.getProperty("database.reset", String.valueOf(DEFAULT_DB_RESET)));
     }
 
     public void setDatabaseReset(Boolean reset) {
@@ -141,17 +134,15 @@ public class SystemProperties {
     }
 
     public String activePeerIP() {
-        if (prop.isEmpty()) return DEFAULT_ACTIVE_PEER_IP;
-        return prop.getProperty("peer.active.ip");
+        return prop.getProperty("peer.active.ip", DEFAULT_ACTIVE_PEER_IP);
     }
 
     public void setActivePeerIP(String host) {
-        prop.setProperty("peer.active.ip", host.toString());
+        prop.setProperty("peer.active.ip", host);
     }
 
     public int activePeerPort() {
-        if (prop.isEmpty()) return DEFAULT_ACTIVE_PORT;
-        return Integer.parseInt(prop.getProperty("peer.active.port"));
+        return Integer.parseInt(prop.getProperty("peer.active.port", String.valueOf(DEFAULT_ACTIVE_PORT)));
     }
 
     public void setActivePeerPort(Integer port) {
@@ -159,54 +150,43 @@ public class SystemProperties {
     }
 
     public String samplesDir() {
-        if (prop.isEmpty()) return DEFAULT_SAMPLES_DIR;
-        return prop.getProperty("samples.dir");
+        return prop.getProperty("samples.dir", DEFAULT_SAMPLES_DIR);
     }
 
     public String coinbaseSecret() {
-        if (prop.isEmpty()) return DEFAULT_COINBASE_SECRET;
-        return prop.getProperty("coinbase.secret");
+        return prop.getProperty("coinbase.secret", DEFAULT_COINBASE_SECRET);
     }
 
     public Integer peerChannelReadTimeout() {
-        if (prop.isEmpty()) return DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT;
-        return Integer.parseInt(prop.getProperty("peer.channel.read.timeout"));
+        return Integer.parseInt(prop.getProperty("peer.channel.read.timeout", String.valueOf(DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT)));
     }
 
     public Integer traceStartBlock() {
-        if (prop.isEmpty()) return DEFAULT_TRACE_STARTBLOCK;
-        return Integer.parseInt(prop.getProperty("trace.startblock"));
+        return Integer.parseInt(prop.getProperty("trace.startblock", String.valueOf(DEFAULT_TRACE_STARTBLOCK)));
     }
 
     public Boolean recordBlocks() {
-        if (prop.isEmpty()) return DEFAULT_RECORD_BLOCKS;
-        return Boolean.parseBoolean(prop.getProperty("record.blocks"));
+        return Boolean.parseBoolean(prop.getProperty("record.blocks", String.valueOf(DEFAULT_RECORD_BLOCKS)));
     }
 
-
     public Boolean dumpFull() {
-        if (prop.isEmpty()) return DEFAULT_DUMP_FULL;
-        return Boolean.parseBoolean(prop.getProperty("dump.full"));
+        return Boolean.parseBoolean(prop.getProperty("dump.full", String.valueOf(DEFAULT_DUMP_FULL)));
     }
 
     public String dumpDir() {
-        if (prop.isEmpty()) return DEFAULT_DUMP_DIR;
-        return prop.getProperty("dump.dir");
+        return prop.getProperty("dump.dir", DEFAULT_DUMP_DIR);
     }
 
     public String dumpStyle() {
-        if (prop.isEmpty()) return DEFAULT_DUMP_STYLE;
-        return prop.getProperty("dump.style");
+        return prop.getProperty("dump.style", DEFAULT_DUMP_STYLE);
     }
 
     public Integer dumpBlock() {
-        if (prop.isEmpty()) return DEFAULT_VMTRACE_BLOCK;
-        return Integer.parseInt(prop.getProperty("dump.block"));
+        return Integer.parseInt(prop.getProperty("dump.block", String.valueOf(DEFAULT_VMTRACE_BLOCK)));
     }
 
     public String databaseDir() {
-        if (prop.isEmpty()) return DEFAULT_DATABASE_DIR;
-        return prop.getProperty("database.dir");
+        return prop.getProperty("database.dir", DEFAULT_DATABASE_DIR);
     }
 
     public void setDataBaseDir(String dataBaseDir) {
@@ -214,43 +194,35 @@ public class SystemProperties {
     }
 
     public Boolean dumpCleanOnRestart() {
-        if (prop.isEmpty()) return DEFAULT_DUMP_CLEAN_ON_RESTART;
-        return Boolean.parseBoolean(prop.getProperty("dump.clean.on.restart"));
+        return Boolean.parseBoolean(prop.getProperty("dump.clean.on.restart", String.valueOf(DEFAULT_DUMP_CLEAN_ON_RESTART)));
     }
 
     public Boolean playVM() {
-        if (prop.isEmpty()) return DEFAULT_PLAY_VM;
-        return Boolean.parseBoolean(prop.getProperty("play.vm"));
+        return Boolean.parseBoolean(prop.getProperty("play.vm", String.valueOf(DEFAULT_PLAY_VM)));
     }
 
     public Boolean blockChainOnly() {
-        if (prop.isEmpty()) return DEFAULT_BLOCKCHAIN_ONLY;
-        return Boolean.parseBoolean(prop.getProperty("blockchain.only"));
+        return Boolean.parseBoolean(prop.getProperty("blockchain.only", String.valueOf(DEFAULT_BLOCKCHAIN_ONLY)));
     }
 
     public Integer maxHashesAsk() {
-        if (prop.isEmpty()) return DEFAULT_MAX_HASHES_ASK;
-        return Integer.parseInt(prop.getProperty("max.hashes.ask"));
+        return Integer.parseInt(prop.getProperty("max.hashes.ask", String.valueOf(DEFAULT_MAX_HASHES_ASK)));
     }
 
     public Integer maxBlocksAsk() {
-        if (prop.isEmpty()) return DEFAULT_MAX_BLOCKS_ASK;
-        return Integer.parseInt(prop.getProperty("max.blocks.ask"));
+        return Integer.parseInt(prop.getProperty("max.blocks.ask", String.valueOf(DEFAULT_MAX_BLOCKS_ASK)));
     }
 
     public Integer maxBlocksQueued() {
-        if (prop.isEmpty()) return DEFAULT_MAX_BLOCKS_QUEUED;
-        return Integer.parseInt(prop.getProperty("max.blocks.queued"));
+        return Integer.parseInt(prop.getProperty("max.blocks.queued", String.valueOf(DEFAULT_MAX_BLOCKS_QUEUED)));
     }
 
     public String projectVersion() {
-        if (prop.isEmpty()) return DEFAULT_PROJECT_VERSION;
-        return prop.getProperty("project.version");
+        return prop.getProperty("project.version", DEFAULT_PROJECT_VERSION);
     }
 
     public String helloPhrase() {
-        if (prop.isEmpty()) return DEFAULT_HELLO_PHRASE;
-        return prop.getProperty("hello.phrase");
+        return prop.getProperty("hello.phrase", DEFAULT_HELLO_PHRASE);
     }
 
     public String rootHashStart() {
@@ -262,30 +234,25 @@ public class SystemProperties {
     }
 
     public List<String> peerCapabilities() {
-        if (prop.isEmpty()) return DEFAULT_PROTOCOL_LIST;
-        String capabilitiesList = prop.getProperty("peer.capabilities");
+        String capabilitiesList = prop.getProperty("peer.capabilities", DEFAULT_PROTOCOL_LIST);
         return Arrays.asList(capabilitiesList.split(","));
     }
 
     public boolean vmTrace() {
-        if (prop.isEmpty()) return DEFAULT_VM_TRACE;
-        return Boolean.parseBoolean(prop.getProperty("vm.structured.trace"));
+        return Boolean.parseBoolean(prop.getProperty("vm.structured.trace", String.valueOf(DEFAULT_VM_TRACE)));
     }
 
     public String vmTraceDir() {
-        if (prop.isEmpty()) return DEFAULT_VM_TRACE_DIR;
-        return prop.getProperty("vm.structured.dir");
+        return prop.getProperty("vm.structured.dir", DEFAULT_VM_TRACE_DIR);
     }
 
     public int listenPort() {
-        if (prop.isEmpty()) return DEFAULT_PEER_LISTEN_PORT;
-        return Integer.parseInt(prop.getProperty("peer.listen.port"));
+        return Integer.parseInt(prop.getProperty("peer.listen.port", String.valueOf(DEFAULT_PEER_LISTEN_PORT)));
     }
 
 
     public String getKeyValueDataSource() {
-        if (prop.isEmpty()) return DEFAULT_KEY_VALUE_DATA_SOURCE;
-        return prop.getProperty("keyvalue.datasource");
+        return prop.getProperty("keyvalue.datasource", DEFAULT_KEY_VALUE_DATA_SOURCE);
     }
 
     public void setListenPort(Integer port) {
@@ -308,8 +275,7 @@ public class SystemProperties {
      *
      */
     public boolean vmTestLoadLocal() {
-        if (prop.isEmpty() || !prop.containsKey("GitHubTests.VMTest.loadLocal")) return DEFAULT_VMTEST_LOAD_LOCAL;
-        return Boolean.parseBoolean(prop.getProperty("GitHubTests.VMTest.loadLocal"));
+        return Boolean.parseBoolean(prop.getProperty("GitHubTests.VMTest.loadLocal", String.valueOf(DEFAULT_VMTEST_LOAD_LOCAL)));
     }
 
     public static void main(String args[]) {
