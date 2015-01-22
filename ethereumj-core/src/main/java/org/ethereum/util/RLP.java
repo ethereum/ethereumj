@@ -20,7 +20,7 @@ import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
  * The purpose of RLP is to encode arbitrarily nested arrays of binary data, and
  * RLP is the main encoding method used to serialize objects in Ethereum. The
  * only purpose of RLP is to encode structure; encoding specific atomic data
- * types (eg. strings, ints, floats) is left up to higher-order protocols; in
+ * types (eg. strings, integers, floats) is left up to higher-order protocols; in
  * Ethereum the standard is that integers are represented in big endian binary
  * form. If one wishes to use RLP to encode a dictionary, the two suggested
  * canonical forms are to either use [[k1,v1],[k2,v2]...] with keys in
@@ -48,7 +48,7 @@ public class RLP {
     /**
      * Allow for content up to size of 2^64 bytes *
      */
-    private static double MAX_ITEM_LENGTH = Math.pow(256, 8);
+    private static final double MAX_ITEM_LENGTH = Math.pow(256, 8);
 
     /**
      * Reason for threshold according to Vitalik Buterin:
@@ -59,7 +59,7 @@ public class RLP {
      * - so 56 and 2^64 space seems like the right place to put the cutoff
      * - also, that's where Bitcoin's varint does the cutof
      */
-    private static int SIZE_THRESHOLD = 56;
+    private static final int SIZE_THRESHOLD = 56;
 
     /** RLP encoding rules are defined as follows: */
 
@@ -74,7 +74,7 @@ public class RLP {
      * byte with value 0x80 plus the length of the string followed by the
      * string. The range of the first byte is thus [0x80, 0xb7].
      */
-    private static int OFFSET_SHORT_ITEM = 0x80;
+    private static final int OFFSET_SHORT_ITEM = 0x80;
 
     /**
      * [0xb7]
@@ -85,7 +85,7 @@ public class RLP {
      * \xb9\x04\x00 followed by the string. The range of the first byte is thus
      * [0xb8, 0xbf].
      */
-    private static int OFFSET_LONG_ITEM = 0xb7;
+    private static final int OFFSET_LONG_ITEM = 0xb7;
 
     /**
      * [0xc0]
@@ -95,7 +95,7 @@ public class RLP {
      * of the RLP encodings of the items. The range of the first byte is thus
      * [0xc0, 0xf7].
      */
-    private static int OFFSET_SHORT_LIST = 0xc0;
+    private static final int OFFSET_SHORT_LIST = 0xc0;
 
     /**
      * [0xf7]
@@ -105,7 +105,7 @@ public class RLP {
      * followed by the concatenation of the RLP encodings of the items. The
      * range of the first byte is thus [0xf8, 0xff].
      */
-    private static int OFFSET_LONG_LIST = 0xf7;
+    private static final int OFFSET_LONG_LIST = 0xf7;
 
 
     /* ******************************************************
@@ -178,45 +178,27 @@ public class RLP {
 
     private static String decodeStringItem(byte[] data, int index) {
 
-        final String value;
-
         if ((data[index] & 0xFF) >= OFFSET_LONG_ITEM
                 && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
 
             byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
             int length = calcLengthRaw(lengthOfLength, data, index);
-            value = new String(data, index + lengthOfLength + 1, length);
+            return new String(data, index + lengthOfLength + 1, length);
 
         } else if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
                 && (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
 
             byte length = (byte) ((data[index] & 0xFF) - OFFSET_SHORT_ITEM);
-            value = new String(data, index + 1, length);
+            return new String(data, index + 1, length);
 
         } else {
             throw new RuntimeException("wrong decode attempt");
         }
-        return value;
     }
 
     private static byte[] decodeItemBytes(byte[] data, int index) {
 
-        final int length;
-
-        if ((data[index] & 0xFF) >= OFFSET_LONG_ITEM
-                && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
-
-            byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
-            length = calcLengthRaw(lengthOfLength, data, index);
-
-        } else if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
-                && (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
-
-            length = (byte) (data[index] - OFFSET_SHORT_ITEM);
-
-        } else {
-            throw new RuntimeException("wrong decode attempt");
-        }
+        final int length = calculateLength(data, index);
         byte[] valueBytes = new byte[length];
         System.arraycopy(data, index, valueBytes, 0, length);
         return valueBytes;
@@ -224,22 +206,7 @@ public class RLP {
 
     public static BigInteger decodeBigInteger(byte[] data, int index) {
 
-        final int length;
-
-        if ((data[index] & 0xFF) >= OFFSET_LONG_ITEM
-                && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
-
-            byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
-            length = calcLengthRaw(lengthOfLength, data, index);
-
-        } else if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
-                && (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
-
-            length = (byte) (data[index] - OFFSET_SHORT_ITEM);
-
-        } else {
-            throw new RuntimeException("wrong decode attempt");
-        }
+        final int length = calculateLength(data, index);
         byte[] valueBytes = new byte[length];
         System.arraycopy(data, index, valueBytes, 0, length);
         return new BigInteger(1, valueBytes);
@@ -247,22 +214,7 @@ public class RLP {
 
     private static byte[] decodeByteArray(byte[] data, int index) {
 
-        final int length;
-
-        if ((data[index] & 0xFF) >= OFFSET_LONG_ITEM
-                && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
-
-            byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
-            length = calcLengthRaw(lengthOfLength, data, index);
-
-        } else if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
-                && (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
-
-            length = (byte) (data[index] - OFFSET_SHORT_ITEM);
-
-        } else {
-            throw new RuntimeException("wrong decode attempt");
-        }
+        final int length = calculateLength(data, index);
         byte[] valueBytes = new byte[length];
         System.arraycopy(data, index, valueBytes, 0, length);
         return valueBytes;
@@ -302,31 +254,19 @@ public class RLP {
 
     public static byte[] decodeIP4Bytes(byte[] data, int index) {
 
-        int length = (data[index] & 0xFF) - OFFSET_SHORT_LIST;
         int offset = 1;
 
-        byte aByte = decodeOneByteItem(data, index + offset);
-
-        if ((data[index + offset] & 0xFF) > OFFSET_SHORT_ITEM)
-            offset = offset + 2;
-        else
-            offset = offset + 1;
-        byte bByte = decodeOneByteItem(data, index + offset);
-
-        if ((data[index + offset] & 0xFF) > OFFSET_SHORT_ITEM)
-            offset = offset + 2;
-        else
-            offset = offset + 1;
-        byte cByte = decodeOneByteItem(data, index + offset);
-
-        if ((data[index + offset] & 0xFF) > OFFSET_SHORT_ITEM)
-            offset = offset + 2;
-        else
-            offset = offset + 1;
-        byte dByte = decodeOneByteItem(data, index + offset);
+        final byte[] result=new byte[4];
+        for ( int i =0 ; i<4 ; i++) {
+            result[i] = decodeOneByteItem(data, index + offset);
+            if ((data[index + offset] & 0xFF) > OFFSET_SHORT_ITEM)
+                offset +=  2;
+            else
+                offset +=  1;
+        }
 
         // return IP address
-        return new byte[]{aByte, bByte, cByte, dByte};
+        return result;
     }
 
     public static int getFirstListElement(byte[] payload, int pos) {
@@ -640,7 +580,6 @@ public class RLP {
                     RLPItem rlpItem = new RLPItem(item);
                     rlpList.add(rlpItem);
                     pos += 1;
-                    continue;
                 }
             }
         } catch (Exception e) {
@@ -913,5 +852,23 @@ public class RLP {
             return toBytes(val.asObj());
         }
         throw new RuntimeException("Unsupported type: Only accepting String, Integer and BigInteger for now");
+    }
+
+
+    private static int calculateLength(byte[] data, int index) {
+        if ((data[index] & 0xFF) >= OFFSET_LONG_ITEM
+                && (data[index] & 0xFF) < OFFSET_SHORT_LIST) {
+
+            byte lengthOfLength = (byte) (data[index] - OFFSET_LONG_ITEM);
+            return calcLengthRaw(lengthOfLength, data, index);
+
+        } else if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
+                && (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
+
+            return (byte) (data[index] - OFFSET_SHORT_ITEM);
+
+        } else {
+            throw new RuntimeException("wrong decode attempt");
+        }
     }
 }
