@@ -84,6 +84,7 @@ public class GitHubStateTest {
     }
 
 
+    @Ignore
     @Test
     public void stSpecialTest() throws ParseException { // [V]
 
