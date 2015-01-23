@@ -9,6 +9,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DataWordTest {
 
@@ -123,6 +124,55 @@ public class DataWordTest {
         x.mul(y);
         assertEquals(32, y.getData().length);
         assertEquals("0100000000000000000000000000000000000000000000000000000000000000", Hex.toHexString(y.getData()));
+    }
+
+    @Test
+    public void testDiv() {
+        byte[] one = new byte[32];
+        one[30] = 0x01;
+        one[31] = 0x2c; // 0x000000000000000000000000000000000000000000000000000000000000012c
+
+        byte[] two = new byte[32];
+        two[31] = 0x0f; // 0x000000000000000000000000000000000000000000000000000000000000000f
+
+        DataWord x = new DataWord(one);
+        DataWord y = new DataWord(two);
+        x.div(y);
+
+        assertEquals(32, x.getData().length);
+        assertEquals("0000000000000000000000000000000000000000000000000000000000000014", Hex.toHexString(x.getData()));
+    }
+
+    @Test
+    public void testDivZero() {
+        byte[] one = new byte[32];
+        one[30] = 0x05; // 0x0000000000000000000000000000000000000000000000000000000000000500
+
+        byte[] two = new byte[32];
+
+        DataWord x = new DataWord(one);
+        DataWord y = new DataWord(two);
+        x.div(y);
+
+        assertEquals(32, x.getData().length);
+        assertTrue(x.isZero());
+    }
+
+    @Test
+    public void testSDivNegative() {
+
+        // one is -300 as 256-bit signed integer:
+        byte[] one = Hex.decode("fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffed4");
+
+        byte[] two = new byte[32];
+        two[31] = 0x0f;
+
+        DataWord x = new DataWord(one);
+        DataWord y = new DataWord(two);
+        x.sDiv(y);
+
+        assertEquals(32, x.getData().length);
+        assertEquals("ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffec", x.toString());
     }
 
     @Test
