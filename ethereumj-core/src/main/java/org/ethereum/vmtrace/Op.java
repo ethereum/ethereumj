@@ -63,8 +63,8 @@ public class Op {
         Collections.sort(keys);
         for (DataWord key : keys) {
             DataWord value = storage.get(key);
-            this.storage.put(Hex.toHexString(key.getNoLeadZeroesData()),
-                    Hex.toHexString(value.getNoLeadZeroesData()));
+            this.storage.put(Hex.toHexString(key.getData()),
+                    Hex.toHexString(value.getData()));
         }
     }
 
@@ -78,7 +78,7 @@ public class Op {
         this.stack = new ArrayList<>();
 
         for (DataWord element : stack) {
-            this.stack.add(0, Hex.toHexString(element.getNoLeadZeroesData()));
+            this.stack.add(0, Hex.toHexString(element.getData()));
         }
     }
 
