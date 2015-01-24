@@ -89,6 +89,16 @@ public class TransactionExecutor {
             return;
         }
 
+        //Insert gas cost protection
+        BigInteger gasLimit = new BigInteger(1, tx.getGasLimit());
+        if (gasLimit.compareTo(BigInteger.ZERO) == 0) {
+            logger.debug("No gas limit set on transaction: hash={}",
+                    Hex.toHexString(tx.getHash()));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
 
         // FIND OUT THE TRANSACTION TYPE
         final byte[] receiverAddress;

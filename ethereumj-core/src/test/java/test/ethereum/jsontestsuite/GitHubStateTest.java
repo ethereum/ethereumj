@@ -110,12 +110,10 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
 
-
     @Test // todo: fix: excluded test
     public void stTransactionTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("EmptyTransaction");
         //todo:    it goes OOG, because no gasLimit is given. So it does not change the state.
 
 
