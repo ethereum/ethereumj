@@ -58,6 +58,7 @@ public class EthereumImpl implements Ethereum {
     ApplicationContext ctx;
 
     public EthereumImpl() {
+        System.out.println();
     }
 
     @PostConstruct

@@ -39,7 +39,6 @@ import static org.ethereum.util.ByteUtil.wrap;
  * @author Roman Mandeleil
  * @since 17.11.2014
  */
-@Component
 public class RepositoryImpl implements Repository {
 
     final static String DETAILS_DB = "details";
