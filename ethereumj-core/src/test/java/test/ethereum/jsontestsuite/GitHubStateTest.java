@@ -44,7 +44,6 @@ public class GitHubStateTest {
     public void stInitCodeTest() throws ParseException { // [V]
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("NotEnoughCashContractCreation");
         excluded.add("CallContractToCreateContractOOG");
         excluded.add("CallContractToCreateContractNoCash");
         excluded.add("CallContractToCreateContractWhichWouldCreateContractInInitCode");
