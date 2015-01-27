@@ -31,6 +31,13 @@ public class LevelDbDataSource implements KeyValueDataSource {
     String name;
     private DB db;
 
+    public LevelDbDataSource() {
+    }
+
+    public LevelDbDataSource(String name) {
+        this.name = name;
+    }
+
     @Override
     public void init() {
 

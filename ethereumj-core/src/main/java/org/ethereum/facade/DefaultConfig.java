@@ -1,6 +1,9 @@
 package org.ethereum.facade;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.datasource.RedisDataSource;
 import org.ethereum.db.RepositoryImpl;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -9,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
@@ -16,6 +20,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.sql.SQLException;
 import java.util.Properties;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  *
@@ -34,8 +40,20 @@ public class DefaultConfig {
     
     @Bean 
     Repository repository(){
-        return new RepositoryImpl();
+        return new RepositoryImpl(keyValueDataSource(), keyValueDataSource());
     }
+
+    @Bean
+    @Scope("prototype")
+    public KeyValueDataSource keyValueDataSource(){
+        
+        if (CONFIG.getKeyValueDataSource().equals("redis")) {
+            return  new RedisDataSource();
+        }
+
+        return new LevelDbDataSource();
+    }
+    
     
     @Bean
     public SessionFactory sessionFactory() throws SQLException {

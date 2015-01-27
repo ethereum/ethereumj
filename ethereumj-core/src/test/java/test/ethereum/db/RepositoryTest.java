@@ -3,6 +3,7 @@ package test.ethereum.db;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
@@ -30,7 +31,7 @@ public class RepositoryTest {
     public void test1() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -49,7 +50,7 @@ public class RepositoryTest {
     public void test2() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -68,7 +69,7 @@ public class RepositoryTest {
     public void test3() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -89,7 +90,7 @@ public class RepositoryTest {
     public void test4() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -114,7 +115,7 @@ public class RepositoryTest {
     public void test5() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -145,7 +146,7 @@ public class RepositoryTest {
     public void test6() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -179,7 +180,7 @@ public class RepositoryTest {
     public void test7() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -204,7 +205,7 @@ public class RepositoryTest {
     public void test8() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -228,7 +229,7 @@ public class RepositoryTest {
     public void test9() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -258,7 +259,7 @@ public class RepositoryTest {
     public void test10() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -289,7 +290,7 @@ public class RepositoryTest {
     public void test11() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -317,7 +318,7 @@ public class RepositoryTest {
     public void test12() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -344,7 +345,7 @@ public class RepositoryTest {
     public void test13() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
         for (String address : Genesis.getPremine()) {
@@ -363,7 +364,7 @@ public class RepositoryTest {
     public void test14() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -401,7 +402,7 @@ public class RepositoryTest {
     public void test15() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -438,7 +439,7 @@ public class RepositoryTest {
     public void test16() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -501,7 +502,7 @@ public class RepositoryTest {
     public void test17() {
 
         SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
-        Repository repository = new RepositoryImpl();
+        Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
 

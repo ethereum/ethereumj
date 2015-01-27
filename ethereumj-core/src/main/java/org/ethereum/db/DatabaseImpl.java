@@ -1,20 +1,19 @@
 package org.ethereum.db;
 
 import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.datasource.LevelDbDataSource;
-import org.ethereum.datasource.RedisDataSource;
+import org.ethereum.facade.EthereumFactory;
 import org.ethereum.util.ByteUtil;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import javax.xml.crypto.dsig.keyinfo.KeyValue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * Generic interface for Ethereum database
@@ -28,32 +27,24 @@ public class DatabaseImpl implements Database {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
     private String name;
-    private KeyValueDataSource dataSource;
 
+    private KeyValueDataSource keyValueDataSource;
+
+    public DatabaseImpl(KeyValueDataSource keyValueDataSource) {
+        this.keyValueDataSource = keyValueDataSource;
+    }
+
+    
     public DatabaseImpl(String name) {
 
-        if (CONFIG.getKeyValueDataSource().equals("redis")) {
-            dataSource = new RedisDataSource();
-            dataSource.setName(name);
-            dataSource.init();
-            return;
-        }
-
-        if (CONFIG.getKeyValueDataSource().equals("leveldb")) {
-            dataSource = new LevelDbDataSource();
-            dataSource.setName(name);
-            dataSource.init();
-            return;
-        }
-
-        logger.info("Key/Value datasource was not configured.");
-        System.exit(-1);
+        keyValueDataSource.setName(name);
+        keyValueDataSource.init();
     }
 
 
     @Override
     public byte[] get(byte[] key) {
-        return dataSource.get(key);
+        return keyValueDataSource.get(key);
     }
 
     @Override
@@ -63,7 +54,7 @@ public class DatabaseImpl implements Database {
             logger.debug("put: key: [{}], value: [{}]",
                     Hex.toHexString(key),
                     Hex.toHexString(value));
-        dataSource.put(key, value);
+        keyValueDataSource.put(key, value);
     }
 
     @Override
@@ -71,23 +62,23 @@ public class DatabaseImpl implements Database {
         if (logger.isDebugEnabled())
             logger.debug("delete: key: [{}]");
 
-        dataSource.delete(key);
+        keyValueDataSource.delete(key);
     }
 
     public KeyValueDataSource getDb() {
-        return this.dataSource;
+        return this.keyValueDataSource;
     }
 
     @Override
     public void close() {
-        dataSource.close();
+        keyValueDataSource.close();
     }
 
     public List<ByteArrayWrapper> dumpKeys() {
 
         ArrayList<ByteArrayWrapper> keys = new ArrayList<>();
 
-        for (byte[] key : dataSource.keys()) {
+        for (byte[] key : keyValueDataSource.keys()) {
             keys.add(ByteUtil.wrap(key));
         }
         Collections.sort(keys);

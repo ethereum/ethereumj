@@ -23,8 +23,14 @@ public class RedisDataSource implements KeyValueDataSource{
     int index;
     
     Jedis jedis;
-    
-    
+
+    public RedisDataSource() {
+    }
+
+    public RedisDataSource(String name) {
+        this.name = name;
+    }
+
     @Override
     public void init() {
         

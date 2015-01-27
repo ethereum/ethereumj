@@ -1,5 +1,7 @@
 package test.ethereum.db;
 
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.db.TrackDatabase;
 
@@ -25,7 +27,10 @@ public class TrackDatabaseTest {
     @Test
     public void test1() {
 
-        DatabaseImpl db1 = new DatabaseImpl("temp");
+        KeyValueDataSource keyValueDataSource = new LevelDbDataSource("temp");
+        keyValueDataSource.init();
+        
+        DatabaseImpl db1 = new DatabaseImpl(keyValueDataSource);
         TrackDatabase trackDatabase1 = new TrackDatabase(db1);
 
         trackDatabase1.put(Hex.decode("abcdef"), Hex.decode("abcdef"));

@@ -18,17 +18,18 @@ import org.springframework.stereotype.Component;
 public class EthereumFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
-
+    public static ApplicationContext context = null;
+    
     public static Ethereum createEthereum() {
         return createEthereum(DefaultConfig.class);
     }
-
+    
     public static Ethereum createEthereum(Class clazz) {
 
         logger.info("capability eth version: [{}]", EthHandler.VERSION);
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
 
-        ApplicationContext context = new AnnotationConfigApplicationContext(clazz);
+        context = new AnnotationConfigApplicationContext(clazz);
         return context.getBean(Ethereum.class);
     }
 

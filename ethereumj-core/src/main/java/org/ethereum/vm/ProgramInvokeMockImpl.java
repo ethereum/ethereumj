@@ -2,6 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.db.RepositoryImpl;
@@ -30,7 +31,9 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     }
 
     public ProgramInvokeMockImpl() {
-        this.repository = new RepositoryImpl("detailsMoc", "stateMoc");
+        
+        
+        this.repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         this.repository.createAccount(ownerAddress);
 
         this.repository.createAccount(contractAddress);
