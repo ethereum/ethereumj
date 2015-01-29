@@ -22,12 +22,10 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, "CallRecursiveBombLog2");
     }
 
-    @Ignore
     @Test // this method is mostly for hands-on convenient testing
     public void runWithExcludedTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallSha256_5");
 
 
         String json = JSONReader.loadJSON("StateTests/stPreCompiledContracts.json");
