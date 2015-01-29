@@ -31,15 +31,16 @@ public class Genesis extends Block {
     public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
 
     private static String[] premine = new String[]{
-            "51ba59315b3a95761d0863b05ccc7a7f54703d99",
-            "e6716f9544a56c530d868e4bfbacb172315bdead",     // # (J)
-            "b9c015918bdaba24b4ff057a92a3873d6eb201be",     // # (V)
-            "1a26338f0d905e295fccb71fa9ea849ffa12aaf4",     // # (A)
-            "2ef47100e0787b915105fd5e3f4ff6752079d5cb",     // # (M)
-            "cd2a3d9f938e13cd947ec05abc7fe734df8dd826",     // # (R)
-            "6c386a4b26f73c802f34673f7248bb118f97424a",     // # (HH)
-            "e4157b34ea9615cfbde6b4fda419828124b70c78",     // # (CH)
+            "dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6",
+            "e4157b34ea9615cfbde6b4fda419828124b70c78", // # (CH)
+            "b9c015918bdaba24b4ff057a92a3873d6eb201be", // # (V)
+            "6c386a4b26f73c802f34673f7248bb118f97424a", // # (HH)
+            "cd2a3d9f938e13cd947ec05abc7fe734df8dd826", // # (R)
+            "2ef47100e0787b915105fd5e3f4ff6752079d5cb", // # (M)
+            "e6716f9544a56c530d868e4bfbacb172315bdead", // # (J)
+            "1a26338f0d905e295fccb71fa9ea849ffa12aaf4"  // # (A)
     };
+
 
     private static byte[] zeroHash256 = new byte[32];
     private static byte[] zeroHash160 = new byte[20];

@@ -7,6 +7,8 @@ import org.ethereum.net.p2p.HelloMessage;
 
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -14,69 +16,68 @@ import java.util.Set;
  * @since 12.11.2014
  */
 @Component(value = "EthereumListener")
-public class EthereumListenerWrapper implements EthereumListener {
+public class CompositeEthereumListener implements EthereumListener {
 
-    EthereumListener listener;
+    List<EthereumListener> listeners = new ArrayList<>();
 
 
     @Override
     public void trace(String output) {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.trace(output);
     }
 
     @Override
     public void onBlock(Block block) {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.onBlock(block);
     }
 
 
     @Override
     public void onRecvMessage(Message message) {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.onRecvMessage(message);
     }
 
     @Override
     public void onSendMessage(Message message) {
-        if (listener != null)
-            listener.onSendMessage(message);
+        for (EthereumListener listener : listeners)
+                listener.onSendMessage(message);
     }
 
     @Override
     public void onPeerDisconnect(String host, long port) {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.onPeerDisconnect(host, port);
     }
 
     @Override
     public void onPendingTransactionsReceived(Set<Transaction> transactions) {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.onPendingTransactionsReceived(transactions);
     }
 
     @Override
     public void onSyncDone() {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.onSyncDone();
     }
 
 
     @Override
     public void onNoConnections() {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.onNoConnections();
     }
 
     @Override
     public void onHandShakePeer(HelloMessage helloMessage) {
-        if (listener != null)
+        for (EthereumListener listener : listeners)
             listener.onHandShakePeer(helloMessage);
     }
 
     public void addListener(EthereumListener listener) {
-        if (listener != null)
-            this.listener = listener;
+        listeners.add(listener);
     }
 }

@@ -10,7 +10,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerWrapper;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.server.ChannelManager;
@@ -88,7 +88,7 @@ public class WorldManager {
 
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
-        ((EthereumListenerWrapper) this.listener).addListener(listener);
+        ((CompositeEthereumListener) this.listener).addListener(listener);
     }
 
     public void startPeerDiscovery() {
