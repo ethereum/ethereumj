@@ -160,7 +160,7 @@ public class WorldManager {
     public boolean isBlockchainLoading() {
         return blockchain.getQueue().size() > 2;
     }
-
+    
     public void loadBlockchain() {
 
         Block bestBlock = blockStore.getBestBlock();
