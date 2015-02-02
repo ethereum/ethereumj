@@ -26,9 +26,7 @@ import java.io.IOException;
 
 import java.math.BigInteger;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
@@ -73,6 +71,8 @@ public class BlockchainImpl implements Blockchain {
 
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
+
+    private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
     @Autowired
     private Repository repository;
@@ -228,6 +228,8 @@ public class BlockchainImpl implements Blockchain {
         // Remove all wallet transactions as they already approved by the net
         wallet.removeTransactions(block.getTransactionsList());
 
+        // Clear pending transaction from the mem
+        clearPendingTransactions(block.getTransactionsList());
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block);
@@ -517,6 +519,27 @@ public class BlockchainImpl implements Blockchain {
         }
 
     }
+
+    public void addPendingTransactions(Set<Transaction> transactions) {
+        logger.info("Pending transaction list added: size: [{}]", transactions.size());
+
+        if (listener != null)
+            listener.onPendingTransactionsReceived(transactions);
+        pendingTransactions.addAll(transactions);
+    }
+
+    public void clearPendingTransactions(List<Transaction> receivedTransactions) {
+
+        for (Transaction tx : receivedTransactions) {
+            logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+            pendingTransactions.remove(tx);
+        }
+    }
+
+    public Set<Transaction> getPendingTransactions() {
+        return pendingTransactions;
+    }
+
 
     public void setRepository(Repository repository) {
         this.repository = repository;

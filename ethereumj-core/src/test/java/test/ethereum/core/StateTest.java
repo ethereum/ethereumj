@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 
 public class StateTest {
 
-    private static final String GENESIS_STATE_ROOT = "c67c70f5d7d3049337d1dcc0503a249881120019a8e7322774dbfe57b463718c";
+    private static final String GENESIS_STATE_ROOT = "156df8ef53c723b40f97aff55dd785489cae8b457495916147687746bd5ee077";
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -45,7 +45,7 @@ public class StateTest {
         // 4) calc the root
 
         Trie trie = generateGenesisState();
-        String expected = "6ae5f47b0cc54ca33b4a46537f6cf6673f9138e876f3ac5a33dde173efe28236";
+        String expected = "aa5dd963f3a1582a0ba0226ad03a076e1e723e87d1a9c28222108ace58a96c97";
 
         // Get and update sender in world state
         byte[] cowAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");

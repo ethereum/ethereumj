@@ -243,4 +243,10 @@ public class EthereumImpl implements Ethereum {
     public ChannelManager getChannelManager() {
         return channelManager;
     }
+
+
+    @Override
+    public Set<Transaction> getPendingTransactions() {
+        return getBlockchain().getPendingTransactions();
+    }
 }

@@ -133,4 +133,6 @@ public interface Ethereum {
 
     public ChannelManager getChannelManager();
 
+    public Set<Transaction> getPendingTransactions();
+
 }

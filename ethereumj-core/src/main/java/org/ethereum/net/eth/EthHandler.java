@@ -54,7 +54,7 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
 @Scope("prototype")
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    public final static byte VERSION = 51;
+    public final static byte VERSION = 52;
     public final static byte NETWORK_ID = 0x0;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
@@ -168,7 +168,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private void processTransactions(TransactionsMessage msg) {
 
         Set<Transaction> txSet = msg.getTransactions();
-        worldManager.addPendingTransactions(txSet);
+        worldManager.getBlockchain().
+                addPendingTransactions(txSet);
 
         for (Transaction tx : txSet) {
             worldManager.getWallet().addTransaction(tx);
@@ -421,7 +422,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private void sendPendingTransactions() {
         Set<Transaction> pendingTxs =
-                worldManager.getPendingTransactions();
+                worldManager.getBlockchain()
+                        .getPendingTransactions();
         TransactionsMessage msg = new TransactionsMessage(pendingTxs);
         msgQueue.sendMessage(msg);
     }

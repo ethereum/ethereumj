@@ -4,7 +4,10 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.RedisDataSource;
+import org.ethereum.db.BlockStore;
+import org.ethereum.db.BlockStoreImpl;
 import org.ethereum.db.RepositoryImpl;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,6 +20,8 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.util.Properties;
@@ -52,6 +57,12 @@ public class DefaultConfig {
         }
 
         return new LevelDbDataSource();
+    }
+
+    @Bean
+    @Transactional(propagation = Propagation.SUPPORTS)
+    public BlockStore blockStore(SessionFactory sessionFactory){
+        return new BlockStoreImpl(sessionFactory);
     }
     
     

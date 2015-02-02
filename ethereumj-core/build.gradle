@@ -60,7 +60,7 @@ dependencies {
     compile "com.madgag.spongycastle:core:${scastleVersion}" // for SHA3 and SECP256K1
     compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
-    compile "org.antlr:antlr4-runtime:4.3" // for serpent compilation
+    compile "org.antlr:antlr4-runtime:4.5" // for serpent compilation
     compile "com.yuvalshavit:antlr-denter:1.1"
     compile "org.javassist:javassist:3.15.0-GA"
     compile "org.slf4j:slf4j-api:${slf4jVersion}"

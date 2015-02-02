@@ -21,17 +21,12 @@ import java.util.List;
  * @author Roman Mandeleil
  * @since 12.11.2014
  */
-@Repository("blockStore")
-@Transactional(propagation = Propagation.SUPPORTS)
 public class BlockStoreImpl implements BlockStore {
 
-    @Autowired
     private SessionFactory sessionFactory;
 
-    @Autowired
-    ApplicationContext ctx;
-
-    public BlockStoreImpl() {
+    public BlockStoreImpl(SessionFactory sessionFactory) {
+        this.sessionFactory = sessionFactory;
     }
 
     @Override

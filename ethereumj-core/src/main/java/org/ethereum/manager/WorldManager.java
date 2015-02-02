@@ -10,7 +10,7 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.listener.EthereumListenerWrapper;
+import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.server.ChannelManager;
@@ -71,7 +71,6 @@ public class WorldManager {
     @Autowired
     private AdminInfo adminInfo;
 
-    private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
 
     @Autowired
     private EthereumListener listener;
@@ -88,7 +87,7 @@ public class WorldManager {
 
     public void addListener(EthereumListener listener) {
         logger.info("Ethereum listener added");
-        ((EthereumListenerWrapper) this.listener).addListener(listener);
+        ((CompositeEthereumListener) this.listener).addListener(listener);
     }
 
     public void startPeerDiscovery() {
@@ -99,22 +98,6 @@ public class WorldManager {
     public void stopPeerDiscovery() {
         if (peerDiscovery.isStarted())
             peerDiscovery.stop();
-    }
-
-    public void addPendingTransactions(Set<Transaction> transactions) {
-        logger.info("Pending transaction list added: size: [{}]", transactions.size());
-
-        if (listener != null)
-            listener.onPendingTransactionsReceived(transactions);
-        pendingTransactions.addAll(transactions);
-    }
-
-    public void clearPendingTransactions(List<Transaction> receivedTransactions) {
-
-        for (Transaction tx : receivedTransactions) {
-            logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
-            pendingTransactions.remove(tx);
-        }
     }
 
     public ChannelManager getChannelManager() {
@@ -153,9 +136,6 @@ public class WorldManager {
         return activePeer;
     }
 
-    public Set<Transaction> getPendingTransactions() {
-        return pendingTransactions;
-    }
 
     public boolean isBlockchainLoading() {
         return blockchain.getQueue().size() > 2;
@@ -176,6 +156,7 @@ public class WorldManager {
             blockchain.setBestBlock(Genesis.getInstance());
             blockchain.setTotalDifficulty(BigInteger.ZERO);
 
+            listener.onBlock(Genesis.getInstance());
             repository.dumpState(Genesis.getInstance(), 0, 0, null);
 
             logger.info("Genesis block loaded");
