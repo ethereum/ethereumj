@@ -168,7 +168,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private void processTransactions(TransactionsMessage msg) {
 
         Set<Transaction> txSet = msg.getTransactions();
-        worldManager.addPendingTransactions(txSet);
+        worldManager.getBlockchain().
+                addPendingTransactions(txSet);
 
         for (Transaction tx : txSet) {
             worldManager.getWallet().addTransaction(tx);
@@ -421,7 +422,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private void sendPendingTransactions() {
         Set<Transaction> pendingTxs =
-                worldManager.getPendingTransactions();
+                worldManager.getBlockchain()
+                        .getPendingTransactions();
         TransactionsMessage msg = new TransactionsMessage(pendingTxs);
         msgQueue.sendMessage(msg);
     }

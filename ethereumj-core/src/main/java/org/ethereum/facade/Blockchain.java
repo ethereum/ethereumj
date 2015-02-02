@@ -1,14 +1,12 @@
 package org.ethereum.facade;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Chain;
-import org.ethereum.core.Genesis;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.net.BlockQueue;
 
 import java.math.BigInteger;
 
 import java.util.List;
+import java.util.Set;
 
 public interface Blockchain {
 
@@ -53,4 +51,10 @@ public interface Blockchain {
     public List<Chain> getAltChains();
 
     public List<Block> getGarbage();
+
+    public Set<Transaction> getPendingTransactions();
+    public void addPendingTransactions(Set<Transaction> transactions);
+    public void clearPendingTransactions(List<Transaction> receivedTransactions);
+
+
 }
