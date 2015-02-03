@@ -2,6 +2,7 @@ package org.ethereum.listener;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 
@@ -33,6 +34,11 @@ public class CompositeEthereumListener implements EthereumListener {
             listener.onBlock(block);
     }
 
+    @Override
+    public void onBlockReciepts(List<TransactionReceipt> receipts) {
+        for (EthereumListener listener : listeners)
+            listener.onBlockReciepts(receipts);
+    }
 
     @Override
     public void onRecvMessage(Message message) {
@@ -80,4 +86,6 @@ public class CompositeEthereumListener implements EthereumListener {
     public void addListener(EthereumListener listener) {
         listeners.add(listener);
     }
+
+
 }

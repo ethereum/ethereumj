@@ -89,7 +89,7 @@ public class BlockQueue {
                 blockchain.tryToConnect(block);
             }
         } catch (Throwable e) {
-            logger.error("Error: ", e.getMessage());
+            logger.error("Error: {} ", e.getMessage());
         }
     }
 

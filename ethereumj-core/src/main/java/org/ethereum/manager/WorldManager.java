@@ -173,7 +173,6 @@ public class WorldManager {
                     Hex.toHexString(blockchain.getBestBlock().getStateRoot()));
         }
 
-
         if (CONFIG.rootHashStart() != null) {
 
             // update world state by dummy hash

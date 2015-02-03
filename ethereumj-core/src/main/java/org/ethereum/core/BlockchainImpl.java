@@ -216,7 +216,7 @@ public class BlockchainImpl implements Blockchain {
             AdvancedDeviceUtils.adjustDetailedTracing(block.getNumber());
         }
 
-        processBlock(block);
+        List<TransactionReceipt> receipts = processBlock(block);
         stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
                 block.getNumber(),
                 Hex.toHexString(repository.getRoot()));
@@ -233,6 +233,7 @@ public class BlockchainImpl implements Blockchain {
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block);
+        listener.onBlockReciepts(receipts);
 
         if (blockQueue.size() == 0 &&
                 !syncDoneCalled &&
@@ -305,7 +306,7 @@ public class BlockchainImpl implements Blockchain {
 
     }
 
-    private void processBlock(Block block) {
+    private List<TransactionReceipt> processBlock(Block block) {
 
         List<TransactionReceipt> receipts = new ArrayList<>();
         if (isValid(block)) {
@@ -320,6 +321,8 @@ public class BlockchainImpl implements Blockchain {
         } else {
             logger.warn("Invalid block with nr: {}", block.getNumber());
         }
+
+        return receipts;
     }
 
     private List<TransactionReceipt> applyBlock(Block block) {
@@ -400,7 +403,7 @@ public class BlockchainImpl implements Blockchain {
             String worldStateRootHash = Hex.toHexString(repository.getRoot());
             if (!blockStateRootHash.equals(worldStateRootHash)) {
 
-                stateLogger.info("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+                stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
                 adminInfo.lostConsensus();
 
                 // in case of rollback hard move the root

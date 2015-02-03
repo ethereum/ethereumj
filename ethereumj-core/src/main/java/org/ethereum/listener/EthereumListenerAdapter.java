@@ -2,9 +2,11 @@ package org.ethereum.listener;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -49,6 +51,11 @@ public class EthereumListenerAdapter implements EthereumListener {
 
     @Override
     public void onNoConnections() {
+
+    }
+
+    @Override
+    public void onBlockReciepts(List<TransactionReceipt> receipts) {
 
     }
 }

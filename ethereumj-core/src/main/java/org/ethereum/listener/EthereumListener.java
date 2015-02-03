@@ -2,9 +2,11 @@ package org.ethereum.listener;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -16,6 +18,8 @@ public interface EthereumListener {
     public void trace(String output);
 
     public void onBlock(Block block);
+
+    public void onBlockReciepts(List<TransactionReceipt> receipts);
 
     public void onRecvMessage(Message message);
 
