@@ -74,6 +74,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
+    @Ignore
     @Test
     public void stRefundTest() throws ParseException { // [V]
 
