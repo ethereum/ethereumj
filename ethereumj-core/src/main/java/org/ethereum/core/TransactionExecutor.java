@@ -100,6 +100,25 @@ public class TransactionExecutor {
             return;
         }
 
+        // GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
+        BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
+        BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
+        logger.info("Gas price limited to [{} wei]", gasDebit.toString());
+
+        // Debit the actual total gas value from the sender
+        // the purchased gas will be available for
+        // the contract in the execution state,
+        // it can be retrieved using GAS op
+        BigInteger txValue = new BigInteger(1, tx.getValue());
+        if (track.getBalance(senderAddress).compareTo(gasDebit.add(txValue)) == -1) {
+            logger.debug("No gas to start the execution: sender={}",
+                    Hex.toHexString(senderAddress));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
+
         // FIND OUT THE TRANSACTION TYPE
         final byte[] receiverAddress;
         final byte[] code;
@@ -121,27 +140,6 @@ public class TransactionExecutor {
                             Hex.toHexString(receiverAddress));
             }
         }
-
-
-        // GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
-        BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
-        BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
-        logger.info("Gas price limited to [{} wei]", gasDebit.toString());
-
-        // Debit the actual total gas value from the sender
-        // the purchased gas will be available for
-        // the contract in the execution state,
-        // it can be retrieved using GAS op
-        BigInteger txValue = new BigInteger(1, tx.getValue());
-        if (track.getBalance(senderAddress).compareTo(gasDebit.add(txValue)) == -1) {
-            logger.debug("No gas to start the execution: sender={}",
-                    Hex.toHexString(senderAddress));
-
-            receipt.setCumulativeGas(0);
-            this.receipt = receipt;
-            return;
-        }
-
 
         // THE SIMPLE VALUE/BALANCE CHANGE
         if (track.getBalance(senderAddress).compareTo(txValue) >= 0) {
