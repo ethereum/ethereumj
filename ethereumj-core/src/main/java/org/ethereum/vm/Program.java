@@ -322,10 +322,17 @@ public class Program {
             return;
         }
 
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
+        BigInteger endowment = value.value();
+        BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
+        if (senderBalance.compareTo(endowment) < 0) {
+            stackPushZero();
+            return;
+        }
+
         // [1] FETCH THE CODE FROM THE MEMORY
         byte[] programCode = memoryChunk(memStart, memSize).array();
 
-        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
@@ -346,12 +353,6 @@ public class Program {
         }
 
         // [4] TRANSFER THE BALANCE
-        BigInteger endowment = value.value();
-        BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
-        if (senderBalance.compareTo(endowment) < 0) {
-            stackPushZero();
-            return;
-        }
         result.getRepository().addBalance(senderAddress, endowment.negate());
         BigInteger newBalance = result.getRepository().addBalance(newAddress, endowment);
 
