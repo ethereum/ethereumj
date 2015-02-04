@@ -43,6 +43,8 @@ public class ProgramResult {
     }
 
     public ByteBuffer getHReturn() {
+        if (hReturn == null)
+           this.setHReturn(new byte[] {});
         return hReturn;
     }
 
