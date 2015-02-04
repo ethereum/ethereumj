@@ -18,7 +18,7 @@ import static java.lang.Thread.sleep;
  */
 public class TransactionTask implements Callable<Transaction> {
 
-    private static final Logger logger = LoggerFactory.getLogger(TransactionTask.class);
+    private static final Logger logger = LoggerFactory.getLogger("net");
 
     private final Transaction tx;
     private final WorldManager worldManager;
@@ -32,21 +32,13 @@ public class TransactionTask implements Callable<Transaction> {
     public Transaction call() throws Exception {
 
         try {
-            logger.info("Call() tx: {}", tx.toString());
-
-            Wallet wallet = worldManager.getWallet();
+            logger.info("submit tx: {}", tx.toString());
             ChannelManager channelManager = worldManager.getChannelManager();
-
-            WalletTransaction walletTransaction = wallet.addByWalletTransaction(tx);
             channelManager.sendTransaction(tx);
+            return tx;
 
-            while (walletTransaction.getApproved() < 1) {
-                sleep(10);
-            }
-            logger.info("return approved: {}", walletTransaction.getApproved());
         } catch (Throwable th) {
             logger.warn("Exception caught: {}", th);
-            worldManager.getWallet().removeTransaction(tx);
         }
         return null;
     }
