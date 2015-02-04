@@ -100,6 +100,8 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
+        excluded.add("createNameRegistratorZeroMem2");
+        excluded.add("testVMtest");
 
         String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
