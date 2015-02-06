@@ -102,6 +102,9 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         excluded.add("createNameRegistratorZeroMem2");
         excluded.add("testVMtest");
+        excluded.add("createWithInvalidOpcode");
+        excluded.add("testRandomTest");
+
 
         String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
