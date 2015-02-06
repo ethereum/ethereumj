@@ -327,6 +327,7 @@ public class BlockchainImpl implements Blockchain {
 
     private List<TransactionReceipt> applyBlock(Block block) {
 
+        long saveTime = System.nanoTime();
         int i = 1;
         long totalGasUsed = 0;
         List<TransactionReceipt> receipts = new ArrayList<>();
@@ -368,6 +369,10 @@ public class BlockchainImpl implements Blockchain {
 
         if (block.getNumber() >= CONFIG.traceStartBlock())
             repository.dumpState(block, totalGasUsed, 0, null);
+
+        long totalTime = System.nanoTime() - saveTime;
+        adminInfo.addBlockExecTime(totalTime);
+        logger.info("block: num: [{}] hash: [{}], executed after: [{}]nano", block.getNumber(), block.getShortHash(), totalTime);
 
         return receipts;
     }
