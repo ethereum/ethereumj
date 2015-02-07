@@ -4,7 +4,11 @@
 [![Coverage Status](https://coveralls.io/repos/ethereum/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereum/ethereumj?branch=master)
 [![Stories in Progress](https://badge.waffle.io/ethereum/ethereumj.png?title=In%20Progress&label=in_progress)](https://waffle.io/ethereum/ethereumj)
 
-:small_blue_diamond: Talk to us:  http://forum.ethergit.com/categories/all
+
+
+######  :small_blue_diamond: .
+######  :small_blue_diamond: . Talk to us:  http://forum.ethergit.com/categories/all
+######  :small_blue_diamond: .
 
 
 # About
