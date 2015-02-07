@@ -21,7 +21,7 @@ public class GitHubVMTest {
     public void runSingle() throws ParseException {
 
         String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "addmod2_1");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "");
     }
 
 
