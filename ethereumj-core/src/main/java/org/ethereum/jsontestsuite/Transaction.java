@@ -1,7 +1,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.json.simple.JSONObject;
-
+import java.math.BigInteger;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -11,7 +11,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
 public class Transaction {
 
     byte[] data;
-    long gasLimit;
+    byte[] gasLimit;
     long gasPrice;
     long nonce;
     byte[] secretKey;
@@ -40,9 +40,8 @@ public class Transaction {
         String toStr = callCreateJSON.get("to").toString();
         String valueStr = callCreateJSON.get("value").toString();
 
-
         this.data = Utils.parseData(dataStr);
-        this.gasLimit = Utils.parseLong(gasLimitStr);
+        this.gasLimit = !gasLimitStr.isEmpty() ? new BigInteger(gasLimitStr).toByteArray() : new byte[]{0};
         this.gasPrice = Utils.parseLong(gasPriceStr);
         this.nonce = Utils.parseLong(nonceStr);
         this.secretKey = Utils.parseData(secretKeyStr);
@@ -54,7 +53,7 @@ public class Transaction {
         return data;
     }
 
-    public long getGasLimit() {
+    public byte[] getGasLimit() {
         return gasLimit;
     }
 

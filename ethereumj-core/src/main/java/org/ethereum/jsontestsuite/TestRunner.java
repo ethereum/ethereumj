@@ -507,7 +507,7 @@ public class TestRunner {
 
         byte[] nonceBytes = ByteUtil.longToBytes(tx.nonce);
         byte[] gasPriceBytes = ByteUtil.longToBytes(tx.gasPrice);
-        byte[] gasBytes = ByteUtil.longToBytes(tx.gasLimit);
+        byte[] gasBytes = tx.gasLimit;
         byte[] valueBytes = ByteUtil.longToBytes(tx.value);
         byte[] toAddr = tx.getTo();
         byte[] data = tx.getData();
