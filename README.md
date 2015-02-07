@@ -4,7 +4,8 @@
 [![Coverage Status](https://coveralls.io/repos/ethereum/ethereumj/badge.png?branch=master)](https://coveralls.io/r/ethereum/ethereumj?branch=master)
 [![Stories in Progress](https://badge.waffle.io/ethereum/ethereumj.png?title=In%20Progress&label=in_progress)](https://waffle.io/ethereum/ethereumj)
 
-![Now hiring](http://i.imgur.com/lJw1Tui.jpg)
+:small_blue_diamond: Talk to us:  http://forum.ethergit.com/categories/all
+
 
 # About
 ethereumj is a pure-Java implementation of the Ethereum protocol. For high-level information about Ethereum and its goals, visit [ethereum.org](https://ethereum.org). The [ethereum white paper](https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-White-Paper) provides a complete conceptual overview, and the [yellow paper](http://gavwood.com/Paper.pdf) provides a formal definition of the protocol.
