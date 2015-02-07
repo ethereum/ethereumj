@@ -253,7 +253,7 @@ public class DataWord implements Comparable<DataWord> {
 
     public void addmod(DataWord word1, DataWord word2) {
         this.add(word1);
-        BigInteger result = this.value().mod(word2.value());
+        BigInteger result = this.sValue().mod(word2.sValue());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 

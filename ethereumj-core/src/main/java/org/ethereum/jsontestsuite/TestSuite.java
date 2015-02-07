@@ -25,6 +25,10 @@ public class TestSuite {
         }
     }
 
+    public List<TestCase> getAllTests(){
+        return testList;
+    }
+
     public Iterator<TestCase> iterator() {
         return testList.iterator();
     }

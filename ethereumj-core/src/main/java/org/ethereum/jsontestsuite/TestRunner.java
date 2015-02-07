@@ -299,7 +299,7 @@ public class TestRunner {
                         DataWord actualValue = testStorage.get(new DataWord(storageKey.getData()));
 
                         if (actualValue == null ||
-                                !Arrays.equals(expectedStValue, actualValue.getNoLeadZeroesData())) {
+                                !Arrays.equals(expectedStValue, actualValue.getData())) {
 
                             String output =
                                     String.format("Storage value different: key [ %s ], expectedValue: [ %s ], actualValue: [ %s ]",

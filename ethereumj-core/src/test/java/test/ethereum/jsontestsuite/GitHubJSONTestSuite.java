@@ -39,7 +39,7 @@ public class GitHubJSONTestSuite {
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
 
-    protected static void runGitHubJsonTest(String json) throws ParseException {
+    protected static void runGitHubJsonVMTest(String json, String testName) throws ParseException {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
@@ -48,9 +48,51 @@ public class GitHubJSONTestSuite {
         TestSuite testSuite = new TestSuite(testSuiteObj);
         Iterator<TestCase> testIterator = testSuite.iterator();
 
+        for (TestCase testCase : testSuite.getAllTests()) {
+
+            String prefix = "    ";
+            if (testName.equals(testCase.getName())) prefix = " => ";
+
+            logger.info(prefix + testCase.getName());
+        }
+
         while (testIterator.hasNext()) {
 
             TestCase testCase = testIterator.next();
+            if (testName.equals((testCase.getName()))) {
+                TestRunner runner = new TestRunner();
+                List<String> result = runner.runTestCase(testCase);
+                Assert.assertTrue(result.isEmpty());
+                return;
+            }
+        }
+    }
+
+
+
+    protected static void runGitHubJsonVMTest(String json, Set<String> excluded) throws ParseException {
+        Assume.assumeFalse("Online test is not available", json.equals(""));
+
+        JSONParser parser = new JSONParser();
+        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
+
+        TestSuite testSuite = new TestSuite(testSuiteObj);
+        Iterator<TestCase> testIterator = testSuite.iterator();
+
+        for (TestCase testCase : testSuite.getAllTests()) {
+
+            String prefix = "    ";
+            if (excluded.contains(testCase.getName())) prefix = "[X] ";
+
+            logger.info(prefix + testCase.getName());
+        }
+
+
+        while (testIterator.hasNext()) {
+
+            TestCase testCase = testIterator.next();
+            if (excluded.contains(testCase.getName()))
+                continue;
 
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
@@ -84,7 +126,7 @@ public class GitHubJSONTestSuite {
         Assert.assertTrue(result.isEmpty());
     }
 
-    protected static void runGitHubJsonStateTest(String json, Set<String> exclude) throws ParseException {
+    protected static void runGitHubJsonStateTest(String json, Set<String> excluded) throws ParseException {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         JSONParser parser = new JSONParser();
@@ -96,14 +138,14 @@ public class GitHubJSONTestSuite {
         for (StateTestCase testCase : testSuite.getAllTests()) {
 
             String prefix = "    ";
-            if (exclude.contains(testCase.getName())) prefix = "[X] ";
+            if (excluded.contains(testCase.getName())) prefix = "[X] ";
 
             logger.info(prefix + testCase.getName());
         }
 
         for (StateTestCase testCase : testCollection) {
 
-            if (exclude.contains(testCase.getName())) continue;
+            if (excluded.contains(testCase.getName())) continue;
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
 
