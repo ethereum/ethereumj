@@ -70,7 +70,6 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    @Ignore
     @Test
     public void stRefundTest() throws ParseException { // [V]
 
@@ -79,7 +78,6 @@ public class GitHubStateTest {
     }
 
 
-    @Ignore
     @Test
     public void stSpecialTest() throws ParseException { // [V]
 
@@ -110,13 +108,13 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
 
-    @Ignore
     @Test // todo: fix: excluded test
     public void stTransactionTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
         //todo:    it goes OOG, because no gasLimit is given. So it does not change the state.
 
+        excluded.add("TransactionFromCoinbaseHittingBlockGasLimit1");
 
         String json = JSONReader.loadJSON("StateTests/stTransactionTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
