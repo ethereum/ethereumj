@@ -12,7 +12,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.security.SignatureException;
 
 import static org.ethereum.util.ByteUtil.*;
@@ -28,6 +30,8 @@ import static org.ethereum.util.ByteUtil.*;
 public class Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
+    private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
+    private static final BigInteger DEFAULT_BALANCE_GAS = new BigInteger("500");
 
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
@@ -336,5 +340,15 @@ public class Transaction {
         Transaction tx = (Transaction) obj;
 
         return tx.hashCode() == this.hashCode();
+    }
+
+    public static Transaction createDefault(String from, String to, BigInteger ammount, BigInteger nonce){
+
+        return new Transaction(BigIntegers.asUnsignedByteArray(nonce),
+                BigIntegers.asUnsignedByteArray(DEFAULT_GAS_PRICE),
+                BigIntegers.asUnsignedByteArray(DEFAULT_BALANCE_GAS),
+                Hex.decode(to),
+                BigIntegers.asUnsignedByteArray(ammount),
+                null);
     }
 }
