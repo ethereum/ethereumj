@@ -17,11 +17,12 @@ import java.util.Set;
 public class GitHubVMTest {
 
 
+    @Ignore
     @Test
     public void runSingle() throws ParseException {
 
-        String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "");
+        String json = JSONReader.loadJSON("VMTests/vmSystemOperationsTest.json");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "CallToPrecompiledContract");
     }
 
 
@@ -126,25 +127,25 @@ public class GitHubVMTest {
     public void testvmSystemOperationsTestGitHub() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallToNameRegistratorNotMuchMemory0");
-        excluded.add("ABAcallsSuicide0");
-        excluded.add("CallToNameRegistratorNotMuchMemory1");
-        excluded.add("CallToNameRegistratorOutOfGas");
-        excluded.add("callcodeToReturn1");
+//        excluded.add("CallToNameRegistratorNotMuchMemory0");
+//        excluded.add("ABAcallsSuicide0");
+//        excluded.add("CallToNameRegistratorNotMuchMemory1");
+//        excluded.add("CallToNameRegistratorOutOfGas");
+//        excluded.add("callcodeToReturn1");
         excluded.add("createNameRegistrator");
-        excluded.add("ABAcallsSuicide1");
+//        excluded.add("ABAcallsSuicide1");
         excluded.add("CallToPrecompiledContract");
-        excluded.add("ABAcalls1");
-        excluded.add("ABAcalls2");
-        excluded.add("ABAcalls3");
-        excluded.add("CallToNameRegistrator0");
-        excluded.add("ABAcalls0");
-        excluded.add("CallRecursiveBomb3");
-        excluded.add("CallRecursiveBomb2");
-        excluded.add("CallRecursiveBomb1");
-        excluded.add("CallRecursiveBomb0");
-        excluded.add("CallToReturn1");
-        excluded.add("callcodeToNameRegistrator0");
+//        excluded.add("ABAcalls1");
+//        excluded.add("ABAcalls2");
+//        excluded.add("ABAcalls3");
+//        excluded.add("CallToNameRegistrator0");
+//        excluded.add("ABAcalls0");
+//        excluded.add("CallRecursiveBomb3");
+//        excluded.add("CallRecursiveBomb2");
+//        excluded.add("CallRecursiveBomb1");
+//        excluded.add("CallRecursiveBomb0");
+//        excluded.add("CallToReturn1");
+//        excluded.add("callcodeToNameRegistrator0");
 
 
         String json = JSONReader.loadJSON("VMTests/vmSystemOperationsTest.json");

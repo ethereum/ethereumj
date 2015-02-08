@@ -1126,6 +1126,8 @@ public class VM {
                 program.spendGas(GasCost.TX_ZERO_DATA * zeroVals, "DATA");
             }
 
+            if (program.invokeData.byTestingSuite()) return;
+
             while (!program.isStopped())
                 this.step(program);
 

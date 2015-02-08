@@ -106,8 +106,8 @@ public class ByteUtilTest {
         byte[] test4 = new byte[]{0x00, 0x01};
         byte[] test5 = new byte[]{0x00, 0x00, 0x01};
         byte[] expected1 = null;
-        byte[] expected2 = new byte[]{};
-        byte[] expected3 = new byte[]{};
+        byte[] expected2 = new byte[]{0};
+        byte[] expected3 = new byte[]{0};
         byte[] expected4 = new byte[]{0x01};
         byte[] expected5 = new byte[]{0x01};
         assertArrayEquals(expected1, ByteUtil.stripLeadingZeroes(test1));

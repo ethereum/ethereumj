@@ -223,6 +223,9 @@ public class Program {
 
     public void memoryExpand(DataWord outDataOffs, DataWord outDataSize) {
 
+        if (outDataSize.isZero())
+            return ;
+
         int maxAddress = outDataOffs.intValue() + outDataSize.intValue();
         if (getMemSize() < maxAddress) {
             memorySave(maxAddress, new byte[]{0});
@@ -365,7 +368,7 @@ public class Program {
         // [5] COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
-                newBalance, null, track, this.invokeData.getBlockStore());
+                newBalance, null, track, this.invokeData.getBlockStore(), invokeData.byTestingSuite());
 
         ProgramResult result = null;
 
@@ -392,7 +395,7 @@ public class Program {
 
         if (programCode.length == 0) {
            result = new ProgramResult();
-           result.setHReturn(new byte[] {}); 
+           result.setHReturn(new byte[] {});
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
@@ -470,8 +473,13 @@ public class Program {
             stackPushZero();
             return;
         }
+
         result.getRepository().addBalance(senderAddress, endowment.negate());
-        BigInteger contextBalance = result.getRepository().addBalance(contextAddress, endowment);
+
+        BigInteger contextBalance = BigInteger.ZERO;
+        if (!invokeData.byTestingSuite()) {
+            contextBalance = result.getRepository().addBalance(contextAddress, endowment);
+        }
 
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test
@@ -486,7 +494,7 @@ public class Program {
         Repository trackRepository = result.getRepository().startTracking();
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(contextAddress), msg.getEndowment(),
-                msg.getGas(), contextBalance, data, trackRepository, this.invokeData.getBlockStore());
+                msg.getGas(), contextBalance, data, trackRepository, this.invokeData.getBlockStore(), invokeData.byTestingSuite());
 
         ProgramResult result = null;
 
@@ -922,8 +930,20 @@ public class Program {
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
 
         byte[] data = this.memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
-
         this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), msg.getEndowment().value().negate());
+
+        if (invokeData.byTestingSuite()) {
+            // This keeps track of the calls created for a test
+            this.getResult().addCallCreate(data,
+                    msg.getCodeAddress().getLast20Bytes(),
+                    msg.getGas().getNoLeadZeroesData(),
+                    msg.getEndowment().getNoLeadZeroesData());
+
+            stackPushOne();
+            return;
+        }
+
+
         this.result.getRepository().addBalance(msg.getCodeAddress().getLast20Bytes(), msg.getEndowment().value());
 
         long requiredGas = contract.getGasForData(data);

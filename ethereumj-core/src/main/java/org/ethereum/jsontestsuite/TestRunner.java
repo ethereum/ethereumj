@@ -171,7 +171,7 @@ public class TestRunner {
             byte[] lastHash = env.getPreviousHash();
             byte[] coinbase = env.getCurrentCoinbase();
             long timestamp = new BigInteger(env.getCurrentTimestamp()).longValue();
-            long number = new BigInteger(env.getCurrentNumber()).longValue();
+            long number = ByteUtil.byteArrayToLong(env.getCurrentNumber());
             byte[] difficulty = env.getCurrentDifficulty();
             long gaslimit = new BigInteger(env.getCurrentGasLimit()).longValue();
 

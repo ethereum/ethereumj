@@ -41,7 +41,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
                              DataWord gasPrice, DataWord gas, DataWord callValue, byte[] msgData,
                              DataWord lastHash, DataWord coinbase, DataWord timestamp, DataWord number, DataWord
                                      difficulty,
-                             DataWord gaslimit, Repository repository, int callDeep, BlockStore blockStore) {
+                             DataWord gaslimit, Repository repository, int callDeep, BlockStore blockStore, boolean byTestingSuite) {
 
         // Transaction env
         this.address = address;
@@ -65,6 +65,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
         this.byTransaction = false;
         this.callDeep = callDeep;
         this.blockStore = blockStore;
+        this.byTestingSuite = byTestingSuite;
     }
 
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,

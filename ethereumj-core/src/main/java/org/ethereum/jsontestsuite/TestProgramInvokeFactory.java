@@ -34,7 +34,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
     @Override
     public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress, DataWord inValue, DataWord inGas,
                                              BigInteger balanceInt, byte[] dataIn,
-                                             Repository repository, BlockStore blockStore) {
+                                             Repository repository, BlockStore blockStore, boolean byTestingSuite) {
         return null;
     }
 
