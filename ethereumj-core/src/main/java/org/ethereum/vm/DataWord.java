@@ -247,17 +247,25 @@ public class DataWord implements Comparable<DataWord> {
             return;
         }
 
-        BigInteger result = sValue().remainder(word.sValue());
+        BigInteger result = sValue().abs().mod(word.sValue().abs());
+        result = (sValue().signum() == -1) ? result.negate() : result;
+
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }
 
     public void addmod(DataWord word1, DataWord word2) {
+
         this.add(word1);
-        BigInteger result = this.sValue().mod(word2.sValue());
-        this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
+        this.mod(word2);
     }
 
     public void mulmod(DataWord word1, DataWord word2) {
+
+        if (word2.isZero()) {
+            this.data = new byte[32];
+            return;
+        }
+
         BigInteger result = value().multiply(word1.value()).mod(word2.value());
         this.data = ByteUtil.copyToArray(result.and(MAX_VALUE));
     }

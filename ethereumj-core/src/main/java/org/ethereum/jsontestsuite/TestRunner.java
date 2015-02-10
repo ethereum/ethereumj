@@ -3,10 +3,7 @@ package org.ethereum.jsontestsuite;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionExecutor;
-import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryDummy;
+import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
@@ -68,7 +65,8 @@ public class TestRunner {
         logger.info("***\n");
 
         logger.info("--------- PRE ---------");
-        RepositoryDummy repository = loadRepository(testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryDummy(),  testCase.getPre());
+
 
         logger.info("loaded repository");
 
@@ -166,7 +164,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryDummy repository = loadRepository(testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(),  testCase.getPre());
 
         try {
 
@@ -186,7 +184,7 @@ public class TestRunner {
             byte[] msgData = exec.getData();
             byte[] lastHash = env.getPreviousHash();
             byte[] coinbase = env.getCurrentCoinbase();
-            long timestamp = new BigInteger(env.getCurrentTimestamp()).longValue();
+            long timestamp = ByteUtil.byteArrayToLong(env.getCurrentTimestamp());
             long number = ByteUtil.byteArrayToLong(env.getCurrentNumber());
             byte[] difficulty = env.getCurrentDifficulty();
             long gaslimit = new BigInteger(env.getCurrentGasLimit()).longValue();
@@ -199,7 +197,7 @@ public class TestRunner {
 
             ProgramInvoke programInvoke = new ProgramInvokeImpl(address, origin, caller, balance,
                     gasPrice, gas, callValue, msgData, lastHash, coinbase,
-                    timestamp, number, difficulty, gaslimit, repository, null, true);
+                    timestamp, number, difficulty, gaslimit, repository, new BlockStoreDummy(), true);
 
             /* 3. Create Program - exec.code */
             /* 4. run VM */
@@ -496,8 +494,8 @@ public class TestRunner {
                 }
 
                 // assert gas
-                BigInteger expectedGas = new BigInteger(testCase.getGas());
-                BigInteger actualGas = new BigInteger(gas).subtract(BigInteger.valueOf(program.getResult().getGasUsed()));
+                BigInteger expectedGas = new BigInteger(1, testCase.getGas());
+                BigInteger actualGas = new BigInteger(1, gas).subtract(BigInteger.valueOf(program.getResult().getGasUsed()));
 
                 if (!expectedGas.equals(actualGas)) {
 
@@ -535,10 +533,8 @@ public class TestRunner {
         return transaction;
     }
 
-    public RepositoryDummy loadRepository(Map<ByteArrayWrapper, AccountState> pre) {
+    public RepositoryImpl loadRepository(RepositoryImpl track, Map<ByteArrayWrapper, AccountState> pre) {
 
-
-        RepositoryDummy track = new RepositoryDummy();
 
             /* 1. Store pre-exist accounts - Pre */
         for (ByteArrayWrapper key : pre.keySet()) {

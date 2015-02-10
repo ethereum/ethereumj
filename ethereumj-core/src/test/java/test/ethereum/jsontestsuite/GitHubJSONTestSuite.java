@@ -19,10 +19,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Test file specific for tests maintained in the GitHub repository
@@ -68,6 +65,10 @@ public class GitHubJSONTestSuite {
         }
     }
 
+    protected static void runGitHubJsonVMTest(String json) throws ParseException {
+        Set<String> excluded = new HashSet<>();
+        runGitHubJsonVMTest(json, excluded);
+    }
 
 
     protected static void runGitHubJsonVMTest(String json, Set<String> excluded) throws ParseException {

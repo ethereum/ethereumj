@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.math.BigInteger;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,9 +55,12 @@ public class RepositoryImpl implements Repository {
 
     KeyValueDataSource detailsDS = null;
     KeyValueDataSource stateDS = null;
-    
+
     public RepositoryImpl() {
         this(DETAILS_DB, STATE_DB);
+    }
+
+    public RepositoryImpl(boolean createDb){
     }
 
     public RepositoryImpl(KeyValueDataSource detailsDS, KeyValueDataSource stateDS) {
@@ -64,7 +68,7 @@ public class RepositoryImpl implements Repository {
         detailsDS.setName(DETAILS_DB);
         detailsDS.init();
         this.detailsDS = detailsDS;
-        
+
         stateDS.setName(STATE_DB);
         stateDS.init();
         this.stateDS = stateDS;
@@ -73,7 +77,7 @@ public class RepositoryImpl implements Repository {
         stateDB = new DatabaseImpl(stateDS);
         worldState = new TrieImpl(stateDB.getDb());
     }
-    
+
     public RepositoryImpl(String detailsDbName, String stateDbName) {
         detailsDB = new DatabaseImpl(detailsDbName);
         stateDB = new DatabaseImpl(stateDbName);
@@ -87,7 +91,7 @@ public class RepositoryImpl implements Repository {
 
         detailsDS.init();
         detailsDB = new DatabaseImpl(detailsDS);
-        
+
         stateDS.init();
         stateDB = new DatabaseImpl(stateDS);
         worldState = new TrieImpl(stateDB.getDb());
@@ -460,6 +464,12 @@ public class RepositoryImpl implements Repository {
         cacheAccounts.put(wrap(addr), account);
         cacheDetails.put(wrap(addr), details);
     }
+
+    public Set<ByteArrayWrapper> getFullAddressSet() {
+        Set<ByteArrayWrapper> setKeys = new HashSet<>(detailsDB.dumpKeys());
+        return setKeys;
+    }
+
 
     @Override
     public byte[] getRoot() {
