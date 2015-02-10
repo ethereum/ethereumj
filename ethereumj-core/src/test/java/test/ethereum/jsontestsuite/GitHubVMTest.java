@@ -19,17 +19,14 @@ public class GitHubVMTest {
 
     @Test
     public void runSingle() throws ParseException {
-
-        String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "mulmoddivByZero");
+        String json = JSONReader.loadJSON("VMTests/vmBlockInfoTest.json");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "blockhash257Block");
     }
 
 
     @Test
     public void testArithmeticFromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
-
         String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
@@ -37,7 +34,6 @@ public class GitHubVMTest {
 
     @Test // testing full suite
     public void testBitwiseLogicOperationFromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSON("VMTests/vmBitwiseLogicOperationTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
@@ -46,10 +42,7 @@ public class GitHubVMTest {
 
     @Test // testing full suite
     public void testBlockInfoFromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
-        excluded.add("blockhash258Block");
-        excluded.add("blockhashInRange");
 
         String json = JSONReader.loadJSON("VMTests/vmBlockInfoTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
@@ -58,7 +51,6 @@ public class GitHubVMTest {
 
     @Test // testing full suite
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
         excluded.add("ExtCodeSizeAddressInputTooBigRightMyAddress");
         excluded.add("balanceAddressInputTooBigRightMyAddress");
@@ -72,7 +64,6 @@ public class GitHubVMTest {
 
     @Test // testing full suite
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSON("VMTests/vmIOandFlowOperationsTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
@@ -81,7 +72,6 @@ public class GitHubVMTest {
     @Ignore
     @Test // testing random
     public void testvmInputLimitsTest1FromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSON("VMTests/vmInputLimitsTest1.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
@@ -89,7 +79,6 @@ public class GitHubVMTest {
 
     @Test // testing full suite
     public void testVMLogGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSON("VMTests/vmLogTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
@@ -97,7 +86,6 @@ public class GitHubVMTest {
 
     @Test // testing full suite
     public void testPushDupSwapFromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSON("VMTests/vmPushDupSwapTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
@@ -105,9 +93,7 @@ public class GitHubVMTest {
 
     @Test // testing full suite
     public void testShaFromGitHub() throws ParseException {
-
         Set<String> excluded = new HashSet<>();
-
         String json = JSONReader.loadJSON("VMTests/vmSha3Test.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
