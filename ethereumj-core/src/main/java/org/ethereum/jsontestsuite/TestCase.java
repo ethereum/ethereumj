@@ -7,6 +7,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -77,7 +78,7 @@ public class TestCase {
             String gasString = "0";
             if (testCaseJSONObj.containsKey("gas"))
                 gasString = testCaseJSONObj.get("gas").toString();
-            this.gas = ByteUtil.bigIntegerToBytes(new BigInteger(gasString));
+            this.gas = BigIntegers.asUnsignedByteArray(new BigInteger(gasString));
 
             String outString = null;
             if (testCaseJSONObj.containsKey("out"))

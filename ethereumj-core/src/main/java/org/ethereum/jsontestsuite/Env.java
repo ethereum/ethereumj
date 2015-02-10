@@ -2,6 +2,7 @@ package org.ethereum.jsontestsuite;
 
 import org.json.simple.JSONObject;
 
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -39,8 +40,8 @@ public class Env {
         String prevHash = env.get("previousHash").toString();
 
         this.currentCoinbase = Hex.decode(coinbase);
-        this.currentDifficulty = new BigInteger(difficulty).toByteArray();
-        this.currentGasLimit = new BigInteger(gasLimit).toByteArray();
+        this.currentDifficulty = BigIntegers.asUnsignedByteArray( new BigInteger(difficulty) );
+        this.currentGasLimit =   BigIntegers.asUnsignedByteArray(new BigInteger(gasLimit));
         this.currentNumber = new BigInteger(number).toByteArray();
         this.currentTimestamp = new BigInteger(timestamp).toByteArray();
         this.previousHash = Hex.decode(prevHash);

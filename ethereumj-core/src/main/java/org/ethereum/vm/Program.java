@@ -350,18 +350,23 @@ public class Program {
 
         if (invokeData.byTestingSuite()) {
             // This keeps track of the contracts created for a test
-            this.getResult().addCallCreate(programCode, newAddress,
+            this.getResult().addCallCreate(programCode, EMPTY_BYTE_ARRAY,
                     gasLimit.getNoLeadZeroesData(),
                     value.getNoLeadZeroesData());
         }
 
         // [4] TRANSFER THE BALANCE
         result.getRepository().addBalance(senderAddress, endowment.negate());
-        BigInteger newBalance = result.getRepository().addBalance(newAddress, endowment);
+        BigInteger newBalance = BigInteger.ZERO;
+        if (!invokeData.byTestingSuite()) {
+            newBalance = result.getRepository().addBalance(newAddress, endowment);
+        }
 
         // [3] UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        result.getRepository().increaseNonce(senderAddress);
+        if (!invokeData.byTestingSuite()) {
+            result.getRepository().increaseNonce(senderAddress);
+        }
 
         Repository track = result.getRepository().startTracking();
 

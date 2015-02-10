@@ -170,7 +170,7 @@ public class TestRunner {
             byte[] msgData = exec.getData();
             byte[] lastHash = env.getPreviousHash();
             byte[] coinbase = env.getCurrentCoinbase();
-            long timestamp = new BigInteger(env.getCurrentTimestamp()).longValue();
+            long timestamp = ByteUtil.byteArrayToLong(env.getCurrentTimestamp());
             long number = ByteUtil.byteArrayToLong(env.getCurrentNumber());
             byte[] difficulty = env.getCurrentDifficulty();
             long gaslimit = new BigInteger(env.getCurrentGasLimit()).longValue();
@@ -480,8 +480,8 @@ public class TestRunner {
                 }
 
                 // assert gas
-                BigInteger expectedGas = new BigInteger(testCase.getGas());
-                BigInteger actualGas = new BigInteger(gas).subtract(BigInteger.valueOf(program.getResult().getGasUsed()));
+                BigInteger expectedGas = new BigInteger(1, testCase.getGas());
+                BigInteger actualGas = new BigInteger(1, gas).subtract(BigInteger.valueOf(program.getResult().getGasUsed()));
 
                 if (!expectedGas.equals(actualGas)) {
 
