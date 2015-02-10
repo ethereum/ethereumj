@@ -89,10 +89,10 @@ public class TestRunner {
             coinbase,
             ByteUtil.EMPTY_BYTE_ARRAY,
             testCase.getEnv().getCurrentDifficulty(),
-            new BigInteger(testCase.getEnv().getCurrentNumber()).longValue(),
-            new BigInteger(testCase.getEnv().getCurrentGasLimit()).longValue(),
+            new BigInteger(1, testCase.getEnv().getCurrentNumber()).longValue(),
+            new BigInteger(1, testCase.getEnv().getCurrentGasLimit()).longValue(),
             0L,
-            new BigInteger(testCase.getEnv().getCurrentTimestamp()).longValue(),
+            new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
             ByteUtil.ZERO_BYTE_ARRAY,
             ByteUtil.ZERO_BYTE_ARRAY,
             null, null);

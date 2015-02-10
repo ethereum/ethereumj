@@ -26,8 +26,6 @@ public class GitHubStateTest {
     public void runWithExcludedTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-
-
         String json = JSONReader.loadJSON("StateTests/stPreCompiledContracts.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
