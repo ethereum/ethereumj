@@ -107,13 +107,6 @@ public class GitHubVMTest {
     public void testShaFromGitHub() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("sha3_bigOffset2");
-        excluded.add("sha3_memSizeQuadraticCost32");
-        excluded.add("sha3_memSizeQuadraticCost65");
-        excluded.add("sha3_memSizeQuadraticCost33");
-        excluded.add("sha3_memSizeQuadraticCost63");
-        excluded.add("sha3_memSizeQuadraticCost64");
-        excluded.add("sha3_memSizeQuadraticCost64_2");
 
         String json = JSONReader.loadJSON("VMTests/vmSha3Test.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
