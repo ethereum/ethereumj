@@ -1,16 +1,18 @@
 package test.ethereum.jsontestsuite;
 
 import org.ethereum.jsontestsuite.JSONReader;
-
 import org.json.simple.parser.ParseException;
-
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+
+import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -19,8 +21,8 @@ public class GitHubVMTest {
 
     @Test
     public void runSingle() throws ParseException {
-        String json = JSONReader.loadJSON("VMTests/vmBlockInfoTest.json");
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "blockhash257Block");
+        String json = JSONReader.loadJSON("VMTests/vmEnvironmentalInfoTest.json");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "extcodecopy0AddressTooBigRight");
     }
 
 
@@ -43,7 +45,6 @@ public class GitHubVMTest {
     @Test // testing full suite
     public void testBlockInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
-
         String json = JSONReader.loadJSON("VMTests/vmBlockInfoTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
@@ -52,11 +53,6 @@ public class GitHubVMTest {
     @Test // testing full suite
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("ExtCodeSizeAddressInputTooBigRightMyAddress");
-        excluded.add("balanceAddressInputTooBigRightMyAddress");
-        excluded.add("balanceAddressInputTooBig");
-        excluded.add("extcodecopy0AddressTooBigRight");
-
         String json = JSONReader.loadJSON("VMTests/vmEnvironmentalInfoTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
@@ -113,5 +109,26 @@ public class GitHubVMTest {
         String json = JSONReader.loadJSON("VMTests/vmtests.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
+
+    @Test // testing full suite
+    public void testRandomVMGitHub() throws ParseException {
+
+        String sha = "60b921af8bf7bbe38565f8543e52a54e5f465ae8";
+        List<String> fileNames = getFileNamesForTreeSha(sha);
+        List<String> excludedFiles =
+                Arrays.asList(
+                        ""
+                );
+
+        for (String fileName : fileNames) {
+
+            if (excludedFiles.contains(fileName)) continue;
+            System.out.println("Running: " + fileName);
+            String json = JSONReader.loadJSON("VMTests//RandomTests/" + fileName);
+            GitHubJSONTestSuite.runGitHubJsonVMTest(json);
+        }
+
+    }
+
 
 }

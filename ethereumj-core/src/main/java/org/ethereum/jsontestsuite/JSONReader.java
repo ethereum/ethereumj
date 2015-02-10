@@ -1,6 +1,10 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.config.SystemProperties;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,6 +16,9 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 public class JSONReader {
 
@@ -62,5 +69,27 @@ public class JSONReader {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public static List<String> getFileNamesForTreeSha(String sha){
+
+        String result = getFromUrl("https://api.github.com/repos/ethereum/tests/git/trees/" + sha);
+
+        JSONParser parser = new JSONParser();
+        JSONObject testSuiteObj = null;
+
+        List<String> fileNames = new ArrayList<String>();
+        try {
+            testSuiteObj = (JSONObject) parser.parse(result);
+            JSONArray tree = (JSONArray)testSuiteObj.get("tree");
+
+            for (Object oEntry : tree) {
+                JSONObject entry = (JSONObject) oEntry;
+                String testName = (String) entry.get("path");
+                fileNames.add(testName);
+            }
+        } catch (ParseException e) {e.printStackTrace();}
+
+        return fileNames;
     }
 }

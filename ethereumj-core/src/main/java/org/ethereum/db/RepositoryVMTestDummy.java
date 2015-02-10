@@ -4,14 +4,11 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -21,15 +18,15 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 /**
  * @author Roman Mandeleil
- * @since 17.11.2014
+ * @since 10.02.2015
  */
-public class RepositoryDummy extends RepositoryImpl {
+public class RepositoryVMTestDummy extends RepositoryImpl{
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
     private Map<ByteArrayWrapper, AccountState> worldState = new HashMap<>();
     private Map<ByteArrayWrapper, ContractDetails> detailsDB = new HashMap<>();
 
-    public RepositoryDummy() {
+    public RepositoryVMTestDummy() {
         super(false);
     }
 
@@ -151,8 +148,9 @@ public class RepositoryDummy extends RepositoryImpl {
     public BigInteger getBalance(byte[] addr) {
         AccountState account = getAccountState(addr);
 
-        if (account == null)
-            return BigInteger.ZERO;
+        if (account== null){
+            account = createAccount(addr);
+        }
 
         return account.getBalance();
     }
@@ -161,8 +159,10 @@ public class RepositoryDummy extends RepositoryImpl {
     public DataWord getStorageValue(byte[] addr, DataWord key) {
         ContractDetails details = getContractDetails(addr);
 
-        if (details == null)
-            return null;
+        if (details == null){
+            createAccount(addr);
+            details = getContractDetails(addr);
+        }
 
         return details.get(key);
     }
@@ -184,8 +184,10 @@ public class RepositoryDummy extends RepositoryImpl {
     public byte[] getCode(byte[] addr) {
         ContractDetails details = getContractDetails(addr);
 
-        if (details == null)
-            return null;
+        if (details == null){
+            createAccount(addr);
+            details = getContractDetails(addr);
+        }
 
         return details.getCode();
     }

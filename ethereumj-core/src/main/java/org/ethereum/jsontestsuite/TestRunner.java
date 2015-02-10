@@ -2,10 +2,7 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.TransactionExecutor;
-import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryDummy;
+import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
@@ -67,7 +64,8 @@ public class TestRunner {
         logger.info("***\n");
 
         logger.info("--------- PRE ---------");
-        RepositoryDummy repository = loadRepository(testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryDummy(),  testCase.getPre());
+
 
         logger.info("loaded repository");
 
@@ -150,7 +148,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryDummy repository = loadRepository(testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(),  testCase.getPre());
 
         try {
 
@@ -519,10 +517,8 @@ public class TestRunner {
         return transaction;
     }
 
-    public RepositoryDummy loadRepository(Map<ByteArrayWrapper, AccountState> pre) {
+    public RepositoryImpl loadRepository(RepositoryImpl track, Map<ByteArrayWrapper, AccountState> pre) {
 
-
-        RepositoryDummy track = new RepositoryDummy();
 
             /* 1. Store pre-exist accounts - Pre */
         for (ByteArrayWrapper key : pre.keySet()) {
