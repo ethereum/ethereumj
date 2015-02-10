@@ -42,7 +42,6 @@ public class GitHubStateTest {
     public void stInitCodeTest() throws ParseException { // [V]
 
         Set<String> excluded = new HashSet<>();
-
         String json = JSONReader.loadJSON("StateTests/stInitCodeTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
