@@ -95,8 +95,6 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("createWithInvalidOpcode");
-        excluded.add("testRandomTest");
 
 
         String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
