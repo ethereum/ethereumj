@@ -18,6 +18,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import java.lang.Long;
+
 import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -94,6 +96,16 @@ public class TransactionExecutor {
         if (gasLimit.compareTo(BigInteger.ZERO) == 0) {
             logger.debug("No gas limit set on transaction: hash={}",
                     Hex.toHexString(tx.getHash()));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
+
+        BigInteger startGasUsed = new BigInteger( Long.toString( this.currentBlock.getGasUsed() ) );
+        BigInteger startGasLimit = new BigInteger( Long.toString( this.currentBlock.getGasLimit() ) );
+        if( startGasUsed.add(gasLimit).compareTo( startGasLimit ) == 1) {
+            logger.debug("Too much gas used in this block: require={}", startGasLimit.toString());
 
             receipt.setCumulativeGas(0);
             this.receipt = receipt;

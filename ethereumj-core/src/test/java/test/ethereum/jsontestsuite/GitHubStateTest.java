@@ -26,8 +26,6 @@ public class GitHubStateTest {
     public void runWithExcludedTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-
-
         String json = JSONReader.loadJSON("StateTests/stPreCompiledContracts.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -44,7 +42,6 @@ public class GitHubStateTest {
     public void stInitCodeTest() throws ParseException { // [V]
 
         Set<String> excluded = new HashSet<>();
-
         String json = JSONReader.loadJSON("StateTests/stInitCodeTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -98,10 +95,6 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("createNameRegistratorZeroMem2");
-        excluded.add("testVMtest");
-        excluded.add("createWithInvalidOpcode");
-        excluded.add("testRandomTest");
 
 
         String json = JSONReader.loadJSON("StateTests/stSystemOperationsTest.json");
@@ -113,8 +106,6 @@ public class GitHubStateTest {
 
         Set<String> excluded = new HashSet<>();
         //todo:    it goes OOG, because no gasLimit is given. So it does not change the state.
-
-        excluded.add("TransactionFromCoinbaseHittingBlockGasLimit1");
 
         String json = JSONReader.loadJSON("StateTests/stTransactionTest.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);

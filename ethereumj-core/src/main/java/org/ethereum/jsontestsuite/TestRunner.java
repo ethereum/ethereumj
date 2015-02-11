@@ -1,6 +1,7 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.Block;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
@@ -82,6 +83,21 @@ public class TestRunner {
         byte[] coinbase = testCase.getEnv().getCurrentCoinbase();
         ProgramInvokeFactory invokeFactory = new TestProgramInvokeFactory(testCase.getEnv());
 
+        Block block = new Block(
+            ByteUtil.EMPTY_BYTE_ARRAY,
+            ByteUtil.EMPTY_BYTE_ARRAY,
+            coinbase,
+            ByteUtil.EMPTY_BYTE_ARRAY,
+            testCase.getEnv().getCurrentDifficulty(),
+            new BigInteger(1, testCase.getEnv().getCurrentNumber()).longValue(),
+            new BigInteger(1, testCase.getEnv().getCurrentGasLimit()).longValue(),
+            0L,
+            new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
+            ByteUtil.ZERO_BYTE_ARRAY,
+            ByteUtil.ZERO_BYTE_ARRAY,
+            null, null);
+
+        blockchain.setBestBlock(block);
         blockchain.setProgramInvokeFactory(invokeFactory);
         blockchain.startTracking();
 
