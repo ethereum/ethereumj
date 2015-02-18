@@ -6,13 +6,33 @@ import org.ethereum.util.Utils;
 
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.engines.AESFastEngine;
+import org.spongycastle.crypto.modes.SICBlockCipher;
+import org.spongycastle.crypto.params.KeyParameter;
+import org.spongycastle.crypto.params.ParametersWithIV;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.util.Assert;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.math.BigInteger;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 
+import static org.ethereum.crypto.HashUtil.sha3;
 import static org.junit.Assert.assertEquals;
 
 public class CryptoTest {
+
+    private static final Logger log = LoggerFactory.getLogger("test");
+
 
     @Test
     public void test1() {
@@ -101,5 +121,79 @@ public class CryptoTest {
         byte[] addr = ECKey.fromPrivate(privKey).getAddress();
         assertEquals("ba73facb4f8291f09f27f90fe1213537b910065e", Hex.toHexString(addr));
     }
+
+
+    @Test  // basic encryption/decryption
+    public void test11() throws Throwable {
+
+        byte[] keyBytes = sha3("...".getBytes());
+        log.info("key: ", Hex.toHexString(keyBytes));
+        byte[] ivBytes = new byte[16];
+        byte[] payload = Hex.decode("22400891000000000000000000000000");
+
+        KeyParameter key = new KeyParameter(keyBytes);
+        ParametersWithIV params = new ParametersWithIV(key, new byte[16]);
+
+        AESFastEngine engine = new AESFastEngine();
+        SICBlockCipher ctrEngine = new SICBlockCipher(engine);
+
+        ctrEngine.init(true, params);
+
+        byte[] cipher = new byte[16];
+        ctrEngine.processBlock(payload, 0, cipher, 0);
+
+        log.info("cipher: {}", Hex.toHexString(cipher));
+
+
+        byte[] output = new byte[cipher.length];
+        ctrEngine.init(false, params);
+        ctrEngine.processBlock(cipher, 0, output, 0);
+
+        assertEquals(Hex.toHexString(output), Hex.toHexString(payload));
+        log.info("original: {}", Hex.toHexString(payload));
+    }
+
+    @Test  // big packet encryption
+    public void test12() throws Throwable {
+
+        AESFastEngine engine = new AESFastEngine();
+        SICBlockCipher ctrEngine = new SICBlockCipher(engine);
+
+        byte[] keyBytes = Hex.decode("a4627abc2a3c25315bff732cb22bc128f203912dd2a840f31e66efb27a47d2b1");
+        byte[] ivBytes = new byte[16];
+        byte[] payload    = Hex.decode("0109efc76519b683d543db9d0991bcde99cc9a3d14b1d0ecb8e9f1f66f31558593d746eaa112891b04ef7126e1dce17c9ac92ebf39e010f0028b8ec699f56f5d0c0d00");
+        byte[] cipherText = Hex.decode("f9fab4e9dd9fc3e5d0d0d16da254a2ac24df81c076e3214e2c57da80a46e6ae4752f4b547889fa692b0997d74f36bb7c047100ba71045cb72cfafcc7f9a251762cdf8f");
+
+        KeyParameter key = new KeyParameter(keyBytes);
+        ParametersWithIV params = new ParametersWithIV(key, ivBytes);
+
+        ctrEngine.init(true, params);
+
+        byte[] in = payload;
+        byte[] out = new byte[in.length];
+
+        int i = 0;
+
+        while(i < in.length){
+            ctrEngine.processBlock(in, i, out, i);
+            i += engine.getBlockSize();
+            if (in.length - i  < engine.getBlockSize())
+                break;
+        }
+
+        // process left bytes
+        if (in.length - i > 0){
+            byte[] tmpBlock = new byte[16];
+            System.arraycopy(in, i, tmpBlock, 0, in.length - i);
+            ctrEngine.processBlock(tmpBlock, 0, tmpBlock, 0);
+            System.arraycopy(tmpBlock, 0, out, i, in.length - i);
+        }
+
+        log.info("cipher: {}", Hex.toHexString(out));
+
+        assertEquals(Hex.toHexString(cipherText), Hex.toHexString(out));
+    }
+
+
 
 }
