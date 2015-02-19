@@ -194,6 +194,26 @@ public class CryptoTest {
         assertEquals(Hex.toHexString(cipherText), Hex.toHexString(out));
     }
 
+    @Test  // cpp keys demystified
+    public void test13() throws Throwable {
+
+//        us.secret() a4627abc2a3c25315bff732cb22bc128f203912dd2a840f31e66efb27a47d2b1
+//        us.public() caa3d5086b31529bb00207eabf244a0a6c54d807d2ac0ec1f3b1bdde0dbf8130c115b1eaf62ce0f8062bcf70c0fefbc97cec79e7faffcc844a149a17fcd7bada
+//        us.address() 47d8cb63a7965d98b547b9f0333a654b60ffa190
+
+
+        ECKey key = ECKey.fromPrivate(Hex.decode("a4627abc2a3c25315bff732cb22bc128f203912dd2a840f31e66efb27a47d2b1"));
+
+        String address = Hex.toHexString(key.getAddress());
+        String pubkey  = Hex.toHexString(key.getPubKeyPoint().getXCoord().getEncoded()) +  // X cord
+                         Hex.toHexString(key.getPubKeyPoint().getYCoord().getEncoded());   // Y cord
+
+        log.info("address: " + address);
+        log.info("pubkey: " + pubkey);
+
+        assertEquals("47d8cb63a7965d98b547b9f0333a654b60ffa190", address);
+        assertEquals("caa3d5086b31529bb00207eabf244a0a6c54d807d2ac0ec1f3b1bdde0dbf8130c115b1eaf62ce0f8062bcf70c0fefbc97cec79e7faffcc844a149a17fcd7bada", pubkey);
+    }
 
 
 }
