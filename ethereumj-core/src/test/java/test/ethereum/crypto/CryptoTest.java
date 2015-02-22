@@ -8,10 +8,20 @@ import org.junit.Test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.AsymmetricCipherKeyPair;
+import org.spongycastle.crypto.BufferedBlockCipher;
+import org.spongycastle.crypto.KeyEncoder;
+import org.spongycastle.crypto.KeyGenerationParameters;
+import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
+import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
+import org.spongycastle.crypto.engines.IESEngine;
+import org.spongycastle.crypto.generators.ECKeyPairGenerator;
+import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
+import org.spongycastle.crypto.generators.KDF2BytesGenerator;
+import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.modes.SICBlockCipher;
-import org.spongycastle.crypto.params.KeyParameter;
-import org.spongycastle.crypto.params.ParametersWithIV;
+import org.spongycastle.crypto.params.*;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.util.Assert;
 
@@ -25,6 +35,7 @@ import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.junit.Assert.assertEquals;
@@ -216,4 +227,62 @@ public class CryptoTest {
     }
 
 
+
+    @Test
+    public void test14() throws Throwable{
+
+        AESFastEngine aesFastEngine = new AESFastEngine();
+
+        IESEngine iesEngine = new IESEngine(
+                new ECDHBasicAgreement(),
+                new KDF2BytesGenerator(new SHA256Digest()),
+                new HMac(new SHA256Digest()),
+                new BufferedBlockCipher(new SICBlockCipher(aesFastEngine)));
+
+
+        byte[]         d = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+        byte[]         e = new byte[] { 8, 7, 6, 5, 4, 3, 2, 1 };
+
+        IESParameters p = new IESWithCipherParameters(d, e, 64, 128);
+        ParametersWithIV parametersWithIV = new ParametersWithIV(p, new byte[16]);
+
+        ECKeyPairGenerator eGen = new ECKeyPairGenerator();
+        KeyGenerationParameters gParam = new ECKeyGenerationParameters(ECKey.CURVE, new SecureRandom());
+
+        eGen.init(gParam);
+
+
+        AsymmetricCipherKeyPair p1 = eGen.generateKeyPair();
+        AsymmetricCipherKeyPair p2 = eGen.generateKeyPair();
+
+
+        ECKeyGenerationParameters keygenParams = new ECKeyGenerationParameters(ECKey.CURVE, new SecureRandom());
+        ECKeyPairGenerator generator = new ECKeyPairGenerator();
+        generator.init(keygenParams);
+
+        ECKeyPairGenerator gen = new ECKeyPairGenerator();
+        gen.init(new ECKeyGenerationParameters(ECKey.CURVE, new SecureRandom()));
+
+        iesEngine.init(true, p1.getPrivate(), p2.getPublic(), parametersWithIV);
+
+        byte[] message = Hex.decode("010101");
+        log.info("payload: {}", Hex.toHexString(message));
+
+
+        byte[] cipher = iesEngine.processBlock(message, 0, message.length);
+        log.info("cipher: {}", Hex.toHexString(cipher));
+
+
+        IESEngine decryptorIES_Engine = new IESEngine(
+                new ECDHBasicAgreement(),
+                new KDF2BytesGenerator (new SHA256Digest()),
+                new HMac(new SHA256Digest()),
+                new BufferedBlockCipher(new SICBlockCipher(aesFastEngine)));
+
+        decryptorIES_Engine.init(false, p2.getPrivate(), p1.getPublic(), parametersWithIV);
+
+        byte[] orig = decryptorIES_Engine.processBlock(cipher, 0, cipher.length);
+
+        log.info("orig: " + Hex.toHexString(orig));
+    }
 }
