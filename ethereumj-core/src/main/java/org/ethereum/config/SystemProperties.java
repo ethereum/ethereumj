@@ -105,8 +105,8 @@ public class SystemProperties {
         }
     }
 
-    public boolean peerDiscovery() {
-        return Boolean.parseBoolean(prop.getProperty("peer.discovery", "true"));
+    public boolean peerDiscoveryEnabled() {
+        return Boolean.parseBoolean(prop.getProperty("peer.discovery.enabled", "true"));
     }
 
     public int peerDiscoveryWorkers() {
