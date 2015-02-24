@@ -3,18 +3,11 @@ package org.ethereum.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Properties;
 
 /**
  * Utility class to retrieve property values from the system.properties files
@@ -22,146 +15,134 @@ import java.util.Properties;
  * @author Roman Mandeleil
  * @since 22.05.2014
  */
-public class SystemProperties {
-    private static Logger logger = LoggerFactory.getLogger("general");
+public abstract class SystemProperties {
+    final static Logger logger = LoggerFactory.getLogger("config");
 
-    private final static String K_BLOCKCHAIN_ONLY = "blockchain.only";
-    private final static String K_COINBASE_SECRET = "coinbase.secret";
-    private final static String K_DUMP_BLOCK = "dump.block";
-    private final static String K_DUMP_CLEAN_ON_RESTART = "dump.clean.on.restart";
-    private final static String K_DUMP_DIR = "dump.dir";
-    private final static String K_DUMP_FULL = "dump.full";
-    private final static String K_DUMP_STYLE = "dump.style";
-    private final static String K_DATABASE_DIR = "database.dir";
-    private final static String K_DATABASE_RESET = "database.reset";
-    private final static String K_HELLO_PHRASE = "hello.phrase";
-    private final static String K_KEYVALUE_DATASOURCE = "keyvalue.datasource";
-    private final static String K_MAX_BLOCKS_ASK = "max.blocks.ask";
-    private final static String K_MAX_HASHES_ASK = "max.hashes.ask";
-    private final static String K_MAX_BLOCKS_QUEUED = "max.blocks.queued";
-    private final static String K_PEER_ACTIVE_IP = "peer.active.ip";
-    private final static String K_PEER_ACTIVE_PORT = "peer.active.port";
-    private final static String K_PEER_CAPABILITIES = "peer.capabilities";
-    private final static String K_PEER_CHANNEL_READ_TIMEOUT = "peer.channel.read.timeout";
-    private final static String K_PEER_CONNECTION_TIMEOUT = "peer.connection.timeout";
-    private final static String K_PEER_DISCOVERY_ENABLED = "peer.discovery.enabled";
-    private final static String K_PEER_DISCOVERY_WORKERS = "peer.discovery.workers";
-    private final static String K_PEER_DISCOVERY_IP_LIST = "peer.discovery.ip.list";
-    private final static String K_PEER_LISTEN_PORT = "peer.listen.port";
-    private final static String K_PLAY_VM = "play.vm";
-    private final static String K_PROJECT_VERSION = "project.version";
-    private final static String K_RECORD_BLOCKS = "record.blocks";
-    private final static String K_ROOT_HASH_START = "root.hash.start";
-    private final static String K_SAMPLES_DIR = "samples.dir";
-    private final static String K_TRANSACTION_APPROVE_TIMEOUT = "transaction.approve.timeout";
-    private final static String K_TRACE_STARTBLOCK = "trace.startblock";
-    private final static String K_VM_STRUCTURED_DIR = "vm.structured.dir";
-    private final static String K_VM_STRUCTURED_TRACE = "vm.structured.trace";
+    final static String K_BLOCKCHAIN_ONLY = "blockchain.only";
+    final static String K_COINBASE_SECRET = "coinbase.secret";
+    final static String K_DUMP_BLOCK = "dump.block";
+    final static String K_DUMP_CLEAN_ON_RESTART = "dump.clean.on.restart";
+    final static String K_DUMP_DIR = "dump.dir";
+    final static String K_DUMP_FULL = "dump.full";
+    final static String K_DUMP_STYLE = "dump.style";
+    final static String K_DATABASE_DIR = "database.dir";
+    final static String K_DATABASE_RESET = "database.reset";
+    final static String K_HELLO_PHRASE = "hello.phrase";
+    final static String K_KEYVALUE_DATASOURCE = "keyvalue.datasource";
+    final static String K_MAX_BLOCKS_ASK = "max.blocks.ask";
+    final static String K_MAX_HASHES_ASK = "max.hashes.ask";
+    final static String K_MAX_BLOCKS_QUEUED = "max.blocks.queued";
+    final static String K_PEER_ACTIVE_IP = "peer.active.ip";
+    final static String K_PEER_ACTIVE_PORT = "peer.active.port";
+    final static String K_PEER_CAPABILITIES = "peer.capabilities";
+    final static String K_PEER_CHANNEL_READ_TIMEOUT = "peer.channel.read.timeout";
+    final static String K_PEER_CONNECTION_TIMEOUT = "peer.connection.timeout";
+    final static String K_PEER_DISCOVERY_ENABLED = "peer.discovery.enabled";
+    final static String K_PEER_DISCOVERY_WORKERS = "peer.discovery.workers";
+    final static String K_PEER_DISCOVERY_IP_LIST = "peer.discovery.ip.list";
+    final static String K_PEER_LISTEN_PORT = "peer.listen.port";
+    final static String K_PLAY_VM = "play.vm";
+    final static String K_PROJECT_VERSION = "project.version";
+    final static String K_RECORD_BLOCKS = "record.blocks";
+    final static String K_ROOT_HASH_START = "root.hash.start";
+    final static String K_SAMPLES_DIR = "samples.dir";
+    final static String K_TRANSACTION_APPROVE_TIMEOUT = "transaction.approve.timeout";
+    final static String K_TRACE_STARTBLOCK = "trace.startblock";
+    final static String K_VM_STRUCTURED_DIR = "vm.structured.dir";
+    final static String K_VM_STRUCTURED_TRACE = "vm.structured.trace";
 
-    //testing, odd key
-    private final static String K_VM_TEST_LOAD_LOCAL = "GitHubTests.VMTest.loadLocal";
+    //testing, this is an odd key
+    final static String K_VM_TEST_LOAD_LOCAL = "GitHubTests.VMTest.loadLocal";
 
-    private final static Map<String,Object> DEFAULTS;
+    private final static String DEFAULT_IMPLEMENTATION_CLASS_FQCN = "org.ethereum.config.PropertiesSystemProperties";
+    private final static String SYSPROP_CONFIG_IMPLEMENTATION_CLASS = "config.implementation.class";
+
+    public final static SystemProperties CONFIG;
+
+    final static Map<String,Object> DEFAULTS;
+
+    // utilities for implementations in this package
+    final static String TRADITIONAL_PROPS_FILENAME;
+    final static String TRADITIONAL_PROPS_RESOURCE;
 
     static {
 	String userDir = System.getProperty( "user.dir" );
-	Map<String,Object> tmp = new HashMap<>();
-	tmp.put( K_BLOCKCHAIN_ONLY, false );
-	tmp.put( K_COINBASE_SECRET, "monkey" );
-	tmp.put( K_DUMP_BLOCK, 0 );
-	tmp.put( K_DUMP_CLEAN_ON_RESTART, true );
-	tmp.put( K_DUMP_DIR, "dmp" );
-	tmp.put( K_DUMP_FULL, false );
-	tmp.put( K_DUMP_STYLE, "standard+" );
-	tmp.put( K_DATABASE_DIR, userDir );
-	tmp.put( K_DATABASE_RESET, false );
-	tmp.put( K_HELLO_PHRASE, "Dev" );
-	tmp.put( K_KEYVALUE_DATASOURCE, "leveldb" );
-	tmp.put( K_MAX_BLOCKS_ASK, 10 );
-	tmp.put( K_MAX_HASHES_ASK, -1 );
-	tmp.put( K_MAX_BLOCKS_QUEUED, 300 );
-	tmp.put( K_PEER_ACTIVE_IP, "poc-7.ethdev.com" );
-	tmp.put( K_PEER_ACTIVE_PORT, 30303 );
-	tmp.put( K_PEER_CAPABILITIES, "eth,shh" );
-	tmp.put( K_PEER_CHANNEL_READ_TIMEOUT, 5 );
-	tmp.put( K_PEER_CONNECTION_TIMEOUT, 10 );
-	tmp.put( K_PEER_DISCOVERY_ENABLED, true );
-	tmp.put( K_PEER_DISCOVERY_WORKERS, 2 );
-	tmp.put( K_PEER_DISCOVERY_IP_LIST, "poc-7.ethdev.com:30303" );
-	tmp.put( K_PEER_LISTEN_PORT, 30303 );
-	tmp.put( K_PLAY_VM, true );
-	tmp.put( K_PROJECT_VERSION, "" );
-	tmp.put( K_RECORD_BLOCKS, false );
-	tmp.put( K_ROOT_HASH_START, -1 );
-	tmp.put( K_SAMPLES_DIR, "samples" );
-	tmp.put( K_TRANSACTION_APPROVE_TIMEOUT, 10 );
-	tmp.put( K_TRACE_STARTBLOCK, -1 );
-	tmp.put( K_VM_STRUCTURED_DIR, "dmp" );
-	tmp.put( K_VM_STRUCTURED_TRACE, false );
-	tmp.put( K_VM_TEST_LOAD_LOCAL, false );
-	DEFAULTS = Collections.unmodifiableMap( tmp );
-    }
 
-    public final static SystemProperties CONFIG = new SystemProperties();
+	TRADITIONAL_PROPS_FILENAME = userDir + "/config/system.properties";
+	TRADITIONAL_PROPS_RESOURCE = "system.properties";
 
-    private final Properties prop = new Properties();
+	Map<String,Object> tmpDefaults = new HashMap<>();
+	tmpDefaults.put( K_BLOCKCHAIN_ONLY,             false                    );
+	tmpDefaults.put( K_COINBASE_SECRET,             "monkey"                 );
+	tmpDefaults.put( K_DUMP_BLOCK,                  0                        );
+	tmpDefaults.put( K_DUMP_CLEAN_ON_RESTART,       true                     );
+	tmpDefaults.put( K_DUMP_DIR,                    "dmp"                    );
+	tmpDefaults.put( K_DUMP_FULL,                   false                    );
+	tmpDefaults.put( K_DUMP_STYLE,                  "standard+"              );
+	tmpDefaults.put( K_DATABASE_DIR,                userDir                  );
+	tmpDefaults.put( K_DATABASE_RESET,              false                    );
+	tmpDefaults.put( K_HELLO_PHRASE,                "Dev"                    );
+	tmpDefaults.put( K_KEYVALUE_DATASOURCE,         "leveldb"                );
+	tmpDefaults.put( K_MAX_BLOCKS_ASK,              10                       );
+	tmpDefaults.put( K_MAX_HASHES_ASK,              -1                       );
+	tmpDefaults.put( K_MAX_BLOCKS_QUEUED,           300                      );
+	tmpDefaults.put( K_PEER_ACTIVE_IP,              "poc-7.ethdev.com"       );
+	tmpDefaults.put( K_PEER_ACTIVE_PORT,            30303                    );
+	tmpDefaults.put( K_PEER_CAPABILITIES, "         eth,shh"                 );
+	tmpDefaults.put( K_PEER_CHANNEL_READ_TIMEOUT,   5                        );
+	tmpDefaults.put( K_PEER_CONNECTION_TIMEOUT,     10                       );
+	tmpDefaults.put( K_PEER_DISCOVERY_ENABLED,      true                     );
+	tmpDefaults.put( K_PEER_DISCOVERY_WORKERS,      2                        );
+	tmpDefaults.put( K_PEER_DISCOVERY_IP_LIST,      "poc-7.ethdev.com:30303" );
+	tmpDefaults.put( K_PEER_LISTEN_PORT,            30303                    );
+	tmpDefaults.put( K_PLAY_VM,                     true                     );
+	tmpDefaults.put( K_PROJECT_VERSION,             ""                       );
+	tmpDefaults.put( K_RECORD_BLOCKS,               false                    );
+	tmpDefaults.put( K_ROOT_HASH_START,             -1                       );
+	tmpDefaults.put( K_SAMPLES_DIR,                 "samples"                );
+	tmpDefaults.put( K_TRANSACTION_APPROVE_TIMEOUT, 10                       );
+	tmpDefaults.put( K_TRACE_STARTBLOCK,            -1                       );
+	tmpDefaults.put( K_VM_STRUCTURED_DIR,           "dmp"                    );
+	tmpDefaults.put( K_VM_STRUCTURED_TRACE,         false                    );
+	tmpDefaults.put( K_VM_TEST_LOAD_LOCAL,          false                    );
 
-    public SystemProperties() {
+	DEFAULTS = Collections.unmodifiableMap( tmpDefaults );
 
-        InputStream input = null;
-        try {
-            String userDir = System.getProperty("user.dir");
-            String fileName = userDir + "/config/system.properties";
-            File file = new File(fileName);
+	String implementationClassFqcn = null;
+	try {
+	    implementationClassFqcn = System.getProperty( SYSPROP_CONFIG_IMPLEMENTATION_CLASS );
+	    if ( implementationClassFqcn == null ) implementationClassFqcn = DEFAULT_IMPLEMENTATION_CLASS_FQCN;
+	    CONFIG = (SystemProperties) Class.forName( implementationClassFqcn ).newInstance();
+	} catch ( Exception e ) {
+	    throw new RuntimeException( "Could not instantiate concrete implementation '" + implementationClassFqcn + "'." );
+	}
 
-            if (file.exists()) {
-                logger.info("config loaded from {}", fileName);
-                input = new FileInputStream(file);
-            } else {
-                fileName = "system.properties";
-                input = SystemProperties.class.getClassLoader()
-                        .getResourceAsStream(fileName);
-                if (input == null) {
-                    logger.error("Sorry, unable to find {}", fileName);
-                    return;
-                }
-            }
-            // load a properties file from class path, inside static method
-            prop.load(input);
-        } catch (IOException ex) {
-            logger.error(ex.getMessage(), ex);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
-        }
+	if ( logger.isDebugEnabled() ) {
+	    logger.debug( "ethereumj configuration:" );
+	    CONFIG.debugPrint();
+	}
     }
 
     /*
      *
-     *  Private utilitiies
+     *  Abstract, package-scoped methods
      *
      */
-    private String getNonDefaultAsString( String key ) {
-	String value = System.getProperty( key );
-	if ( value == null ) value = prop.getProperty( key );
-    }
-    private boolean getBoolean( String key ) {
-	String value = getNondefaultAsString( key );
-	return ( value != null ? Boolean.parseBoolean( value ) : ((Boolean) DEFAULTS.get( key )).booleanValue() );
-    }
-    private int getInt( String key ) {
-	String value = getNondefaultAsString( key );
-	return ( value != null ? Integer.parseInt( value ) : ((Integer) DEFAULTS.get( key )).intValue() );
-    }
-    private String getString( String key ) {
-	String value = getNondefaultAsString( key );
-	return ( value != null ? value : (String) DEFAULTS.get( key ) );
-    }
+    abstract boolean getBoolean( String key );
+    abstract int getInt( String key );
+    abstract String getString( String key );
+    abstract String getCoerceToString( String key );
+
+    /*
+     *
+     *  Public, abstract setters for org.ethereum.cli.CLIInterface
+     *
+     */
+    public abstract void setListenPort(Integer port);
+    public abstract void setDatabaseReset(Boolean reset);
+    public abstract void setActivePeerIP(String host);
+    public abstract void setActivePeerPort(Integer port);
+    public abstract void setDataBaseDir(String dataBaseDir);
 
     /*
      *
@@ -214,31 +195,45 @@ public class SystemProperties {
 	return getInt( K_PEER_CONNECTION_TIMEOUT ) * 1000; 
     }
 
-    // setters for org.ethereum.cli.CLIInterface
-    public void setListenPort(Integer port)        { prop.setProperty(K_PEER_LISTEN_PORT, port.toString()); }
-    public void setDatabaseReset(Boolean reset)    { prop.setProperty(K_DATABASE_RESET, reset.toString()); }
-    public void setActivePeerIP(String host)       { prop.setProperty(K_PEER_ACTIVE_IP, host); }
-    public void setActivePeerPort(Integer port)    { prop.setProperty(K_PEER_ACTIVE_PORT, port.toString()); }
-    public void setDataBaseDir(String dataBaseDir) { prop.setProperty(K_DATABASE_DIR, dataBaseDir); }
+    interface LinePrinter {
+	public void print( String key, Object value );
+    }
+    private static String kvline( String key, Object value ) { 
+	return "    " + key + " -> " + value; 
+    }
 
-    public void print() {
-        Enumeration<?> e = prop.propertyNames();
-        while (e.hasMoreElements()) {
-            String key = (String) e.nextElement();
-            String value = prop.getProperty(key);
-            if (!key.equals("null"))
-                logger.info("Key: " + key + ", Value: " + value);
+    private LinePrinter infoPrinter = new LinePrinter() {
+	    public void print( String key, Object value ) {
+		if ( logger.isInfoEnabled() )
+		    logger.info( kvline( key, value ) );
+	    }
+    };
+    private LinePrinter debugPrinter = new LinePrinter() {
+	    public void print( String key, Object value ) {
+		if ( logger.isDebugEnabled() )
+		    logger.debug( kvline( key, value ) );
+	    }
+    };
+
+    private void print(LinePrinter lp) {
+	for ( String key : DEFAULTS.keySet() ) {
+            String value = getCoerceToString( key );
+	    value = ( value == null ? "null" : value );
+	    if ( K_COINBASE_SECRET.equals( key ) ) value = "[hidden]";
+	    lp.print( key, value );
         }
     }
+
+    public void debugPrint() { print( debugPrinter ); }
+    public void infoPrint()  { print( infoPrinter ); }
+    public void print()      { infoPrint(); }
 
     /*
      *
      * Testing
      *
      */
-
     public static void main(String args[]) {
-        SystemProperties systemProperties = new SystemProperties();
-        systemProperties.print();
+        CONFIG.print();
     }
 }
