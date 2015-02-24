@@ -5,7 +5,17 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Component;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
+/*
+ * Note: The classes below are the ONLY classes in config
+ *        that should be referenced from CLIInterface.
+ *
+ *       The static initializer for the SystemProperties
+ *       expects the static field CONFIG_OVERRIDES to
+ *       have already been set when that class is 
+ *       initialized.
+ */
+import org.ethereum.config.CLIInterfaceConfig;
+import org.ethereum.config.CLIInterfaceConfig.Frozen;
 
 /**
  * @author Roman Mandeleil
@@ -16,10 +26,26 @@ public class CLIInterface {
 
     private static final Logger logger = LoggerFactory.getLogger("cli");
 
+    private static CLIInterfaceConfig.Frozen CONFIG_OVERRIDES = null;
+
+    public static synchronized CLIInterfaceConfig.Frozen getConfigOverrides() {
+	return CONFIG_OVERRIDES;
+    }
+    public static synchronized void setConfigOverrides( CLIInterfaceConfig.Frozen overrides ) {
+	if ( CONFIG_OVERRIDES == null ) {
+	    CONFIG_OVERRIDES = overrides;
+	} else {
+	    logger.error( "A command line application should only begin once! " +
+			  "CLIInterface's call(...) method called multiple times. " +
+			  "Any attempts to alter the (immutable) configuration will be ignored." );
+	}
+    }
 
     public static void call(String[] args) {
 
         try {
+	    CLIInterfaceConfig cfg = new CLIInterfaceConfig();
+
             for (int i = 0; i < args.length; ++i) {
 
                 // override the db directory
@@ -33,14 +59,14 @@ public class CLIInterface {
                 if (args[i].equals("-db") && i + 1 < args.length) {
                     String db = args[i + 1];
                     logger.info("DB directory set to [{}]", db);
-                    CONFIG.setDataBaseDir(db);
+                    cfg.setDataBaseDir(db);
                 }
 
                 // override the listen port directory
                 if (args[i].equals("-listen") && i + 1 < args.length) {
                     String port = args[i + 1];
                     logger.info("Listen port set to [{}]", port);
-                    CONFIG.setListenPort(Integer.valueOf(port));
+                    cfg.setListenPort(Integer.valueOf(port));
                 }
 
                 // override the connect host:port directory
@@ -50,17 +76,20 @@ public class CLIInterface {
                     String[] params = connectStr.split(":");
                     String host = params[0];
                     String port = params[1];
-                    CONFIG.setActivePeerIP(host);
-                    CONFIG.setActivePeerPort(Integer.valueOf(port));
+                    cfg.setActivePeerIP(host);
+                    cfg.setActivePeerPort(Integer.valueOf(port));
                 }
 
                 // override the listen port directory
                 if (args[i].equals("-reset") && i + 1 < args.length) {
                     Boolean resetStr = interpret(args[i + 1]);
                     logger.info("Resetting db set to [{}]", resetStr);
-                    CONFIG.setDatabaseReset(resetStr);
+                    cfg.setDatabaseReset(resetStr);
                 }
             }
+
+	    setConfigOverrides( cfg.freeze() );
+
             logger.info("");
         } catch (Throwable e) {
             logger.error("Error parsing command line: [{}]", e.getMessage());

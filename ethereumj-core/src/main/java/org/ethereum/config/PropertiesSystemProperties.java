@@ -4,7 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
 import java.util.Properties;
+
+import org.ethereum.cli.CLIInterface;
+
+import static org.ethereum.config.KeysDefaultsConstants.*;
 
 final class PropertiesSystemProperties extends SystemProperties {
     private final Properties prop = new Properties();
@@ -26,8 +31,11 @@ final class PropertiesSystemProperties extends SystemProperties {
 		    logger.debug("config loaded from resource {}", TRADITIONAL_PROPS_FILENAME );
 		}
             }
+
             // load a properties file from class path, inside static method
             prop.load(input);
+
+	    applyCommandLineOverrides();
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
@@ -52,6 +60,21 @@ final class PropertiesSystemProperties extends SystemProperties {
 	return value;
     }
 
+    private void applyCommandLineOverrides() {
+	CLIInterfaceConfig.Frozen mapHolder = CLIInterface.getConfigOverrides();
+	if ( mapHolder != null ) {
+	    Map<String,Object> overrides = mapHolder.getMap();
+	    for ( Map.Entry<String,Object> entry : overrides.entrySet() ) {
+		String k = entry.getKey();
+		Object v = entry.getValue();
+		prop.setProperty( k, String.valueOf( v ) );
+		logger.debug("Applied command line config override: {} -> {}", k, v);
+	    }
+	} else {
+	    logger.debug("Command-line overrides have not been set, not even to an empty set. Presumably this application was not run as a command-line application");
+	}
+    }
+
     /*
      *
      *  Abstract method implementations
@@ -74,11 +97,4 @@ final class PropertiesSystemProperties extends SystemProperties {
 	if ( value == null ) value = DEFAULTS.get( key );
 	return String.valueOf( value );
     }
-
-
-    public void setListenPort(Integer port)        { prop.setProperty(K_PEER_LISTEN_PORT, port.toString()); }
-    public void setDatabaseReset(Boolean reset)    { prop.setProperty(K_DATABASE_RESET, reset.toString()); }
-    public void setActivePeerIP(String host)       { prop.setProperty(K_PEER_ACTIVE_IP, host); }
-    public void setActivePeerPort(Integer port)    { prop.setProperty(K_PEER_ACTIVE_PORT, port.toString()); }
-    public void setDataBaseDir(String dataBaseDir) { prop.setProperty(K_DATABASE_DIR, dataBaseDir); }
 }
