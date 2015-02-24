@@ -23,16 +23,16 @@ import org.spongycastle.asn1.x9.X9ECParameters;
 import org.spongycastle.asn1.x9.X9IntegerConverter;
 import org.spongycastle.crypto.AsymmetricCipherKeyPair;
 import org.spongycastle.crypto.digests.SHA256Digest;
+import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.generators.ECKeyPairGenerator;
-import org.spongycastle.crypto.params.ECDomainParameters;
-import org.spongycastle.crypto.params.ECKeyGenerationParameters;
-import org.spongycastle.crypto.params.ECPrivateKeyParameters;
-import org.spongycastle.crypto.params.ECPublicKeyParameters;
+import org.spongycastle.crypto.modes.SICBlockCipher;
+import org.spongycastle.crypto.params.*;
 import org.spongycastle.crypto.signers.ECDSASigner;
 import org.spongycastle.crypto.signers.HMacDSAKCalculator;
 import org.spongycastle.math.ec.ECAlgorithms;
 import org.spongycastle.math.ec.ECCurve;
 import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Base64;
 import org.spongycastle.util.encoders.Hex;
 
@@ -468,6 +468,48 @@ public class ECKey implements Serializable {
         return key;
     }
 
+
+    /**
+     * Decrypt cipher by AES in SIC(also know as CTR) mode
+     * @param cipher -proper cipher
+     * @return decrypted cipher, equal length to the cipher.
+     */
+    public byte[] decryptAES(byte[] cipher){
+
+        if (priv == null)
+            throw new MissingPrivateKeyException();
+
+
+        AESFastEngine engine = new AESFastEngine();
+        SICBlockCipher ctrEngine = new SICBlockCipher(engine);
+
+        KeyParameter key = new KeyParameter(BigIntegers.asUnsignedByteArray(priv));
+        ParametersWithIV params = new ParametersWithIV(key, new byte[16]);
+
+        ctrEngine.init(false, params);
+
+        int i = 0;
+        byte[] out = new byte[cipher.length];
+        while(i < cipher.length){
+            ctrEngine.processBlock(cipher, i, out, i);
+            i += engine.getBlockSize();
+            if (cipher.length - i  < engine.getBlockSize())
+                break;
+        }
+
+        // process left bytes
+        if (cipher.length - i > 0){
+            byte[] tmpBlock = new byte[16];
+            System.arraycopy(cipher, i, tmpBlock, 0, cipher.length - i);
+            ctrEngine.processBlock(tmpBlock, 0, tmpBlock, 0);
+            System.arraycopy(tmpBlock, 0, out, i, cipher.length - i);
+        }
+
+        return out;
+    }
+
+
+
     /**
      * <p>Verifies the given ECDSA signature against the message bytes using the public key bytes.</p>
      *
@@ -654,6 +696,8 @@ public class ECKey implements Serializable {
         return (bits[0] & 0xFF) | ((bits[1] & 0xFF) << 8) | ((bits[2] & 0xFF) << 16) | ((bits[3] & 0xFF) << 24);
     }
 
+
+
     @SuppressWarnings("serial")
     public static class MissingPrivateKeyException extends RuntimeException {
     }
@@ -661,4 +705,5 @@ public class ECKey implements Serializable {
     private static void check(boolean test, String message) {
         if (!test) throw new IllegalArgumentException(message);
     }
+
 }

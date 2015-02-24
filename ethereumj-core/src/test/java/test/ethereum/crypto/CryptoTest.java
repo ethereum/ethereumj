@@ -139,7 +139,7 @@ public class CryptoTest {
     public void test11() throws Throwable {
 
         byte[] keyBytes = sha3("...".getBytes());
-        log.info("key: ", Hex.toHexString(keyBytes));
+        log.info("key: {}", Hex.toHexString(keyBytes));
         byte[] ivBytes = new byte[16];
         byte[] payload = Hex.decode("22400891000000000000000000000000");
 
