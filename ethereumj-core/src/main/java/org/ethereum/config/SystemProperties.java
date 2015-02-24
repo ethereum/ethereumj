@@ -57,7 +57,7 @@ public class SystemProperties {
 
     private final static String DEFAULT_PROTOCOL_LIST = "eth,shh";
 
-    public static SystemProperties CONFIG = new SystemProperties();
+    public final static SystemProperties CONFIG = new SystemProperties();
     private final Properties prop = new Properties();
 
     public SystemProperties() {
@@ -118,7 +118,7 @@ public class SystemProperties {
     }
 
     public int transactionApproveTimeout() {
-        return Integer.parseInt(prop.getProperty("transaction.approve.timeout", String.valueOf("DEFAULT_TX_APPROVE_TIMEOUT")));
+        return Integer.parseInt(prop.getProperty("transaction.approve.timeout", String.valueOf(DEFAULT_TX_APPROVE_TIMEOUT)));
     }
 
     public String peerDiscoveryIPList() {
