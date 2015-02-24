@@ -9,8 +9,11 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Properties;
 
 /**
@@ -20,44 +23,87 @@ import java.util.Properties;
  * @since 22.05.2014
  */
 public class SystemProperties {
-
     private static Logger logger = LoggerFactory.getLogger("general");
 
-    private final static int DEFAULT_TX_APPROVE_TIMEOUT = 10;
-    private final static String DEFAULT_DISCOVERY_PEER_LIST = "poc-7.ethdev.com:30303";
-    private final static String DEFAULT_ACTIVE_PEER_IP = "poc-7.ethdev.com";
-    private final static int DEFAULT_ACTIVE_PORT = 30303;
-    private final static String DEFAULT_SAMPLES_DIR = "samples";
-    private final static String DEFAULT_COINBASE_SECRET = "monkey";
-    private final static int DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
-    private final static Boolean DEFAULT_DB_RESET = false;
-    private final static Boolean DEFAULT_DUMP_FULL = false;
-    private final static Boolean DEFAULT_RECORD_BLOCKS = false;
-    private final static String DEFAULT_DUMP_DIR = "dmp";
-    private final static String DEFAULT_DUMP_STYLE = "standard+";
-    private final static Integer DEFAULT_VMTRACE_BLOCK = 0;
-    private final static String DEFAULT_DATABASE_DIR = System.getProperty("user.dir");
-    private final static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
-    private final static Boolean DEFAULT_PLAY_VM = true;
-    private final static Boolean DEFAULT_BLOCKCHAIN_ONLY = false;
-    private final static int DEFAULT_TRACE_STARTBLOCK = -1;
-    private final static int DEFAULT_MAX_HASHES_ASK = -1; // unlimited
-    private final static int DEFAULT_MAX_BLOCKS_ASK = 10;
-    private final static int DEFAULT_MAX_BLOCKS_QUEUED = 300;
-    private final static String DEFAULT_PROJECT_VERSION = "";
-    private final static String DEFAULT_HELLO_PHRASE = "Dev";
-    private final static Boolean DEFAULT_VM_TRACE = false;
-    private final static String DEFAULT_VM_TRACE_DIR = "dmp";
-    private final static int DEFAULT_PEER_LISTEN_PORT = 30303;
-    private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
+    private final static String K_BLOCKCHAIN_ONLY = "blockchain.only";
+    private final static String K_COINBASE_SECRET = "coinbase.secret";
+    private final static String K_DUMP_BLOCK = "dump.block";
+    private final static String K_DUMP_CLEAN_ON_RESTART = "dump.clean.on.restart";
+    private final static String K_DUMP_DIR = "dump.dir";
+    private final static String K_DUMP_FULL = "dump.full";
+    private final static String K_DUMP_STYLE = "dump.style";
+    private final static String K_DATABASE_DIR = "database.dir";
+    private final static String K_DATABASE_RESET = "database.reset";
+    private final static String K_HELLO_PHRASE = "hello.phrase";
+    private final static String K_KEYVALUE_DATASOURCE = "keyvalue.datasource";
+    private final static String K_MAX_BLOCKS_ASK = "max.blocks.ask";
+    private final static String K_MAX_HASHES_ASK = "max.hashes.ask";
+    private final static String K_MAX_BLOCKS_QUEUED = "max.blocks.queued";
+    private final static String K_PEER_ACTIVE_IP = "peer.active.ip";
+    private final static String K_PEER_ACTIVE_PORT = "peer.active.port";
+    private final static String K_PEER_CAPABILITIES = "peer.capabilities";
+    private final static String K_PEER_CHANNEL_READ_TIMEOUT = "peer.channel.read.timeout";
+    private final static String K_PEER_CONNECTION_TIMEOUT = "peer.connection.timeout";
+    private final static String K_PEER_DISCOVERY_ENABLED = "peer.discovery.enabled";
+    private final static String K_PEER_DISCOVERY_WORKERS = "peer.discovery.workers";
+    private final static String K_PEER_DISCOVERY_IP_LIST = "peer.discovery.ip.list";
+    private final static String K_PEER_LISTEN_PORT = "peer.listen.port";
+    private final static String K_PLAY_VM = "play.vm";
+    private final static String K_PROJECT_VERSION = "project.version";
+    private final static String K_RECORD_BLOCKS = "record.blocks";
+    private final static String K_ROOT_HASH_START = "root.hash.start";
+    private final static String K_SAMPLES_DIR = "samples.dir";
+    private final static String K_TRANSACTION_APPROVE_TIMEOUT = "transaction.approve.timeout";
+    private final static String K_TRACE_STARTBLOCK = "trace.startblock";
+    private final static String K_VM_STRUCTURED_DIR = "vm.structured.dir";
+    private final static String K_VM_STRUCTURED_TRACE = "vm.structured.trace";
 
+    //testing, odd key
+    private final static String K_VM_TEST_LOAD_LOCAL = "GitHubTests.VMTest.loadLocal";
 
-    /* Testing */
-    private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
+    private final static Map<String,Object> DEFAULTS;
 
-    private final static String DEFAULT_PROTOCOL_LIST = "eth,shh";
+    static {
+	String userDir = System.getProperty( "user.dir" );
+	Map<String,Object> tmp = new HashMap<>();
+	tmp.put( K_BLOCKCHAIN_ONLY, false );
+	tmp.put( K_COINBASE_SECRET, "monkey" );
+	tmp.put( K_DUMP_BLOCK, 0 );
+	tmp.put( K_DUMP_CLEAN_ON_RESTART, true );
+	tmp.put( K_DUMP_DIR, "dmp" );
+	tmp.put( K_DUMP_FULL, false );
+	tmp.put( K_DUMP_STYLE, "standard+" );
+	tmp.put( K_DATABASE_DIR, userDir );
+	tmp.put( K_DATABASE_RESET, false );
+	tmp.put( K_HELLO_PHRASE, "Dev" );
+	tmp.put( K_KEYVALUE_DATASOURCE, "leveldb" );
+	tmp.put( K_MAX_BLOCKS_ASK, 10 );
+	tmp.put( K_MAX_HASHES_ASK, -1 );
+	tmp.put( K_MAX_BLOCKS_QUEUED, 300 );
+	tmp.put( K_PEER_ACTIVE_IP, "poc-7.ethdev.com" );
+	tmp.put( K_PEER_ACTIVE_PORT, 30303 );
+	tmp.put( K_PEER_CAPABILITIES, "eth,shh" );
+	tmp.put( K_PEER_CHANNEL_READ_TIMEOUT, 5 );
+	tmp.put( K_PEER_CONNECTION_TIMEOUT, 10 );
+	tmp.put( K_PEER_DISCOVERY_ENABLED, true );
+	tmp.put( K_PEER_DISCOVERY_WORKERS, 2 );
+	tmp.put( K_PEER_DISCOVERY_IP_LIST, "poc-7.ethdev.com:30303" );
+	tmp.put( K_PEER_LISTEN_PORT, 30303 );
+	tmp.put( K_PLAY_VM, true );
+	tmp.put( K_PROJECT_VERSION, "" );
+	tmp.put( K_RECORD_BLOCKS, false );
+	tmp.put( K_ROOT_HASH_START, -1 );
+	tmp.put( K_SAMPLES_DIR, "samples" );
+	tmp.put( K_TRANSACTION_APPROVE_TIMEOUT, 10 );
+	tmp.put( K_TRACE_STARTBLOCK, -1 );
+	tmp.put( K_VM_STRUCTURED_DIR, "dmp" );
+	tmp.put( K_VM_STRUCTURED_TRACE, false );
+	tmp.put( K_VM_TEST_LOAD_LOCAL, false );
+	DEFAULTS = Collections.unmodifiableMap( tmp );
+    }
 
     public final static SystemProperties CONFIG = new SystemProperties();
+
     private final Properties prop = new Properties();
 
     public SystemProperties() {
@@ -98,166 +144,87 @@ public class SystemProperties {
         }
     }
 
+    /*
+     *
+     *  Private utilitiies
+     *
+     */
     private void overrideCLIParams() {
-        String value = System.getProperty("keyvalue.datasource");
+        String value = System.getProperty( K_KEYVALUE_DATASOURCE );
         if (value != null) {
-            prop.setProperty("keyvalue.datasource", value);
+            prop.setProperty( K_KEYVALUE_DATASOURCE, value);
         }
     }
-
-    public boolean peerDiscoveryEnabled() {
-        return Boolean.parseBoolean(prop.getProperty("peer.discovery.enabled", "true"));
+    private boolean getBoolean( String key ) {
+	String value = prop.getProperty( key );
+	return ( value != null ? Boolean.parseBoolean( value ) : ((Boolean) DEFAULTS.get( key )).booleanValue() );
+    }
+    private int getInt( String key ) {
+	String value = prop.getProperty( key );
+	return ( value != null ? Integer.parseInt( value ) : ((Integer) DEFAULTS.get( key )).intValue() );
+    }
+    private String getString( String key ) {
+	String value = prop.getProperty( key );
+	return ( value != null ? value : (String) DEFAULTS.get( key ) );
     }
 
-    public int peerDiscoveryWorkers() {
-        return Integer.parseInt(prop.getProperty("peer.discovery.workers", "2"));
-    }
+    /*
+     *
+     *  Public accessors
+     *
+     */
+    public String  activePeerIP()              { return getString( K_PEER_ACTIVE_IP ); }
+    public int     activePeerPort()            { return getInt( K_PEER_ACTIVE_PORT ); }
+    public boolean blockChainOnly()            { return getBoolean( K_BLOCKCHAIN_ONLY ); }
+    public String  coinbaseSecret()            { return getString( K_COINBASE_SECRET ); }
+    public String  databaseDir()               { return getString( K_DATABASE_DIR ); }
+    public boolean databaseReset()             { return getBoolean( K_DATABASE_RESET ); }
+    public int     dumpBlock()                 { return getInt( K_DUMP_BLOCK ); }
+    public boolean dumpCleanOnRestart()        { return getBoolean( K_DUMP_CLEAN_ON_RESTART ); }
+    public String  dumpDir()                   { return getString( K_DUMP_DIR ); }
+    public boolean dumpFull()                  { return getBoolean( K_DUMP_FULL ); }
+    public String  dumpStyle()                 { return getString( K_DUMP_STYLE ); }
+    public String  helloPhrase()               { return getString( K_HELLO_PHRASE ); }
+    public int     listenPort()                { return getInt( K_PEER_LISTEN_PORT ); }
+    public int     maxBlocksAsk()              { return getInt( K_MAX_BLOCKS_ASK ); }
+    public int     maxBlocksQueued()           { return getInt( K_MAX_BLOCKS_QUEUED ); }
+    public int     maxHashesAsk()              { return getInt( K_MAX_HASHES_ASK ); }
+    public int     peerChannelReadTimeout()    { return getInt( K_PEER_CHANNEL_READ_TIMEOUT ); }
+    public boolean peerDiscoveryEnabled()      { return getBoolean( K_PEER_DISCOVERY_ENABLED ); }
+    public String  peerDiscoveryIPList()       { return getString( K_PEER_DISCOVERY_IP_LIST ); }
+    public int     peerDiscoveryWorkers()      { return getInt( K_PEER_DISCOVERY_WORKERS ); }
+    public boolean playVM()                    { return getBoolean( K_PLAY_VM ); }
+    public String  projectVersion()            { return getString( K_PROJECT_VERSION ); }
+    public boolean recordBlocks()              { return getBoolean( K_RECORD_BLOCKS ); }
+    public String  samplesDir()                { return getString( K_SAMPLES_DIR ); }
+    public int     transactionApproveTimeout() { return getInt( K_TRANSACTION_APPROVE_TIMEOUT ); }
+    public int     traceStartBlock()           { return getInt( K_TRACE_STARTBLOCK ); }
+    public boolean vmTrace()                   { return getBoolean( K_VM_STRUCTURED_TRACE ); }
+    public String  vmTraceDir()                { return getString( K_VM_STRUCTURED_DIR ); }
+    public boolean vmTestLoadLocal()           { return getBoolean( K_VM_TEST_LOAD_LOCAL ); }
 
-    public int peerConnectionTimeout() {
-        return Integer.parseInt(prop.getProperty("peer.connection.timeout", "10")) * 1000;
-    }
+    public String  getKeyValueDataSource()     { return getString( K_KEYVALUE_DATASOURCE ); } 
 
-    public int transactionApproveTimeout() {
-        return Integer.parseInt(prop.getProperty("transaction.approve.timeout", String.valueOf(DEFAULT_TX_APPROVE_TIMEOUT)));
-    }
-
-    public String peerDiscoveryIPList() {
-        return prop.getProperty("peer.discovery.ip.list", DEFAULT_DISCOVERY_PEER_LIST);
-    }
-
-    public boolean databaseReset() {
-        return Boolean.parseBoolean(prop.getProperty("database.reset", String.valueOf(DEFAULT_DB_RESET)));
-    }
-
-    public void setDatabaseReset(Boolean reset) {
-        prop.setProperty("database.reset", reset.toString());
-    }
-
-    public String activePeerIP() {
-        return prop.getProperty("peer.active.ip", DEFAULT_ACTIVE_PEER_IP);
-    }
-
-    public void setActivePeerIP(String host) {
-        prop.setProperty("peer.active.ip", host);
-    }
-
-    public int activePeerPort() {
-        return Integer.parseInt(prop.getProperty("peer.active.port", String.valueOf(DEFAULT_ACTIVE_PORT)));
-    }
-
-    public void setActivePeerPort(Integer port) {
-        prop.setProperty("peer.active.port", port.toString());
-    }
-
-    public String samplesDir() {
-        return prop.getProperty("samples.dir", DEFAULT_SAMPLES_DIR);
-    }
-
-    public String coinbaseSecret() {
-        return prop.getProperty("coinbase.secret", DEFAULT_COINBASE_SECRET);
-    }
-
-    public Integer peerChannelReadTimeout() {
-        return Integer.parseInt(prop.getProperty("peer.channel.read.timeout", String.valueOf(DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT)));
-    }
-
-    public Integer traceStartBlock() {
-        return Integer.parseInt(prop.getProperty("trace.startblock", String.valueOf(DEFAULT_TRACE_STARTBLOCK)));
-    }
-
-    public Boolean recordBlocks() {
-        return Boolean.parseBoolean(prop.getProperty("record.blocks", String.valueOf(DEFAULT_RECORD_BLOCKS)));
-    }
-
-    public Boolean dumpFull() {
-        return Boolean.parseBoolean(prop.getProperty("dump.full", String.valueOf(DEFAULT_DUMP_FULL)));
-    }
-
-    public String dumpDir() {
-        return prop.getProperty("dump.dir", DEFAULT_DUMP_DIR);
-    }
-
-    public String dumpStyle() {
-        return prop.getProperty("dump.style", DEFAULT_DUMP_STYLE);
-    }
-
-    public Integer dumpBlock() {
-        return Integer.parseInt(prop.getProperty("dump.block", String.valueOf(DEFAULT_VMTRACE_BLOCK)));
-    }
-
-    public String databaseDir() {
-        return prop.getProperty("database.dir", DEFAULT_DATABASE_DIR);
-    }
-
-    public void setDataBaseDir(String dataBaseDir) {
-        prop.setProperty("database.dir", dataBaseDir);
-    }
-
-    public Boolean dumpCleanOnRestart() {
-        return Boolean.parseBoolean(prop.getProperty("dump.clean.on.restart", String.valueOf(DEFAULT_DUMP_CLEAN_ON_RESTART)));
-    }
-
-    public Boolean playVM() {
-        return Boolean.parseBoolean(prop.getProperty("play.vm", String.valueOf(DEFAULT_PLAY_VM)));
-    }
-
-    public Boolean blockChainOnly() {
-        return Boolean.parseBoolean(prop.getProperty("blockchain.only", String.valueOf(DEFAULT_BLOCKCHAIN_ONLY)));
-    }
-
-    public Integer maxHashesAsk() {
-        return Integer.parseInt(prop.getProperty("max.hashes.ask", String.valueOf(DEFAULT_MAX_HASHES_ASK)));
-    }
-
-    public Integer maxBlocksAsk() {
-        return Integer.parseInt(prop.getProperty("max.blocks.ask", String.valueOf(DEFAULT_MAX_BLOCKS_ASK)));
-    }
-
-    public Integer maxBlocksQueued() {
-        return Integer.parseInt(prop.getProperty("max.blocks.queued", String.valueOf(DEFAULT_MAX_BLOCKS_QUEUED)));
-    }
-
-    public String projectVersion() {
-        return prop.getProperty("project.version", DEFAULT_PROJECT_VERSION);
-    }
-
-    public String helloPhrase() {
-        return prop.getProperty("hello.phrase", DEFAULT_HELLO_PHRASE);
-    }
-
+    // special-case accessors
     public String rootHashStart() {
-        if (prop.isEmpty()) return null;
-        String hash = prop.getProperty("root.hash.start");
-        if (hash == null || hash.equals("-1"))
-            return null;
-        return hash;
+	int intVal = getInt( K_ROOT_HASH_START );
+        return ( intVal == -1 ? null : String.valueOf( intVal ) );
     }
 
     public List<String> peerCapabilities() {
-        String capabilitiesList = prop.getProperty("peer.capabilities", DEFAULT_PROTOCOL_LIST);
+        String capabilitiesList = getString( K_PEER_CAPABILITIES );
         return Arrays.asList(capabilitiesList.split(","));
     }
-
-    public boolean vmTrace() {
-        return Boolean.parseBoolean(prop.getProperty("vm.structured.trace", String.valueOf(DEFAULT_VM_TRACE)));
+    public int peerConnectionTimeout() { // configured in seconds, expected in millis
+	return getInt( K_PEER_CONNECTION_TIMEOUT ) * 1000; 
     }
 
-    public String vmTraceDir() {
-        return prop.getProperty("vm.structured.dir", DEFAULT_VM_TRACE_DIR);
-    }
-
-    public int listenPort() {
-        return Integer.parseInt(prop.getProperty("peer.listen.port", String.valueOf(DEFAULT_PEER_LISTEN_PORT)));
-    }
-
-
-    public String getKeyValueDataSource() {
-        return prop.getProperty("keyvalue.datasource", DEFAULT_KEY_VALUE_DATA_SOURCE);
-    }
-
-    public void setListenPort(Integer port) {
-        prop.setProperty("peer.listen.port", port.toString());
-    }
+    // setters for org.ethereum.cli.CLIInterface
+    public void setListenPort(Integer port)        { prop.setProperty(K_PEER_LISTEN_PORT, port.toString()); }
+    public void setDatabaseReset(Boolean reset)    { prop.setProperty(K_DATABASE_RESET, reset.toString()); }
+    public void setActivePeerIP(String host)       { prop.setProperty(K_PEER_ACTIVE_IP, host); }
+    public void setActivePeerPort(Integer port)    { prop.setProperty(K_PEER_ACTIVE_PORT, port.toString()); }
+    public void setDataBaseDir(String dataBaseDir) { prop.setProperty(K_DATABASE_DIR, dataBaseDir); }
 
     public void print() {
         Enumeration<?> e = prop.propertyNames();
@@ -274,9 +241,6 @@ public class SystemProperties {
      * Testing
      *
      */
-    public boolean vmTestLoadLocal() {
-        return Boolean.parseBoolean(prop.getProperty("GitHubTests.VMTest.loadLocal", String.valueOf(DEFAULT_VMTEST_LOAD_LOCAL)));
-    }
 
     public static void main(String args[]) {
         SystemProperties systemProperties = new SystemProperties();
