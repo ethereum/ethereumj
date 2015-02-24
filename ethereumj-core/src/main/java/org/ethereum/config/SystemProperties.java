@@ -128,9 +128,6 @@ public class SystemProperties {
             }
             // load a properties file from class path, inside static method
             prop.load(input);
-
-            overrideCLIParams();
-
         } catch (IOException ex) {
             logger.error(ex.getMessage(), ex);
         } finally {
@@ -149,22 +146,20 @@ public class SystemProperties {
      *  Private utilitiies
      *
      */
-    private void overrideCLIParams() {
-        String value = System.getProperty( K_KEYVALUE_DATASOURCE );
-        if (value != null) {
-            prop.setProperty( K_KEYVALUE_DATASOURCE, value);
-        }
+    private String getNonDefaultAsString( String key ) {
+	String value = System.getProperty( key );
+	if ( value == null ) value = prop.getProperty( key );
     }
     private boolean getBoolean( String key ) {
-	String value = prop.getProperty( key );
+	String value = getNondefaultAsString( key );
 	return ( value != null ? Boolean.parseBoolean( value ) : ((Boolean) DEFAULTS.get( key )).booleanValue() );
     }
     private int getInt( String key ) {
-	String value = prop.getProperty( key );
+	String value = getNondefaultAsString( key );
 	return ( value != null ? Integer.parseInt( value ) : ((Integer) DEFAULTS.get( key )).intValue() );
     }
     private String getString( String key ) {
-	String value = prop.getProperty( key );
+	String value = getNondefaultAsString( key );
 	return ( value != null ? value : (String) DEFAULTS.get( key ) );
     }
 
