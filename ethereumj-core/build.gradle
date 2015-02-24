@@ -43,6 +43,7 @@ test {
 
 configurations {
     compile.extendsFrom antlr4
+    console
 }
 
 ext {
@@ -87,6 +88,14 @@ dependencies {
     optional "log4j:apache-log4j-extras:${log4jVersion}"
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
+
+    // stuff to bring up an interactive console, see
+    // http://stackoverflow.com/questions/22567831/gradle-execute-groovy-interactive-shell-with-project-classpath
+    console 'commons-cli:commons-cli:1.2'
+    console('jline:jline:2.11') {
+        exclude(group: 'junit', module: 'junit')
+    }
+    console 'org.codehaus.groovy:groovy-groovysh:2.2.+'
 }
 
 javadoc {
@@ -108,6 +117,31 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 task javadocJar(type: Jar) {
     classifier = "javadoc"
     from javadoc
+}
+
+// stuff to bring up an interactive console, see
+// http://stackoverflow.com/questions/22567831/gradle-execute-groovy-interactive-shell-with-project-classpath
+task(console, dependsOn: 'classes') << {
+    def classpath = sourceSets.main.runtimeClasspath + configurations.console
+
+    def command = [
+        'java',
+        '-cp', classpath.collect().join(System.getProperty('path.separator')),
+        'org.codehaus.groovy.tools.shell.Main',
+        '--color'
+    ]
+
+    def proc = new ProcessBuilder(command)
+        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+        .redirectInput(ProcessBuilder.Redirect.INHERIT)
+        .redirectError(ProcessBuilder.Redirect.INHERIT)
+        .start()
+
+    proc.waitFor()
+
+    if (0 != proc.exitValue()) {
+        throw new RuntimeException("console exited with status: ${proc.exitValue()}")
+    }
 }
 
 artifacts {
