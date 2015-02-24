@@ -3,6 +3,8 @@ package org.ethereum.config;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 final class KeysDefaultsConstants {
     final static String K_BLOCKCHAIN_ONLY             = "blockchain.only";
@@ -46,6 +48,8 @@ final class KeysDefaultsConstants {
     // utilities for implementations in this package
     final static String TRADITIONAL_PROPS_FILENAME;
     final static String TRADITIONAL_PROPS_RESOURCE;
+
+    final static Set<String> ORDERED_KEYS;
 
     static {
 	String userDir = System.getProperty( "user.dir" );
@@ -91,5 +95,7 @@ final class KeysDefaultsConstants {
 	tmpDefaults.put( K_VM_TEST_LOAD_LOCAL,          false                    );
 
 	DEFAULTS = Collections.unmodifiableMap( tmpDefaults );
+
+	ORDERED_KEYS = Collections.unmodifiableSet( new TreeSet<String>( DEFAULTS.keySet() ) );
     }
 }

@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 import static org.ethereum.config.KeysDefaultsConstants.*;
 
@@ -120,7 +122,7 @@ public abstract class SystemProperties {
     };
 
     private void print(LinePrinter lp) {
-	for ( String key : DEFAULTS.keySet() ) {
+	for ( String key : ORDERED_KEYS ) {
             String value = getCoerceToString( key );
 	    value = ( value == null ? "null" : value );
 	    if ( K_COINBASE_SECRET.equals( key ) ) value = "[hidden]";

@@ -80,7 +80,7 @@ public class CLIInterface {
                     cfg.setActivePeerPort(Integer.valueOf(port));
                 }
 
-                // override the listen port directory
+                // override whether the database should be reset
                 if (args[i].equals("-reset") && i + 1 < args.length) {
                     Boolean resetStr = interpret(args[i + 1]);
                     logger.info("Resetting db set to [{}]", resetStr);
