@@ -94,6 +94,10 @@ public class Message {
         byte[] s = new byte[32];
         byte v = signature[64];
 
+        // todo: remove this when cpp conclude what they do here
+        if (v == 1) v = 28;
+        if (v == 0) v = 27;
+
         System.arraycopy(signature, 0, r, 0, 32);
         System.arraycopy(signature, 32, s, 0, 32);
 
