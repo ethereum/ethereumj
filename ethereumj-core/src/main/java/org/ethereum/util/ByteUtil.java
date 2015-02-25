@@ -349,4 +349,29 @@ public class ByteUtil {
         byte dataByte = data[posByte];
         return Math.min(1, (dataByte & (1 << (posBit))));
     }
+
+
+    /**
+     * @param arrays - arrays to merge
+     * @return - merged array
+     */
+    public static byte[] merge(byte[]... arrays)
+    {
+        int arrCount = 0;
+        int count = 0;
+        for (byte[] array: arrays)
+        {
+            arrCount++;
+            count += array.length;
+        }
+
+        // Create new array and copy all array contents
+        byte[] mergedArray = new byte[count];
+        int start = 0;
+        for (byte[] array: arrays) {
+            System.arraycopy(array, 0, mergedArray, start, array.length);
+            start += array.length;
+        }
+        return mergedArray;
+    }
 }
