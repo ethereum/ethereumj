@@ -1,10 +1,12 @@
 package test.ethereum.net;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.*;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
@@ -22,9 +24,9 @@ public class RLPXTest {
 
         String ip = "85.65.19.231";
         int port = 30303;
-        long expiration = System.currentTimeMillis();
+        ECKey key = ECKey.fromPrivate(BigInteger.TEN);
 
-        Message ping = PingMessage.create(ip, port);
+        Message ping = PingMessage.create(ip, port, key);
         logger.info("{}", ping);
 
         byte[] wire = ping.getPacket();
@@ -32,14 +34,18 @@ public class RLPXTest {
         logger.info("{}", ping2);
 
         assertEquals(ping.toString(), ping2.toString());
+
+        String key2 = ping2.getKey().toString();
+        assertEquals(key.toString(), key2.toString());
     }
 
     @Test // pong test
     public void test2(){
 
         byte[] token = sha3("+++".getBytes(Charset.forName("UTF-8")));
+        ECKey key = ECKey.fromPrivate(BigInteger.TEN);
 
-        Message pong = PongMessage.create(token);
+        Message pong = PongMessage.create(token, key);
         logger.info("{}", pong);
 
         byte[] wire = pong.getPacket();
@@ -47,6 +53,9 @@ public class RLPXTest {
         logger.info("{}", pong);
 
         assertEquals(pong.toString(), pong2.toString());
+
+        String key2 = pong2.getKey().toString();
+        assertEquals(key.toString(), key2.toString());
     }
 
     @Test // neighbors message
@@ -62,7 +71,9 @@ public class RLPXTest {
         Node node = new Node(id, ip, port);
 
         List<Node> nodes = Arrays.asList(node);
-        Message neighbors = NeighborsMessage.create(nodes);
+        ECKey key = ECKey.fromPrivate(BigInteger.TEN);
+
+        Message neighbors = NeighborsMessage.create(nodes, key);
         logger.info("{}", neighbors);
 
         byte[] wire = neighbors.getPacket();
@@ -70,14 +81,18 @@ public class RLPXTest {
         logger.info("{}", neighbors2);
 
         assertEquals(neighbors.toString(), neighbors2.toString());
+
+        String key2 = neighbors2.getKey().toString();
+        assertEquals(key.toString(), key2.toString());
     }
 
     @Test // find node message
     public void test4(){
 
         byte[] id = sha3("+++".getBytes(Charset.forName("UTF-8")));
+        ECKey key = ECKey.fromPrivate(BigInteger.TEN);
 
-        Message findNode = FindNodeMessage.create(id);
+        Message findNode = FindNodeMessage.create(id, key);
         logger.info("{}", findNode);
 
         byte[] wire = findNode.getPacket();
@@ -85,6 +100,9 @@ public class RLPXTest {
         logger.info("{}", findNode2);
 
         assertEquals(findNode.toString(), findNode2.toString());
+
+        String key2 = findNode2.getKey().toString();
+        assertEquals(key.toString(), key2.toString());
     }
 
 
@@ -92,8 +110,9 @@ public class RLPXTest {
     public void test5(){
 
         byte[] id = sha3("+++".getBytes(Charset.forName("UTF-8")));
+        ECKey key = ECKey.fromPrivate(BigInteger.TEN);
 
-        Message findNode = FindNodeMessage.create(id);
+        Message findNode = FindNodeMessage.create(id, key);
         logger.info("{}", findNode);
 
         byte[] wire = findNode.getPacket();

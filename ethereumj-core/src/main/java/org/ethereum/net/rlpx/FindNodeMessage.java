@@ -1,11 +1,12 @@
 package org.ethereum.net.rlpx;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 
 public class FindNodeMessage extends Message {
 
-    public static Message create(byte[] target) {
+    public static Message create(byte[] target, ECKey privKey) {
 
         long expiration = System.currentTimeMillis();
 
@@ -17,7 +18,7 @@ public class FindNodeMessage extends Message {
         byte[] data = RLP.encodeList(rlpToken, rlpExp);
 
         FindNodeMessage findNode = new FindNodeMessage();
-        findNode.encode(type, data);
+        findNode.encode(type, data, privKey);
 
         return findNode;
     }

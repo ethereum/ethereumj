@@ -1,5 +1,6 @@
 package org.ethereum.net.rlpx;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 public class NeighborsMessage extends Message {
 
-    public static Message create(List<Node> nodes) {
+    public static Message create(List<Node> nodes, ECKey privKey) {
 
         long expiration = System.currentTimeMillis();
 
@@ -27,7 +28,7 @@ public class NeighborsMessage extends Message {
         byte[] data = RLP.encodeList(rlpListNodes, rlpExp);
 
         NeighborsMessage neighborsMessage = new NeighborsMessage();
-        neighborsMessage.encode(type, data);
+        neighborsMessage.encode(type, data, privKey);
 
         return neighborsMessage;
     }

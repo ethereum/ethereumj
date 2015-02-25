@@ -1,11 +1,12 @@
 package org.ethereum.net.rlpx;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 
 public class PongMessage extends Message {
 
-    public static Message create(byte[] token) {
+    public static Message create(byte[] token, ECKey privKey) {
 
         long expiration = System.currentTimeMillis();
 
@@ -17,7 +18,7 @@ public class PongMessage extends Message {
         byte[] data = RLP.encodeList(rlpToken, rlpExp);
 
         PongMessage pong = new PongMessage();
-        pong.encode(type, data);
+        pong.encode(type, data, privKey);
 
         return pong;
     }

@@ -5,10 +5,14 @@ import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
+import java.security.SignatureException;
+
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.merge;
 
 public class Message {
+
+    byte[] wire;
 
     byte[] mdc;
     byte[] signature;
@@ -48,12 +52,13 @@ public class Message {
         msg.signature = signature;
         msg.type = type;
         msg.data = data;
+        msg.wire = wire;
 
         return msg;
     }
 
 
-    public Message encode(byte[] type, byte[] data) {
+    public Message encode(byte[] type, byte[] data, ECKey privKey) {
 
         /* [1] Calc sha3 - prepare for sig */
         byte[] payload = new byte[type.length + data.length];
@@ -62,12 +67,11 @@ public class Message {
         byte[] forSig = sha3(payload);
 
         /* [2] Crate signature*/
-        ECKey privKey = ECKey.fromPrivate(Hex.decode("3ecb44df2159c26e0f995712d4f39b6f6e499b40749b1cf1246c37f9516cb6a4"));
         ECKey.ECDSASignature signature = privKey.sign(forSig);
 
         byte[] sigBytes =
-                merge(new byte[]{signature.v}, BigIntegers.asUnsignedByteArray(signature.r),
-                        BigIntegers.asUnsignedByteArray(signature.s));
+                merge(BigIntegers.asUnsignedByteArray(signature.r),
+                        BigIntegers.asUnsignedByteArray(signature.s), new byte[]{signature.v});
 
         // [3] calculate MDC
         byte[] forSha = merge(sigBytes, type, data);
@@ -79,12 +83,35 @@ public class Message {
         this.type = type;
         this.data = data;
 
+        this.wire = merge(this.mdc, this.signature, this.type, this.data);
+
         return this;
     }
 
+    public ECKey getKey() {
+
+        byte[] r = new byte[32];
+        byte[] s = new byte[32];
+        byte v = signature[64];
+
+        System.arraycopy(signature, 0, r, 0, 32);
+        System.arraycopy(signature, 32, s, 0, 32);
+
+        ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v);
+        byte[] msgHash = sha3(wire, 97, wire.length - 97);
+
+        ECKey outKey = null;
+        try {
+            outKey = ECKey.signatureToKey(msgHash, signature.toBase64());
+        } catch (SignatureException e) {
+            e.printStackTrace();
+        }
+
+        return outKey;
+    }
+
     public byte[] getPacket() {
-        byte[] packet = merge(mdc, signature, type, data);
-        return packet;
+        return wire;
     }
 
     public byte[] getMdc() {

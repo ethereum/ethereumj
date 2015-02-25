@@ -1,11 +1,12 @@
 package org.ethereum.net.rlpx;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 
 public class PingMessage extends Message {
 
-    public static Message create(String ip, int port){
+    public static Message create(String ip, int port, ECKey privKey){
 
         long expiration = System.currentTimeMillis();
 
@@ -18,7 +19,7 @@ public class PingMessage extends Message {
         byte[] data = RLP.encodeList(rlpIp, rlpPort, rlpExp);
 
         PingMessage ping = new PingMessage();
-        ping.encode(type, data);
+        ping.encode(type, data, privKey);
 
         return ping;
     }
