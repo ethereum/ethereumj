@@ -6,6 +6,14 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+/*
+ *
+ * To add new keys, be sure to update this file in three places:
+ *    1) define the package-visible final static constant. (we hide to avoid publishing inline-able constants.)
+ *    2) define a default, by adding that constant to the nascent DEFAULTS map in the static initializer
+ *    3) define an accessor to the key as a static method of the Keys class.
+ *
+ */
 final class KeysDefaultsConstants {
     final static String K_BLOCKCHAIN_ONLY             = "blockchain.only";
     final static String K_COINBASE_SECRET             = "coinbase.secret";
@@ -97,5 +105,47 @@ final class KeysDefaultsConstants {
 	DEFAULTS = Collections.unmodifiableMap( tmpDefaults );
 
 	ORDERED_KEYS = Collections.unmodifiableSet( new TreeSet<String>( DEFAULTS.keySet() ) );
+    }
+
+    // publish access to constants outside the config package only via methods
+    
+    public static Map<String,Object> defaultConfig()     { return DEFAULTS; }
+
+    static class Keys {
+	public static Set<String> all()                  { return ORDERED_KEYS; }
+
+	public static String blockchainOnly()            { return K_BLOCKCHAIN_ONLY; }
+	public static String coinbaseSecret()            { return K_COINBASE_SECRET; }
+	public static String dumpBlock()                 { return K_DUMP_BLOCK; }
+	public static String dumpCleanOnRestart()        { return K_DUMP_CLEAN_ON_RESTART; } 
+	public static String dumpDir()                   { return K_DUMP_DIR; }
+	public static String dumpFull()                  { return K_DUMP_FULL; }
+	public static String dumpStyle()                 { return K_DUMP_STYLE; }
+	public static String databaseDir()               { return K_DATABASE_DIR; }
+	public static String databaseReset()             { return K_DATABASE_RESET; }
+	public static String helloPhrase()               { return K_HELLO_PHRASE; }
+	public static String keyvalueDatasource()        { return K_KEYVALUE_DATASOURCE; }
+	public static String maxBlocksAsk()              { return K_MAX_BLOCKS_ASK; }
+	public static String maxHashesAsk()              { return K_MAX_HASHES_ASK; }
+	public static String maxBlocksQueued()           { return K_MAX_BLOCKS_QUEUED; }
+	public static String peerActiveIP()              { return K_PEER_ACTIVE_IP; }
+	public static String peerActivePort()            { return K_PEER_ACTIVE_PORT; }
+	public static String peerCapabilities()          { return K_PEER_CAPABILITIES; }
+	public static String peerChannelReadTimeout()    { return K_PEER_CHANNEL_READ_TIMEOUT; }
+	public static String peerConnectionTimeout()     { return K_PEER_CONNECTION_TIMEOUT; }
+	public static String peerDiscoveryEnabled()      { return K_PEER_DISCOVERY_ENABLED; }
+	public static String peerDiscoveryWorkers()      { return K_PEER_DISCOVERY_WORKERS; }
+	public static String peerDiscoveryIPList()       { return K_PEER_DISCOVERY_IP_LIST; }
+	public static String peerListenPort()            { return K_PEER_LISTEN_PORT; }
+	public static String playVM()                    { return K_PLAY_VM; }
+	public static String projectVersion()            { return K_PROJECT_VERSION; }
+	public static String recordBlocks()              { return K_RECORD_BLOCKS; }
+	public static String rootHashStart()             { return K_ROOT_HASH_START; }
+	public static String samplesDir()                { return K_SAMPLES_DIR; }
+	public static String transactionApproveTimeout() { return K_TRANSACTION_APPROVE_TIMEOUT; }
+	public static String traceStartblock()           { return K_TRACE_STARTBLOCK; }
+	public static String vmStructuredDir()           { return K_VM_STRUCTURED_DIR; }
+	public static String vmStructuredTrace()         { return K_VM_STRUCTURED_TRACE; }
+	public static String vmTestLoadLocal()           { return K_VM_TEST_LOAD_LOCAL; }
     }
 }

@@ -5,8 +5,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
 
 import static org.ethereum.config.KeysDefaultsConstants.*;
 
