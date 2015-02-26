@@ -8,13 +8,16 @@ import java.util.TreeSet;
 
 /*
  *
- * To add new keys, be sure to update this file in three places:
- *    1) define the package-visible final static constant. (we hide to avoid publishing inline-able constants.)
- *    2) define a default, by adding that constant to the nascent DEFAULTS map in the static initializer
- *    3) define an accessor to the key as a static method of the Keys class.
+ *  To add new keys, be sure to update this file in three places:
+ *     1) define the package-visible final static constant. (we hide to avoid publishing inline-able constants.)
+ *     2) define a default, by adding that constant to the nascent DEFAULTS map in the static initializer
+ *     3) define an accessor to the key as a static method of the Keys class.
+ *
+ *  Initializing this class should NOT force initialization of the SystemProperties class! Clients may rely
+ *  upon the accessibility of the class prior to the materialization of the application's immutable config.
  *
  */
-final class KeysDefaults {
+public final class KeysDefaults {
     final static String K_BLOCKCHAIN_ONLY             = "blockchain.only";
     final static String K_COINBASE_SECRET             = "coinbase.secret";
     final static String K_DUMP_BLOCK                  = "dump.block";
@@ -111,7 +114,7 @@ final class KeysDefaults {
     
     public static Map<String,Object> defaultConfig()     { return DEFAULTS; }
 
-    static class Keys {
+    public static class Keys {
 	public static Set<String> all()                  { return ORDERED_KEYS; }
 
 	public static String blockchainOnly()            { return K_BLOCKCHAIN_ONLY; }

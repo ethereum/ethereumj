@@ -61,9 +61,8 @@ final class PropertiesSystemProperties extends SystemProperties {
     }
 
     private void applyCommandLineOverrides() {
-	CLIInterfaceConfig.Frozen mapHolder = CLIInterface.getConfigOverrides();
-	if ( mapHolder != null ) {
-	    Map<String,Object> overrides = mapHolder.getMap();
+	Map<String,Object> overrides = CLIInterface.getConfigOverrides();
+	if ( overrides != null ) {
 	    for ( Map.Entry<String,Object> entry : overrides.entrySet() ) {
 		String k = entry.getKey();
 		Object v = entry.getValue();
@@ -71,7 +70,7 @@ final class PropertiesSystemProperties extends SystemProperties {
 		logger.debug("Applied command line config override: {} -> {}", k, v);
 	    }
 	} else {
-	    logger.debug("Command-line overrides have not been set, not even to an empty set. Presumably this application was not run as a command-line application");
+	    logger.debug("Command-line overrides have not been set, not even to an empty Map. Presumably this application was not run as a command-line application");
 	}
     }
 

@@ -5,17 +5,25 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
 /*
- * Note: The classes below are the ONLY classes in config
- *        that should be referenced from CLIInterface.
+ * Note: This class should never, directly or indirectly,
+ *       touch (cause initialization-on-load of)
+ *
+ *        org.ethereum.config.SystemProperties
  *
  *       The static initializer for the SystemProperties
  *       expects the static field CONFIG_OVERRIDES to
  *       have already been set when that class is 
  *       initialized.
+ *
+ *       It is (by construction) safe for this class to
+ *       touch the class KeysDefaults in the config package.
  */
-import org.ethereum.config.CLIInterfaceConfig;
-import org.ethereum.config.CLIInterfaceConfig.Frozen;
+import org.ethereum.config.KeysDefaults.Keys;
 
 /**
  * @author Roman Mandeleil
@@ -26,12 +34,12 @@ public class CLIInterface {
 
     private static final Logger logger = LoggerFactory.getLogger("cli");
 
-    private static CLIInterfaceConfig.Frozen CONFIG_OVERRIDES = null;
+    private static Map<String,Object> CONFIG_OVERRIDES = null;
 
-    public static synchronized CLIInterfaceConfig.Frozen getConfigOverrides() {
+    public static synchronized Map<String,Object> getConfigOverrides() {
 	return CONFIG_OVERRIDES;
     }
-    public static synchronized void setConfigOverrides( CLIInterfaceConfig.Frozen overrides ) {
+    public static synchronized void setConfigOverrides( Map<String,Object> overrides ) {
 	if ( CONFIG_OVERRIDES == null ) {
 	    CONFIG_OVERRIDES = overrides;
 	} else {
@@ -44,11 +52,11 @@ public class CLIInterface {
     public static void call(String[] args) {
 
         try {
-	    CLIInterfaceConfig cfg = new CLIInterfaceConfig();
+	    Map<String,Object> overrides = new HashMap<>();
 
             for (int i = 0; i < args.length; ++i) {
 
-                // override the db directory
+                // prints help message
                 if (args[i].equals("--help")) {
 
                     printHelp();
@@ -59,14 +67,14 @@ public class CLIInterface {
                 if (args[i].equals("-db") && i + 1 < args.length) {
                     String db = args[i + 1];
                     logger.info("DB directory set to [{}]", db);
-                    cfg.setDataBaseDir(db);
+		    overrides.put( Keys.databaseDir(), db );
                 }
 
                 // override the listen port directory
                 if (args[i].equals("-listen") && i + 1 < args.length) {
                     String port = args[i + 1];
                     logger.info("Listen port set to [{}]", port);
-                    cfg.setListenPort(Integer.valueOf(port));
+		    overrides.put( Keys.peerListenPort(), Integer.valueOf( port ) );
                 }
 
                 // override the connect host:port directory
@@ -76,19 +84,19 @@ public class CLIInterface {
                     String[] params = connectStr.split(":");
                     String host = params[0];
                     String port = params[1];
-                    cfg.setActivePeerIP(host);
-                    cfg.setActivePeerPort(Integer.valueOf(port));
+		    overrides.put( Keys.peerActiveIP(), host );
+		    overrides.put( Keys.peerActivePort(), Integer.valueOf( port ) );
                 }
 
                 // override whether the database should be reset
                 if (args[i].equals("-reset") && i + 1 < args.length) {
-                    Boolean resetStr = interpret(args[i + 1]);
-                    logger.info("Resetting db set to [{}]", resetStr);
-                    cfg.setDatabaseReset(resetStr);
+                    Boolean reset = interpret(args[i + 1]);
+                    logger.info("Resetting db set to [{}]", reset);
+		    overrides.put( Keys.databaseReset(), reset );
                 }
             }
 
-	    setConfigOverrides( cfg.freeze() );
+	    CONFIG_OVERRIDES = Collections.unmodifiableMap( overrides );
 
             logger.info("");
         } catch (Throwable e) {
