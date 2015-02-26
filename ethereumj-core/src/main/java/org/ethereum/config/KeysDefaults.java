@@ -14,7 +14,7 @@ import java.util.TreeSet;
  *    3) define an accessor to the key as a static method of the Keys class.
  *
  */
-final class KeysDefaultsConstants {
+final class KeysDefaults {
     final static String K_BLOCKCHAIN_ONLY             = "blockchain.only";
     final static String K_COINBASE_SECRET             = "coinbase.secret";
     final static String K_DUMP_BLOCK                  = "dump.block";

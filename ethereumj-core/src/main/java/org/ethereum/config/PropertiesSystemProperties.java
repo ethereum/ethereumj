@@ -9,7 +9,7 @@ import java.util.Properties;
 
 import org.ethereum.cli.CLIInterface;
 
-import static org.ethereum.config.KeysDefaultsConstants.*;
+import static org.ethereum.config.KeysDefaults.*;
 
 final class PropertiesSystemProperties extends SystemProperties {
     private final Properties prop = new Properties();

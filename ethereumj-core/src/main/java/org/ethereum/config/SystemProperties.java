@@ -6,7 +6,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.ethereum.config.KeysDefaultsConstants.*;
+import static org.ethereum.config.KeysDefaults.*;
 
 /**
  * Utility class to retrieve property values from the system.properties files

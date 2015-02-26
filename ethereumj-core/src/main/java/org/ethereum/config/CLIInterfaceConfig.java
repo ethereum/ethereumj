@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.ethereum.config.KeysDefaultsConstants.*;
+import static org.ethereum.config.KeysDefaults.*;
 
 public final class CLIInterfaceConfig {
     public static class Frozen {
