@@ -27,41 +27,42 @@ public final class KeysDefaults {
     // to be used by plug-in writers outside the package, via public accessor
     private final static Logger configPluginLogger = LoggerFactory.getLogger("config-plugin");
 
-    final static String K_BLOCKCHAIN_ONLY             = "blockchain.only";
-    final static String K_COINBASE_SECRET             = "coinbase.secret";
-    final static String K_DUMP_BLOCK                  = "dump.block";
-    final static String K_DUMP_CLEAN_ON_RESTART       = "dump.clean.on.restart";
-    final static String K_DUMP_DIR                    = "dump.dir";
-    final static String K_DUMP_FULL                   = "dump.full";
-    final static String K_DUMP_STYLE                  = "dump.style";
-    final static String K_DATABASE_DIR                = "database.dir";
-    final static String K_DATABASE_RESET              = "database.reset";
-    final static String K_HELLO_PHRASE                = "hello.phrase";
-    final static String K_KEYVALUE_DATASOURCE         = "keyvalue.datasource";
-    final static String K_MAX_BLOCKS_ASK              = "max.blocks.ask";
-    final static String K_MAX_HASHES_ASK              = "max.hashes.ask";
-    final static String K_MAX_BLOCKS_QUEUED           = "max.blocks.queued";
-    final static String K_PEER_ACTIVE_IP              = "peer.active.ip";
-    final static String K_PEER_ACTIVE_PORT            = "peer.active.port";
-    final static String K_PEER_CAPABILITIES           = "peer.capabilities";
-    final static String K_PEER_CHANNEL_READ_TIMEOUT   = "peer.channel.read.timeout";
-    final static String K_PEER_CONNECTION_TIMEOUT     = "peer.connection.timeout";
-    final static String K_PEER_DISCOVERY_ENABLED      = "peer.discovery.enabled";
-    final static String K_PEER_DISCOVERY_WORKERS      = "peer.discovery.workers";
-    final static String K_PEER_DISCOVERY_IP_LIST      = "peer.discovery.ip.list";
-    final static String K_PEER_LISTEN_PORT            = "peer.listen.port";
-    final static String K_PLAY_VM                     = "play.vm";
-    final static String K_PROJECT_VERSION             = "project.version";
-    final static String K_RECORD_BLOCKS               = "record.blocks";
-    final static String K_ROOT_HASH_START             = "root.hash.start";
-    final static String K_SAMPLES_DIR                 = "samples.dir";
-    final static String K_TRANSACTION_APPROVE_TIMEOUT = "transaction.approve.timeout";
-    final static String K_TRACE_STARTBLOCK            = "trace.startblock";
-    final static String K_VM_STRUCTURED_DIR           = "vm.structured.dir";
-    final static String K_VM_STRUCTURED_TRACE         = "vm.structured.trace";
+    final static String ETHEREUMJ_PREFIX     = "ethereumj.";
+    final static int    ETHEREUMJ_PREFIX_LEN = ETHEREUMJ_PREFIX.length();
 
-    //testing, this is an odd key
-    final static String K_VM_TEST_LOAD_LOCAL = "GitHubTests.VMTest.loadLocal";
+    final static String K_BLOCKCHAIN_ONLY             = ETHEREUMJ_PREFIX + "blockchain.only";
+    final static String K_COINBASE_SECRET             = ETHEREUMJ_PREFIX + "coinbase.secret";
+    final static String K_DUMP_BLOCK                  = ETHEREUMJ_PREFIX + "dump.block";
+    final static String K_DUMP_CLEAN_ON_RESTART       = ETHEREUMJ_PREFIX + "dump.clean.on.restart";
+    final static String K_DUMP_DIR                    = ETHEREUMJ_PREFIX + "dump.dir";
+    final static String K_DUMP_FULL                   = ETHEREUMJ_PREFIX + "dump.full";
+    final static String K_DUMP_STYLE                  = ETHEREUMJ_PREFIX + "dump.style";
+    final static String K_DATABASE_DIR                = ETHEREUMJ_PREFIX + "database.dir";
+    final static String K_DATABASE_RESET              = ETHEREUMJ_PREFIX + "database.reset";
+    final static String K_HELLO_PHRASE                = ETHEREUMJ_PREFIX + "hello.phrase";
+    final static String K_KEYVALUE_DATASOURCE         = ETHEREUMJ_PREFIX + "keyvalue.datasource";
+    final static String K_MAX_BLOCKS_ASK              = ETHEREUMJ_PREFIX + "max.blocks.ask";
+    final static String K_MAX_HASHES_ASK              = ETHEREUMJ_PREFIX + "max.hashes.ask";
+    final static String K_MAX_BLOCKS_QUEUED           = ETHEREUMJ_PREFIX + "max.blocks.queued";
+    final static String K_PEER_ACTIVE_IP              = ETHEREUMJ_PREFIX + "peer.active.ip";
+    final static String K_PEER_ACTIVE_PORT            = ETHEREUMJ_PREFIX + "peer.active.port";
+    final static String K_PEER_CAPABILITIES           = ETHEREUMJ_PREFIX + "peer.capabilities";
+    final static String K_PEER_CHANNEL_READ_TIMEOUT   = ETHEREUMJ_PREFIX + "peer.channel.read.timeout";
+    final static String K_PEER_CONNECTION_TIMEOUT     = ETHEREUMJ_PREFIX + "peer.connection.timeout";
+    final static String K_PEER_DISCOVERY_ENABLED      = ETHEREUMJ_PREFIX + "peer.discovery.enabled";
+    final static String K_PEER_DISCOVERY_WORKERS      = ETHEREUMJ_PREFIX + "peer.discovery.workers";
+    final static String K_PEER_DISCOVERY_IP_LIST      = ETHEREUMJ_PREFIX + "peer.discovery.ip.list";
+    final static String K_PEER_LISTEN_PORT            = ETHEREUMJ_PREFIX + "peer.listen.port";
+    final static String K_PLAY_VM                     = ETHEREUMJ_PREFIX + "play.vm";
+    final static String K_PROJECT_VERSION             = ETHEREUMJ_PREFIX + "project.version";
+    final static String K_RECORD_BLOCKS               = ETHEREUMJ_PREFIX + "record.blocks";
+    final static String K_ROOT_HASH_START             = ETHEREUMJ_PREFIX + "root.hash.start";
+    final static String K_SAMPLES_DIR                 = ETHEREUMJ_PREFIX + "samples.dir";
+    final static String K_TRANSACTION_APPROVE_TIMEOUT = ETHEREUMJ_PREFIX + "transaction.approve.timeout";
+    final static String K_TRACE_STARTBLOCK            = ETHEREUMJ_PREFIX + "trace.startblock";
+    final static String K_VM_STRUCTURED_DIR           = ETHEREUMJ_PREFIX + "vm.structured.dir";
+    final static String K_VM_STRUCTURED_TRACE         = ETHEREUMJ_PREFIX + "vm.structured.trace";
+    final static String K_VM_TEST_LOAD_LOCAL          = ETHEREUMJ_PREFIX + "GitHubTests.VMTest.loadLocal"; //testing, this is an odd key
 
     final static Map<String,Object> DEFAULTS;
 
@@ -72,8 +73,6 @@ public final class KeysDefaults {
     final static String TRADITIONAL_PROPS_RESOURCE;
 
     final static Set<String> ORDERED_KEYS;
-
-    final static String ETHEREUMJ_PREFIX = "ethereumj.";
 
     final static String SYSPROP_PLUGIN_PATH_APPEND  = "config.plugin.path.append";
     final static String SYSPROP_PLUGIN_PATH_PREPEND = "config.plugin.path.prepend";
@@ -124,7 +123,9 @@ public final class KeysDefaults {
 
 	DEFAULTS = Collections.unmodifiableMap( tmpDefaults );
 
-	ORDERED_KEYS = Collections.unmodifiableSet( new TreeSet<String>( DEFAULTS.keySet() ) );
+	Set tmpOrderedKeys = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER ); // to deal with one ugly mixed-case key...
+	tmpOrderedKeys.addAll( DEFAULTS.keySet() );
+	ORDERED_KEYS = Collections.unmodifiableSet( tmpOrderedKeys );
     }
 
     // publish access to constants outside the config package only via methods
