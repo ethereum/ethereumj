@@ -11,7 +11,7 @@ import org.ethereum.cli.CLIInterface;
 
 import static org.ethereum.config.KeysDefaults.*;
 
-final class PropertiesSystemProperties extends SystemProperties {
+public final class PropertiesSystemProperties extends StringSourceSystemProperties {
     private final Properties prop = new Properties();
 
     public PropertiesSystemProperties() {
@@ -73,20 +73,9 @@ final class PropertiesSystemProperties extends SystemProperties {
      *  Abstract method implementations
      *
      */
-    protected Boolean getBooleanOrNull( String key ) {
-	String value = getStringOrNull( key );
-	return ( value != null ? Boolean.parseBoolean( value ) : null );
-    }
-    protected Integer getIntegerOrNull( String key ) {
-	String value = getStringOrNull( key );
-	return ( value != null ? Integer.parseInt( value ) : null );
-    }
     protected String getStringOrNull( String key ) {
-	String value = System.getProperty( key );
+	String value = System.getProperty( key );  // accept System.property overrides
 	if ( value == null ) value = prop.getProperty( key );
 	return value;
-    }
-    protected String getCoerceToStringOrNull( String key ) {
-	return getStringOrNull( key );
     }
 }
