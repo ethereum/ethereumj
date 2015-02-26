@@ -1,8 +1,5 @@
 package org.ethereum.config;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.Arrays;
 import java.util.List;
 
@@ -15,23 +12,11 @@ import static org.ethereum.config.KeysDefaults.*;
  * @since 22.05.2014
  */
 public abstract class SystemProperties {
-    final static Logger logger = LoggerFactory.getLogger("config");
 
     public final static SystemProperties CONFIG;
 
-    private final static String DEFAULT_IMPLEMENTATION_CLASS_FQCN = "org.ethereum.config.PropertiesSystemProperties";
-    private final static String SYSPROP_CONFIG_IMPLEMENTATION_CLASS = "config.implementation.class";
-
     static {
-	String implementationClassFqcn = null;
-	try {
-	    implementationClassFqcn = System.getProperty( SYSPROP_CONFIG_IMPLEMENTATION_CLASS );
-	    if ( implementationClassFqcn == null ) implementationClassFqcn = DEFAULT_IMPLEMENTATION_CLASS_FQCN;
-	    CONFIG = (SystemProperties) Class.forName( implementationClassFqcn ).newInstance();
-	} catch ( Exception e ) {
-	    throw new RuntimeException( "Could not instantiate concrete implementation '" + implementationClassFqcn + "'." );
-	}
-
+	CONFIG = new PathFollowingSystemProperties();
 	if ( logger.isDebugEnabled() ) {
 	    logger.debug( "ethereumj configuration:" );
 	    CONFIG.debugPrint();
@@ -43,9 +28,18 @@ public abstract class SystemProperties {
      *  Abstract, protected methods
      *
      */
+
+    /** May throw ClassCastExceptions */
     protected abstract Boolean getBooleanOrNull( String key );
+
+    /** May throw ClassCastExceptions */
     protected abstract Integer getIntegerOrNull( String key );
+
+    /** May throw ClassCastExceptions */
+
     protected abstract String  getStringOrNull( String key );
+
+    /** May NOT throw ClassCastExceptions */
     protected abstract String  getCoerceToStringOrNull( String key );
 
     
@@ -54,17 +48,36 @@ public abstract class SystemProperties {
      *  private utilities for fetching cached config values
      *
      */
+    private void logClassCastError( String key, String expectedType, ClassCastException ick ) {
+	logger.error( "Value for key '" + key + "' has an unexpected type. Should have been " + expectedType + '.', ick );
+    }
+
     private boolean getBoolean( String key ) {
-	Boolean out = getBooleanOrNull( key );
-	return ( out != null ? out : ((Boolean) DEFAULTS.get( key )).booleanValue() );
+	try {
+	    Boolean out = getBooleanOrNull( key );
+	    return ( out != null ? out : ((Boolean) DEFAULTS.get( key )).booleanValue() );
+	} catch ( ClassCastException e ) {
+	    logClassCastError( key, "boolean", e );
+	    throw e;
+	}
     }
     private int getInt( String key ) {
-	Integer out = getIntegerOrNull( key );
-	return ( out != null ? out : ((Integer) DEFAULTS.get( key )).intValue() );
+	try {
+	    Integer out = getIntegerOrNull( key );
+	    return ( out != null ? out : ((Integer) DEFAULTS.get( key )).intValue() );
+	} catch (ClassCastException e) {
+	    logClassCastError( key, "int", e );
+	    throw e;
+	}
     }
     private String getString( String key ) {
-	String out = getStringOrNull( key );
-	return ( out != null ? out : ((String) DEFAULTS.get( key )) );
+	try {
+	    String out = getStringOrNull( key );
+	    return ( out != null ? out : ((String) DEFAULTS.get( key )) );
+	} catch (ClassCastException e) {
+	    logClassCastError( key, "int", e );
+	    throw e;
+	}
     }
     private String getCoerceToString( String key ) {
 	String out = getCoerceToStringOrNull( key );

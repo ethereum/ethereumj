@@ -1,5 +1,8 @@
 package org.ethereum.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +21,12 @@ import java.util.TreeSet;
  *
  */
 public final class KeysDefaults {
+    // used by other classes in this package, not used by this class, not published outside the package
+    final static Logger logger = LoggerFactory.getLogger("config");
+
+    // to be used by plug-in writers outside the package, via public accessor
+    private final static Logger configPluginLogger = LoggerFactory.getLogger("config-plugin");
+
     final static String K_BLOCKCHAIN_ONLY             = "blockchain.only";
     final static String K_COINBASE_SECRET             = "coinbase.secret";
     final static String K_DUMP_BLOCK                  = "dump.block";
@@ -57,10 +66,18 @@ public final class KeysDefaults {
     final static Map<String,Object> DEFAULTS;
 
     // utilities for implementations in this package
+    final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.PropertiesSystemProperties";
+
     final static String TRADITIONAL_PROPS_FILENAME;
     final static String TRADITIONAL_PROPS_RESOURCE;
 
     final static Set<String> ORDERED_KEYS;
+
+    final static String ETHEREUMJ_PREFIX = "ethereumj.";
+
+    final static String SYSPROP_PLUGIN_PATH_APPEND  = "config.plugin.path.append";
+    final static String SYSPROP_PLUGIN_PATH_PREPEND = "config.plugin.path.prepend";
+    final static String SYSPROP_PLUGIN_PATH_REPLACE = "config.plugin.path.replace";
 
     static {
 	String userDir = System.getProperty( "user.dir" );
@@ -111,8 +128,9 @@ public final class KeysDefaults {
     }
 
     // publish access to constants outside the config package only via methods
-    
     public static Map<String,Object> defaultConfig()     { return DEFAULTS; }
+
+    public static Logger getConfigPluginLogger()         { return configPluginLogger; }
 
     public static class Keys {
 	public static Set<String> all()                  { return ORDERED_KEYS; }
