@@ -54,12 +54,6 @@ final class PropertiesSystemProperties extends SystemProperties {
      *  Private utilities
      *
      */
-    private String getNonDefaultAsString( String key ) {
-	String value = System.getProperty( key );
-	if ( value == null ) value = prop.getProperty( key );
-	return value;
-    }
-
     private void applyCommandLineOverrides() {
 	Map<String,Object> overrides = CLIInterface.getConfigOverrides();
 	if ( overrides != null ) {
@@ -79,21 +73,20 @@ final class PropertiesSystemProperties extends SystemProperties {
      *  Abstract method implementations
      *
      */
-    boolean getBoolean( String key ) {
-	String value = getNonDefaultAsString( key );
-	return ( value != null ? Boolean.parseBoolean( value ) : ((Boolean) DEFAULTS.get( key )).booleanValue() );
+    protected Boolean getBooleanOrNull( String key ) {
+	String value = getStringOrNull( key );
+	return ( value != null ? Boolean.parseBoolean( value ) : null );
     }
-    int getInt( String key ) {
-	String value = getNonDefaultAsString( key );
-	return ( value != null ? Integer.parseInt( value ) : ((Integer) DEFAULTS.get( key )).intValue() );
+    protected Integer getIntegerOrNull( String key ) {
+	String value = getStringOrNull( key );
+	return ( value != null ? Integer.parseInt( value ) : null );
     }
-    String getString( String key ) {
-	String value = getNonDefaultAsString( key );
-	return ( value != null ? value : (String) DEFAULTS.get( key ) );
+    protected String getStringOrNull( String key ) {
+	String value = System.getProperty( key );
+	if ( value == null ) value = prop.getProperty( key );
+	return value;
     }
-    String getCoerceToString( String key ) {
-	Object value = getNonDefaultAsString( key );
-	if ( value == null ) value = DEFAULTS.get( key );
-	return String.valueOf( value );
+    protected String getCoerceToStringOrNull( String key ) {
+	return getStringOrNull( key );
     }
 }

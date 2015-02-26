@@ -40,13 +40,36 @@ public abstract class SystemProperties {
 
     /*
      *
-     *  Abstract, package-scoped methods
+     *  Abstract, protected methods
      *
      */
-    abstract boolean getBoolean( String key );
-    abstract int getInt( String key );
-    abstract String getString( String key );
-    abstract String getCoerceToString( String key );
+    protected abstract Boolean getBooleanOrNull( String key );
+    protected abstract Integer getIntegerOrNull( String key );
+    protected abstract String  getStringOrNull( String key );
+    protected abstract String  getCoerceToStringOrNull( String key );
+
+    
+    /*
+     *
+     *  private utilities for fetching cached config values
+     *
+     */
+    private boolean getBoolean( String key ) {
+	Boolean out = getBooleanOrNull( key );
+	return ( out != null ? out : ((Boolean) DEFAULTS.get( key )).booleanValue() );
+    }
+    private int getInt( String key ) {
+	Integer out = getIntegerOrNull( key );
+	return ( out != null ? out : ((Integer) DEFAULTS.get( key )).intValue() );
+    }
+    private String getString( String key ) {
+	String out = getStringOrNull( key );
+	return ( out != null ? out : ((String) DEFAULTS.get( key )) );
+    }
+    private String getCoerceToString( String key ) {
+	String out = getCoerceToStringOrNull( key );
+	return ( out != null ? out : String.valueOf( DEFAULTS.get( key ) ) );
+    }
 
     /*
      *
