@@ -18,15 +18,15 @@ public final class PropertiesSystemProperties extends StringSourceSystemProperti
 	File file = new File( TRADITIONAL_PROPS_FILENAME );
 	if (file.exists()) {
 	    this.prop = ensurePrefixedProperties( loadPropertiesFile( file ) );
-	    logger.debug("{}: config loaded from {}", this.getClass().getName(), TRADITIONAL_PROPS_FILENAME );
+	    logger.debug("config loaded from {} [{}]", TRADITIONAL_PROPS_FILENAME, this.getClass().getSimpleName() );
 	} else {
 	    URL url = SystemProperties.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
 	    if (url == null) {
-		logger.error("{}: Sorry, unable to find file {} or resource {}", this.getClass().getName(), TRADITIONAL_PROPS_FILENAME, TRADITIONAL_PROPS_RESOURCE);
+		logger.error("Sorry, unable to find file {} or resource {} [{}]", TRADITIONAL_PROPS_FILENAME, TRADITIONAL_PROPS_RESOURCE, this.getClass().getSimpleName() );
 		this.prop = new Properties();
 	    } else {
 		this.prop = ensurePrefixedProperties( loadPropertiesURL( url ) );
-		logger.debug("{}: config loaded from resource {}", this.getClass().getName(), TRADITIONAL_PROPS_FILENAME );
+		logger.debug("config loaded from resource {} [{}]", TRADITIONAL_PROPS_FILENAME, this.getClass().getSimpleName());
 	    }
 	}
 	applyCommandLineOverrides();

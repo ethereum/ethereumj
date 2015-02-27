@@ -6,6 +6,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.Map;
 import java.util.Properties;
 
 import static org.ethereum.config.KeysDefaults.*;
@@ -35,6 +36,13 @@ class ConfigUtils {
 	   out.load( input );
 	   return out;
 	}
+    }
+
+    static Properties stringifyToProperties(Map<String,? extends Object> map) {
+	Properties out = new Properties();
+	for ( Map.Entry<String, ? extends Object> entry : map.entrySet() )
+	    out.setProperty( entry.getKey(), String.valueOf( entry.getValue() ) );
+	return out;
     }
 
     private ConfigUtils()

@@ -101,14 +101,14 @@ public final class KeysDefaults {
 	tmpDefaults.put( K_MAX_BLOCKS_ASK,              10                       );
 	tmpDefaults.put( K_MAX_HASHES_ASK,              -1                       );
 	tmpDefaults.put( K_MAX_BLOCKS_QUEUED,           300                      );
-	tmpDefaults.put( K_PEER_ACTIVE_IP,              "poc-7.ethdev.com"       );
+	tmpDefaults.put( K_PEER_ACTIVE_IP,              "poc-8.ethdev.com"       );
 	tmpDefaults.put( K_PEER_ACTIVE_PORT,            30303                    );
 	tmpDefaults.put( K_PEER_CAPABILITIES,           "eth,shh"                );
 	tmpDefaults.put( K_PEER_CHANNEL_READ_TIMEOUT,   5                        );
 	tmpDefaults.put( K_PEER_CONNECTION_TIMEOUT,     10                       );
 	tmpDefaults.put( K_PEER_DISCOVERY_ENABLED,      true                     );
 	tmpDefaults.put( K_PEER_DISCOVERY_WORKERS,      2                        );
-	tmpDefaults.put( K_PEER_DISCOVERY_IP_LIST,      "poc-7.ethdev.com:30303" );
+	tmpDefaults.put( K_PEER_DISCOVERY_IP_LIST,      "poc-8.ethdev.com:30303" );
 	tmpDefaults.put( K_PEER_LISTEN_PORT,            30303                    );
 	tmpDefaults.put( K_PLAY_VM,                     true                     );
 	tmpDefaults.put( K_PROJECT_VERSION,             ""                       );
