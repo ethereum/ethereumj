@@ -12,13 +12,15 @@ public class NeighborsMessage extends Message {
 
         long expiration = System.currentTimeMillis();
 
-        byte[][] nodeRLPs = new byte[nodes.size()][];
+        byte[][] nodeRLPs = null;
 
-        /* RLP Encode data */
-        int i = 0;
-        for (Node node : nodes){
-            nodeRLPs[i] = node.getRLP();
-            ++i;
+        if (nodes != null) {
+            nodeRLPs =  new byte[nodes.size()][];
+            int i = 0;
+            for (Node node : nodes) {
+                nodeRLPs[i] = node.getRLP();
+                ++i;
+            }
         }
 
         byte[] rlpListNodes = RLP.encodeList(nodeRLPs);
