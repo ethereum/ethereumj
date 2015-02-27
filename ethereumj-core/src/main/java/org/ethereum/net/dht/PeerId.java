@@ -17,9 +17,9 @@ public class PeerId {
         HashUtil.randomPeerId();
     }
 
-    public byte nextBit(String startPatern) {
+    public byte nextBit(String startPattern) {
 
-        if (this.toBinaryString().startsWith(startPatern + "1"))
+        if (this.toBinaryString().startsWith(startPattern + "1"))
             return 1;
         else
             return 0;
