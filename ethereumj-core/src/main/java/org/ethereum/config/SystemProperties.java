@@ -179,7 +179,7 @@ public abstract class SystemProperties {
 	public void print( String key, Object value );
     }
     private static String kvline( String key, Object value ) { 
-	return "    " + key + " -> " + value; 
+	return String.format( "    %-" + MAX_KEY_LEN + "s -> %s", key, value ); 
     }
 
     private LinePrinter infoPrinter = new LinePrinter() {

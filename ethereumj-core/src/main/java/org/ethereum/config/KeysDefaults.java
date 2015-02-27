@@ -21,12 +21,6 @@ import java.util.TreeSet;
  *
  */
 public final class KeysDefaults {
-    // used by other classes in this package, not used by this class, not published outside the package
-    final static Logger logger = LoggerFactory.getLogger("config");
-
-    // to be used by plug-in writers outside the package, via public accessor
-    private final static Logger configPluginLogger = LoggerFactory.getLogger("config-plugin");
-
     final static String ETHEREUMJ_PREFIX     = "ethereumj.";
     final static int    ETHEREUMJ_PREFIX_LEN = ETHEREUMJ_PREFIX.length();
 
@@ -64,10 +58,16 @@ public final class KeysDefaults {
     final static String K_VM_STRUCTURED_TRACE         = ETHEREUMJ_PREFIX + "vm.structured.trace";
     final static String K_VM_TEST_LOAD_LOCAL          = ETHEREUMJ_PREFIX + "GitHubTests.VMTest.loadLocal"; //testing, this is an odd key
 
-    final static Map<String,Object> DEFAULTS;
+
+    final static String SYSPROP_PLUGIN_PATH_APPEND  = "config.plugin.path.append";
+    final static String SYSPROP_PLUGIN_PATH_PREPEND = "config.plugin.path.prepend";
+    final static String SYSPROP_PLUGIN_PATH_REPLACE = "config.plugin.path.replace";
 
     // utilities for implementations in this package
     final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.TypesafeConfigSystemProperties,org.ethereum.config.PropertiesSystemProperties";
+
+    // stuff to be set-up in the static initializer
+    final static Map<String,Object> DEFAULTS;
 
     final static String TRADITIONAL_PROPS_FILENAME;
     final static String TRADITIONAL_PROPS_RESOURCE_BASENAME;
@@ -75,9 +75,7 @@ public final class KeysDefaults {
 
     final static Set<String> ORDERED_KEYS;
 
-    final static String SYSPROP_PLUGIN_PATH_APPEND  = "config.plugin.path.append";
-    final static String SYSPROP_PLUGIN_PATH_PREPEND = "config.plugin.path.prepend";
-    final static String SYSPROP_PLUGIN_PATH_REPLACE = "config.plugin.path.replace";
+    final static int MAX_KEY_LEN;
 
     static {
 	String userDir = System.getProperty( "user.dir" );
@@ -128,6 +126,10 @@ public final class KeysDefaults {
 	Set tmpOrderedKeys = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER ); // to deal with one ugly mixed-case key...
 	tmpOrderedKeys.addAll( DEFAULTS.keySet() );
 	ORDERED_KEYS = Collections.unmodifiableSet( tmpOrderedKeys );
+
+	int maxLen = -1;
+	for ( String key : ORDERED_KEYS ) maxLen = Math.max( maxLen, key.length() );
+	MAX_KEY_LEN = maxLen;
     }
 
     // publish access to constants outside the config package only via methods
@@ -172,4 +174,10 @@ public final class KeysDefaults {
 	public static String vmStructuredTrace()         { return K_VM_STRUCTURED_TRACE; }
 	public static String vmTestLoadLocal()           { return K_VM_TEST_LOAD_LOCAL; }
     }
+
+    // used by other classes in this package, not used by this class, not published outside the package
+    final static Logger logger = LoggerFactory.getLogger("config");
+
+    // to be used by plug-in writers outside the package, via public accessor
+    private final static Logger configPluginLogger = LoggerFactory.getLogger("config-plugin");
 }
