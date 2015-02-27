@@ -51,51 +51,16 @@ public abstract class SystemProperties {
 	logger.error( "Value for key '" + key + "' has an unexpected type. Should have been " + expectedType + '.', ick );
     }
 
-    // for backwards compatibility, we accept keys without the ethereumj prefix,
-    // but always use the version with the prefix if available in preference to 
-    // a key without
-    private static class WithWithout {
-	String with;
-	String without() { return with.substring( ETHEREUMJ_PREFIX_LEN ); }
-
-	WithWithout( String key ) {
-	    if ( key.startsWith( ETHEREUMJ_PREFIX ) ) with = key;
-	    else with = ETHEREUMJ_PREFIX + key;
-	}
-    }
-    private Boolean mbPrefixGetBooleanOrNull( String key ) {
-	WithWithout ww = new WithWithout( key );
-
-	Boolean out = getBooleanOrNull( ww.with );
-	if ( out == null ) out = getBooleanOrNull( ww.without() );
-	return out;
-    }
-    private Integer mbPrefixGetIntegerOrNull( String key ) {
-	WithWithout ww = new WithWithout( key );
-
-	Integer out = getIntegerOrNull( ww.with );
-	if ( out == null ) out = getIntegerOrNull( ww.without() );
-	return out;
-    }
-    private String mbPrefixGetStringOrNull( String key ) {
-	WithWithout ww = new WithWithout( key );
-
-	String out = getStringOrNull( ww.with );
-	if ( out == null ) out = getStringOrNull( ww.without() );
-	return out;
-    }
-    private String mbPrefixGetCoerceToStringOrNull( String key ) {
-	WithWithout ww = new WithWithout( key );
-
-	String out = getCoerceToStringOrNull( ww.with );
-	if ( out == null ) out = getCoerceToStringOrNull( ww.without() );
-	return out;
+    private String ensurePrefix( String key ) {
+	if ( key.startsWith( ETHEREUMJ_PREFIX ) ) return key;
+	else return ETHEREUMJ_PREFIX + key;
     }
 
     private boolean getBoolean( String key ) {
 	try {
-	    Boolean out = mbPrefixGetBooleanOrNull( key );
-	    return ( out != null ? out : ((Boolean) DEFAULTS.get( key )).booleanValue() );
+	    String pkey = ensurePrefix( key );
+	    Boolean out = getBooleanOrNull( pkey );
+	    return ( out != null ? out : ((Boolean) DEFAULTS.get( pkey )).booleanValue() );
 	} catch ( ClassCastException e ) {
 	    logClassCastError( key, "boolean", e );
 	    throw e;
@@ -103,8 +68,9 @@ public abstract class SystemProperties {
     }
     private int getInt( String key ) {
 	try {
-	    Integer out = mbPrefixGetIntegerOrNull( key );
-	    return ( out != null ? out : ((Integer) DEFAULTS.get( key )).intValue() );
+	    String pkey = ensurePrefix( key );
+	    Integer out = getIntegerOrNull( pkey );
+	    return ( out != null ? out : ((Integer) DEFAULTS.get( pkey )).intValue() );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
 	    throw e;
@@ -112,16 +78,18 @@ public abstract class SystemProperties {
     }
     private String getString( String key ) {
 	try {
-	    String out = mbPrefixGetStringOrNull( key );
-	    return ( out != null ? out : ((String) DEFAULTS.get( key )) );
+	    String pkey = ensurePrefix( key );
+	    String out = getStringOrNull( pkey );
+	    return ( out != null ? out : ((String) DEFAULTS.get( pkey )) );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
 	    throw e;
 	}
     }
     private String getCoerceToString( String key ) {
-	String out = mbPrefixGetCoerceToStringOrNull( key );
-	return ( out != null ? out : String.valueOf( DEFAULTS.get( key ) ) );
+	String pkey = ensurePrefix( key );
+	String out = getCoerceToStringOrNull( pkey );
+	return ( out != null ? out : String.valueOf( DEFAULTS.get( pkey ) ) );
     }
 
     /*
