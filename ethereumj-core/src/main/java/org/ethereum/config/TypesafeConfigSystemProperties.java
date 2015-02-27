@@ -7,6 +7,8 @@ import java.net.MalformedURLException;
 import java.util.Map;
 import java.util.Properties;
 
+import org.slf4j.Logger;
+
 import com.typesafe.config.*;
 
 import static org.ethereum.config.KeysDefaults.*;
@@ -15,6 +17,8 @@ import static org.ethereum.config.ConfigUtils.*;
 import org.ethereum.cli.CLIInterface;
 
 public class TypesafeConfigSystemProperties extends SystemProperties {
+
+    private final static Logger logger = KeysDefaults.getConfigPluginLogger();
 
     private final static String SN = TypesafeConfigSystemProperties.class.getSimpleName();
 
@@ -64,6 +68,15 @@ public class TypesafeConfigSystemProperties extends SystemProperties {
 	
 	Config sysPropOverrides = ConfigFactory.defaultOverrides();
 
+	ACTIVE = sysPropOverrides
+	    .withFallback( traditionalPropertiesConfigFile )
+	    .withFallback( applicationSettings )
+	    .withFallback( traditionalPropertiesConfigResource )
+	    .withFallback( referenceDefaults )
+	    .resolve();
+
+	/*
+	// Command line overrides are now handled by CLIConfigSystemProperties
 	Config commandLineOverrides;
 	Map<String,Object> cliSettings = CLIInterface.getConfigOverrides();
 	if (cliSettings == null ) {
@@ -83,6 +96,7 @@ public class TypesafeConfigSystemProperties extends SystemProperties {
 	    .withFallback( traditionalPropertiesConfigResource )
 	    .withFallback( referenceDefaults )
 	    .resolve();
+	*/
 
 	warnUnknownKeys();
 

@@ -37,10 +37,10 @@ public abstract class SystemProperties {
 
     /** May throw ClassCastExceptions */
 
-    protected abstract String  getStringOrNull( String key );
+    protected abstract String getStringOrNull( String key );
 
     /** May NOT throw ClassCastExceptions */
-    protected abstract String  getCoerceToStringOrNull( String key );
+    protected abstract String getCoerceToStringOrNull( String key );
     
     /*
      *
@@ -87,8 +87,8 @@ public abstract class SystemProperties {
     private String mbPrefixGetCoerceToStringOrNull( String key ) {
 	WithWithout ww = new WithWithout( key );
 
-	String out = getStringOrNull( ww.with );
-	if ( out == null ) out = getStringOrNull( ww.without() );
+	String out = getCoerceToStringOrNull( ww.with );
+	if ( out == null ) out = getCoerceToStringOrNull( ww.without() );
 	return out;
     }
 

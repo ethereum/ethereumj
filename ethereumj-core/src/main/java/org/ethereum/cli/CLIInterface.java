@@ -96,11 +96,13 @@ public class CLIInterface {
                 }
             }
 
-	    CONFIG_OVERRIDES = Collections.unmodifiableMap( overrides );
+	    setConfigOverrides( Collections.unmodifiableMap( overrides ) );
 
             logger.info("");
         } catch (Throwable e) {
-            logger.error("Error parsing command line: [{}]", e.getMessage());
+	    if ( logger.isErrorEnabled() ) {
+		logger.error("Error parsing command line: [" + e.getMessage() + "]", e);
+	    }
             System.exit(1);
         }
     }

@@ -8,6 +8,8 @@ import java.util.Properties;
 
 import org.ethereum.cli.CLIInterface;
 
+import org.slf4j.Logger;
+
 import static org.ethereum.config.KeysDefaults.*;
 import static org.ethereum.config.ConfigUtils.*;
 
@@ -18,6 +20,9 @@ import static org.ethereum.config.ConfigUtils.*;
  *  no longer in the default plugin path.
  */
 public final class PropertiesSystemProperties extends StringSourceSystemProperties {
+
+    private final static Logger logger = KeysDefaults.getConfigPluginLogger();
+
     private final Properties prop;
 
     public PropertiesSystemProperties() throws IOException {
@@ -35,7 +40,8 @@ public final class PropertiesSystemProperties extends StringSourceSystemProperti
 		logger.debug("config loaded from resource {} [{}]", TRADITIONAL_PROPS_FILENAME, this.getClass().getSimpleName());
 	    }
 	}
-	applyCommandLineOverrides();
+	// We've moved command-line override handling to CLIConfigSystemProperties
+	// applyCommandLineOverrides();
     }
 
     /*
