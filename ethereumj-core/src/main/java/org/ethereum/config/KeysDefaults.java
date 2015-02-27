@@ -67,9 +67,10 @@ public final class KeysDefaults {
     final static Map<String,Object> DEFAULTS;
 
     // utilities for implementations in this package
-    final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.PropertiesSystemProperties";
+    final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.TypesafeConfigSystemProperties,org.ethereum.config.PropertiesSystemProperties";
 
     final static String TRADITIONAL_PROPS_FILENAME;
+    final static String TRADITIONAL_PROPS_RESOURCE_BASENAME;
     final static String TRADITIONAL_PROPS_RESOURCE;
 
     final static Set<String> ORDERED_KEYS;
@@ -81,8 +82,9 @@ public final class KeysDefaults {
     static {
 	String userDir = System.getProperty( "user.dir" );
 
-	TRADITIONAL_PROPS_FILENAME = userDir + "/config/system.properties";
-	TRADITIONAL_PROPS_RESOURCE = "system.properties";
+	TRADITIONAL_PROPS_FILENAME          = userDir + "/config/system.properties";
+	TRADITIONAL_PROPS_RESOURCE_BASENAME = "system";
+	TRADITIONAL_PROPS_RESOURCE          = TRADITIONAL_PROPS_RESOURCE_BASENAME + ".properties";
 
 	// the values below are the fallback, hard-coded default values
 	// of config params.

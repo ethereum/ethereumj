@@ -18,6 +18,7 @@ public final class PathFollowingSystemProperties extends SystemProperties {
 
 		SystemProperties instance = (SystemProperties) Class.forName( fqcn ).newInstance();
 		tmp.add( instance );
+		logger.info( "Loaded config plugin '{}'.", fqcn );
 	    } catch (Exception e ) {
 		logger.warn("Could not create an instance of config plug-in '" + fqcn + "'.", e);
 	    }

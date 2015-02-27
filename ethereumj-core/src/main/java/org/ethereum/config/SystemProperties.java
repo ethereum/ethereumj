@@ -41,7 +41,6 @@ public abstract class SystemProperties {
 
     /** May NOT throw ClassCastExceptions */
     protected abstract String  getCoerceToStringOrNull( String key );
-
     
     /*
      *
@@ -51,7 +50,6 @@ public abstract class SystemProperties {
     private void logClassCastError( String key, String expectedType, ClassCastException ick ) {
 	logger.error( "Value for key '" + key + "' has an unexpected type. Should have been " + expectedType + '.', ick );
     }
-
 
     // for backwards compatibility, we accept keys without the ethereumj prefix,
     // but always use the version with the prefix if available in preference to 
