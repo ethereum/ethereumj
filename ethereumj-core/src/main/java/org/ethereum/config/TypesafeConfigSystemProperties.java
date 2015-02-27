@@ -75,29 +75,6 @@ public class TypesafeConfigSystemProperties extends SystemProperties {
 	    .withFallback( referenceDefaults )
 	    .resolve();
 
-	/*
-	// Command line overrides are now handled by CLIConfigSystemProperties
-	Config commandLineOverrides;
-	Map<String,Object> cliSettings = CLIInterface.getConfigOverrides();
-	if (cliSettings == null ) {
-	    commandLineOverrides = ConfigFactory.empty();
-	} else {
-	    Properties overrideProps = stringifyToProperties( cliSettings );
-	    commandLineOverrides = ConfigFactory.parseProperties( overrideProps );
-	    for ( Map.Entry entry : overrideProps.entrySet() ) {
-		logger.debug("Applied command line config override: {} -> {} [{}]", entry.getKey(), entry.getValue(), SN);
-	    }
-	}
-
-	ACTIVE = commandLineOverrides
-	    .withFallback( sysPropOverrides )
-	    .withFallback( traditionalPropertiesConfigFile )
-	    .withFallback( applicationSettings )
-	    .withFallback( traditionalPropertiesConfigResource )
-	    .withFallback( referenceDefaults )
-	    .resolve();
-	*/
-
 	warnUnknownKeys();
 
 	/*
@@ -114,7 +91,6 @@ public class TypesafeConfigSystemProperties extends SystemProperties {
 	logCompare( ACTIVE, traditionalPropertiesConfigResource, "ACTIVE", "resource:system.properties" );
 	*/
     }
-    
 
     // it'd be great to implement this once with lambdas,
     // but i think ethereum-core wants to remain Java 7

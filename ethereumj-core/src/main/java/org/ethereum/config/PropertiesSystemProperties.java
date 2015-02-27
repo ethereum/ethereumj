@@ -40,27 +40,6 @@ public final class PropertiesSystemProperties extends StringSourceSystemProperti
 		logger.debug("config loaded from resource {} [{}]", TRADITIONAL_PROPS_FILENAME, this.getClass().getSimpleName());
 	    }
 	}
-	// We've moved command-line override handling to CLIConfigSystemProperties
-	// applyCommandLineOverrides();
-    }
-
-    /*
-     *
-     *  Private utilities
-     *
-     */
-    private void applyCommandLineOverrides() {
-	Map<String,Object> overrides = CLIInterface.getConfigOverrides();
-	if ( overrides != null ) {
-	    for ( Map.Entry<String,Object> entry : overrides.entrySet() ) {
-		String k = entry.getKey();
-		Object v = entry.getValue();
-		prop.setProperty( k, String.valueOf( v ) );
-		logger.debug("Applied command line config override: {} -> {}", k, v);
-	    }
-	} else {
-	    logger.debug("Command-line overrides have not been set, not even to an empty Map. Presumably this application was not run as a command-line application");
-	}
     }
 
     /*
