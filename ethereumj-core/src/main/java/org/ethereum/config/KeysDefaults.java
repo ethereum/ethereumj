@@ -103,7 +103,7 @@ public final class KeysDefaults {
 	tmpDefaults.put( K_MAX_BLOCKS_QUEUED,           300                      );
 	tmpDefaults.put( K_PEER_ACTIVE_IP,              "poc-7.ethdev.com"       );
 	tmpDefaults.put( K_PEER_ACTIVE_PORT,            30303                    );
-	tmpDefaults.put( K_PEER_CAPABILITIES, "         eth,shh"                 );
+	tmpDefaults.put( K_PEER_CAPABILITIES,           "eth,shh"                );
 	tmpDefaults.put( K_PEER_CHANNEL_READ_TIMEOUT,   5                        );
 	tmpDefaults.put( K_PEER_CONNECTION_TIMEOUT,     10                       );
 	tmpDefaults.put( K_PEER_DISCOVERY_ENABLED,      true                     );

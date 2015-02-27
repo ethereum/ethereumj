@@ -1,12 +1,16 @@
 package org.ethereum.config;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.net.MalformedURLException;
+import java.util.Properties;
 
 import com.typesafe.config.*;
 
 import static org.ethereum.config.KeysDefaults.*;
+import static org.ethereum.config.ConfigUtils.*;
+
 
 public class TypesafeConfigSystemProperties extends SystemProperties {
 
@@ -15,23 +19,42 @@ public class TypesafeConfigSystemProperties extends SystemProperties {
     static {
 	ClassLoader cl = SystemProperties.class.getClassLoader(); 
 
-	ConfigParseOptions resourceDefaultsOptions = ConfigParseOptions.defaults()
+	ConfigParseOptions referenceDefaultsOptions = ConfigParseOptions.defaults()
 	    .setSyntax( ConfigSyntax.CONF )
 	    .setAllowMissing( true );
 
-	ConfigParseOptions propertiesParseOptions = ConfigParseOptions.defaults()
-	    .setSyntax( ConfigSyntax.PROPERTIES )
-	    .setAllowMissing( true );
-
-
 	// we don't just use ConfigFactor.defaultReference() because we don't want System Property overrides applied at this point.
-	Config resourceDefaults = ConfigFactory.parseResourcesAnySyntax( cl, "reference", resourceDefaultsOptions );
+	Config referenceDefaults = ConfigFactory.parseResourcesAnySyntax( cl, "reference", referenceDefaultsOptions );
 
-	Config traditionalPropertiesConfigResource = ConfigFactory.parseResourcesAnySyntax( cl, TRADITIONAL_PROPS_RESOURCE_BASENAME, propertiesParseOptions );
+	Config traditionalPropertiesConfigResource;
+	try {
+	    URL url = SystemProperties.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
+	    if (url == null) {
+		traditionalPropertiesConfigResource = ConfigFactory.empty();
+	    } else {
+		Properties props = ensurePrefixedProperties( loadPropertiesURL( url ) );
+		traditionalPropertiesConfigResource = ConfigFactory.parseProperties( props );
+	    }
+	} catch ( IOException e ) {
+	    logger.warn( "IOException while trying to read resource " + TRADITIONAL_PROPS_RESOURCE + ", skipping...", e );
+	    traditionalPropertiesConfigResource = ConfigFactory.empty();
+	}
 
 	Config applicationSettings = applicationOrStandardSubstitute( cl );
 
-	Config traditionalPropertiesConfigFile = ConfigFactory.parseFileAnySyntax( new File(TRADITIONAL_PROPS_FILENAME), propertiesParseOptions );
+	Config traditionalPropertiesConfigFile;
+	try {
+	    File f = new File( TRADITIONAL_PROPS_FILENAME );
+	    if (! f.exists()) {
+		traditionalPropertiesConfigFile = ConfigFactory.empty();
+	    } else {
+		Properties props = ensurePrefixedProperties( loadPropertiesFile( f ) );
+		traditionalPropertiesConfigFile = ConfigFactory.parseProperties( props );
+	    }
+	} catch ( IOException e ) {
+	    logger.warn( "IOException while trying to read file " + TRADITIONAL_PROPS_FILENAME + ", skipping...", e );
+	    traditionalPropertiesConfigFile = ConfigFactory.empty();
+	}
 	
 	Config sysPropOverrides = ConfigFactory.defaultOverrides();
 
@@ -39,8 +62,46 @@ public class TypesafeConfigSystemProperties extends SystemProperties {
 	    .withFallback( traditionalPropertiesConfigFile )
 	    .withFallback( applicationSettings )
 	    .withFallback( traditionalPropertiesConfigResource )
-	    .withFallback( resourceDefaults )
+	    .withFallback( referenceDefaults )
 	    .resolve();
+
+	// note the reversed order of referenceDefaults and sysPropertyOverrides.
+	// we really want to just check out referenceDefaults, but we need to resolve ${user.conf}
+	Config referenceDefaultsForComparison = referenceDefaults.withFallback( sysPropOverrides ).resolve();
+	logCompareToDefaults( referenceDefaultsForComparison, "reference.conf" );
+	
+	logCompare( referenceDefaultsForComparison, traditionalPropertiesConfigResource, "reference.conf", "resource:system.properties" );
+    }
+    
+    static void logCompare( Config config0, Config config1, String configName0, String configName1 ) {
+	for ( String key : Keys.all() ) {
+	    
+	    String cfgValue0;
+	    if ( config0.hasPath( key ) ) cfgValue0 = config0.getString( key );
+	    else cfgValue0 = null;
+	    
+	    String cfgValue1;
+	    if ( config1.hasPath( key ) ) cfgValue1 = config1.getString( key );
+	    else cfgValue1 = null;
+	    
+	    if ( ( cfgValue0 == null && cfgValue1 != null ) || (! cfgValue0.equals( cfgValue1 ) ) ) {
+		logger.debug("{} key {} differs from {}, {} vs. {}", configName0, key, configName1, cfgValue0, cfgValue1);
+	    }
+	}
+    }
+
+    static void logCompareToDefaults( Config config, String configName ) {
+	for ( String key : Keys.all() ) {
+
+	    String cfgValue;
+	    if ( config.hasPath( key ) ) cfgValue = config.getString( key );
+	    else cfgValue = null;
+
+	    String defaultValue = String.valueOf( DEFAULTS.get( key ) );
+	    if ( ! defaultValue.equals( cfgValue ) ) {
+		logger.debug("{} key {} differs from default, {} vs. {}", configName, key, cfgValue, defaultValue);
+	    }
+	}
     }
 
     // it'd be great to implement this once with lambdas,

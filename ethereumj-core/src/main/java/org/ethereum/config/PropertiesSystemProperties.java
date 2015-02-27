@@ -1,52 +1,35 @@
 package org.ethereum.config;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
 import org.ethereum.cli.CLIInterface;
 
 import static org.ethereum.config.KeysDefaults.*;
+import static org.ethereum.config.ConfigUtils.*;
 
 public final class PropertiesSystemProperties extends StringSourceSystemProperties {
-    private final Properties prop = new Properties();
+    private final Properties prop;
 
-    public PropertiesSystemProperties() {
-        InputStream input = null;
-        try {
-            File file = new File( TRADITIONAL_PROPS_FILENAME );
-	    
-            if (file.exists()) {
-                logger.debug("config loaded from {}", TRADITIONAL_PROPS_FILENAME );
-                input = new FileInputStream(file);
-            } else {
-                input = SystemProperties.class.getClassLoader().getResourceAsStream( TRADITIONAL_PROPS_RESOURCE );
-                if (input == null) {
-                    logger.error("Sorry, unable to find file {} or resource {}", TRADITIONAL_PROPS_FILENAME, TRADITIONAL_PROPS_RESOURCE);
-                    return;
-                } else {
-		    logger.debug("config loaded from resource {}", TRADITIONAL_PROPS_FILENAME );
-		}
-            }
-
-            // load a properties file from class path, inside static method
-            prop.load(input);
-
-	    applyCommandLineOverrides();
-        } catch (IOException ex) {
-            logger.error(ex.getMessage(), ex);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    logger.error(e.getMessage(), e);
-                }
-            }
-        }
+    public PropertiesSystemProperties() throws IOException {
+	File file = new File( TRADITIONAL_PROPS_FILENAME );
+	if (file.exists()) {
+	    this.prop = ensurePrefixedProperties( loadPropertiesFile( file ) );
+	    logger.debug("{}: config loaded from {}", this.getClass().getName(), TRADITIONAL_PROPS_FILENAME );
+	} else {
+	    URL url = SystemProperties.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
+	    if (url == null) {
+		logger.error("{}: Sorry, unable to find file {} or resource {}", this.getClass().getName(), TRADITIONAL_PROPS_FILENAME, TRADITIONAL_PROPS_RESOURCE);
+		this.prop = new Properties();
+	    } else {
+		this.prop = ensurePrefixedProperties( loadPropertiesURL( url ) );
+		logger.debug("{}: config loaded from resource {}", this.getClass().getName(), TRADITIONAL_PROPS_FILENAME );
+	    }
+	}
+	applyCommandLineOverrides();
     }
 
     /*
