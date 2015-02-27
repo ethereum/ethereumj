@@ -64,7 +64,7 @@ public final class KeysDefaults {
     final static String SYSPROP_PLUGIN_PATH_REPLACE = "config.plugin.path.replace";
 
     // utilities for implementations in this package
-    final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.TypesafeConfigSystemProperties,org.ethereum.config.PropertiesSystemProperties";
+    final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.TypesafeConfigSystemProperties";
 
     // stuff to be set-up in the static initializer
     final static Map<String,Object> DEFAULTS;

@@ -11,6 +11,12 @@ import org.ethereum.cli.CLIInterface;
 import static org.ethereum.config.KeysDefaults.*;
 import static org.ethereum.config.ConfigUtils.*;
 
+/*
+ *  This plugin replicates the original behavior of the SystemProperties class
+ *  prior to its refactoring. (It was the first plug-in refactored out of that class.)
+ *  TypesafeConfigSystemProperties provides a superset of its behavior, so it is
+ *  no longer in the default plugin path.
+ */
 public final class PropertiesSystemProperties extends StringSourceSystemProperties {
     private final Properties prop;
 
