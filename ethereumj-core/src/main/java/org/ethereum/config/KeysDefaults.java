@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.TreeSet;
 
 /*
@@ -16,9 +17,10 @@ import java.util.TreeSet;
  *     2) define a default, by adding that constant to the nascent DEFAULTS map in the static initializer
  *     3) define an accessor to the key as a static method of the Keys class.
  *
+ *  Don't forget to also define an accessor that looks up the key in the SystemProperties class.
+ *
  *  Initializing this class should NOT force initialization of the SystemProperties class! Clients may rely
  *  upon the accessibility of the class prior to the materialization of the application's immutable config.
- *
  */
 public final class KeysDefaults {
     final static String ETHEREUMJ_PREFIX     = "ethereumj.";
@@ -74,6 +76,7 @@ public final class KeysDefaults {
     final static String TRADITIONAL_PROPS_RESOURCE;
 
     final static Set<String> ORDERED_KEYS;
+    final static Set<String> SYSPROPS;
 
     final static int MAX_KEY_LEN;
 
@@ -130,6 +133,12 @@ public final class KeysDefaults {
 	int maxLen = -1;
 	for ( String key : ORDERED_KEYS ) maxLen = Math.max( maxLen, key.length() );
 	MAX_KEY_LEN = maxLen;
+
+	Set<String> tmpSysProps = new HashSet<>();
+	tmpSysProps.add( SYSPROP_PLUGIN_PATH_APPEND  );
+	tmpSysProps.add( SYSPROP_PLUGIN_PATH_PREPEND );
+	tmpSysProps.add( SYSPROP_PLUGIN_PATH_REPLACE );
+	SYSPROPS = Collections.unmodifiableSet( tmpSysProps );
     }
 
     // publish access to constants outside the config package only via methods

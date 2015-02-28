@@ -247,7 +247,7 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
     void warnUnknownKeys() {
 	for ( Map.Entry<String,ConfigValue> entry : active.entrySet() ){
 	    String key = entry.getKey();
-	    if ( key.startsWith( ETHEREUMJ_PREFIX ) && !ORDERED_KEYS.contains( key ) )
+	    if ( key.startsWith( ETHEREUMJ_PREFIX ) && !ORDERED_KEYS.contains( key ) && !SYSPROPS.contains( key ) )
 		logger.warn("Unknown ethereumj key: {} [{}]", key, SN);
 	}
     }
