@@ -37,9 +37,33 @@ antlr4 {
 
 compileJava.dependsOn antlr4
 
+// to ensure unique DBs across tests
+class Counter {
+      int count = 0;
+      synchronized int incrementAndGet() { return ++count; }
+}
+Counter counter = new Counter();
+
 test {
-    systemProperty "file.encoding", "UTF-8"
-    jvmArgs '-Xss16m'
+     forkEvery 1
+     maxParallelForks Runtime.runtime.availableProcessors()
+
+     // testLogging {
+     //   showStandardStreams = true
+     // }
+
+     systemProperty "file.encoding", "UTF-8"
+     jvmArgs '-Xss16m'
+
+     beforeSuite { TestDescriptor descriptor ->
+        // using name or className from the descriptor gave odd, inconsistent results
+	// i think there are issues with how groovy controls the parallelism of its forks,
+	// i.e. System properties might be stored in one shared structure, and beforeSuite
+	// might be run multiple times prior to the fork it intends to describe, leaving 
+	// names of DB dirs nondeterministic. 
+
+        systemProperty( 'ethereumj.database.dir', "test_db/db" + counter.incrementAndGet() )
+     }
 }
 
 configurations {
