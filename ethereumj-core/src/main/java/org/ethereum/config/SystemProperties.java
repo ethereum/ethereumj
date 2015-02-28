@@ -16,9 +16,13 @@ public class SystemProperties {
     public final static SystemProperties CONFIG;
 
     static {
-	CONFIG = new SystemProperties( new PathFollowingConfigPlugin() );
+	ConfigPlugin head = ConfigPlugin.fromPluginPath( ConfigPlugin.vmPluginPath() );
+	CONFIG = new SystemProperties( head );
+	String[] defaultParsedPath = ConfigPlugin.parsePluginPath( DEFAULT_PLUGIN_PATH );
 	if ( logger.isDebugEnabled() ) {
-	    logger.debug( "ethereumj configuration:" );
+	    if (! head.matches( defaultParsedPath ) )
+		logger.debug( "Using plugin path: {}", head.path() );
+	    logger.debug( "main ethereumj configuration:" );
 	    CONFIG.debugPrint();
 	}
     }
@@ -27,7 +31,7 @@ public class SystemProperties {
 
     SystemProperties( ConfigPlugin plugin )
     { this.plugin = plugin; }
-    
+
     /*
      *
      *  private utilities for fetching cached config values

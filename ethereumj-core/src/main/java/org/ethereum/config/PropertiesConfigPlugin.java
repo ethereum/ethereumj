@@ -21,7 +21,8 @@ public final class PropertiesConfigPlugin extends StringSourceConfigPlugin {
 
     private final Properties prop;
 
-    public PropertiesConfigPlugin() throws IOException {
+    public PropertiesConfigPlugin(ConfigPlugin fallback) throws IOException {
+	super( fallback );
 	File file = new File( TRADITIONAL_PROPS_FILENAME );
 	if (file.exists()) {
 	    this.prop = ensurePrefixedProperties( loadPropertiesFile( file ) );
@@ -43,7 +44,7 @@ public final class PropertiesConfigPlugin extends StringSourceConfigPlugin {
      *  Abstract method implementations
      *
      */
-    protected String getStringOrNull( String key ) {
+    protected String getLocalStringOrNull( String key ) {
 	String value = System.getProperty( key );  // accept System.property overrides
 	if ( value == null ) value = prop.getProperty( key );
 	return value;

@@ -9,7 +9,8 @@ public final class CLIConfigPlugin extends ConfigPlugin {
 
     Map<String,Object> overrides;
 
-    public CLIConfigPlugin() {
+    public CLIConfigPlugin(ConfigPlugin fallback) {
+	super( fallback );
 	this.overrides = CLIInterface.getConfigOverrides();
 	if ( this.overrides == null ) this.overrides = Collections.emptyMap();
 	for ( Map.Entry<String,Object> entry : overrides.entrySet() ) {
@@ -18,16 +19,16 @@ public final class CLIConfigPlugin extends ConfigPlugin {
     }
 
     /** May throw ClassCastExceptions */
-    protected Boolean getBooleanOrNull( String key ) { return (Boolean) overrides.get( key ); }
+    protected Boolean getLocalBooleanOrNull( String key ) { return (Boolean) overrides.get( key ); }
 
     /** May throw ClassCastExceptions */
-    protected Integer getIntegerOrNull( String key ) { return (Integer) overrides.get( key ); }
+    protected Integer getLocalIntegerOrNull( String key ) { return (Integer) overrides.get( key ); }
 
     /** May throw ClassCastExceptions */
-    protected String getStringOrNull( String key ) { return (String) overrides.get( key ); }
+    protected String getLocalStringOrNull( String key ) { return (String) overrides.get( key ); }
 
     /** May NOT throw ClassCastExceptions */
-    protected String getCoerceToStringOrNull( String key ) { 
+    protected String getLocalCoerceToStringOrNull( String key ) { 
 	Object value = overrides.get( key );
 	return ( value == null ? null : String.valueOf( key ) );
     }

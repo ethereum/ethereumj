@@ -2,27 +2,31 @@ package org.ethereum.config;
 
 public abstract class StringSourceConfigPlugin extends ConfigPlugin {
 
+    StringSourceConfigPlugin( ConfigPlugin fallback ) {
+	super( fallback );
+    }
+
     /**
      *
      * The only method concrete sublasses must implement.
      *
      */
-    protected abstract String getStringOrNull( String key );
+    protected abstract String getLocalStringOrNull( String key );
 
     /*
      *
      *  Abstract method implementations
      *
      */
-    protected Boolean getBooleanOrNull( String key ) {
-	String value = getStringOrNull( key );
+    protected Boolean getLocalBooleanOrNull( String key ) {
+	String value = getLocalStringOrNull( key );
 	return ( value != null ? Boolean.parseBoolean( value ) : null );
     }
-    protected Integer getIntegerOrNull( String key ) {
-	String value = getStringOrNull( key );
+    protected Integer getLocalIntegerOrNull( String key ) {
+	String value = getLocalStringOrNull( key );
 	return ( value != null ? Integer.parseInt( value ) : null );
     }
-    protected String getCoerceToStringOrNull( String key ) {
-	return getStringOrNull( key );
+    protected String getLocalCoerceToStringOrNull( String key ) {
+	return getLocalStringOrNull( key );
     }
 }

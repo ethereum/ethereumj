@@ -22,9 +22,11 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
 
     private final static String SN = TypesafeConfigPlugin.class.getSimpleName();
 
-    final static Config ACTIVE;
+    final Config active;
     
-    static {
+    public TypesafeConfigPlugin( ConfigPlugin fallback ) {
+	super( fallback );
+
 	ClassLoader cl = TypesafeConfigPlugin.class.getClassLoader(); 
 
 	ConfigParseOptions referenceDefaultsOptions = ConfigParseOptions.defaults()
@@ -68,7 +70,7 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
 	
 	Config sysPropOverrides = ConfigFactory.defaultOverrides();
 
-	ACTIVE = sysPropOverrides
+	active = sysPropOverrides
 	    .withFallback( traditionalPropertiesConfigFile )
 	    .withFallback( applicationSettings )
 	    .withFallback( traditionalPropertiesConfigResource )
@@ -88,7 +90,7 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
 	logCompareToDefaults( referenceDefaultsForComparison, "reference.conf" );
 	
 	logCompare( referenceDefaultsForComparison, traditionalPropertiesConfigResource, "reference.conf", "resource:system.properties" );
-	logCompare( ACTIVE, traditionalPropertiesConfigResource, "ACTIVE", "resource:system.properties" );
+	logCompare( active, traditionalPropertiesConfigResource, "active", "resource:system.properties" );
 	*/
     }
 
@@ -97,10 +99,10 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
     // compatible for now.
 
     /** May throw ClassCastExceptions */
-    protected Boolean getBooleanOrNull( String key ) { 
+    protected Boolean getLocalBooleanOrNull( String key ) { 
 	try {
-	    if ( ACTIVE.hasPath( key ) ) 
-		return ACTIVE.getBoolean( key ); 
+	    if ( active.hasPath( key ) ) 
+		return active.getBoolean( key ); 
 	    else
 		return null;
 	} catch (ConfigException.WrongType e) {
@@ -109,10 +111,10 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
     }
 
     /** May throw ClassCastExceptions */
-    protected Integer getIntegerOrNull( String key ) {
+    protected Integer getLocalIntegerOrNull( String key ) {
 	try {
-	    if ( ACTIVE.hasPath( key ) ) 
-		return ACTIVE.getInt( key ); 
+	    if ( active.hasPath( key ) ) 
+		return active.getInt( key ); 
 	    else
 		return null;
 	} catch (ConfigException.WrongType e) {
@@ -121,10 +123,10 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
     }
 
     /** May throw ClassCastExceptions */
-    protected String  getStringOrNull( String key ) {
+    protected String  getLocalStringOrNull( String key ) {
 	try {
-	    if ( ACTIVE.hasPath( key ) ) 
-		return ACTIVE.getString( key ); 
+	    if ( active.hasPath( key ) ) 
+		return active.getString( key ); 
 	    else
 		return null;
 	} catch (ConfigException.WrongType e) {
@@ -133,16 +135,16 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
     }
 
     /** May NOT throw ClassCastExceptions */
-    protected String  getCoerceToStringOrNull( String key ) {
-	if ( ACTIVE.hasPath( key ) ) 
-	    return String.valueOf( ACTIVE.getValue( key ).unwrapped() );
+    protected String  getLocalCoerceToStringOrNull( String key ) {
+	if ( active.hasPath( key ) ) 
+	    return String.valueOf( active.getValue( key ).unwrapped() );
 	else
 	    return null;
     }
 
     private <T> T forceClassCastException( Class<T> clz, ConfigException.WrongType e, String key ) {
 	logger.debug( "Converting ConfigException.WrongType to ClassCastException.", e );
-	return (T) ACTIVE.getValue( key ).unwrapped();
+	return (T) active.getValue( key ).unwrapped();
     }
 
     // applicationOrStandardSubstitute is copied/pasted/modified from the com.mchange.v3.hocon of mchange-commons-java.
@@ -242,8 +244,8 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
 	}
     }
 
-    static void warnUnknownKeys() {
-	for ( Map.Entry<String,ConfigValue> entry : ACTIVE.entrySet() ){
+    void warnUnknownKeys() {
+	for ( Map.Entry<String,ConfigValue> entry : active.entrySet() ){
 	    String key = entry.getKey();
 	    if ( key.startsWith( ETHEREUMJ_PREFIX ) && !ORDERED_KEYS.contains( key ) )
 		logger.warn("Unknown ethereumj key: {} [{}]", key, SN);

@@ -59,9 +59,9 @@ public final class KeysDefaults {
     final static String K_VM_TEST_LOAD_LOCAL          = ETHEREUMJ_PREFIX + "GitHubTests.VMTest.loadLocal"; //testing, this is an odd key
 
 
-    final static String SYSPROP_PLUGIN_PATH_APPEND  = "config.plugin.path.append";
-    final static String SYSPROP_PLUGIN_PATH_PREPEND = "config.plugin.path.prepend";
-    final static String SYSPROP_PLUGIN_PATH_REPLACE = "config.plugin.path.replace";
+    final static String SYSPROP_PLUGIN_PATH_APPEND  = ETHEREUMJ_PREFIX + "config.plugin.path.append";
+    final static String SYSPROP_PLUGIN_PATH_PREPEND = ETHEREUMJ_PREFIX + "config.plugin.path.prepend";
+    final static String SYSPROP_PLUGIN_PATH_REPLACE = ETHEREUMJ_PREFIX + "config.plugin.path.replace";
 
     // utilities for implementations in this package
     final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.CLIConfigPlugin,org.ethereum.config.TypesafeConfigPlugin";
