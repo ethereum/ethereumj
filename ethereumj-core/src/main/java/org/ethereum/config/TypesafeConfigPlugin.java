@@ -16,16 +16,16 @@ import static org.ethereum.config.ConfigUtils.*;
 
 import org.ethereum.cli.CLIInterface;
 
-public class TypesafeConfigSystemProperties extends SystemProperties {
+public class TypesafeConfigPlugin extends ConfigPlugin {
 
     private final static Logger logger = KeysDefaults.getConfigPluginLogger();
 
-    private final static String SN = TypesafeConfigSystemProperties.class.getSimpleName();
+    private final static String SN = TypesafeConfigPlugin.class.getSimpleName();
 
     final static Config ACTIVE;
     
     static {
-	ClassLoader cl = SystemProperties.class.getClassLoader(); 
+	ClassLoader cl = TypesafeConfigPlugin.class.getClassLoader(); 
 
 	ConfigParseOptions referenceDefaultsOptions = ConfigParseOptions.defaults()
 	    .setSyntax( ConfigSyntax.CONF )
@@ -36,7 +36,7 @@ public class TypesafeConfigSystemProperties extends SystemProperties {
 
 	Config traditionalPropertiesConfigResource;
 	try {
-	    URL url = SystemProperties.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
+	    URL url = TypesafeConfigPlugin.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
 	    if (url == null) {
 		traditionalPropertiesConfigResource = ConfigFactory.empty();
 	    } else {

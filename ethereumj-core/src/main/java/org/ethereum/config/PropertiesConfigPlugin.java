@@ -8,30 +8,26 @@ import java.util.Properties;
 
 import org.ethereum.cli.CLIInterface;
 
-import org.slf4j.Logger;
-
 import static org.ethereum.config.KeysDefaults.*;
 import static org.ethereum.config.ConfigUtils.*;
 
 /*
  *  This plugin replicates the original behavior of the SystemProperties class
  *  prior to its refactoring. (It was the first plug-in refactored out of that class.)
- *  TypesafeConfigSystemProperties provides a superset of its behavior, so it is
+ *  TypesafeConfigPlugin provides a superset of its behavior, so it is
  *  no longer in the default plugin path.
  */
-public final class PropertiesSystemProperties extends StringSourceSystemProperties {
-
-    private final static Logger logger = KeysDefaults.getConfigPluginLogger();
+public final class PropertiesConfigPlugin extends StringSourceConfigPlugin {
 
     private final Properties prop;
 
-    public PropertiesSystemProperties() throws IOException {
+    public PropertiesConfigPlugin() throws IOException {
 	File file = new File( TRADITIONAL_PROPS_FILENAME );
 	if (file.exists()) {
 	    this.prop = ensurePrefixedProperties( loadPropertiesFile( file ) );
 	    logger.debug("config loaded from {} [{}]", TRADITIONAL_PROPS_FILENAME, this.getClass().getSimpleName() );
 	} else {
-	    URL url = SystemProperties.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
+	    URL url = PropertiesConfigPlugin.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
 	    if (url == null) {
 		logger.error("Sorry, unable to find file {} or resource {} [{}]", TRADITIONAL_PROPS_FILENAME, TRADITIONAL_PROPS_RESOURCE, this.getClass().getSimpleName() );
 		this.prop = new Properties();

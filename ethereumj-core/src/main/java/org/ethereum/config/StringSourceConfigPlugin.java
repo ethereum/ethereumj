@@ -1,6 +1,6 @@
 package org.ethereum.config;
 
-public abstract class StringSourceSystemProperties extends SystemProperties {
+public abstract class StringSourceConfigPlugin extends ConfigPlugin {
 
     /**
      *

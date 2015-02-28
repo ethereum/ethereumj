@@ -11,36 +11,22 @@ import static org.ethereum.config.KeysDefaults.*;
  * @author Roman Mandeleil
  * @since 22.05.2014
  */
-public abstract class SystemProperties {
+public class SystemProperties {
 
     public final static SystemProperties CONFIG;
 
     static {
-	CONFIG = new PathFollowingSystemProperties();
+	CONFIG = new SystemProperties( new PathFollowingConfigPlugin() );
 	if ( logger.isDebugEnabled() ) {
 	    logger.debug( "ethereumj configuration:" );
 	    CONFIG.debugPrint();
 	}
     }
 
-    /*
-     *
-     *  Abstract, protected methods
-     *
-     */
+    ConfigPlugin plugin;
 
-    /** May throw ClassCastExceptions */
-    protected abstract Boolean getBooleanOrNull( String key );
-
-    /** May throw ClassCastExceptions */
-    protected abstract Integer getIntegerOrNull( String key );
-
-    /** May throw ClassCastExceptions */
-
-    protected abstract String getStringOrNull( String key );
-
-    /** May NOT throw ClassCastExceptions */
-    protected abstract String getCoerceToStringOrNull( String key );
+    SystemProperties( ConfigPlugin plugin )
+    { this.plugin = plugin; }
     
     /*
      *
@@ -59,7 +45,7 @@ public abstract class SystemProperties {
     private boolean getBoolean( String key ) {
 	try {
 	    String pkey = ensurePrefix( key );
-	    Boolean out = getBooleanOrNull( pkey );
+	    Boolean out = plugin.getBooleanOrNull( pkey );
 	    return ( out != null ? out : ((Boolean) DEFAULTS.get( pkey )).booleanValue() );
 	} catch ( ClassCastException e ) {
 	    logClassCastError( key, "boolean", e );
@@ -69,7 +55,7 @@ public abstract class SystemProperties {
     private int getInt( String key ) {
 	try {
 	    String pkey = ensurePrefix( key );
-	    Integer out = getIntegerOrNull( pkey );
+	    Integer out = plugin.getIntegerOrNull( pkey );
 	    return ( out != null ? out : ((Integer) DEFAULTS.get( pkey )).intValue() );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
@@ -79,7 +65,7 @@ public abstract class SystemProperties {
     private String getString( String key ) {
 	try {
 	    String pkey = ensurePrefix( key );
-	    String out = getStringOrNull( pkey );
+	    String out = plugin.getStringOrNull( pkey );
 	    return ( out != null ? out : ((String) DEFAULTS.get( pkey )) );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
@@ -88,7 +74,7 @@ public abstract class SystemProperties {
     }
     private String getCoerceToString( String key ) {
 	String pkey = ensurePrefix( key );
-	String out = getCoerceToStringOrNull( pkey );
+	String out = plugin.getCoerceToStringOrNull( pkey );
 	return ( out != null ? out : String.valueOf( DEFAULTS.get( pkey ) ) );
     }
 

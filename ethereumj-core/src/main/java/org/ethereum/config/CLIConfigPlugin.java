@@ -5,15 +5,11 @@ import java.util.Map;
 
 import org.ethereum.cli.CLIInterface;
 
-import org.slf4j.Logger;
-
-public final class CLIConfigSystemProperties extends SystemProperties {
-
-    private final static Logger logger = KeysDefaults.getConfigPluginLogger();
+public final class CLIConfigPlugin extends ConfigPlugin {
 
     Map<String,Object> overrides;
 
-    public CLIConfigSystemProperties() {
+    public CLIConfigPlugin() {
 	this.overrides = CLIInterface.getConfigOverrides();
 	if ( this.overrides == null ) this.overrides = Collections.emptyMap();
 	for ( Map.Entry<String,Object> entry : overrides.entrySet() ) {

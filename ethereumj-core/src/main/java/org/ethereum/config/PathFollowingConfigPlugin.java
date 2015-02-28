@@ -6,17 +6,18 @@ import java.util.LinkedList;
 
 import static org.ethereum.config.KeysDefaults.*;
 
-public final class PathFollowingSystemProperties extends SystemProperties {
-    private final static List<SystemProperties> INSTANCE_PATH;
+public final class PathFollowingConfigPlugin extends ConfigPlugin {
 
-    static List<SystemProperties> createInstancePath( String classnamePath ) {
+    private final static List<ConfigPlugin> INSTANCE_PATH;
+
+    static List<ConfigPlugin> createInstancePath( String classnamePath ) {
 	String[] classNames = classnamePath.split("\\s*,\\s*");
-	List<SystemProperties> tmp = new LinkedList<>();
+	List<ConfigPlugin> tmp = new LinkedList<>();
 	for ( String fqcn : classNames ) {
 	    try {
 		if ( "".equals( fqcn ) ) continue; //don't bother trying to load a class whose name is the empty String
 
-		SystemProperties instance = (SystemProperties) Class.forName( fqcn ).newInstance();
+		ConfigPlugin instance = (ConfigPlugin) Class.forName( fqcn ).newInstance();
 		tmp.add( instance );
 		logger.info( "Loaded config plugin '{}'.", fqcn );
 	    } catch (Exception e ) {
@@ -56,28 +57,28 @@ public final class PathFollowingSystemProperties extends SystemProperties {
      *
      */
     protected Boolean getBooleanOrNull( String key ) {
-	for( SystemProperties instance : INSTANCE_PATH ) {
+	for( ConfigPlugin instance : INSTANCE_PATH ) {
 	    Boolean maybe = instance.getBooleanOrNull( key );
 	    if ( maybe != null ) return maybe;
 	}
 	return null;
     }
     protected Integer getIntegerOrNull( String key ) {
-	for( SystemProperties instance : INSTANCE_PATH ) {
+	for( ConfigPlugin instance : INSTANCE_PATH ) {
 	    Integer maybe = instance.getIntegerOrNull( key );
 	    if ( maybe != null ) return maybe;
 	}
 	return null;
     }
     protected String  getStringOrNull( String key ) {
-	for( SystemProperties instance : INSTANCE_PATH ) {
+	for( ConfigPlugin instance : INSTANCE_PATH ) {
 	    String maybe = instance.getStringOrNull( key );
 	    if ( maybe != null ) return maybe;
 	}
 	return null;
     }
     protected String  getCoerceToStringOrNull( String key ) {
-	for( SystemProperties instance : INSTANCE_PATH ) {
+	for( ConfigPlugin instance : INSTANCE_PATH ) {
 	    String maybe = instance.getCoerceToStringOrNull( key );
 	    if ( maybe != null ) return maybe;
 	}
