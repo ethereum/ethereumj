@@ -24,7 +24,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
-//applicationDefaultJvmArgs = ["-Dethereumj.config.plugin.path.replace=org.ethereum.config.PropertiesConfigPlugin"]
+//applicationDefaultJvmArgs = ["-Dethereumj.config.plugin.path.replace=org.ethereum.config.TraditionalPropertiesConfigPlugin"]
 
 ext.generatedSrcDir = file('src/gen/java')
 

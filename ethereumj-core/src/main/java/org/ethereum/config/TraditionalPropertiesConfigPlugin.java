@@ -17,18 +17,18 @@ import static org.ethereum.config.ConfigUtils.*;
  *  TypesafeConfigPlugin provides a superset of its behavior, so it is
  *  no longer in the default plugin path.
  */
-public final class PropertiesConfigPlugin extends StringSourceConfigPlugin {
+public final class TraditionalPropertiesConfigPlugin extends StringSourceConfigPlugin {
 
     private final Properties prop;
 
-    public PropertiesConfigPlugin(ConfigPlugin fallback) throws IOException {
+    public TraditionalPropertiesConfigPlugin(ConfigPlugin fallback) throws IOException {
 	super( fallback );
 	File file = new File( TRADITIONAL_PROPS_FILENAME );
 	if (file.exists()) {
 	    this.prop = ensurePrefixedProperties( loadPropertiesFile( file ) );
 	    logger.debug("config loaded from {} [{}]", TRADITIONAL_PROPS_FILENAME, this.getClass().getSimpleName() );
 	} else {
-	    URL url = PropertiesConfigPlugin.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
+	    URL url = TraditionalPropertiesConfigPlugin.class.getClassLoader().getResource( TRADITIONAL_PROPS_RESOURCE );
 	    if (url == null) {
 		logger.error("Sorry, unable to find file {} or resource {} [{}]", TRADITIONAL_PROPS_FILENAME, TRADITIONAL_PROPS_RESOURCE, this.getClass().getSimpleName() );
 		this.prop = new Properties();
