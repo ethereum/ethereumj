@@ -15,7 +15,7 @@ class CachingConfigSource implements ConfigSource {
     }
 
     /** May throw ClassCastExceptions */
-    public Boolean getBooleanOrNull( String key ) {
+    public synchronized Boolean getBooleanOrNull( String key ) {
 	Object out = cache.get( key );
 	if ( out == null ) {
 	    out = inner.getBooleanOrNull( key );
@@ -25,7 +25,7 @@ class CachingConfigSource implements ConfigSource {
     }
     
     /** May throw ClassCastExceptions */
-    public Integer getIntegerOrNull( String key ) {
+    public synchronized Integer getIntegerOrNull( String key ) {
 	Object out = cache.get( key );
 	if ( out == null ) {
 	    out = inner.getIntegerOrNull( key );
@@ -35,7 +35,7 @@ class CachingConfigSource implements ConfigSource {
     }
     
     /** May throw ClassCastExceptions */
-    public String getStringOrNull( String key ) {
+    public synchronized String getStringOrNull( String key ) {
 	Object out = cache.get( key );
 	if ( out == null ) {
 	    out = inner.getStringOrNull( key );
@@ -47,7 +47,7 @@ class CachingConfigSource implements ConfigSource {
     /** May NOT throw ClassCastExceptions */
 
     // does not populate cache, but uses previously cached values if available
-    public String getCoerceToStringOrNull( String key ) {
+    public synchronized String getCoerceToStringOrNull( String key ) {
 	Object out = cache.get( key );
 	return ( out == null ? inner.getCoerceToStringOrNull( key ) : String.valueOf( out ) );
     }
