@@ -28,9 +28,17 @@ public class SystemProperties {
     }
 
     ConfigPlugin plugin;
+    ConfigSource source; 
 
     SystemProperties( ConfigPlugin plugin )
-    { this.plugin = plugin; }
+    { 
+	this.plugin = plugin; 
+	this.source = new CachingConfigSource( plugin );
+    }
+
+    SystemProperties withOverrides( Class pluginClass ) throws Exception {
+	return new SystemProperties( ConfigPlugin.instantiatePlugin( pluginClass, this.plugin ) );
+    }
 
     /*
      *
@@ -48,9 +56,8 @@ public class SystemProperties {
 
     private boolean getBoolean( String key ) {
 	try {
-	    String pkey = ensurePrefix( key );
-	    Boolean out = plugin.getBooleanOrNull( pkey );
-	    return ( out != null ? out : ((Boolean) DEFAULTS.get( pkey )).booleanValue() );
+	    Boolean out = source.getBooleanOrNull( key );
+	    return ( out != null ? out : ((Boolean) DEFAULTS.get( key )).booleanValue() );
 	} catch ( ClassCastException e ) {
 	    logClassCastError( key, "boolean", e );
 	    throw e;
@@ -58,9 +65,8 @@ public class SystemProperties {
     }
     private int getInt( String key ) {
 	try {
-	    String pkey = ensurePrefix( key );
-	    Integer out = plugin.getIntegerOrNull( pkey );
-	    return ( out != null ? out : ((Integer) DEFAULTS.get( pkey )).intValue() );
+	    Integer out = source.getIntegerOrNull( key );
+	    return ( out != null ? out : ((Integer) DEFAULTS.get( key )).intValue() );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
 	    throw e;
@@ -68,18 +74,16 @@ public class SystemProperties {
     }
     private String getString( String key ) {
 	try {
-	    String pkey = ensurePrefix( key );
-	    String out = plugin.getStringOrNull( pkey );
-	    return ( out != null ? out : ((String) DEFAULTS.get( pkey )) );
+	    String out = source.getStringOrNull( key );
+	    return ( out != null ? out : ((String) DEFAULTS.get( key )) );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
 	    throw e;
 	}
     }
     private String getCoerceToString( String key ) {
-	String pkey = ensurePrefix( key );
-	String out = plugin.getCoerceToStringOrNull( pkey );
-	return ( out != null ? out : String.valueOf( DEFAULTS.get( pkey ) ) );
+	String out = source.getCoerceToStringOrNull( key );
+	return ( out != null ? out : String.valueOf( DEFAULTS.get( key ) ) );
     }
 
     /*

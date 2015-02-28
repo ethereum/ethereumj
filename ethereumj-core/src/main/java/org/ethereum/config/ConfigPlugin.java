@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 
 import static org.ethereum.config.KeysDefaults.*;
 
-public abstract class ConfigPlugin {
+public abstract class ConfigPlugin implements ConfigSource {
 
     protected final static Logger logger = KeysDefaults.getConfigPluginLogger();
 
@@ -42,8 +42,12 @@ public abstract class ConfigPlugin {
 	return path;
     }
 
-    private final static ConfigPlugin instantiatePlugin( String fqcn, ConfigPlugin fallback ) throws Exception {
+    final static ConfigPlugin instantiatePlugin( String fqcn, ConfigPlugin fallback ) throws Exception {
 	Class clz = Class.forName( fqcn );
+	return instantiatePlugin( clz, fallback );
+    }
+
+    final static ConfigPlugin instantiatePlugin( Class clz, ConfigPlugin fallback ) throws Exception {
 	Constructor<ConfigPlugin> ctor = clz.getConstructor( ConfigPlugin.class );
 	return ctor.newInstance( fallback );
     }
@@ -107,25 +111,25 @@ public abstract class ConfigPlugin {
     protected abstract String getLocalCoerceToStringOrNull( String key );
 
     /** May throw ClassCastExceptions */
-    final Boolean getBooleanOrNull( String key ) {
+    public final Boolean getBooleanOrNull( String key ) {
 	Boolean out = getLocalBooleanOrNull( key );
 	return ( out == null ? fallback.getLocalBooleanOrNull( key ) : out );
     }
     
     /** May throw ClassCastExceptions */
-    final Integer getIntegerOrNull( String key ) {
+    public final Integer getIntegerOrNull( String key ) {
 	Integer out = getLocalIntegerOrNull( key );
 	return ( out == null ? fallback.getLocalIntegerOrNull( key ) : out );
     }
     
     /** May throw ClassCastExceptions */
-    final String getStringOrNull( String key ) {
+    public final String getStringOrNull( String key ) {
 	String out = getLocalStringOrNull( key );
 	return ( out == null ? fallback.getLocalStringOrNull( key ) : out );
     }
     
     /** May NOT throw ClassCastExceptions */
-    final String getCoerceToStringOrNull( String key ) {
+    public final String getCoerceToStringOrNull( String key ) {
 	String out = getLocalCoerceToStringOrNull( key );
 	return ( out == null ? fallback.getLocalCoerceToStringOrNull( key ) : out );
     }
