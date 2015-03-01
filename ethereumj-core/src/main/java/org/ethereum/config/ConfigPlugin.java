@@ -6,6 +6,16 @@ import org.slf4j.Logger;
 
 import static org.ethereum.config.KeysDefaults.*;
 
+
+/**
+ * To write a config plugin, override the {@link #getLocalOrNull},
+ * and provide a public constructor that accepts a fallback ConfigPlugin
+ * for its sole argument.
+ *
+ * Objects provided should be put into the types expected for the key.
+ *
+ * @see KeysDefaults#expectedTypes() and {@link #attemptCoerceValueForKey}
+ */
 public abstract class ConfigPlugin implements ConfigSource {
 
     protected final static Logger logger = KeysDefaults.getConfigPluginLogger();
