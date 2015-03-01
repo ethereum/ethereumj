@@ -11,13 +11,10 @@ added automatically if omitted from configuration in `system.properties` files.
 
 ### Plugin architecture
 
-You can rather trivially write plugins to accept configuration from anywhere you please. Plugin implementations must extend
-[ConfigPlugin](https://github.com/swaldman/ethereumj/blob/experimental/ethereumj-core/src/main/java/org/ethereum/config/ConfigPlugin.java)
-and override four very simple methods (see [ConfigSource](https://github.com/swaldman/ethereumj/blob/experimental/ethereumj-core/src/main/java/org/ethereum/config/ConfigSource.java),
-or may extend [StringSourceConfigPlugin](https://github.com/swaldman/ethereumj/blob/experimental/ethereumj-core/src/main/java/org/ethereum/config/StringSourceConfigPlugin.java)
-and override just one method. See, for example, the [simple plugin](https://github.com/swaldman/ethereumj/blob/experimental/ethereumj-core/src/main/java/org/ethereum/config/CLIConfigPlugin.java)
-that accepts command line overrides from `CLIInterface`, or the plugin factored out of the original implementation to read
-`system.properties` files.
+You can rather trivially write plugins to accept configuration from anywhere you please.  See, for example, the [simple plugin](CLIConfigPlugin.java)
+that accepts command line overrides from `CLIInterface`, or the 
+[plugin factored out](TraditionalPropertiesConfigPlugin.java) of 
+the original implementation to read `system.properties` files. Plugin implementations must extend [ConfigPlugin](ConfigPlugin.java) and override one simple method.
 
 Plugins are arranged into a path (configurable via JVM System properties). The first plugin in the path to offer
 a non-null value for a key lookup "wins", overriding any config in lower priority plugins.
@@ -58,8 +55,11 @@ as cycles are avoided).
 Typesafe config defines nice conventions about configuring defaults in a resource called "reference.conf". Reference.conf
 has the same format as application.conf, but it is intended to be provided within a jar file by developers, while
 application.conf can be placed on the application CLASSPATH or *at any file or URL* (specified in a System property) to
-selectively override defaults. Here is an example [reference.conf](https://github.com/swaldman/ethereumj/blob/experimental/ethereumj-core/src/main/resources/reference.conf)
+selectively override defaults. Here is an example [reference.conf](../../../../resources/reference.conf)
 file.
+
+"application.conf" can also be specified as "application.properties", for users more comfortable with writing
+in properties file format. hierarchical keys are flattened into dot-separated paths.
 
 Typesafe config is especially good at integration. If an application embeds ethereum in a typesafe-config supporting
 application server, or uses other typesafe-configgy libraries, you end up with a unified, readable config file like this:
@@ -87,7 +87,7 @@ System property overrides of any key are also supported.
 ### Documentation
 
 Despite the increased complexity of the library, definitions of keys, constants, and defaults are centralized in
-one, very [readable source code file](https://github.com/swaldman/ethereumj/blob/experimental/ethereumj-core/src/main/java/org/ethereum/config/KeysDefaults.java).
+one, very [readable source code file](KeysDefaults.java).
 
 ### Immutability and instantiability
 
@@ -96,20 +96,22 @@ are read prior to config initialization so they do not need to mutate `CONFIG`. 
 it offers easy thread safety and eliminates large classes of hard-to-reason-about bugs and attacks.
 
 Although config objects are immutable, they can easily be instantiated, so if the library evolves to support
-config objects as parameters rather than relying on one static singleton, it will be possible to have multiple
+selection among multiple config objects rather than relying on one static singleton, it will be possible to have multiple
 configurations simultaneously active within a single JVM/ClassLoader. Configurations can be derived from other
 configurations, including the default configuration, by calling a method `withOverrides(...)`.
 
 Given the current very centralized config architecture, a final and immutable config presents challenges for
-testing, in which different tests want different configs. Previously, individual tests mutated the central config 
+testing, since different tests want different configs. Previously, individual tests mutated the central config 
 (in particular the database directory) prior to running to get the parameters they expected. That worked fine, as
 long as tests are not run in parallel within a single VM. With an immutable central config, that is no longer
 possible. However, since all config params can be overridden in System properties, Gradle can be configured to
 fork a JVM for each test suite with appropriate parameters configured. (There are some [issues](http://stackoverflow.com/questions/28780841/setting-system-properties-for-gradle-tests)
 here, but for ensuring a unique database directory for the various tests it works fine.)
 
+An alternative and perhaps desirable approach would be to make the central CONFIG object replaceable. This could be done simply by making the existing field nonfinal and volatile, or by providing static synchronized accessor and setter methods. It'd probably be a good idea to ensure that access to the main config happens only once, on initialization of an `org.ethereum.facade.Ethereum` rather than continually over its lifecycle, to prevent changes in configuration to alter an the behavior of an already initialized instance and potential violations of consistency assumptions embedded in the config.
+
 ### Performance
 
-While this is a much "thicker" configuration layer than before, all known keys are cached, so the performance
-should be comparable to the Properties-based implementation (perhaps better under Thread contention since
-immutability renders synchronization unnecessary).
+While this is a much "thicker" configuration layer than before, all known keys are cached in preparsed (often boxed) types,
+so performance should be comparable or superior to the Properties-based implementation (perhaps better under Thread 
+contention since immutability renders synchronization unnecessary).
