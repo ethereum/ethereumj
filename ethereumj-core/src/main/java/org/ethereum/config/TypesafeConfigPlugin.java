@@ -99,52 +99,31 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
     // compatible for now.
 
     /** May throw ClassCastExceptions */
-    protected Boolean getLocalBooleanOrNull( String key ) { 
-	try {
-	    if ( active.hasPath( key ) ) 
-		return active.getBoolean( key ); 
-	    else
-		return null;
-	} catch (ConfigException.WrongType e) {
-	    return forceClassCastException( Boolean.class, e, key );
-	}
-    }
-
-    /** May throw ClassCastExceptions */
-    protected Integer getLocalIntegerOrNull( String key ) {
-	try {
-	    if ( active.hasPath( key ) ) 
-		return active.getInt( key ); 
-	    else
-		return null;
-	} catch (ConfigException.WrongType e) {
-	    return forceClassCastException( Integer.class, e, key );
-	}
-    }
-
-    /** May throw ClassCastExceptions */
-    protected String  getLocalStringOrNull( String key ) {
-	try {
-	    if ( active.hasPath( key ) ) 
-		return active.getString( key ); 
-	    else
-		return null;
-	} catch (ConfigException.WrongType e) {
-	    return forceClassCastException( String.class, e, key );
-	}
-    }
-
-    /** May NOT throw ClassCastExceptions */
-    protected String  getLocalCoerceToStringOrNull( String key ) {
-	if ( active.hasPath( key ) ) 
-	    return String.valueOf( active.getValue( key ).unwrapped() );
-	else
+    protected Object getLocalOrNull( String key ) {
+	if ( active.hasPath( key ) ) {
+	    Class<?> type = TYPES.get( key );
+	    return getForKeyAndType( key, type );
+	} else {
 	    return null;
+	}
     }
 
-    private <T> T forceClassCastException( Class<T> clz, ConfigException.WrongType e, String key ) {
-	logger.debug( "Converting ConfigException.WrongType to ClassCastException.", e );
-	return (T) active.getValue( key ).unwrapped();
+    private Object getForKeyAndType( String key, Class<?> type ) {
+	Object out;
+	if ( type == Boolean.class ) {
+	    out = active.getBoolean( key );
+	} else if ( type == Integer.class ) {
+	    out = active.getInt( key );
+	} else if ( type == String.class ) {
+	    out = active.getString( key );
+	} else {
+	    out = active.getValue( key ).unwrapped();
+	    if ( logger.isWarnEnabled() ) {
+		logger.warn( "Value for key '{}' left in unverified native type {}, rather than converted to {}. [{}]", 
+			     key, out.getClass().getName(), type.getName(), this.getClass().getSimpleName() );
+	    }
+	}
+	return out;
     }
 
     // applicationOrStandardSubstitute is copied/pasted/modified from the com.mchange.v3.hocon of mchange-commons-java.

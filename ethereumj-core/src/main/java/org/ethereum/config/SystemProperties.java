@@ -56,8 +56,8 @@ public class SystemProperties {
 
     private boolean getBoolean( String key ) {
 	try {
-	    Boolean out = source.getBooleanOrNull( key );
-	    return ( out != null ? out : ((Boolean) DEFAULTS.get( key )).booleanValue() );
+	    Object out = source.getOrNull( key );
+	    return ( (Boolean) ( out != null ? out : DEFAULTS.get( key ) ) ).booleanValue();
 	} catch ( ClassCastException e ) {
 	    logClassCastError( key, "boolean", e );
 	    throw e;
@@ -65,8 +65,8 @@ public class SystemProperties {
     }
     private int getInt( String key ) {
 	try {
-	    Integer out = source.getIntegerOrNull( key );
-	    return ( out != null ? out : ((Integer) DEFAULTS.get( key )).intValue() );
+	    Object out = source.getOrNull( key );
+	    return ( (Integer) ( out != null ? out : DEFAULTS.get( key ) ) ).intValue();
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
 	    throw e;
@@ -74,16 +74,16 @@ public class SystemProperties {
     }
     private String getString( String key ) {
 	try {
-	    String out = source.getStringOrNull( key );
-	    return ( out != null ? out : ((String) DEFAULTS.get( key )) );
+	    Object out = source.getOrNull( key );
+	    return (String) ( out != null ? out : DEFAULTS.get( key ) );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
 	    throw e;
 	}
     }
     private String getCoerceToString( String key ) {
-	String out = source.getCoerceToStringOrNull( key );
-	return ( out != null ? out : String.valueOf( DEFAULTS.get( key ) ) );
+	Object raw = source.getOrNull( key );
+	return ( raw != null ? String.valueOf( raw ) : String.valueOf( DEFAULTS.get( key ) ) );
     }
 
     /*

@@ -1,54 +1,31 @@
 package org.ethereum.config;
 
+import java.util.Collections;
 import java.util.Map;
 import java.util.HashMap;
+
+import static org.ethereum.config.KeysDefaults.*;
 
 class CachingConfigSource implements ConfigSource {
 
     private final static Object NULL_TOKEN = new Object();
 
     ConfigSource inner;
-    Map<String,Object> cache = new HashMap();
+    Map<String,Object> cache;
 
     CachingConfigSource( ConfigSource inner ) {
 	this.inner = inner;
+	Map<String,Object> map = new HashMap<>();
+	for ( String key : Keys.all() ) {
+	    Object value = inner.getOrNull( key );
+	    map.put( key, ( value == null ? NULL_TOKEN : value ) );
+	}
+	this.cache = Collections.unmodifiableMap( map );
     }
 
-    /** May throw ClassCastExceptions */
-    public synchronized Boolean getBooleanOrNull( String key ) {
+    public Object getOrNull( String key ) {
 	Object out = cache.get( key );
-	if ( out == null ) {
-	    out = inner.getBooleanOrNull( key );
-	    cache.put( key, out == null ? NULL_TOKEN : out );
-	}
-	return (Boolean) ( out == NULL_TOKEN ? null : out );
+	return ( out == NULL_TOKEN ? null : out );
     }
-    
-    /** May throw ClassCastExceptions */
-    public synchronized Integer getIntegerOrNull( String key ) {
-	Object out = cache.get( key );
-	if ( out == null ) {
-	    out = inner.getIntegerOrNull( key );
-	    cache.put( key, out == null ? NULL_TOKEN : out );
-	}
-	return (Integer) ( out == NULL_TOKEN ? null : out );
-    }
-    
-    /** May throw ClassCastExceptions */
-    public synchronized String getStringOrNull( String key ) {
-	Object out = cache.get( key );
-	if ( out == null ) {
-	    out = inner.getStringOrNull( key );
-	    cache.put( key, out == null ? NULL_TOKEN : out );
-	}
-	return (String) ( out == NULL_TOKEN ? null : out );
-    }
-    
-    /** May NOT throw ClassCastExceptions */
 
-    // does not populate cache, but uses previously cached values if available
-    public synchronized String getCoerceToStringOrNull( String key ) {
-	Object out = cache.get( key );
-	return ( out == null ? inner.getCoerceToStringOrNull( key ) : String.valueOf( out ) );
-    }
 }

@@ -10,11 +10,7 @@ public abstract class ConfigPlugin implements ConfigSource {
 
     protected final static Logger logger = KeysDefaults.getConfigPluginLogger();
 
-    final static String[] parsePluginPath( String pluginPath ) {
-	return pluginPath.split("\\s*,\\s*");
-    }
-
-    public final static ConfigPlugin fromPluginPath( String pluginPath ) {
+    protected final static ConfigPlugin fromPluginPath( String pluginPath ) {
 	String[] classNames = parsePluginPath( pluginPath );
 	ConfigPlugin head = ConfigPlugin.NULL;
 	for ( int i = classNames.length; --i >= 0; ) {
@@ -31,8 +27,7 @@ public abstract class ConfigPlugin implements ConfigSource {
 	}
 	return head;
     }
-
-    public static String vmPluginPath() {
+    protected static String vmPluginPath() {
 	String replacePath = System.getProperty(SYSPROP_PLUGIN_PATH_REPLACE);
 	String appendPath  = System.getProperty(SYSPROP_PLUGIN_PATH_APPEND);
 	String prependPath = System.getProperty(SYSPROP_PLUGIN_PATH_PREPEND);
@@ -42,21 +37,20 @@ public abstract class ConfigPlugin implements ConfigSource {
 	return path;
     }
 
+    final static String[] parsePluginPath( String pluginPath ) {
+	return pluginPath.split("\\s*,\\s*");
+    }
     final static ConfigPlugin instantiatePlugin( String fqcn, ConfigPlugin fallback ) throws Exception {
 	Class clz = Class.forName( fqcn );
 	return instantiatePlugin( clz, fallback );
     }
-
     final static ConfigPlugin instantiatePlugin( Class clz, ConfigPlugin fallback ) throws Exception {
 	Constructor<ConfigPlugin> ctor = clz.getConstructor( ConfigPlugin.class );
 	return ctor.newInstance( fallback );
     }
 
     private final static ConfigPlugin NULL = new ConfigPlugin(null) {
-	    protected Boolean getLocalBooleanOrNull( String key )        { return null; }
-	    protected Integer getLocalIntegerOrNull( String key )        { return null; }
-	    protected String  getLocalStringOrNull( String key )         { return null; }
-	    protected String  getLocalCoerceToStringOrNull( String key ) { return null; }
+	    protected Object getLocalOrNull( String key ) { return null; }
 
 	    @Override 
 	    boolean matchesTail( String[] classNames, int index ) { return classNames.length == index; }
@@ -69,6 +63,24 @@ public abstract class ConfigPlugin implements ConfigSource {
 
     protected ConfigPlugin( ConfigPlugin fallback ) {
 	this.fallback = fallback;
+    }
+
+    protected Object attemptCoerceValueForKey( String value, String key ) {
+	Class<?> type = TYPES.get( key );
+	Object out;
+	if ( type == Boolean.class ) {
+	    out = Boolean.valueOf( value );
+	} else if ( type == Integer.class ) {
+	    out = Integer.valueOf( value );
+	} else if ( type == String.class ) {
+	    out = value;
+	} else {
+	    if ( logger.isWarnEnabled() ) {
+		logger.warn("Cannot coerce String to {} for key '{}'. Left as String. [{}]", type, key, this.getClass().getSimpleName());
+	    }
+	    out = value;
+	}
+	return out;
     }
 
     boolean matchesTail( String[] classNames, int index ) {
@@ -98,39 +110,10 @@ public abstract class ConfigPlugin implements ConfigSource {
      *  Abstract, protected methods
      *
      */
-    /** May throw ClassCastExceptions */
-    protected abstract Boolean getLocalBooleanOrNull( String key );
+    protected abstract Object getLocalOrNull( String key );
     
-    /** May throw ClassCastExceptions */
-    protected abstract Integer getLocalIntegerOrNull( String key );
-    
-    /** May throw ClassCastExceptions */
-    protected abstract String getLocalStringOrNull( String key );
-    
-    /** May NOT throw ClassCastExceptions */
-    protected abstract String getLocalCoerceToStringOrNull( String key );
-
-    /** May throw ClassCastExceptions */
-    public final Boolean getBooleanOrNull( String key ) {
-	Boolean out = getLocalBooleanOrNull( key );
-	return ( out == null ? fallback.getLocalBooleanOrNull( key ) : out );
-    }
-    
-    /** May throw ClassCastExceptions */
-    public final Integer getIntegerOrNull( String key ) {
-	Integer out = getLocalIntegerOrNull( key );
-	return ( out == null ? fallback.getLocalIntegerOrNull( key ) : out );
-    }
-    
-    /** May throw ClassCastExceptions */
-    public final String getStringOrNull( String key ) {
-	String out = getLocalStringOrNull( key );
-	return ( out == null ? fallback.getLocalStringOrNull( key ) : out );
-    }
-    
-    /** May NOT throw ClassCastExceptions */
-    public final String getCoerceToStringOrNull( String key ) {
-	String out = getLocalCoerceToStringOrNull( key );
-	return ( out == null ? fallback.getLocalCoerceToStringOrNull( key ) : out );
+    public final Object getOrNull( String key ) {
+	Object out = getLocalOrNull( key );
+	return ( out == null ? fallback.getLocalOrNull( key ) : out );
     }
 }

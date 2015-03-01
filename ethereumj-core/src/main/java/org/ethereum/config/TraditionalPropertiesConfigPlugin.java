@@ -17,7 +17,7 @@ import static org.ethereum.config.ConfigUtils.*;
  *  TypesafeConfigPlugin provides a superset of its behavior, so it is
  *  no longer in the default plugin path.
  */
-public final class TraditionalPropertiesConfigPlugin extends StringSourceConfigPlugin {
+public final class TraditionalPropertiesConfigPlugin extends ConfigPlugin {
 
     private final Properties prop;
 
@@ -44,9 +44,9 @@ public final class TraditionalPropertiesConfigPlugin extends StringSourceConfigP
      *  Abstract method implementations
      *
      */
-    protected String getLocalStringOrNull( String key ) {
+    protected Object getLocalOrNull( String key ) {
 	String value = System.getProperty( key );  // accept System.property overrides
 	if ( value == null ) value = prop.getProperty( key );
-	return value;
+	return attemptCoerceValueForKey( value, key );
     }
 }

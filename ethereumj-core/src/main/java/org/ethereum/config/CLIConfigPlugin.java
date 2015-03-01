@@ -18,18 +18,5 @@ public final class CLIConfigPlugin extends ConfigPlugin {
 	}
     }
 
-    /** May throw ClassCastExceptions */
-    protected Boolean getLocalBooleanOrNull( String key ) { return (Boolean) overrides.get( key ); }
-
-    /** May throw ClassCastExceptions */
-    protected Integer getLocalIntegerOrNull( String key ) { return (Integer) overrides.get( key ); }
-
-    /** May throw ClassCastExceptions */
-    protected String getLocalStringOrNull( String key ) { return (String) overrides.get( key ); }
-
-    /** May NOT throw ClassCastExceptions */
-    protected String getLocalCoerceToStringOrNull( String key ) { 
-	Object value = overrides.get( key );
-	return ( value == null ? null : String.valueOf( key ) );
-    }
+    protected Object getLocalOrNull( String key ) { return overrides.get( key ); }
 }

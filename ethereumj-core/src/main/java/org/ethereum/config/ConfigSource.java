@@ -1,15 +1,12 @@
 package org.ethereum.config;
 
 interface ConfigSource {
-    /** May throw ClassCastExceptions */
-    public Boolean getBooleanOrNull( String key );
-    
-    /** May throw ClassCastExceptions */
-    public Integer getIntegerOrNull( String key );
-    
-    /** May throw ClassCastExceptions */
-    public String getStringOrNull( String key );
-    
-    /** May NOT throw ClassCastExceptions */
-    public String getCoerceToStringOrNull( String key );
+
+    /** 
+     *  The Object should be in the type expected by the accessor method in SystemProperties.
+     *
+     *  @see KeysDefaults#expectedTypes() and {@link org.ethereum.config.ConfigPlugin#attemptCoerceValueForKey}
+     */
+    public Object getOrNull( String key );
+
 }

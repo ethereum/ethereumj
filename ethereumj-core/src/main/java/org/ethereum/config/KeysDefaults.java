@@ -68,15 +68,15 @@ public final class KeysDefaults {
     // utilities for implementations in this package
     final static String DEFAULT_PLUGIN_PATH="org.ethereum.config.CLIConfigPlugin,org.ethereum.config.TypesafeConfigPlugin";
 
-    // stuff to be set-up in the static initializer
-    final static Map<String,Object> DEFAULTS;
-
     final static String TRADITIONAL_PROPS_FILENAME;
     final static String TRADITIONAL_PROPS_RESOURCE_BASENAME;
     final static String TRADITIONAL_PROPS_RESOURCE;
 
-    final static Set<String> ORDERED_KEYS;
-    final static Set<String> SYSPROPS;
+    // stuff to be set-up in the static initializer
+    final static Map<String,Object>   DEFAULTS;
+    final static Map<String,Class<?>> TYPES;
+    final static Set<String>          ORDERED_KEYS;
+    final static Set<String>          SYSPROPS;
 
     final static int MAX_KEY_LEN;
 
@@ -87,44 +87,54 @@ public final class KeysDefaults {
 	TRADITIONAL_PROPS_RESOURCE_BASENAME = "system";
 	TRADITIONAL_PROPS_RESOURCE          = TRADITIONAL_PROPS_RESOURCE_BASENAME + ".properties";
 
+	Class<Boolean> B = Boolean.class;
+	Class<Integer> I = Integer.class;
+	Class<String>  S = String.class;
+
 	// the values below are the fallback, hard-coded default values
 	// of config params.
-	Map<String,Object> tmpDefaults = new HashMap<>();
-	tmpDefaults.put( K_BLOCKCHAIN_ONLY,             false                    );
-	tmpDefaults.put( K_COINBASE_SECRET,             "monkey"                 );
-	tmpDefaults.put( K_DUMP_BLOCK,                  0                        );
-	tmpDefaults.put( K_DUMP_CLEAN_ON_RESTART,       true                     );
-	tmpDefaults.put( K_DUMP_DIR,                    "dmp"                    );
-	tmpDefaults.put( K_DUMP_FULL,                   false                    );
-	tmpDefaults.put( K_DUMP_STYLE,                  "standard+"              );
-	tmpDefaults.put( K_DATABASE_DIR,                "database"               );
-	tmpDefaults.put( K_DATABASE_RESET,              false                    );
-	tmpDefaults.put( K_HELLO_PHRASE,                "Dev"                    );
-	tmpDefaults.put( K_KEYVALUE_DATASOURCE,         "leveldb"                );
-	tmpDefaults.put( K_MAX_BLOCKS_ASK,              10                       );
-	tmpDefaults.put( K_MAX_HASHES_ASK,              -1                       );
-	tmpDefaults.put( K_MAX_BLOCKS_QUEUED,           300                      );
-	tmpDefaults.put( K_PEER_ACTIVE_IP,              "poc-8.ethdev.com"       );
-	tmpDefaults.put( K_PEER_ACTIVE_PORT,            30303                    );
-	tmpDefaults.put( K_PEER_CAPABILITIES,           "eth,shh"                );
-	tmpDefaults.put( K_PEER_CHANNEL_READ_TIMEOUT,   5                        );
-	tmpDefaults.put( K_PEER_CONNECTION_TIMEOUT,     10                       );
-	tmpDefaults.put( K_PEER_DISCOVERY_ENABLED,      true                     );
-	tmpDefaults.put( K_PEER_DISCOVERY_WORKERS,      2                        );
-	tmpDefaults.put( K_PEER_DISCOVERY_IP_LIST,      "poc-8.ethdev.com:30303" );
-	tmpDefaults.put( K_PEER_LISTEN_PORT,            30303                    );
-	tmpDefaults.put( K_PLAY_VM,                     true                     );
-	tmpDefaults.put( K_PROJECT_VERSION,             ""                       );
-	tmpDefaults.put( K_RECORD_BLOCKS,               false                    );
-	tmpDefaults.put( K_ROOT_HASH_START,             -1                       );
-	tmpDefaults.put( K_SAMPLES_DIR,                 "samples"                );
-	tmpDefaults.put( K_TRANSACTION_APPROVE_TIMEOUT, 10                       );
-	tmpDefaults.put( K_TRACE_STARTBLOCK,            -1                       );
-	tmpDefaults.put( K_VM_STRUCTURED_DIR,           "dmp"                    );
-	tmpDefaults.put( K_VM_STRUCTURED_TRACE,         false                    );
-	tmpDefaults.put( K_VM_TEST_LOAD_LOCAL,          false                    );
+	Map<String,DT> dts = new HashMap<>();
+	dts.put( K_BLOCKCHAIN_ONLY,             new DT( false,                    B ) );
+	dts.put( K_COINBASE_SECRET,             new DT( "monkey",                 S ) );
+	dts.put( K_DUMP_BLOCK,                  new DT( 0,                        I ) );
+	dts.put( K_DUMP_CLEAN_ON_RESTART,       new DT( true,                     B ) );
+	dts.put( K_DUMP_DIR,                    new DT( "dmp",                    S ) );
+	dts.put( K_DUMP_FULL,                   new DT( false,                    B ) );
+	dts.put( K_DUMP_STYLE,                  new DT( "standard+",              S ) );
+	dts.put( K_DATABASE_DIR,                new DT( "database",               S ) );
+	dts.put( K_DATABASE_RESET,              new DT( false,                    B ) );
+	dts.put( K_HELLO_PHRASE,                new DT( "Dev",                    S ) );
+	dts.put( K_KEYVALUE_DATASOURCE,         new DT( "leveldb",                S ) );
+	dts.put( K_MAX_BLOCKS_ASK,              new DT( 10,                       I ) );
+	dts.put( K_MAX_HASHES_ASK,              new DT( -1,                       I ) );
+	dts.put( K_MAX_BLOCKS_QUEUED,           new DT( 300,                      I ) );
+	dts.put( K_PEER_ACTIVE_IP,              new DT( "poc-8.ethdev.com",       S ) );
+	dts.put( K_PEER_ACTIVE_PORT,            new DT( 30303,                    I ) );
+	dts.put( K_PEER_CAPABILITIES,           new DT( "eth,shh",                S ) );
+	dts.put( K_PEER_CHANNEL_READ_TIMEOUT,   new DT( 5,                        I ) );
+	dts.put( K_PEER_CONNECTION_TIMEOUT,     new DT( 10,                       I ) );
+	dts.put( K_PEER_DISCOVERY_ENABLED,      new DT( true,                     B ) );
+	dts.put( K_PEER_DISCOVERY_WORKERS,      new DT( 2,                        I ) );
+	dts.put( K_PEER_DISCOVERY_IP_LIST,      new DT( "poc-8.ethdev.com:30303", S ) );
+	dts.put( K_PEER_LISTEN_PORT,            new DT( 30303,                    I ) );
+	dts.put( K_PLAY_VM,                     new DT( true,                     B ) );
+	dts.put( K_PROJECT_VERSION,             new DT( "",                       S ) );
+	dts.put( K_RECORD_BLOCKS,               new DT( false,                    B ) );
+	dts.put( K_ROOT_HASH_START,             new DT( -1,                       I ) );
+	dts.put( K_SAMPLES_DIR,                 new DT( "samples",                S ) );
+	dts.put( K_TRANSACTION_APPROVE_TIMEOUT, new DT( 10,                       I ) );
+	dts.put( K_TRACE_STARTBLOCK,            new DT( -1,                       I ) );
+	dts.put( K_VM_STRUCTURED_DIR,           new DT( "dmp",                    S ) );
+	dts.put( K_VM_STRUCTURED_TRACE,         new DT( false,                    B ) );
+	dts.put( K_VM_TEST_LOAD_LOCAL,          new DT( false,                    B ) );
 
+	Map<String,Object> tmpDefaults = new HashMap<>();
+	for ( Map.Entry<String,DT> entry : dts.entrySet() ) tmpDefaults.put( entry.getKey(), entry.getValue().dflt );
 	DEFAULTS = Collections.unmodifiableMap( tmpDefaults );
+
+	Map<String,Class<?>> tmpTypes = new HashMap<>();
+	for ( Map.Entry<String,DT> entry : dts.entrySet() ) tmpTypes.put( entry.getKey(), entry.getValue().type );
+	TYPES = Collections.unmodifiableMap( tmpTypes );
 
 	Set tmpOrderedKeys = new TreeSet<String>( String.CASE_INSENSITIVE_ORDER ); // to deal with one ugly mixed-case key...
 	tmpOrderedKeys.addAll( DEFAULTS.keySet() );
@@ -142,7 +152,8 @@ public final class KeysDefaults {
     }
 
     // publish access to constants outside the config package only via methods
-    public static Map<String,Object> defaultConfig()     { return DEFAULTS; }
+    public static Map<String,Object>   defaultConfig()   { return DEFAULTS; }
+    public static Map<String,Class<?>> expectedTypes()   { return TYPES; }
 
     public static Logger getConfigPluginLogger()         { return configPluginLogger; }
 
@@ -189,4 +200,13 @@ public final class KeysDefaults {
 
     // to be used by plug-in writers outside the package, via public accessor
     private final static Logger configPluginLogger = LoggerFactory.getLogger("config-plugin");
+
+    private static class DT {
+	Object dflt;
+	Class<?> type;
+	DT( Object dflt, Class<?> type ) { 
+	    this.dflt = dflt; 
+	    this.type = type;
+	}
+    }
 }

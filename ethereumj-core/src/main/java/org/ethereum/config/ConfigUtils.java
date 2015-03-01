@@ -13,6 +13,22 @@ import static org.ethereum.config.KeysDefaults.*;
 
 class ConfigUtils {
 
+    static Object attemptCoerceValueForKey( String value, String key ) {
+	Class<?> type = TYPES.get( key );
+	Object out;
+	if ( type == Boolean.class ) {
+	    out = Boolean.valueOf( value );
+	} else if ( type == Integer.class ) {
+	    out = Integer.valueOf( value );
+	} else if ( type == String.class ) {
+	    out = value;
+	} else {
+	    if ( logger.isWarnEnabled() ) logger.warn("Cannot coerce String to {} for key '{}'. Left as String.", type, key);
+	    out = value;
+	}
+	return out;
+    }
+
     static Properties ensurePrefixedProperties( Properties in ) {
 	Properties out = new Properties();
 	for ( String oldKey : in.stringPropertyNames() ) {
