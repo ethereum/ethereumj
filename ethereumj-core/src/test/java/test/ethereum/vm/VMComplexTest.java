@@ -424,4 +424,76 @@ public class VMComplexTest {
 
         // TODO: check that the value pushed after exec is 1
     }
+
+    //sha3_memSizeQuadraticCost33
+    @Test // contract call quadratic memory use
+    public void test7() {
+
+        /**
+         *       #The code will run
+         *       ------------------
+
+                 a = contract.storage[999]
+                 if a > 0:
+                     contract.storage[999] = a - 1
+
+                     # call to contract: 77045e71a7a2c50903d88e564cd72fab11e82051
+                     send((tx.gas / 10 * 8), 0x77045e71a7a2c50903d88e564cd72fab11e82051, 0)
+                 else:
+                     stop
+         */
+
+        int expectedGas = 357;
+
+        DataWord key1 = new DataWord(999);
+        DataWord value1 = new DataWord(3);
+
+        // Set contract into Database
+        String callerAddr = "cd1722f3947def4cf144679da39c4c32bdc35681";
+        String contractAddr = "0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6";
+        String code = "600161040020600055";
+
+        byte[] contractAddrB = Hex.decode(contractAddr);
+        byte[] callerAddrB = Hex.decode(callerAddr);
+        byte[] codeB = Hex.decode(code);
+
+        byte[] codeKey = HashUtil.sha3(codeB);
+        AccountState accountState = new AccountState();
+        accountState.setCodeHash(codeKey);
+
+        ProgramInvokeMockImpl pi = new ProgramInvokeMockImpl();
+        pi.setOwnerAddress(contractAddrB);
+        Repository repository = pi.getRepository();
+
+        repository.createAccount(callerAddrB);
+        repository.addBalance(callerAddrB, new BigInteger("115792089237316195423570985008687907853269984665640564039457584007913129639935"));
+
+        repository.createAccount(contractAddrB);
+        repository.saveCode(contractAddrB, codeB);
+        repository.addStorageRow(contractAddrB, key1, value1);
+
+        // Play the program
+        VM vm = new VM();
+        Program program = new Program(codeB, pi);
+
+        try {
+            while (!program.isStopped())
+                vm.step(program);
+        } catch (RuntimeException e) {
+            program.setRuntimeFailure(e);
+        }
+
+        System.out.println();
+        System.out.println("============ Results ============");
+
+        BigInteger balance = repository.getBalance(callerAddrB);
+
+        System.out.println("*** Used gas: " + program.getResult().getGasUsed());
+        System.out.println("*** Contract Balance: " + balance);
+
+        // todo: assert caller balance after contract exec
+
+        repository.close();
+        assertEquals(expectedGas, program.getResult().getGasUsed());
+    }
 }
