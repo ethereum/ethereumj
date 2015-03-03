@@ -81,10 +81,13 @@ public class SystemProperties {
 	    throw e;
 	}
     }
+
+    /*
     private String getCoerceToString( String key ) {
 	Object raw = source.getOrNull( key, Object.class );
 	return ( raw != null ? String.valueOf( raw ) : String.valueOf( DEFAULTS.get( key ) ) );
     }
+    */
 
     /*
      *
@@ -163,8 +166,9 @@ public class SystemProperties {
 
     private void print(LinePrinter lp) {
 	for ( String key : ORDERED_KEYS ) {
-            String value = getCoerceToString( key );
-	    value = ( value == null ? "null" : value );
+            //String value = getCoerceToString( key );
+            String value = String.valueOf( source.getOrNull( key, TYPES.get( key ) ) );
+	    //value = ( value == null ? "null" : value );
 	    if ( K_COINBASE_SECRET.equals( key ) ) value = "[hidden]";
 	    lp.print( key, value );
         }

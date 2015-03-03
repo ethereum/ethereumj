@@ -72,7 +72,7 @@ public abstract class ConfigPlugin implements ConfigSource {
 	    String className = classNames[i];
 	    try { 
 		head = instantiatePlugin( className, head ); 
-		logger.info( "Loaded config plugin '{}'.", className );
+		logger.info( "Loaded config plugin '{}' (priority {}).", className, i );
 	    }
 	    catch ( Exception e ) {
 		if ( logger.isWarnEnabled() ) {
