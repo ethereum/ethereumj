@@ -18,5 +18,5 @@ public final class CLIConfigPlugin extends ConfigPlugin {
 	}
     }
 
-    protected Object getLocalOrNull( String key ) { return overrides.get( key ); }
+    protected Object getLocalOrNull( String key, Class<?> expectedType ) { return attemptCoerce( overrides.get( key ), expectedType, key ); }
 }

@@ -98,11 +98,9 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
     // but i think ethereum-core wants to remain Java 7
     // compatible for now.
 
-    /** May throw ClassCastExceptions */
-    protected Object getLocalOrNull( String key ) {
+    protected Object getLocalOrNull( String key, Class<?> expectedType ) {
 	if ( active.hasPath( key ) ) {
-	    Class<?> type = TYPES.get( key );
-	    return getForKeyAndType( key, type );
+	    return getForKeyAndType( key, expectedType );
 	} else {
 	    return null;
 	}
@@ -117,11 +115,7 @@ public class TypesafeConfigPlugin extends ConfigPlugin {
 	} else if ( type == String.class ) {
 	    out = active.getString( key );
 	} else {
-	    out = active.getValue( key ).unwrapped();
-	    if ( logger.isWarnEnabled() ) {
-		logger.warn( "Value for key '{}' left in unverified native type {}, rather than converted to {}. [{}]", 
-			     key, out.getClass().getName(), type.getName(), this.getClass().getSimpleName() );
-	    }
+	    out = attemptCoerce( active.getValue( key ).unwrapped(), type, key );
 	}
 	return out;
     }

@@ -1,5 +1,12 @@
 package org.ethereum.config;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.lang.reflect.Constructor;
 
 import org.slf4j.Logger;
@@ -12,11 +19,49 @@ import static org.ethereum.config.KeysDefaults.*;
  * and provide a public constructor that accepts a fallback ConfigPlugin
  * for its sole argument.
  *
- * Objects provided should be put into the types expected for the key.
+ * The Object should be returned in the expected type.
+ * (available in {@link org.ethereum.config.KeysDefaults#TYPES} for standard keys)
  *
- * @see KeysDefaults#expectedTypes() and {@link #attemptCoerceValueForKey}
+ * @see KeysDefaults#expectedTypes() and {@link #attemptCoerce}
  */
 public abstract class ConfigPlugin implements ConfigSource {
+
+    // TODO: Factor coercion stuff out into a successor to com.mchange.v2.lang.Coerce
+    //       Careful of conversion from slf4j to mlog.
+    private final static List<Class<?>> ORDERED_INTEGRALS;
+    private final static List<Class<?>> ORDERED_FPS;
+    static {
+	Class<?>[] tmp_i = { Byte.class, Short.class, Integer.class, Long.class, BigInteger.class };
+	ORDERED_INTEGRALS = Collections.unmodifiableList( Arrays.asList( tmp_i ) );
+
+	Class<?>[] tmp_fp = { Float.class, Double.class, BigDecimal.class };
+	ORDERED_FPS = Collections.unmodifiableList( Arrays.asList( tmp_fp ) );
+    }
+    private static boolean isIntegral( Class<?> numClass ) {
+	return ORDERED_INTEGRALS.indexOf( numClass ) >= 0 || numClass == AtomicInteger.class || numClass == AtomicLong.class;
+    }
+    private static boolean isFloatingPoint( Class<?> numClass ) {
+	return ORDERED_FPS.indexOf( numClass ) >= 0;
+    }
+    private static int ordinalWidthIntegral( Class<?> numClass ) {
+	// from a width perspective, AtomicInteger is the same as Integer,
+	// AtomicLong is the same as Long
+	if ( numClass == AtomicInteger.class ) {
+	    numClass = Integer.class; 
+	} else if ( numClass == AtomicLong.class ) {
+	    numClass = Long.class;
+	}
+	int out = ORDERED_INTEGRALS.indexOf( numClass );
+	if ( out == -1 )
+	    throw new IllegalArgumentException("Not an integral Number: " + numClass.getSimpleName());
+	return out;
+    }
+    private static int ordinalWidthFloatingPoint( Class<?> numClass ) {
+	int out = ORDERED_FPS.indexOf( numClass );
+	if ( out == -1 )
+	    throw new IllegalArgumentException("Not a floating point Number: " + numClass.getSimpleName());
+	return out;
+    }
 
     protected final static Logger logger = KeysDefaults.getConfigPluginLogger();
 
@@ -60,7 +105,7 @@ public abstract class ConfigPlugin implements ConfigSource {
     }
 
     private final static ConfigPlugin NULL = new ConfigPlugin(null) {
-	    protected Object getLocalOrNull( String key ) { return null; }
+	    protected Object getLocalOrNull( String key, Class<?> expectedType ) { return null; }
 
 	    @Override 
 	    boolean matchesTail( String[] classNames, int index ) { return classNames.length == index; }
@@ -75,22 +120,140 @@ public abstract class ConfigPlugin implements ConfigSource {
 	this.fallback = fallback;
     }
 
-    protected Object attemptCoerceValueForKey( String value, String key ) {
-	Class<?> type = TYPES.get( key );
+    private final void warnCannotCoerce( Object value, Class<?> desiredType, String key ) {
+	logger.warn("Cannot coerce {} to {} for key '{}'. Left as {}. [{}]", value, desiredType, key, value.getClass().getName(), this.getClass().getSimpleName());
+    }
+
+    protected Object attemptCoerce( Object value, Class<?> type, String key ) {
 	Object out;
-	if ( type == Boolean.class ) {
-	    out = Boolean.valueOf( value );
-	} else if ( type == Integer.class ) {
-	    out = Integer.valueOf( value );
-	} else if ( type == String.class ) {
+	if ( value == null ) {
 	    out = value;
 	} else {
-	    if ( logger.isWarnEnabled() ) {
-		logger.warn("Cannot coerce String to {} for key '{}'. Left as String. [{}]", type, key, this.getClass().getSimpleName());
+	    Class<?> vClass = value.getClass();
+	    if ( type.isAssignableFrom( vClass ) ) {
+		out = value;
+	    } else {
+		Class<?> normalizedType = normalizeType( type );
+		if ( normalizedType.isAssignableFrom( vClass ) ) {
+		    out = value;
+		} else if ( value instanceof String ) {
+		    out = attemptCoerceStringValueForType( (String) value, normalizedType, key );
+		} else if ( value instanceof Number ) {
+		    out = attemptCoerceNumberForType( (Number) value, normalizedType, key );
+		} else {
+		    warnCannotCoerce( value, type, key );
+		    out = value;
+		}
 	    }
+	}
+	return out;
+    }
+
+    private Object attemptCoerceNumberForType( Number value, Class<?> normalizedType, String key ) {
+	Class<?> valueClass = value.getClass();
+	Object out;
+	if ( Number.class.isAssignableFrom( normalizedType ) ) {
+	    boolean integralValue = isIntegral( value.getClass() );
+	    boolean integralType = isIntegral( normalizedType );
+	    if ( integralValue && integralType ) {
+		int valueWidth = ordinalWidthIntegral( valueClass );
+		int typeWidth = ordinalWidthIntegral( valueClass );
+		if ( valueWidth > typeWidth ) {
+		    logger.warn("Conversion from {} (value {}) to {} desired for key '{}' may require truncation.", 
+			     valueClass.getSimpleName(), value, normalizedType.getSimpleName(), key);
+		}
+	    } else if ( !integralValue && !integralType ) {
+		int valueWidth = ordinalWidthFloatingPoint( valueClass );
+		int typeWidth = ordinalWidthFloatingPoint( valueClass );
+		if ( valueWidth > typeWidth ) {
+		    logger.warn("Conversion from {} (value {}) to {} desired for key '{}' may lose precsion.", 
+			     valueClass.getSimpleName(), value, normalizedType.getSimpleName(), key);
+		}
+	    } else {
+		logger.warn("Conversion between integral and nonintegral values (from {}, value {} to {}) for key '{}' is unsafe.", 
+			 valueClass.getSimpleName(), value, normalizedType.getSimpleName(), key);
+	    }
+	    out = forceConvertNumberToNumeric( value, normalizedType );
+	} else {
+	    warnCannotCoerce( value, normalizedType, key );
 	    out = value;
 	}
 	return out;
+    }
+
+    private Object forceConvertNumberToNumeric( Number value, Class<?> normalizedNumType ) {
+	Object out;
+	if ( normalizedNumType == BigInteger.class ) {
+	    out = BigInteger.valueOf( value.longValue() );
+	} else if ( normalizedNumType == Long.class ) {
+	    out = value.longValue();
+	} else if ( normalizedNumType == AtomicLong.class ) {
+	    out = new AtomicLong( value.longValue() );
+	} else if ( normalizedNumType == Integer.class ) {
+	    out = value.intValue();
+	} else if ( normalizedNumType == AtomicInteger.class ) {
+	    out = new AtomicInteger( value.intValue() );
+	} else if ( normalizedNumType == Short.class ) {
+	    out = value.shortValue();
+	} else if ( normalizedNumType == Byte.class ) {
+	    out = value.byteValue();
+	} else if ( normalizedNumType == BigDecimal.class ) {
+	    if ( isIntegral( value.getClass() ) ) {
+		out = BigDecimal.valueOf( value.longValue() );
+	    } else {
+		out = BigDecimal.valueOf( value.doubleValue() );
+	    }
+	} else if ( normalizedNumType == Double.class ) {
+	    out = value.doubleValue();
+	} else if ( normalizedNumType == Float.class ) {
+	    out = value.floatValue();
+	} else {
+	    throw new IllegalArgumentException( "Unknown Number type: " + normalizedNumType.getName() );
+	}
+	return out;
+    }
+
+    private Object attemptCoerceStringValueForType( String value, Class<?> normalizedType, String key ) {
+	Object out;
+	if ( normalizedType == Boolean.class ) {
+	    out = Boolean.valueOf( value );
+	} else if ( normalizedType == Byte.class ) {
+	    out = Byte.decode( value );
+	} else if ( normalizedType == Character.class ) {
+	    if ( value.length() != 1 ) {
+		warnCannotCoerce( value, Character.class, key );
+		out = value;
+	    } else {
+		out = value.charAt(0);
+	    }
+	} else if ( normalizedType == Short.class ) {
+	    out = Short.valueOf( value );
+	} else if ( normalizedType == Integer.class ) {
+	    out = Integer.valueOf( value );
+	} else if ( normalizedType == Long.class ) { 
+	    out = Long.valueOf( value );
+	} else if ( normalizedType == Float.class ) { 
+	    out = Float.valueOf( value );
+	} else if ( normalizedType == Double.class ) { 
+	    out = Double.valueOf( value );
+	} else {
+	    warnCannotCoerce( value, normalizedType, key );
+	    out = value;
+	}
+	return out;
+    }
+
+    private Class<?> normalizeType( Class<?> type ) { // primitives should be normalized to their wrapper types
+	if ( type == boolean.class )     return Boolean.class;
+	else if ( type == byte.class )   return Byte.class;
+	else if ( type == char.class )   return Character.class;
+	else if ( type == short.class )  return Short.class;
+	else if ( type == int.class )    return Integer.class;
+	else if ( type == long.class )   return Long.class;
+	else if ( type == float.class )  return Float.class;
+	else if ( type == double.class ) return Double.class;
+	else if ( type == void.class )   return Void.class; // for a kind of ridiculous completeness
+	else return type;
     }
 
     boolean matchesTail( String[] classNames, int index ) {
@@ -120,10 +283,10 @@ public abstract class ConfigPlugin implements ConfigSource {
      *  Abstract, protected methods
      *
      */
-    protected abstract Object getLocalOrNull( String key );
+    protected abstract Object getLocalOrNull( String key, Class<?> expectedType );
     
-    public final Object getOrNull( String key ) {
-	Object out = getLocalOrNull( key );
-	return ( out == null ? fallback.getLocalOrNull( key ) : out );
+    public final Object getOrNull( String key, Class<?> expectedType ) {
+	Object out = getLocalOrNull( key, expectedType );
+	return ( out == null ? fallback.getLocalOrNull( key, expectedType ) : out );
     }
 }

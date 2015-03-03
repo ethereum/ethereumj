@@ -56,7 +56,7 @@ public class SystemProperties {
 
     private boolean getBoolean( String key ) {
 	try {
-	    Object out = source.getOrNull( key );
+	    Object out = source.getOrNull( key, Boolean.class );
 	    return ( (Boolean) ( out != null ? out : DEFAULTS.get( key ) ) ).booleanValue();
 	} catch ( ClassCastException e ) {
 	    logClassCastError( key, "boolean", e );
@@ -65,7 +65,7 @@ public class SystemProperties {
     }
     private int getInt( String key ) {
 	try {
-	    Object out = source.getOrNull( key );
+	    Object out = source.getOrNull( key, Integer.class );
 	    return ( (Integer) ( out != null ? out : DEFAULTS.get( key ) ) ).intValue();
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
@@ -74,7 +74,7 @@ public class SystemProperties {
     }
     private String getString( String key ) {
 	try {
-	    Object out = source.getOrNull( key );
+	    Object out = source.getOrNull( key, String.class );
 	    return (String) ( out != null ? out : DEFAULTS.get( key ) );
 	} catch (ClassCastException e) {
 	    logClassCastError( key, "int", e );
@@ -82,7 +82,7 @@ public class SystemProperties {
 	}
     }
     private String getCoerceToString( String key ) {
-	Object raw = source.getOrNull( key );
+	Object raw = source.getOrNull( key, Object.class );
 	return ( raw != null ? String.valueOf( raw ) : String.valueOf( DEFAULTS.get( key ) ) );
     }
 
@@ -91,6 +91,10 @@ public class SystemProperties {
      *  Public accessors
      *
      */
+    public Object getArbitrary( String key, Class<?> attemptCoerceTo ) {
+	return source.getOrNull( key, attemptCoerceTo );
+    }
+
     public String  activePeerIP()              { return getString( K_PEER_ACTIVE_IP ); }
     public int     activePeerPort()            { return getInt( K_PEER_ACTIVE_PORT ); }
     public boolean blockChainOnly()            { return getBoolean( K_BLOCKCHAIN_ONLY ); }

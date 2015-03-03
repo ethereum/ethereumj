@@ -44,9 +44,9 @@ public final class TraditionalPropertiesConfigPlugin extends ConfigPlugin {
      *  Abstract method implementations
      *
      */
-    protected Object getLocalOrNull( String key ) {
+    protected Object getLocalOrNull( String key, Class<?> expectedType ) {
 	String value = System.getProperty( key );  // accept System.property overrides
 	if ( value == null ) value = prop.getProperty( key );
-	return attemptCoerceValueForKey( value, key );
+	return attemptCoerce( value, expectedType, key );
     }
 }
