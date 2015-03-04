@@ -108,8 +108,6 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         //todo:    it goes OOG, because no gasLimit is given. So it does not change the state.
         excluded.add("HighGasLimit");
-        excluded.add("RefundOverflow");
-        excluded.add("UserTransactionZeroCostWithData");
         excluded.add("UserTransactionGasLimitIsTooLowWhenZeroCost");
         excluded.add("SuicidesAndInternlCallSuicides");
         excluded.add("SuicidesMixingCoinbase");

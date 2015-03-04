@@ -117,6 +117,16 @@ public class TransactionExecutor {
         BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
         logger.info("Gas price limited to [{} wei]", gasDebit.toString());
 
+        //Check: Do not execute if transaction has debit amount of 0 and there is code
+        if (gasDebit.compareTo(BigInteger.ZERO) == 0 && tx.getData() != null) {
+            logger.debug("Transaction gas debits are zero! Cannot execute any code: sender={}",
+                    Hex.toHexString(senderAddress));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
+
         // Debit the actual total gas value from the sender
         // the purchased gas will be available for
         // the contract in the execution state,
