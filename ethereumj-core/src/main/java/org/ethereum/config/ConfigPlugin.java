@@ -5,9 +5,15 @@ import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.lang.reflect.Constructor;
+
+/*
+ * we support AtomicInteger and AtomicLong mostly just to
+ * support all subclasses of java.lang.Number in the
+ * standard libraries.
+ */
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.lang.reflect.Constructor;
 
 import org.slf4j.Logger;
 
@@ -236,7 +242,15 @@ public abstract class ConfigPlugin implements ConfigSource {
 	    out = Float.valueOf( value );
 	} else if ( normalizedType == Double.class ) { 
 	    out = Double.valueOf( value );
-	} else {
+	} else if ( normalizedType == BigInteger.class ) { 
+	    out = new BigInteger( value );
+	} else if ( normalizedType == BigDecimal.class ) { 
+	    out = new BigDecimal( value );
+	} else if ( normalizedType == AtomicInteger.class ) { 
+	    out = new AtomicInteger( Integer.parseInt( value ) );
+	} else if ( normalizedType == AtomicLong.class ) { 
+	    out = new AtomicLong( Long.parseLong( value ) );
+	}else {
 	    warnCannotCoerce( value, normalizedType, key );
 	    out = value;
 	}
