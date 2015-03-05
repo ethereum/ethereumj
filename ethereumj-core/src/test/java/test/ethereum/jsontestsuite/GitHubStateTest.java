@@ -26,8 +26,6 @@ public class GitHubStateTest {
     public void runWithExcludedTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRipemd160_5");
-        excluded.add("CallSha256_5");
         String json = JSONReader.loadJSON("StateTests/stPreCompiledContracts.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -57,8 +55,6 @@ public class GitHubStateTest {
     @Test
     public void stPreCompiledContracts() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRipemd160_5");
-        excluded.add("CallSha256_5");
         String json = JSONReader.loadJSON("StateTests/stPreCompiledContracts.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
