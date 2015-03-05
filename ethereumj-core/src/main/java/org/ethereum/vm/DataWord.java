@@ -107,6 +107,10 @@ public class DataWord implements Comparable<DataWord> {
         return new BigInteger(data);
     }
 
+    public String  bigIntValue() {
+        return new BigInteger(data).toString();
+    }
+
     public boolean isZero() {
         for (byte tmp : data) {
             if (tmp != 0) return false;
