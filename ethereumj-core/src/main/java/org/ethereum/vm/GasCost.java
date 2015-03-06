@@ -8,98 +8,53 @@ package org.ethereum.vm;
  */
 public class GasCost {
 
-    /**
-     * Cost 1 gas
-     */
-    public final static int STEP = 1;
-    /**
-     * Cost 20 gas
-     */
+    public final static int ZEROSTEP = 0;
+    public final static int QUICKSTEP = 2;
+    public final static int FASTESTSTEP = 3;
+    public final static int FASTSTEP = 5;
+    public final static int MIDSTEP = 8;
+    public final static int SLOWSTEP = 10;
+    public final static int EXTSTEP = 20;
+
+    public final static int GENESISGASLIMIT = 1000000;
+    public final static int MINGASLIMIT = 125000;
+
     public final static int BALANCE = 20;
-    /**
-     * Cost 10 gas
-     */
-    public final static int SHA3 = 10;
-    /**
-     * Cost 10 gas
-     */
-    public final static int SHA3_WORD = 10;
-    /**
-     * Cost 20 gas
-     */
-    public final static int SLOAD = 20;
-    /**
-     * Cost 0 gas
-     */
+    public final static int SHA3 = 30;
+    public final static int SHA3_WORD = 6;
+    public final static int SLOAD = 50;
     public final static int STOP = 0;
-    /**
-     * Cost 0 gas
-     */
     public final static int SUICIDE = 0;
-    /**
-     * Cost 300 gas
-     */
-    public final static int SSTORE = 300;
-    /**
-     * Cost 100 gas
-     */
-    public final static int RESET_SSTORE = 100;
-    /**
-     * Cost 100 gas
-     */
-    public final static int REFUND_SSTORE = 100;
-    /**
-     * Cost 100 gas
-     */
-    public final static int CREATE = 100;
-    /**
-     * Cost 1 gas
-     */
+    public final static int CLEAR_SSTORE = 5000;
+    public final static int SET_SSTORE = 20000;
+    public final static int RESET_SSTORE = 5000;
+    public final static int REFUND_SSTORE = 15000;
+    public final static int CREATE = 32000;
+
+    public final static int JUMPDEST = 1;
     public final static int CREATE_DATA_BYTE = 5;
-    /**
-     * Cost 20 gas
-     */
-    public final static int CALL = 20;
-    /**
-     * Cost 1 gas
-     */
-    public final static int MEMORY = 1;
-    /**
-     * Cost 5 gas
-     */
-    public final static int TX_NO_ZERO_DATA = 5;
-    /**
-     * Cost 1 gas
-     */
-    public final static int TX_ZERO_DATA = 1;
-    /**
-     * Cost 500 gas
-     */
-    public final static int TRANSACTION = 500;
-    /**
-     * Cost 32 gas
-     */
-    public static int LOG_GAS = 32;
-    /**
-     * Cost 1 gas
-     */
-    public final static int LOG_DATA_GAS = 1;
-    /**
-     * Cost 32 gas
-     */
-    public final static int LOG_TOPIC_GAS = 32;
-    /**
-     * Cost 1 gas
-     */
-    public final static int COPY_GAS = 1;
-    /**
-     * Cost 1 gas
-     */
-    public final static int EXP_GAS = 1;
-    /**
-     * Cost 1 gas
-     */
-    public final static int EXP_BYTE_GAS = 1;
-
-
+    public final static int CALL = 40;
+    public final static int STIPEND_CALL = 2300;
+    public final static int VT_CALL = 9000;  //value transfer call
+    public final static int NEW_ACCT_CALL = 25000;  //new account call
+    public final static int MEMORY = 3;
+    public final static int SUICIDE_REFUND = 24000;
+    public final static int QUAD_COEFF_DIV = 512;
+    public final static int CREATE_DATA = 200;
+    public final static int TX_NO_ZERO_DATA = 68;
+    public final static int TX_ZERO_DATA = 4;
+    public final static int TRANSACTION = 21000;
+    public final static int LOG = 375;
+    public final static int LOG_DATA = 8;
+    public final static int LOG_TOPIC = 375;
+    public final static int COPY = 3;
+    public final static int EXP = 10;
+    public final static int EXP_BYTE = 10;
+    public final static int IDENTITY = 15;
+    public final static int IDENTITY_WORD = 3;
+    public final static int RIPEMD160 = 600;
+    public final static int RIPEMD160_WORD = 120;
+    public final static int SHA256 = 60;
+    public final static int SHA256_WORD = 12;
+    public final static int EC_RECOVER = 3000;
 }
