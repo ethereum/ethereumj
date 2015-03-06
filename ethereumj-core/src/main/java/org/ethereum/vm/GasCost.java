@@ -8,6 +8,11 @@ package org.ethereum.vm;
  */
 public class GasCost {
 
+    /* backwards compatibility, remove eventually */
+    public final static int STEP = 1;
+    public final static int SSTORE = 300;
+    /* backwards compatibility, remove eventually */
+
     public final static int ZEROSTEP = 0;
     public final static int QUICKSTEP = 2;
     public final static int FASTESTSTEP = 3;
@@ -44,12 +49,12 @@ public class GasCost {
     public final static int TX_NO_ZERO_DATA = 68;
     public final static int TX_ZERO_DATA = 4;
     public final static int TRANSACTION = 21000;
-    public final static int LOG = 375;
-    public final static int LOG_DATA = 8;
-    public final static int LOG_TOPIC = 375;
-    public final static int COPY = 3;
-    public final static int EXP = 10;
-    public final static int EXP_BYTE = 10;
+    public final static int LOG_GAS = 375;
+    public final static int LOG_DATA_GAS = 8;
+    public final static int LOG_TOPIC_GAS = 375;
+    public final static int COPY_GAS = 3;
+    public final static int EXP_GAS = 10;
+    public final static int EXP_BYTE_GAS = 10;
     public final static int IDENTITY = 15;
     public final static int IDENTITY_WORD = 3;
     public final static int RIPEMD160 = 600;
