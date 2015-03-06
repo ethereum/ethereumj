@@ -48,11 +48,10 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-
     @Test // testing full suite
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("env1"); //Bug in test runner- this passes if VM logging is on "ALL"
+        excluded.add("env1");
         String json = JSONReader.loadJSON("VMTests/vmEnvironmentalInfoTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
@@ -101,7 +100,6 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-
     @Test // testing full suite
     public void testVMGitHub() throws ParseException {
 
@@ -113,11 +111,11 @@ public class GitHubVMTest {
     @Test // testing full suite
     public void testRandomVMGitHub() throws ParseException {
 
-        String sha = "60b921af8bf7bbe38565f8543e52a54e5f465ae8";
+        String sha = "f8aa9aa1f46995af1b07436db4fa528894914c60";
         List<String> fileNames = getFileNamesForTreeSha(sha);
         List<String> excludedFiles =
                 Arrays.asList(
-                        "201501150842LARGE_DATA_IN_CALLCREATE_GOjson" //Badly named file
+                        "201501150842LARGE_DATA_IN_CALLCREATE_GO.json"
                 );
 
         for (String fileName : fileNames) {
@@ -129,5 +127,4 @@ public class GitHubVMTest {
         }
 
     }
-
 }
