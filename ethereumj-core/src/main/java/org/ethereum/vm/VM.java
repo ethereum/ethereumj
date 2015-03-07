@@ -92,9 +92,21 @@ public class VM {
 
             String hint = "";
             long callGas = 0, memWords = 0; // parameters for logging
-            long gasCost = GasCost.STEP;
+            long gasCost = GasCost.FASTESTSTEP; //TODO #POC9 Add tier support 
             long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
+
+            /*DEBUG #POC9 if( op.asInt() == 96 || op.asInt() == -128 || op.asInt() == 57 || op.asInt() == 115) {
+              //byte alphaone = 0x63;
+              //op = OpCode.code(alphaone);
+              gasCost = 3;
+            }
+
+            if( op.asInt() == -13 ) {
+              //byte alphaone = 0x63;
+              //op = OpCode.code(alphaone);
+              gasCost = 0;
+            }*/
 
             // Calculate fees and spend gas
             switch (op) {
@@ -107,13 +119,13 @@ public class VM {
                     DataWord newValue = stack.get(stack.size() - 2);
                     DataWord oldValue = program.storageLoad(stack.peek());
                     if (oldValue == null && !newValue.isZero())
-                        gasCost = GasCost.SSTORE;
+                        gasCost = GasCost.SET_SSTORE;
                     else if (oldValue != null && newValue.isZero()) {
                         // todo: GASREFUND counter policy
 
                         // refund step cost policy.
                         program.futureRefundGas(GasCost.REFUND_SSTORE);
-                        gasCost = 0;
+                        gasCost = GasCost.CLEAR_SSTORE;
                     } else
                         gasCost = GasCost.RESET_SSTORE;
                     break;
@@ -135,6 +147,7 @@ public class VM {
                     newMemSize = memNeeded(stack.peek(), new DataWord(32));
                     break;
                 case RETURN:
+                    gasCost = GasCost.STOP; //rename?
                     newMemSize = memNeeded(stack.peek(), stack.get(stack.size() - 2));
                     break;
                 case SHA3:
@@ -163,6 +176,13 @@ public class VM {
                     if (callGasWord.compareTo(program.getGas()) == 1) {
                         throw program.new OutOfGasException();
                     }
+                    //TODO #POC9 add logic from cpp for NEW_ACCOUNT_GAS
+                    //if (inst != Instruction::CALLCODE &&
+                    // !_ext.exists(asAddress(m_stack[m_stack.size() - 2]))) {
+                    //runGas += c_callNewAccountGas; }
+
+                    if (stack.size() - 3 > 0 )
+                      gasCost += GasCost.VT_CALL;
                     callGas = callGasWord.longValue();
                     BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
@@ -200,6 +220,8 @@ public class VM {
                 default:
                     break;
             }
+
+            //DEBUG System.out.println(" OP IS " + op.name() + " GASCOST IS " + gasCost + " NUM IS " + op.asInt());
             program.spendGas(gasCost, op.name());
 
             // Avoid overflows

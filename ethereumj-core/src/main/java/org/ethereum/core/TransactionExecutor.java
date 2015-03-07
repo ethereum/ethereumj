@@ -319,7 +319,7 @@ public class TransactionExecutor {
                                     Hex.toHexString(bodyCode));
 
                 BigInteger storageCost = gasPrice.multiply(BigInteger.valueOf(bodyCode.length * GasCost
-                        .CREATE_DATA_BYTE));
+                        .CREATE_DATA));
                 BigInteger balance = repository.getBalance(senderAddress);
 
                 // check if can be charged for the contract data save
