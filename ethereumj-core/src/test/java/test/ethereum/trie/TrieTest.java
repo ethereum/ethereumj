@@ -4,6 +4,8 @@ import org.ethereum.core.AccountState;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.DatabaseImpl;
+import org.ethereum.trie.SecureTrie;
+import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -918,32 +920,31 @@ public class TrieTest {
     @Test
     public void testSecureTrie(){
 
-        TrieImpl trie = new TrieImpl(mockDb);
+        Trie trie = new SecureTrie(mockDb);
 
-        byte[] k1 = sha3("do".getBytes());
+        byte[] k1 = "do".getBytes();
         byte[] v1 = "verb".getBytes();
 
-        byte[] k2 = sha3("ether".getBytes());
+        byte[] k2 = "ether".getBytes();
         byte[] v2 = "wookiedoo".getBytes();
 
-        byte[] k3 = sha3("horse".getBytes());
+        byte[] k3 = "horse".getBytes();
         byte[] v3 = "stallion".getBytes();
 
-        byte[] k4 = sha3("shaman".getBytes());
+        byte[] k4 = "shaman".getBytes();
         byte[] v4 = "horse".getBytes();
 
-        byte[] k5 = sha3("doge".getBytes());
+        byte[] k5 = "doge".getBytes();
         byte[] v5 = "coin".getBytes();
 
-        byte[] k6 = sha3("ether".getBytes());
+        byte[] k6 = "ether".getBytes();
         byte[] v6 = "".getBytes();
 
-        byte[] k7 = sha3("dog".getBytes());
+        byte[] k7 = "dog".getBytes();
         byte[] v7 = "puppy".getBytes();
 
-        byte[] k8 = sha3("shaman".getBytes());
+        byte[] k8 = "shaman".getBytes();
         byte[] v8 = "".getBytes();
-
 
         trie.update(k1, v1);
         trie.update(k2, v2);
@@ -958,7 +959,7 @@ public class TrieTest {
 
         logger.info("root: " + Hex.toHexString(root));
 
-        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d","Hex.toHexString(root)");
+        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d",Hex.toHexString(root));
     }
 
 }
