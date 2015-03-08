@@ -15,7 +15,7 @@ public class Bucket {
 
     String name;
 
-    List<PeerId> peerIds = new ArrayList<>();
+    List<Peer> peers = new ArrayList<>();
 
 
     public Bucket(String name) {
@@ -23,23 +23,23 @@ public class Bucket {
     }
 
 
-    public void add(PeerId peerId) {
+    public void add(Peer peer) {
 
-        if (peerId == null) throw new Error("Not a leaf");
+        if (peer == null) throw new Error("Not a leaf");
 
-        if ( peerIds == null){
+        if ( peers == null){
 
-            if (peerId.nextBit(name) == 1)
-                left.add(peerId);
+            if (peer.nextBit(name) == 1)
+                left.add(peer);
             else
-                right.add(peerId);
+                right.add(peer);
 
             return;
         }
 
-        peerIds.add(peerId);
+        peers.add(peer);
 
-        if (peerIds.size() > MAX_KADEMLIA_K)
+        if (peers.size() > MAX_KADEMLIA_K)
             splitBucket();
     }
 
@@ -47,14 +47,14 @@ public class Bucket {
         left = new Bucket(name + "1");
         right = new Bucket(name + "0");
 
-        for (PeerId id : peerIds) {
+        for (Peer id : peers) {
             if (id.nextBit(name) == 1)
                 left.add(id);
             else
                 right.add(id);
         }
 
-        this.peerIds = null;
+        this.peers = null;
     }
 
 
@@ -74,9 +74,9 @@ public class Bucket {
 
         sb.append(name).append("\n");
 
-        if (peerIds == null) return sb.toString();
+        if (peers == null) return sb.toString();
 
-        for (PeerId id : peerIds)
+        for (Peer id : peers)
             sb.append(id.toBinaryString()).append("\n");
 
         return sb.toString();
@@ -108,7 +108,7 @@ public class Bucket {
 
         @Override
         public void call(Bucket bucket) {
-            if (bucket.peerIds != null) leafs.add(bucket);
+            if (bucket.peers != null) leafs.add(bucket);
         }
 
         public List<Bucket> getLeafs() {
@@ -124,7 +124,7 @@ public class Bucket {
         return name;
     }
 
-    public List<PeerId> getPeerIds() {
-        return peerIds;
+    public List<Peer> getPeers() {
+        return peers;
     }
 }

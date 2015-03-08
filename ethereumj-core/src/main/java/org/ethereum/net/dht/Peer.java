@@ -1,19 +1,28 @@
 package org.ethereum.net.dht;
 
+import com.sun.javafx.binding.StringFormatter;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-public class PeerId {
-    byte[] data;
+public class Peer {
+    byte[] id;
+    String host = "127.0.0.1";
+    int port = 0;
 
-    public PeerId(byte[] data) {
-        this.data = data;
+    public Peer(byte[] id, String host, int port) {
+        this.id = id;
+        this.host = host;
+        this.port = port;
     }
 
-    public PeerId() {
+    public Peer(byte[] ip) {
+        this.id= ip;
+    }
+
+    public Peer() {
         HashUtil.randomPeerId();
     }
 
@@ -25,34 +34,32 @@ public class PeerId {
             return 0;
     }
 
-    public byte[] calcDistance(PeerId toPeerId) {
+    public byte[] calcDistance(Peer toPeer) {
 
-        BigInteger aPeer = new BigInteger(data);
-        BigInteger bPeer = new BigInteger(toPeerId.data);
+        BigInteger aPeer = new BigInteger(getId());
+        BigInteger bPeer = new BigInteger(toPeer.getId());
 
         BigInteger distance = aPeer.xor(bPeer);
         return BigIntegers.asUnsignedByteArray(distance);
     }
 
 
-    public byte[] getData() {
-        return data;
+    public byte[] getId() {
+        return id;
     }
 
-    public void setData(byte[] data) {
-        this.data = data;
+    public void setId(byte[] ip) {
+        this.id = id;
     }
 
     @Override
     public String toString() {
-        return "PeerId{" +
-                "data=" + Hex.toHexString(data) +
-                '}';
+        return String.format("Peer {\n id=%s, \n host=%s, \n port=%d\n}", Hex.toHexString(id), host, port);
     }
 
     public String toBinaryString() {
 
-        BigInteger bi = new BigInteger(1, data);
+        BigInteger bi = new BigInteger(1, id);
         String out = String.format("%512s", bi.toString(2));
         out = out.replace(' ', '0');
 

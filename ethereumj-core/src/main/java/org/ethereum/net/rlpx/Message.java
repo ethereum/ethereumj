@@ -10,7 +10,7 @@ import java.security.SignatureException;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.merge;
 
-public class Message {
+public abstract class Message {
 
     byte[] wire;
 
@@ -53,6 +53,8 @@ public class Message {
         msg.type = type;
         msg.data = data;
         msg.wire = wire;
+
+        msg.parse(data);
 
         return msg;
     }
@@ -133,6 +135,8 @@ public class Message {
     public byte[] getData() {
         return data;
     }
+
+    public abstract void parse(byte[] data);
 
     @Override
     public String toString() {
