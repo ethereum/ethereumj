@@ -54,11 +54,11 @@ public class SecureTrie extends TrieImpl implements Trie{
 
     @Override
     public String getTrieDump() {
-        return getTrieDump();
+        return super.getTrieDump();
     }
 
     @Override
     public boolean validate() {
-        return validate();
+    return super.validate();
     }
 }
