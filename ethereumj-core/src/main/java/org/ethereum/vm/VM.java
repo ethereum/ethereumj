@@ -178,20 +178,16 @@ public class VM {
                     }
                     
                     DataWord callAddressWord = stack.get(stack.size() - 2);
-                    PrecompiledContracts.PrecompiledContract contract =
-                            PrecompiledContracts.getContractForAddress(callAddressWord);
 
                     //check to see if account does not exist and is not a precompiled contract
-                    //if (op != CALLCODE &&  (contract != null && !program.result.getRepository().isExist(callAddressWord.getData())) )
-                    //  gasCost += GasCost.NEW_ACCT_CALL;
-                    System.out.println("PRECOMPILED - " + callAddressWord.toString());
+                    //TODO #POC9 isExist() is broken.
+                    if (op != CALLCODE && !program.result.getRepository().isExist(callAddressWord.getData()))
+                      gasCost += GasCost.NEW_ACCT_CALL;
 
-                    System.out.println(/*contract == null && !*/
-                      program.result.getRepository().isExist(callAddressWord.getData()));
-
-
-                    if (stack.size() - 3 > 0 )
+                    //TODO #POC9 Make sure this is converted to BigInteger (256num support)
+                    if (stack.get(stack.size() - 3).intValue() > 0 )
                       gasCost += GasCost.VT_CALL;
+
                     callGas = callGasWord.longValue();
                     BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
