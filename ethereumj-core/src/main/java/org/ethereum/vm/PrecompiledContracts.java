@@ -44,8 +44,8 @@ public class PrecompiledContracts {
 
             // gas charge for the execution:
             // minimum 1 and additional 1 for each 32 bytes word (round  up)
-            if (data == null) return 1;
-            return 1 + (data.length + 31) / 32 * 1;
+            if (data == null) return 15;
+            return 15 + (data.length + 31) / 32 * 3;
         }
 
         @Override
@@ -62,8 +62,8 @@ public class PrecompiledContracts {
 
             // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
-            if (data == null) return 50;
-            return 50 + (data.length + 31) / 32 * 50;
+            if (data == null) return 60;
+            return 60 + (data.length + 31) / 32 * 12;
         }
 
         @Override
@@ -83,8 +83,8 @@ public class PrecompiledContracts {
 
             // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
-            if (data == null) return 50;
-            return 50 + (data.length + 31) / 32 * 50;
+            if (data == null) return 600;
+            return 600 + (data.length + 31) / 32 * 120;
         }
 
         @Override
@@ -103,7 +103,7 @@ public class PrecompiledContracts {
 
         @Override
         public long getGasForData(byte[] data) {
-            return 500;
+            return 3000;
         }
 
         @Override
