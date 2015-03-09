@@ -176,10 +176,19 @@ public class VM {
                     if (callGasWord.compareTo(program.getGas()) == 1) {
                         throw program.new OutOfGasException();
                     }
-                    //TODO #POC9 add logic from cpp for NEW_ACCOUNT_GAS
-                    //if (inst != Instruction::CALLCODE &&
-                    // !_ext.exists(asAddress(m_stack[m_stack.size() - 2]))) {
-                    //runGas += c_callNewAccountGas; }
+                    
+                    DataWord callAddressWord = stack.get(stack.size() - 2);
+                    PrecompiledContracts.PrecompiledContract contract =
+                            PrecompiledContracts.getContractForAddress(callAddressWord);
+
+                    //check to see if account does not exist and is not a precompiled contract
+                    //if (op != CALLCODE &&  (contract != null && !program.result.getRepository().isExist(callAddressWord.getData())) )
+                    //  gasCost += GasCost.NEW_ACCT_CALL;
+                    System.out.println("PRECOMPILED - " + callAddressWord.toString());
+
+                    System.out.println(/*contract == null && !*/
+                      program.result.getRepository().isExist(callAddressWord.getData()));
+
 
                     if (stack.size() - 3 > 0 )
                       gasCost += GasCost.VT_CALL;
