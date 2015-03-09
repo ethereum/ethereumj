@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.codec.binary.Base64;
+
 public class JSONReader {
 
     public static String loadJSON(String filename) {
@@ -69,6 +71,36 @@ public class JSONReader {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public static String getTestBlobForTreeSha(String shacommit, String testcase){
+
+        String result = getFromUrl("https://api.github.com/repos/ethereum/tests/git/trees/" + shacommit);
+
+        JSONParser parser = new JSONParser();
+        JSONObject testSuiteObj = null;
+
+        List<String> fileNames = new ArrayList<String>();
+        try {
+            testSuiteObj = (JSONObject) parser.parse(result);
+            JSONArray tree = (JSONArray)testSuiteObj.get("tree");
+
+            for (Object oEntry : tree) {
+                JSONObject entry = (JSONObject) oEntry;
+                String testName = (String) entry.get("path");
+                if ( testName.equals(testcase) ) {
+                    String blobresult = getFromUrl( (String) entry.get("url") );
+
+                    testSuiteObj = (JSONObject) parser.parse(blobresult);
+                    String blob  = (String) testSuiteObj.get("content");
+                    byte[] valueDecoded= Base64.decodeBase64(blob.getBytes() );
+                    //System.out.println("Decoded value is " + new String(valueDecoded));
+                    return new String(valueDecoded);
+                }
+            }
+        } catch (ParseException e) {e.printStackTrace();}
+
+        return "";
     }
 
     public static List<String> getFileNamesForTreeSha(String sha){
