@@ -41,7 +41,7 @@ public enum OpCode {
     /**
      * (0x06) Modulo remainder operation
      */
-    MOD(0x06, 2, Tier.VeryLowTier),
+    MOD(0x06, 2, Tier.LowTier),
     /**
      * (0x07) Signed modulo remainder operation
      */
@@ -133,7 +133,7 @@ public enum OpCode {
     /**
      * (0x32) Get execution origination address
      */
-    ORIGIN(0x32, 0, Tier.VeryLowTier),
+    ORIGIN(0x32, 0, Tier.BaseTier),
     /**
      * (0x33) Get caller address
      */
@@ -616,11 +616,15 @@ public enum OpCode {
         return intToTypeMap.get(code);
     }
 
+    public Tier getTier() {
+       return this.tier;
+    }
+
   public enum Tier { 
     ZeroTier(0), 
     BaseTier(2), 
     VeryLowTier(3), 
-    LowTier(4), 
+    LowTier(5), 
     MidTier(5),
     HighTier(6), 
     ExtTier(7), 
@@ -634,6 +638,9 @@ public enum OpCode {
           this.level = level;
       }
 
+      public int asInt() {
+          return level;
+      }
    }; 
 
 }

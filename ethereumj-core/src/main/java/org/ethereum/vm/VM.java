@@ -92,7 +92,7 @@ public class VM {
 
             String hint = "";
             long callGas = 0, memWords = 0; // parameters for logging
-            long gasCost = GasCost.FASTESTSTEP; //TODO #POC9 Add tier support 
+            long gasCost = op.getTier().asInt();
             long gasBefore = program.getGas().longValue();
             int stepBefore = program.getPC();
 

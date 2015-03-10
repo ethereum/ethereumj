@@ -81,6 +81,7 @@ public class PrecompiledContracts {
         @Override
         public long getGasForData(byte[] data) {
 
+            // TODO #POC9 Replace magic numbers with constants
             // gas charge for the execution:
             // minimum 50 and additional 50 for each 32 bytes word (round  up)
             if (data == null) return 600;
