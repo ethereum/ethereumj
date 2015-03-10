@@ -18,6 +18,10 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubVMTest {
 
+    //SHACOMMIT of VMTESTS TREE (not main tree)
+    public String shacommit = "a713843af6e6274915bdbbc03d62dc5a0007548b";
+    public List<String> vmTestFiles = getFileNamesForTreeSha(shacommit);
+
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSON("VMTests/vmEnvironmentalInfoTest.json");
@@ -30,7 +34,7 @@ public class GitHubVMTest {
         // TODO: these are excluded due to bad wrapping behavior in ADDMOD/DataWord.add
         excluded.add("addmod1_overflowDiff");
         excluded.add("addmod1_overflow3");
-        String json = JSONReader.loadJSON("VMTests/vmArithmeticTest.json");
+        String json = JSONReader.getTestBlobForTreeSha(shacommit, "vmArithmeticTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 

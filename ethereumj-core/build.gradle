@@ -69,6 +69,7 @@ dependencies {
     compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.2.0"
     compile "org.apache.commons:commons-collections4:4.0"
+    compile "commons-codec:commons-codec:1.10"
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
