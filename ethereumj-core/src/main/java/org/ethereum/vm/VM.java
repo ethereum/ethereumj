@@ -238,8 +238,9 @@ public class VM {
             if (memoryUsage > oldMemSize) {
                 memWords = (memoryUsage / 32);
                 long memWordsOld = (oldMemSize / 32);
-                long memGas = (GasCost.MEMORY * (memWords + memWords * memWords / 1024))
-                              - (GasCost.MEMORY * (memWordsOld + memWordsOld * memWordsOld / 1024));
+                //TODO #POC9 c_quadCoeffDiv = 512, this should be a constant, not magic number
+                long memGas = ( GasCost.MEMORY * memWords + memWords * memWords / 512)
+                              - (GasCost.MEMORY * memWordsOld + memWordsOld * memWordsOld / 512);
                 program.spendGas(memGas, op.name() + " (memory usage)");
                 gasCost += memGas;
             }
