@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.util.ByteUtil;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
@@ -15,7 +14,12 @@ import java.util.Arrays;
 
 public class Bloom {
 
-    byte[] data = new byte[64];
+    final static int _8STEPS = 8;
+    final static int _3LOW_BITS = 7;
+    final static int ENSURE_BYTE = 255;
+
+    byte[] data = new byte[256];
+
 
     public Bloom() {
     }
@@ -25,11 +29,12 @@ public class Bloom {
     }
 
     public static Bloom create(byte[] toBloom) {
-        int mov1 = ((255 & toBloom[0 + 1]) + 256 * ((255 & toBloom[0]) & 1));
-        int mov2 = ((255 & toBloom[2 + 1]) + 256 * ((255 & toBloom[2]) & 1));
-        int mov3 = ((255 & toBloom[4 + 1]) + 256 * ((255 & toBloom[4]) & 1));
 
-        byte[] data = new byte[64];
+        int mov1 = (((toBloom[0] & ENSURE_BYTE) & (_3LOW_BITS)) << _8STEPS) + ((toBloom[1]) & ENSURE_BYTE);
+        int mov2 = (((toBloom[2] & ENSURE_BYTE) & (_3LOW_BITS)) << _8STEPS) + ((toBloom[3]) & ENSURE_BYTE);
+        int mov3 = (((toBloom[4] & ENSURE_BYTE) & (_3LOW_BITS)) << _8STEPS) + ((toBloom[5]) & ENSURE_BYTE);
+
+        byte[] data = new byte[256];
         Bloom bloom = new Bloom(data);
 
         ByteUtil.setBit(data, mov1, 1);
