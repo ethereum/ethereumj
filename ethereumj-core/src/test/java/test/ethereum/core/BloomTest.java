@@ -1,10 +1,9 @@
 package test.ethereum.core;
 
 import org.ethereum.core.Bloom;
-import org.ethereum.crypto.SHA3Helper;
-
+import org.ethereum.crypto.HashUtil;
+import org.junit.Assert;
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -14,43 +13,41 @@ import org.spongycastle.util.encoders.Hex;
 public class BloomTest {
 
 
-    @Test
-    public void test1() {
+    @Test /// based on http://bit.ly/1MtXxFg
+    public void test1(){
 
-        byte[] key = SHA3Helper.sha3(Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826"));
+        byte[] address = Hex.decode("095e7baea6a6c7c4c2dfeb977efac326af552d87");
+        Bloom addressBloom = Bloom.create(HashUtil.sha3(address));
 
-        Bloom bloom = Bloom.create(key);
-        System.out.println(bloom);
+        byte[] topic = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000");
+        Bloom topicBloom = Bloom.create(HashUtil.sha3(topic));
 
+        Bloom totalBloom = new Bloom();
+        totalBloom.or(addressBloom);
+        totalBloom.or(topicBloom);
+
+
+        Assert.assertEquals(
+                "00000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000000000000800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000004000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020000000000040000000000000000000000000000000000000000000000000000000",
+                totalBloom.toString()
+        );
     }
+
 
     @Test
     public void test2() {
-
-        byte[] key = Hex.decode("0954D2BEF0CA79C1A988AE5FF3072C2AEA90F3967A9596065123F2A15AA37EF3");
-
-        Bloom bloom = Bloom.create(key);
-        System.out.println(bloom);
+        // todo: more testing
     }
 
     @Test
     public void test3() {
-
-        byte[] key = SHA3Helper.sha3(Hex.decode("22341AE42D6DD7384BC8584E50419EA3AC75B83F "));
-
-        Bloom bloom = Bloom.create(key);
-        System.out.println(bloom);
+        // todo: more testing
     }
 
 
     @Test
     public void test4() {
-
-        byte[] key = SHA3Helper.sha3(Hex.decode("0f572e5295c57f15886f9b263e2f6d2d6c7b5ec6"));
-
-        Bloom bloom = Bloom.create(key);
-        System.out.println(bloom);
-
+        // todo: more testing
     }
 
 }
