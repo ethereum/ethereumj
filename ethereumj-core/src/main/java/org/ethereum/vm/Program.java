@@ -412,7 +412,7 @@ public class Program {
             track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
         } else {
 
-            result.spendGas(code.length * GasCost.CREATE_DATA_BYTE);
+            result.spendGas(code.length * GasCost.CREATE_DATA);
             track.saveCode(newAddress, code);
         }
 
@@ -492,9 +492,6 @@ public class Program {
                     msg.getGas().getNoLeadZeroesData(),
                     msg.getEndowment().getNoLeadZeroesData());
         }
-
-        //  actual gas subtract
-        this.spendGas(msg.getGas().longValue(), "internal call");
 
         Repository trackRepository = result.getRepository().startTracking();
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
@@ -954,11 +951,11 @@ public class Program {
         long requiredGas = contract.getGasForData(data);
         if (requiredGas > msg.getGas().longValue()) {
 
-            this.spendGas(msg.getGas().longValue(), "call pre-compiled");
+            this.refundGas(0, "call pre-compiled"); //matches cpp logic
             this.stackPushZero();
         } else {
 
-            this.spendGas(requiredGas, "call pre-compiled");
+            this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
             byte[] out = contract.execute(data);
 
             this.memorySave(msg.getOutDataOffs().intValue(), out);

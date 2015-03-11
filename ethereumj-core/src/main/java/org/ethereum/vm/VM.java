@@ -189,6 +189,7 @@ public class VM {
                       gasCost += GasCost.VT_CALL;
 
                     callGas = callGasWord.longValue();
+                    gasCost += callGas;
                     BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
                     newMemSize = in.max(out);
@@ -1055,6 +1056,9 @@ public class VM {
                     DataWord gas = program.stackPop();
                     DataWord codeAddress = program.stackPop();
                     DataWord value = program.stackPop();
+
+                    if( value.intValue() > 0)
+                      gas = new DataWord(gas.intValue() + GasCost.STIPEND_CALL);
 
                     DataWord inDataOffs = program.stackPop();
                     DataWord inDataSize = program.stackPop();
