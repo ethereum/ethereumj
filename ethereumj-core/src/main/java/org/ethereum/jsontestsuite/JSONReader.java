@@ -31,6 +31,13 @@ public class JSONReader {
         return json.isEmpty() ? getFromLocal(filename) : json;
     }
 
+    public static String loadJSONFromCommit(String filename, String shacommit) {
+        String json = "";
+        if (!SystemProperties.CONFIG.vmTestLoadLocal())
+            json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/" + shacommit + "/" + filename);
+        return json.isEmpty() ? getFromLocal(filename) : json;
+    }
+
     public static String getFromLocal(String filename) {
         System.out.println("Loading local file: " + filename);
         try {
