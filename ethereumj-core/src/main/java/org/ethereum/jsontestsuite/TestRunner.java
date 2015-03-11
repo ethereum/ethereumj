@@ -93,6 +93,8 @@ public class TestRunner {
             new BigInteger(1, testCase.getEnv().getCurrentGasLimit()).longValue(),
             0L,
             new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
+            new byte[32],
+            new byte[32],
             ByteUtil.ZERO_BYTE_ARRAY,
             ByteUtil.ZERO_BYTE_ARRAY,
             null, null);

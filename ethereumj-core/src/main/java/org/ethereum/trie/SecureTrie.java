@@ -39,7 +39,7 @@ public class SecureTrie extends TrieImpl implements Trie{
 
     @Override
     public void setRoot(byte[] root) {
-        setRoot(root);
+        super.setRoot(root);
     }
 
     @Override

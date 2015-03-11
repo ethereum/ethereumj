@@ -54,6 +54,12 @@ public class BlockHeader {
     private long gasLimit;
     /* A scalar value equal to the total gas used in transactions in this block */
     private long gasUsed;
+
+
+    private byte[] seedHash;
+
+    private byte[] mixHash;
+
     /* An arbitrary byte array containing data relevant to this block.
      * With the exception of the genesis block, this must be 32 bytes or fewer */
     private byte[] extraData;
@@ -90,14 +96,16 @@ public class BlockHeader {
         this.gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
         this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
 
-        this.extraData = rlpHeader.get(12).getRLPData();
-        this.nonce = rlpHeader.get(13).getRLPData();
-
+        this.seedHash = rlpHeader.get(12).getRLPData();
+        this.mixHash = rlpHeader.get(13).getRLPData();
+        this.extraData = rlpHeader.get(14).getRLPData();
+        this.nonce = rlpHeader.get(15).getRLPData();
     }
 
     public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
                        byte[] logsBloom, byte[] difficulty, long number,
                        long gasLimit, long gasUsed, long timestamp,
+                       byte[] seedHash, byte[] mixHash,
                        byte[] extraData, byte[] nonce) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
@@ -109,6 +117,8 @@ public class BlockHeader {
         this.gasUsed = gasUsed;
         this.timestamp = timestamp;
         this.extraData = extraData;
+        this.seedHash = seedHash;
+        this.mixHash = mixHash;
         this.nonce = nonce;
         this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
     }
@@ -141,10 +151,6 @@ public class BlockHeader {
         return parentHash;
     }
 
-    public void setParentHash(byte[] parentHash) {
-        this.parentHash = parentHash;
-    }
-
     public byte[] getUnclesHash() {
         return unclesHash;
     }
@@ -173,20 +179,8 @@ public class BlockHeader {
         return txTrieRoot;
     }
 
-    public void setTxTrieRoot(byte[] txTrieRoot) {
-        this.txTrieRoot = txTrieRoot;
-    }
-
-    public byte[] getReceiptTrieRoot() {
-        return receiptTrieRoot;
-    }
-
     public byte[] getLogsBloom() {
         return logsBloom;
-    }
-
-    public void setReceiptTrieRoot(byte[] receiptTrieRoot) {
-        this.receiptTrieRoot = receiptTrieRoot;
     }
 
     public byte[] getDifficulty() {
@@ -229,12 +223,16 @@ public class BlockHeader {
         this.gasUsed = gasUsed;
     }
 
-    public byte[] getExtraData() {
-        return extraData;
+    public byte[] getSeedHash() {
+        return seedHash;
     }
 
-    public void setExtraData(byte[] extraData) {
-        this.extraData = extraData;
+    public byte[] getMixHash() {
+        return mixHash;
+    }
+
+    public byte[] getExtraData() {
+        return extraData;
     }
 
     public byte[] getNonce() {
@@ -273,16 +271,19 @@ public class BlockHeader {
         byte[] gasLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.gasLimit));
         byte[] gasUsed = RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
+
+        byte[] seedHash = RLP.encodeElement(this.seedHash);
+        byte[] mixHash = RLP.encodeElement(this.mixHash);
         byte[] extraData = RLP.encodeElement(this.extraData);
         if (withNonce) {
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, extraData, nonce);
+                    gasLimit, gasUsed, timestamp, seedHash, mixHash, extraData, nonce);
         } else {
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, extraData);
+                    gasLimit, gasUsed, timestamp, seedHash, mixHash, extraData);
         }
     }
 
@@ -303,6 +304,8 @@ public class BlockHeader {
         toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
         toStringBuff.append("  gasUsed=").append(gasUsed).append(suffix);
         toStringBuff.append("  timestamp=").append(timestamp).append(" (").append(Utils.longToDateTime(timestamp)).append(")").append(suffix);
+        toStringBuff.append("  seedHash=").append(toHexString(seedHash)).append(suffix);
+        toStringBuff.append("  mixHash=").append(toHexString(mixHash)).append(suffix);
         toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);
         toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
         return toStringBuff.toString();
