@@ -3,6 +3,7 @@ package test.ethereum.trie;
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.DatabaseImpl;
 import org.ethereum.trie.FatTrie;
 import org.ethereum.trie.SecureTrie;
@@ -21,7 +22,6 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Pipeline;
-import test.ethereum.db.MockDB;
 
 import java.io.File;
 import java.io.IOException;
@@ -51,8 +51,8 @@ public class TrieTest {
     private static String test = "test";
     private static String dude = "dude";
 
-    private MockDB mockDb = new MockDB();
-    private MockDB mockDb_2 = new MockDB();
+    private HashMapDB mockDb = new HashMapDB();
+    private HashMapDB mockDb_2 = new HashMapDB();
 
 //      ROOT: [ '\x16', A ]
 //      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
@@ -824,7 +824,7 @@ public class TrieTest {
         byte[] val3 = Hex.decode("94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d");
         byte[] val4 = Hex.decode("01");
 
-        TrieImpl storage = new TrieImpl(new MockDB());
+        TrieImpl storage = new TrieImpl(new HashMapDB());
         storage.update(key1, val1);
         storage.update(key2, val2);
         storage.update(key3, val3);
