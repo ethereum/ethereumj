@@ -1,6 +1,5 @@
 package org.ethereum.net.dht;
 
-import com.sun.javafx.binding.StringFormatter;
 import org.ethereum.crypto.HashUtil;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;

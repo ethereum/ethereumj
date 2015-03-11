@@ -102,6 +102,7 @@ public class TransactionExecutor {
             return;
         }
 
+        //Check: gas limit is not lessthan total tx cost
         BigInteger totalCost = new BigInteger( Long.toString(GasCost.TRANSACTION + 
           GasCost.TX_NO_ZERO_DATA * tx.nonZeroDataBytes() + 
           GasCost.TX_ZERO_DATA * tx.zeroDataBytes()), 10);

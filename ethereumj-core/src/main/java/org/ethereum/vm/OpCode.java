@@ -137,7 +137,7 @@ public enum OpCode {
     /**
      * (0x33) Get caller address
      */
-    CALLER(0x33, 0, Tier.VeryLowTier),
+    CALLER(0x33, 0, Tier.BaseTier),
     /**
      * (0x34) Get deposited value by the
      * instruction/transaction responsible
@@ -218,7 +218,7 @@ public enum OpCode {
     /**
      * (0x50) Remove item from stack
      */
-    POP(0x50, 1, Tier.VeryLowTier),
+    POP(0x50, 1, Tier.BaseTier),
     /**
      * (0x51) Load word from memory
      */
@@ -251,7 +251,7 @@ public enum OpCode {
     /**
      * (0x58) Get the program counter
      */
-    PC(0x58, 0, Tier.VeryLowTier),
+    PC(0x58, 0, Tier.BaseTier),
     /**
      * (0x59) Get the size of active memory
      */
