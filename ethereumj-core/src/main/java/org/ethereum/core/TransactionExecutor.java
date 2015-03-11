@@ -102,6 +102,18 @@ public class TransactionExecutor {
             return;
         }
 
+        BigInteger totalCost = new BigInteger( Long.toString(GasCost.TRANSACTION + 
+          GasCost.TX_NO_ZERO_DATA * tx.nonZeroDataBytes() + 
+          GasCost.TX_ZERO_DATA * tx.zeroDataBytes()), 10);
+        if (gasLimit.compareTo(totalCost) == -1) {
+            logger.debug("Not enough gas to pay for the transaction: hash={}",
+                    Hex.toHexString(tx.getHash()));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
+
         BigInteger startGasUsed = new BigInteger( Long.toString( this.currentBlock.getGasUsed() ) );
         BigInteger startGasLimit = new BigInteger( Long.toString( this.currentBlock.getGasLimit() ) );
         if( startGasUsed.add(gasLimit).compareTo( startGasLimit ) == 1) {
