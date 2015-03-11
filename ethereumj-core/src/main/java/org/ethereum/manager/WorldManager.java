@@ -1,12 +1,10 @@
 package org.ethereum.manager;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
-import org.ethereum.core.Wallet;
+import javafx.scene.input.GestureEvent;
+import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -146,9 +144,10 @@ public class WorldManager {
         Block bestBlock = blockStore.getBestBlock();
         if (bestBlock == null) {
             logger.info("DB is empty - adding Genesis");
-            for (String address : Genesis.getPremine()) {
-                repository.createAccount(Hex.decode(address));
-                repository.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
+            Genesis genesis = (Genesis)Genesis.getInstance();
+            for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
+                repository.createAccount(key.getData());
+                repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
             }
 
             blockStore.saveBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>());

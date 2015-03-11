@@ -1,13 +1,16 @@
 package test.ethereum.core;
 
-import test.ethereum.db.MockDB;
+
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.datasource.HashMapDB;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.slf4j.Logger;
@@ -34,6 +37,7 @@ public class StateTest {
     }
 
 
+    @Ignore
     @Test  // calc state after applying first tx on genesis
     public void test2() {
 
@@ -112,10 +116,10 @@ public class StateTest {
 
     private Trie generateGenesisState() {
 
-        Trie trie = new TrieImpl(new MockDB());
-        for (String address : Genesis.getPremine()) {
-            AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-            trie.update(Hex.decode(address), acct.getEncoded());
+        Trie trie = new TrieImpl(new HashMapDB());
+        Genesis genesis = (Genesis)Genesis.getInstance();
+        for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
+            trie.update(key.getData(), genesis.getPremine().get(key).getEncoded());
         }
         return trie;
     }

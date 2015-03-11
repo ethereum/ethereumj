@@ -1,16 +1,12 @@
 package org.ethereum.crypto;
 
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.LRUMap;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
-
 import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.digests.RIPEMD160Digest;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -20,7 +16,6 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 public class HashUtil {
 
     private static final int MAX_ENTRIES = 100; // Should contain most commonly hashed values
-    private static LRUMap<ByteArrayWrapper, byte[]> sha3Cache = new LRUMap<>(0, MAX_ENTRIES);
     public static final byte[] EMPTY_DATA_HASH = sha3(EMPTY_BYTE_ARRAY);
     public static final byte[] EMPTY_LIST_HASH = sha3(RLP.encodeList());
     public static final byte[] EMPTY_TRIE_HASH = sha3(RLP.encodeElement(EMPTY_BYTE_ARRAY));
@@ -40,14 +35,13 @@ public class HashUtil {
     }
 
     public static byte[] sha3(byte[] input) {
-        ByteArrayWrapper inputByteArray = new ByteArrayWrapper(input);
-        byte[] result = sha3Cache.get(inputByteArray);
-        if (result != null)
-            return result;
-        result = SHA3Helper.sha3(input);
-        sha3Cache.put(inputByteArray, result);
-        return result;
+        return SHA3Helper.sha3(input);
     }
+
+    public static byte[] sha3(byte[] input, int start, int length) {
+        return SHA3Helper.sha3(input, start, length);
+    }
+
 
     public static byte[] ripemd160(byte[] message) {
         Digest digest = new RIPEMD160Digest();

@@ -100,6 +100,33 @@ public class ByteUtil {
     }
 
     /**
+     * Converts a long value into a byte array.
+     *
+     * @param val - long value to convert
+     * @return decimal value with leading byte that are zeroes striped
+     */
+    public static byte[] longToBytesNoLeadZeroes(long val) {
+
+        // todo: improve performance by while strip numbers until (long >> 8 == 0)
+        byte[] data = ByteBuffer.allocate(8).putLong(val).array();
+
+        return stripLeadingZeroes(data);
+    }
+
+
+    /**
+     * Converts a int value into a byte array.
+     *
+     * @param val - int value to convert
+     * @return decimal value with leading byte that are zeroes striped
+     */
+    public static byte[] intToBytesNoLeadZeroes(int val) {
+        return longToBytesNoLeadZeroes((long)val);
+    }
+
+
+
+    /**
      * Convert a byte-array into a hex String.<br>
      * Works similar to {@link Hex#toHexString}
      * but allows for <code>null</code>
@@ -348,5 +375,30 @@ public class ByteUtil {
         int posBit = pos % 8;
         byte dataByte = data[posByte];
         return Math.min(1, (dataByte & (1 << (posBit))));
+    }
+
+
+    /**
+     * @param arrays - arrays to merge
+     * @return - merged array
+     */
+    public static byte[] merge(byte[]... arrays)
+    {
+        int arrCount = 0;
+        int count = 0;
+        for (byte[] array: arrays)
+        {
+            arrCount++;
+            count += array.length;
+        }
+
+        // Create new array and copy all array contents
+        byte[] mergedArray = new byte[count];
+        int start = 0;
+        for (byte[] array: arrays) {
+            System.arraycopy(array, 0, mergedArray, start, array.length);
+            start += array.length;
+        }
+        return mergedArray;
     }
 }

@@ -4,7 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.LevelDbDataSource;
-import org.ethereum.db.RepositoryDummy;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.facade.Repository;
@@ -350,8 +350,10 @@ public class RepositoryTest {
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
-        for (String address : Genesis.getPremine()) {
-            track.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
+        Genesis genesis = (Genesis)Genesis.getInstance();
+        for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
+            repository.createAccount(key.getData());
+            repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
         }
 
         track.commit();
