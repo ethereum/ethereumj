@@ -210,7 +210,7 @@ public class VM {
             long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;
             if (memoryUsage > oldMemSize) {
                 memWords = (memoryUsage - oldMemSize) / 32;
-                long memGas = GasCost.MEMORY * memWords;
+                long memGas = GasCost.MEMORY * (memWords + memWords * memWords / 1024);
                 program.spendGas(memGas, op.name() + " (memory usage)");
                 gasCost += memGas;
             }
