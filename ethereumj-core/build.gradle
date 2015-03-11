@@ -24,6 +24,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
+//applicationDefaultJvmArgs = ["-Dethereumj.config.plugin.path.replace=org.ethereum.config.TraditionalPropertiesConfigPlugin"]
 
 ext.generatedSrcDir = file('src/gen/java')
 
@@ -36,13 +37,38 @@ antlr4 {
 
 compileJava.dependsOn antlr4
 
+// to ensure unique DBs across tests
+class Counter {
+      int count = 0;
+      synchronized int incrementAndGet() { return ++count; }
+}
+Counter counter = new Counter();
+
 test {
-    systemProperty "file.encoding", "UTF-8"
-    jvmArgs '-Xss16m'
+     forkEvery 1
+     maxParallelForks Runtime.runtime.availableProcessors()
+
+     // testLogging {
+     //   showStandardStreams = true
+     // }
+
+     systemProperty "file.encoding", "UTF-8"
+     jvmArgs '-Xss16m'
+
+     beforeSuite { TestDescriptor descriptor ->
+        // using name or className from the descriptor gave odd, inconsistent results
+	// i think there are issues with how groovy controls the parallelism of its forks,
+	// i.e. System properties might be stored in one shared structure, and beforeSuite
+	// might be run multiple times prior to the fork it intends to describe, leaving 
+	// names of DB dirs nondeterministic. 
+
+        systemProperty( 'ethereumj.database.dir', "test_db/db" + counter.incrementAndGet() )
+     }
 }
 
 configurations {
     compile.extendsFrom antlr4
+    console
 }
 
 ext {
@@ -78,6 +104,7 @@ dependencies {
     compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
     compile "commons-dbcp:commons-dbcp:1.4"
     compile "redis.clients:jedis:2.6.0"
+    compile "com.typesafe:config:1.2.1"
 
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
@@ -88,6 +115,14 @@ dependencies {
     optional "log4j:apache-log4j-extras:${log4jVersion}"
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
+
+    // stuff to bring up an interactive console, see
+    // http://stackoverflow.com/questions/22567831/gradle-execute-groovy-interactive-shell-with-project-classpath
+    console 'commons-cli:commons-cli:1.2'
+    console('jline:jline:2.11') {
+        exclude(group: 'junit', module: 'junit')
+    }
+    console 'org.codehaus.groovy:groovy-groovysh:2.2.+'
 }
 
 javadoc {
@@ -109,6 +144,31 @@ task sourcesJar(type: Jar, dependsOn: classes) {
 task javadocJar(type: Jar) {
     classifier = "javadoc"
     from javadoc
+}
+
+// stuff to bring up an interactive console, see
+// http://stackoverflow.com/questions/22567831/gradle-execute-groovy-interactive-shell-with-project-classpath
+task(console, dependsOn: 'classes') << {
+    def classpath = sourceSets.main.runtimeClasspath + configurations.console
+
+    def command = [
+        'java',
+        '-cp', classpath.collect().join(System.getProperty('path.separator')),
+        'org.codehaus.groovy.tools.shell.Main',
+        '--color'
+    ]
+
+    def proc = new ProcessBuilder(command)
+        .redirectOutput(ProcessBuilder.Redirect.INHERIT)
+        .redirectInput(ProcessBuilder.Redirect.INHERIT)
+        .redirectError(ProcessBuilder.Redirect.INHERIT)
+        .start()
+
+    proc.waitFor()
+
+    if (0 != proc.exitValue()) {
+        throw new RuntimeException("console exited with status: ${proc.exitValue()}")
+    }
 }
 
 artifacts {

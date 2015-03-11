@@ -54,7 +54,6 @@ public class WalletTest {
     @ComponentScan(basePackages = "org.ethereum")
     static class ContextConfiguration extends TestContext {
         static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/" + WalletTest.class);
         }
     }
 

@@ -30,7 +30,6 @@ public class RepositoryTest {
     @Test
     public void test1() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -49,7 +48,6 @@ public class RepositoryTest {
     @Test
     public void test2() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -68,7 +66,6 @@ public class RepositoryTest {
     @Test
     public void test3() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -89,7 +86,6 @@ public class RepositoryTest {
     @Test
     public void test4() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -114,7 +110,6 @@ public class RepositoryTest {
     @Test
     public void test5() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -145,7 +140,6 @@ public class RepositoryTest {
     @Test
     public void test6() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -179,7 +173,6 @@ public class RepositoryTest {
     @Test
     public void test7() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -204,7 +197,6 @@ public class RepositoryTest {
     @Test
     public void test8() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -228,7 +220,6 @@ public class RepositoryTest {
     @Test
     public void test9() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -258,7 +249,6 @@ public class RepositoryTest {
     @Test
     public void test10() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -289,7 +279,6 @@ public class RepositoryTest {
     @Test
     public void test11() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -317,7 +306,6 @@ public class RepositoryTest {
     @Test
     public void test12() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -344,7 +332,6 @@ public class RepositoryTest {
     @Test  // Let's upload genesis pre-mine just like in the real world
     public void test13() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
@@ -363,7 +350,6 @@ public class RepositoryTest {
     @Test
     public void test14() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -401,7 +387,6 @@ public class RepositoryTest {
     @Test
     public void test15() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -438,7 +423,6 @@ public class RepositoryTest {
     @Test
     public void test16() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
@@ -501,7 +485,6 @@ public class RepositoryTest {
     @Test
     public void test17() {
 
-        SystemProperties.CONFIG.setDataBaseDir("test_db/" + RepositoryTest.class);
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");

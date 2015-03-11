@@ -68,7 +68,7 @@ public class PeerInfoWindow extends JFrame {
         pack();
         setLocation(802, 460);
 
-        if (CONFIG.peerDiscovery())
+        if (CONFIG.peerDiscoveryEnabled())
             UIEthereumManager.ethereum.startPeerDiscovery();
 
     }
