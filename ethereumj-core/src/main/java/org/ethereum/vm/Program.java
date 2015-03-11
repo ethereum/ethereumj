@@ -309,7 +309,7 @@ public class Program {
         if (logger.isInfoEnabled())
             logger.info("Transfer to: [{}] heritage: [{}]",
                     Hex.toHexString(obtainer.getLast20Bytes()),
-                    balance.longValue());
+                    balance.bigIntValue());
 
         this.result.getRepository().addBalance(obtainer.getLast20Bytes(), balance.value());
         this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), balance.value().negate());

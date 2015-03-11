@@ -26,8 +26,6 @@ public class GitHubStateTest {
     public void runWithExcludedTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRipemd160_5");
-        excluded.add("CallSha256_5");
         String json = JSONReader.loadJSON("StateTests/stPreCompiledContracts.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -57,8 +55,6 @@ public class GitHubStateTest {
     @Test
     public void stPreCompiledContracts() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRipemd160_5");
-        excluded.add("CallSha256_5");
         String json = JSONReader.loadJSON("StateTests/stPreCompiledContracts.json");
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -106,10 +102,11 @@ public class GitHubStateTest {
     public void stTransactionTest() throws ParseException {
 
         Set<String> excluded = new HashSet<>();
-        //todo:    it goes OOG, because no gasLimit is given. So it does not change the state.
+
+        //TODO: This is going to stay excluded until we refactor 
+        //      the codebase to use bigintegers instead of longs
         excluded.add("HighGasLimit");
-        excluded.add("RefundOverflow");
-        excluded.add("UserTransactionZeroCostWithData");
+
         excluded.add("UserTransactionGasLimitIsTooLowWhenZeroCost");
         excluded.add("SuicidesAndInternlCallSuicides");
         excluded.add("SuicidesMixingCoinbase");

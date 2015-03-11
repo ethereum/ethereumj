@@ -178,7 +178,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                     timestamp.longValue(),
                     number.longValue(),
                     Hex.toHexString(difficulty.getNoLeadZeroesData()),
-                    gasLimit.longValue());
+                    gasLimit.bigIntValue());
         }
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
