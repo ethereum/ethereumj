@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
+import org.junit.Ignore;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -47,7 +48,7 @@ public class LogInfoTest {
         logger.info("{}", log);
     }
 
-
+    @Ignore //TODO #POC9
     @Test // rlp decode
     public void test_3() {
 

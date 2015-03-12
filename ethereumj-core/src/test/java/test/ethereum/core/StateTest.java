@@ -30,6 +30,7 @@ public class StateTest {
     private static final Logger logger = LoggerFactory.getLogger("test");
 
 
+    @Ignore //TODO #POC9
     @Test
     public void testGenesisAccounts() {
         Trie trie = generateGenesisState();

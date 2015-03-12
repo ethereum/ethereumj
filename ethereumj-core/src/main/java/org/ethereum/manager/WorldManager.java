@@ -1,6 +1,5 @@
 package org.ethereum.manager;
 
-import javafx.scene.input.GestureEvent;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
