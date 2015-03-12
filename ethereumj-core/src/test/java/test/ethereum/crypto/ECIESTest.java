@@ -140,4 +140,5 @@ public class ECIESTest {
         byte[] cipher = iesEngine.processBlock(plaintext, 0, plaintext.length);
         return cipher;
     }
+
 }
