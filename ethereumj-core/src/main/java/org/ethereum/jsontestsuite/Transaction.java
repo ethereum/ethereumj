@@ -33,8 +33,8 @@ public class Transaction {
     public Transaction(JSONObject callCreateJSON) {
 
         String dataStr = callCreateJSON.get("data").toString();
-        String gasLimitStr = callCreateJSON.get("gasLimit").toString();
-        String gasPriceStr = callCreateJSON.get("gasPrice").toString();
+        String gasLimitStr = Utils.parseUnidentifiedBase(callCreateJSON.get("gasLimit").toString());
+        String gasPriceStr = Utils.parseUnidentifiedBase(callCreateJSON.get("gasPrice").toString());
         String nonceStr = callCreateJSON.get("nonce").toString();
         String secretKeyStr = callCreateJSON.get("secretKey").toString();
         String toStr = callCreateJSON.get("to").toString();

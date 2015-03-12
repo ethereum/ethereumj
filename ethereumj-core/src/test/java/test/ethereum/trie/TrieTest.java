@@ -1,53 +1,40 @@
 package test.ethereum.trie;
 
+import org.ethereum.core.AccountState;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
-import test.ethereum.db.MockDB;
-
-import org.ethereum.core.AccountState;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.DatabaseImpl;
+import org.ethereum.trie.FatTrie;
+import org.ethereum.trie.SecureTrie;
+import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Pipeline;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.net.URISyntaxException;
 import java.net.URL;
-
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.junit.Assert.*;
-
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Pipeline;
 
 public class TrieTest {
 
@@ -64,8 +51,8 @@ public class TrieTest {
     private static String test = "test";
     private static String dude = "dude";
 
-    private MockDB mockDb = new MockDB();
-    private MockDB mockDb_2 = new MockDB();
+    private HashMapDB mockDb = new HashMapDB();
+    private HashMapDB mockDb_2 = new HashMapDB();
 
 //      ROOT: [ '\x16', A ]
 //      A: [ '', '', '', '', B, '', '', '', C, '', '', '', '', '', '', '', '' ]
@@ -837,7 +824,7 @@ public class TrieTest {
         byte[] val3 = Hex.decode("94412e0c4f0102f3f0ac63f0a125bce36ca75d4e0d");
         byte[] val4 = Hex.decode("01");
 
-        TrieImpl storage = new TrieImpl(new MockDB());
+        TrieImpl storage = new TrieImpl(new HashMapDB());
         storage.update(key1, val1);
         storage.update(key2, val2);
         storage.update(key3, val3);
@@ -929,5 +916,100 @@ public class TrieTest {
         System.out.println();
         Assert.assertEquals("8bd5544747b4c44d1274aa99a6293065fe319b3230e800203317e4c75a770099", Hex.toHexString(trie.getRootHash()));
     }
+
+
+    @Test
+    public void testSecureTrie(){
+
+        Trie trie = new SecureTrie(mockDb);
+
+        byte[] k1 = "do".getBytes();
+        byte[] v1 = "verb".getBytes();
+
+        byte[] k2 = "ether".getBytes();
+        byte[] v2 = "wookiedoo".getBytes();
+
+        byte[] k3 = "horse".getBytes();
+        byte[] v3 = "stallion".getBytes();
+
+        byte[] k4 = "shaman".getBytes();
+        byte[] v4 = "horse".getBytes();
+
+        byte[] k5 = "doge".getBytes();
+        byte[] v5 = "coin".getBytes();
+
+        byte[] k6 = "ether".getBytes();
+        byte[] v6 = "".getBytes();
+
+        byte[] k7 = "dog".getBytes();
+        byte[] v7 = "puppy".getBytes();
+
+        byte[] k8 = "shaman".getBytes();
+        byte[] v8 = "".getBytes();
+
+        trie.update(k1, v1);
+        trie.update(k2, v2);
+        trie.update(k3, v3);
+        trie.update(k4, v4);
+        trie.update(k5, v5);
+        trie.update(k6, v6);
+        trie.update(k7, v7);
+        trie.update(k8, v8);
+
+        byte[] root = trie.getRootHash();
+
+        logger.info("root: " + Hex.toHexString(root));
+
+        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d",Hex.toHexString(root));
+    }
+
+    @Test
+    public void testFatTrie(){
+
+        FatTrie trie = new FatTrie(mockDb, mockDb_2);
+
+        byte[] k1 = "do".getBytes();
+        byte[] v1 = "verb".getBytes();
+
+        byte[] k2 = "ether".getBytes();
+        byte[] v2 = "wookiedoo".getBytes();
+
+        byte[] k3 = "horse".getBytes();
+        byte[] v3 = "stallion".getBytes();
+
+        byte[] k4 = "shaman".getBytes();
+        byte[] v4 = "horse".getBytes();
+
+        byte[] k5 = "doge".getBytes();
+        byte[] v5 = "coin".getBytes();
+
+        byte[] k6 = "ether".getBytes();
+        byte[] v6 = "".getBytes();
+
+        byte[] k7 = "dog".getBytes();
+        byte[] v7 = "puppy".getBytes();
+
+        byte[] k8 = "shaman".getBytes();
+        byte[] v8 = "".getBytes();
+
+        trie.update(k1, v1);
+        trie.update(k2, v2);
+        trie.update(k3, v3);
+        trie.update(k4, v4);
+        trie.update(k5, v5);
+        trie.update(k6, v6);
+        trie.update(k7, v7);
+        trie.update(k8, v8);
+
+        byte[] root = trie.getRootHash();
+
+        logger.info("root: " + Hex.toHexString(root));
+
+        Assert.assertEquals("29b235a58c3c25ab83010c327d5932bcf05324b7d6b1185e650798034783ca9d", Hex.toHexString(root));
+
+        String origRoot = Hex.toHexString(trie.getOrigTrie().getRootHash());
+        Assert.assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", origRoot);
+    }
+
 
 }
