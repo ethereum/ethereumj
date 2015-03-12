@@ -288,6 +288,10 @@ public class TransactionExecutor {
         BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
                 result.getGasUsed()).multiply(gasPrice));
 
+        // accumulate refunds for suicides
+        result.futureRefundGas(
+          GasCost.SUICIDE_REFUND * (result.getDeleteAccounts() == null ? 0 : result.getDeleteAccounts().size()));
+
         if (refund.signum() > 0) {
             if (stateLogger.isDebugEnabled())
                 stateLogger
