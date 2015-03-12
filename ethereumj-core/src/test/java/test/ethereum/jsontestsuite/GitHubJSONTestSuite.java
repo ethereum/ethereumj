@@ -1,10 +1,8 @@
 package test.ethereum.jsontestsuite;
 
-import org.ethereum.jsontestsuite.StateTestCase;
-import org.ethereum.jsontestsuite.StateTestSuite;
-import org.ethereum.jsontestsuite.TestCase;
-import org.ethereum.jsontestsuite.TestRunner;
-import org.ethereum.jsontestsuite.TestSuite;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.ethereum.jsontestsuite.*;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -19,6 +17,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -182,6 +181,32 @@ public class GitHubJSONTestSuite {
             logger.info(" *** Passed: " + testCase.getName());
         }
     }
+
+
+    protected static void runGitHubJsonBlockTest(String json) throws ParseException, IOException {
+        Assume.assumeFalse("Online test is not available", json.equals(""));
+
+        BlockTestSuite testSuite = new BlockTestSuite(json);
+        Set<String> testCollection = testSuite.getTestCases().keySet();
+
+
+        for (String testName : testCollection) {
+
+            BlockTestCase blockTestCase =  testSuite.getTestCases().get(testName);
+            TestRunner runner = new TestRunner();
+
+            logger.info("Running test: {}", testName);
+            List<String> result = runner.runTestCase(blockTestCase);
+
+//            if (!result.isEmpty())
+//                for (String single : result)
+//                    logger.info(single);
+
+//            Assert.assertTrue(result.isEmpty());
+//            logger.info(" *** Passed: " + testName);
+        }
+    }
+
 
 
 }
