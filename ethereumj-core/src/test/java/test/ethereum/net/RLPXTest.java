@@ -14,6 +14,7 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
+import org.junit.Ignore;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.merge;
 import static org.junit.Assert.assertEquals;
@@ -192,6 +193,7 @@ public class RLPXTest {
         Assert.assertEquals(Hex.toHexString(msg1.getTarget()), Hex.toHexString(msg3.getTarget()));
     }
 
+    @Ignore //TODO #POC9
     @Test  // Ping parse data
     public void test9() {
 //        wire: 4c62e1b75f4003ef77032006a142bbf31772936a1e5098566b28a04a5c71c73f1f2c9f539a85458c50a554de12da9d7e69fb2507f7c0788885508d385bbe7a9538fa675712aa1eaad29902bb46eee4531d00a10fd81179e4151929f60fec4dc50001ce87302e302e302e30808454f8483c
