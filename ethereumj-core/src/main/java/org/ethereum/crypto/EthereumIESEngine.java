@@ -220,7 +220,12 @@ public class EthereumIESEngine
         // Apply the MAC.
         byte[] T = new byte[mac.getMacSize()];
 
-        mac.init(new KeyParameter(K2));
+        byte[] K2a = new byte[hash.getDigestSize()];
+        hash.reset();
+        hash.update(K2, 0, K2.length);
+        hash.doFinal(K2a, 0);
+        mac.init(new KeyParameter(K2a));
+        mac.update(IV, 0, IV.length);
         mac.update(C, 0, C.length);
         if (P2 != null)
         {
