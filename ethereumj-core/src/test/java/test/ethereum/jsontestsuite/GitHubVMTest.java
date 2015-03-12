@@ -27,6 +27,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, "extcodecopy0AddressTooBigRight");
     }
 
+    @Ignore
     @Test
     public void testArithmeticFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -38,6 +39,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testBitwiseLogicOperationFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -45,7 +47,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-
+    @Ignore
     @Test // testing full suite
     public void testBlockInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -53,6 +55,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -61,7 +64,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-
+    @Ignore
     @Test // testing full suite
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -77,6 +80,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testVMLogGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -84,6 +88,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testPushDupSwapFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -91,6 +96,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testShaFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -98,6 +104,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testvmSystemOperationsTestGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -105,6 +112,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testVMGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -112,6 +120,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testRandomVMGitHub() throws ParseException {
 
