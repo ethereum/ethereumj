@@ -36,7 +36,7 @@ public class Env {
         String difficulty = env.get("currentDifficulty").toString();
         String timestamp = env.get("currentTimestamp").toString();
         String number = env.get("currentNumber").toString();
-        String gasLimit = env.get("currentGasLimit").toString();
+        String gasLimit = Utils.parseUnidentifiedBase( env.get("currentGasLimit").toString() );
         String prevHash = env.get("previousHash").toString();
 
         this.currentCoinbase = Hex.decode(coinbase);

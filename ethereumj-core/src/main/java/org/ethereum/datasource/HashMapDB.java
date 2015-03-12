@@ -1,15 +1,13 @@
-package test.ethereum.db;
+package org.ethereum.datasource;
 
-import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
-
 import org.iq80.leveldb.DBException;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class MockDB implements KeyValueDataSource {
+public class HashMapDB implements KeyValueDataSource {
 
     Map<ByteArrayWrapper, byte[]> storage = new HashMap<>();
 

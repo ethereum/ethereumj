@@ -4,6 +4,8 @@ import org.ethereum.util.ByteUtil;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
+
 /**
  * @author Roman Mandeleil
  * @since 15.12.2014
@@ -20,4 +22,9 @@ public class Utils {
         return data.equals("") ? 0 : Long.parseLong(data);
     }
 
+    public static String parseUnidentifiedBase(String number) {
+        if (number.startsWith("0x")) 
+          number = new BigInteger(number.substring(2), 16).toString(10);
+        return number;
+    }
 }

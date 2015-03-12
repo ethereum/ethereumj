@@ -102,6 +102,19 @@ public class TransactionExecutor {
             return;
         }
 
+        //Check: gas limit is not lessthan total tx cost
+        BigInteger totalCost = new BigInteger( Long.toString(GasCost.TRANSACTION + 
+          GasCost.TX_NO_ZERO_DATA * tx.nonZeroDataBytes() + 
+          GasCost.TX_ZERO_DATA * tx.zeroDataBytes()), 10);
+        if (gasLimit.compareTo(totalCost) == -1) {
+            logger.debug("Not enough gas to pay for the transaction: hash={}",
+                    Hex.toHexString(tx.getHash()));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
+
         BigInteger startGasUsed = new BigInteger( Long.toString( this.currentBlock.getGasUsed() ) );
         BigInteger startGasLimit = new BigInteger( Long.toString( this.currentBlock.getGasLimit() ) );
         if( startGasUsed.add(gasLimit).compareTo( startGasLimit ) == 1) {
@@ -116,6 +129,16 @@ public class TransactionExecutor {
         BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
         BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
         logger.info("Gas price limited to [{} wei]", gasDebit.toString());
+
+        //Check: Do not execute if transaction has debit amount of 0 and there is code
+        if (gasDebit.compareTo(BigInteger.ZERO) == 0 && tx.getData() != null) {
+            logger.debug("Transaction gas debits are zero! Cannot execute any code: sender={}",
+                    Hex.toHexString(senderAddress));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
 
         // Debit the actual total gas value from the sender
         // the purchased gas will be available for
@@ -309,7 +332,7 @@ public class TransactionExecutor {
                                     Hex.toHexString(bodyCode));
 
                 BigInteger storageCost = gasPrice.multiply(BigInteger.valueOf(bodyCode.length * GasCost
-                        .CREATE_DATA_BYTE));
+                        .CREATE_DATA));
                 BigInteger balance = repository.getBalance(senderAddress);
 
                 // check if can be charged for the contract data save

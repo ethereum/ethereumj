@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -143,15 +144,17 @@ public class MinerThread implements Runnable {
         long timeDiff = System.currentTimeMillis() - lastBlock.getTimestamp();
 
         byte[] difficulty = lastBlock.getDifficulty();
-//       if (timeDiff < 5000){
-//           System.out.println("increase");
-//           BigInteger diff = (new BigInteger(1, lastBlock.getDifficulty()).add(new BigInteger("FFF", 16)));
-//           difficulty = diff.toByteArray();
-//       }
+
+       if (timeDiff < 5000){
+           System.out.println("increase");
+           BigInteger diff = (new BigInteger(1, lastBlock.getDifficulty()).add(new BigInteger("FFF", 16)));
+           difficulty = diff.toByteArray();
+       }
 
         Block newBlock = new Block(lastBlock.getHash(), lastBlock.getUnclesHash(), coinbase, lastBlock.getLogBloom(),
                 difficulty, lastBlock.getNumber() + 1,
                 lastBlock.getGasLimit(), lastBlock.getGasUsed(), System.currentTimeMillis() / 1000,
+                new byte[64], new byte[64],
                 null, null, null, null);
 
         return newBlock;
