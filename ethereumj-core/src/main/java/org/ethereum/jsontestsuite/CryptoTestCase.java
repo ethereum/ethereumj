@@ -3,6 +3,7 @@ package org.ethereum.jsontestsuite;
 import org.ethereum.crypto.ECKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.jcajce.provider.asymmetric.ec.IESCipher;
 import org.spongycastle.util.encoders.Hex;
 
 /**
@@ -29,7 +30,13 @@ public class CryptoTestCase {
         byte[] cipher = Hex.decode(this.cipher);
 
         ECKey ecKey = ECKey.fromPrivate(key);
-        byte[] resultPayload = ecKey.decryptAES(cipher);
+
+        byte[] resultPayload = new byte[0];
+        if (decryption_type.equals("aes_ctr"))
+            resultPayload = ecKey.decryptAES(cipher);
+
+        if (decryption_type.equals("ecies_sec1_altered"))
+            return;// todo: call the ECIESCoder.decode()
 
         if (!Hex.toHexString(resultPayload).equals(payload)){
             String error = String.format("payload should be: %s, but got that result: %s  ",

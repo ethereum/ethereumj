@@ -1,6 +1,7 @@
 package test.ethereum.jsontestsuite;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.JavaType;
 import org.ethereum.jsontestsuite.CryptoTestCase;
 import org.ethereum.jsontestsuite.JSONReader;
 import org.json.simple.parser.ParseException;
@@ -9,6 +10,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -21,12 +23,17 @@ public class GitHubCryptoTest {
         String json = JSONReader.loadJSON("BasicTests/crypto.json");
 
         ObjectMapper mapper = new ObjectMapper();
-        CryptoTestCase[] testSuite =
-                mapper.readValue(json, CryptoTestCase[].class);
+        JavaType type = mapper.getTypeFactory().
+                constructMapType(HashMap.class, String.class, CryptoTestCase.class);
 
-        for (CryptoTestCase cryptoTestCase : testSuite){
 
-            cryptoTestCase.execute();
+        HashMap<String , CryptoTestCase> testSuite =
+                mapper.readValue(json, type);
+
+        for (String key : testSuite.keySet()){
+
+            System.out.println("executing: " + key);
+            testSuite.get(key).execute();
 
         }
     }
