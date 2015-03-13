@@ -508,6 +508,7 @@ public class Program {
             this.getProgramTrace().merge(program.getProgramTrace());
             this.result.addDeleteAccounts(result.getDeleteAccounts());
             this.result.addLogInfos(result.getLogInfoList());
+            this.result.futureRefundGas(result.getFutureRefund());
         }
 
         if (result != null &&
@@ -575,6 +576,10 @@ public class Program {
 
     public void futureRefundGas(long gasValue) {
         result.futureRefundGas(gasValue);
+    }
+
+    public void resetFutureRefund() {
+        result.resetFutureRefund();
     }
 
     public void storageSave(DataWord word1, DataWord word2) {
