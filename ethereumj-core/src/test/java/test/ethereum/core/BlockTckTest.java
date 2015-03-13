@@ -1,6 +1,5 @@
 package test.ethereum.core;
 
-import junit.framework.Assert;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.facade.Blockchain;
@@ -42,7 +41,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
-public class BlockTest {
+public class BlockTckTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -51,7 +50,7 @@ public class BlockTest {
     @ComponentScan(basePackages = "org.ethereum")
     static class ContextConfiguration extends TestContext {
         static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/" + BlockTest.class);
+            SystemProperties.CONFIG.setDataBaseDir("test_db/" + BlockTckTest.class);
         }
     }
 
