@@ -157,6 +157,11 @@ public class TestRunner {
         return results;
     }
 
+    public List<String> runTestCase(BlockTestCase testCase){
+        return null;
+    }
+
+
     public List<String> runTestCase(TestCase testCase) {
 
         logger.info("\n***");
@@ -556,6 +561,8 @@ public class TestRunner {
 
         return track;
     }
+
+
 
 
     public ProgramTrace getTrace() {
