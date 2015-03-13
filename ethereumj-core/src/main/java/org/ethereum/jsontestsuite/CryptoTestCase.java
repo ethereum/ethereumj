@@ -1,10 +1,13 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.jcajce.provider.asymmetric.ec.IESCipher;
 import org.spongycastle.util.encoders.Hex;
+
+import java.math.BigInteger;
 
 /**
  * @author Roman Mandeleil
@@ -36,7 +39,9 @@ public class CryptoTestCase {
             resultPayload = ecKey.decryptAES(cipher);
 
         if (decryption_type.equals("ecies_sec1_altered"))
-            return;// todo: call the ECIESCoder.decode()
+            try {
+                resultPayload = ECIESCoder.decrypt(new BigInteger(Hex.toHexString(key), 16), cipher);
+            } catch (Throwable e) {e.printStackTrace();}
 
         if (!Hex.toHexString(resultPayload).equals(payload)){
             String error = String.format("payload should be: %s, but got that result: %s  ",
