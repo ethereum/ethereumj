@@ -1,4 +1,4 @@
-package org.ethereum.jsontestsuite;
+package org.ethereum.jsontestsuite.model;
 
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
@@ -13,7 +13,7 @@ import java.util.*;
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-public class AccountState2 {
+public class AccountTCK {
 
     String balance;
     String code;
@@ -21,7 +21,7 @@ public class AccountState2 {
 
     Map<DataWord, DataWord> storage = new HashMap<>();
 
-    public AccountState2() {
+    public AccountTCK() {
     }
 
     public String getBalance() {

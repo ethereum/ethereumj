@@ -1,6 +1,6 @@
-package org.ethereum.jsontestsuite;
+package org.ethereum.jsontestsuite.model;
 
-public class BlockHeader {
+public class BlockHeaderTck {
 
     String bloom;
     String coinbase;
@@ -20,7 +20,7 @@ public class BlockHeader {
     String transactionsTrie;
     String uncleHash;
 
-    public BlockHeader() {
+    public BlockHeaderTck() {
     }
 
     public String getBloom() {

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.junit.Ignore;
 import org.spongycastle.util.encoders.Hex;
 
-public class NewBlockTckMessageTest {
+public class NewBlockMessageTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 

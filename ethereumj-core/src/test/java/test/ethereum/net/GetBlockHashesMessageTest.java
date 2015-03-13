@@ -10,7 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import static org.junit.Assert.assertEquals;
 
-public class GetBlockTckHashesMessageTest {
+public class GetBlockHashesMessageTest {
 
     /* BLOCK_HASHES_MESSAGE */
 

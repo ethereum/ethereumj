@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
-public class BlockTckTest {
+public class BlockTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -50,7 +50,7 @@ public class BlockTckTest {
     @ComponentScan(basePackages = "org.ethereum")
     static class ContextConfiguration extends TestContext {
         static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/" + BlockTckTest.class);
+            SystemProperties.CONFIG.setDataBaseDir("test_db/" + BlockTest.class);
         }
     }
 

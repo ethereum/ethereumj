@@ -1,4 +1,4 @@
-package org.ethereum.jsontestsuite;
+package org.ethereum.jsontestsuite.model;
 
 import org.json.simple.JSONObject;
 
@@ -10,7 +10,7 @@ import static org.ethereum.util.ByteUtil.toHexString;
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-public class Transaction2 {
+public class TransactionTck {
 
     String data;
     String gasLimit;
@@ -23,7 +23,7 @@ public class Transaction2 {
     String value;
 
 
-    public Transaction2() {
+    public TransactionTck() {
     }
 
     public String getData() {

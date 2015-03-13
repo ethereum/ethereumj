@@ -12,7 +12,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
-public class BlockTckHashesMessageTest {
+public class BlockHashesMessageTest {
 
     /* BLOCK_HASHES_MESSAGE */
 

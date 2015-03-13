@@ -1,35 +1,24 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.Block;
-import org.ethereum.core.TransactionExecutor;
+import org.ethereum.core.*;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
+import org.ethereum.jsontestsuite.builder.BlockBuilder;
+import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
+import org.ethereum.jsontestsuite.model.BlockTck;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvoke;
-import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.ProgramInvokeImpl;
-import org.ethereum.vm.VM;
+import org.ethereum.vm.*;
 import org.ethereum.vmtrace.ProgramTrace;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import static org.ethereum.util.ByteUtil.*;
+import static org.ethereum.jsontestsuite.Utils.parseData;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.wrap;
 
 /**
  * @author Roman Mandeleil
@@ -65,7 +54,7 @@ public class TestRunner {
         logger.info("***\n");
 
         logger.info("--------- PRE ---------");
-        RepositoryImpl repository = loadRepository(new RepositoryDummy(),  testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryDummy(), testCase.getPre());
 
 
         logger.info("loaded repository");
@@ -84,20 +73,20 @@ public class TestRunner {
         ProgramInvokeFactory invokeFactory = new TestProgramInvokeFactory(testCase.getEnv());
 
         Block block = new Block(
-            ByteUtil.EMPTY_BYTE_ARRAY,
-            ByteUtil.EMPTY_BYTE_ARRAY,
-            coinbase,
-            ByteUtil.EMPTY_BYTE_ARRAY,
-            testCase.getEnv().getCurrentDifficulty(),
-            new BigInteger(1, testCase.getEnv().getCurrentNumber()).longValue(),
-            new BigInteger(1, testCase.getEnv().getCurrentGasLimit()).longValue(),
-            0L,
-            new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
-            new byte[32],
-            new byte[32],
-            ByteUtil.ZERO_BYTE_ARRAY,
-            ByteUtil.ZERO_BYTE_ARRAY,
-            null, null);
+                ByteUtil.EMPTY_BYTE_ARRAY,
+                ByteUtil.EMPTY_BYTE_ARRAY,
+                coinbase,
+                ByteUtil.EMPTY_BYTE_ARRAY,
+                testCase.getEnv().getCurrentDifficulty(),
+                new BigInteger(1, testCase.getEnv().getCurrentNumber()).longValue(),
+                new BigInteger(1, testCase.getEnv().getCurrentGasLimit()).longValue(),
+                0L,
+                new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
+                new byte[32],
+                new byte[32],
+                ByteUtil.ZERO_BYTE_ARRAY,
+                ByteUtil.ZERO_BYTE_ARRAY,
+                null, null);
 
         blockchain.setBestBlock(block);
         blockchain.setProgramInvokeFactory(invokeFactory);
@@ -157,7 +146,56 @@ public class TestRunner {
         return results;
     }
 
-    public List<String> runTestCase(BlockTestCase testCase){
+    public List<String> runTestCase(BlockTestCase testCase) {
+
+
+        /* 1 */ // Create genesis + init pre state
+        Block genesis = BlockBuilder.build(testCase.getGenesisBlockHeader(), null, null);
+        Repository repository = RepositoryBuilder.build(testCase.getPre());
+
+        BlockStore blockStore = new InMemoryBlockStore();
+        blockStore.saveBlock(genesis, new ArrayList<TransactionReceipt>());
+
+
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository);
+        blockchain.setBestBlock(genesis);
+        blockchain.setTotalDifficulty(BigInteger.ZERO);
+
+
+
+
+        // todo: validate root of the genesis   *!!!*
+
+
+        /* 2 */ // Create block traffic list
+        List<Block> blockTraffic = new ArrayList<>();
+        for (BlockTck blockTck : testCase.getBlocks()) {
+            Block block = BlockBuilder.build(blockTck.getBlockHeader(),
+                    blockTck.getTransactions(),
+                    blockTck.getUncleHeaders());
+
+            byte[] rlp = parseData(blockTck.getRlp());
+            Block tBlock = new Block(rlp);
+
+
+            // todo: validate tBlock = block  *!!!*
+
+            blockTraffic.add(block);
+        }
+
+
+
+        /* 3 */ // Inject blocks to the blockchain execution
+
+
+
+        for (Block block: blockTraffic){
+
+            blockchain.tryToConnect(block);
+        }
+
+
+
         return null;
     }
 
@@ -171,7 +209,7 @@ public class TestRunner {
 
 
         logger.info("--------- PRE ---------");
-        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(),  testCase.getPre());
+        RepositoryImpl repository = loadRepository(new RepositoryVMTestDummy(), testCase.getPre());
 
         try {
 

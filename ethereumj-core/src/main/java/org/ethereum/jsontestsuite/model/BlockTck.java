@@ -1,22 +1,22 @@
-package org.ethereum.jsontestsuite;
+package org.ethereum.jsontestsuite.model;
 
 import java.util.List;
 
-public class Block {
+public class BlockTck {
 
-    BlockHeader blockHeader;
-    List<Transaction2> transactions;
-    List<BlockHeader> uncleHeaders;
+    BlockHeaderTck blockHeader;
+    List<TransactionTck> transactions;
+    List<BlockHeaderTck> uncleHeaders;
     String rlp;
 
-    public Block() {
+    public BlockTck() {
     }
 
-    public BlockHeader getBlockHeader() {
+    public BlockHeaderTck getBlockHeader() {
         return blockHeader;
     }
 
-    public void setBlockHeader(BlockHeader blockHeader) {
+    public void setBlockHeader(BlockHeaderTck blockHeader) {
         this.blockHeader = blockHeader;
     }
 
@@ -28,19 +28,19 @@ public class Block {
         this.rlp = rlp;
     }
 
-    public List<Transaction2> getTransactions() {
+    public List<TransactionTck> getTransactions() {
         return transactions;
     }
 
-    public void setTransactions(List<Transaction2> transactions) {
+    public void setTransactions(List<TransactionTck> transactions) {
         this.transactions = transactions;
     }
 
-    public List<BlockHeader> getUncleHeaders() {
+    public List<BlockHeaderTck> getUncleHeaders() {
         return uncleHeaders;
     }
 
-    public void setUncleHeaders(List<BlockHeader> uncleHeaders) {
+    public void setUncleHeaders(List<BlockHeaderTck> uncleHeaders) {
         this.uncleHeaders = uncleHeaders;
     }
 

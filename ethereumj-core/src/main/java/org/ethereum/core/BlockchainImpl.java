@@ -107,6 +107,15 @@ public class BlockchainImpl implements Blockchain {
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
 
+
+    public BlockchainImpl(){};
+
+    //todo: autowire over constructor
+    public BlockchainImpl(BlockStore blockStore, Repository repository) {
+        this.blockStore = blockStore;
+        this.repository = repository;
+    }
+
     @Override
     public byte[] getBestBlockHash() {
         return getBestBlock().getHash();

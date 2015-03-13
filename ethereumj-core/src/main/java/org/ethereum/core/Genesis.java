@@ -93,6 +93,7 @@ public class Genesis extends Block {
         setStateRoot(state.getRootHash());
     }
 
+
     private Trie parseGenesis() {
         JSONParser parser = new JSONParser();
         JSONObject genesisMap = null;
