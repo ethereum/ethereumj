@@ -61,8 +61,13 @@ public class TrieImpl implements Trie {
 
     public TrieImpl(KeyValueDataSource db, Object root) {
         this.cache = new Cache(db);
-        this.root = root;
-        this.prevRoot = root;
+
+	if ( root instanceof byte[] )
+	    this.setRoot( (byte[]) root );
+	else
+	    this.root = root;
+
+        this.prevRoot = this.root;
     }
 
     public TrieIterator getIterator() {
