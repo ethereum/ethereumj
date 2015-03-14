@@ -346,7 +346,11 @@ public class Program {
         // [2] CREATE THE CONTRACT ADDRESS
         byte[] nonce = result.getRepository().getNonce(senderAddress).toByteArray();
         byte[] newAddress = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
+
+        //In case of hashing collisions, check for any balance before createAccount() 
+        BigInteger oldBalance = result.getRepository().getBalance(newAddress); 
         result.getRepository().createAccount(newAddress);
+        result.getRepository().addBalance(newAddress,oldBalance);
 
         if (invokeData.byTestingSuite()) {
             // This keeps track of the contracts created for a test
@@ -476,6 +480,7 @@ public class Program {
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
             stackPushZero();
+            this.refundGas(msg.getGas().longValue(), "refund gas from message call");
             return;
         }
 
