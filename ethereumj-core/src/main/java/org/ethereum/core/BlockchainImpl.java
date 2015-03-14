@@ -111,9 +111,14 @@ public class BlockchainImpl implements Blockchain {
     public BlockchainImpl(){};
 
     //todo: autowire over constructor
-    public BlockchainImpl(BlockStore blockStore, Repository repository) {
+    public BlockchainImpl(BlockStore blockStore, Repository repository,
+                          Wallet wallet, AdminInfo adminInfo,
+                          EthereumListener listener) {
         this.blockStore = blockStore;
         this.repository = repository;
+        this.wallet = wallet;
+        this.adminInfo = adminInfo;
+        this.listener = listener;
     }
 
     @Override
@@ -244,9 +249,10 @@ public class BlockchainImpl implements Blockchain {
         listener.onBlock(block);
         listener.onBlockReciepts(receipts);
 
-        if (blockQueue.size() == 0 &&
-                !syncDoneCalled &&
-                channelManager.isAllSync()) {
+        if (blockQueue != null &&
+            blockQueue.size() == 0 &&
+            !syncDoneCalled &&
+            channelManager.isAllSync()) {
 
             logger.info("Sync done");
             syncDoneCalled = true;
