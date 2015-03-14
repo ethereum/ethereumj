@@ -107,6 +107,14 @@ public class TrieTest {
     }
 
     @Test
+    public void testResetToEmptyRoot() {
+        TrieImpl trie = new TrieImpl(mockDb);
+	trie.setRoot( EMPTY_TRIE_HASH );
+        trie.update("", dog);
+        assertEquals(dog, new String(trie.get("")));
+    }
+
+    @Test
     public void testInsertMultipleItems1() {
         TrieImpl trie = new TrieImpl(mockDb);
         trie.update(ca, dude);
