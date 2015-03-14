@@ -83,7 +83,6 @@ public class TestRunner {
                 0L,
                 new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
                 new byte[32],
-                new byte[32],
                 ByteUtil.ZERO_BYTE_ARRAY,
                 ByteUtil.ZERO_BYTE_ARRAY,
                 null, null);
@@ -153,6 +152,10 @@ public class TestRunner {
         Block genesis = BlockBuilder.build(testCase.getGenesisBlockHeader(), null, null);
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
+        System.out.println("rlp: " + Hex.toHexString(genesis.getHeader().getEncoded()));
+        System.out.println("hash: " + Hex.toHexString(genesis.getHash()));
+
+
         BlockStore blockStore = new InMemoryBlockStore();
         blockStore.saveBlock(genesis, new ArrayList<TransactionReceipt>());
 
@@ -160,7 +163,6 @@ public class TestRunner {
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository);
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(BigInteger.ZERO);
-
 
 
 
@@ -177,10 +179,18 @@ public class TestRunner {
             byte[] rlp = parseData(blockTck.getRlp());
             Block tBlock = new Block(rlp);
 
+            System.out.println("rlp: " + Hex.toHexString(tBlock.getHeader().getEncoded()));
+            System.out.println("hash: " + Hex.toHexString(tBlock.getHash()));
+
+            System.out.println("rlp: " + Hex.toHexString(block.getHeader().getEncoded()));
+            System.out.println("hash: " + Hex.toHexString(block.getHash()));
+            System.out.println();
+
 
             // todo: validate tBlock = block  *!!!*
 
             blockTraffic.add(block);
+
         }
 
 

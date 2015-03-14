@@ -75,7 +75,6 @@ public class Genesis extends Block {
     public static long GAS_USED = 0;
     public static long TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
-    public static byte[] SEED_HASH = zeroHash256;
     public static byte[] MIX_HASH = zeroHash256;
     public static byte[] NONCE = Hex.decode("000000000000002A");
 
@@ -84,7 +83,7 @@ public class Genesis extends Block {
     private Genesis() {
         super(PARENT_HASH, UNCLES_HASH, COINBASE, LOG_BLOOM, DIFFICULTY,
                 NUMBER, GAS_LIMIT, GAS_USED, TIMESTAMP,
-                EXTRA_DATA, SEED_HASH, MIX_HASH, NONCE, null, null);
+                EXTRA_DATA, MIX_HASH, NONCE, null, null);
 
         // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
