@@ -1,6 +1,6 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.jsontestsuite.model.AccountTCK;
+import org.ethereum.jsontestsuite.model.AccountTck;
 import org.ethereum.jsontestsuite.model.BlockHeaderTck;
 import org.ethereum.jsontestsuite.model.BlockTck;
 
@@ -11,7 +11,7 @@ public class BlockTestCase {
 
     private List<BlockTck> blocks;
     private BlockHeaderTck genesisBlockHeader;
-    private Map<String, AccountTCK> pre;
+    private Map<String, AccountTck> pre;
 
 
     public BlockTestCase() {
@@ -33,11 +33,11 @@ public class BlockTestCase {
         this.genesisBlockHeader = genesisBlockHeader;
     }
 
-    public Map<String, AccountTCK> getPre() {
+    public Map<String, AccountTck> getPre() {
         return pre;
     }
 
-    public void setPre(Map<String, AccountTCK> pre) {
+    public void setPre(Map<String, AccountTck> pre) {
         this.pre = pre;
     }
 
