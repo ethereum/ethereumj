@@ -288,6 +288,10 @@ public class TransactionExecutor {
         BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
                 result.getGasUsed()).multiply(gasPrice));
 
+        // accumulate refunds for suicides
+        result.futureRefundGas(
+          GasCost.SUICIDE_REFUND * (result.getDeleteAccounts() == null ? 0 : result.getDeleteAccounts().size()));
+
         if (refund.signum() > 0) {
             if (stateLogger.isDebugEnabled())
                 stateLogger
@@ -302,7 +306,10 @@ public class TransactionExecutor {
 
         if (result.getFutureRefund() > 0) {
 
-            long futureRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            //TODO #POC9 add getGasFree() as method to ProgramResult?
+            BigInteger gasFree = gasDebit.subtract(BigInteger.valueOf(result.getGasUsed()));
+
+            long futureRefund = Math.min(result.getFutureRefund(), gasDebit.subtract(gasFree).longValue() / 2 );
             BigInteger futureRefundBI = BigInteger.valueOf(futureRefund);
             BigInteger futureRefundVal = futureRefundBI.multiply(gasPrice);
 

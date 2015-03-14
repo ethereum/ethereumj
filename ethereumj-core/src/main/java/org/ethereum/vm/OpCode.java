@@ -127,7 +127,7 @@ public enum OpCode {
      * (0x30)  Get address of currently
      * executing account
      */
-    ADDRESS(0x30, 0, VeryLowTier),
+    ADDRESS(0x30, 0, BaseTier),
     /**
      * (0x31) Get balance of the given account
      */
@@ -145,7 +145,7 @@ public enum OpCode {
      * instruction/transaction responsible
      * for this execution
      */
-    CALLVALUE(0x34, 0, VeryLowTier),
+    CALLVALUE(0x34, 0, BaseTier),
     /**
      * (0x35) Get input data of current
      * environment
@@ -249,7 +249,7 @@ public enum OpCode {
      * (0x57) Conditionally alter the program
      * counter
      */
-    JUMPI(0x57, 2, VeryLowTier),
+    JUMPI(0x57, 2, HighTier),
     /**
      * (0x58) Get the program counter
      */
@@ -261,11 +261,11 @@ public enum OpCode {
     /**
      * (0x5a) Get the amount of available gas
      */
-    GAS(0x5a, 0, VeryLowTier),
+    GAS(0x5a, 0, BaseTier),
     /**
      * (0x5b)
      */
-    JUMPDEST(0x5b, 0, VeryLowTier),
+    JUMPDEST(0x5b, 0, SpecialTier),
 
     /*  Push Operations */
 
@@ -628,9 +628,9 @@ public enum OpCode {
         VeryLowTier(3),
         LowTier(5),
         MidTier(5),
-        HighTier(6),
+        HighTier(10),
         ExtTier(7),
-        SpecialTier(20),
+        SpecialTier(1),
         InvalidTier(21);
 
 
