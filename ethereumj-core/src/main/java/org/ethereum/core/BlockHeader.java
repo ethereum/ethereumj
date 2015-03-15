@@ -56,8 +56,6 @@ public class BlockHeader {
     private long gasUsed;
 
 
-    private byte[] seedHash;
-
     private byte[] mixHash;
 
     /* An arbitrary byte array containing data relevant to this block.
@@ -96,17 +94,15 @@ public class BlockHeader {
         this.gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
         this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
 
-        this.seedHash = rlpHeader.get(12).getRLPData();
+        this.extraData = rlpHeader.get(12).getRLPData();
         this.mixHash = rlpHeader.get(13).getRLPData();
-        this.extraData = rlpHeader.get(14).getRLPData();
-        this.nonce = rlpHeader.get(15).getRLPData();
+        this.nonce = rlpHeader.get(14).getRLPData();
     }
 
     public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
                        byte[] logsBloom, byte[] difficulty, long number,
                        long gasLimit, long gasUsed, long timestamp,
-                       byte[] seedHash, byte[] mixHash,
-                       byte[] extraData, byte[] nonce) {
+                       byte[] extraData, byte[] mixHash, byte[] nonce) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
         this.coinbase = coinbase;
@@ -117,7 +113,6 @@ public class BlockHeader {
         this.gasUsed = gasUsed;
         this.timestamp = timestamp;
         this.extraData = extraData;
-        this.seedHash = seedHash;
         this.mixHash = mixHash;
         this.nonce = nonce;
         this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
@@ -179,6 +174,19 @@ public class BlockHeader {
         return txTrieRoot;
     }
 
+    public void setReceiptsRoot(byte[] receiptTrieRoot) {
+        this.receiptTrieRoot = receiptTrieRoot;
+    }
+
+    public byte[] getReceiptsRoot() {
+        return receiptTrieRoot;
+    }
+
+    public void setTransactionsRoot(byte[] stateRoot) {
+        this.txTrieRoot = stateRoot;
+    }
+
+
     public byte[] getLogsBloom() {
         return logsBloom;
     }
@@ -221,10 +229,6 @@ public class BlockHeader {
 
     public void setGasUsed(long gasUsed) {
         this.gasUsed = gasUsed;
-    }
-
-    public byte[] getSeedHash() {
-        return seedHash;
     }
 
     public byte[] getMixHash() {
@@ -272,18 +276,17 @@ public class BlockHeader {
         byte[] gasUsed = RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
 
-        byte[] seedHash = RLP.encodeElement(this.seedHash);
-        byte[] mixHash = RLP.encodeElement(this.mixHash);
         byte[] extraData = RLP.encodeElement(this.extraData);
+        byte[] mixHash = RLP.encodeElement(this.mixHash);
         if (withNonce) {
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, seedHash, mixHash, extraData, nonce);
+                    gasLimit, gasUsed, timestamp, extraData, mixHash, nonce);
         } else {
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, seedHash, mixHash, extraData);
+                    gasLimit, gasUsed, timestamp, extraData, mixHash);
         }
     }
 
@@ -304,9 +307,8 @@ public class BlockHeader {
         toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
         toStringBuff.append("  gasUsed=").append(gasUsed).append(suffix);
         toStringBuff.append("  timestamp=").append(timestamp).append(" (").append(Utils.longToDateTime(timestamp)).append(")").append(suffix);
-        toStringBuff.append("  seedHash=").append(toHexString(seedHash)).append(suffix);
-        toStringBuff.append("  mixHash=").append(toHexString(mixHash)).append(suffix);
         toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);
+        toStringBuff.append("  mixHash=").append(toHexString(mixHash)).append(suffix);
         toStringBuff.append("  nonce=").append(toHexString(nonce)).append(suffix);
         return toStringBuff.toString();
     }

@@ -2,7 +2,7 @@ package org.ethereum.jsontestsuite.builder;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.jsontestsuite.model.AccountTCK;
+import org.ethereum.jsontestsuite.model.AccountTck;
 
 import java.math.BigInteger;
 
@@ -11,7 +11,7 @@ import static org.ethereum.jsontestsuite.Utils.parseData;
 
 public class AccountBuilder {
 
-    public static StateWrap build(AccountTCK account){
+    public static StateWrap build(AccountTck account){
 
         ContractDetails details = new ContractDetails();
         details.setCode(parseData(account.getCode()));

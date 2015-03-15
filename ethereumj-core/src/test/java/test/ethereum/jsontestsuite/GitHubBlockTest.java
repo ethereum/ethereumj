@@ -17,7 +17,7 @@ import java.util.Map;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "b7021c7898ec1028405d70394c7ddf2445bfde6c";
+    public String shacommit = "f6b8e28f40042a99818e85d66819482d96f409f2";
 
     @Test
     public void runBlockChainTest() throws ParseException, IOException {

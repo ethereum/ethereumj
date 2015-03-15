@@ -1,11 +1,15 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.*;
+import org.ethereum.crypto.EthereumIESEngine;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
+import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
 import org.ethereum.vmtrace.ProgramTrace;
@@ -83,7 +87,6 @@ public class TestRunner {
                 0L,
                 new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
                 new byte[32],
-                new byte[32],
                 ByteUtil.ZERO_BYTE_ARRAY,
                 ByteUtil.ZERO_BYTE_ARRAY,
                 null, null);
@@ -154,14 +157,15 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         BlockStore blockStore = new InMemoryBlockStore();
-        blockStore.saveBlock(genesis, new ArrayList<TransactionReceipt>());
+        blockStore.saveBlock(genesis, new ArrayList<>());
 
+        Wallet wallet = new Wallet();
+        AdminInfo adminInfo = new AdminInfo();
+        EthereumListener listener = new CompositeEthereumListener();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository);
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(BigInteger.ZERO);
-
-
 
 
         // todo: validate root of the genesis   *!!!*
@@ -177,10 +181,10 @@ public class TestRunner {
             byte[] rlp = parseData(blockTck.getRlp());
             Block tBlock = new Block(rlp);
 
-
             // todo: validate tBlock = block  *!!!*
 
             blockTraffic.add(block);
+
         }
 
 

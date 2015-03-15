@@ -1,9 +1,7 @@
 package org.ethereum.util;
 
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,12 +9,13 @@ import java.util.Queue;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.isNullOrZeroArray;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
 /**
  * Recursive Length Prefix (RLP) encoding.
- *
+ * <p>
  * The purpose of RLP is to encode arbitrarily nested arrays of binary data, and
  * RLP is the main encoding method used to serialize objects in Ethereum. The
  * only purpose of RLP is to encode structure; encoding specific atomic data
@@ -26,18 +25,18 @@ import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
  * canonical forms are to either use [[k1,v1],[k2,v2]...] with keys in
  * lexicographic order or to use the higher-level Patricia Tree encoding as
  * Ethereum does.
- *
+ * <p>
  * The RLP encoding function takes in an item. An item is defined as follows:
- *
+ * <p>
  * - A string (ie. byte array) is an item - A list of items is an item
- *
+ * <p>
  * For example, an empty string is an item, as is the string containing the word
  * "cat", a list containing any number of strings, as well as more complex data
  * structures like ["cat",["puppy","cow"],"horse",[[]],"pig",[""],"sheep"]. Note
  * that in the context of the rest of this article, "string" will be used as a
  * synonym for "a certain number of bytes of binary data"; no special encodings
  * are used and no knowledge about the content of the strings is implied.
- *
+ * <p>
  * See: https://github.com/ethereum/wiki/wiki/%5BEnglish%5D-RLP
  *
  * @author Roman Mandeleil
@@ -256,13 +255,13 @@ public class RLP {
 
         int offset = 1;
 
-        final byte[] result=new byte[4];
-        for ( int i =0 ; i<4 ; i++) {
+        final byte[] result = new byte[4];
+        for (int i = 0; i < 4; i++) {
             result[i] = decodeOneByteItem(data, index + offset);
             if ((data[index + offset] & 0xFF) > OFFSET_SHORT_ITEM)
-                offset +=  2;
+                offset += 2;
             else
-                offset +=  1;
+                offset += 1;
         }
 
         // return IP address
@@ -748,7 +747,7 @@ public class RLP {
 
     public static byte[] encodeElement(byte[] srcData) {
 
-        if (srcData == null)
+        if (isNullOrZeroArray(srcData))
             return new byte[]{(byte) OFFSET_SHORT_ITEM};
         else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
             return srcData;

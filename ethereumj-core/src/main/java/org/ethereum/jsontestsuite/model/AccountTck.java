@@ -13,7 +13,7 @@ import java.util.*;
  * @author Roman Mandeleil
  * @since 28.06.2014
  */
-public class AccountTCK {
+public class AccountTck {
 
     String balance;
     String code;
@@ -21,7 +21,7 @@ public class AccountTCK {
 
     Map<DataWord, DataWord> storage = new HashMap<>();
 
-    public AccountTCK() {
+    public AccountTck() {
     }
 
     public String getBalance() {

@@ -4,21 +4,14 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPElement;
-import org.ethereum.util.RLPList;
-
+import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -66,14 +59,55 @@ public class Block {
         this.parsed = false;
     }
 
+    public Block(BlockHeader header, List<Transaction> transactionsList, List<BlockHeader> uncleList) {
+
+        this(header.getParentHash(),
+                header.getUnclesHash(),
+                header.getCoinbase(),
+                header.getLogsBloom(),
+                header.getDifficulty(),
+                header.getNumber(),
+                header.getGasLimit(),
+                header.getGasUsed(),
+                header.getTimestamp(),
+                header.getExtraData(),
+                header.getMixHash(),
+                header.getNonce(),
+                header.getReceiptsRoot(),
+                header.getTxTrieRoot(),
+                header.getStateRoot(),
+                transactionsList,
+                uncleList);
+    }
+
     public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
                  byte[] difficulty, long number, long gasLimit,
-                 long gasUsed, long timestamp, byte[] seedHash, byte[] mixHash,
-                 byte[] extraData, byte[] nonce,
+                 long gasUsed, long timestamp, byte[] extraData,
+                 byte[] mixHash, byte[] nonce, byte[] receiptsRoot,
+                 byte[] transactionsRoot, byte[] stateRoot,
+                 List<Transaction> transactionsList, List<BlockHeader> uncleList) {
+
+        this(parentHash, unclesHash, coinbase, logsBloom, difficulty, number, gasLimit,
+                gasUsed, timestamp, extraData, mixHash, nonce, transactionsList, uncleList);
+
+        this.header.setTransactionsRoot(calcTxTrie(transactionsList));
+        if (!Hex.toHexString(transactionsRoot).
+                equals(Hex.toHexString(this.header.getTxTrieRoot())))
+            logger.error("Transaction root miss-calculate, block: {}", getNumber());
+
+        this.header.setStateRoot(stateRoot);
+        this.header.setReceiptsRoot(receiptsRoot);
+    }
+
+
+    public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
+                 byte[] difficulty, long number, long gasLimit,
+                 long gasUsed, long timestamp,
+                 byte[] extraData, byte[] mixHash, byte[] nonce,
                  List<Transaction> transactionsList, List<BlockHeader> uncleList) {
         this.header = new BlockHeader(parentHash, unclesHash, coinbase, logsBloom,
                 difficulty, number, gasLimit, gasUsed,
-                timestamp, seedHash, mixHash, extraData, nonce);
+                timestamp, extraData, mixHash, nonce);
 
         this.transactionsList = transactionsList;
         if (this.transactionsList == null) {
@@ -169,6 +203,12 @@ public class Block {
         return this.header.getTxTrieRoot();
     }
 
+    public byte[] getReceiptsRoot() {
+        if (!parsed) parseRLP();
+        return this.header.getReceiptsRoot();
+    }
+
+
     public byte[] getLogBloom() {
         if (!parsed) parseRLP();
         return this.header.getLogsBloom();
@@ -208,9 +248,10 @@ public class Block {
         return this.header.getGasUsed();
     }
 
-    public byte[] getSeedHash() {
+
+    public byte[] getExtraData() {
         if (!parsed) parseRLP();
-        return this.header.getSeedHash();
+        return this.header.getExtraData();
     }
 
     public byte[] getMixHash() {
@@ -218,11 +259,6 @@ public class Block {
         return this.header.getMixHash();
     }
 
-
-    public byte[] getExtraData() {
-        if (!parsed) parseRLP();
-        return this.header.getExtraData();
-    }
 
     public byte[] getNonce() {
         if (!parsed) parseRLP();
@@ -289,7 +325,20 @@ public class Block {
     }
 
 
-    private void parseTxs(byte[] expectedRoot, RLPList txTransactions) {
+    private byte[] calcTxTrie(List<Transaction> transactions){
+
+        this.txsState = new TrieImpl(null);
+
+        if (transactions == null || transactions.isEmpty())
+            return HashUtil.EMPTY_TRIE_HASH;
+
+        for (int i = 0; i < transactions.size(); i++) {
+            this.txsState.update(RLP.encodeInt(i), transactions.get(i).getEncoded());
+        }
+        return txsState.getRootHash();
+    }
+
+    private void parseTxs(RLPList txTransactions) {
 
         this.txsState = new TrieImpl(null);
         for (int i = 0; i < txTransactions.size(); i++) {
@@ -297,7 +346,12 @@ public class Block {
             this.transactionsList.add(new Transaction(transactionRaw.getRLPData()));
             this.txsState.update(RLP.encodeInt(i), transactionRaw.getRLPData());
         }
+    }
 
+
+    private void parseTxs(byte[] expectedRoot, RLPList txTransactions) {
+
+        parseTxs(txTransactions);
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
             logger.error("Added tx receipts don't match the given txsStateRoot");
