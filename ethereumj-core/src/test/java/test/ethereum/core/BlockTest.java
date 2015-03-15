@@ -91,6 +91,7 @@ public class BlockTest {
     }
 
 
+    @Ignore
     @Test
     public void testGenesisFromRLP() {
         // from RLP encoding
@@ -102,6 +103,7 @@ public class BlockTest {
         assertEquals(Hex.toHexString(genesis.getStateRoot()), Hex.toHexString(genesisFromRLP.getStateRoot()));
     }
 
+    @Ignore
     @Test
     public void testGenesisFromNew() {
         Block genesis = Genesis.getInstance();
