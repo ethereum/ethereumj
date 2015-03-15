@@ -130,16 +130,6 @@ public class TransactionExecutor {
         BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
         logger.info("Gas price limited to [{} wei]", gasDebit.toString());
 
-        //Check: Do not execute if transaction has debit amount of 0 and there is code
-        if (gasDebit.compareTo(BigInteger.ZERO) == 0 && tx.getData() != null) {
-            logger.debug("Transaction gas debits are zero! Cannot execute any code: sender={}",
-                    Hex.toHexString(senderAddress));
-
-            receipt.setCumulativeGas(0);
-            this.receipt = receipt;
-            return;
-        }
-
         // Debit the actual total gas value from the sender
         // the purchased gas will be available for
         // the contract in the execution state,
@@ -207,6 +197,16 @@ public class TransactionExecutor {
                     "Before contract execution debit the sender address with gas total cost, "
                             + "\n sender={} \n gas_debit= {}",
                     Hex.toHexString(senderAddress), gasDebit);
+
+        //Check: Do not execute if transaction has debit amount of 0 and there is code
+        if (gasDebit.compareTo(BigInteger.ZERO) == 0 && tx.getData() != null) {
+            logger.debug("Transaction gas debits are zero! Cannot execute any code: sender={}",
+                    Hex.toHexString(senderAddress));
+
+            receipt.setCumulativeGas(0);
+            this.receipt = receipt;
+            return;
+        }
 
         // CREATE AND/OR EXECUTE CONTRACT
         long gasUsed = 0;
@@ -288,6 +288,10 @@ public class TransactionExecutor {
         BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
                 result.getGasUsed()).multiply(gasPrice));
 
+        // accumulate refunds for suicides
+        result.futureRefundGas(
+          GasCost.SUICIDE_REFUND * (result.getDeleteAccounts() == null ? 0 : result.getDeleteAccounts().size()));
+
         if (refund.signum() > 0) {
             if (stateLogger.isDebugEnabled())
                 stateLogger
@@ -302,7 +306,10 @@ public class TransactionExecutor {
 
         if (result.getFutureRefund() > 0) {
 
-            long futureRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            //TODO #POC9 add getGasFree() as method to ProgramResult?
+            BigInteger gasFree = gasDebit.subtract(BigInteger.valueOf(result.getGasUsed()));
+
+            long futureRefund = Math.min(result.getFutureRefund(), gasDebit.subtract(gasFree).longValue() / 2 );
             BigInteger futureRefundBI = BigInteger.valueOf(futureRefund);
             BigInteger futureRefundVal = futureRefundBI.multiply(gasPrice);
 
