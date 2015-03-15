@@ -99,10 +99,8 @@ public class GitHubStateTest {
     @Test
     public void stSystemOperationsTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth");
-        excluded.add("callcodeWithHighValue");
+        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //TODO failing on cpp?
         excluded.add("Call10"); //TODO gaslimit exceeds Block long
-        excluded.add("CreateHashCollision");
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -114,7 +112,6 @@ public class GitHubStateTest {
         //TODO: This is going to stay excluded until we refactor 
         //      the codebase to use bigintegers instead of longs
         excluded.add("HighGasLimit");
-        excluded.add("UserTransactionZeroCostWithData");
         excluded.add("SuicidesMixingCoinbase");
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
