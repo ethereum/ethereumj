@@ -117,4 +117,8 @@ public class ProgramResult {
     public long getFutureRefund() {
         return futureRefund;
     }
+
+    public void resetFutureRefund() {
+        futureRefund = 0;
+    }
 }

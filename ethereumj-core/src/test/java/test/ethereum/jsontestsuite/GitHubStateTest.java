@@ -44,7 +44,6 @@ public class GitHubStateTest {
     @Test
     public void stInitCodeTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
-        excluded.add("TransactionSuicideInitCode");
         String json = JSONReader.loadJSONFromCommit("StateTests/stInitCodeTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -72,12 +71,10 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    @Ignore //fix
+    //@Ignore
     @Test
     public void stRefundTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
-        excluded.add("refund_CallA");
-        excluded.add("refund_CallA2");
         String json = JSONReader.loadJSONFromCommit("StateTests/stRefundTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -98,33 +95,24 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    @Ignore //fix
+    //@Ignore
     @Test
     public void stSystemOperationsTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("suicideSendEtherToMe");
-        excluded.add("suicideOrigin");
-        excluded.add("suicideCaller");
-        excluded.add("suicideCallerAddresTooBigLeft");
-        excluded.add("suicideAddress");
-        excluded.add("suicideCallerAddresTooBigRight");
+        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //TODO failing on cpp?
+        excluded.add("Call10"); //TODO gaslimit exceeds Block long
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
 
-    @Ignore //fix
+    //@Ignore
     @Test
     public void stTransactionTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
         //TODO: This is going to stay excluded until we refactor 
         //      the codebase to use bigintegers instead of longs
         excluded.add("HighGasLimit");
-
-        excluded.add("UserTransactionZeroCostWithData");
-        excluded.add("UserTransactionGasLimitIsTooLowWhenZeroCost");
-        excluded.add("SuicidesAndInternlCallSuicides");
         excluded.add("SuicidesMixingCoinbase");
-        excluded.add("CreateTransactionReverted");
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }

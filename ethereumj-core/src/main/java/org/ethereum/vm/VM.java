@@ -247,7 +247,7 @@ public class VM {
             }
 
             if (copySize > 0) {
-                long copyGas = GasCost.COPY_GAS * (copySize + 31) / 32;
+                long copyGas = GasCost.COPY_GAS * ((copySize + 31) / 32);
                 gasCost += copyGas;
                 program.spendGas(copyGas, op.name() + " (copy usage)");
             }
@@ -1137,6 +1137,7 @@ public class VM {
         } catch (RuntimeException e) {
             logger.warn("VM halted: [{}]", e.toString());
             program.spendAllGas();
+            program.resetFutureRefund();
             program.stop();
             throw e;
         } finally {
