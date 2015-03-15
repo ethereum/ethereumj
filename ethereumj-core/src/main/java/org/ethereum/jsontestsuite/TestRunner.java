@@ -157,7 +157,7 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         BlockStore blockStore = new InMemoryBlockStore();
-        blockStore.saveBlock(genesis, new ArrayList<>());
+        blockStore.saveBlock(genesis, new ArrayList<TransactionReceipt>());
 
         Wallet wallet = new Wallet();
         AdminInfo adminInfo = new AdminInfo();
@@ -190,9 +190,6 @@ public class TestRunner {
 
 
         /* 3 */ // Inject blocks to the blockchain execution
-
-
-
         for (Block block: blockTraffic){
 
             blockchain.tryToConnect(block);

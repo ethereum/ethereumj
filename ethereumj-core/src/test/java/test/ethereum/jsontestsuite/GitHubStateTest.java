@@ -40,7 +40,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    //@Ignore 
+    @Ignore
     @Test
     public void stInitCodeTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
@@ -105,11 +105,11 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
 
-    //@Ignore
+    @Ignore
     @Test
     public void stTransactionTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        //TODO: This is going to stay excluded until we refactor 
+        //TODO: This is going to stay excluded until we refactor
         //      the codebase to use bigintegers instead of longs
         excluded.add("HighGasLimit");
         excluded.add("SuicidesMixingCoinbase");
