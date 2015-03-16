@@ -27,7 +27,7 @@ public enum OpCode {
     /**
      * (0x02) Multiplication operation
      */
-    MUL(0x02, 2, VeryLowTier),
+    MUL(0x02, 2, LowTier),
     /**
      * (0x03) Subtraction operations
      */
@@ -35,11 +35,11 @@ public enum OpCode {
     /**
      * (0x04) Integer division operation
      */
-    DIV(0x04, 2, VeryLowTier),
+    DIV(0x04, 2, LowTier),
     /**
      * (0x05) Signed integer division operation
      */
-    SDIV(0x05, 2, VeryLowTier),
+    SDIV(0x05, 2, LowTier),
     /**
      * (0x06) Modulo remainder operation
      */
@@ -47,25 +47,25 @@ public enum OpCode {
     /**
      * (0x07) Signed modulo remainder operation
      */
-    SMOD(0x07, 2, VeryLowTier),
+    SMOD(0x07, 2, LowTier),
     /**
      * (0x08) Addition combined with modulo
      * remainder operation
      */
-    ADDMOD(0x08, 3, VeryLowTier),
+    ADDMOD(0x08, 3, MidTier),
     /**
      * (0x09) Multiplication combined with modulo
      * remainder operation
      */
-    MULMOD(0x09, 3, VeryLowTier),
+    MULMOD(0x09, 3, MidTier),
     /**
      * (0x0a) Exponential operation
      */
-    EXP(0x0a, 2, VeryLowTier),
+    EXP(0x0a, 2, SpecialTier),
     /**
      * (0x0b) Extend length of signed integer
      */
-    SIGNEXTEND(0x0b, 2, VeryLowTier),
+    SIGNEXTEND(0x0b, 2, LowTier),
 
     /*  Bitwise Logic & Comparison Operations   */
 
@@ -119,7 +119,7 @@ public enum OpCode {
     /**
      * (0x20) Compute SHA3-256 hash
      */
-    SHA3(0x20, 2, VeryLowTier),
+    SHA3(0x20, 2, SpecialTier),
 
     /*  Environmental Information   */
 
@@ -131,7 +131,7 @@ public enum OpCode {
     /**
      * (0x31) Get balance of the given account
      */
-    BALANCE(0x31, 1, VeryLowTier),
+    BALANCE(0x31, 1, ExtTier),
     /**
      * (0x32) Get execution origination address
      */
@@ -155,7 +155,7 @@ public enum OpCode {
      * (0x36) Get size of input data in current
      * environment
      */
-    CALLDATASIZE(0x36, 0, VeryLowTier),
+    CALLDATASIZE(0x36, 0, BaseTier),
     /**
      * (0x37) Copy input data in current
      * environment to memory
@@ -165,7 +165,7 @@ public enum OpCode {
      * (0x38) Get size of code running in
      * current environment
      */
-    CODESIZE(0x38, 0, VeryLowTier),
+    CODESIZE(0x38, 0, BaseTier),
     /**
      * (0x39) Copy code running in current
      * environment to memory
@@ -175,17 +175,17 @@ public enum OpCode {
      * (0x3a) Get price of gas in current
      * environment
      */
-    GASPRICE(0x3a, 0, VeryLowTier),
+    GASPRICE(0x3a, 0, BaseTier),
     /**
      * (0x3b) Get size of code running in
      * current environment with given offset
      */
-    EXTCODESIZE(0x3b, 1, VeryLowTier),
+    EXTCODESIZE(0x3b, 1, ExtTier),
     /**
      * (0x3c) Copy code running in current
      * environment to memory with given offset
      */
-    EXTCODECOPY(0x3c, 4, VeryLowTier),
+    EXTCODECOPY(0x3c, 4, ExtTier),
 
     /*  Block Information   */
 
@@ -193,27 +193,27 @@ public enum OpCode {
      * (0x40) Get hash of most recent
      * complete block
      */
-    BLOCKHASH(0x40, 1, VeryLowTier),
+    BLOCKHASH(0x40, 1, ExtTier),
     /**
      * (0x41) Get the block’s coinbase address
      */
-    COINBASE(0x41, 0, VeryLowTier),
+    COINBASE(0x41, 0, BaseTier),
     /**
      * (x042) Get the block’s timestamp
      */
-    TIMESTAMP(0x42, 0, VeryLowTier),
+    TIMESTAMP(0x42, 0, BaseTier),
     /**
      * (0x43) Get the block’s number
      */
-    NUMBER(0x43, 0, VeryLowTier),
+    NUMBER(0x43, 0, BaseTier),
     /**
      * (0x44) Get the block’s difficulty
      */
-    DIFFICULTY(0x44, 0, VeryLowTier),
+    DIFFICULTY(0x44, 0, BaseTier),
     /**
      * (0x45) Get the block’s gas limit
      */
-    GASLIMIT(0x45, 0, VeryLowTier),
+    GASLIMIT(0x45, 0, BaseTier),
 
     /*  Memory, Storage and Flow Operations */
 
@@ -236,15 +236,15 @@ public enum OpCode {
     /**
      * (0x54) Load word from storage
      */
-    SLOAD(0x54, 1, VeryLowTier),
+    SLOAD(0x54, 1, SpecialTier),
     /**
      * (0x55) Save word to storage
      */
-    SSTORE(0x55, 2, VeryLowTier),
+    SSTORE(0x55, 2, SpecialTier),
     /**
      * (0x56) Alter the program counter
      */
-    JUMP(0x56, 1, VeryLowTier),
+    JUMP(0x56, 1, MidTier),
     /**
      * (0x57) Conditionally alter the program
      * counter
@@ -257,7 +257,7 @@ public enum OpCode {
     /**
      * (0x59) Get the size of active memory
      */
-    MSIZE(0x59, 0, VeryLowTier),
+    MSIZE(0x59, 0, BaseTier),
     /**
      * (0x5a) Get the amount of available gas
      */
@@ -536,37 +536,37 @@ public enum OpCode {
     /**
      * (0xa[n]) log some data for some addres with 0..n tags [addr [tag0..tagn] data]
      */
-    LOG0(0xa0, 2, VeryLowTier),
-    LOG1(0xa1, 3, VeryLowTier),
-    LOG2(0xa2, 4, VeryLowTier),
-    LOG3(0xa3, 5, VeryLowTier),
-    LOG4(0xa4, 6, VeryLowTier),
+    LOG0(0xa0, 2, SpecialTier),
+    LOG1(0xa1, 3, SpecialTier),
+    LOG2(0xa2, 4, SpecialTier),
+    LOG3(0xa3, 5, SpecialTier),
+    LOG4(0xa4, 6, SpecialTier),
 
     /*  System operations   */
 
     /**
      * (0xf0) Create a new account with associated code
      */
-    CREATE(0xf0, 3, VeryLowTier),   //       [in_size] [in_offs] [gas_val] CREATE
+    CREATE(0xf0, 3, SpecialTier),   //       [in_size] [in_offs] [gas_val] CREATE
     /**
      * (cxf1) Message-call into an account
      */
-    CALL(0xf1, 7, VeryLowTier),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr]
+    CALL(0xf1, 7, SpecialTier),     //       [out_data_size] [out_data_start] [in_data_size] [in_data_start] [value] [to_addr]
     // [gas] CALL
     /**
      * (0xf2) Calls self, but grabbing the code from the
      * TO argument instead of from one's own address
      */
-    CALLCODE(0xf2, 7, VeryLowTier),
+    CALLCODE(0xf2, 7, SpecialTier),
     /**
      * (0xf3) Halt execution returning output data
      */
-    RETURN(0xf3, 2, VeryLowTier),
+    RETURN(0xf3, 2, ZeroTier),
     /**
      * (0xff) Halt execution and register account for
      * later deletion
      */
-    SUICIDE(0xff, 1, VeryLowTier);
+    SUICIDE(0xff, 1, ZeroTier);
 
     private final byte opcode;
     private final int require;
@@ -627,11 +627,11 @@ public enum OpCode {
         BaseTier(2),
         VeryLowTier(3),
         LowTier(5),
-        MidTier(5),
+        MidTier(8),
         HighTier(10),
-        ExtTier(7),
-        SpecialTier(1),
-        InvalidTier(21);
+        ExtTier(20),
+        SpecialTier(1), //TODO #POC9 is this correct?? "multiparam" from cpp
+        InvalidTier(0);
 
 
         private final int level;
