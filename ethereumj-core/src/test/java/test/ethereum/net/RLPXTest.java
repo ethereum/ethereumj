@@ -91,6 +91,7 @@ public class RLPXTest {
         assertEquals(key.toString(), key2.toString());
     }
 
+    @Ignore
     @Test // find node message
     public void test4() {
 
