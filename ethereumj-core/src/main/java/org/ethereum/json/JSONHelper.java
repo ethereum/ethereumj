@@ -45,6 +45,7 @@ import java.util.List;
  */
 public class JSONHelper {
 
+    @SuppressWarnings("uncheked")
     public static void dumpState(ObjectNode statesNode, String address, AccountState state, ContractDetails details) {
 
         List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());

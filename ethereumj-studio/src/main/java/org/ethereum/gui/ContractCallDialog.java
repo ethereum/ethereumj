@@ -41,6 +41,7 @@ import javax.swing.table.DefaultTableModel;
  * @author Roman Mandeleil
  * @since 18.05.14
  */
+@SuppressWarnings("unchecked")
 class ContractCallDialog extends JDialog implements MessageAwareDialog {
 
     private static final long serialVersionUID = -7561153561155037293L;

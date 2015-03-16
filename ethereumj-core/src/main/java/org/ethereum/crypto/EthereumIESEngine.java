@@ -46,10 +46,10 @@ public class EthereumIESEngine
      * set up for use with stream mode, where the key derivation function
      * is used to provide a stream of bytes to xor with the message.
      *  @param agree the key agreement used as the basis for the encryption
-     * @param kdf   the key derivation function used for byte generation
-     * @param mac   the message authentication code generator for the message
-     * @param hash
-     * @param cipher
+     * @param kdf    the key derivation function used for byte generation
+     * @param mac    the message authentication code generator for the message
+     * @param hash   hash ing function
+     * @param cipher the actual cipher
      */
     public EthereumIESEngine(
             BasicAgreement agree,
@@ -199,9 +199,9 @@ public class EthereumIESEngine
             }
             else
             {
-                cipher.init(true, new KeyParameter(K1));    
+                cipher.init(true, new KeyParameter(K1));
             }
-            
+
             C = new byte[cipher.getOutputSize(inLen)];
             len = cipher.processBytes(in, inOff, inLen, C, 0);
             len += cipher.doFinal(C, len);
@@ -292,7 +292,7 @@ public class EthereumIESEngine
         }
         else
         {
-            // Block cipher mode.        
+            // Block cipher mode.
             K1 = new byte[((IESWithCipherParameters)param).getCipherKeySize() / 8];
             K2 = new byte[param.getMacKeySize() / 8];
             K = new byte[K1.length + K2.length];
@@ -308,7 +308,7 @@ public class EthereumIESEngine
             }
             else
             {
-                cipher.init(false, new KeyParameter(K1));    
+                cipher.init(false, new KeyParameter(K1));
             }
 
             M = new byte[cipher.getOutputSize(inLen - V.length - mac.getMacSize())];
@@ -396,12 +396,12 @@ public class EthereumIESEngine
             }
         }
 
-        // Compute the common value and convert to byte array. 
+        // Compute the common value and convert to byte array.
         agree.init(privParam);
         BigInteger z = agree.calculateAgreement(pubParam);
         byte[] Z = BigIntegers.asUnsignedByteArray(agree.getFieldSize(), z);
 
-        // Create input to KDF.  
+        // Create input to KDF.
         byte[] VZ;
 //        if (V.length != 0)
 //        {
