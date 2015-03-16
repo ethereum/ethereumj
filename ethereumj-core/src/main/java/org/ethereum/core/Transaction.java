@@ -16,6 +16,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.security.SignatureException;
+import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.*;
 
@@ -216,7 +217,7 @@ public class Transaction {
 
     public boolean isContractCreation() {
         if (!parsed) rlpParse();
-        return this.receiveAddress == null || this.receiveAddress == ByteUtil.EMPTY_BYTE_ARRAY;
+        return this.receiveAddress == null || Arrays.equals(this.receiveAddress,ByteUtil.EMPTY_BYTE_ARRAY);
     }
 
     /*
