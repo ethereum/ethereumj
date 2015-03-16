@@ -24,10 +24,11 @@ public class GitHubVMTest {
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "extcodecopy0AddressTooBigRight");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "balance0");
     }
 
     @Test
+    @Ignore
     public void testArithmeticFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
         excluded.add("addmod1_overflowDiff");
@@ -98,6 +99,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
+    @Ignore
     @Test // testing full suite
     public void testvmSystemOperationsTestGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -120,7 +122,7 @@ public class GitHubVMTest {
         List<String> fileNames = getFileNamesForTreeSha(sha);
         List<String> excludedFiles =
                 Arrays.asList(
-                        "201501150842LARGE_DATA_IN_CALLCREATE_GOjson" //Badly named file 
+                        "201501150842LARGE_DATA_IN_CALLCREATE_GOjson" //Badly named file
                 );
 
         for (String fileName : fileNames) {
