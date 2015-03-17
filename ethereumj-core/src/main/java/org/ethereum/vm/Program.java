@@ -468,14 +468,6 @@ public class Program {
                     Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
         // 2.1 PERFORM THE GAS VALUE TX
-        // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
-        if (this.getGas().longValue() - msg.getGas().longValue() < 0) {
-            gasLogger.info("No gas for the internal call, \n" +
-                            "fromAddress={}, codeAddress={}",
-                    Hex.toHexString(senderAddress), Hex.toHexString(codeAddress));
-            throw new OutOfGasException();
-        }
-
         BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {

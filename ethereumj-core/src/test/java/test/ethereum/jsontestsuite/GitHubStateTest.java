@@ -48,7 +48,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
 
-    @Ignore //FIXME
+    //@Ignore
     @Test
     public void stInitCodeTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
@@ -97,8 +97,6 @@ public class GitHubStateTest {
     @Test
     public void stSolidityTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallLowLevelCreatesSolidity");
-        excluded.add("RecursiveCreateContractsCreate4Contracts");
         String json = JSONReader.loadJSONFromCommit("StateTests/stSolidityTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
