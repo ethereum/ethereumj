@@ -22,6 +22,7 @@ import java.util.Map;
 import javax.swing.*;
 import javax.swing.table.AbstractTableModel;
 
+@SuppressWarnings("unchecked")
 public class StateExplorerWindow extends JFrame {
 
     private ToolBar toolBar = null;

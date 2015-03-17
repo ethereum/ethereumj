@@ -37,8 +37,17 @@ antlr4 {
 compileJava.dependsOn antlr4
 
 test {
-    systemProperty "file.encoding", "UTF-8"
+
+    useTestNG()
+
     jvmArgs '-Xss16m'
+
+    testLogging {
+        events "failed"
+        exceptionFormat "short"
+    }
+
+    systemProperty "file.encoding", "UTF-8"
 }
 
 configurations {

@@ -5,6 +5,7 @@ import org.ethereum.net.rlpx.*;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -44,6 +45,7 @@ public class RLPXTest {
         assertEquals(key.toString(), key2.toString());
     }
 
+    @Ignore
     @Test // pong test
     public void test2() {
 

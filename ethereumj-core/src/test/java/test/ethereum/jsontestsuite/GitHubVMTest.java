@@ -25,11 +25,12 @@ public class GitHubVMTest {
     @Test
     public void runSingle() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("VMTests/vmEnvironmentalInfoTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "extcodecopy0AddressTooBigRight");
+        GitHubJSONTestSuite.runGitHubJsonVMTest(json, "balance0");
     }
 
     //@Ignore
     @Test
+    @Ignore
     public void testArithmeticFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
         // TODO: these are excluded due to bad wrapping behavior in ADDMOD/DataWord.add
@@ -157,7 +158,7 @@ public class GitHubVMTest {
         List<String> fileNames = getFileNamesForTreeSha(sha);
         List<String> excludedFiles =
                 Arrays.asList(
-                        "" //Badly named file 
+                        "" //Badly named file
                 );
 
         for (String fileName : fileNames) {

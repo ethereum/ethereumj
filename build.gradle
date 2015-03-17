@@ -11,6 +11,8 @@ subprojects {
     version = '0.9.0-SNAPSHOT'
 
     compileJava.options.encoding = 'UTF-8'
+    compileJava.options.compilerArgs << '-XDignore.symbol.file'
+
     compileTestJava.options.encoding = 'UTF-8'
 
     repositories {
