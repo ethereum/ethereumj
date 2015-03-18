@@ -357,8 +357,9 @@ public class TransactionExecutor {
         // delete the marked to die accounts
         if (result.getDeleteAccounts() == null) return;
         for (DataWord address : result.getDeleteAccounts()) {
-            repository.delete(address.getNoLeadZeroesData());
+            repository.delete(address.getLast20Bytes());
         }
+
     }
 
 

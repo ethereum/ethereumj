@@ -127,7 +127,6 @@ public class GitHubStateTest {
     //@Ignore
     @Test
     public void stBlockHashTest() throws ParseException {
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stBlockHashTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
@@ -142,7 +141,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
 
-    @Ignore //FIXME
+    //@Ignore
     @Test
     public void stTransactionTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
