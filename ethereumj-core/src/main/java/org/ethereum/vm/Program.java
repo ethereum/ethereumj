@@ -304,7 +304,12 @@ public class Program {
 
     public void suicide(DataWord obtainer) {
 
-        DataWord balance = getBalance(this.getOwnerAddress());
+        // 0) detect if this is a coinbase suicide
+        BigInteger gasDebit = invokeData.getGas().value().multiply(invokeData.getMinGasPrice().value());
+        boolean coinbaseSuicide = getCoinbase().equals(this.getOwnerAddress());
+        DataWord suicideBalance = new DataWord(getBalance(this.getOwnerAddress()).value().subtract(gasDebit).toByteArray());
+
+        DataWord balance = coinbaseSuicide ? suicideBalance : getBalance(this.getOwnerAddress());
         // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
             logger.info("Transfer to: [{}] heritage: [{}]",
@@ -316,6 +321,7 @@ public class Program {
 
         // 2) mark the account as for delete
         result.addDeleteAccount(this.getOwnerAddress());
+
     }
 
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {

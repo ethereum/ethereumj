@@ -40,7 +40,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    @Ignore //FIXME
+    @Ignore //FIXME need to support biginteger in Block class to pass these
     @Test
     public void stCallCreateCallCodeTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
@@ -72,7 +72,7 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
 
-    @Ignore //FIXME
+    @Ignore //FIXME need to expand VM memory limit to pass these
     @Test
     public void stMemoryStressTest() throws ParseException { // [V]
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
@@ -136,7 +136,7 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
         excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //TODO failing on cpp?
-        excluded.add("Call10"); //TODO gaslimit exceeds Block long
+        excluded.add("Call10"); //FIXME need to support biginteger in Block class to pass this 
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
@@ -145,10 +145,7 @@ public class GitHubStateTest {
     @Test
     public void stTransactionTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        //TODO: This is going to stay excluded until we refactor
-        //      the codebase to use bigintegers instead of longs
-        excluded.add("HighGasLimit");
-        excluded.add("SuicidesMixingCoinbase");
+        excluded.add("HighGasLimit");  //FIXME need to support biginteger in Block class to pass this
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
