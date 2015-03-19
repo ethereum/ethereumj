@@ -16,6 +16,8 @@ public class BlockBuilder {
                               List<TransactionTck> transactionsTck,
                               List<BlockHeaderTck> unclesTck) {
 
+        if (header == null) return null;
+
         List<BlockHeader> uncles = new ArrayList<>();
         if (unclesTck != null) for (BlockHeaderTck uncle : unclesTck)
             uncles.add(BlockHeaderBuilder.build(uncle));

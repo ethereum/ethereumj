@@ -1,7 +1,6 @@
 package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.*;
-import org.ethereum.crypto.EthereumIESEngine;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
@@ -181,20 +180,26 @@ public class TestRunner {
             byte[] rlp = parseData(blockTck.getRlp());
             Block tBlock = new Block(rlp);
 
-            // todo: validate tBlock = block  *!!!*
+//            ArrayList<String> outputSummary =
+//                    BlockHeaderValidator.valid(tBlock.getHeader(), block.getHeader());
 
-            blockTraffic.add(block);
+//            if (!outputSummary.isEmpty()){
+//                for (String output : outputSummary)
+//                    logger.error("%s", output);
+//
+//                System.exit(-1);
+//            }
 
+            blockTraffic.add(tBlock);
         }
 
 
 
         /* 3 */ // Inject blocks to the blockchain execution
-        for (Block block: blockTraffic){
+        for (Block block : blockTraffic) {
 
             blockchain.tryToConnect(block);
         }
-
 
 
         return null;
@@ -600,8 +605,6 @@ public class TestRunner {
 
         return track;
     }
-
-
 
 
     public ProgramTrace getTrace() {

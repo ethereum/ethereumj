@@ -128,7 +128,7 @@ public class BlockHeader {
     public byte[] calcDifficulty() {
         if (this.isGenesis())
             return Genesis.DIFFICULTY;
-        else { //todo find the right way to calc difficulty
+        else {
 //          Block parent = this.getParent();
 //          long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
 //          long newDifficulty = this.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
@@ -194,6 +194,11 @@ public class BlockHeader {
     public byte[] getDifficulty() {
         return difficulty;
     }
+
+    public BigInteger getDifficultyBI() {
+        return new BigInteger(1, difficulty);
+    }
+
 
     public void setDifficulty(byte[] difficulty) {
         this.difficulty = difficulty;

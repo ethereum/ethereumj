@@ -12,6 +12,7 @@ public class BlockTestCase {
     private List<BlockTck> blocks;
     private BlockHeaderTck genesisBlockHeader;
     private Map<String, AccountTck> pre;
+    private Map<String, AccountTck> postState;
 
 
     public BlockTestCase() {
@@ -39,6 +40,14 @@ public class BlockTestCase {
 
     public void setPre(Map<String, AccountTck> pre) {
         this.pre = pre;
+    }
+
+    public Map<String, AccountTck> getPostState() {
+        return postState;
+    }
+
+    public void setPostState(Map<String, AccountTck> postState) {
+        this.postState = postState;
     }
 
     @Override
