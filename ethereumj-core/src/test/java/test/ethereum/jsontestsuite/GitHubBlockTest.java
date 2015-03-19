@@ -13,7 +13,7 @@ import java.io.IOException;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "f6b8e28f40042a99818e85d66819482d96f409f2";
+    public String shacommit = "ee7ea6a4beaf8b40d1ad49d14e2b82f6aac4d48a";
 
     @Ignore
     @Test
@@ -29,7 +29,6 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json);
     }
 
-    @Ignore
     @Test
     public void runBCUncleTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcUncleTest.json", shacommit);

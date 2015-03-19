@@ -181,24 +181,6 @@ public class BlockTest {
         assertEquals(actualDifficulty, calcDifficulty);
     }
 
-    @Test
-    public void testCalcGasLimit() {
-        BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
-        Block genesis = Genesis.getInstance();
-        long gasLimit = blockchain.calcGasLimit(genesis.getHeader());
-        logger.info("Genesis gasLimit: [{}] ", gasLimit);
-        assertEquals(Genesis.GAS_LIMIT, gasLimit);
-
-        // Test with block
-        Block block1 = new Block(Hex.decode(POC9_GENESIS_HEX_RLP_ENCODED));
-        long calcGasLimit = blockchain.calcGasLimit(block1.getHeader());
-        long actualGasLimit = block1.getGasLimit();
-        blockchain.tryToConnect(block1);
-        logger.info("Block#1 actual gasLimit [{}] ", actualGasLimit);
-        logger.info("Block#1 calculated gasLimit [{}] ", calcGasLimit);
-        assertEquals(actualGasLimit, calcGasLimit);
-    }
-
 
     @Ignore
     @Test

@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.Constants;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
@@ -9,12 +10,9 @@ import org.ethereum.net.BlockQueue;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.vm.ProgramInvokeFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
@@ -23,23 +21,22 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.util.*;
 
+import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
  * although it does have some differences.
- *
+ * <p/>
  * The main difference between Ethereum and Bitcoin with regard to the blockchain architecture
  * is that, unlike Bitcoin, Ethereum blocks contain a copy of both the transaction list
  * and the most recent state. Aside from that, two other values, the block number and
  * the difficulty, are also stored in the block.
- *
+ * <p/>
  * The block validation algorithm in Ethereum is as follows:
  * <ol>
  * <li>Check if the previous block referenced exists and is valid.</li>
@@ -63,8 +60,6 @@ import static org.ethereum.core.Denomination.SZABO;
 @Component
 public class BlockchainImpl implements Blockchain {
 
-    /* A scalar value equal to the minimum limit of gas expenditure per block */
-    private static final long MIN_GAS_LIMIT = 125000L;
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");
     private static final Logger stateLogger = LoggerFactory.getLogger("state");
@@ -108,7 +103,10 @@ public class BlockchainImpl implements Blockchain {
     private List<Block> garbage = new ArrayList<>();
 
 
-    public BlockchainImpl(){};
+    public BlockchainImpl() {
+    }
+
+    ;
 
     //todo: autowire over constructor
     public BlockchainImpl(BlockStore blockStore, Repository repository,
@@ -250,9 +248,9 @@ public class BlockchainImpl implements Blockchain {
         listener.onBlockReciepts(receipts);
 
         if (blockQueue != null &&
-            blockQueue.size() == 0 &&
-            !syncDoneCalled &&
-            channelManager.isAllSync()) {
+                blockQueue.size() == 0 &&
+                !syncDoneCalled &&
+                channelManager.isAllSync()) {
 
             logger.info("Sync done");
             syncDoneCalled = true;
@@ -266,27 +264,50 @@ public class BlockchainImpl implements Blockchain {
         return blockStore.getBlockByHash(header.getParentHash());
     }
 
-    /**
-     * Calculate GasLimit
-     * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (25)
-     *
-     * @return long value of the gasLimit
-     */
-    public long calcGasLimit(BlockHeader header) {
-        if (header.isGenesis())
-            return Genesis.GAS_LIMIT;
-
-        Block parent = getParent(header);
-        return Math.max(MIN_GAS_LIMIT, (parent.getGasLimit() * (1024 - 1) + (parent.getGasUsed() * 6 / 5)) / 1024);
-    }
-
 
     public boolean isValid(BlockHeader header) {
 
-        return header.getDifficulty() == header.calcDifficulty() // difficulty meets requirements
-                && header.getGasLimit() == calcGasLimit(header) // gasLimit meets requirements
-                && header.getTimestamp() > getParent(header).getTimestamp() // timestamp meets requirements
-                && (header.getExtraData() == null || header.getExtraData().length <= 1024); // extraData doesn't exceed 1024 bytes
+
+        Block parentBlock = getParent(header);
+
+        BigInteger parentDifficulty = parentBlock.getDifficultyBI();
+        long parentTimestamp = parentBlock.getTimestamp();
+
+        BigInteger minDifficulty = header.getTimestamp() >= parentTimestamp + DURATION_LIMIT ?
+                parentBlock.getDifficultyBI().subtract(parentDifficulty.divide(BigInteger.valueOf(Constants.DIFFICULTY_BOUND_DIVISOR))) :
+                parentBlock.getDifficultyBI().add(parentDifficulty.divide(BigInteger.valueOf(Constants.DIFFICULTY_BOUND_DIVISOR)));
+
+        BigInteger difficulty = new BigInteger(1, header.getDifficulty());
+
+        if (header.getGasLimit() < header.getGasUsed()) {
+            logger.error("Block invalid: header.getGasLimit() < header.getGasUsed()");
+            return false;
+        }
+
+        if (difficulty.compareTo(minDifficulty) == -1) {
+            logger.error("Block invalid: difficulty < minDifficulty");
+            return false;
+        }
+
+        if (header.getGasLimit() < MIN_GAS_LIMIT) {
+            logger.error("Block invalid: header.getGasLimit() < MIN_GAS_LIMIT");
+            return false;
+        }
+
+        if (header.getExtraData() != null &&  header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
+            logger.error("Block invalid: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE");
+            return false;
+        }
+
+        if (header.getGasLimit() < Constants.MIN_GAS_LIMIT ||
+                header.getGasLimit() < parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
+                header.getGasLimit() > parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR){
+
+            logger.error("Block invalid: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR");
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -299,26 +320,33 @@ public class BlockchainImpl implements Blockchain {
     private boolean isValid(Block block) {
 
         boolean isValid = true;
-        if (isValid) return (isValid); // todo get back to the real header validation
 
         if (!block.isGenesis()) {
             isValid = isValid(block.getHeader());
 
+            if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
+                logger.error("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
+                return false;
+            };
+
             for (BlockHeader uncle : block.getUncleList()) {
+
                 // - They are valid headers (not necessarily valid blocks)
-                isValid = isValid(uncle);
-                // - Their parent is a kth generation ancestor for k in {2, 3, 4, 5, 6, 7}
+                if (!isValid(uncle)) return false;
+
                 long generationGap = block.getNumber() - getParent(uncle).getNumber();
-                isValid = generationGap > 1 && generationGap < 8;
-                // - They were not uncles of the kth generation ancestor for k in {1, 2, 3, 4, 5, 6}
-                generationGap = block.getNumber() - uncle.getNumber();
-                isValid = generationGap > 0 && generationGap < 7;
+                isValid = generationGap > 1 && generationGap < UNCLE_GENERATION_LIMIT;
+                if (!isValid){
+
+                    logger.error("Uncle invalid: generationGap > 1 && generationGap < UNCLE_GENERATION_LIMIT");
+                    return false;
+                }
+
+
             }
         }
-        if (!isValid)
-            logger.warn("WARNING: Invalid - {}", this);
-        return isValid;
 
+        return isValid;
     }
 
     private List<TransactionReceipt> processBlock(Block block) {

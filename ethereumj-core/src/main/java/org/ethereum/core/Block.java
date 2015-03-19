@@ -219,6 +219,12 @@ public class Block {
         return this.header.getDifficulty();
     }
 
+    public BigInteger getDifficultyBI() {
+        if (!parsed) parseRLP();
+        return this.header.getDifficultyBI();
+    }
+
+
     public BigInteger getCumulativeDifficulty() {
         if (!parsed) parseRLP();
         BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
