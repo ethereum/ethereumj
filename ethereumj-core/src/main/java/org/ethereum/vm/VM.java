@@ -180,7 +180,6 @@ public class VM {
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
                     //check to see if account does not exist and is not a precompiled contract
-                    //TODO #POC9 isExist() is broken.
                     if (op != CALLCODE && !program.result.getRepository().isExist(callAddressWord.getLast20Bytes()))
                       gasCost += GasCost.NEW_ACCT_CALL;
 

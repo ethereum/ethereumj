@@ -74,7 +74,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore  //FIXME - 60M testfile
+    @Ignore  //FIXME - 60M - need new fast downloader 
     @Test
     public void testvmInputLimitsTest1FromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -82,7 +82,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore //FIXME - 50M testfile
+    @Ignore //FIXME - 50M - need to handle large filesizes
     @Test
     public void testvmInputLimitsTest2FromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -90,7 +90,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore //FIXME - 20M testfile
+    @Ignore //FIXME - 20M - possibly provide percentage indicator
     @Test
     public void testvmInputLimitsLightTestFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
@@ -154,7 +154,7 @@ public class GitHubVMTest {
         List<String> fileNames = getFileNamesForTreeSha(sha);
         List<String> excludedFiles =
                 Arrays.asList(
-                        "201503102037PYTHON.json"
+                        ""
                 );
 
         for (String fileName : fileNames) {

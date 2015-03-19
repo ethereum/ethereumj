@@ -474,7 +474,7 @@ public class Program {
                     Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
         // 2.1 PERFORM THE GAS VALUE TX
-        BigInteger endowment = msg.getEndowment().value();
+        BigInteger endowment = msg.getEndowment().value(); //TODO #POC9 add 1024 stack check <=
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
             stackPushZero();
@@ -938,6 +938,17 @@ public class Program {
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
+
+        //CHECKS:
+        //TODO this is duplicated in callToAddress(), move to VM class instead ?
+        byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
+        BigInteger endowment = msg.getEndowment().value();
+        BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
+        if (senderBalance.compareTo(endowment) < 0) {
+            stackPushZero();
+            this.refundGas(msg.getGas().longValue(), "refund gas from message call");
+            return;
+        }
 
         byte[] data = this.memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
         this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), msg.getEndowment().value().negate());
