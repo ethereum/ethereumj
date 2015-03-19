@@ -30,7 +30,6 @@ public class GitHubVMTest {
 
     //@Ignore
     @Test
-    @Ignore
     public void testArithmeticFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
         // TODO: these are excluded due to bad wrapping behavior in ADDMOD/DataWord.add
@@ -135,9 +134,6 @@ public class GitHubVMTest {
     @Test // testing full suite
     public void testvmSystemOperationsTestGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRecursiveBomb1");
-        excluded.add("CallRecursiveBomb2");
-        excluded.add("CallRecursiveBomb3");
         String json = JSONReader.loadJSONFromCommit("VMTests/vmSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
@@ -150,7 +146,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore //FIXME
+    //@Ignore
     @Test // testing full suite
     public void testRandomVMGitHub() throws ParseException {
 
@@ -158,7 +154,7 @@ public class GitHubVMTest {
         List<String> fileNames = getFileNamesForTreeSha(sha);
         List<String> excludedFiles =
                 Arrays.asList(
-                        "" //Badly named file
+                        "201503102037PYTHON.json"
                 );
 
         for (String fileName : fileNames) {
