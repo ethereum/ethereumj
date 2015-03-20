@@ -1,11 +1,15 @@
 package org.ethereum.datasource;
 
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBException;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+
+import static org.ethereum.util.ByteUtil.wrap;
 
 public class HashMapDB implements KeyValueDataSource {
 
@@ -52,7 +56,12 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public Set<byte[]> keys() {
-        return null;
+
+        Set<byte[]> keys = new HashSet<>();
+        for (ByteArrayWrapper key : storage.keySet()){
+            keys.add(key.getData());
+        }
+        return keys;
     }
 
     @Override

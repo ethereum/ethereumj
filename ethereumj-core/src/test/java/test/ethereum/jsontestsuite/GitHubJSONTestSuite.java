@@ -198,12 +198,12 @@ public class GitHubJSONTestSuite {
             logger.info("Running test: {}", testName);
             List<String> result = runner.runTestCase(blockTestCase);
 
-//            if (!result.isEmpty())
-//                for (String single : result)
-//                    logger.info(single);
+            if (!result.isEmpty())
+                for (String single : result)
+                    logger.info(single);
 
-//            Assert.assertTrue(result.isEmpty());
-//            logger.info(" *** Passed: " + testName);
+            Assert.assertTrue(result.isEmpty());
+            logger.info(" *** Passed: " + testName);
         }
     }
 

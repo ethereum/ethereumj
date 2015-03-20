@@ -19,7 +19,7 @@ public class AccountTck {
     String code;
     String nonce;
 
-    Map<DataWord, DataWord> storage = new HashMap<>();
+    Map<String, String> storage = new HashMap<>();
 
     public AccountTck() {
     }
@@ -48,11 +48,11 @@ public class AccountTck {
         this.nonce = nonce;
     }
 
-    public Map<DataWord, DataWord> getStorage() {
+    public Map<String, String> getStorage() {
         return storage;
     }
 
-    public void setStorage(Map<DataWord, DataWord> storage) {
+    public void setStorage(Map<String, String> storage) {
         this.storage = storage;
     }
 
