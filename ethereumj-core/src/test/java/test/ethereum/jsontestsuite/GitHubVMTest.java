@@ -18,8 +18,8 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "ca6dfa9c0155b46ea205ce4edc5178f5772d28e3";
-    //public List<String> vmTestFiles = getFileNamesForTreeSha(shacommit);
+    //Last known good commit: ca6dfa9c0155b46ea205ce4edc5178f5772d28e3
+    public String shacommit = "473f67fcb9f6d3551e4a2db82b84a66c19fe90d5";
 
     //@Ignore
     @Test

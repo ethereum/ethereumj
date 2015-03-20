@@ -16,7 +16,8 @@ import java.util.Set;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "ca6dfa9c0155b46ea205ce4edc5178f5772d28e3";
+    //Last known good commit: ca6dfa9c0155b46ea205ce4edc5178f5772d28e3
+    public String shacommit = "473f67fcb9f6d3551e4a2db82b84a66c19fe90d5";
 
     //@Ignore
     @Test // this method is mostly for hands-on convenient testing
@@ -40,10 +41,16 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runGitHubJsonStateTest(json);
     }
 
-    @Ignore //FIXME need to support biginteger in Block class to pass these
+    //@Ignore
     @Test
     public void stCallCreateCallCodeTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
+        excluded.add("Callcode1024BalanceTooLow"); //FIXME block limits 
+        excluded.add("Call1024OOG"); //FIXME block limits 
+        excluded.add("Callcode1024OOG"); //FIXME block limits 
+        excluded.add("Call1024BalanceTooLow");
+        excluded.add("CallLoseGasOOG"); //FIXME block limits 
+        excluded.add("CallcodeLoseGasOOG"); //FIXME block limits
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }
