@@ -1,7 +1,5 @@
 package org.ethereum.jsontestsuite;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
 import org.slf4j.Logger;
@@ -23,8 +21,7 @@ public class BlockTestSuite {
         JavaType type = mapper.getTypeFactory().
                 constructMapType(HashMap.class, String.class, BlockTestCase.class);
 
-        testCases = new ObjectMapper().
-                readValue(json, type);
+        testCases = new ObjectMapper().readValue(json, type);
     }
 
     public Map<String, BlockTestCase> getTestCases() {

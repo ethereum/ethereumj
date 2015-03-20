@@ -1,4 +1,4 @@
-package org.ethereum.jsontestsuite;
+package org.ethereum.jsontestsuite.validators;
 
 import org.ethereum.core.BlockHeader;
 import org.spongycastle.util.encoders.Hex;

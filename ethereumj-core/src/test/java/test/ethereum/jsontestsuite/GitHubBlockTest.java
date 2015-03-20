@@ -13,28 +13,43 @@ import java.io.IOException;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "ee7ea6a4beaf8b40d1ad49d14e2b82f6aac4d48a";
+    public String shacommit = "473f67fcb9f6d3551e4a2db82b84a66c19fe90d5";
 
     @Ignore
     @Test
     public void runBCBlockChainTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("BlockTests/bcBlockChainTest.json", shacommit);
+        String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidHeaderTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json);
     }
 
     @Ignore
     @Test
-    public void runBCInvalidHeaderTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidHeaderTest.json", shacommit);
+    public void runBCInvalidRLPTest() throws ParseException, IOException {
+        String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidRLPTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json);
     }
 
+    @Ignore
+    @Test
+    public void runBCJSAPITest() throws ParseException, IOException {
+        String json = JSONReader.loadJSONFromCommit("BlockTests/bcJS_API_Test.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonBlockTest(json);
+    }
+
+
+    @Ignore
     @Test
     public void runBCUncleTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcUncleTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json);
     }
 
+    @Ignore
+    @Test
+    public void runBCValidBlockTest() throws ParseException, IOException {
+        String json = JSONReader.loadJSONFromCommit("BlockTests/bcValidBlockTest.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonBlockTest(json);
+    }
 
 
 

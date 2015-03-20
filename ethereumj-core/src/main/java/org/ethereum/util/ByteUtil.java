@@ -12,6 +12,8 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ByteUtil {
 
@@ -404,5 +406,25 @@ public class ByteUtil {
 
     public static boolean isNullOrZeroArray(byte[] array){
         return (array == null) || (array.length == 0) || (array.length == 1 && array[0] == 0);
+    }
+
+
+    public static Set<byte[]> difference(Set<byte[]> setA, Set<byte[]> setB){
+
+        Set<byte[]> result = new HashSet<>();
+
+        for (byte[] elementA : setA){
+            boolean found = false;
+            for (byte[] elementB : setB){
+
+                if (Arrays.equals(elementA, elementB)){
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) result.add(elementA);
+        }
+
+        return result;
     }
 }
