@@ -16,7 +16,7 @@ import java.util.Set;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    //Last known good commit: ca6dfa9c0155b46ea205ce4edc5178f5772d28e3
+    //Last known good commit: 5af1002b96f34cd2c9252c1a6636826d47411ccd
     public String shacommit = "5af1002b96f34cd2c9252c1a6636826d47411ccd";
 
     //@Ignore
