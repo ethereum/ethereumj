@@ -2,27 +2,16 @@ package org.ethereum.core;
 
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.GasCost;
-import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvoke;
-import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.ProgramResult;
-import org.ethereum.vm.VM;
-
+import org.ethereum.vm.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
-import java.lang.Long;
-
 import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -81,7 +70,7 @@ public class TransactionExecutor {
         // VALIDATE THE NONCE
         BigInteger nonce = track.getNonce(senderAddress);
         BigInteger txNonce = new BigInteger(1, tx.getNonce());
-        if (nonce.compareTo(txNonce) != 0) {
+        if (isNotEqual(nonce, txNonce)) {
             if (stateLogger.isWarnEnabled())
                 stateLogger.warn("Invalid nonce account.nonce={} tx.nonce={}",
                         nonce, txNonce);
@@ -92,8 +81,8 @@ public class TransactionExecutor {
         }
 
         //Insert gas cost protection
-        BigInteger gasLimit = new BigInteger(1, tx.getGasLimit());
-        if (gasLimit.compareTo(BigInteger.ZERO) == 0) {
+        BigInteger txGasLimit = new BigInteger(1, tx.getGasLimit());
+        if (isZero(txGasLimit)) {  // isZero()
             logger.debug("No gas limit set on transaction: hash={}",
                     Hex.toHexString(tx.getHash()));
 
@@ -103,10 +92,10 @@ public class TransactionExecutor {
         }
 
         //Check: gas limit is not lessthan total tx cost
-        BigInteger totalCost = new BigInteger( Long.toString(GasCost.TRANSACTION + 
-          GasCost.TX_NO_ZERO_DATA * tx.nonZeroDataBytes() + 
-          GasCost.TX_ZERO_DATA * tx.zeroDataBytes()), 10);
-        if (gasLimit.compareTo(totalCost) == -1) {
+        BigInteger txDataCost = new BigInteger(Long.toString(GasCost.TRANSACTION +
+                GasCost.TX_NO_ZERO_DATA * tx.nonZeroDataBytes() +
+                GasCost.TX_ZERO_DATA * tx.zeroDataBytes()), 10);
+        if (isLessThan(txGasLimit, txDataCost)) {
             logger.debug("Not enough gas to pay for the transaction: hash={}",
                     Hex.toHexString(tx.getHash()));
 
@@ -115,26 +104,25 @@ public class TransactionExecutor {
             return;
         }
 
-        BigInteger startGasUsed = new BigInteger( Long.toString( this.currentBlock.getGasUsed() ) );
-        BigInteger startGasLimit = new BigInteger( Long.toString( this.currentBlock.getGasLimit() ) );
-        if( startGasUsed.add(gasLimit).compareTo( startGasLimit ) == 1) {
-            logger.debug("Too much gas used in this block: require={}", startGasLimit.toString());
-
+        BigInteger blockGasUsed = toBI(currentBlock.getGasUsed());
+        BigInteger blockGasLimit = toBI(currentBlock.getGasLimit());
+        if (isNotCovers(blockGasLimit, sum(blockGasUsed, txGasLimit))) {
+            logger.debug("Too much gas used in this block: require={}", blockGasLimit.toString());
             receipt.setCumulativeGas(0);
             this.receipt = receipt;
             return;
         }
 
         // GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
-        BigInteger gasPrice = new BigInteger(1, tx.getGasPrice());
-        BigInteger gasDebit = new BigInteger(1, tx.getGasLimit()).multiply(gasPrice);
+        BigInteger gasPrice = toBI(tx.getGasPrice());
+        BigInteger gasDebit = toBI(tx.getGasLimit()).multiply(gasPrice);
         logger.info("Gas price limited to [{} wei]", gasDebit.toString());
 
         // Debit the actual total gas value from the sender
         // the purchased gas will be available for
         // the contract in the execution state,
         // it can be retrieved using GAS op
-        BigInteger txValue = new BigInteger(1, tx.getValue());
+        BigInteger txValue = toBI(tx.getValue());
         if (track.getBalance(senderAddress).compareTo(gasDebit.add(txValue)) == -1) {
             logger.debug("No gas to start the execution: sender={}",
                     Hex.toHexString(senderAddress));
@@ -167,10 +155,9 @@ public class TransactionExecutor {
         }
 
         // THE SIMPLE VALUE/BALANCE CHANGE
-        if (track.getBalance(senderAddress).compareTo(txValue) >= 0) {
+        if (isCovers(track.getBalance(senderAddress), txValue)) {
 
-            track.addBalance(receiverAddress, txValue); // balance will be read again below
-            track.addBalance(senderAddress, txValue.negate());
+            transfer(track, senderAddress, receiverAddress, txValue);
 
             if (stateLogger.isDebugEnabled())
                 stateLogger.debug("Update value balance \n "
@@ -183,7 +170,8 @@ public class TransactionExecutor {
 
         // UPDATE THE NONCE
         track.increaseNonce(senderAddress);
-        logger.info("increased nonce to: [{}], addr: [{}]", track.getNonce(senderAddress), Hex.toHexString(senderAddress));
+        logger.info("increased nonce to: [{}], addr: [{}]",
+                track.getNonce(senderAddress), Hex.toHexString(senderAddress));
 
         // CHARGE FOR GAS
         track.addBalance(senderAddress, gasDebit.negate());
@@ -199,7 +187,7 @@ public class TransactionExecutor {
                     Hex.toHexString(senderAddress), gasDebit);
 
         //Check: Do not execute if transaction has debit amount of 0 and there is code
-        if (gasDebit.compareTo(BigInteger.ZERO) == 0 && tx.getData() != null) {
+        if (isZero(gasDebit) && tx.getData() != null) {
             logger.debug("Transaction gas debits are zero! Cannot execute any code: sender={}",
                     Hex.toHexString(senderAddress));
 
@@ -240,7 +228,6 @@ public class TransactionExecutor {
                 applyProgramResult(result, gasDebit, gasPrice, trackTx,
                         senderAddress, receiverAddress, coinbase, isContractCreation);
 
-
                 List<LogInfo> logs = result.getLogInfoList();
                 receipt.setLogInfoList(logs);
 
@@ -252,17 +239,17 @@ public class TransactionExecutor {
             }
             trackTx.commit();
         } else {
-            // REFUND GASDEBIT EXCEPT FOR FEE (500 + 5*TX_NO_ZERO_DATA)
+
+            // REFUND GAS_DEBIT EXCEPT FOR FEE (500 + 5*TX_NO_ZERO_DATA)
             long dataCost = tx.getData() == null ? 0 :
                     tx.nonZeroDataBytes() * GasCost.TX_NO_ZERO_DATA +
                             tx.zeroDataBytes() * GasCost.TX_ZERO_DATA;
             gasUsed = GasCost.TRANSACTION + dataCost;
 
-            BigInteger refund = gasDebit.subtract(BigInteger.valueOf(gasUsed).multiply(gasPrice));
-            if (refund.signum() > 0) {
-                track.addBalance(senderAddress, refund);
-                track.addBalance(coinbase, refund.negate());
-            }
+            BigInteger refund = gasDebit.subtract(toBI(gasUsed).multiply(gasPrice));
+            if (isPositive(refund))
+                transfer(track, coinbase, senderAddress, refund);
+
         }
 
         receipt.setCumulativeGas(gasUsed);
@@ -284,15 +271,13 @@ public class TransactionExecutor {
             throw result.getException();
         }
 
-
-        BigInteger refund = gasDebit.subtract(BigInteger.valueOf(
-                result.getGasUsed()).multiply(gasPrice));
+        BigInteger refund = gasDebit.subtract(toBI(result.getGasUsed()).multiply(gasPrice));
 
         // accumulate refunds for suicides
         result.futureRefundGas(
-          GasCost.SUICIDE_REFUND * (result.getDeleteAccounts() == null ? 0 : result.getDeleteAccounts().size()));
+                GasCost.SUICIDE_REFUND * (result.getDeleteAccounts() == null ? 0 : result.getDeleteAccounts().size()));
 
-        if (refund.signum() > 0) {
+        if (isPositive(refund)) {
             if (stateLogger.isDebugEnabled())
                 stateLogger
                         .debug("After contract execution the sender address refunded with gas leftover, "
@@ -300,17 +285,16 @@ public class TransactionExecutor {
                                 Hex.toHexString(senderAddress),
                                 Hex.toHexString(contractAddress), refund);
             // gas refund
-            repository.addBalance(senderAddress, refund);
-            repository.addBalance(coinbase, refund.negate());
+            transfer(repository, coinbase, senderAddress, refund);
         }
 
         if (result.getFutureRefund() > 0) {
 
             //TODO #POC9 add getGasFree() as method to ProgramResult?
-            BigInteger gasFree = gasDebit.subtract(BigInteger.valueOf(result.getGasUsed()));
+            BigInteger gasFree = gasDebit.subtract(toBI(result.getGasUsed()));
 
-            long futureRefund = Math.min(result.getFutureRefund(), gasDebit.subtract(gasFree).longValue() / 2 );
-            BigInteger futureRefundBI = BigInteger.valueOf(futureRefund);
+            long futureRefund = Math.min(result.getFutureRefund(), gasDebit.subtract(gasFree).longValue() / 2);
+            BigInteger futureRefundBI = toBI(futureRefund);
             BigInteger futureRefundVal = futureRefundBI.multiply(gasPrice);
 
             if (stateLogger.isDebugEnabled())
@@ -319,8 +303,8 @@ public class TransactionExecutor {
                                         + "\n sender={} \n contract={}  \n gas_refund= {}",
                                 Hex.toHexString(senderAddress),
                                 Hex.toHexString(contractAddress), futureRefundVal);
-            repository.addBalance(senderAddress, futureRefundVal);
-            repository.addBalance(coinbase, futureRefundVal.negate());
+
+            transfer(repository, coinbase, senderAddress, futureRefundVal);
         }
 
 
@@ -343,12 +327,10 @@ public class TransactionExecutor {
                 BigInteger balance = repository.getBalance(senderAddress);
 
                 // check if can be charged for the contract data save
-                if (storageCost.compareTo(balance) > 1) {
+                if (isCovers(balance, storageCost))
+                    transfer(repository, senderAddress, coinbase, storageCost);
+                else
                     bodyCode = EMPTY_BYTE_ARRAY;
-                } else {
-                    repository.addBalance(coinbase, storageCost);
-                    repository.addBalance(senderAddress, storageCost.negate());
-                }
 
                 repository.saveCode(contractAddress, bodyCode);
             }

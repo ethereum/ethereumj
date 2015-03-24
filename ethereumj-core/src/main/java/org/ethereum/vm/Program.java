@@ -3,6 +3,7 @@ package org.ethereum.vm;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
+import org.ethereum.util.BIUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
@@ -36,6 +37,9 @@ import java.util.Set;
 import java.util.Stack;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.util.BIUtil.isNotCovers;
+import static org.ethereum.util.BIUtil.isPositive;
+import static org.ethereum.util.BIUtil.toBI;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -353,8 +357,8 @@ public class Program {
         byte[] nonce = result.getRepository().getNonce(senderAddress).toByteArray();
         byte[] newAddress = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
 
-        //In case of hashing collisions, check for any balance before createAccount() 
-        BigInteger oldBalance = result.getRepository().getBalance(newAddress); 
+        //In case of hashing collisions, check for any balance before createAccount()
+        BigInteger oldBalance = result.getRepository().getBalance(newAddress);
         result.getRepository().createAccount(newAddress);
         result.getRepository().addBalance(newAddress,oldBalance);
 
@@ -476,7 +480,7 @@ public class Program {
         // 2.1 PERFORM THE GAS VALUE TX
         BigInteger endowment = msg.getEndowment().value(); //TODO #POC9 add 1024 stack check <=
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
-        if (senderBalance.compareTo(endowment) < 0) {
+        if (isNotCovers(senderBalance, endowment)) {
             stackPushZero();
             this.refundGas(msg.getGas().longValue(), "refund gas from message call");
             return;
@@ -546,8 +550,8 @@ public class Program {
 
         // 5. REFUND THE REMAIN GAS
         if (result != null) {
-            BigInteger refundGas = msg.getGas().value().subtract(BigInteger.valueOf(result.getGasUsed()));
-            if (refundGas.signum() == 1) {
+            BigInteger refundGas = msg.getGas().value().subtract(toBI(result.getGasUsed()));
+            if (isPositive(refundGas)) {
                 this.refundGas(refundGas.longValue(), "remaining gas from the internal call");
                 if (gasLogger.isInfoEnabled())
                     gasLogger.info("The remaining gas refunded, account: [{}], gas: [{}] ",
