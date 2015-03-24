@@ -1,10 +1,6 @@
 package org.ethereum.manager;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
-import org.ethereum.core.Wallet;
+import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
@@ -146,9 +142,10 @@ public class WorldManager {
         Block bestBlock = blockStore.getBestBlock();
         if (bestBlock == null) {
             logger.info("DB is empty - adding Genesis");
-            for (String address : Genesis.getPremine()) {
-                repository.createAccount(Hex.decode(address));
-                repository.addBalance(Hex.decode(address), Genesis.PREMINE_AMOUNT);
+
+            for (PremineRaw raw : Genesis.getPremine()) {
+                repository.createAccount(raw.getAddr());
+                repository.addBalance(raw.getAddr(), raw.getValue().multiply(raw.getDenomination().value()));
             }
 
             blockStore.saveBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>());
