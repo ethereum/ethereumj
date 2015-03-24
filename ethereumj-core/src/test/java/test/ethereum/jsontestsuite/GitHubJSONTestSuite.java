@@ -182,6 +182,21 @@ public class GitHubJSONTestSuite {
         }
     }
 
+    protected static void runGitHubJsonSingleBlockTest(String json, String testName) throws ParseException, IOException {
+
+        BlockTestSuite testSuite = new BlockTestSuite(json);
+        Set<String> testCollection = testSuite.getTestCases().keySet();
+
+        for (String testCase : testCollection) {
+            if (testCase.equals(testName))
+                logger.info(" => " + testCase);
+            else
+                logger.info("    " + testCase);
+        }
+
+        runSingleBlockTest(testSuite, testName);
+    }
+
 
     protected static void runGitHubJsonBlockTest(String json) throws ParseException, IOException {
         Assume.assumeFalse("Online test is not available", json.equals(""));
@@ -189,22 +204,26 @@ public class GitHubJSONTestSuite {
         BlockTestSuite testSuite = new BlockTestSuite(json);
         Set<String> testCollection = testSuite.getTestCases().keySet();
 
-
         for (String testName : testCollection) {
-
-            BlockTestCase blockTestCase =  testSuite.getTestCases().get(testName);
-            TestRunner runner = new TestRunner();
-
-            logger.info("Running test: {}", testName);
-            List<String> result = runner.runTestCase(blockTestCase);
-
-            if (!result.isEmpty())
-                for (String single : result)
-                    logger.info(single);
-
-            Assert.assertTrue(result.isEmpty());
-            logger.info(" *** Passed: " + testName);
+            runSingleBlockTest(testSuite, testName);
         }
+    }
+
+    private static void runSingleBlockTest(BlockTestSuite testSuite, String testName){
+
+        BlockTestCase blockTestCase =  testSuite.getTestCases().get(testName);
+        TestRunner runner = new TestRunner();
+
+        logger.info("Running test: {}", testName);
+        List<String> result = runner.runTestCase(blockTestCase);
+
+        if (!result.isEmpty())
+            for (String single : result)
+                logger.info(single);
+
+        Assert.assertTrue(result.isEmpty());
+        logger.info(" *** Passed: " + testName);
+
     }
 
 

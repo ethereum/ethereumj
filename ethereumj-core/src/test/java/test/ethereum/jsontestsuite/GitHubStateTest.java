@@ -23,7 +23,7 @@ public class GitHubStateTest {
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException {
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "CallRecursiveBombLog2");
+        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createWithInvalidOpcode");
     }
 
     //@Ignore
@@ -148,7 +148,7 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws ParseException {
         Set<String> excluded = new HashSet<>();
         excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //TODO failing on cpp?
-        excluded.add("Call10"); //FIXME need to support biginteger in Block class to pass this 
+        excluded.add("Call10"); //FIXME need to support biginteger in Block class to pass this
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);
     }

@@ -17,6 +17,14 @@ public class GitHubBlockTest {
 
     @Ignore
     @Test
+    public void runSingleTest() throws ParseException, IOException {
+        String json = JSONReader.loadJSONFromCommit("BlockTests/bcUncleTest.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "oneUncleGeneration7");
+    }
+
+
+    @Ignore
+    @Test
     public void runBCBlockChainTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidHeaderTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json);

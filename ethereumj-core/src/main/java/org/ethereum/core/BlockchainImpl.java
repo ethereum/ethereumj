@@ -216,6 +216,11 @@ public class BlockchainImpl implements Blockchain {
     @Override
     public void add(Block block) {
 
+        if(!isValid(block)){
+            logger.warn("Invalid block with number: {}", block.getNumber());
+            return;
+        }
+
         track = repository.startTracking();
         if (block == null)
             return;
@@ -229,9 +234,6 @@ public class BlockchainImpl implements Blockchain {
         }
 
         List<TransactionReceipt> receipts = processBlock(block);
-        stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
-                block.getNumber(),
-                Hex.toHexString(repository.getRoot()));
 
         track.commit();
         repository.flush(); // saving to the disc
@@ -352,18 +354,14 @@ public class BlockchainImpl implements Blockchain {
     private List<TransactionReceipt> processBlock(Block block) {
 
         List<TransactionReceipt> receipts = new ArrayList<>();
-        if (isValid(block)) {
-            if (!block.isGenesis()) {
-                if (!CONFIG.blockChainOnly()) {
-                    wallet.addTransactions(block.getTransactionsList());
-                    receipts = applyBlock(block);
-                    wallet.processBlock(block);
-                }
+        if (!block.isGenesis()) {
+            if (!CONFIG.blockChainOnly()) {
+                wallet.addTransactions(block.getTransactionsList());
+                receipts = applyBlock(block);
+                wallet.processBlock(block);
             }
-            storeBlock(block, receipts);
-        } else {
-            logger.warn("Invalid block with nr: {}", block.getNumber());
         }
+        storeBlock(block, receipts);
 
         return receipts;
     }
@@ -410,6 +408,11 @@ public class BlockchainImpl implements Blockchain {
 
         track.commit();
 
+        stateLogger.info("applied reward for block: [{}]  \n  state: [{}]",
+                block.getNumber(),
+                Hex.toHexString(repository.getRoot()));
+
+
         if (block.getNumber() >= CONFIG.traceStartBlock())
             repository.dumpState(block, totalGasUsed, 0, null);
 
@@ -440,6 +443,8 @@ public class BlockchainImpl implements Blockchain {
                     .multiply(BigInteger.valueOf(block.getUncleList().size())));
         }
         track.addBalance(block.getCoinbase(), totalBlockReward);
+
+
     }
 
     @Override
