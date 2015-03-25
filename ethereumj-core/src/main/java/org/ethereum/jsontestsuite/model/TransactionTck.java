@@ -21,6 +21,7 @@ public class TransactionTck {
     String to;
     String v;
     String value;
+    String secretKey;
 
 
     public TransactionTck() {
@@ -98,9 +99,17 @@ public class TransactionTck {
         this.value = value;
     }
 
+    public String getSecretKey() {
+        return secretKey;
+    }
+
+    public void setSecretKey(String secretKey) {
+        this.secretKey = secretKey;
+    }
+
     @Override
     public String toString() {
-        return "Transaction2{" +
+        return "TransactionTck{" +
                 "data='" + data + '\'' +
                 ", gasLimit='" + gasLimit + '\'' +
                 ", gasPrice='" + gasPrice + '\'' +
@@ -110,6 +119,7 @@ public class TransactionTck {
                 ", to='" + to + '\'' +
                 ", v='" + v + '\'' +
                 ", value='" + value + '\'' +
+                ", secretKey='" + secretKey + '\'' +
                 '}';
     }
 }

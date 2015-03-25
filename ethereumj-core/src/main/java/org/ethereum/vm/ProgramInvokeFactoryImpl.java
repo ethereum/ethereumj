@@ -171,7 +171,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                     balance.toString(),
                     gasPrice.longValue(),
                     gas.longValue(),
-                    callValue.toString(),
+                    Hex.toHexString(callValue.getNoLeadZeroesData()),
                     data == null ? "" : Hex.toHexString(data),
                     Hex.toHexString(lastHash.getData()),
                     Hex.toHexString(coinbase.getLast20Bytes()),

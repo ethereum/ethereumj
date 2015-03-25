@@ -1,9 +1,8 @@
 package test.ethereum.jsontestsuite;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.ethereum.jsontestsuite.*;
 
+import org.ethereum.jsontestsuite.runners.StateTestRunner;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -227,5 +226,44 @@ public class GitHubJSONTestSuite {
     }
 
 
+    public static void runNewStateTest(String jsonSuite) throws IOException {
+
+        StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
+        Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
+
+        Set<String> testNames = stateTestSuite2.getTestCases().keySet();
+        for (String testName : testNames){
+
+            String output = String.format("*  running: %s  *", testName);
+            String line = output.replaceAll(".", "*");
+
+            logger.info(line);
+            logger.info(output);
+            logger.info(line);
+            StateTestRunner.run(testCases.get(testName));
+        }
+
+        System.out.println(stateTestSuite2);
+    }
+
+    public static void runNewSingleTest(String jsonSuite, String testName) throws IOException {
+
+        StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
+        Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
+
+        StateTestCase2 testCase = testCases.get(testName);
+        if (testCase != null){
+            String output = String.format("*  running: %s  *", testName);
+            String line = output.replaceAll(".", "*");
+
+            logger.info(line);
+            logger.info(output);
+            logger.info(line);
+            StateTestRunner.run(testCases.get(testName));
+
+        } else {
+            logger.error("Sorry test case doesn't exist: {}", testName);
+        }
+    }
 
 }

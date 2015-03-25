@@ -6,23 +6,36 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
 /**
  * @author Roman Mandeleil
  * @since 15.12.2014
  */
 public class Utils {
 
+    public static byte[] parseVarData(String data){
+        if (data == null || data.equals("")) return EMPTY_BYTE_ARRAY;
+        if (data.startsWith("0x")) {
+            data = data.substring(2);
+            if (data.equals("")) return EMPTY_BYTE_ARRAY;
+
+            return Hex.decode(data);
+        }
+
+        return parseNumericData(data);
+    }
 
 
     public static byte[] parseData(String data) {
-        if (data == null) return ByteUtil.EMPTY_BYTE_ARRAY;
+        if (data == null) return EMPTY_BYTE_ARRAY;
         if (data.startsWith("0x")) data = data.substring(2);
         return Hex.decode(data);
     }
 
     public static byte[] parseNumericData(String data){
 
-        if (data == null) return ByteUtil.EMPTY_BYTE_ARRAY;
+        if (data == null || data.equals("")) return EMPTY_BYTE_ARRAY;
         byte[] dataB = new BigInteger(data, 10).toByteArray();
         return ByteUtil.stripLeadingZeroes(dataB);
     }

@@ -21,7 +21,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
 
     private final Env env;
 
-    TestProgramInvokeFactory(Env env) {
+    public TestProgramInvokeFactory(Env env) {
         this.env = env;
     }
 

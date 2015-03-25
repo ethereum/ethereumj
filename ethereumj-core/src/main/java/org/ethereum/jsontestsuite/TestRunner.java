@@ -59,8 +59,6 @@ public class TestRunner {
 
         logger.info("--------- PRE ---------");
         RepositoryImpl repository = loadRepository(new RepositoryDummy(), testCase.getPre());
-
-
         logger.info("loaded repository");
 
         org.ethereum.core.Transaction tx = createTransaction(testCase.getTransaction());

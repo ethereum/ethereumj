@@ -3,11 +3,18 @@ package org.ethereum.jsontestsuite.builder;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.Transaction;
+import org.ethereum.jsontestsuite.Env;
 import org.ethereum.jsontestsuite.model.BlockHeaderTck;
 import org.ethereum.jsontestsuite.model.TransactionTck;
+import org.ethereum.util.BIUtil;
+import org.ethereum.util.ByteUtil;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.ethereum.util.BIUtil.toBI;
+import static org.ethereum.util.ByteUtil.byteArrayToLong;
 
 public class BlockBuilder {
 
@@ -30,6 +37,28 @@ public class BlockBuilder {
         Block block = new Block(
                 blockHeader,
                 transactions, uncles);
+
+        return block;
+    }
+
+
+    public static Block build(Env env){
+
+        Block block = new Block(
+                ByteUtil.EMPTY_BYTE_ARRAY,
+                ByteUtil.EMPTY_BYTE_ARRAY,
+                env.getCurrentCoinbase(),
+                ByteUtil.EMPTY_BYTE_ARRAY,
+                env.getCurrentDifficulty(),
+
+                byteArrayToLong(env.getCurrentNumber()),
+                byteArrayToLong(env.getCurrentGasLimit()),
+                0L,
+                byteArrayToLong(env.getCurrentTimestamp()),
+                new byte[32],
+                ByteUtil.ZERO_BYTE_ARRAY,
+                ByteUtil.ZERO_BYTE_ARRAY,
+                null, null);
 
         return block;
     }

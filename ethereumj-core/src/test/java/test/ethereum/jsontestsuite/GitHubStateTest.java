@@ -9,6 +9,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -22,9 +23,17 @@ public class GitHubStateTest {
     //@Ignore
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "createWithInvalidOpcode");
+        String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", "8f3fbe63f92c413fda1fc68cf27a9dbb69681168");
+        GitHubJSONTestSuite.runGitHubJsonStateTest(json, "CallToNameRegistrator0");
     }
+
+    @Test
+    public void newTypeTest() throws IOException {
+
+        String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", "8f3fbe63f92c413fda1fc68cf27a9dbb69681168");
+        GitHubJSONTestSuite.runNewSingleTest(json, "CallToNameRegistrator0");
+    }
+
 
     //@Ignore
     @Test // this method is mostly for hands-on convenient testing
@@ -45,11 +54,11 @@ public class GitHubStateTest {
     @Test
     public void stCallCreateCallCodeTest() throws ParseException { // [V]
         Set<String> excluded = new HashSet<>();
-        excluded.add("Callcode1024BalanceTooLow"); //FIXME block limits 
-        excluded.add("Call1024OOG"); //FIXME block limits 
-        excluded.add("Callcode1024OOG"); //FIXME block limits 
+        excluded.add("Callcode1024BalanceTooLow"); //FIXME block limits
+        excluded.add("Call1024OOG"); //FIXME block limits
+        excluded.add("Callcode1024OOG"); //FIXME block limits
         excluded.add("Call1024BalanceTooLow");
-        excluded.add("CallLoseGasOOG"); //FIXME block limits 
+        excluded.add("CallLoseGasOOG"); //FIXME block limits
         excluded.add("CallcodeLoseGasOOG"); //FIXME block limits
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonStateTest(json, excluded);

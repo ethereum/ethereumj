@@ -21,15 +21,26 @@ public class Env {
     private final byte[] previousHash;
 
 
+    public Env(byte[] currentCoinbase, byte[] currentDifficulty, byte[] 
+            currentGasLimit, byte[] currentNumber, byte[] 
+            currentTimestamp, byte[] previousHash) {
+        this.currentCoinbase = currentCoinbase;
+        this.currentDifficulty = currentDifficulty;
+        this.currentGasLimit = currentGasLimit;
+        this.currentNumber = currentNumber;
+        this.currentTimestamp = currentTimestamp;
+        this.previousHash = previousHash;
+    }
+
     /*
-        e.g:
-            "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
-            "currentDifficulty" : "256",
-            "currentGasLimit" : "1000000",
-            "currentNumber" : "0",
-            "currentTimestamp" : 1,
-            "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
-  */
+                e.g:
+                    "currentCoinbase" : "2adc25665018aa1fe0e6bc666dac8fc2697ff9ba",
+                    "currentDifficulty" : "256",
+                    "currentGasLimit" : "1000000",
+                    "currentNumber" : "0",
+                    "currentTimestamp" : 1,
+                    "previousHash" : "5e20a0453cecd065ea59c37ac63e079ee08998b6045136a8ce6635c7912ec0b6"
+          */
     public Env(JSONObject env) {
 
         String coinbase = env.get("currentCoinbase").toString();
