@@ -59,10 +59,6 @@ public class StateTestRunner {
         Repository postRepository = RepositoryBuilder.build(stateTestCase2.getPost());
         List<String> results = RepositoryValidator.valid(repository, postRepository);
 
-
-        /* TODO: compare state root */
-        stateTestCase2.getPostStateRoot();
-
         for (String result : results) {
             logger.error(result);
         }
