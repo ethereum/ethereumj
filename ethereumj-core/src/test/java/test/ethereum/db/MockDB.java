@@ -22,15 +22,13 @@ public class MockDB implements KeyValueDataSource {
 
     @Override
     public byte[] get(byte[] arg0) throws DBException {
-
         return storage.get(new ByteArrayWrapper(arg0));
     }
 
 
     @Override
-    public void put(byte[] key, byte[] value) throws DBException {
-
-        storage.put(new ByteArrayWrapper(key), value);
+    public byte[] put(byte[] key, byte[] value) throws DBException {
+        return storage.put(new ByteArrayWrapper(key), value);
     }
 
     /**

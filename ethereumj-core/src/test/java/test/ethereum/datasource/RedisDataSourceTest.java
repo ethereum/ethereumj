@@ -1,68 +1,69 @@
 package test.ethereum.datasource;
 
-import org.ethereum.datasource.RedisDataSource;
-
+import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.redis.RedisDataSource;
 import org.junit.Assert;
 import org.junit.Test;
-
 import org.spongycastle.util.encoders.Hex;
-
-import redis.clients.jedis.exceptions.JedisConnectionException;
 
 /**
  * @author Roman Mandeleil
  */
-public class RedisDataSourceTest {
-
+public class RedisDataSourceTest extends AbstractRedisTest {
 
     @Test
     public void testSet1() {
+        if (!redisConnection.isAvailable()) return;
 
+        KeyValueDataSource dataSource = createDataSource("test-state");
         try {
-            RedisDataSource redis = new RedisDataSource();
-            redis.setName("state");
-            redis.init();
-
             byte[] key = Hex.decode("a1a2a3");
             byte[] val = Hex.decode("b1b2b3");
 
-            redis.put(key, val);
-            byte[] val2 = redis.get(key);
+            dataSource.put(key, val);
+            byte[] val2 = dataSource.get(key);
 
             Assert.assertEquals(Hex.toHexString(val), Hex.toHexString(val2));
-        } catch (JedisConnectionException e) {
-            // no redis server consider test as pass
+        } finally {
+            clear(dataSource);
         }
     }
 
     @Test
     public void testSet2() {
+        if (!redisConnection.isAvailable()) return;
+
+        KeyValueDataSource states = createDataSource("test-state");
+        KeyValueDataSource details = createDataSource("test-details");
 
         try {
-            RedisDataSource redis1 = new RedisDataSource();
-            redis1.setName("state");
-            redis1.init();
-
-            RedisDataSource redis2 = new RedisDataSource();
-            redis2.setName("details");
-            redis2.init();
-
-
             byte[] key = Hex.decode("a1a2a3");
             byte[] val1 = Hex.decode("b1b2b3");
             byte[] val2 = Hex.decode("c1c2c3");
 
-            redis1.put(key, val1);
-            redis2.put(key, val2);
+            states.put(key, val1);
+            details.put(key, val2);
 
-            byte[] res1 = redis1.get(key);
-            byte[] res2 = redis2.get(key);
+            byte[] res1 = states.get(key);
+            byte[] res2 = details.get(key);
 
             Assert.assertEquals(Hex.toHexString(val1), Hex.toHexString(res1));
             Assert.assertEquals(Hex.toHexString(val2), Hex.toHexString(res2));
-        } catch (JedisConnectionException e) {
-            // no redis server consider test as pass
+        } finally {
+            clear(states);
+            clear(details);
         }
+    }
+
+    private KeyValueDataSource createDataSource(String name) {
+        KeyValueDataSource result = redisConnection.createDataSource(name);
+        result.setName(name);
+        result.init();
+        return result;
+    }
+
+    private void clear(KeyValueDataSource dataSource) {
+        ((RedisDataSource) dataSource).clear();
     }
 
 }

@@ -3,34 +3,16 @@ package test.ethereum.datasource;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.datasource.redis.RedisConnection;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
-import test.ethereum.TestContext;
 
 import java.math.BigInteger;
 import java.util.Set;
 
 import static org.junit.Assert.*;
 
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(loader = AnnotationConfigContextLoader.class)
-public class RedisConnectionTest {
+public class RedisConnectionTest extends AbstractRedisTest {
 
-    @Configuration
-    @ComponentScan(basePackages = "org.ethereum")
-    static class ContextConfiguration extends TestContext { }
-
-    @Autowired
-    private RedisConnection redisConnection;
-    
     @Test
     public void test() {
         if (!redisConnection.isAvailable()) return;

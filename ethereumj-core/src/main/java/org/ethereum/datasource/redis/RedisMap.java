@@ -5,10 +5,7 @@ import org.apache.commons.collections4.keyvalue.AbstractMapEntry;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static org.apache.commons.collections4.CollectionUtils.collect;
 import static org.ethereum.util.Functional.Consumer;
@@ -18,9 +15,17 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
 
     private final RedisSerializer<K> keySerializer;
 
-    RedisMap(String namespace, JedisPool pool, RedisSerializer<K> keySerializer, RedisSerializer<V> valueSerializer) {
+    public RedisMap(String namespace, JedisPool pool, RedisSerializer<K> keySerializer, RedisSerializer<V> valueSerializer) {
         super(namespace, pool, valueSerializer);
         this.keySerializer = keySerializer;
+    }
+
+    protected byte[] serializeKey(K key) {
+        return keySerializer.serialize(key);
+    }
+
+    protected K deserializeKey(byte[] input) {
+        return keySerializer.deserialize(input);
     }
 
     @Override
@@ -28,7 +33,7 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
         return pooledWithResult(new Function<Jedis, Integer>() {
             @Override
             public Integer apply(Jedis jedis) {
-                return jedis.hlen(getNamespace()).intValue();
+                return jedis.hlen(getName()).intValue();
             }
         });
     }
@@ -43,14 +48,14 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.hexists(getNamespace(), keySerializer.serialize((K) key));
+                return jedis.hexists(getName(), serializeKey((K) key));
             }
         });
     }
 
     @Override
     public boolean containsValue(Object value) {
-        return false;
+        return values().contains(value);
     }
 
     @Override
@@ -58,33 +63,50 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
         return pooledWithResult(new Function<Jedis, V>() {
             @Override
             public V apply(Jedis jedis) {
-                byte[] value = jedis.hget(getNamespace(), keySerializer.serialize((K) key));
+                byte[] value = jedis.hget(getName(), serializeKey((K) key));
                 return deserialize(value);
             }
         });
     }
 
     @Override
-    public V put(K key, V value) {
-/*
+    public V put(final K key, final V value) {
         return pooledWithResult(new Function<Jedis, V>() {
             @Override
             public V apply(Jedis jedis) {
-                return jedis.hset(getNamespace(), keySerializer.serialize(key), serialize(value));
+                byte[] serializedKey = serializeKey(key);
+                byte[] oldValue = jedis.hget(getName(), serializedKey);
+                jedis.hset(getName(), serializedKey, serialize(value));
+                return deserialize(oldValue);
             }
         });
-*/
-        return null;
     }
 
     @Override
-    public V remove(Object key) {
-        return null;
+    public V remove(final Object key) {
+        return pooledWithResult(new Function<Jedis, V>() {
+            @Override
+            public V apply(Jedis jedis) {
+                byte[] serializedKey = serializeKey((K) key);
+                byte[] oldValue = jedis.hget(getName(), serializedKey);
+                jedis.hdel(getName(), serializedKey);
+                return deserialize(oldValue);
+            }
+        });
     }
 
     @Override
-    public void putAll(Map<? extends K, ? extends V> m) {
-
+    public void putAll(final Map<? extends K, ? extends V> m) {
+        pooled(new Consumer<Jedis>() {
+            @Override
+            public void accept(Jedis jedis) {
+                Map<byte[], byte[]> map = new HashMap<byte[], byte[]>();
+                for (Entry<? extends K, ? extends V> entry : m.entrySet()) {
+                    map.put(serializeKey(entry.getKey()), serialize(entry.getValue()));
+                }
+                jedis.hmset(getName(), map);
+            }
+        });
     }
 
     @Override
@@ -92,7 +114,7 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
         pooled(new Consumer<Jedis>() {
             @Override
             public void accept(Jedis jedis) {
-                jedis.del(getNamespace());
+                jedis.del(getName());
             }
         });
     }
@@ -103,10 +125,10 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
             @Override
             public Set<K> apply(Jedis jedis) {
                 Set<K> result = new HashSet<K>();
-                collect(jedis.hkeys(getNamespace()), new Transformer<byte[], K>() {
+                collect(jedis.hkeys(getName()), new Transformer<byte[], K>() {
                     @Override
                     public K transform(byte[] input) {
-                        return keySerializer.deserialize(input);
+                        return deserializeKey(input);
                     }
                 }, result);
                 return result;
@@ -119,7 +141,7 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
         return pooledWithResult(new Function<Jedis, Collection<V>>() {
             @Override
             public Collection<V> apply(Jedis jedis) {
-                return deserialize(jedis.hvals(getNamespace()));
+                return deserialize(jedis.hvals(getName()));
             }
         });
     }
@@ -130,10 +152,10 @@ public class RedisMap<K, V> extends RedisStorage<V> implements Map<K, V> {
             @Override
             public Set<Entry<K, V>> apply(Jedis jedis) {
                 Set<Entry<K, V>> result = new HashSet<Entry<K, V>>();
-                collect(jedis.hgetAll(getNamespace()).entrySet(), new Transformer<Entry<byte[], byte[]>, Entry<K, V>>() {
+                collect(jedis.hgetAll(getName()).entrySet(), new Transformer<Entry<byte[], byte[]>, Entry<K, V>>() {
                     @Override
                     public Entry<K, V> transform(Entry<byte[], byte[]> input) {
-                        K key = keySerializer.deserialize(input.getKey());
+                        K key = deserializeKey(input.getKey());
                         V value = deserialize(input.getValue());
                         return new RedisMapEntry<K, V>(key, value);
                     }

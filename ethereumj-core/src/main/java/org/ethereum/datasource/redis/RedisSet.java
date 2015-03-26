@@ -22,7 +22,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Integer>() {
             @Override
             public Integer apply(Jedis jedis) {
-                return jedis.scard(getNamespace()).intValue();
+                return jedis.scard(getName()).intValue();
             }
         });
     }
@@ -37,30 +37,34 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.sismember(getNamespace(), serialize(o));
+                return jedis.sismember(getName(), serialize((T) o));
             }
         });
     }
 
     @Override
     public Iterator<T> iterator() {
+        return asCollection().iterator();
+    }
+
+    private Collection<T> asCollection() {
         Set<byte[]> members = pooledWithResult(new Function<Jedis, Set<byte[]>>() {
             @Override
             public Set<byte[]> apply(Jedis jedis) {
-                return jedis.smembers(getNamespace());
+                return jedis.smembers(getName());
             }
         });
-        return deserialize(members).iterator();
+        return deserialize(members);
     }
 
     @Override
     public Object[] toArray() {
-        throw new UnsupportedOperationException();
+        return asCollection().toArray();
     }
 
     @Override
     public <T1> T1[] toArray(T1[] a) {
-        throw new UnsupportedOperationException();
+        return asCollection().toArray(a);
     }
 
     @Override
@@ -83,7 +87,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.sadd(getNamespace(), serialize(c)) == 1;
+                return jedis.sadd(getName(), serialize(c)) == 1;
             }
         });
     }
@@ -93,7 +97,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.sinterstore(getNamespace(), serialize(c)) == c.size();
+                return jedis.sinterstore(getName(), serialize(c)) == c.size();
             }
         });
     }
@@ -103,7 +107,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.srem(getNamespace(), serialize(c)) == 1;
+                return jedis.srem(getName(), serialize(c)) == 1;
             }
         });
     }
@@ -113,7 +117,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         pooled(new Consumer<Jedis>() {
             @Override
             public void accept(Jedis jedis) {
-                jedis.del(getNamespace());
+                jedis.del(getName());
             }
         });
     }

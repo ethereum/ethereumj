@@ -1,16 +1,11 @@
 package org.ethereum.db;
 
 import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.facade.EthereumFactory;
 import org.ethereum.util.ByteUtil;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
 
-import javax.xml.crypto.dsig.keyinfo.KeyValue;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -71,6 +66,7 @@ public class DatabaseImpl implements Database {
 
     @Override
     public void close() {
+
         keyValueDataSource.close();
     }
 
