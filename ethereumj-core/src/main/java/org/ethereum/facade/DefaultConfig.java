@@ -1,13 +1,15 @@
 package org.ethereum.facade;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.RedisDataSource;
+import org.ethereum.datasource.redis.RedisConnection;
+import org.ethereum.datasource.redis.RedisConnectionImpl;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreImpl;
 import org.ethereum.db.RepositoryImpl;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +26,10 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -57,6 +62,21 @@ public class DefaultConfig {
         }
 
         return new LevelDbDataSource();
+    }
+
+    @Bean
+    public RedisConnection redisConnection() {
+        RedisConnectionImpl connection = new RedisConnectionImpl();
+        connection.init();
+        return connection;
+    }
+
+    @Bean
+    public Set<Transaction> pendingTransactions() {
+        RedisConnection connection = redisConnection();
+        return connection.isAvailable()
+                ? connection.createTransactionSet("pendingTransactions")
+                : Collections.synchronizedSet(new HashSet<Transaction>());
     }
 
     @Bean
