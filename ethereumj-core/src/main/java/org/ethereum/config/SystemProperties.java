@@ -50,6 +50,7 @@ public class SystemProperties {
     private final static String DEFAULT_VM_TRACE_DIR = "dmp";
     private final static int DEFAULT_PEER_LISTEN_PORT = 30303;
     private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
+    private final static boolean DEFAULT_REDIS_ENABLED = true;
 
 
     /* Testing */
@@ -239,7 +240,11 @@ public class SystemProperties {
     }
 
     public boolean vmTrace() {
-        return Boolean.parseBoolean(prop.getProperty("vm.structured.trace", String.valueOf(DEFAULT_VM_TRACE)));
+        return boolProperty("vm.structured.trace", DEFAULT_VM_TRACE);
+    }
+
+    private boolean boolProperty(String key, Boolean defaultValue) {
+        return Boolean.parseBoolean(prop.getProperty(key, String.valueOf(defaultValue)));
     }
 
     public String vmTraceDir() {
@@ -250,9 +255,12 @@ public class SystemProperties {
         return Integer.parseInt(prop.getProperty("peer.listen.port", String.valueOf(DEFAULT_PEER_LISTEN_PORT)));
     }
 
-
     public String getKeyValueDataSource() {
         return prop.getProperty("keyvalue.datasource", DEFAULT_KEY_VALUE_DATA_SOURCE);
+    }
+    
+    public boolean isRedisEnabled() {
+        return boolProperty("redis.enabled", DEFAULT_REDIS_ENABLED);    
     }
 
     public void setListenPort(Integer port) {

@@ -16,9 +16,11 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
 
+import javax.annotation.Resource;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -72,7 +74,9 @@ public class BlockchainImpl implements Blockchain {
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
-    private final Set<Transaction> pendingTransactions = Collections.synchronizedSet(new HashSet<Transaction>());
+    @Resource
+    @Qualifier("pendingTransactions")
+    private Set<Transaction> pendingTransactions;
 
     @Autowired
     private Repository repository;
