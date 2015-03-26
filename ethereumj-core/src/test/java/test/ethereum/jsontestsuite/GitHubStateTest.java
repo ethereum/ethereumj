@@ -30,8 +30,15 @@ public class GitHubStateTest {
     @Test
     public void newTypeTest() throws IOException {
 
+        Set<String> excluded = new HashSet<>();
+        excluded.add("Call10");  // value overflow long
+        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); // value overflow long
+
+        excluded.add("");
+
+
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", "ca0401b2fef08ac6e674d5151ad6b66fd88fa655");
-        GitHubJSONTestSuite.runNewSingleTest(json, "CallToNameRegistrator0");
+        GitHubJSONTestSuite.runNewStateTest(json, excluded);
     }
 
 

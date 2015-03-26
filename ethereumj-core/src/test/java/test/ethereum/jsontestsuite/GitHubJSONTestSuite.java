@@ -246,10 +246,18 @@ public class GitHubJSONTestSuite {
         System.out.println(stateTestSuite2);
     }
 
-    public static void runNewSingleTest(String jsonSuite, String testName) throws IOException {
+
+    public static void runNewStateTest(String jsonSuite, String testName) throws IOException {
 
         StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
         Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
+
+        for (String testCase : testCases.keySet()) {
+            if (testCase.equals(testName))
+                logger.info("  => " + testCase);
+            else
+                logger.info("     " + testCase);
+        }
 
         StateTestCase2 testCase = testCases.get(testName);
         if (testCase != null){
@@ -265,5 +273,36 @@ public class GitHubJSONTestSuite {
             logger.error("Sorry test case doesn't exist: {}", testName);
         }
     }
+
+    public static void runNewStateTest(String jsonSuite, Set<String> excluded) throws IOException {
+
+        StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
+        Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
+
+
+        for (String testCase : testCases.keySet()) {
+            if ( excluded.contains(testCase))
+                logger.info(" [X] " + testCase);
+            else
+                logger.info("     " + testCase);
+        }
+
+        Set<String> testNames = stateTestSuite2.getTestCases().keySet();
+        for (String testName : testNames){
+
+            if (excluded.contains(testName)) continue;
+            String output = String.format("*  running: %s  *", testName);
+            String line = output.replaceAll(".", "*");
+
+            logger.info(line);
+            logger.info(output);
+            logger.info(line);
+
+            StateTestRunner.run(testCases.get(testName));
+        }
+
+        System.out.println(stateTestSuite2);
+    }
+
 
 }
