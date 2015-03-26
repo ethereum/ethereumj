@@ -7,6 +7,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.core.Denomination.FINNEY;
+import static org.ethereum.core.Denomination.WEI;
 import static org.ethereum.crypto.HashUtil.*;
 
 /**
@@ -30,16 +32,23 @@ public class Genesis extends Block {
 
     public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
 
-    private static String[] premine = new String[]{
-            "dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6",
-            "e4157b34ea9615cfbde6b4fda419828124b70c78", // # (CH)
-            "b9c015918bdaba24b4ff057a92a3873d6eb201be", // # (V)
-            "6c386a4b26f73c802f34673f7248bb118f97424a", // # (HH)
-            "cd2a3d9f938e13cd947ec05abc7fe734df8dd826", // # (R)
-            "2ef47100e0787b915105fd5e3f4ff6752079d5cb", // # (M)
-            "e6716f9544a56c530d868e4bfbacb172315bdead", // # (J)
-            "1a26338f0d905e295fccb71fa9ea849ffa12aaf4"  // # (A)
+
+    private static PremineRaw[] premine = new PremineRaw[]{
+        new PremineRaw(Hex.decode("dbdbdb2cbd23b783741e8d7fcf51e459b497e4a6"), PREMINE_AMOUNT, WEI),
+        new PremineRaw(Hex.decode("e6716f9544a56c530d868e4bfbacb172315bdead"), PREMINE_AMOUNT, WEI),
+        new PremineRaw(Hex.decode("b9c015918bdaba24b4ff057a92a3873d6eb201be"), PREMINE_AMOUNT, WEI),
+        new PremineRaw(Hex.decode("1a26338f0d905e295fccb71fa9ea849ffa12aaf4"), PREMINE_AMOUNT, WEI),
+        new PremineRaw(Hex.decode("2ef47100e0787b915105fd5e3f4ff6752079d5cb"), PREMINE_AMOUNT, WEI),
+        new PremineRaw(Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826"), PREMINE_AMOUNT, WEI),
+        new PremineRaw(Hex.decode("6c386a4b26f73c802f34673f7248bb118f97424a"), PREMINE_AMOUNT, WEI),
+        new PremineRaw(Hex.decode("e4157b34ea9615cfbde6b4fda419828124b70c78"), PREMINE_AMOUNT, WEI),
+
+        new PremineRaw(Hex.decode("b0afc46d9ce366d06ab4952ca27db1d9557ae9fd"), new BigInteger("154162184"), FINNEY),
+        new PremineRaw(Hex.decode("f6b1e9dc460d4d62cc22ec5f987d726929c0f9f0"), new BigInteger("102774789"), FINNEY),
+        new PremineRaw(Hex.decode("cc45122d8b7fa0b1eaa6b29e0fb561422a9239d0"), new BigInteger("51387394"), FINNEY),
+        new PremineRaw(Hex.decode("b7576e9d314df41ec5506494293afb1bd5d3f65d"), new BigInteger("69423399"), FINNEY),
     };
+
 
 
     private static byte[] zeroHash256 = new byte[32];
@@ -68,9 +77,11 @@ public class Genesis extends Block {
         Trie state = new TrieImpl(null);
         // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
-        for (String address : premine) {
-            AccountState acctState = new AccountState(BigInteger.ZERO, PREMINE_AMOUNT);
-            state.update(Hex.decode(address), acctState.getEncoded());
+
+        for (PremineRaw raw : premine) {
+            AccountState acctState = new AccountState(BigInteger.ZERO,
+                    raw.getValue().multiply(raw.getDenomination().value()));
+            state.update(raw.getAddr(), acctState.getEncoded());
         }
 
         setStateRoot(state.getRootHash());
@@ -83,7 +94,9 @@ public class Genesis extends Block {
         return instance;
     }
 
-    public final static String[] getPremine() {
+    public final static PremineRaw[] getPremine() {
         return premine;
     }
+
+
 }

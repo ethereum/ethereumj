@@ -1,5 +1,6 @@
 package test.ethereum.core;
 
+import org.ethereum.core.PremineRaw;
 import test.ethereum.db.MockDB;
 
 import org.ethereum.core.AccountState;
@@ -22,7 +23,7 @@ import static org.junit.Assert.assertEquals;
 
 public class StateTest {
 
-    private static final String GENESIS_STATE_ROOT = "156df8ef53c723b40f97aff55dd785489cae8b457495916147687746bd5ee077";
+    private static final String GENESIS_STATE_ROOT = "7e204dc9cfb7acdf062ff0b8052f7fcb0b7e6593754773967932ce458d134af3";
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -45,7 +46,7 @@ public class StateTest {
         // 4) calc the root
 
         Trie trie = generateGenesisState();
-        String expected = "aa5dd963f3a1582a0ba0226ad03a076e1e723e87d1a9c28222108ace58a96c97";
+        String expected = "c12b4d771fbcc0d56ec106f8d465d24b9d4c36d60275bbafa7d69694d6708660";
 
         // Get and update sender in world state
         byte[] cowAddress = Hex.decode("cd2a3d9f938e13cd947ec05abc7fe734df8dd826");
@@ -113,10 +114,13 @@ public class StateTest {
     private Trie generateGenesisState() {
 
         Trie trie = new TrieImpl(new MockDB());
-        for (String address : Genesis.getPremine()) {
-            AccountState acct = new AccountState(BigInteger.ZERO, BigInteger.valueOf(2).pow(200));
-            trie.update(Hex.decode(address), acct.getEncoded());
+
+        for (PremineRaw raw : Genesis.getPremine()) {
+            AccountState acctState = new AccountState(BigInteger.ZERO,
+                    raw.getValue().multiply(raw.getDenomination().value()));
+            trie.update(raw.getAddr(), acctState.getEncoded());
         }
+
         return trie;
     }
 }
