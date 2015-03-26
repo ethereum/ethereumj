@@ -24,7 +24,7 @@ public class GitHubStateTest {
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", "ca0401b2fef08ac6e674d5151ad6b66fd88fa655");
-        GitHubJSONTestSuite.runNewStateTest(json, "CallToReturn1ForDynamicJump1");
+        GitHubJSONTestSuite.runNewStateTest(json, "suicideOrigin");
     }
 
     @Test
@@ -33,18 +33,16 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         excluded.add("Call10");  // value overflow long
         excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); // value overflow long
-        excluded.add("suicideSendEtherToMe");
-        excluded.add("suicideOrigin");
-        excluded.add("createWithInvalidOpcode");
-        excluded.add("suicideCaller");
-        excluded.add("suicideCallerAddresTooBigLeft");
-        excluded.add("suicideAddress");
-        excluded.add("suicideCallerAddresTooBigRight");
-        excluded.add("ABAcallsSuicide0");
-        excluded.add("ABAcallsSuicide1");
-        excluded.add("suicideNotExistingAccount");
-
-        excluded.add("");
+//        excluded.add("suicideSendEtherToMe");
+//        excluded.add("suicideOrigin");
+//        excluded.add("createWithInvalidOpcode");
+//        excluded.add("suicideCaller");
+//        excluded.add("suicideCallerAddresTooBigLeft");
+//        excluded.add("suicideAddress");
+//        excluded.add("suicideCallerAddresTooBigRight");
+//        excluded.add("ABAcallsSuicide0");
+//        excluded.add("ABAcallsSuicide1");
+//        excluded.add("suicideNotExistingAccount");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", "ca0401b2fef08ac6e674d5151ad6b66fd88fa655");
         GitHubJSONTestSuite.runNewStateTest(json, excluded);

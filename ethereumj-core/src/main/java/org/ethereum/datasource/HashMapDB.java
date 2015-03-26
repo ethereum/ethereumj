@@ -18,21 +18,21 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public void delete(byte[] arg0) throws DBException {
-        storage.remove(arg0);
+        storage.remove(wrap(arg0));
     }
 
 
     @Override
     public byte[] get(byte[] arg0) throws DBException {
 
-        return storage.get(new ByteArrayWrapper(arg0));
+        return storage.get(wrap(arg0));
     }
 
 
     @Override
     public void put(byte[] key, byte[] value) throws DBException {
 
-        storage.put(new ByteArrayWrapper(key), value);
+        storage.put(wrap(key), value);
     }
 
     /**
@@ -67,6 +67,10 @@ public class HashMapDB implements KeyValueDataSource {
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
 
+        for (byte[] key :  rows.keySet()){
+            byte[] value = rows.get(key);
+            storage.put(wrap(key), value);
+        }
     }
 
     @Override

@@ -50,6 +50,7 @@ public class StateTestRunner {
                         invokeFactory, blockchain.getBestBlock());
         executor.execute();
         track.commit();
+        repository.flush();
 
         logger.info("--------- POST Validation---------");
         List<LogInfo> origLogs = executor.getResult().getLogInfoList();

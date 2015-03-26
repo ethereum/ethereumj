@@ -297,6 +297,27 @@ public class TrieTest {
     }
 
     @Test
+    public void testDeleteCompletellyDiferentItems() {
+        TrieImpl trie = new TrieImpl(mockDb);
+
+        String val_1 = "2a";
+        String val_2 = "09";
+        String val_3 = "a9";
+
+        trie.update(Hex.decode(val_1), Hex.decode(val_1));
+        trie.update(Hex.decode(val_2), Hex.decode(val_2));
+
+        String root1 = Hex.toHexString(trie.getRootHash());
+
+        trie.update(Hex.decode(val_3), Hex.decode(val_3));
+        trie.delete(Hex.decode(val_3));
+        String root1_ = Hex.toHexString(trie.getRootHash());
+
+        Assert.assertEquals(root1, root1_);
+    }
+
+
+    @Test
     public void testDeleteMultipleItems1() {
         String ROOT_HASH_BEFORE = "3a784eddf1936515f0313b073f99e3bd65c38689021d24855f62a9601ea41717";
         String ROOT_HASH_AFTER1 = "60a2e75cfa153c4af2783bd6cb48fd6bed84c6381bc2c8f02792c046b46c0653";

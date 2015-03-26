@@ -323,7 +323,6 @@ public class TransactionExecutor {
             transfer(repository, coinbase, senderAddress, futureRefundVal);
         }
 
-
         if (initResults) {
             // Save the code created by init
             byte[] bodyCode = null;
