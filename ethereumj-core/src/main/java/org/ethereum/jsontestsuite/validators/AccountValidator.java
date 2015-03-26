@@ -59,14 +59,14 @@ public class AccountValidator {
 
         for (DataWord key : currentKeys) {
 
-            DataWord currentValue = currentDetails.getStorage().get(expectedKeys);
+            DataWord currentValue = currentDetails.getStorage().get(key);
             DataWord expectedValue = expectedDetails.getStorage().get(key);
             if (expectedValue == null) {
 
                 String formattedString = String.format("Account: %s: has unexpected storage data: %s = %s",
                         address,
-                        currentValue,
-                        expectedValue);
+                        key,
+                        currentValue);
 
                 results.add(formattedString);
                 continue;

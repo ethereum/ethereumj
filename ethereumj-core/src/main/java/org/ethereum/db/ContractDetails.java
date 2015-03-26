@@ -198,7 +198,7 @@ public class ContractDetails {
     public void setStorage(Map<DataWord, DataWord> storage) {
 
         List<DataWord> keys = new ArrayList<>();
-        keys.addAll(storageKeys);
+        keys.addAll(storage.keySet());
 
         List<DataWord> values = new ArrayList<>();
         for (DataWord key : keys) {

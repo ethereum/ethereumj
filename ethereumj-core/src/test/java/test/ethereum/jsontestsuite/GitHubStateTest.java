@@ -30,7 +30,7 @@ public class GitHubStateTest {
     @Test
     public void newTypeTest() throws IOException {
 
-        String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", "8f3fbe63f92c413fda1fc68cf27a9dbb69681168");
+        String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", "ca0401b2fef08ac6e674d5151ad6b66fd88fa655");
         GitHubJSONTestSuite.runNewSingleTest(json, "CallToNameRegistrator0");
     }
 
