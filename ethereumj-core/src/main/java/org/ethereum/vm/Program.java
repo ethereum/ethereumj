@@ -369,12 +369,6 @@ public class Program {
                     value.getNoLeadZeroesData());
         }
 
-        // [4] TRANSFER THE BALANCE
-        result.getRepository().addBalance(senderAddress, endowment.negate());
-        BigInteger newBalance = BigInteger.ZERO;
-        if (!invokeData.byTestingSuite()) {
-            newBalance = result.getRepository().addBalance(newAddress, endowment);
-        }
 
         // [3] UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
@@ -383,6 +377,14 @@ public class Program {
         }
 
         Repository track = result.getRepository().startTracking();
+
+        // [4] TRANSFER THE BALANCE
+        track.addBalance(senderAddress, endowment.negate());
+        BigInteger newBalance = BigInteger.ZERO;
+        if (!invokeData.byTestingSuite()) {
+            newBalance = track.addBalance(newAddress, endowment);
+        }
+
 
         // [5] COOK THE INVOKE AND EXECUTE
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
@@ -477,20 +479,22 @@ public class Program {
             logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
                     Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
 
-        // 2.1 PERFORM THE GAS VALUE TX
+        Repository trackRepository = result.getRepository().startTracking();
+
+        // 2.1 PERFORM THE VALUE (endowment) PART
         BigInteger endowment = msg.getEndowment().value(); //TODO #POC9 add 1024 stack check <=
-        BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
+        BigInteger senderBalance = trackRepository.getBalance(senderAddress);
         if (isNotCovers(senderBalance, endowment)) {
             stackPushZero();
             this.refundGas(msg.getGas().longValue(), "refund gas from message call");
             return;
         }
 
-        result.getRepository().addBalance(senderAddress, endowment.negate());
+        trackRepository .addBalance(senderAddress, endowment.negate());
 
         BigInteger contextBalance = BigInteger.ZERO;
         if (!invokeData.byTestingSuite()) {
-            contextBalance = result.getRepository().addBalance(contextAddress, endowment);
+            contextBalance = trackRepository.addBalance(contextAddress, endowment);
         }
 
         if (invokeData.byTestingSuite()) {
@@ -500,7 +504,6 @@ public class Program {
                     msg.getEndowment().getNoLeadZeroesData());
         }
 
-        Repository trackRepository = result.getRepository().startTracking();
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(contextAddress), msg.getEndowment(),
                 msg.getGas(), contextBalance, data, trackRepository, this.invokeData.getBlockStore(), invokeData.byTestingSuite());

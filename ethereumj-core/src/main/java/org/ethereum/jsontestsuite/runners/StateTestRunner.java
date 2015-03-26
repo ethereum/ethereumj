@@ -23,7 +23,7 @@ public class StateTestRunner {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
-    public static void run(StateTestCase2 stateTestCase2) {
+    public static List<String> run(StateTestCase2 stateTestCase2) {
 
         logger.info("");
         Repository repository = RepositoryBuilder.build(stateTestCase2.getPre());
@@ -64,5 +64,6 @@ public class StateTestRunner {
         }
 
         logger.info("\n\n");
+        return results;
     }
 }

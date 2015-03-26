@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.util.*;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * Test file specific for tests maintained in the GitHub repository
  * by the Ethereum DEV team. <br/>
@@ -57,7 +59,7 @@ public class GitHubJSONTestSuite {
             if (testName.equals((testCase.getName()))) {
                 TestRunner runner = new TestRunner();
                 List<String> result = runner.runTestCase(testCase);
-                Assert.assertTrue(result.isEmpty());
+                assertTrue(result.isEmpty());
                 return;
             }
         }
@@ -95,7 +97,7 @@ public class GitHubJSONTestSuite {
 
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
-            Assert.assertTrue(result.isEmpty());
+            assertTrue(result.isEmpty());
         }
     }
 
@@ -122,7 +124,7 @@ public class GitHubJSONTestSuite {
             for (String single : result)
                 logger.info(single);
 
-        Assert.assertTrue(result.isEmpty());
+        assertTrue(result.isEmpty());
     }
 
     protected static void runGitHubJsonStateTest(String json, Set<String> excluded) throws ParseException {
@@ -152,7 +154,7 @@ public class GitHubJSONTestSuite {
                 for (String single : result)
                     logger.info(single);
 
-            Assert.assertTrue(result.isEmpty());
+            assertTrue(result.isEmpty());
         }
     }
 
@@ -176,7 +178,7 @@ public class GitHubJSONTestSuite {
                 for (String single : result)
                     logger.info(single);
 
-            Assert.assertTrue(result.isEmpty());
+            assertTrue(result.isEmpty());
             logger.info(" *** Passed: " + testCase.getName());
         }
     }
@@ -220,30 +222,14 @@ public class GitHubJSONTestSuite {
             for (String single : result)
                 logger.info(single);
 
-        Assert.assertTrue(result.isEmpty());
+        assertTrue(result.isEmpty());
         logger.info(" *** Passed: " + testName);
 
     }
 
 
     public static void runNewStateTest(String jsonSuite) throws IOException {
-
-        StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
-        Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
-
-        Set<String> testNames = stateTestSuite2.getTestCases().keySet();
-        for (String testName : testNames){
-
-            String output = String.format("*  running: %s  *", testName);
-            String line = output.replaceAll(".", "*");
-
-            logger.info(line);
-            logger.info(output);
-            logger.info(line);
-            StateTestRunner.run(testCases.get(testName));
-        }
-
-        System.out.println(stateTestSuite2);
+        runNewStateTest(jsonSuite, new HashSet<String>());
     }
 
 
@@ -278,6 +264,7 @@ public class GitHubJSONTestSuite {
 
         StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
         Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
+        Map<String, Boolean> summary = new HashMap<>();
 
 
         for (String testCase : testCases.keySet()) {
@@ -298,10 +285,29 @@ public class GitHubJSONTestSuite {
             logger.info(output);
             logger.info(line);
 
-            StateTestRunner.run(testCases.get(testName));
+            List<String> result = StateTestRunner.run(testCases.get(testName));
+            if (!result.isEmpty())
+                summary.put(testName, false);
+            else
+                summary.put(testName, true);
         }
 
-        System.out.println(stateTestSuite2);
+        logger.info("Summary: ");
+        logger.info("=========");
+
+        int fails = 0; int pass = 0;
+        for (String key : summary.keySet()){
+
+            if (summary.get(key)) ++pass; else ++fails;
+            String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "PASS" : "FAIL")).
+                    replace(' ', '.').
+                    replace("^", " ");
+            logger.info(sumTest);
+        }
+
+        logger.info(" Total: Pass: {}, Failed: {}", pass, fails);
+
+        assertTrue(fails == 0);
     }
 
 

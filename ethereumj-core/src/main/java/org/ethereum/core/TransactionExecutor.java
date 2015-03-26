@@ -116,7 +116,7 @@ public class TransactionExecutor {
         // GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
         BigInteger gasPrice = toBI(tx.getGasPrice());
         BigInteger gasDebit = toBI(tx.getGasLimit()).multiply(gasPrice);
-        logger.info("Gas price limited to [{} wei]", gasDebit.toString());
+        logger.info("Gas price limited to [{} units]", gasDebit.toString());
 
         // Debit the actual total gas value from the sender
         // the purchased gas will be available for
@@ -155,17 +155,19 @@ public class TransactionExecutor {
         }
 
         // THE SIMPLE VALUE/BALANCE CHANGE
-        if (isCovers(track.getBalance(senderAddress), txValue)) {
+        if (!(isContractCreation || code != EMPTY_BYTE_ARRAY)) // if code invoke transfer will be done latter
+                                                               // for rollback purposes
+            if (isCovers(track.getBalance(senderAddress), txValue)) {
 
-            transfer(track, senderAddress, receiverAddress, txValue);
+                transfer(track, senderAddress, receiverAddress, txValue);
 
-            if (stateLogger.isDebugEnabled())
-                stateLogger.debug("Update value balance \n "
-                                + "sender={}, receiver={}, value={}",
-                        Hex.toHexString(senderAddress),
-                        Hex.toHexString(receiverAddress),
-                        new BigInteger(tx.getValue()));
-        }
+                if (stateLogger.isDebugEnabled())
+                    stateLogger.debug("Update value balance \n "
+                                    + "sender={}, receiver={}, value={}",
+                            Hex.toHexString(senderAddress),
+                            Hex.toHexString(receiverAddress),
+                            new BigInteger(tx.getValue()));
+            }
 
 
         // UPDATE THE NONCE
@@ -203,6 +205,20 @@ public class TransactionExecutor {
             // START TRACKING FOR REVERT CHANGES OPTION
             Repository trackTx = track.startTracking();
             trackTx.addBalance(receiverAddress, BigInteger.ZERO); // the contract created for anycase but SUICIDE call
+
+            // THE SIMPLE VALUE/BALANCE CHANGE
+            if (isCovers(trackTx.getBalance(senderAddress), txValue)) {
+
+                transfer(trackTx, senderAddress, receiverAddress, txValue);
+
+                if (stateLogger.isDebugEnabled())
+                    stateLogger.debug("Update value balance \n "
+                                    + "sender={}, receiver={}, value={}",
+                            Hex.toHexString(senderAddress),
+                            Hex.toHexString(receiverAddress),
+                            new BigInteger(tx.getValue()));
+            }
+
 
             logger.info("Start tracking VM run");
             try {
