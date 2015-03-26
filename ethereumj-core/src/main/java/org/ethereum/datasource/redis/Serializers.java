@@ -3,8 +3,11 @@ package org.ethereum.datasource.redis;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
+import org.ethereum.core.AccountState;
+import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.db.ContractDetails;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -14,13 +17,13 @@ public final class Serializers {
     private static abstract class BaseRedisSerializer<T> implements RedisSerializer<T> {
 
         public abstract boolean supports(Class<?> aClass);
-        
+
         @Override
         public boolean canSerialize(Object o) {
             return (o != null) && supports(o.getClass());
         }
-    }  
-    
+    }
+
     private static class JacksonJsonRedisSerializer<T> implements RedisSerializer<T> {
 
         private final ObjectMapper objectMapper = new ObjectMapper();
@@ -68,12 +71,12 @@ public final class Serializers {
 
         @Override
         public byte[] serialize(TransactionReceipt transactionReceipt) {
-            return transactionReceipt.getEncoded();
+            return (transactionReceipt == null) ? EMPTY_ARRAY : transactionReceipt.getEncoded();
         }
 
         @Override
         public TransactionReceipt deserialize(byte[] bytes) {
-            return new TransactionReceipt(bytes);
+            return isEmpty(bytes) ? null : new TransactionReceipt(bytes);
         }
     }
 
@@ -86,20 +89,77 @@ public final class Serializers {
 
         @Override
         public byte[] serialize(Transaction transaction) {
-            return transaction.getEncoded();
+            return (transaction == null) ? EMPTY_ARRAY : transaction.getEncoded();
         }
 
         @Override
         public Transaction deserialize(byte[] bytes) {
-            return new Transaction(bytes);
+            return isEmpty(bytes) ? null : new Transaction(bytes);
         }
     }
 
-    
+    private static class AccountStateSerializer extends BaseRedisSerializer<AccountState> {
+
+        @Override
+        public boolean supports(Class<?> aClass) {
+            return AccountState.class.isAssignableFrom(aClass);
+        }
+
+        @Override
+        public byte[] serialize(AccountState accountState) {
+            return (accountState == null) ? EMPTY_ARRAY : accountState.getEncoded();
+        }
+
+        @Override
+        public AccountState deserialize(byte[] bytes) {
+            return isEmpty(bytes) ? null : new AccountState(bytes);
+        }
+    }
+
+    private static class BlockSerializer extends BaseRedisSerializer<Block> {
+
+        @Override
+        public boolean supports(Class<?> aClass) {
+            return Block.class.isAssignableFrom(aClass);
+        }
+
+        @Override
+        public byte[] serialize(Block block) {
+            return (block == null) ? EMPTY_ARRAY : block.getEncoded();
+        }
+
+        @Override
+        public Block deserialize(byte[] bytes) {
+            return isEmpty(bytes) ? null : new Block(bytes);
+        }
+    }
+
+    private static class ContractDetailsSerializer extends BaseRedisSerializer<ContractDetails> {
+
+        @Override
+        public boolean supports(Class<?> aClass) {
+            return ContractDetails.class.isAssignableFrom(aClass);
+        }
+
+        @Override
+        public byte[] serialize(ContractDetails contractDetails) {
+            return (contractDetails == null) ? EMPTY_ARRAY : contractDetails.getEncoded();
+        }
+
+        @Override
+        public ContractDetails deserialize(byte[] bytes) {
+            return isEmpty(bytes) ? null : new ContractDetails(bytes);
+        }
+    }
+
+
     private static final byte[] EMPTY_ARRAY = new byte[0];
     private static final Set<? extends BaseRedisSerializer> SERIALIZERS = new HashSet<BaseRedisSerializer>() {{
         add(new TransactionSerializer());
         add(new TransactionReceiptSerializer());
+        add(new AccountStateSerializer());
+        add(new BlockSerializer());
+        add(new ContractDetailsSerializer());
     }};
 
     public static <T> RedisSerializer<T> forClass(Class<T> clazz) {

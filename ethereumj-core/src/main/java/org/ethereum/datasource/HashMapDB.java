@@ -24,15 +24,14 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public byte[] get(byte[] arg0) throws DBException {
-
         return storage.get(wrap(arg0));
     }
 
 
     @Override
-    public void put(byte[] key, byte[] value) throws DBException {
+    public byte[] put(byte[] key, byte[] value) throws DBException {
 
-        storage.put(wrap(key), value);
+        return storage.put(wrap(key), value);
     }
 
     /**

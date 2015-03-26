@@ -16,49 +16,33 @@ public abstract class RedisStorage<T> {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    private String namespace;
+    private byte[] name;
     private final JedisPool pool;
     private final RedisSerializer<T> serializer;
 
-    RedisStorage(String namespace, JedisPool pool, RedisSerializer<T> serializer) {
+    RedisStorage(String name, JedisPool pool, RedisSerializer<T> serializer) {
+        this.name = name.getBytes();
         this.pool = pool;
         this.serializer = serializer;
-
-        setNamespace(namespace);
     }
 
-    protected byte[] getNamespace() {
-        return namespace.getBytes();
+    protected byte[] getName() {
+        return name;
     }
 
-    protected void setNamespace(String namespace) {
-        this.namespace = namespace + ":";
+    protected void setName(String name) {
+        this.name = name.getBytes();
     }
 
-    protected byte[] formatKey(byte[] key) {
-        byte[] prefix = getNamespace();
-
-        int length = prefix.length + key.length;
-        byte[] result = new byte[length];
-        System.arraycopy(prefix, 0, result, 0, prefix.length);
-        System.arraycopy(key, 0, result, prefix.length, key.length);
-        return result;
-    }
-
-    protected byte[] serialize(Object o) {
-        if (serializer.canSerialize(o)) {
-            return serializer.serialize((T) o);
-        }
-
-        logger.warn("Cannot serialize '%s'.", o.getClass());
-        return new byte[0];
+    protected byte[] serialize(T o) {
+        return serializer.serialize(o);
     }
 
     protected byte[][] serialize(Collection<?> collection) {
         return collect(collection, new Transformer<Object, byte[]>() {
             @Override
             public byte[] transform(Object input) {
-                return serialize(input);
+                return serialize((T) input);
             }
         }).toArray(new byte[][]{});
     }

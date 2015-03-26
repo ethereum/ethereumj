@@ -27,7 +27,7 @@ public class RedisConnectionImpl implements RedisConnection {
     private JedisPool jedisPool;
 
     @PostConstruct
-    public void init() {
+    public void tryConnect() {
         if (!SystemProperties.CONFIG.isRedisEnabled()) return;
 
         String redisCloudUrl = System.getenv("REDISCLOUD_URL");
@@ -97,8 +97,7 @@ public class RedisConnectionImpl implements RedisConnection {
     }
 
     @Override
-    public KeyValueDataSource createKeyValueDataSource(String name) {
-        return new RedisKeyValueDataSource(name, jedisPool, null);
-
+    public KeyValueDataSource createDataSource(String name) {
+        return new RedisDataSource(name, jedisPool);
     }
 }
