@@ -88,8 +88,9 @@ public class LevelDbDataSource implements KeyValueDataSource {
     }
 
     @Override
-    public void put(byte[] key, byte[] value) {
+    public byte[] put(byte[] key, byte[] value) {
         db.put(key, value);
+        return value;
     }
 
     @Override
