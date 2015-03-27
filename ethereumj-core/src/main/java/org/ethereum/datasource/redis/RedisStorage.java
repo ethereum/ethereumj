@@ -1,5 +1,6 @@
 package org.ethereum.datasource.redis;
 
+import com.google.common.primitives.Bytes;
 import org.apache.commons.collections4.Transformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,14 @@ public abstract class RedisStorage<T> {
 
     protected void setName(String name) {
         this.name = name.getBytes();
+    }
+
+    protected byte[] formatName(String suffix) {
+        return Bytes.concat(getName(), suffix.getBytes());
+    }
+
+    protected byte[] temporaryName() {
+        return formatName(":" + Thread.currentThread().getName() + ":" + System.currentTimeMillis());
     }
 
     protected byte[] serialize(T o) {
@@ -89,10 +98,18 @@ public abstract class RedisStorage<T> {
 
     protected <R> R pooledWithResult(Function<Jedis, R> function) {
         Jedis jedis = pool.getResource();
+        Exception operationException = null;
         try {
             return function.apply(jedis);
+        } catch (Exception e) {
+            operationException = e;
+            throw e;
         } finally {
-            pool.returnResource(jedis);
+            if (operationException == null) {
+                pool.returnResource(jedis);
+            } else {
+                pool.returnBrokenResource(jedis);
+            }
         }
     }
 }
