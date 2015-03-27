@@ -159,6 +159,7 @@ artifactoryPublish.onlyIf {
 //    (!pullRequest || pullRequest == 'false') &&
 //            project.version.endsWith('-SNAPSHOT') &&
 
+    
     branchName.startsWith('master')
 }
 
