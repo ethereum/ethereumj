@@ -2,8 +2,10 @@ package org.ethereum.trie;
 
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.KeyValueDataSource;
+import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class SecureTrie extends TrieImpl implements Trie{
 
@@ -29,7 +31,7 @@ public class SecureTrie extends TrieImpl implements Trie{
 
     @Override
     public void delete(byte[] key) {
-        super.delete(sha3(key));
+        this.update(key, EMPTY_BYTE_ARRAY);
     }
 
     @Override
