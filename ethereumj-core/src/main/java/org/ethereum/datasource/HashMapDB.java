@@ -30,7 +30,6 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public byte[] put(byte[] key, byte[] value) throws DBException {
-
         return storage.put(wrap(key), value);
     }
 
