@@ -18,6 +18,7 @@ import java.util.Set;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.matchingNibbleLength;
 import static org.ethereum.util.CompactEncoder.*;
 import static org.spongycastle.util.Arrays.concatenate;
@@ -133,12 +134,12 @@ public class TrieImpl implements Trie {
      * Delete a key/value pair from the trie.
      */
     public void delete(String key) {
-        this.update(key.getBytes(), "".getBytes());
+        this.update(key.getBytes(), EMPTY_BYTE_ARRAY);
     }
 
     @Override
     public void delete(byte[] key) {
-        delete(new String(key));
+        this.update(key, EMPTY_BYTE_ARRAY);
         if (logger.isDebugEnabled()) {
             logger.debug("Deleted value for key {}", Hex.toHexString(key));
             logger.debug("New root-hash: {}", Hex.toHexString(this.getRootHash()));

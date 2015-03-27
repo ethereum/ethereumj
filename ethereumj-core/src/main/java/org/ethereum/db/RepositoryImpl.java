@@ -148,7 +148,6 @@ public class RepositoryImpl implements Repository {
                 }
 
             }
-
         }
 
         stateCache.clear();
@@ -239,6 +238,10 @@ public class RepositoryImpl implements Repository {
                 e.printStackTrace();
             }
         }
+    }
+
+    public String getTrieDump(){
+        return worldState.getTrieDump();
     }
 
     public void dumpTrie(Block block) {

@@ -53,6 +53,11 @@ public class FatTrie implements Trie{
 
     @Override
     public void setRoot(byte[] root) {
+
+        // todo : in fat trie it will not  sync the orig trie
+        // todo : in fat trie it will not  sync the orig trie
+        // todo : in fat trie it will not  sync the orig trie
+
         secureTrie.setRoot(root);
     }
 
