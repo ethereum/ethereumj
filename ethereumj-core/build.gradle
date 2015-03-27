@@ -157,7 +157,7 @@ artifactory {
 
 artifactoryPublish.onlyIf {
     (!pullRequest || pullRequest == 'false') &&
-            project.version.endsWith('-SNAPSHOT') && (branchName.equals('master'))
+            project.version.endsWith('-SNAPSHOT') && (branchName == 'master')
 }
 
 bintray {
@@ -186,6 +186,8 @@ install {
 }
 
 task publish {
+
+    print "publishing if master current branch: " + branchName
     description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }
