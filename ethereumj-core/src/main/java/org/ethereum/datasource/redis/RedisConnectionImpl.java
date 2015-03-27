@@ -15,6 +15,7 @@ import redis.clients.jedis.Protocol;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.net.URI;
+import java.util.Map;
 import java.util.Set;
 
 import static org.springframework.util.StringUtils.isEmpty;
@@ -30,7 +31,7 @@ public class RedisConnectionImpl implements RedisConnection {
     public void tryConnect() {
         if (!SystemProperties.CONFIG.isRedisEnabled()) return;
 
-        String redisCloudUrl = System.getenv("REDISCLOUD_URL");
+        String redisCloudUrl = System.getenv(REDISCLOUD_URL);
         if (isEmpty(redisCloudUrl)) {
             logger.info("Cannot connect to Redis. 'REDISCLOUD_URL' environment variable is not defined.");
             return;
@@ -73,14 +74,16 @@ public class RedisConnectionImpl implements RedisConnection {
     public boolean isAvailable() {
         boolean available = jedisPool != null;
         if (available) {
-            Jedis jedis = jedisPool.getResource();
             try {
-                available = jedis.isConnected();
+                Jedis jedis = jedisPool.getResource();
+                try {
+                    available = jedis.isConnected();
+                } finally {
+                    jedisPool.returnResource(jedis);
+                }
             } catch (Throwable t) {
                 logger.warn("Connection testing failed: ", t);
                 available = false;
-            } finally {
-                jedisPool.returnResource(jedis);
             }
         }
         return available;
@@ -89,6 +92,11 @@ public class RedisConnectionImpl implements RedisConnection {
     @Override
     public <T> Set<T> createSetFor(Class<T> clazz, String name) {
         return new RedisSet<T>(name, jedisPool, Serializers.forClass(clazz));
+    }
+    
+    @Override
+    public <K,V> Map<K, V> createMapFor(Class<K> keyClass, Class<V> valueClass, String name) {
+        return new RedisMap<K, V>(name, jedisPool, Serializers.forClass(keyClass), Serializers.forClass(valueClass));     
     }
 
     @Override

@@ -1,10 +1,16 @@
 package test.ethereum.datasource;
 
 import org.ethereum.datasource.KeyValueDataSource;
+import org.ethereum.datasource.redis.RedisConnection;
 import org.ethereum.datasource.redis.RedisDataSource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
+import redis.clients.jedis.Jedis;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Set;
 
 /**
  * @author Roman Mandeleil
@@ -13,7 +19,7 @@ public class RedisDataSourceTest extends AbstractRedisTest {
 
     @Test
     public void testSet1() {
-        if (!redisConnection.isAvailable()) return;
+        if (!isConnected()) return;
 
         KeyValueDataSource dataSource = createDataSource("test-state");
         try {
@@ -30,8 +36,22 @@ public class RedisDataSourceTest extends AbstractRedisTest {
     }
 
     @Test
+    public void test() {
+        try {
+            Jedis jedis = new Jedis(new URI(System.getenv(RedisConnection.REDISCLOUD_URL)));
+            Long count = jedis.sinterstore("f", "f", "s");
+            System.out.println(count);
+            Set<String> r = jedis.smembers("f");
+            System.out.println(r);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
+    }
+    
+    @Test
     public void testSet2() {
-        if (!redisConnection.isAvailable()) return;
+        if (!isConnected()) return;
 
         KeyValueDataSource states = createDataSource("test-state");
         KeyValueDataSource details = createDataSource("test-details");
@@ -56,7 +76,7 @@ public class RedisDataSourceTest extends AbstractRedisTest {
     }
 
     private KeyValueDataSource createDataSource(String name) {
-        KeyValueDataSource result = redisConnection.createDataSource(name);
+        KeyValueDataSource result = getRedisConnection().createDataSource(name);
         result.setName(name);
         result.init();
         return result;
