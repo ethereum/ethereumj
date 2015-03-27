@@ -36,20 +36,6 @@ public class RedisDataSourceTest extends AbstractRedisTest {
     }
 
     @Test
-    public void test() {
-        try {
-            Jedis jedis = new Jedis(new URI(System.getenv(RedisConnection.REDISCLOUD_URL)));
-            Long count = jedis.sinterstore("f", "f", "s");
-            System.out.println(count);
-            Set<String> r = jedis.smembers("f");
-            System.out.println(r);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-
-    }
-    
-    @Test
     public void testSet2() {
         if (!isConnected()) return;
 
