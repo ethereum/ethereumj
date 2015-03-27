@@ -305,7 +305,7 @@ public class GitHubJSONTestSuite {
             logger.info(sumTest);
         }
 
-        logger.info(" Total: Pass: {}, Failed: {}", pass, fails);
+        logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
 
         assertTrue(fails == 0);
     }

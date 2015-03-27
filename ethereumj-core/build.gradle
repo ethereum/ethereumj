@@ -38,6 +38,10 @@ compileJava.dependsOn antlr4
 
 test {
 
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: ${descriptor}")
+    }
+
     useTestNG()
 
     jvmArgs '-Xss16m'
@@ -100,6 +104,7 @@ dependencies {
     testCompile "org.springframework:spring-test:${springVersion}"
 }
 
+
 javadoc {
     options.author = true
     options.header = project.name
@@ -110,6 +115,7 @@ javadoc {
             "http://netty.io/4.0/api/"
     )
 }
+
 
 task sourcesJar(type: Jar, dependsOn: classes) {
     classifier = 'sources'
@@ -136,6 +142,7 @@ jacocoTestReport {
 def bintrayUsername = project.hasProperty('bintrayUser') ? project.bintrayUser : ''
 def bintrayPassword = project.hasProperty('bintrayKey') ? project.bintrayKey : ''
 def pullRequest = System.getenv('TRAVIS_PULL_REQUEST')
+def branchName = System.getenv('TRAVIS_BRANCH')
 
 artifactory {
     contextUrl = 'http://oss.jfrog.org/artifactory'

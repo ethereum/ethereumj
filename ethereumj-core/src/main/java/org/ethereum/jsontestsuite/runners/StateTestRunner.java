@@ -53,7 +53,9 @@ public class StateTestRunner {
         repository.flush();
 
         logger.info("--------- POST Validation---------");
-        List<LogInfo> origLogs = executor.getResult().getLogInfoList();
+        List<LogInfo> origLogs = null;
+        if (executor.getResult() != null)
+            origLogs = executor.getResult().getLogInfoList();
         List<LogInfo> postLogs = LogBuilder.build(stateTestCase2.getLogs());
         LogsValidator.valid(origLogs, postLogs);
 

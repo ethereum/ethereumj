@@ -7,7 +7,7 @@ public class LogTck {
     String address;
     String bloom;
     String data;
-    List<String> topic;
+    List<String> topics;
 
     public LogTck() {
     }
@@ -36,11 +36,11 @@ public class LogTck {
         this.data = data;
     }
 
-    public List<String> getTopic() {
-        return topic;
+    public List<String> getTopics() {
+        return topics;
     }
 
-    public void setTopic(List<String> topic) {
-        this.topic = topic;
+    public void setTopics(List<String> topics) {
+        this.topics = topics;
     }
 }

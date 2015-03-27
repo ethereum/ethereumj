@@ -16,6 +16,14 @@ public class LogsValidator {
         int i = 0;
         for (LogInfo postLog : postLogs) {
 
+            if (origLogs == null || origLogs.size() - 1 < i){
+                String formattedString = String.format("Log: %s: was expected but doesn't exist: address: %s",
+                        i, Hex.toHexString(postLog.getAddress()));
+                results.add(formattedString);
+
+                continue;
+            }
+
             LogInfo realLog = origLogs.get(i);
 
             String postAddress = Hex.toHexString(postLog.getAddress());

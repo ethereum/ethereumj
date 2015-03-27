@@ -31,12 +31,12 @@ import static org.ethereum.core.Denomination.SZABO;
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
  * although it does have some differences.
- * <p/>
+ *
  * The main difference between Ethereum and Bitcoin with regard to the blockchain architecture
  * is that, unlike Bitcoin, Ethereum blocks contain a copy of both the transaction list
  * and the most recent state. Aside from that, two other values, the block number and
  * the difficulty, are also stored in the block.
- * <p/>
+ *
  * The block validation algorithm in Ethereum is as follows:
  * <ol>
  * <li>Check if the previous block referenced exists and is valid.</li>
