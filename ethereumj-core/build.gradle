@@ -136,6 +136,7 @@ jacocoTestReport {
 def bintrayUsername = project.hasProperty('bintrayUser') ? project.bintrayUser : ''
 def bintrayPassword = project.hasProperty('bintrayKey') ? project.bintrayKey : ''
 def pullRequest = System.getenv('TRAVIS_PULL_REQUEST')
+def branchName = System.getenv('TRAVIS_BRANCH')
 
 artifactory {
     contextUrl = 'http://oss.jfrog.org/artifactory'
@@ -155,7 +156,11 @@ artifactory {
 }
 
 artifactoryPublish.onlyIf {
-    (!pullRequest || pullRequest == 'false') && project.version.endsWith('-SNAPSHOT')
+//    (!pullRequest || pullRequest == 'false') &&
+//            project.version.endsWith('-SNAPSHOT') &&
+
+    
+    branchName.startsWith('master')
 }
 
 bintray {
@@ -184,6 +189,8 @@ install {
 }
 
 task publish {
+
+    println "publishing if master current branch: " + branchName
     description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }
