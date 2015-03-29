@@ -62,9 +62,9 @@ test {
         logger.lifecycle("Running test: ${descriptor}")
     }
 
-    useTestNG()
+//    useTestNG()
 
-    jvmArgs '-Xss16m'
+    jvmArgs '-Xss32m'
 
     testLogging {
         events "failed"

@@ -115,6 +115,7 @@ public class BlockTest {
         assertEquals(POC9_GENESIS_HEX_RLP_ENCODED, Hex.toHexString(genesis.getEncoded()));
     }
 
+    @Ignore
     @Test
     public void testGenesisPremineData() {
         Genesis genesis = (Genesis) Genesis.getInstance();
@@ -123,6 +124,7 @@ public class BlockTest {
     }
 
 
+    @Ignore
     @Test
     public void testPremineFromJSON() throws ParseException {
 
@@ -150,17 +152,20 @@ public class BlockTest {
     }
 
 
+    @Ignore
     @Test /* block without transactions - block#32  */
     public void testEmptyBlock() {
         // todo: add real block wire format testing
     }
 
+    @Ignore
     @Test /* block with some transactions  */
     public void testWithTransactionsBlock() {
         // todo: add real block wire format testing
     }
 
 
+    @Ignore
     @Test
     public void testCalcDifficulty() {
 
