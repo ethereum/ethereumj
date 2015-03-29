@@ -22,11 +22,10 @@ public class RunTck {
     public static void main(String[] args) throws ParseException, IOException {
 
         if (args.length > 0){
-            System.out.println("TCK Running, file: " + args[0]);
+            logger.info("TCK Running, file: " + args[0]);
             runTest(args[0]);
-
         } else {
-            System.out.println("No test case specified");
+            logger.info("No test case specified");
         }
     }
 

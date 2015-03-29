@@ -43,6 +43,10 @@ public class JSONReader {
         System.out.println("Loading local file: " + filename);
         try {
             File vmTestFile = new File(filename);
+            if (!vmTestFile.exists()){
+                System.out.println(" Error: no file: " +filename);
+                System.exit(1);
+            }
             return new String(Files.readAllBytes(vmTestFile.toPath()));
         } catch (IOException e) {
             e.printStackTrace();
