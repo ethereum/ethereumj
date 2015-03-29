@@ -37,9 +37,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.util.BIUtil.isNotCovers;
-import static org.ethereum.util.BIUtil.isPositive;
-import static org.ethereum.util.BIUtil.toBI;
+import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -420,7 +418,7 @@ public class Program {
         }
 
         // 4. CREATE THE CONTRACT OUT OF RETURN
-        byte[] code = result.getHReturn().array();
+        byte[] code = result.getHReturn();
 
         long storageCost = code.length * GasCost.CREATE_DATA_BYTE;
         long afterSpend = invokeData.getGas().longValue() - storageCost - result.getGasUsed();
@@ -535,15 +533,15 @@ public class Program {
 
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
         if (result != null) {
-            ByteBuffer buffer = result.getHReturn();
+            byte[] buffer = result.getHReturn();
             int allocSize = msg.getOutDataSize().intValue();
             if (buffer != null && allocSize > 0) {
-                int retSize = buffer.limit();
+                int retSize = buffer.length;
                 int offset = msg.getOutDataOffs().intValue();
                 if (retSize > allocSize)
-                    this.memorySave(offset, buffer.array());
+                    this.memorySave(offset, buffer);
                 else
-                    this.memorySave(offset, allocSize, buffer.array());
+                    this.memorySave(offset, allocSize, buffer);
             }
         }
 
@@ -817,7 +815,7 @@ public class Program {
 
             if (result.getHReturn() != null)
                 globalOutput.append("\n  HReturn: ").append(
-                        Hex.toHexString(result.getHReturn().array()));
+                        Hex.toHexString(result.getHReturn()));
 
             // sophisticated assumption that msg.data != codedata
             // means we are calling the contract not creating it
@@ -946,9 +944,10 @@ public class Program {
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
 
-        //CHECKS:
-        //TODO this is duplicated in callToAddress(), move to VM class instead ?
+        Repository track = this.getResult().getRepository().startTracking();
+
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
+        byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
         BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
@@ -958,7 +957,8 @@ public class Program {
         }
 
         byte[] data = this.memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
-        this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), msg.getEndowment().value().negate());
+
+        transfer(track, senderAddress, codeAddress, msg.getEndowment().value());
 
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test
@@ -972,13 +972,12 @@ public class Program {
         }
 
 
-        this.result.getRepository().addBalance(msg.getCodeAddress().getLast20Bytes(), msg.getEndowment().value());
-
         long requiredGas = contract.getGasForData(data);
         if (requiredGas > msg.getGas().longValue()) {
 
             this.refundGas(0, "call pre-compiled"); //matches cpp logic
             this.stackPushZero();
+            track.rollback();
         } else {
 
             this.refundGas(msg.getGas().longValue() - requiredGas, "call pre-compiled");
@@ -986,6 +985,7 @@ public class Program {
 
             this.memorySave(msg.getOutDataOffs().intValue(), out);
             this.stackPushOne();
+            track.commit();
         }
     }
 

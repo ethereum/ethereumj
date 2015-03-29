@@ -96,4 +96,9 @@ public class BIUtil {
         repository.addBalance(fromAddr, value.negate());
         repository.addBalance(toAddr, value);
     }
+
+    public static boolean exitLong(BigInteger value){
+
+        return (value.compareTo(new BigInteger(Long.MAX_VALUE + ""))) > -1;
+    }
 }

@@ -50,102 +50,6 @@ public class TestRunner {
         return resultCollector;
     }
 
-    public List<String> runTestCase(StateTestCase testCase) {
-
-        List<String> results = new ArrayList<>();
-        logger.info("\n***");
-        logger.info(" Running test case: [" + testCase.getName() + "]");
-        logger.info("***\n");
-
-        logger.info("--------- PRE ---------");
-        RepositoryImpl repository = loadRepository(new RepositoryDummy(), testCase.getPre());
-        logger.info("loaded repository");
-
-        org.ethereum.core.Transaction tx = createTransaction(testCase.getTransaction());
-        logger.info("transaction: {}", tx.toString());
-
-        byte[] secretKey = testCase.getTransaction().secretKey;
-        logger.info("sign tx with: {}", Hex.toHexString(secretKey));
-        tx.sign(secretKey);
-
-        BlockchainImpl blockchain = new BlockchainImpl();
-        blockchain.setRepository(repository);
-
-        byte[] coinbase = testCase.getEnv().getCurrentCoinbase();
-        ProgramInvokeFactory invokeFactory = new TestProgramInvokeFactory(testCase.getEnv());
-
-        Block block = new Block(
-                ByteUtil.EMPTY_BYTE_ARRAY,
-                ByteUtil.EMPTY_BYTE_ARRAY,
-                coinbase,
-                ByteUtil.EMPTY_BYTE_ARRAY,
-                testCase.getEnv().getCurrentDifficulty(),
-                new BigInteger(1, testCase.getEnv().getCurrentNumber()).longValue(),
-                new BigInteger(1, testCase.getEnv().getCurrentGasLimit()).longValue(),
-                0L,
-                new BigInteger(1, testCase.getEnv().getCurrentTimestamp()).longValue(),
-                new byte[32],
-                ByteUtil.ZERO_BYTE_ARRAY,
-                ByteUtil.ZERO_BYTE_ARRAY,
-                null, null);
-
-        blockchain.setBestBlock(block);
-        blockchain.setProgramInvokeFactory(invokeFactory);
-        blockchain.startTracking();
-
-        Repository track = repository.startTracking();
-        TransactionExecutor executor =
-                new TransactionExecutor(tx, coinbase, track, new BlockStoreDummy(),
-                        invokeFactory, blockchain.getBestBlock());
-        executor.execute();
-        track.commit();
-
-        logger.info("compare results");
-
-        List<LogInfo> logs = null;
-        if (executor.getResult() != null)
-            logs = executor.getResult().getLogInfoList();
-
-        List<String> logResults = testCase.getLogs().compareToReal(logs);
-        results.addAll(logResults);
-
-        Set<ByteArrayWrapper> fullAddressSet = repository.getFullAddressSet();
-        int repoSize = 0;
-        for (ByteArrayWrapper addrWrapped : fullAddressSet) {
-
-            byte[] addr = addrWrapped.getData();
-
-            org.ethereum.core.AccountState accountState = repository.getAccountState(addr);
-            ContractDetails contractDetails = repository.getContractDetails(addr);
-
-            logger.info("{} \n{} \n{}", Hex.toHexString(addr),
-                    accountState.toString(), contractDetails.toString());
-            logger.info("");
-
-            AccountState expectedAccountState = testCase.getPost().get(wrap(addr));
-            if (expectedAccountState == null) {
-                String formattedString = String.format("Unexpected account state: address: %s", Hex.toHexString(addr));
-                results.add(formattedString);
-                continue;
-            }
-
-            List<String> result = expectedAccountState.compareToReal(accountState, contractDetails);
-            results.addAll(result);
-
-            ++repoSize;
-        }
-
-        int postRepoSize = testCase.getPost().size();
-
-        if (postRepoSize > repoSize) {
-            results.add("ERROR: Expected 'Post' repository contains more accounts than executed repository ");
-
-            logger.info("Full address set: " + fullAddressSet);
-
-        }
-
-        return results;
-    }
 
     public List<String> runTestCase(BlockTestCase testCase) {
 
@@ -533,7 +437,7 @@ public class TestRunner {
                 byte[] expectedHReturn = testCase.getOut();
                 byte[] actualHReturn = EMPTY_BYTE_ARRAY;
                 if (program.getResult().getHReturn() != null) {
-                    actualHReturn = program.getResult().getHReturn().array();
+                    actualHReturn = program.getResult().getHReturn();
                 }
 
                 if (!Arrays.equals(expectedHReturn, actualHReturn)) {

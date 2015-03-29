@@ -1,123 +1,81 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.jsontestsuite.model.AccountTck;
+import org.ethereum.jsontestsuite.model.EnvTck;
+import org.ethereum.jsontestsuite.model.LogTck;
+import org.ethereum.jsontestsuite.model.TransactionTck;
 
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.ParseException;
-
-import org.spongycastle.util.encoders.Hex;
-
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-/**
- * @author Roman Mandeleil
- * @since 15.12.2014
- */
 public class StateTestCase {
 
-    private String name = "";
 
-    private Env env;
-    private Logs logs;
-    private byte[] out;
+    private EnvTck env;
+    private List<LogTck> logs;
+    private String out;
+    private Map<String, AccountTck> pre;
+    private String postStateRoot;
+    private Map<String, AccountTck> post;
+    private TransactionTck transaction;
 
-    //            "pre": { ... },
-    private Map<ByteArrayWrapper, AccountState> pre = new HashMap<>();
 
-    //            "post": { ... },
-    private Map<ByteArrayWrapper, AccountState> post = new HashMap<>();
-
-    private Transaction transaction;
-
-    public StateTestCase(String name, JSONObject testCaseJSONObj) throws ParseException {
-
-        this(testCaseJSONObj);
-        this.name = name;
+    public StateTestCase() {
     }
 
-    public StateTestCase(JSONObject testCaseJSONObj) throws ParseException {
-
-        try {
-
-            JSONObject envJSON = (JSONObject) testCaseJSONObj.get("env");
-            JSONArray logsJSON = (JSONArray) testCaseJSONObj.get("logs");
-            String outStr = testCaseJSONObj.get("out").toString();
-            JSONObject txJSON = (JSONObject) testCaseJSONObj.get("transaction");
-
-            JSONObject preJSON = (JSONObject) testCaseJSONObj.get("pre");
-            JSONObject postJSON = (JSONObject) testCaseJSONObj.get("post");
-
-            this.env = new Env(envJSON);
-            this.logs = new Logs(logsJSON);
-            this.out = Utils.parseData(outStr);
-            this.transaction = new Transaction(txJSON);
-
-            for (Object key : preJSON.keySet()) {
-
-                byte[] keyBytes = Hex.decode(key.toString());
-                AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject) preJSON.get(key));
-
-                pre.put(new ByteArrayWrapper(keyBytes), accountState);
-            }
-
-            for (Object key : postJSON.keySet()) {
-
-                byte[] keyBytes = Hex.decode(key.toString());
-                AccountState accountState =
-                        new AccountState(keyBytes, (JSONObject) postJSON.get(key));
-
-                post.put(new ByteArrayWrapper(keyBytes), accountState);
-            }
-
-
-        } catch (Throwable e) {
-            throw new ParseException(0, e);
-        }
-    }
-
-
-    public String getName() {
-        return name;
-    }
-
-    public Env getEnv() {
+    public EnvTck getEnv() {
         return env;
     }
 
-    public Logs getLogs() {
+    public void setEnv(EnvTck env) {
+        this.env = env;
+    }
+
+    public List<LogTck> getLogs() {
         return logs;
     }
 
-    public byte[] getOut() {
+    public void setLogs(List<LogTck> logs) {
+        this.logs = logs;
+    }
+
+    public String getOut() {
         return out;
     }
 
-    public Map<ByteArrayWrapper, AccountState> getPre() {
+    public void setOut(String out) {
+        this.out = out;
+    }
+
+    public Map<String, AccountTck> getPre() {
         return pre;
     }
 
-    public Map<ByteArrayWrapper, AccountState> getPost() {
+    public void setPre(Map<String, AccountTck> pre) {
+        this.pre = pre;
+    }
+
+    public String getPostStateRoot() {
+        return postStateRoot;
+    }
+
+    public void setPostStateRoot(String postStateRoot) {
+        this.postStateRoot = postStateRoot;
+    }
+
+    public Map<String, AccountTck> getPost() {
         return post;
     }
 
-    public Transaction getTransaction() {
+    public void setPost(Map<String, AccountTck> post) {
+        this.post = post;
+    }
+
+    public TransactionTck getTransaction() {
         return transaction;
     }
 
-    @Override
-    public String toString() {
-        return "StateTestCase{" +
-                "name='" + name + '\'' +
-                ", env=" + env +
-                ", logs=" + logs +
-                ", out=" + Arrays.toString(out) +
-                ", pre=" + pre +
-                ", post=" + post +
-                ", transaction=" + transaction +
-                '}';
+    public void setTransaction(TransactionTck transaction) {
+        this.transaction = transaction;
     }
 }

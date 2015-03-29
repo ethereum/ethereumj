@@ -7,7 +7,6 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -101,87 +100,6 @@ public class GitHubJSONTestSuite {
         }
     }
 
-    protected static void runGitHubJsonStateTest(String json, String testName) throws ParseException {
-        Assume.assumeFalse("Online test is not available", json.equals(""));
-
-        JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
-
-        StateTestSuite testSuite = new StateTestSuite(testSuiteObj);
-
-        for (StateTestCase testCase : testSuite.getAllTests()) {
-            if (testCase.getName().equals(testName))
-                logger.info(" => " + testCase.getName());
-            else
-                logger.info("    " + testCase.getName());
-        }
-
-        StateTestCase testCase = testSuite.getTestCase(testName);
-        TestRunner runner = new TestRunner();
-        List<String> result = runner.runTestCase(testCase);
-
-        if (!result.isEmpty())
-            for (String single : result)
-                logger.info(single);
-
-        assertTrue(result.isEmpty());
-    }
-
-    protected static void runGitHubJsonStateTest(String json, Set<String> excluded) throws ParseException {
-        Assume.assumeFalse("Online test is not available", json.equals(""));
-
-        JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
-
-        StateTestSuite testSuite = new StateTestSuite(testSuiteObj);
-        Collection<StateTestCase> testCollection = testSuite.getAllTests();
-
-        for (StateTestCase testCase : testSuite.getAllTests()) {
-
-            String prefix = "    ";
-            if (excluded.contains(testCase.getName())) prefix = "[X] ";
-
-            logger.info(prefix + testCase.getName());
-        }
-
-        for (StateTestCase testCase : testCollection) {
-
-            if (excluded.contains(testCase.getName())) continue;
-            TestRunner runner = new TestRunner();
-            List<String> result = runner.runTestCase(testCase);
-
-            if (!result.isEmpty())
-                for (String single : result)
-                    logger.info(single);
-
-            assertTrue(result.isEmpty());
-        }
-    }
-
-
-    protected static void runGitHubJsonStateTest(String json) throws ParseException {
-        Assume.assumeFalse("Online test is not available", json.equals(""));
-
-        JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject) parser.parse(json);
-
-        StateTestSuite testSuite = new StateTestSuite(testSuiteObj);
-        Collection<StateTestCase> testCollection = testSuite.getAllTests();
-
-
-        for (StateTestCase testCase : testCollection) {
-
-            TestRunner runner = new TestRunner();
-            List<String> result = runner.runTestCase(testCase);
-
-            if (!result.isEmpty())
-                for (String single : result)
-                    logger.info(single);
-
-            assertTrue(result.isEmpty());
-            logger.info(" *** Passed: " + testCase.getName());
-        }
-    }
 
     protected static void runGitHubJsonSingleBlockTest(String json, String testName) throws ParseException, IOException {
 
@@ -228,15 +146,15 @@ public class GitHubJSONTestSuite {
     }
 
 
-    public static void runNewStateTest(String jsonSuite) throws IOException {
-        runNewStateTest(jsonSuite, new HashSet<String>());
+    public static void runStateTest(String jsonSuite) throws IOException {
+        runStateTest(jsonSuite, new HashSet<String>());
     }
 
 
-    public static void runNewStateTest(String jsonSuite, String testName) throws IOException {
+    public static void runStateTest(String jsonSuite, String testName) throws IOException {
 
-        StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
-        Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
+        StateTestSuite stateTestSuite2 = new StateTestSuite(jsonSuite);
+        Map<String, StateTestCase> testCases = stateTestSuite2.getTestCases();
 
         for (String testCase : testCases.keySet()) {
             if (testCase.equals(testName))
@@ -245,7 +163,7 @@ public class GitHubJSONTestSuite {
                 logger.info("     " + testCase);
         }
 
-        StateTestCase2 testCase = testCases.get(testName);
+        StateTestCase testCase = testCases.get(testName);
         if (testCase != null){
             String output = String.format("*  running: %s  *", testName);
             String line = output.replaceAll(".", "*");
@@ -253,17 +171,19 @@ public class GitHubJSONTestSuite {
             logger.info(line);
             logger.info(output);
             logger.info(line);
-            StateTestRunner.run(testCases.get(testName));
+            List<String> fails = StateTestRunner.run(testCases.get(testName));
+
+            assertTrue(fails.size() == 0);
 
         } else {
             logger.error("Sorry test case doesn't exist: {}", testName);
         }
     }
 
-    public static void runNewStateTest(String jsonSuite, Set<String> excluded) throws IOException {
+    public static void runStateTest(String jsonSuite, Set<String> excluded) throws IOException {
 
-        StateTestSuite2 stateTestSuite2 = new StateTestSuite2(jsonSuite);
-        Map<String, StateTestCase2> testCases = stateTestSuite2.getTestCases();
+        StateTestSuite stateTestSuite2 = new StateTestSuite(jsonSuite);
+        Map<String, StateTestCase> testCases = stateTestSuite2.getTestCases();
         Map<String, Boolean> summary = new HashMap<>();
 
 

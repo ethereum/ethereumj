@@ -35,6 +35,7 @@ public class JSONReader {
         String json = "";
         if (!SystemProperties.CONFIG.vmTestLoadLocal())
             json = getFromUrl("https://raw.githubusercontent.com/ethereum/tests/" + shacommit + "/" + filename);
+        if (!json.isEmpty()) json = json.replaceAll("//", "data");
         return json.isEmpty() ? getFromLocal(filename) : json;
     }
 

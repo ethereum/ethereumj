@@ -13,6 +13,8 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.ethereum.util.BIUtil.exitLong;
+import static org.ethereum.util.BIUtil.isCovers;
 import static org.ethereum.util.BIUtil.toBI;
 import static org.ethereum.util.ByteUtil.byteArrayToLong;
 
@@ -44,6 +46,12 @@ public class BlockBuilder {
 
     public static Block build(Env env){
 
+
+        // TODO: it can be removed in the future when block will be adapted to 32 bytes range gas limit
+        long gasLimit = byteArrayToLong(env.getCurrentGasLimit());
+        if (exitLong(toBI(env.getCurrentGasLimit())))
+            gasLimit = Long.MAX_VALUE;
+
         Block block = new Block(
                 ByteUtil.EMPTY_BYTE_ARRAY,
                 ByteUtil.EMPTY_BYTE_ARRAY,
@@ -52,7 +60,7 @@ public class BlockBuilder {
                 env.getCurrentDifficulty(),
 
                 byteArrayToLong(env.getCurrentNumber()),
-                byteArrayToLong(env.getCurrentGasLimit()),
+                gasLimit,
                 0L,
                 byteArrayToLong(env.getCurrentTimestamp()),
                 new byte[32],

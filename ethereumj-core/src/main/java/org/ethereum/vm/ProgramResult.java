@@ -1,11 +1,14 @@
 package org.ethereum.vm;
 
 import org.ethereum.facade.Repository;
+import org.ethereum.util.ByteUtil;
 
 import java.nio.ByteBuffer;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * @author Roman Mandeleil
@@ -14,7 +17,7 @@ import java.util.List;
 public class ProgramResult {
 
     private long gasUsed = 0;
-    private ByteBuffer hReturn = null;
+    private byte[] hReturn = EMPTY_BYTE_ARRAY;
     private RuntimeException exception;
     private List<DataWord> deleteAccounts;
     private List<LogInfo> logInfoList;
@@ -38,13 +41,11 @@ public class ProgramResult {
     }
 
     public void setHReturn(byte[] hReturn) {
-        this.hReturn = ByteBuffer.allocate(hReturn.length);
-        this.hReturn.put(hReturn);
+        this.hReturn = hReturn;
+
     }
 
-    public ByteBuffer getHReturn() {
-        if (hReturn == null)
-           this.setHReturn(new byte[] {});
+    public byte[] getHReturn() {
         return hReturn;
     }
 

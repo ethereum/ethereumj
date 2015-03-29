@@ -2435,7 +2435,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn()).toUpperCase());
         assertTrue(program.isStopped());
     }
 
@@ -2454,7 +2454,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn()).toUpperCase());
         assertTrue(program.isStopped());
     }
 
@@ -2475,7 +2475,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn()).toUpperCase());
         assertTrue(program.isStopped());
     }
 
@@ -2497,7 +2497,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn().array()).toUpperCase());
+        assertEquals(s_expected_1, Hex.toHexString(program.getResult().getHReturn()).toUpperCase());
         assertTrue(program.isStopped());
     }
 

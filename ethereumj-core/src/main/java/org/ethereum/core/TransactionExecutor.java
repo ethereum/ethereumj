@@ -31,7 +31,7 @@ public class TransactionExecutor {
     private byte[] coinbase;
 
     private TransactionReceipt receipt;
-    private ProgramResult result;
+    private ProgramResult result = new ProgramResult();
     private Block currentBlock;
 
 
@@ -326,8 +326,8 @@ public class TransactionExecutor {
         if (initResults) {
             // Save the code created by init
             byte[] bodyCode = null;
-            if (result.getHReturn() != null && result.getHReturn().array().length > 0) {
-                bodyCode = result.getHReturn().array();
+            if (result.getHReturn() != null && result.getHReturn().length > 0) {
+                bodyCode = result.getHReturn();
             }
 
             if (bodyCode != null) {

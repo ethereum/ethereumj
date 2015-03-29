@@ -7,23 +7,26 @@ import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.Env;
-import org.ethereum.jsontestsuite.StateTestCase2;
+import org.ethereum.jsontestsuite.StateTestCase;
 import org.ethereum.jsontestsuite.TestProgramInvokeFactory;
 import org.ethereum.jsontestsuite.builder.*;
 import org.ethereum.jsontestsuite.validators.LogsValidator;
+import org.ethereum.jsontestsuite.validators.OutputValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class StateTestRunner {
 
     private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
-    public static List<String> run(StateTestCase2 stateTestCase2) {
+    public static List<String> run(StateTestCase stateTestCase2) {
 
         logger.info("");
         Repository repository = RepositoryBuilder.build(stateTestCase2.getPre());
@@ -48,19 +51,34 @@ public class StateTestRunner {
         TransactionExecutor executor =
                 new TransactionExecutor(transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
                         invokeFactory, blockchain.getBestBlock());
-        executor.execute();
+
+        try{
+            executor.execute();
+        } catch (StackOverflowError soe){
+            logger.error(" !!! StackOverflowError: update your java run command with -Xss32M !!!");
+            System.exit(-1);
+        }
+
+
         track.commit();
         repository.flush();
 
         logger.info("--------- POST Validation---------");
-        List<LogInfo> origLogs = null;
-        if (executor.getResult() != null)
-            origLogs = executor.getResult().getLogInfoList();
+        List<LogInfo> origLogs = executor.getResult().getLogInfoList();
         List<LogInfo> postLogs = LogBuilder.build(stateTestCase2.getLogs());
-        LogsValidator.valid(origLogs, postLogs);
+
+        List<String> logsResult = LogsValidator.valid(origLogs, postLogs);
 
         Repository postRepository = RepositoryBuilder.build(stateTestCase2.getPost());
-        List<String> results = RepositoryValidator.valid(repository, postRepository);
+        List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
+
+        List<String> outputResults =
+                OutputValidator.valid(Hex.toHexString(executor.getResult().getHReturn()), stateTestCase2.getOut());
+
+        List<String> results = new ArrayList<>();
+        results.addAll(repoResults);
+        results.addAll(logsResult);
+        results.addAll(outputResults);
 
         for (String result : results) {
             logger.error(result);
