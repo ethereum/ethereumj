@@ -42,13 +42,7 @@ public class JSONReader {
     public static String getFromLocal(String filename) {
         System.out.println("Loading local file: " + filename);
         try {
-            if (System.getProperty("ETHEREUM_TEST_PATH") == null) {
-                System.out.println("ETHEREUM_TEST_PATH is not passed as a VM argument, please make sure you pass it " +
-                        "with the correct path");
-                return "";
-            }
-            System.out.println("From: " + System.getProperty("ETHEREUM_TEST_PATH"));
-            File vmTestFile = new File(System.getProperty("ETHEREUM_TEST_PATH") + filename);
+            File vmTestFile = new File(filename);
             return new String(Files.readAllBytes(vmTestFile.toPath()));
         } catch (IOException e) {
             e.printStackTrace();

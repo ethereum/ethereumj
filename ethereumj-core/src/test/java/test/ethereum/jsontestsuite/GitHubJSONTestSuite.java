@@ -7,6 +7,7 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -58,7 +59,7 @@ public class GitHubJSONTestSuite {
             if (testName.equals((testCase.getName()))) {
                 TestRunner runner = new TestRunner();
                 List<String> result = runner.runTestCase(testCase);
-                assertTrue(result.isEmpty());
+                Assert.assertTrue(result.isEmpty());
                 return;
             }
         }
@@ -96,7 +97,7 @@ public class GitHubJSONTestSuite {
 
             TestRunner runner = new TestRunner();
             List<String> result = runner.runTestCase(testCase);
-            assertTrue(result.isEmpty());
+            Assert.assertTrue(result.isEmpty());
         }
     }
 
@@ -140,7 +141,7 @@ public class GitHubJSONTestSuite {
             for (String single : result)
                 logger.info(single);
 
-        assertTrue(result.isEmpty());
+        Assert.assertTrue(result.isEmpty());
         logger.info(" *** Passed: " + testName);
 
     }
@@ -153,8 +154,8 @@ public class GitHubJSONTestSuite {
 
     public static void runStateTest(String jsonSuite, String testName) throws IOException {
 
-        StateTestSuite stateTestSuite2 = new StateTestSuite(jsonSuite);
-        Map<String, StateTestCase> testCases = stateTestSuite2.getTestCases();
+        StateTestSuite stateTestSuite = new StateTestSuite(jsonSuite);
+        Map<String, StateTestCase> testCases = stateTestSuite.getTestCases();
 
         for (String testCase : testCases.keySet()) {
             if (testCase.equals(testName))
@@ -173,7 +174,7 @@ public class GitHubJSONTestSuite {
             logger.info(line);
             List<String> fails = StateTestRunner.run(testCases.get(testName));
 
-            assertTrue(fails.size() == 0);
+            Assert.assertTrue(fails.size() == 0);
 
         } else {
             logger.error("Sorry test case doesn't exist: {}", testName);
@@ -182,8 +183,8 @@ public class GitHubJSONTestSuite {
 
     public static void runStateTest(String jsonSuite, Set<String> excluded) throws IOException {
 
-        StateTestSuite stateTestSuite2 = new StateTestSuite(jsonSuite);
-        Map<String, StateTestCase> testCases = stateTestSuite2.getTestCases();
+        StateTestSuite stateTestSuite = new StateTestSuite(jsonSuite);
+        Map<String, StateTestCase> testCases = stateTestSuite.getTestCases();
         Map<String, Boolean> summary = new HashMap<>();
 
 
@@ -194,7 +195,7 @@ public class GitHubJSONTestSuite {
                 logger.info("     " + testCase);
         }
 
-        Set<String> testNames = stateTestSuite2.getTestCases().keySet();
+        Set<String> testNames = stateTestSuite.getTestCases().keySet();
         for (String testName : testNames){
 
             if (excluded.contains(testName)) continue;
@@ -227,7 +228,7 @@ public class GitHubJSONTestSuite {
 
         logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
 
-        assertTrue(fails == 0);
+        Assert.assertTrue(fails == 0);
     }
 
 

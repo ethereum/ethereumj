@@ -74,7 +74,7 @@ public class GitHubVMTest {
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
 
-    @Ignore  //FIXME - 60M - need new fast downloader 
+    @Ignore  //FIXME - 60M - need new fast downloader
     @Test
     public void testvmInputLimitsTest1FromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
