@@ -184,6 +184,7 @@ artifactory {
 artifactoryPublish.onlyIf {
     (!pullRequest || pullRequest == 'false') &&
             project.version.endsWith('-SNAPSHOT') &&
+            branchName != null &&
             branchName.startsWith('master')
 }
 
