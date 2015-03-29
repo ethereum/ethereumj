@@ -11,6 +11,7 @@ script:
   - ./gradlew clean build publish jacocoTestReport coveralls --stacktrace --info
 
 
+
 cache:
   directories:
     - $HOME/.gradle
