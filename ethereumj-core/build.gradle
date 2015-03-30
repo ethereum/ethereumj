@@ -62,8 +62,6 @@ test {
         logger.lifecycle("Running test: ${descriptor}")
     }
 
-//    useTestNG()
-
     jvmArgs '-Xss32m'
 
     testLogging {
