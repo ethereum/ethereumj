@@ -38,28 +38,40 @@ public class CommonConfig {
     private RedisConnection redisConnection;
 
     @Bean
-    Repository repository(){
+    Repository repository() {
         return new RepositoryImpl(keyValueDataSource(), keyValueDataSource());
     }
 
     @Bean
     @Scope("prototype")
-    public KeyValueDataSource keyValueDataSource(){
-        if (CONFIG.getKeyValueDataSource().equals("redis")) {
-            if (redisConnection.isAvailable()) {
+    public KeyValueDataSource keyValueDataSource() {
+        String dataSource = CONFIG.getKeyValueDataSource();
+        try {
+            if ("redis".equals(dataSource) && redisConnection.isAvailable()) {
                 // Name will be defined before initialization
                 return redisConnection.createDataSource("");
             }
-        }
 
-        return new LevelDbDataSource();
+            dataSource = "leveldb";
+            return new LevelDbDataSource();
+        } finally {
+            logger.info(dataSource + " key-value data source created.");
+        }
     }
 
     @Bean
     public Set<Transaction> pendingTransactions() {
-        return redisConnection.isAvailable()
-                ? redisConnection.createTransactionSet("pendingTransactions")
-                : Collections.synchronizedSet(new HashSet<Transaction>());
+        String storage = "Redis";
+        try {
+            if (redisConnection.isAvailable()) {
+                return redisConnection.createTransactionSet("pendingTransactions");
+            }
+
+            storage = "In memory";
+            return Collections.synchronizedSet(new HashSet<Transaction>());
+        } finally {
+            logger.info(storage + " 'pendingTransactions' storage created.");
+        }
     }
 
     @Bean
