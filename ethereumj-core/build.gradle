@@ -156,11 +156,9 @@ artifactory {
 }
 
 artifactoryPublish.onlyIf {
-//    (!pullRequest || pullRequest == 'false') &&
-//            project.version.endsWith('-SNAPSHOT') &&
-
-    
-    branchName.startsWith('master')
+    (!pullRequest || pullRequest == 'false') &&
+            project.version.endsWith('-SNAPSHOT') &&
+            branchName.startsWith('master')
 }
 
 bintray {
