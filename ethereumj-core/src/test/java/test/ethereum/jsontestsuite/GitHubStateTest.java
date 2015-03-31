@@ -17,7 +17,7 @@ import java.util.Set;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "c97bf26c12e93fa5e45022a8d532d5152fc035a1";
+    public String shacommit = "04108e0be8016c8a7d74d70c11ff00ec6bad6ae3";
 
 
     @Ignore
@@ -79,7 +79,7 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         excluded.add("mload32bitBound_return2");
         excluded.add("mload32bitBound_return");
-        excluded.add("mload32bitBound_Msize");
+        excluded.add("mload32bitBound_Msize");// Falls on Cpp
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -100,16 +100,6 @@ public class GitHubStateTest {
     @Test
     public void stQuadraticComplexityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("Call50000_identity");
-        excluded.add("Return50000");
-        excluded.add("Call50000_rip160");
-        excluded.add("Call50000_identity2");
-        excluded.add("Return50000_2");
-        excluded.add("Call1MB1024Calldepth");
-        excluded.add("Call50000_ecrec");
-        excluded.add("Callcode50000");
-        excluded.add("Call50000");
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stQuadraticComplexityTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -119,7 +109,6 @@ public class GitHubStateTest {
     public void stSolidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         excluded.add("TestBlockAndTransactionProperties");
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stSolidityTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
