@@ -80,7 +80,7 @@ public class VM {
         try {
             OpCode op = OpCode.code(program.getCurrentOp());
             if (op == null)
-                throw program.new IllegalOperationException();
+                throw new Program.IllegalOperationException();
 
             program.setLastOp(op.val());
             program.stackRequire(op.require());

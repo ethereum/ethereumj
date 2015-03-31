@@ -902,6 +902,9 @@ public class Program {
         OpCode op = OpCode.code(code[index]);
         final byte[] continuedCode;
 
+        if (op == null) throw new IllegalOperationException("Invalid operation: " +
+                        Hex.toHexString(code, index, 1));
+
         switch(op) {
             case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
             case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
@@ -975,7 +978,13 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class IllegalOperationException extends RuntimeException {
+    public static class IllegalOperationException extends RuntimeException {
+        public IllegalOperationException(String message) {
+            super(message);
+        }
+
+        public IllegalOperationException() {
+        }
     }
 
     @SuppressWarnings("serial")
