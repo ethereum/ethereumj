@@ -42,7 +42,7 @@ compileJava.dependsOn antlr4
  *     gradle tckRun -PfilePath=[ file path]
  *      e.g: gradle tckRun -PfilePath=E:\temp\test-case.json
  */
-task tckRun(type:JavaExec, dependsOn: build){
+task tckRun(type:JavaExec, dependsOn: classes){
 
     if (project.hasProperty("filePath")) {
         println "TCK will run for: $filePath"
