@@ -905,12 +905,15 @@ public class Program {
     }
 
 
-    public static String stringify(byte[] code, int index, String result) {
+    public static String stringify(byte[] code, int index, String result){
         if (code == null || code.length == 0)
             return result;
 
         OpCode op = OpCode.code(code[index]);
         final byte[] continuedCode;
+
+        if (op == null) throw new IllegalOperationException("Invalid operation: " +
+                Hex.toHexString(code, index, 1));
 
         switch(op) {
             case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
@@ -998,7 +1001,13 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class IllegalOperationException extends RuntimeException {
+    public static class IllegalOperationException extends RuntimeException {
+        public IllegalOperationException(String message) {
+            super(message);
+        }
+
+        public IllegalOperationException() {
+        }
     }
 
     @SuppressWarnings("serial")

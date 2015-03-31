@@ -96,8 +96,8 @@ public class TransactionExecutor {
                 GasCost.TX_NO_ZERO_DATA * tx.nonZeroDataBytes() +
                 GasCost.TX_ZERO_DATA * tx.zeroDataBytes()), 10);
         if (isLessThan(txGasLimit, txDataCost)) {
-            logger.debug("Not enough gas to pay for the transaction: hash={}",
-                    Hex.toHexString(tx.getHash()));
+            logger.debug("Not enough gas to pay for the transaction: hash: {}\n required: {}, found: {}",
+                    Hex.toHexString(tx.getHash()), txDataCost, txGasLimit);
 
             receipt.setCumulativeGas(0);
             this.receipt = receipt;
