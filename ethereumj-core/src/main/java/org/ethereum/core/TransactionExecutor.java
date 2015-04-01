@@ -139,10 +139,6 @@ public class TransactionExecutor {
         if (isContractCreation) {
             receiverAddress = tx.getContractAddress();
             code = tx.getData(); // init code
-
-            // on CREATE the contract is created event if it will rollback
-            track.addBalance(receiverAddress, BigInteger.ZERO);
-
         } else {
             receiverAddress = tx.getReceiveAddress();
             code = track.getCode(receiverAddress);
@@ -248,9 +244,6 @@ public class TransactionExecutor {
                 receipt.setLogInfoList(logs);
 
             } catch (RuntimeException e) {
-                //Don't delete pre-existing contracts in a rollback 
-                if( isContractCreation ) track.delete(receiverAddress); 
-
                 trackTx.rollback();
                 receipt.setCumulativeGas(tx.getGasLimit());
                 this.receipt = receipt;

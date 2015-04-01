@@ -355,11 +355,6 @@ public class Program {
         byte[] nonce = result.getRepository().getNonce(senderAddress).toByteArray();
         byte[] newAddress = HashUtil.calcNewAddr(this.getOwnerAddress().getLast20Bytes(), nonce);
 
-        //In case of hashing collisions, check for any balance before createAccount()
-        BigInteger oldBalance = result.getRepository().getBalance(newAddress);
-        result.getRepository().createAccount(newAddress);
-        result.getRepository().addBalance(newAddress,oldBalance);
-
         if (invokeData.byTestingSuite()) {
             // This keeps track of the contracts created for a test
             this.getResult().addCallCreate(programCode, EMPTY_BYTE_ARRAY,
@@ -375,6 +370,11 @@ public class Program {
         }
 
         Repository track = result.getRepository().startTracking();
+
+        //In case of hashing collisions, check for any balance before createAccount()
+        BigInteger oldBalance = result.getRepository().getBalance(newAddress);
+        track.createAccount(newAddress);
+        track.addBalance(newAddress,oldBalance);
 
         // [4] TRANSFER THE BALANCE
         track.addBalance(senderAddress, endowment.negate());
@@ -407,7 +407,6 @@ public class Program {
                     result.getException());
 
 
-            this.result.getRepository().delete(newAddress);
             track.rollback();
             stackPushZero();
             return;
