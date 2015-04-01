@@ -50,7 +50,6 @@ public class GitHubStateTest {
         excluded.add("StackUnderFlowContractCreation");
         excluded.add("TransactionCreateRandomInitCode");
         excluded.add("TransactionCreateSuicideInInitcode");
-        excluded.add("CallRecursiveContract");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stInitCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
@@ -152,7 +151,6 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //TODO failing on cpp?
         excluded.add("Call10");
-        excluded.add("createWithInvalidOpcode");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);

@@ -407,6 +407,7 @@ public class Program {
                     result.getException());
 
 
+            this.result.getRepository().delete(newAddress);
             track.rollback();
             stackPushZero();
             return;
