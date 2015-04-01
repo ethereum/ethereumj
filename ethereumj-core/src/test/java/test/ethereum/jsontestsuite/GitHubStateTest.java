@@ -47,10 +47,6 @@ public class GitHubStateTest {
     @Test
     public void stInitCodeTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("StackUnderFlowContractCreation");
-        excluded.add("TransactionCreateRandomInitCode");
-        excluded.add("TransactionCreateSuicideInInitcode");
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stInitCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -116,7 +112,6 @@ public class GitHubStateTest {
     @Test
     public void stRecursiveCreate() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("recursiveCreate");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stRecursiveCreate.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);

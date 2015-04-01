@@ -248,6 +248,9 @@ public class TransactionExecutor {
                 receipt.setLogInfoList(logs);
 
             } catch (RuntimeException e) {
+                //Don't delete pre-existing contracts in a rollback 
+                if( isContractCreation ) track.delete(receiverAddress); 
+
                 trackTx.rollback();
                 receipt.setCumulativeGas(tx.getGasLimit());
                 this.receipt = receipt;
