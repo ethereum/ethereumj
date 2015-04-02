@@ -13,6 +13,7 @@ import org.ethereum.jsontestsuite.builder.*;
 import org.ethereum.jsontestsuite.validators.LogsValidator;
 import org.ethereum.jsontestsuite.validators.OutputValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -50,7 +51,7 @@ public class StateTestRunner {
         Repository track = repository.startTracking();
         TransactionExecutor executor =
                 new TransactionExecutor(transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
-                        invokeFactory, blockchain.getBestBlock());
+                        invokeFactory, blockchain.getBestBlock(), new EthereumListenerAdapter());
 
         try{
             executor.execute();

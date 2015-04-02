@@ -1,12 +1,14 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.Wallet;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
-import org.ethereum.jsontestsuite.validators.RepositoryValidator;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -22,7 +24,6 @@ import java.util.*;
 
 import static org.ethereum.jsontestsuite.Utils.parseData;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.ethereum.util.ByteUtil.wrap;
 
 /**
  * @author Roman Mandeleil
@@ -87,8 +88,8 @@ public class TestRunner {
                     blockTck.getTransactions(),
                     blockTck.getUncleHeaders());
 
-            setNewStateRoot = !((blockTck.getTransactions() == null) 
-                && (blockTck.getUncleHeaders() == null) 
+            setNewStateRoot = !((blockTck.getTransactions() == null)
+                && (blockTck.getUncleHeaders() == null)
                 && (blockTck.getBlockHeader() == null));
 
             //DEBUG System.out.println(" --> " + setNewStateRoot);
@@ -133,7 +134,7 @@ public class TestRunner {
         Repository postRepository = RepositoryBuilder.build(testCase.getPostState());
 
         //Uncomment this if you want POST debugging checks enabled
-        //results.addAll(RepositoryValidator.rootValid(repository, postRepository)); 
+        //results.addAll(RepositoryValidator.rootValid(repository, postRepository));
 
         return results;
     }
