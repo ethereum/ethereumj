@@ -84,9 +84,6 @@ public class GitHubStateTest {
     public void stMemoryTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-        excluded.add("stackLimitPush32_1025");
-        excluded.add("stackLimitGas_1025");
-        excluded.add("stackLimitPush31_1025");
 
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
