@@ -5,6 +5,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.LogInfo;
@@ -104,7 +105,7 @@ public class TestRunner {
         Repository track = repository.startTracking();
         TransactionExecutor executor =
                 new TransactionExecutor(tx, coinbase, track, new BlockStoreDummy(),
-                        invokeFactory, blockchain.getBestBlock());
+                        invokeFactory, blockchain.getBestBlock(), new EthereumListenerAdapter());
         executor.execute();
         track.commit();
 

@@ -341,7 +341,7 @@ public class BlockchainImpl implements Blockchain {
 
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
                     track, blockStore,
-                    programInvokeFactory, block);
+                    programInvokeFactory, block, listener);
             executor.execute();
 
             TransactionReceipt receipt = executor.getReceipt();

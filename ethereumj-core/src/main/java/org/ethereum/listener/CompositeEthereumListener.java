@@ -83,9 +83,15 @@ public class CompositeEthereumListener implements EthereumListener {
             listener.onHandShakePeer(helloMessage);
     }
 
+    @Override
+    public void onVMTraceCreated(String transactionHash, String traceAsJson) {
+        for (EthereumListener listener : listeners) {
+            listener.onVMTraceCreated(transactionHash, traceAsJson);
+        }
+    }
+
     public void addListener(EthereumListener listener) {
         listeners.add(listener);
     }
-
 
 }

@@ -2,6 +2,7 @@ package org.ethereum.core;
 
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.LogInfo;
@@ -45,9 +46,10 @@ public class TransactionExecutor {
     private ProgramResult result;
     private Block currentBlock;
 
+    private final EthereumListener listener;
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
-                               ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
+                               ProgramInvokeFactory programInvokeFactory, Block currentBlock, EthereumListener listener) {
 
         this.tx = tx;
         this.coinbase = coinbase;
@@ -55,6 +57,7 @@ public class TransactionExecutor {
         this.blockStore = blockStore;
         this.programInvokeFactory = programInvokeFactory;
         this.currentBlock = currentBlock;
+        this.listener = listener;
     }
 
 /* jeff:
@@ -69,7 +72,8 @@ public class TransactionExecutor {
     public void execute() {
 
 
-        logger.info("applyTransaction: [{}]", Hex.toHexString(tx.getHash()));
+        final String txHash = Hex.toHexString(tx.getHash());
+        logger.info("applyTransaction: [{}]", txHash);
 
         TransactionReceipt receipt = new TransactionReceipt();
 
@@ -94,8 +98,7 @@ public class TransactionExecutor {
         //Insert gas cost protection
         BigInteger gasLimit = new BigInteger(1, tx.getGasLimit());
         if (gasLimit.compareTo(BigInteger.ZERO) == 0) {
-            logger.debug("No gas limit set on transaction: hash={}",
-                    Hex.toHexString(tx.getHash()));
+            logger.debug("No gas limit set on transaction: hash={}", txHash);
 
             receipt.setCumulativeGas(0);
             this.receipt = receipt;
@@ -212,7 +215,9 @@ public class TransactionExecutor {
                 if (CONFIG.playVM())
                     vm.play(program);
 
-                program.saveProgramTraceToFile(Hex.toHexString(tx.getHash()));
+                listener.onVMTraceCreated(txHash, program.getProgramTrace().getJsonString());
+                program.saveProgramTraceToFile(txHash);
+                
                 result = program.getResult();
                 applyProgramResult(result, gasDebit, gasPrice, trackTx,
                         senderAddress, receiverAddress, coinbase, isContractCreation);
