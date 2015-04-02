@@ -84,6 +84,7 @@ public class VM {
 
             program.setLastOp(op.val());
             program.stackRequire(op.require());
+            program.stackMax(op.require(), op.ret()); //Check not exceeding stack limits 
 
             long oldMemSize = program.getMemSize();
             BigInteger newMemSize = BigInteger.ZERO;
