@@ -128,20 +128,24 @@ public class Program {
 
     public void stackPush(byte[] data) {
         DataWord stackWord = new DataWord(data);
+        stackMax(0, 1); //Sanity Check
         stack.push(stackWord);
     }
 
     public void stackPushZero() {
         DataWord stackWord = new DataWord(0);
+        stackMax(0, 1); //Sanity Check
         stack.push(stackWord);
     }
 
     public void stackPushOne() {
         DataWord stackWord = new DataWord(1);
+        stackMax(0, 1); //Sanity Check
         stack.push(stackWord);
     }
 
     public void stackPush(DataWord stackWord) {
+        stackMax(0, 1); //Sanity Check
         stack.push(stackWord);
     }
 
@@ -208,6 +212,12 @@ public class Program {
         if (stack.size() < stackSize) {
             throw new StackTooSmallException("Expected: " + stackSize
                     + ", found: " + stack.size());
+        }
+    }
+
+    public void stackMax(int argsReqs, int returnReqs) {
+        if ( (stack.size() - argsReqs + returnReqs) > 1023) {
+            throw new StackTooLargeException("Expected: less than 1024, found: " + stack.size());
         }
     }
 
@@ -1017,6 +1027,13 @@ public class Program {
     @SuppressWarnings("serial")
     public class StackTooSmallException extends RuntimeException {
         public StackTooSmallException(String message) {
+            super(message);
+        }
+    }
+
+    @SuppressWarnings("serial")
+    public class StackTooLargeException extends RuntimeException {
+        public StackTooLargeException(String message) {
             super(message);
         }
     }
