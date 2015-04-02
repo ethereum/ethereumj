@@ -57,6 +57,9 @@ public class Program {
      */
     private static final int MAX_DEPTH = 1024;
 
+    //Max size for stack checks
+    private static final int MAX_STACKSIZE = 1024;
+
     ProgramInvokeFactory programInvokeFactory = new ProgramInvokeFactoryImpl();
 
     private int invokeHash;
@@ -128,20 +131,17 @@ public class Program {
 
     public void stackPush(byte[] data) {
         DataWord stackWord = new DataWord(data);
-        stackMax(0, 1); //Sanity Check
-        stack.push(stackWord);
+        stackPush(stackWord);
     }
 
     public void stackPushZero() {
         DataWord stackWord = new DataWord(0);
-        stackMax(0, 1); //Sanity Check
-        stack.push(stackWord);
+        stackPush(stackWord);
     }
 
     public void stackPushOne() {
         DataWord stackWord = new DataWord(1);
-        stackMax(0, 1); //Sanity Check
-        stack.push(stackWord);
+        stackPush(stackWord);
     }
 
     public void stackPush(DataWord stackWord) {
@@ -216,8 +216,8 @@ public class Program {
     }
 
     public void stackMax(int argsReqs, int returnReqs) {
-        if ( (stack.size() - argsReqs + returnReqs) > 1023) {
-            throw new StackTooLargeException("Expected: less than 1024, found: " + stack.size());
+        if ( (stack.size() - argsReqs + returnReqs) > MAX_STACKSIZE) {
+            throw new StackTooLargeException("Expected: overflow 1024 elements stack limit");
         }
     }
 

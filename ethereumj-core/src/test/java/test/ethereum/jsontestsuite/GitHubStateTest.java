@@ -17,7 +17,7 @@ import java.util.Set;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "04108e0be8016c8a7d74d70c11ff00ec6bad6ae3";
+    public String shacommit = "049c4d356783eff8c9d3a4c8a1e158f72e512389";
 
 
     @Ignore
@@ -39,6 +39,7 @@ public class GitHubStateTest {
     @Test
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
+        excluded.add("createJS_ExampleContract");
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -84,7 +85,6 @@ public class GitHubStateTest {
     public void stMemoryTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
