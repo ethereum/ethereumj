@@ -17,7 +17,7 @@ import java.util.Set;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "049c4d356783eff8c9d3a4c8a1e158f72e512389";
+    public String shacommit = "2110806beb6ad11ae1601106ff8f026d55cf37b1";
 
 
     @Ignore
@@ -39,7 +39,7 @@ public class GitHubStateTest {
     @Test
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("createJS_ExampleContract");
+        excluded.add("createJS_ExampleContract"); //FIXME Bug on CPP testrunner, storage/SSTORE
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -71,11 +71,10 @@ public class GitHubStateTest {
     //@Ignore
     @Test
     public void stMemoryStressTest() throws ParseException, IOException {
-
         Set<String> excluded = new HashSet<>();
-        excluded.add("mload32bitBound_return2");
-        excluded.add("mload32bitBound_return");
-        excluded.add("mload32bitBound_Msize");// Falls on Cpp
+        excluded.add("mload32bitBound_return2");//FIXME memorySave must support long
+        excluded.add("mload32bitBound_return"); //FIXME memorySave must support long
+        excluded.add("mload32bitBound_Msize"); //FIXME memoryChunk must support long
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -100,7 +99,7 @@ public class GitHubStateTest {
     @Test
     public void stSolidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("TestBlockAndTransactionProperties");
+        excluded.add("TestBlockAndTransactionProperties"); //TODO proper BigInt block support needed
         String json = JSONReader.loadJSONFromCommit("StateTests/stSolidityTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -109,7 +108,6 @@ public class GitHubStateTest {
     @Test
     public void stRecursiveCreate() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stRecursiveCreate.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -141,9 +139,8 @@ public class GitHubStateTest {
     @Test
     public void stSystemOperationsTest() throws IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //TODO failing on cpp?
-        excluded.add("Call10");
-
+        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //FIXME hitting VM limits
+        excluded.add("Call10"); //FIXME gaslimit as biginteger
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -153,8 +150,7 @@ public class GitHubStateTest {
     public void stTransactionTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         excluded.add("OverflowGasRequire");    //FIXME wont work until we use gaslimit as long
-        excluded.add("EmptyTransaction2"); // Buggy testcase ?
-
+        excluded.add("EmptyTransaction2"); // Buggy testcase
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
