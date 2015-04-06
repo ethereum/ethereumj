@@ -118,15 +118,26 @@ public class GitHubJSONTestSuite {
     }
 
 
-    protected static void runGitHubJsonBlockTest(String json) throws ParseException, IOException {
+    protected static void runGitHubJsonBlockTest(String json, Set<String> excluded) throws ParseException, IOException {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         BlockTestSuite testSuite = new BlockTestSuite(json);
         Set<String> testCollection = testSuite.getTestCases().keySet();
 
         for (String testName : testCollection) {
+
+            if ( excluded.contains(testName)) {
+                logger.info(" Not running: " + testName);
+                continue;
+            }
+
             runSingleBlockTest(testSuite, testName);
         }
+    }
+
+    protected static void runGitHubJsonBlockTest(String json) throws ParseException, IOException {
+        Set<String> excluded = new HashSet<>();
+        runGitHubJsonBlockTest(json, excluded);
     }
 
     private static void runSingleBlockTest(BlockTestSuite testSuite, String testName){
@@ -134,7 +145,7 @@ public class GitHubJSONTestSuite {
         BlockTestCase blockTestCase =  testSuite.getTestCases().get(testName);
         TestRunner runner = new TestRunner();
 
-        logger.info("Running test: {}", testName);
+        logger.info("\n\n ***** Running test: {}", testName);
         List<String> result = runner.runTestCase(blockTestCase);
 
         if (!result.isEmpty())

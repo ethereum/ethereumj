@@ -11,6 +11,7 @@ public class BlockTestCase {
 
     private List<BlockTck> blocks;
     private BlockHeaderTck genesisBlockHeader;
+    private String genesisRLP;
     private Map<String, AccountTck> pre;
     private Map<String, AccountTck> postState;
 
@@ -36,6 +37,10 @@ public class BlockTestCase {
 
     public Map<String, AccountTck> getPre() {
         return pre;
+    }
+
+    public String getGenesisRLP() {
+        return genesisRLP;
     }
 
     public void setPre(Map<String, AccountTck> pre) {

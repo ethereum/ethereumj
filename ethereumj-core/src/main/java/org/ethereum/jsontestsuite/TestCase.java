@@ -112,8 +112,11 @@ public class TestCase {
                 this.callCreateList.add(cc);
             }
 
-            this.env = new Env(envJSON);
-            this.exec = new Exec(execJSON);
+            if (testCaseJSONObj.containsKey("env"))
+              this.env = new Env(envJSON);
+
+            if (testCaseJSONObj.containsKey("exec"))
+              this.exec = new Exec(execJSON);
 
         } catch (Throwable e) {
             throw new ParseException(0, e);

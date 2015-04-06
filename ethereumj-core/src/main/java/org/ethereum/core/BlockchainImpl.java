@@ -71,7 +71,7 @@ public class BlockchainImpl implements Blockchain {
 
     @Resource
     @Qualifier("pendingTransactions")
-    private Set<Transaction> pendingTransactions;
+    private Set<Transaction> pendingTransactions = new HashSet<>();
 
     @Autowired
     private Repository repository;
