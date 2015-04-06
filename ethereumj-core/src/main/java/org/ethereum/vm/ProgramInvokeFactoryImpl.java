@@ -185,4 +185,8 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
                 repository, program.invokeData.getCallDeep() + 1, blockStore, byTestingSuite);
     }
+
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
+    }
 }

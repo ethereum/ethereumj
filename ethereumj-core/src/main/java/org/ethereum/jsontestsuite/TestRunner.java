@@ -64,22 +64,14 @@ public class TestRunner {
         Wallet wallet = new Wallet();
         AdminInfo adminInfo = new AdminInfo();
         EthereumListener listener = new CompositeEthereumListener();
+        ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
 
-        byte[] coinbase = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000");
-        byte[] difficulty = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000"); 
-        byte[] gasLimit = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000"); 
-        byte[] number = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000"); 
-        byte[] timestamp = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000"); 
-        byte[] prevHash = Hex.decode("0000000000000000000000000000000000000000000000000000000000000000"); 
-
-        Env env = new Env(coinbase,difficulty,gasLimit,number,timestamp,prevHash);
-        ProgramInvokeFactory invokeFactory = new TestProgramInvokeFactory(env);
-
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(BigInteger.ZERO);
-        blockchain.setProgramInvokeFactory(invokeFactory);
+        blockchain.setProgramInvokeFactory(programInvokeFactory);
+        programInvokeFactory.setBlockchain(blockchain);
 
 
         // todo: validate root of the genesis   *!!!*
