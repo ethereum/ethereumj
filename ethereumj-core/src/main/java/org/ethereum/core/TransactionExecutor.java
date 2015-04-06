@@ -3,6 +3,7 @@ package org.ethereum.core;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.GasCost;
 import org.ethereum.vm.LogInfo;
@@ -47,6 +48,12 @@ public class TransactionExecutor {
 
     private final EthereumListener listener;
 
+    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
+                               ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
+        
+        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter());
+    }
+    
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock, EthereumListener listener) {
 
