@@ -105,7 +105,7 @@ public class TestRunner {
         Repository track = repository.startTracking();
         TransactionExecutor executor =
                 new TransactionExecutor(tx, coinbase, track, new BlockStoreDummy(),
-                        invokeFactory, blockchain.getBestBlock(), new EthereumListenerAdapter());
+                        invokeFactory, blockchain.getBestBlock());
         executor.execute();
         track.commit();
 
