@@ -94,14 +94,9 @@ public class GitHubBlockTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcUncleTest.json", shacommit);
         excluded.add("uncleWithSameBlockNumber");
-        excluded.add("oneUncleGeneration2");
-        excluded.add("oneUncleGeneration3");
-        excluded.add("oneUncleGeneration4");
-        excluded.add("oneUncleGeneration5");
         excluded.add("oneUncleGeneration6");
         excluded.add("oneUncleGeneration7");
         excluded.add("InChainUncle");
-        excluded.add("twoUncle");
         excluded.add("threeUncle");
         excluded.add("twoEqualUncle");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);

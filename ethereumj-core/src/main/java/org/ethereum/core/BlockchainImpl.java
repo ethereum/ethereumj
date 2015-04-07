@@ -444,9 +444,9 @@ public class BlockchainImpl implements Blockchain {
             for (BlockHeader uncle : block.getUncleList()) {
                 track.addBalance(uncle.getCoinbase(), 
                   new BigDecimal(block.BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
+
+                totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD);
             }
-            totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD);
-                    //.multiply(BigInteger.valueOf(block.getUncleList().size())));
         }
         track.addBalance(block.getCoinbase(), totalBlockReward);
 
