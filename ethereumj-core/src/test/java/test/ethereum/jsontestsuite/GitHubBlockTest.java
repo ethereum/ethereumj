@@ -30,6 +30,7 @@ public class GitHubBlockTest {
     public void runBCBlockChainTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidHeaderTest.json", shacommit);
+        //TODO figure out if these need to have POSTs or not, cpp doesnt check
         excluded.add("wrongNumber");
         excluded.add("wrongDifficulty");
         excluded.add("wrongTimestamp");
@@ -59,13 +60,12 @@ public class GitHubBlockTest {
     }
 
 
-    @Ignore
+    //@Ignore
     @Test
      public void runBCUncleTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcUncleTest.json", shacommit);
         excluded.add("uncleWithSameBlockNumber");
-        excluded.add("uncleHeaderWithGeneration0");
         excluded.add("oneUncleGeneration2");
         excluded.add("oneUncleGeneration3");
         excluded.add("oneUncleGeneration4");
@@ -73,7 +73,6 @@ public class GitHubBlockTest {
         excluded.add("oneUncleGeneration6");
         excluded.add("oneUncleGeneration7");
         excluded.add("InChainUncle");
-        excluded.add("oneUncle");
         excluded.add("twoUncle");
         excluded.add("threeUncle");
         excluded.add("twoEqualUncle");

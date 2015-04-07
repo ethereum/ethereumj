@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.util.*;
 
 import static org.ethereum.config.Constants.*;
@@ -441,10 +442,11 @@ public class BlockchainImpl implements Blockchain {
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
-                track.addBalance(uncle.getCoinbase(), Block.UNCLE_REWARD);
+                track.addBalance(uncle.getCoinbase(), 
+                  new BigDecimal(block.BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
             }
-            totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD
-                    .multiply(BigInteger.valueOf(block.getUncleList().size())));
+            totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD);
+                    //.multiply(BigInteger.valueOf(block.getUncleList().size())));
         }
         track.addBalance(block.getCoinbase(), totalBlockReward);
 
