@@ -2,6 +2,9 @@ package org.ethereum.vmtrace;
 
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.ethereum.vm.DataWord;
+import org.ethereum.vm.OpCode;
+import org.json.simple.JSONObject;
+import org.json.simple.JSONValue;
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
@@ -81,7 +84,18 @@ public class Op {
     }
 
     public String toString() {
-        return asJsonString();
+
+        Map<Object, Object> jsonData = new LinkedHashMap<>();
+
+        jsonData.put("op", OpCode.code(op).name());
+        jsonData.put("deep", Long.toString(deep));
+        jsonData.put("pc", Long.toString(pc));
+        jsonData.put("gas", gas.value().toString());
+        jsonData.put("stack", stack);
+        jsonData.put("memory", memory == null ? "" : Hex.toHexString(memory));
+        jsonData.put("storage", new JSONObject(storage));
+
+        return JSONValue.toJSONString(jsonData);
     }
 
     private String asJsonString() {
