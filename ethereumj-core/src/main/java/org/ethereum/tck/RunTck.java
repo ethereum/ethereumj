@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -22,21 +21,26 @@ public class RunTck {
     public static void main(String[] args) throws ParseException, IOException {
 
         if (args.length > 0){
-            logger.info("TCK Running, file: " + args[0]);
-            runTest(args[0]);
+
+            if (args[0].equals("filerun")) {
+                logger.info("TCK Running, file: " + args[1]);
+                runTest(args[1]);
+            } else if ((args[0].equals("content"))) {
+                logger.info("TCK Running, content: ");
+                runContentTest(args[1].replaceAll("'", "\""));
+            }
+
         } else {
             logger.info("No test case specified");
         }
     }
 
+    public static void runContentTest(String content) throws ParseException, IOException {
 
-    public static void runTest(String name) throws ParseException, IOException {
-
-        String testCaseJson = JSONReader.getFromLocal(name);
         Map<String, Boolean> summary = new HashMap<>();
 
         JSONParser parser = new JSONParser();
-        JSONObject testSuiteObj = (JSONObject) parser.parse(testCaseJson);
+        JSONObject testSuiteObj = (JSONObject) parser.parse(content);
 
         StateTestSuite stateTestSuite = new StateTestSuite(testSuiteObj.toJSONString());
         Map<String, StateTestCase> testCases = stateTestSuite.getTestCases();
@@ -73,5 +77,14 @@ public class RunTck {
             System.exit(1);
         else
             System.exit(0);
+
+    }
+
+
+
+    public static void runTest(String name) throws ParseException, IOException {
+
+        String testCaseJson = JSONReader.getFromLocal(name);
+        runContentTest(testCaseJson);
     }
 }

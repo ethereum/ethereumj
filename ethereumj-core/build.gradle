@@ -46,9 +46,16 @@ task tckRun(type:JavaExec, dependsOn: classes){
 
     if (project.hasProperty("filePath")) {
         println "TCK will run for: $filePath"
-        args = ["$filePath"]
+        args = ["filerun", "$filePath"]
         jvmArgs = ["-Xss32M"]
     }
+
+    if (project.hasProperty("content")) {
+        println "TCK will run for: $content"
+        args = ["content", "$content"]
+        jvmArgs = ["-Xss32M"]
+    }
+
 
     main = "org.ethereum.tck.RunTck"
     classpath = sourceSets.main.runtimeClasspath
