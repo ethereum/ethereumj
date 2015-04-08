@@ -26,7 +26,7 @@ public class RunTck {
                 logger.info("TCK Running, file: " + args[1]);
                 runTest(args[1]);
             } else if ((args[0].equals("content"))) {
-                logger.info("TCK Running, content: ");
+                logger.debug("TCK Running, content: ");
                 runContentTest(args[1].replaceAll("'", "\""));
             }
 

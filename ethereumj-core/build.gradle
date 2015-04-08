@@ -36,6 +36,10 @@ antlr4 {
 
 compileJava.dependsOn antlr4
 
+tasks.withType(JavaCompile){
+    options.warnings = false
+}
+
 /**
  *  This is TCK test command line option,
  *  to run the test:
