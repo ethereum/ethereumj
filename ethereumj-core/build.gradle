@@ -49,17 +49,14 @@ tasks.withType(JavaCompile){
 task tckRun(type:JavaExec, dependsOn: classes){
 
     if (project.hasProperty("filePath")) {
-        println "TCK will run for: $filePath"
         args = ["filerun", "$filePath"]
         jvmArgs = ["-Xss32M"]
     }
 
     if (project.hasProperty("content")) {
-        println "TCK will run for: $content"
         args = ["content", "$content"]
         jvmArgs = ["-Xss32M"]
     }
-
 
     main = "org.ethereum.tck.RunTck"
     classpath = sourceSets.main.runtimeClasspath
@@ -223,7 +220,6 @@ install {
 }
 
 task publish {
-    println "publishing if master current branch: " + branchName
     description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }
