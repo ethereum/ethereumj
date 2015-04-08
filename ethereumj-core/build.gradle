@@ -46,7 +46,7 @@ tasks.withType(JavaCompile){
  *     gradle tckRun -PfilePath=[ file path]
  *      e.g: gradle tckRun -PfilePath=E:\temp\test-case.json
  */
-task tckRun(type:JavaExec, dependsOn: classes){
+task tckRun(type:JavaExec){
 
     if (project.hasProperty("filePath")) {
         args = ["filerun", "$filePath"]
