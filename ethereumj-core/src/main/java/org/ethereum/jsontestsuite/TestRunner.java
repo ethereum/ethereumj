@@ -64,10 +64,14 @@ public class TestRunner {
         Wallet wallet = new Wallet();
         AdminInfo adminInfo = new AdminInfo();
         EthereumListener listener = new CompositeEthereumListener();
+        ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
+
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(BigInteger.ZERO);
+        blockchain.setProgramInvokeFactory(programInvokeFactory);
+        programInvokeFactory.setBlockchain(blockchain);
 
 
         // todo: validate root of the genesis   *!!!*
