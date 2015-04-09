@@ -30,11 +30,8 @@ public class GitHubBlockTest {
     public void runBCBlockChainTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidHeaderTest.json", shacommit);
-        //TODO figure out if these need to have POSTs or not, cpp doesnt check
         excluded.add("wrongNumber");
-        excluded.add("wrongDifficulty");
         excluded.add("wrongTimestamp");
-        excluded.add("wrongGasLimit");
         excluded.add("wrongParentHash");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json,excluded);
         //GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "wrongDifficulty");
@@ -65,7 +62,8 @@ public class GitHubBlockTest {
         excluded.add("TRANSCT_svalue_TooShort");
         excluded.add("TRANSCT_svalue_GivenAsList");
         excluded.add("TRANSCT__RandomByteAtTheEnd");
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
+        //GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
+        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "TRANSCT__RandomByteAtTheEnd");
     }
 
     @Ignore
@@ -88,7 +86,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+    //@Ignore
     @Test
      public void runBCUncleTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -97,9 +95,8 @@ public class GitHubBlockTest {
         excluded.add("oneUncleGeneration6");
         excluded.add("oneUncleGeneration7");
         excluded.add("InChainUncle");
-        excluded.add("threeUncle");
-        excluded.add("twoEqualUncle");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
+        //GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "threeUncle");
     }
 
     @Ignore
