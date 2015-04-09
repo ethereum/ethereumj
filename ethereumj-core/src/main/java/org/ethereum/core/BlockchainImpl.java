@@ -183,6 +183,10 @@ public class BlockchainImpl implements Blockchain {
             return;
         }
 
+        //TODO POC9 add rollback support
+        if (1 == 1)
+            return; // todo: temporary cancel the rollback
+
         // cut on the chain got lastBlock + 1 > n
         if (block.getNumber() > bestBlock.getNumber() + 1) {
             channelManager.ethSync();
@@ -286,6 +290,11 @@ public class BlockchainImpl implements Blockchain {
                 parentBlock.getDifficultyBI().add(parentDifficulty.divide(BigInteger.valueOf(Constants.DIFFICULTY_BOUND_DIVISOR)));
 
         BigInteger difficulty = new BigInteger(1, header.getDifficulty());
+
+        if (header.getNumber() != (parentBlock.getNumber() + 1) ) {
+            logger.error("Block invalid: block number is not parentBlock number + 1, ");
+            return false;
+        }
 
         if (header.getGasLimit() < header.getGasUsed()) {
             logger.error("Block invalid: header.getGasLimit() < header.getGasUsed()");
