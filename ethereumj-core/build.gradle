@@ -36,17 +36,25 @@ antlr4 {
 
 compileJava.dependsOn antlr4
 
+tasks.withType(JavaCompile){
+    options.warnings = false
+}
+
 /**
  *  This is TCK test command line option,
  *  to run the test:
  *     gradle tckRun -PfilePath=[ file path]
  *      e.g: gradle tckRun -PfilePath=E:\temp\test-case.json
  */
-task tckRun(type:JavaExec, dependsOn: classes){
+task tckRun(type:JavaExec){
 
     if (project.hasProperty("filePath")) {
-        println "TCK will run for: $filePath"
-        args = ["$filePath"]
+        args = ["filerun", "$filePath"]
+        jvmArgs = ["-Xss32M"]
+    }
+
+    if (project.hasProperty("content")) {
+        args = ["content", "$content"]
         jvmArgs = ["-Xss32M"]
     }
 
@@ -212,7 +220,6 @@ install {
 }
 
 task publish {
-    println "publishing if master current branch: " + branchName
     description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }
