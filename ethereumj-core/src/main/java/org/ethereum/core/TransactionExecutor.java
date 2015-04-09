@@ -4,24 +4,17 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.GasCost;
-import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvoke;
-import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.ProgramResult;
-import org.ethereum.vm.VM;
-
+import org.ethereum.vm.*;
 import org.ethereum.vmtrace.ProgramTrace;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.nio.ByteBuffer;
 import java.util.List;
 
+import static java.nio.ByteBuffer.wrap;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -50,10 +43,10 @@ public class TransactionExecutor {
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
-        
+
         this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter());
     }
-    
+
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock, EthereumListener listener) {
 
@@ -258,7 +251,6 @@ public class TransactionExecutor {
                 if (CONFIG.playVM())
                     vm.play(program);
 
-                listener.onVMTraceCreated(txHash, program.getProgramTrace().asJsonString());
                 program.saveProgramTraceToFile(txHash);
 
                 result = program.getResult();
@@ -274,17 +266,14 @@ public class TransactionExecutor {
                 this.receipt = receipt;
                 return;
             } finally {
-                if (CONFIG.vmTrace()) {
-                    String traceAsJson = "{}";
-                    if (program != null) {
-                        ProgramResult result = program.getResult();
-                        ProgramTrace trace = program.getProgramTrace();
-//                        trace.setResult(result.getHReturn());
-                        trace.setError(result.getException());
-                        traceAsJson = trace.asJsonString();
-                    }
-                    listener.onVMTraceCreated(txHash, traceAsJson);
+                String traceAsJson = "{}";
+                if (program != null) {
+                    ProgramTrace trace = program.getProgramTrace();
+                    trace.setResult(wrap(result.getHReturn()));
+                    trace.setError(result.getException());
+                    traceAsJson = trace.getJsonString();
                 }
+                listener.onVMTraceCreated(txHash, traceAsJson);
             }
             trackTx.commit();
         } else {

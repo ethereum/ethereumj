@@ -36,5 +36,5 @@ public interface EthereumListener {
 
     void onHandShakePeer(HelloMessage helloMessage);
 
-    void onVMTraceCreated(String transactionHash, String traceAsJson);
+    void onVMTraceCreated(String transactionHash, String trace);
 }

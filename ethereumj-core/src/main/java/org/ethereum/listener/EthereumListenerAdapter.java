@@ -60,7 +60,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onVMTraceCreated(String transactionHash, String traceAsJson) {
+    public void onVMTraceCreated(String transactionHash, String trace) {
 
     }
 }
