@@ -32,6 +32,8 @@ public class TestRunner {
 
     private Logger logger = LoggerFactory.getLogger("TCK-Test");
     private ProgramTrace trace = null;
+    private boolean setNewStateRoot;
+    private String bestStateRoot;
 
     public List<String> runTestSuite(TestSuite testSuite) {
 
@@ -77,6 +79,7 @@ public class TestRunner {
         // todo: validate root of the genesis   *!!!*
 
 
+        bestStateRoot = Hex.toHexString(genesis.getStateRoot());
         /* 2 */ // Create block traffic list
         List<Block> blockTraffic = new ArrayList<>();
         for (BlockTck blockTck : testCase.getBlocks()) {
@@ -84,6 +87,11 @@ public class TestRunner {
                     blockTck.getTransactions(),
                     blockTck.getUncleHeaders());
 
+            setNewStateRoot = !((blockTck.getTransactions() == null) 
+                && (blockTck.getUncleHeaders() == null) 
+                && (blockTck.getBlockHeader() == null));
+
+            //DEBUG System.out.println(" --> " + setNewStateRoot);
             Block tBlock = null;
             try {
                 byte[] rlp = parseData(blockTck.getRlp());
@@ -98,6 +106,8 @@ public class TestRunner {
 //
 //                System.exit(-1);
 //            }
+                if(setNewStateRoot)
+                  bestStateRoot = Hex.toHexString(tBlock.getStateRoot());
 
                 blockTraffic.add(tBlock);
             } catch (Exception e) {
@@ -107,12 +117,25 @@ public class TestRunner {
 
         /* 3 */ // Inject blocks to the blockchain execution
         for (Block block : blockTraffic) {
-
+            //DEBUG System.out.println(" Examine block: "); System.out.println(block.toString());
             blockchain.tryToConnect(block);
         }
 
+        //Check state root matches last valid block
+        List<String> results = new ArrayList<>();
+        String currRoot = Hex.toHexString(repository.getRoot());
+        if (!bestStateRoot.equals(currRoot)){
+            String formattedString = String.format("Root hash doesn't match best: expected: %s current: %s",
+                    bestStateRoot, currRoot);
+            results.add(formattedString);
+        }
+
         Repository postRepository = RepositoryBuilder.build(testCase.getPostState());
-        return RepositoryValidator.valid(repository, postRepository);
+
+        //Uncomment this if you want POST debugging checks enabled
+        //results.addAll(RepositoryValidator.rootValid(repository, postRepository)); 
+
+        return results;
     }
 
 
