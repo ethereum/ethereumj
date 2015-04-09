@@ -861,7 +861,7 @@ public class Program {
 
             fw = new FileWriter(dumpFile.getAbsoluteFile());
             bw = new BufferedWriter(fw);
-            bw.write(programTrace.getJsonString());
+            bw.write(programTrace.asJsonString());
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         } finally {

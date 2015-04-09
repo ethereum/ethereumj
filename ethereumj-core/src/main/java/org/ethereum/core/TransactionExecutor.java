@@ -266,14 +266,16 @@ public class TransactionExecutor {
                 this.receipt = receipt;
                 return;
             } finally {
-                String traceAsJson = "{}";
-                if (program != null) {
-                    ProgramTrace trace = program.getProgramTrace();
-                    trace.setResult(wrap(result.getHReturn()));
-                    trace.setError(result.getException());
-                    traceAsJson = trace.getJsonString();
+                if (CONFIG.vmTrace()) {
+                    String traceAsJson = "{}";
+                    if (program != null) {
+                        ProgramTrace trace = program.getProgramTrace();
+                        trace.setResult(wrap(result.getHReturn()));
+                        trace.setError(result.getException());
+                        traceAsJson = trace.asJsonString();
+                    }
+                    listener.onVMTraceCreated(txHash, traceAsJson);
                 }
-                listener.onVMTraceCreated(txHash, traceAsJson);
             }
             trackTx.commit();
         } else {
