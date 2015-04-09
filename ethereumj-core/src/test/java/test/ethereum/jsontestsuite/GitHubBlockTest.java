@@ -15,7 +15,7 @@ import java.util.HashSet;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "dbc3241e70dd3388cb87b1509f686893125d5f0b";
+    public String shacommit = "d2ba02fe0507da205e3d17d79612ae15282b35a2";
 
     @Ignore
     @Test
