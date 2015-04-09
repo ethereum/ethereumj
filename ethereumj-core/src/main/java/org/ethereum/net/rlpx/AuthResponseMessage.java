@@ -9,7 +9,7 @@ import org.spongycastle.math.ec.ECPoint;
  * Created by devrandom on 2015-04-07.
  */
 public class AuthResponseMessage {
-    ECPoint publicKey; // 64 bytes - uncompressed and no type byte
+    ECPoint ephemeralPublicKey; // 64 bytes - uncompressed and no type byte
     byte[] nonce; // 32 bytes
     boolean isTokenUsed; // 1 byte - 0x00 or 0x01
 
@@ -19,7 +19,7 @@ public class AuthResponseMessage {
         System.arraycopy(wire, offset, bytes, 1, 64);
         offset += 64;
         bytes[0] = 0x04; // uncompressed
-        message.publicKey = ECKey.CURVE.getCurve().decodePoint(bytes);
+        message.ephemeralPublicKey = ECKey.CURVE.getCurve().decodePoint(bytes);
         message.nonce = new byte[32];
         System.arraycopy(wire, offset, message.nonce, 0, 32);
         offset += message.nonce.length;

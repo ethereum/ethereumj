@@ -21,8 +21,6 @@ public class AuthInitiateMessage {
     boolean isTokenUsed; // 1 byte - 0x00 or 0x01
 
     public AuthInitiateMessage() {
-        nonce = new byte[32];
-        new SecureRandom().nextBytes(nonce);
     }
 
     public int getLength() {

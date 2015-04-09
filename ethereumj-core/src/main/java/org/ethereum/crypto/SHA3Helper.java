@@ -25,6 +25,10 @@ public class SHA3Helper {
         return sha3(message, new SHA3Digest(DEFAULT_SIZE), true);
     }
 
+    public static byte[] sha3(byte[] m1, byte[] m2) {
+        return sha3(m1, m2, new SHA3Digest(DEFAULT_SIZE), true);
+    }
+
     public static byte[] sha3(byte[] message, int start, int length) {
         return sha3(message, start, length, new SHA3Digest(DEFAULT_SIZE), true);
     }
@@ -70,6 +74,10 @@ public class SHA3Helper {
         return doSha3(message, digest, bouncyencoder);
     }
 
+    private static byte[] sha3(byte[] m1, byte[] m2, SHA3Digest digest, boolean bouncyencoder) {
+        return doSha3(m1, m2, digest, bouncyencoder);
+    }
+
     private static byte[] sha3(byte[] message, int start, int length, SHA3Digest digest, boolean bouncyencoder) {
         byte[] hash = new byte[digest.getDigestSize()];
 
@@ -87,6 +95,15 @@ public class SHA3Helper {
         if (message.length != 0) {
             digest.update(message, 0, message.length);
         }
+        digest.doFinal(hash, 0);
+        return hash;
+    }
+
+    private static byte[] doSha3(byte[] m1, byte[] m2, SHA3Digest digest, boolean bouncyencoder) {
+        byte[] hash = new byte[digest.getDigestSize()];
+        digest.update(m1, 0, m1.length);
+        digest.update(m2, 0, m2.length);
+
         digest.doFinal(hash, 0);
         return hash;
     }
