@@ -6,6 +6,7 @@ import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
 
 import java.math.BigInteger;
+import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -293,6 +294,17 @@ public class BlockHeader {
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
                     gasLimit, gasUsed, timestamp, extraData, mixHash);
         }
+    }
+
+    public byte[] getUnclesEncoded(List<BlockHeader> uncleList) {
+
+        byte[][] unclesEncoded = new byte[uncleList.size()][];
+        int i = 0;
+        for (BlockHeader uncle : uncleList) {
+            unclesEncoded[i] = uncle.getEncoded();
+            ++i;
+        }
+        return RLP.encodeList(unclesEncoded);
     }
 
     public String toString() {
