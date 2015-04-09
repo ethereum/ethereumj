@@ -13,6 +13,7 @@ import org.ethereum.vm.ProgramInvokeFactory;
 import org.ethereum.vm.ProgramResult;
 import org.ethereum.vm.VM;
 
+import org.ethereum.vmtrace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -200,9 +201,10 @@ public class TransactionExecutor {
         if (isContractCreation || code != EMPTY_BYTE_ARRAY) {
 
             // START TRACKING FOR REVERT CHANGES OPTION
+            Program program = null;
             Repository trackTx = track.startTracking();
             trackTx.addBalance(receiverAddress, BigInteger.ZERO); // the contract created for anycase but SUICIDE call
-
+            
             logger.info("Start tracking VM run");
             try {
 
@@ -217,12 +219,11 @@ public class TransactionExecutor {
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, trackTx, blockStore);
 
                 VM vm = new VM();
-                Program program = new Program(code, programInvoke);
+                program = new Program(code, programInvoke);
 
                 if (CONFIG.playVM())
                     vm.play(program);
 
-                listener.onVMTraceCreated(txHash, program.getProgramTrace().getJsonString());
                 program.saveProgramTraceToFile(txHash);
                 
                 result = program.getResult();
@@ -238,6 +239,15 @@ public class TransactionExecutor {
                 receipt.setCumulativeGas(tx.getGasLimit());
                 this.receipt = receipt;
                 return;
+            } finally {
+                String traceAsJson = "{}";
+                if (program != null) {
+                    ProgramTrace trace = program.getProgramTrace();
+                    trace.setResult(result.getHReturn());
+                    trace.setError(result.getException());
+                    traceAsJson = trace.getJsonString();
+                }
+                listener.onVMTraceCreated(txHash, traceAsJson);
             }
             trackTx.commit();
         } else {

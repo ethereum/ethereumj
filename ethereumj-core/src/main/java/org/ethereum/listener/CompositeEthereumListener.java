@@ -84,9 +84,9 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onVMTraceCreated(String transactionHash, String traceAsJson) {
+    public void onVMTraceCreated(String transactionHash, String trace) {
         for (EthereumListener listener : listeners) {
-            listener.onVMTraceCreated(transactionHash, traceAsJson);
+            listener.onVMTraceCreated(transactionHash, trace);
         }
     }
 
