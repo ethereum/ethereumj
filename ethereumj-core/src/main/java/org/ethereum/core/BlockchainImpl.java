@@ -9,7 +9,9 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.AdvancedDeviceUtils;
+import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
+import org.ethereum.util.*;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,6 +156,19 @@ public class BlockchainImpl implements Blockchain {
     @Override
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
         return blockStore.getListOfHashesStartFrom(hash, qty);
+    }
+
+    private byte[] calcTxTrie(List<Transaction> transactions){
+
+        Trie txsState = new TrieImpl(null);
+
+        if (transactions == null || transactions.isEmpty())
+            return HashUtil.EMPTY_TRIE_HASH;
+
+        for (int i = 0; i < transactions.size(); i++) {
+            txsState.update(RLP.encodeInt(i), transactions.get(i).getEncoded());
+        }
+        return txsState.getRootHash();
     }
 
     public void tryToConnect(Block block) {
@@ -342,6 +357,14 @@ public class BlockchainImpl implements Blockchain {
             isValid = isValid(block.getHeader());
 
             // Sanity checks
+            String trieHash = Hex.toHexString( block.getTxTrieRoot() );
+            String trieListHash = Hex.toHexString(calcTxTrie(block.getTransactionsList()));
+
+            if( !trieHash.equals(trieListHash) ) {
+              logger.error("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
+              return false;
+            }
+
             String unclesHash = Hex.toHexString(block.getHeader().getUnclesHash());
             String unclesListHash = Hex.toHexString( HashUtil.sha3(block.getHeader().getUnclesEncoded( block.getUncleList() ) ) );
 

@@ -34,7 +34,6 @@ public class GitHubBlockTest {
         //TODO need to make sure the checks match the cpp
         //excluded.add("wrongParentHash");
         //excluded.add("wrongTimestamp");
-        excluded.add("wrongTransactionsTrie");
         excluded.add("wrongGasUsed");
         excluded.add("wrongReceiptTrie");
         excluded.add("log1_wrongBloom");
