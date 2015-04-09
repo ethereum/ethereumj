@@ -145,7 +145,7 @@ public class GitHubJSONTestSuite {
         BlockTestCase blockTestCase =  testSuite.getTestCases().get(testName);
         TestRunner runner = new TestRunner();
 
-        logger.info("\n\n ***** Running test: {}", testName);
+        logger.info("\n\n ***************** Running test: {} ***************************** \n\n", testName);
         List<String> result = runner.runTestCase(blockTestCase);
 
         if (!result.isEmpty())
@@ -153,7 +153,7 @@ public class GitHubJSONTestSuite {
                 logger.info(single);
 
         Assert.assertTrue(result.isEmpty());
-        logger.info(" *** Passed: " + testName);
+        logger.info(" \n\n *********************** Passed: " + testName + " ************************** \n\n");
 
     }
 
