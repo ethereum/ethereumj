@@ -6,6 +6,7 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
 
@@ -35,5 +36,5 @@ public interface EthereumListener {
 
     void onHandShakePeer(HelloMessage helloMessage);
 
-    void onVMTraceCreated(String transactionHash, String traceAsJson);
+    void onVMTraceCreated(String transactionHash, String trace);
 }

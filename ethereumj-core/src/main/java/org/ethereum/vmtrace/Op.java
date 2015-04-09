@@ -26,6 +26,7 @@ import java.util.Stack;
  *    'op': 'CODECOPY'
  *    'storage': {},
  *    'gas': '99376',
+ *    'deep': 0,
  *    'pc': '9',
  *    'memory': '',
  *    'stack': ['15', '15', '14', '0'],
@@ -38,6 +39,7 @@ import java.util.Stack;
 public class Op {
 
     private byte op;
+    private int deep;
     private int pc;
     private DataWord gas;
     private Map<String, String> storage;
@@ -46,6 +48,10 @@ public class Op {
 
     public void setOp(byte op) {
         this.op = op;
+    }
+
+    public void setDeep(int deep) {
+        this.deep = deep;
     }
 
     public void setPc(int pc) {
@@ -87,6 +93,7 @@ public class Op {
         Map<Object, Object> jsonData = new LinkedHashMap<>();
 
         jsonData.put("op", OpCode.code(op).name());
+        jsonData.put("deep", Long.toString(deep));
         jsonData.put("pc", Long.toString(pc));
         jsonData.put("gas", gas.value().toString());
         jsonData.put("stack", stack);

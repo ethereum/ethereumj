@@ -1,9 +1,22 @@
 package org.ethereum.vmtrace;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
+import static java.lang.String.format;
 
 /**
  * @author Roman Mandeleil
@@ -11,11 +24,24 @@ import java.util.List;
  */
 public class ProgramTrace {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger("vmtrace");
+    
+    @JsonIgnore
     private byte[] txHash;
     private List<Op> ops = new ArrayList<>();
+    private String result;
+    private String error;
 
     public void setTxHash(byte[] txHash) {
         this.txHash = txHash;
+    }
+
+    public void setResult(ByteBuffer result) {
+        this.result = Hex.toHexString(result.array());
+    }
+
+    public void setError(Exception error) {
+        this.error = (error == null) ? "" : format("%s: %s", error.getClass(), error.getMessage());;
     }
 
     public void addOp(Op op) {
@@ -31,6 +57,13 @@ public class ProgramTrace {
     }
 
     public String getJsonString() {
-        return JSONArray.toJSONString(ops);
+        try {
+            return new ObjectMapper()
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .writeValueAsString(this);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("JSON serialization error: ", e);
+            return "{}";
+        }
     }
 }

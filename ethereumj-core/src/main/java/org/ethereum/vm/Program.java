@@ -825,7 +825,7 @@ public class Program {
 
         Op op = new Op();
         op.setPc(pc);
-
+        op.setDeep(invokeData.getCallDeep());
         op.setOp(ops[pc]);
         op.saveGas(getGas());
 
