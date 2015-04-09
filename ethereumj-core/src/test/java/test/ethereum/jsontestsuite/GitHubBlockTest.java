@@ -31,12 +31,14 @@ public class GitHubBlockTest {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidHeaderTest.json", shacommit);
         excluded.add("wrongStateRoot"); //TODO fix via blockchain rollbacks
-        excluded.add("wrongTimestamp");
+        //TODO need to make sure the checks match the cpp
+        //excluded.add("wrongParentHash");
+        //excluded.add("wrongTimestamp");
         excluded.add("wrongTransactionsTrie");
         excluded.add("wrongGasUsed");
         excluded.add("wrongReceiptTrie");
         excluded.add("log1_wrongBloom");
-        excluded.add("wrongParentHash");
+
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json,excluded);
     }
 
