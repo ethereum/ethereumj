@@ -1,6 +1,7 @@
 package org.ethereum.core;
 
 import org.ethereum.config.Constants;
+import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
@@ -330,6 +331,16 @@ public class BlockchainImpl implements Blockchain {
 
         if (!block.isGenesis()) {
             isValid = isValid(block.getHeader());
+
+            // Sanity checks
+            String unclesHash = Hex.toHexString(block.getHeader().getUnclesHash());
+            String unclesListHash = Hex.toHexString( HashUtil.sha3(block.getHeader().getUnclesEncoded( block.getUncleList() ) ) );
+
+            if( !unclesHash.equals(unclesListHash) ) {
+              logger.error("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
+              return false;
+            }
+
 
             if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
                 logger.error("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
