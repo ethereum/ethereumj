@@ -1,23 +1,13 @@
 package org.ethereum.vmtrace;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import org.ethereum.vm.DataWord;
-import org.ethereum.vm.OpCode;
-
-import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.ByteBuffer;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Stack;
+import static org.ethereum.vmtrace.Serializers.*;
 
 /**
  * Data to for one program step to save.
@@ -35,16 +25,18 @@ import java.util.Stack;
  * @author Roman Mandeleil
  * @since 28.10.2014
  */
-
 public class Op {
 
+    @JsonSerialize(using = OpCodeSerializer.class)
     private byte op;
     private int deep;
     private int pc;
+    @JsonSerialize(using = DataWordSerializer.class)
     private DataWord gas;
-    private Map<String, String> storage;
+    @JsonSerialize(using = ByteArraySerializer.class)
     private byte[] memory;
     private List<String> stack;
+    private Map<String, String> storage;
 
     public void setOp(byte op) {
         this.op = op;
@@ -89,19 +81,10 @@ public class Op {
     }
 
     public String toString() {
-
-        Map<Object, Object> jsonData = new LinkedHashMap<>();
-
-        jsonData.put("op", OpCode.code(op).name());
-        jsonData.put("deep", Long.toString(deep));
-        jsonData.put("pc", Long.toString(pc));
-        jsonData.put("gas", gas.value().toString());
-        jsonData.put("stack", stack);
-        jsonData.put("memory", memory == null ? "" : Hex.toHexString(memory));
-        jsonData.put("storage", new JSONObject(storage));
-
-        return JSONValue.toJSONString(jsonData);
+        return asJsonString();
     }
 
-
+    private String asJsonString() {
+        return serializeFieldsOnly(this, false);
+    }
 }

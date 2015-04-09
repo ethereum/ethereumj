@@ -8,35 +8,21 @@ import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
 import org.ethereum.vmtrace.Op;
 import org.ethereum.vmtrace.ProgramTrace;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
+import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.springframework.util.StringUtils.isEmpty;
 
 /**
  * @author Roman Mandeleil
@@ -840,7 +826,7 @@ public class Program {
 
     public void saveProgramTraceToFile(String fileName) {
 
-        if (!CONFIG.vmTrace()) return;
+        if (!CONFIG.vmTrace() || isEmpty(CONFIG.vmTraceDir())) return;
 
         String dir = CONFIG.databaseDir() + "/" + CONFIG.vmTraceDir() + "/";
 
@@ -849,21 +835,12 @@ public class Program {
         BufferedWriter bw = null;
 
         try {
-
             dumpFile.getParentFile().mkdirs();
             dumpFile.createNewFile();
 
             fw = new FileWriter(dumpFile.getAbsoluteFile());
             bw = new BufferedWriter(fw);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-
-            String originalJson = programTrace.getJsonString();
-            JsonNode tree = objectMapper.readTree(originalJson);
-            String formattedJson = objectMapper.writeValueAsString(tree);
-            bw.write(formattedJson);
-
+            bw.write(programTrace.asJsonString());
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         } finally {
