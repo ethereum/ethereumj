@@ -264,8 +264,8 @@ public class BlockchainImpl implements Blockchain {
         String receiptHash = Hex.toHexString( block.getReceiptsRoot() );
         String receiptListHash = Hex.toHexString(calcReceiptsTrie(receipts));
 
-        if( !recieptHash.equals(recieptListHash) ) {
-          logger.error("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
+        if( !receiptHash.equals(receiptListHash) ) {
+          logger.error("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
           //return false;
         }
         
@@ -432,11 +432,10 @@ public class BlockchainImpl implements Blockchain {
                 // - They are valid headers (not necessarily valid blocks)
                 if (!isValid(uncle)) return false;
 
-                long generationGap = block.getNumber() - getParent(uncle).getNumber();
-                isValid = generationGap > 1 && generationGap < UNCLE_GENERATION_LIMIT;
+                //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
+                isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT) ); 
                 if (!isValid){
-
-                    logger.error("Uncle invalid: generationGap > 1 && generationGap < UNCLE_GENERATION_LIMIT");
+                    logger.error("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
                     return false;
                 }
 

@@ -25,7 +25,7 @@ public class GitHubBlockTest {
     }
 
 
-    //@Ignore
+    @Ignore
     @Test
     public void runBCBlockChainTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -81,7 +81,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void runBCUncleHeaderValidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -93,18 +93,15 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+    //@Ignore
     @Test
      public void runBCUncleTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcUncleTest.json", shacommit);
-        excluded.add("uncleWithSameBlockNumber");
-        excluded.add("oneUncleGeneration6");
-        excluded.add("oneUncleGeneration7");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void runBCValidBlockTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcValidBlockTest.json", shacommit);
