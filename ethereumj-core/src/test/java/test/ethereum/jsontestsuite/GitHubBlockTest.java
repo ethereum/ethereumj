@@ -30,11 +30,13 @@ public class GitHubBlockTest {
     public void runBCBlockChainTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockTests/bcInvalidHeaderTest.json", shacommit);
-        excluded.add("wrongStateRoot"); //TODO fix via blockchain rollbacks
+        //TODO fix via blockchain rollbacks
+        excluded.add("wrongGasUsed");
+        excluded.add("wrongStateRoot");
         //TODO need to make sure the checks match the cpp
         //excluded.add("wrongParentHash");
         //excluded.add("wrongTimestamp");
-        excluded.add("wrongGasUsed");
+        //TODO need to add some way to roll back repository from BlockChain.add()
         excluded.add("wrongReceiptTrie");
         excluded.add("log1_wrongBloom");
 

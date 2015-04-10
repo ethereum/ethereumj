@@ -260,6 +260,28 @@ public class BlockchainImpl implements Blockchain {
 
         List<TransactionReceipt> receipts = processBlock(block);
 
+        // Sanity checks
+        String receiptHash = Hex.toHexString( block.getReceiptsRoot() );
+        String receiptListHash = Hex.toHexString(calcReceiptsTrie(receipts));
+
+        if( !recieptHash.equals(recieptListHash) ) {
+          logger.error("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
+          //return false;
+        }
+        
+        String logBloomHash = Hex.toHexString( block.getLogBloom() );
+        String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
+        
+        if( !logBloomHash.equals(logBloomListHash) ) {
+          logger.error("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
+          //track.rollback();
+          //return;
+        }
+
+        //DEBUG
+        //System.out.println(" Receipts root is: " + receiptHash + " logbloomhash is " + logBloomHash);
+        //System.out.println(" Receipts listroot is: " + receiptListHash + " logbloomlisthash is " + logBloomListHash);
+
         track.commit();
         repository.flush(); // saving to the disc
 
@@ -285,6 +307,32 @@ public class BlockchainImpl implements Blockchain {
         }
     }
 
+    private byte[] calcReceiptsTrie(List<TransactionReceipt> receipts){
+        //TODO Fix Trie hash for receipts - doesnt match cpp
+        Trie receiptsTrie = new TrieImpl(null);
+
+        if (receipts == null || receipts.isEmpty())
+            return HashUtil.EMPTY_TRIE_HASH;
+
+        for (int i = 0; i < receipts.size(); i++) {
+            receiptsTrie.update(RLP.encodeInt(i), receipts.get(i).getEncoded());
+        }
+        return receiptsTrie.getRootHash();
+    }
+
+    private byte[] calcLogBloom( List<TransactionReceipt> receipts ) {
+
+        Bloom retBloomFilter = new Bloom();
+
+        if (receipts == null || receipts.isEmpty())
+            return retBloomFilter.getData();
+
+        for (int i = 0; i < receipts.size(); i++) {
+            retBloomFilter.or(receipts.get(i).getBloomFilter());
+        }
+
+        return retBloomFilter.getData();
+    }
 
     public Block getParent(BlockHeader header) {
 
