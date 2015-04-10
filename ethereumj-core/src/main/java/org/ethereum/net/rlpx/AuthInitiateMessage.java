@@ -4,12 +4,10 @@ import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
 
-import java.security.SecureRandom;
-
 import static org.ethereum.util.ByteUtil.merge;
 
 /**
- * Authentication initiation message, to be wrapped inside {@link EncryptedMessage}.
+ * Authentication initiation message, to be wrapped inside {@link Encrypter}.
  *
  * Created by devrandom on 2015-04-07.
  */
@@ -23,15 +21,17 @@ public class AuthInitiateMessage {
     public AuthInitiateMessage() {
     }
 
-    public int getLength() {
+    public static int getLength() {
         return 65+32+64+32+1;
     }
 
-    public int encode(byte[] buffer, int offset) {
+    public byte[] encode() {
         // FIXME does this code generate a constant length for each item?
         byte[] sigBytes = merge(BigIntegers.asUnsignedByteArray(signature.r),
-                BigIntegers.asUnsignedByteArray(signature.s), new byte[]{signature.v});
+                BigIntegers.asUnsignedByteArray(signature.s), new byte[]{Handshake.recIdFromSignatureV(signature.v)});
 
+        byte[] buffer = new byte[getLength()];
+        int offset = 0;
         System.arraycopy(sigBytes, 0, buffer, offset, sigBytes.length);
         offset += sigBytes.length;
         System.arraycopy(ephemeralPublicHash, 0, buffer, offset, ephemeralPublicHash.length);
@@ -43,6 +43,6 @@ public class AuthInitiateMessage {
         offset += nonce.length;
         buffer[offset] = (byte)(isTokenUsed ? 0x01 : 0x00);
         offset += 1;
-        return offset;
+        return buffer;
     }
 }

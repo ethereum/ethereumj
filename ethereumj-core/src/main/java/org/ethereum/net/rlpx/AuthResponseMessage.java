@@ -4,7 +4,7 @@ import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
 
 /**
- * Authentication response message, to be wrapped inside {@link EncryptedMessage}.
+ * Authentication response message, to be wrapped inside {@link Encrypter}.
  *
  * Created by devrandom on 2015-04-07.
  */
@@ -13,7 +13,8 @@ public class AuthResponseMessage {
     byte[] nonce; // 32 bytes
     boolean isTokenUsed; // 1 byte - 0x00 or 0x01
 
-    static AuthResponseMessage decode(byte[] wire, int offset) {
+    static AuthResponseMessage decode(byte[] wire) {
+        int offset = 0;
         AuthResponseMessage message = new AuthResponseMessage();
         byte[] bytes = new byte[65];
         System.arraycopy(wire, offset, bytes, 1, 64);
@@ -29,5 +30,22 @@ public class AuthResponseMessage {
             throw new RuntimeException("invalid boolean"); // TODO specific exception
         message.isTokenUsed = (tokenUsed == 0x01);
         return message;
+    }
+
+    public static int getLength() {
+        return 64+32+1;
+    }
+
+    public byte[] encode() {
+        byte[] buffer = new byte[getLength()];
+        int offset = 0;
+        byte[] publicBytes = ephemeralPublicKey.getEncoded(false);
+        System.arraycopy(publicBytes, 1, buffer, offset, publicBytes.length - 1);
+        offset += publicBytes.length - 1;
+        System.arraycopy(nonce, 0, buffer, offset, nonce.length);
+        offset += nonce.length;
+        buffer[offset] = (byte)(isTokenUsed ? 0x01 : 0x00);
+        offset += 1;
+        return buffer;
     }
 }

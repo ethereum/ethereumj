@@ -1,11 +1,14 @@
 package org.ethereum.net.rlpx;
 
+import com.google.common.base.Throwables;
+import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.util.ByteUtil;
+import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.math.ec.ECPoint;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.math.BigInteger;
 import java.security.SecureRandom;
 
@@ -50,7 +53,8 @@ public class Handshake {
         boolean isToken;
         if (token == null) {
             isToken = false;
-            token = new byte[32]; // TODO shared secret
+            BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+            token = ByteUtil.bigIntegerToBytes(secretScalar, 32);
         } else {
             isToken = true;
         }
@@ -64,6 +68,21 @@ public class Handshake {
         message.publicKey = key.getPubKeyPoint();
         message.nonce = initiatorNonce;
         return message;
+    }
+
+    public byte[] encryptAuthMessage(AuthInitiateMessage message) {
+        return ECIESCoder.encrypt(remotePublicKey, message.encode());
+    }
+
+    public AuthResponseMessage decryptAuthResponse(byte[] ciphertext, ECKey myKey) {
+        try {
+            byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
+            return AuthResponseMessage.decode(plaintext);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        } catch (InvalidCipherTextException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
     public void handleAuthResponse(AuthResponseMessage response) {
@@ -91,6 +110,7 @@ public class Handshake {
             signed[i] = (byte) (token[i] ^ initiatorNonce[i]);
         }
 
+        remotePublicKey = initiate.publicKey;
         remoteEphemeralKey = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
                 initiate.signature, signed, false).getPubKeyPoint();
         agreeSecret();
@@ -101,16 +121,20 @@ public class Handshake {
         return response;
     }
 
-    private int recIdFromSignatureV(int v) {
+    static public byte recIdFromSignatureV(int v) {
         if (v >= 31) {
             // compressed
             v -= 4;
         }
-        return v - 27;
+        return (byte)(v - 27);
     }
 
     public Secrets getSecrets() {
         return secrets;
+    }
+
+    public ECPoint getRemotePublicKey() {
+        return remotePublicKey;
     }
 
     public static class Secrets {
