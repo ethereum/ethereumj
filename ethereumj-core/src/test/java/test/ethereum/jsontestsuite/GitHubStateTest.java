@@ -12,12 +12,16 @@ import org.junit.runners.MethodSorters;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
+
+import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "2110806beb6ad11ae1601106ff8f026d55cf37b1";
+    public String shacommit = "d2ba02fe0507da205e3d17d79612ae15282b35a2";
 
 
     @Ignore
@@ -151,9 +155,32 @@ public class GitHubStateTest {
         Set<String> excluded = new HashSet<>();
         excluded.add("OverflowGasRequire");    //FIXME wont work until we use gaslimit as long
         excluded.add("EmptyTransaction2"); // Buggy testcase
+        excluded.add("TransactionSendingToEmpty");
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
+    //@Ignore
+    @Test // testing full suite
+    public void testRandomStateGitHub() throws ParseException, IOException {
+
+        String sha = "99db6f4f5fea3aa5cfbe8436feba8e213d06d1e8";
+        List<String> fileNames = getFileNamesForTreeSha(sha);
+        List<String> includedFiles =
+                Arrays.asList(
+                        "st201504081841JAVA.json", 
+                        "st201504081842JAVA.json", 
+                        "st201504081843JAVA.json"
+                );
+
+        for (String fileName : fileNames) {
+            if (includedFiles.contains(fileName)) {
+              System.out.println("Running: " + fileName);
+              String json = JSONReader.loadJSON("StateTests//RandomTests/" + fileName);
+              GitHubJSONTestSuite.runStateTest(json);
+            }
+        }
+
+    }
 }
 
