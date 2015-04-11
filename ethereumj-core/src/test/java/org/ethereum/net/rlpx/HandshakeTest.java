@@ -35,7 +35,7 @@ public class HandshakeTest {
     public void testAgreement() throws Exception {
         Handshake responder = new Handshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
-        AuthResponseMessage response = responder.handleAuthInitiate(initiate);
+        AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
         initiator.handleAuthResponse(response);
         assertArrayEquals(initiator.getSecrets().aes, responder.getSecrets().aes);
         assertArrayEquals(initiator.getSecrets().mac, responder.getSecrets().mac);
@@ -52,7 +52,7 @@ public class HandshakeTest {
         byte[] plaintext = ECIESCoder.decrypt(remoteKey.getPrivKey(), authBuffer);
         assertArrayEquals(plaintext, initiate.encode());
 
-        AuthResponseMessage response = responder.handleAuthInitiate(initiate);
+        AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
         // Simulate encryption
         byte[] responseBuffer = ECIESCoder.encrypt(responder.getRemotePublicKey(), response.encode());
 

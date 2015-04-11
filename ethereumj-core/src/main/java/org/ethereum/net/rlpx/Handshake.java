@@ -102,15 +102,17 @@ public class Handshake {
         secrets.token = sha3(sharedSecret);
     }
 
-    public AuthResponseMessage handleAuthInitiate(AuthInitiateMessage initiate) {
+    public AuthResponseMessage handleAuthInitiate(AuthInitiateMessage initiate, ECKey key) {
         initiatorNonce = initiate.nonce;
-        byte[] token = new byte[32]; // TODO shared secret
+        remotePublicKey = initiate.publicKey;
+
+        BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+        byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, 32);
         byte[] signed = new byte[32];
         for (int i = 0; i < 32; i++) {
             signed[i] = (byte) (token[i] ^ initiatorNonce[i]);
         }
 
-        remotePublicKey = initiate.publicKey;
         remoteEphemeralKey = ECKey.recoverFromSignature(recIdFromSignatureV(initiate.signature.v),
                 initiate.signature, signed, false).getPubKeyPoint();
         agreeSecret();
