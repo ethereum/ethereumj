@@ -21,8 +21,8 @@ public class FrameCodecTest {
     public void setUp() throws IOException {
         ECKey remoteKey = new ECKey().decompress();
         ECKey myKey = new ECKey().decompress();
-        Handshake initiator = new Handshake(remoteKey.getPubKeyPoint());
-        Handshake responder = new Handshake();
+        EncryptionHandshake initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
+        EncryptionHandshake responder = new EncryptionHandshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
         AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
         initiator.handleAuthResponse(initiate, response);

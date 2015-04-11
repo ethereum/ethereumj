@@ -24,7 +24,7 @@ public class FrameCodec {
     private final DataInput inp;
     private final OutputStream out;
 
-    public FrameCodec(Handshake.Secrets secrets, InputStream inp, OutputStream out) {
+    public FrameCodec(EncryptionHandshake.Secrets secrets, InputStream inp, OutputStream out) {
         this.inp = new DataInputStream(inp);
         this.out = out;
         int blockSize = secrets.aes.length * 8;

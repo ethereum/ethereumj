@@ -11,16 +11,16 @@ import static org.junit.Assert.assertEquals;
 /**
  * Created by android on 4/8/15.
  */
-public class HandshakeTest {
+public class EncryptionHandshakeTest {
     private ECKey myKey;
     private ECKey remoteKey;
-    private Handshake initiator;
+    private EncryptionHandshake initiator;
 
     @Before
     public void setUp() {
         remoteKey = new ECKey().decompress();
         myKey = new ECKey().decompress();
-        initiator = new Handshake(remoteKey.getPubKeyPoint());
+        initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
     }
 
     @Test
@@ -33,7 +33,7 @@ public class HandshakeTest {
 
     @Test
     public void testAgreement() throws Exception {
-        Handshake responder = new Handshake();
+        EncryptionHandshake responder = new EncryptionHandshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
         AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
         initiator.handleAuthResponse(initiate, response);
@@ -44,7 +44,7 @@ public class HandshakeTest {
 
     @Test
     public void testAgreementWithEncryption() throws Exception {
-        Handshake responder = new Handshake();
+        EncryptionHandshake responder = new EncryptionHandshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
         byte[] authBuffer = initiator.encryptAuthMessage(initiate);
 

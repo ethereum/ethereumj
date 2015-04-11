@@ -33,7 +33,7 @@ public class Handshaker {
         Socket sock = new Socket(host, port);
         InputStream inp = sock.getInputStream();
         OutputStream out = sock.getOutputStream();
-        Handshake initiator = new Handshake(remotePublic);
+        EncryptionHandshake initiator = new EncryptionHandshake(remotePublic);
         AuthInitiateMessage initiateMessage = initiator.createAuthInitiate(null, myKey);
         byte[] initiatePacket = initiator.encryptAuthMessage(initiateMessage);
 

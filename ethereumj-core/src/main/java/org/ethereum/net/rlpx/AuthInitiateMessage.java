@@ -28,7 +28,7 @@ public class AuthInitiateMessage {
     public byte[] encode() {
         // FIXME does this code generate a constant length for each item?
         byte[] sigBytes = merge(BigIntegers.asUnsignedByteArray(signature.r),
-                BigIntegers.asUnsignedByteArray(signature.s), new byte[]{Handshake.recIdFromSignatureV(signature.v)});
+                BigIntegers.asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
 
         byte[] buffer = new byte[getLength()];
         int offset = 0;

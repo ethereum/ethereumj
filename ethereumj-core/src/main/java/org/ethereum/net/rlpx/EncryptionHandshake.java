@@ -20,7 +20,7 @@ import static org.ethereum.crypto.SHA3Helper.sha3;
 /**
  * Created by devrandom on 2015-04-08.
  */
-public class Handshake {
+public class EncryptionHandshake {
     public static final int NONCE_SIZE = 32;
     public static final int MAC_SIZE = 256;
     public static final int SECRET_SIZE = 32;
@@ -33,7 +33,7 @@ public class Handshake {
     private byte[] responderNonce;
     private Secrets secrets;
 
-    public Handshake(ECPoint remotePublicKey) {
+    public EncryptionHandshake(ECPoint remotePublicKey) {
         this.remotePublicKey = remotePublicKey;
         ephemeralKey = new ECKey(random);
         initiatorNonce = new byte[NONCE_SIZE];
@@ -41,7 +41,7 @@ public class Handshake {
         isInitiator = true;
     }
 
-    public Handshake() {
+    public EncryptionHandshake() {
         ephemeralKey = new ECKey(random);
         responderNonce = new byte[NONCE_SIZE];
         random.nextBytes(responderNonce);
