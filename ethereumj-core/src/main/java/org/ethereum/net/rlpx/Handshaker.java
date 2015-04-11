@@ -43,8 +43,8 @@ public class Handshaker {
         if (n < responsePacket.length)
             throw new IOException("could not read, got " + n);
 
-        AuthResponseMessage response = initiator.decryptAuthResponse(responsePacket, myKey);
-        initiator.handleAuthResponse(response);
+        AuthResponseMessage responseMessage = initiator.decryptAuthResponse(responsePacket, myKey);
+        initiator.handleAuthResponse(initiateMessage, responseMessage);
         System.out.println(Hex.toHexString(initiator.getSecrets().aes));
     }
 }

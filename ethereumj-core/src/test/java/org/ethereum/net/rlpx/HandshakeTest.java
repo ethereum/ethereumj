@@ -36,7 +36,7 @@ public class HandshakeTest {
         Handshake responder = new Handshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
         AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
-        initiator.handleAuthResponse(response);
+        initiator.handleAuthResponse(initiate, response);
         assertArrayEquals(initiator.getSecrets().aes, responder.getSecrets().aes);
         assertArrayEquals(initiator.getSecrets().mac, responder.getSecrets().mac);
         assertArrayEquals(initiator.getSecrets().token, responder.getSecrets().token);
@@ -59,7 +59,7 @@ public class HandshakeTest {
         // Decryption should preserve
         AuthResponseMessage response1 = initiator.decryptAuthResponse(responseBuffer, myKey);
         assertArrayEquals(response.encode(), response1.encode());
-        initiator.handleAuthResponse(response);
+        initiator.handleAuthResponse(initiate, response);
         assertArrayEquals(initiator.getSecrets().aes, responder.getSecrets().aes);
         assertArrayEquals(initiator.getSecrets().mac, responder.getSecrets().mac);
         assertArrayEquals(initiator.getSecrets().token, responder.getSecrets().token);
