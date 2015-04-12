@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 
 import java.nio.ByteBuffer;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -125,21 +126,29 @@ public class CompactEncoder {
      * @return array with each individual nibble adding a terminator at the end
      */
     public static byte[] binToNibbles(byte[] str) {
+
         byte[] hexEncoded = encode(str);
-        ByteBuffer slice = ByteBuffer.allocate(hexEncoded.length + 1);
-        for (byte b : hexEncoded) {
-            slice.put(hexMap.get((char) b));
+        byte[] hexEncodedTerminated = Arrays.copyOf(hexEncoded, hexEncoded.length + 1);
+
+        for (int i = 0; i < hexEncoded.length; ++i){
+            byte b = hexEncodedTerminated[i];
+            hexEncodedTerminated[i] = hexMap.get((char) b);
         }
-        slice.put(TERMINATOR);
-        return slice.array();
+
+        hexEncodedTerminated[hexEncodedTerminated.length - 1] = TERMINATOR;
+        return hexEncodedTerminated;
     }
 
+
     public static byte[] binToNibblesNoTerminator(byte[] str) {
+
         byte[] hexEncoded = encode(str);
-        ByteBuffer slice = ByteBuffer.allocate(hexEncoded.length);
-        for (byte b : hexEncoded) {
-            slice.put(hexMap.get((char) b));
+
+        for (int i = 0; i < hexEncoded.length; ++i){
+            byte b = hexEncoded[i];
+            hexEncoded[i] = hexMap.get((char) b);
         }
-        return slice.array();
+
+        return hexEncoded;
     }
 }
