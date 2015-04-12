@@ -1,8 +1,12 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.crypto.ECKey;
+import org.ethereum.util.DecodeResult;
+import org.ethereum.util.RLP;
 import org.junit.Before;
 import org.junit.Test;
+import org.spongycastle.crypto.digests.SHA3Digest;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 import java.security.SecureRandom;
@@ -48,4 +52,34 @@ public class FrameCodecTest {
         assertEquals(frame.type, frame1.type);
     }
 
+    @Test
+    public void blah() {
+        Object[] stuff = new Object[]{1L, 3, "asdf"};
+        byte[] res = RLP.encode(stuff);
+        DecodeResult result = RLP.decode(res, 0);
+        System.out.println(result.getDecoded());
+
+        SHA3Digest d = new SHA3Digest();
+        d.update((byte)11);
+        d.update((byte) 22);
+        byte[] buf = new byte[d.getDigestSize()];
+        new SHA3Digest(d).doFinal(buf, 0);
+        System.out.println(Hex.toHexString(buf));
+        d.update((byte) 33);
+        d.doFinal(buf, 0);
+        System.out.println(Hex.toHexString(buf));
+
+        d = new SHA3Digest();
+        d.update((byte) 11);
+        d.update((byte) 22);
+        d.doFinal(buf, 0);
+        System.out.println(Hex.toHexString(buf));
+        d = new SHA3Digest();
+        d.update((byte) 11);
+        d.update((byte) 22);
+        d.update((byte) 33);
+        d.doFinal(buf, 0);
+        System.out.print(Hex.toHexString(buf));
+        System.out.println(".");
+    }
 }

@@ -5,7 +5,6 @@ import com.google.common.base.Throwables;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.ByteUtil;
-import org.spongycastle.crypto.Digest;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.math.ec.ECPoint;
@@ -112,11 +111,11 @@ public class EncryptionHandshake {
         secrets.aes = aesSecret;
         secrets.mac = sha3(sharedSecret, aesSecret);
         secrets.token = sha3(sharedSecret);
-        Digest mac1 = new SHA3Digest(MAC_SIZE);
+        SHA3Digest mac1 = new SHA3Digest(MAC_SIZE);
         mac1.update(xor(secrets.mac, responderNonce), 0, secrets.mac.length);
         byte[] encode = initiate.encode();
         mac1.update(encode, 0, encode.length);
-        Digest mac2 = new SHA3Digest(MAC_SIZE);
+        SHA3Digest mac2 = new SHA3Digest(MAC_SIZE);
         mac2.update(xor(secrets.mac, initiatorNonce), 0, secrets.mac.length);
         byte[] encode1 = response.encode();
         mac2.update(encode1, 0, encode1.length);
@@ -170,8 +169,8 @@ public class EncryptionHandshake {
         byte[] aes;
         byte[] mac;
         byte[] token;
-        Digest egressMac;
-        Digest ingressMac;
+        SHA3Digest egressMac;
+        SHA3Digest ingressMac;
 
         public byte[] getAes() {
             return aes;
@@ -185,11 +184,11 @@ public class EncryptionHandshake {
             return token;
         }
 
-        public Digest getIngressMac() {
+        public SHA3Digest getIngressMac() {
             return ingressMac;
         }
 
-        public Digest getEgressMac() {
+        public SHA3Digest getEgressMac() {
             return egressMac;
         }
     }
