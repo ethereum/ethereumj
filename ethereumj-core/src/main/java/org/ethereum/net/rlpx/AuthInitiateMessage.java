@@ -25,6 +25,37 @@ public class AuthInitiateMessage {
         return 65+32+64+32+1;
     }
 
+    static AuthInitiateMessage decode(byte[] wire) {
+        AuthInitiateMessage message = new AuthInitiateMessage();
+        int offset = 0;
+        byte[] r = new byte[32];
+        byte[] s = new byte[32];
+        System.arraycopy(wire, offset, r, 0, 32);
+        offset += 32;
+        System.arraycopy(wire, offset, s, 0, 32);
+        offset += 32;
+        int v = wire[offset] + 27;
+        offset += 1;
+        message.signature = ECKey.ECDSASignature.fromComponents(r, s, (byte)v);
+        message.ephemeralPublicHash = new byte[32];
+        System.arraycopy(wire, offset, message.ephemeralPublicHash, 0, 32);
+        offset += 32;
+        byte[] bytes = new byte[65];
+        System.arraycopy(wire, offset, bytes, 1, 64);
+        offset += 64;
+        bytes[0] = 0x04; // uncompressed
+        message.publicKey = ECKey.CURVE.getCurve().decodePoint(bytes);
+        message.nonce = new byte[32];
+        System.arraycopy(wire, offset, message.nonce, 0, 32);
+        offset += message.nonce.length;
+        byte tokenUsed = wire[offset];
+        offset += 1;
+        if (tokenUsed != 0x00 && tokenUsed != 0x01)
+            throw new RuntimeException("invalid boolean"); // TODO specific exception
+        message.isTokenUsed = (tokenUsed == 0x01);
+        return message;
+    }
+
     public byte[] encode() {
         // FIXME does this code generate a constant length for each item?
         byte[] sigBytes = merge(BigIntegers.asUnsignedByteArray(signature.r),

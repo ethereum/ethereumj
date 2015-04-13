@@ -8,6 +8,7 @@ import org.ethereum.util.ByteUtil;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -87,6 +88,10 @@ public class EncryptionHandshake {
         return ECIESCoder.encrypt(remotePublicKey, message.encode());
     }
 
+    public byte[] encryptAuthReponse(AuthResponseMessage message) {
+        return ECIESCoder.encrypt(remotePublicKey, message.encode());
+    }
+
     public AuthResponseMessage decryptAuthResponse(byte[] ciphertext, ECKey myKey) {
         try {
             byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
@@ -96,29 +101,52 @@ public class EncryptionHandshake {
         }
     }
 
-    public void handleAuthResponse(AuthInitiateMessage initiate, AuthResponseMessage response) {
-        remoteEphemeralKey = response.ephemeralPublicKey;
-        responderNonce = response.nonce;
-        agreeSecret(initiate, response);
+    public AuthInitiateMessage decryptAuthInitiate(byte[] ciphertext, ECKey myKey) {
+        try {
+            byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
+            return AuthInitiateMessage.decode(plaintext);
+        } catch (IOException | InvalidCipherTextException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
-    private void agreeSecret(AuthInitiateMessage initiate, AuthResponseMessage response) {
+    public void handleAuthResponse(ECKey myKey, byte[] initiatePacket, byte[] responsePacket) {
+        AuthResponseMessage response = decryptAuthResponse(responsePacket, myKey);
+        remoteEphemeralKey = response.ephemeralPublicKey;
+        responderNonce = response.nonce;
+        agreeSecret(initiatePacket, responsePacket);
+    }
+
+    private void agreeSecret(byte[] initiatePacket, byte[] responsePacket) {
         BigInteger secretScalar = remoteEphemeralKey.multiply(ephemeralKey.getPrivKey()).normalize().getXCoord().toBigInteger();
         byte[] agreedSecret = ByteUtil.bigIntegerToBytes(secretScalar, SECRET_SIZE);
         byte[] sharedSecret = sha3(agreedSecret, sha3(responderNonce, initiatorNonce));
         byte[] aesSecret = sha3(agreedSecret, sharedSecret);
         secrets = new Secrets();
         secrets.aes = aesSecret;
-        secrets.mac = sha3(sharedSecret, aesSecret);
+        secrets.mac = sha3(agreedSecret, aesSecret);
         secrets.token = sha3(sharedSecret);
+        System.out.println("mac " + Hex.toHexString(secrets.mac));
+        System.out.println("aes " + Hex.toHexString(secrets.aes));
+        System.out.println("shared " + Hex.toHexString(sharedSecret));
+        System.out.println("ecdhe " + Hex.toHexString(agreedSecret));
+
         SHA3Digest mac1 = new SHA3Digest(MAC_SIZE);
         mac1.update(xor(secrets.mac, responderNonce), 0, secrets.mac.length);
-        byte[] encode = initiate.encode();
-        mac1.update(encode, 0, encode.length);
+        byte[] buf = new byte[32];
+        new SHA3Digest(mac1).doFinal(buf, 0);
+        System.out.println("1a " + Hex.toHexString(buf));
+        System.out.println("auth " + Hex.toHexString(initiatePacket));
+        mac1.update(initiatePacket, 0, initiatePacket.length);
+        new SHA3Digest(mac1).doFinal(buf, 0);
+        System.out.println("1b " + Hex.toHexString(buf));
         SHA3Digest mac2 = new SHA3Digest(MAC_SIZE);
         mac2.update(xor(secrets.mac, initiatorNonce), 0, secrets.mac.length);
-        byte[] encode1 = response.encode();
-        mac2.update(encode1, 0, encode1.length);
+        new SHA3Digest(mac2).doFinal(buf, 0);
+        System.out.println("2a " + Hex.toHexString(buf));
+        mac2.update(responsePacket, 0, responsePacket.length);
+        new SHA3Digest(mac2).doFinal(buf, 0);
+        System.out.println("2b " + Hex.toHexString(buf));
         if (isInitiator) {
             secrets.egressMac = mac1;
             secrets.ingressMac = mac2;
@@ -128,7 +156,15 @@ public class EncryptionHandshake {
         }
     }
 
-    public AuthResponseMessage handleAuthInitiate(AuthInitiateMessage initiate, ECKey key) {
+    public byte[] handleAuthInitiate(byte[] initiatePacket, ECKey key) {
+        AuthResponseMessage response = makeAuthInitiate(initiatePacket, key);
+        byte[] responsePacket = encryptAuthReponse(response);
+        agreeSecret(initiatePacket, responsePacket);
+        return responsePacket;
+    }
+
+    AuthResponseMessage makeAuthInitiate(byte[] initiatePacket, ECKey key) {
+        AuthInitiateMessage initiate = decryptAuthInitiate(initiatePacket, key);
         initiatorNonce = initiate.nonce;
         remotePublicKey = initiate.publicKey;
         BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
@@ -145,7 +181,6 @@ public class EncryptionHandshake {
         response.isTokenUsed = initiate.isTokenUsed;
         response.ephemeralPublicKey = ephemeralKey.getPubKeyPoint();
         response.nonce = responderNonce;
-        agreeSecret(initiate, response);
         return response;
     }
 

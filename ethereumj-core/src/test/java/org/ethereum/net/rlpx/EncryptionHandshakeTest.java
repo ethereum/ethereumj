@@ -1,6 +1,5 @@
 package org.ethereum.net.rlpx;
 
-import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,31 +34,9 @@ public class EncryptionHandshakeTest {
     public void testAgreement() throws Exception {
         EncryptionHandshake responder = new EncryptionHandshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
-        AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
-        initiator.handleAuthResponse(initiate, response);
-        assertArrayEquals(initiator.getSecrets().aes, responder.getSecrets().aes);
-        assertArrayEquals(initiator.getSecrets().mac, responder.getSecrets().mac);
-        assertArrayEquals(initiator.getSecrets().token, responder.getSecrets().token);
-    }
-
-    @Test
-    public void testAgreementWithEncryption() throws Exception {
-        EncryptionHandshake responder = new EncryptionHandshake();
-        AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
-        byte[] authBuffer = initiator.encryptAuthMessage(initiate);
-
-        // Simulate decryption
-        byte[] plaintext = ECIESCoder.decrypt(remoteKey.getPrivKey(), authBuffer);
-        assertArrayEquals(plaintext, initiate.encode());
-
-        AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
-        // Simulate encryption
-        byte[] responseBuffer = ECIESCoder.encrypt(responder.getRemotePublicKey(), response.encode());
-
-        // Decryption should preserve
-        AuthResponseMessage response1 = initiator.decryptAuthResponse(responseBuffer, myKey);
-        assertArrayEquals(response.encode(), response1.encode());
-        initiator.handleAuthResponse(initiate, response);
+        byte[] initiatePacket = initiator.encryptAuthMessage(initiate);
+        byte[] responsePacket = responder.handleAuthInitiate(initiatePacket, remoteKey);
+        initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
         assertArrayEquals(initiator.getSecrets().aes, responder.getSecrets().aes);
         assertArrayEquals(initiator.getSecrets().mac, responder.getSecrets().mac);
         assertArrayEquals(initiator.getSecrets().token, responder.getSecrets().token);

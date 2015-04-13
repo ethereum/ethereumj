@@ -32,8 +32,9 @@ public class RlpxConnectionTest {
         initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
         responder = new EncryptionHandshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
-        AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
-        initiator.handleAuthResponse(initiate, response);
+        byte[] initiatePacket = initiator.encryptAuthMessage(initiate);
+        byte[] responsePacket = responder.handleAuthInitiate(initiatePacket, remoteKey);
+        initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
         PipedInputStream to = new PipedInputStream(1024*1024);
         PipedOutputStream toOut = new PipedOutputStream(to);
         PipedInputStream from = new PipedInputStream(1024*1024);
