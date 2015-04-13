@@ -1,13 +1,8 @@
 package org.ethereum.util;
 
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Queue;
+import java.util.*;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
@@ -129,10 +124,12 @@ public class RLP {
     }
 
     public static int decodeInt(byte[] data, int index) {
-
         int value = 0;
+        // NOTE: there are two ways zero can be encoded - 0x00 and OFFSET_SHORT_ITEM
 
-        if ((data[index] & 0xFF) > OFFSET_SHORT_ITEM
+        if ((data[index] & 0xFF) < OFFSET_SHORT_ITEM) {
+            return data[index];
+        } else if ((data[index] & 0xFF) >= OFFSET_SHORT_ITEM
                 && (data[index] & 0xFF) < OFFSET_LONG_ITEM) {
 
             byte length = (byte) (data[index] - OFFSET_SHORT_ITEM);
