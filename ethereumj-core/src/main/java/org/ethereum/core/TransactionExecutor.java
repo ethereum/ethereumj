@@ -243,6 +243,7 @@ public class TransactionExecutor {
                 if (CONFIG.vmTrace()) {
                     String traceAsJson = "{}";
                     if (program != null) {
+                        ProgramResult result = program.getResult();
                         ProgramTrace trace = program.getProgramTrace();
                         trace.setResult(result.getHReturn());
                         trace.setError(result.getException());

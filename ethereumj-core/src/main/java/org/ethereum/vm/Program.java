@@ -20,6 +20,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 
+import static java.lang.String.format;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.springframework.util.StringUtils.isEmpty;
@@ -190,8 +191,7 @@ public class Program {
      */
     public void stackRequire(int stackSize) {
         if (stack.size() < stackSize) {
-            throw new StackTooSmallException("Expected: " + stackSize
-                    + ", found: " + stack.size());
+            throw Program.Exception.tooSmallStack(stackSize, stack.size());
         }
     }
 
@@ -452,10 +452,11 @@ public class Program {
         // 2.1 PERFORM THE GAS VALUE TX
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
         if (this.getGas().longValue() - msg.getGas().longValue() < 0) {
-            gasLogger.info("No gas for the internal call, \n" +
-                            "fromAddress={}, codeAddress={}",
+            OutOfGasException ex = new OutOfGasException("Not enough gas for the internal call: fromAddress[%s], codeAddress[%s];",
                     Hex.toHexString(senderAddress), Hex.toHexString(codeAddress));
-            throw new OutOfGasException();
+            gasLogger.info(ex.getMessage());
+            
+            throw ex;
         }
 
         BigInteger endowment = msg.getEndowment().value();
@@ -548,8 +549,9 @@ public class Program {
         gasLogger.info("[{}] Spent for cause: [{}], gas: [{}]", invokeHash, cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
-        if (afterSpend < 0)
-            throw new OutOfGasException();
+        if (afterSpend < 0) {
+            throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
+        }
         result.spendGas(gasValue);
     }
 
@@ -700,7 +702,7 @@ public class Program {
             secondLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
             if ((i + 1) % 8 == 0) {
-                String tmp = String.format("%4s", Integer.toString(i - 7, 16)).replace(" ", "0");
+                String tmp = format("%4s", Integer.toString(i - 7, 16)).replace(" ", "0");
                 memoryData.append("").append(tmp).append(" ");
                 memoryData.append(firstLine).append(" ");
                 memoryData.append(secondLine);
@@ -744,7 +746,7 @@ public class Program {
                 oneLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
                 if ((i + 1) % 16 == 0) {
-                    String tmp = String.format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
+                    String tmp = format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
                             Integer.toString(i, 16)).replace(" ", "0");
                     memoryData.append("").append(tmp).append(" ");
                     memoryData.append(oneLine);
@@ -840,7 +842,7 @@ public class Program {
 
             fw = new FileWriter(dumpFile.getAbsoluteFile());
             bw = new BufferedWriter(fw);
-            bw.write(programTrace.asJsonString());
+            bw.write(programTrace.asJsonString(true));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         } finally {
@@ -876,12 +878,13 @@ public class Program {
         if (code == null || code.length == 0)
             return result;
 
-        OpCode op = OpCode.code(code[index]);
+        final byte opCode = code[index];
+        OpCode op = OpCode.code(opCode);
+        if (op == null) {
+            throw Program.Exception.invalidOpCode(opCode);   
+        }
+
         final byte[] continuedCode;
-
-        if (op == null) throw new IllegalOperationException("Invalid operation: " +
-                        Hex.toHexString(code, index, 1));
-
         switch(op) {
             case PUSH1:  case PUSH2:  case PUSH3:  case PUSH4:  case PUSH5:  case PUSH6:  case PUSH7:  case PUSH8:
             case PUSH9:  case PUSH10: case PUSH11: case PUSH12: case PUSH13: case PUSH14: case PUSH15: case PUSH16:
@@ -909,7 +912,9 @@ public class Program {
     }
 
     public void validateJumpDest(int nextPC) {
-        if (!jumpdest.contains(nextPC)) throw new BadJumpDestinationException();
+        if (!jumpdest.contains(nextPC)) {
+            throw Program.Exception.undefinedProgramCounterJump(nextPC);
+        }
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
@@ -951,27 +956,68 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class OutOfGasException extends RuntimeException {
+    public static class OutOfGasException extends RuntimeException {
+        
+        public OutOfGasException(String message, Object... args) {
+            super(format(message, args));
+        }
     }
 
     @SuppressWarnings("serial")
     public static class IllegalOperationException extends RuntimeException {
-        public IllegalOperationException(String message) {
-            super(message);
-        }
-
-        public IllegalOperationException() {
+        
+        public IllegalOperationException(String message, Object... args) {
+            super(format(message, args));
         }
     }
 
     @SuppressWarnings("serial")
-    public class BadJumpDestinationException extends RuntimeException {
+    public static class BadJumpDestinationException extends RuntimeException {
+
+        public BadJumpDestinationException(String message, Object... args) {
+            super(format(message, args));
+        }
     }
 
     @SuppressWarnings("serial")
-    public class StackTooSmallException extends RuntimeException {
-        public StackTooSmallException(String message) {
-            super(message);
+    public static class StackTooSmallException extends RuntimeException {
+        
+        public StackTooSmallException(String message, Object... args) {
+            super(format(message, args));
+        }
+    }
+
+    public static class Exception {
+
+        public static OutOfGasException notEnoughOpGas(OpCode op, long opGas, long programGas) {
+            return new OutOfGasException("Not enough gas for '%s' operation executing: opGas[%d], programGas[%d];", op, opGas, programGas);
+        }
+        public static OutOfGasException notEnoughOpGas(OpCode op, DataWord opGas, DataWord programGas) {
+            return notEnoughOpGas(op, opGas.longValue(), programGas.longValue());
+        }
+        public static OutOfGasException notEnoughOpGas(OpCode op, BigInteger opGas, BigInteger programGas) {
+            return notEnoughOpGas(op, opGas.longValue(), programGas.longValue());
+        }
+
+        public static OutOfGasException notEnoughSpendingGas(String cause, long gasValue, Program program) {
+            return new OutOfGasException("Not enough gas for '%s' cause spending: invokeGas[%d], gas[%d], usedGas[%d];",
+                    cause, program.invokeData.getGas().longValue(), gasValue, program.result.getGasUsed());
+        }
+
+        public static OutOfGasException gasOverflow(BigInteger actualGas, BigInteger gasLimit) {
+            return new OutOfGasException("Gas value overflow: actualGas[%d], gasLimit[%d];", actualGas.longValue(), gasLimit.longValue());
+        }
+
+        public static IllegalOperationException invalidOpCode(byte... opCode) {
+            return new IllegalOperationException("Invalid operation code: opCode[%s];", Hex.toHexString(opCode, 0, 1));
+        }
+
+        public static BadJumpDestinationException undefinedProgramCounterJump(int pc) {
+            return new BadJumpDestinationException("Undefined program counter for jump: PC[%d];", pc);
+        }
+
+        public static StackTooSmallException tooSmallStack(int expectedSize, int actualSize) {
+            return new StackTooSmallException("Expected stack size %d but actual %d;", expectedSize, actualSize);
         }
     }
 
