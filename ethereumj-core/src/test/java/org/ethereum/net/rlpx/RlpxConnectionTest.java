@@ -1,6 +1,8 @@
 package org.ethereum.net.rlpx;
 
+import com.google.common.collect.Lists;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.net.client.Capability;
 import org.ethereum.util.DecodeResult;
 import org.ethereum.util.RLP;
 import org.junit.Before;
@@ -11,22 +13,24 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.*;
 import java.security.SecureRandom;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * Created by devrandom on 2015-04-11.
  */
-public class FrameCodecTest {
+public class RlpxConnectionTest {
     private FrameCodec iCodec;
     private FrameCodec rCodec;
+    private EncryptionHandshake initiator;
+    private EncryptionHandshake responder;
+    private HandshakeMessage iMessage;
 
     @Before
     public void setUp() throws IOException {
         ECKey remoteKey = new ECKey().decompress();
         ECKey myKey = new ECKey().decompress();
-        EncryptionHandshake initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
-        EncryptionHandshake responder = new EncryptionHandshake();
+        initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
+        responder = new EncryptionHandshake();
         AuthInitiateMessage initiate = initiator.createAuthInitiate(null, myKey);
         AuthResponseMessage response = responder.handleAuthInitiate(initiate, remoteKey);
         initiator.handleAuthResponse(initiate, response);
@@ -36,6 +40,17 @@ public class FrameCodecTest {
         PipedOutputStream fromOut = new PipedOutputStream(from);
         iCodec = new FrameCodec(initiator.getSecrets(), to, fromOut);
         rCodec = new FrameCodec(responder.getSecrets(), from, toOut);
+        byte[] nodeId = {1, 2, 3, 4};
+        iMessage = new HandshakeMessage(
+                123,
+                "abcd",
+                Lists.newArrayList(
+                        new Capability("zz", (byte) 1),
+                        new Capability("yy", (byte) 3)
+                ),
+                3333,
+                nodeId
+        );
     }
 
     @Test
@@ -50,6 +65,28 @@ public class FrameCodecTest {
         frame1.payload.read(payload1);
         assertArrayEquals(payload, payload1);
         assertEquals(frame.type, frame1.type);
+    }
+
+    @Test
+    public void testMessageEncoding() throws IOException {
+        byte[] wire = iMessage.encode();
+        HandshakeMessage message1 = HandshakeMessage.parse(wire);
+        assertEquals(123, message1.version);
+        assertEquals("abcd", message1.name);
+        assertEquals(3333, message1.listenPort);
+        assertArrayEquals(message1.nodeId, message1.nodeId);
+        assertEquals(iMessage.caps, message1.caps);
+    }
+
+    @Test
+    public void testHandshake() throws IOException {
+        RlpxConnection iConn =  new RlpxConnection(initiator.getSecrets(), iCodec);
+        RlpxConnection rConn =  new RlpxConnection(responder.getSecrets(), rCodec);
+        iConn.sendProtocolHandshake(iMessage);
+        rConn.handleNextMessage();
+        HandshakeMessage receivedMessage = rConn.getHandshakeMessage();
+        assertNotNull(receivedMessage);
+        assertArrayEquals(iMessage.nodeId, receivedMessage.nodeId);
     }
 
     @Test

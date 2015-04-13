@@ -38,14 +38,21 @@ public class FrameCodec {
     }
 
     public static class Frame {
+        long type;
+        int size;
+        InputStream payload;
+
         public Frame(long type, int size, InputStream payload) {
             this.type = type;
             this.size = size;
             this.payload = payload;
         }
-        long type;
-        int size;
-        InputStream payload;
+
+        public Frame(int type, byte[] payload) {
+            this.type = type;
+            this.size = payload.length;
+            this.payload = new ByteArrayInputStream(payload);
+        }
     }
 
     public void writeFrame(Frame frame) throws IOException {
