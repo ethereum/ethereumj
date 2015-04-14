@@ -94,7 +94,6 @@ public class HelloMessage extends P2pMessage {
     }
 
     private void encode() {
-        byte[] command = RLP.encodeByte(HELLO.asByte());
         byte[] p2pVersion = RLP.encodeByte(this.p2pVersion);
         byte[] clientId = RLP.encodeString(this.clientId);
         byte[][] capabilities = new byte[this.capabilities.size()][];
@@ -108,7 +107,7 @@ public class HelloMessage extends P2pMessage {
         byte[] peerPort = RLP.encodeInt(this.listenPort);
         byte[] peerId = RLP.encodeElement(Hex.decode(this.peerId));
 
-        this.encoded = RLP.encodeList(command, p2pVersion, clientId,
+        this.encoded = RLP.encodeList(p2pVersion, clientId,
                 capabilityList, peerPort, peerId);
     }
 
