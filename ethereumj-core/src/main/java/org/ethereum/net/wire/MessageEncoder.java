@@ -3,6 +3,7 @@ package org.ethereum.net.wire;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.util.ByteUtil;
 
 import io.netty.buffer.ByteBuf;
@@ -17,6 +18,8 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import static org.ethereum.net.rlpx.FrameCodec.*;
 
 /**
  * The PacketEncoder encodes the message and adds a sync token to every packet.
@@ -45,9 +48,13 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
 
-        out.capacity(encoded.length + 8);
-        out.writeBytes(StaticMessages.SYNC_TOKEN);
-        out.writeBytes(ByteUtil.calcPacketLength(encoded));
-        out.writeBytes(encoded);
+        if (worldManager.frameCodec == null){
+            System.out.println("You don't have RLPx set... than die painfully");
+            System.exit(1);
+        }
+
+        /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
+        Frame frame = new Frame(msg.getCode(), msg.getEncoded());
+        worldManager.frameCodec.writeFrame(frame, out);
     }
 }

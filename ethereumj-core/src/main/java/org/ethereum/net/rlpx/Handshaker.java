@@ -5,6 +5,7 @@ import com.google.common.collect.Lists;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.rlpx.EncryptionHandshake.Secrets;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
@@ -21,12 +22,13 @@ import java.util.Arrays;
 public class Handshaker {
     private final ECKey myKey;
     private final byte[] nodeId;
+    private Secrets secrets;
 
     public static void main(String[] args) throws IOException {
         new Handshaker().doHandshake(args[0], Integer.parseInt(args[1]), args[2]);
     }
 
-    Handshaker() {
+    public Handshaker() {
         myKey = new ECKey().decompress();
         byte[] nodeIdWithFormat = myKey.getPubKey();
         nodeId = new byte[nodeIdWithFormat.length - 1];
@@ -34,7 +36,7 @@ public class Handshaker {
         System.out.println("Node ID " + Hex.toHexString(nodeId));
     }
 
-    private void doHandshake(String host, int port, String remoteIdHex) throws IOException {
+    public void doHandshake(String host, int port, String remoteIdHex) throws IOException {
         byte[] remoteId = Hex.decode(remoteIdHex);
         byte[] remotePublicBytes = new byte[remoteId.length + 1];
         System.arraycopy(remoteId, 0, remotePublicBytes, 1, remoteId.length);
@@ -69,12 +71,19 @@ public class Handshaker {
                 nodeId
         );
 
-        conn.sendProtocolHandshake(handshakeMessage);
-        conn.handleNextMessage();
-        if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
-            throw new IOException("returns node ID doesn't match the node ID we dialed to");
-        System.out.println(conn.getHandshakeMessage().caps);
+//        conn.sendProtocolHandshake(handshakeMessage);
+//        conn.handleNextMessage();
+//        if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
+//            throw new IOException("returns node ID doesn't match the node ID we dialed to");
+//        System.out.println(conn.getHandshakeMessage().caps);
+
+        this.secrets = initiator.getSecrets();
     }
+
+    public Secrets getSecrets() {
+        return secrets;
+    }
+
 
     private void delay(int millis) {
         try {

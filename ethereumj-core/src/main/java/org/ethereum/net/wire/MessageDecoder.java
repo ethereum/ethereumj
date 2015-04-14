@@ -9,6 +9,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
+import org.ethereum.net.rlpx.FrameCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+
+import static org.ethereum.net.rlpx.FrameCodec.*;
 
 /**
  * The PacketDecoder parses every valid Ethereum packet to a Message object
@@ -35,6 +38,20 @@ public class MessageDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+
+        if (worldManager.frameCodec == null){
+            System.out.println("You don't have RLPx set... than die painfully");
+            System.exit(1);
+        }
+
+        Frame frame = worldManager.frameCodec.readFrame(in);
+        if (frame == null) return;  // here we check if the buffer was fully read
+                                    // the return means read more !!!
+
+        if (!isValidEthereumPacket(in)) {
+            return;
+        }
+
 
         if (!isValidEthereumPacket(in)) {
             return;

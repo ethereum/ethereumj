@@ -6,6 +6,7 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
+import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.net.server.ChannelManager;
 
 import java.math.BigInteger;
@@ -134,5 +135,7 @@ public interface Ethereum {
     public ChannelManager getChannelManager();
 
     public Set<Transaction> getPendingTransactions();
+
+    public void setFrameCode(FrameCodec frameCode);
 
 }

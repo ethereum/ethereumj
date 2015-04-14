@@ -35,4 +35,9 @@ public abstract class Message {
      * @return A string with all attributes of the message
      */
     public abstract String toString();
+
+    public byte getCode() {
+            return code;
+    }
+
 }

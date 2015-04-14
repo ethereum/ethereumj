@@ -7,6 +7,7 @@ import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
+import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
@@ -244,4 +245,10 @@ public class EthereumImpl implements Ethereum {
     public Set<Transaction> getPendingTransactions() {
         return getBlockchain().getPendingTransactions();
     }
+
+    @Override
+    public void setFrameCode(FrameCodec frameCode){
+            worldManager.frameCodec = frameCode;
+    }
+
 }
