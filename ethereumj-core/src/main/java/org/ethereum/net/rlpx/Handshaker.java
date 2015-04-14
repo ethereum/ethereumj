@@ -6,6 +6,9 @@ import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.rlpx.EncryptionHandshake.Secrets;
+import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.p2p.DisconnectMessage;
+import org.ethereum.net.p2p.PingMessage;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
@@ -71,14 +74,20 @@ public class Handshaker {
                 nodeId
         );
 
-//        conn.sendProtocolHandshake(handshakeMessage);
-//        conn.handleNextMessage();
-//        if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
-//            throw new IOException("returns node ID doesn't match the node ID we dialed to");
-//        System.out.println(conn.getHandshakeMessage().caps);
+
+
+        conn.sendProtocolHandshake(handshakeMessage);
+        conn.handleNextMessage();
+        if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
+            throw new IOException("returns node ID doesn't match the node ID we dialed to");
+        System.out.println(conn.getHandshakeMessage().caps);
+        conn.writeMessage(new PingMessage());
+        conn.writeMessage(new DisconnectMessage(ReasonCode.PEER_QUITING));
+        conn.handleNextMessage();
 
         this.secrets = initiator.getSecrets();
     }
+
 
     public Secrets getSecrets() {
         return secrets;

@@ -1,5 +1,7 @@
 package org.ethereum.net.rlpx;
 
+import org.ethereum.net.p2p.P2pMessage;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,5 +43,10 @@ public class RlpxConnection {
 
     public HandshakeMessage getHandshakeMessage() {
         return handshakeMessage;
+    }
+
+    public void writeMessage(P2pMessage message) throws IOException {
+        byte[] payload = message.getEncoded();
+        codec.writeFrame(new FrameCodec.Frame(message.getCommand().asByte(), payload));
     }
 }

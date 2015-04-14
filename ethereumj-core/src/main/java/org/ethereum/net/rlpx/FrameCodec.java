@@ -2,13 +2,13 @@ package org.ethereum.net.rlpx;
 
 import io.netty.buffer.ByteBuf;
 import org.ethereum.util.RLP;
-import org.spongycastle.crypto.BlockCipher;
 import org.spongycastle.crypto.StreamCipher;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 
@@ -20,13 +20,14 @@ public class FrameCodec {
     private final StreamCipher dec;
     private final SHA3Digest egressMac;
     private final SHA3Digest ingressMac;
-    private final BlockCipher macc;
     private final DataInput inp;
     private final OutputStream out;
+    private final byte[] mac;
 
     public FrameCodec(EncryptionHandshake.Secrets secrets, InputStream inp, OutputStream out) {
         this.inp = new DataInputStream(inp);
         this.out = out;
+        this.mac = secrets.mac;
         int blockSize = secrets.aes.length * 8;
         enc = new SICBlockCipher(new AESFastEngine());
         enc.init(true, new ParametersWithIV(new KeyParameter(secrets.aes), new byte[blockSize / 8]));
@@ -34,8 +35,12 @@ public class FrameCodec {
         dec.init(false, new ParametersWithIV(new KeyParameter(secrets.aes), new byte[blockSize / 8]));
         egressMac = secrets.egressMac;
         ingressMac = secrets.ingressMac;
-        macc = new AESFastEngine();
-        macc.init(true, new KeyParameter(secrets.mac));
+    }
+
+    private AESFastEngine makeMacCipher() {
+        AESFastEngine macc = new AESFastEngine();
+        macc.init(true, new KeyParameter(mac));
+        return macc;
     }
 
     public static class Frame {
@@ -136,6 +141,7 @@ public class FrameCodec {
     private void dumpEgress() {
         byte[] buf = new byte[32];
         new SHA3Digest(egressMac).doFinal(buf, 0);
+        System.out.println("egress MAC " + Hex.toHexString(buf));
     }
 
     public Frame readFrame(ByteBuf in) throws IOException {
@@ -188,7 +194,8 @@ public class FrameCodec {
         byte[] aesBlock = new byte[mac.getDigestSize()];
         // doFinal without resetting the MAC
         doSum(mac, aesBlock);
-        macc.processBlock(aesBlock, 0, aesBlock, 0);
+        makeMacCipher().processBlock(aesBlock, 0, aesBlock, 0);
+        System.out.println(Hex.toHexString(aesBlock));
         // go-ethereum is confused about block size. The cipher is 256 bits (32 bytes),
         // but the output buffer is only 16 bytes.
         int length = 16;
