@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Arrays;
 
 /**
  * Created by devrandom on 2015-04-09.
@@ -30,6 +31,7 @@ public class Handshaker {
         byte[] nodeIdWithFormat = myKey.getPubKey();
         nodeId = new byte[nodeIdWithFormat.length - 1];
         System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+        System.out.println("Node ID " + Hex.toHexString(nodeId));
     }
 
     private void doHandshake(String host, int port, String remoteIdHex) throws IOException {
@@ -52,15 +54,12 @@ public class Handshaker {
             throw new IOException("could not read, got " + n);
 
         initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
-        System.out.println(Hex.toHexString(initiator.getSecrets().aes));
-        byte[] buf = new byte[32];
+        byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
         new SHA3Digest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
-        System.out.println(Hex.toHexString(buf));
         new SHA3Digest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
-        System.out.println(Hex.toHexString(buf));
         RlpxConnection conn =  new RlpxConnection(initiator.getSecrets(), inp, out);
         HandshakeMessage handshakeMessage = new HandshakeMessage(
-                123,
+                3,
                 "abcd",
                 Lists.newArrayList(
                         new Capability("zz", (byte) 1),
@@ -71,7 +70,9 @@ public class Handshaker {
         );
 
         conn.sendProtocolHandshake(handshakeMessage);
-        delay(1000);
+        conn.handleNextMessage();
+        if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
+            throw new IOException("returns node ID doesn't match the node ID we dialed to");
     }
 
     private void delay(int millis) {

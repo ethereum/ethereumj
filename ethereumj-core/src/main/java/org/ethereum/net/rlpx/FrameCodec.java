@@ -56,6 +56,7 @@ public class FrameCodec {
     }
 
     public void writeFrame(Frame frame) throws IOException {
+        dumpEgress();
         byte[] headBuffer = new byte[32];
         byte[] ptype = RLP.encodeInt((int) frame.type); // FIXME encodeLong
         int totalSize = frame.size + ptype.length;
@@ -64,10 +65,13 @@ public class FrameCodec {
         headBuffer[2] = (byte)(totalSize);
         enc.processBytes(headBuffer, 0, 16, headBuffer, 0);
         updateMac(egressMac, headBuffer, 0, headBuffer, 16);
+        dumpEgress();
+
         byte[] buff = new byte[256];
         out.write(headBuffer);
         enc.processBytes(ptype, 0, ptype.length, buff, 0);
         out.write(buff, 0, ptype.length);
+        egressMac.update(buff, 0, ptype.length);
         while (true) {
             int n = frame.payload.read(buff);
             if (n <= 0) break;
@@ -82,11 +86,15 @@ public class FrameCodec {
             egressMac.update(buff, 0, padding);
             out.write(buff, 0, padding);
         }
-        out.write(pad);
         byte[] macBuffer = new byte[egressMac.getDigestSize()];
         doSum(egressMac, macBuffer); // fmacseed
         updateMac(egressMac, macBuffer, 0, macBuffer, 0);
         out.write(macBuffer, 0, macBuffer.length);
+    }
+
+    private void dumpEgress() {
+        byte[] buf = new byte[32];
+        new SHA3Digest(egressMac).doFinal(buf, 0);
     }
 
     public Frame readFrame() throws IOException {
@@ -112,15 +120,16 @@ public class FrameCodec {
 
     private byte[] updateMac(SHA3Digest mac, byte[] seed, int offset, byte[] buf, int outOffset) {
         byte[] aesBlock = new byte[mac.getDigestSize()];
-        // FIXME is aesBlock 16 bytes or 32?
         // doFinal without resetting the MAC
         doSum(mac, aesBlock);
         macc.processBlock(aesBlock, 0, aesBlock, 0);
-        int length = macc.getBlockSize();
+        // go-ethereum is confused about block size. The cipher is 256 bits (32 bytes),
+        // but the output buffer is only 16 bytes.
+        int length = 16;
         for (int i = 0; i < length; i++) {
             aesBlock[i] ^= seed[i + offset];
         }
-        mac.update(aesBlock, 0, aesBlock.length);
+        mac.update(aesBlock, 0, length);
         byte[] result = new byte[mac.getDigestSize()];
         // doFinal without resetting the MAC
         doSum(mac, result);

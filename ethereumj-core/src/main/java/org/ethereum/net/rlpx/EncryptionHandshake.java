@@ -8,7 +8,6 @@ import org.ethereum.util.ByteUtil;
 import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.math.ec.ECPoint;
-import org.spongycastle.util.encoders.Hex;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
@@ -126,27 +125,22 @@ public class EncryptionHandshake {
         secrets.aes = aesSecret;
         secrets.mac = sha3(agreedSecret, aesSecret);
         secrets.token = sha3(sharedSecret);
-        System.out.println("mac " + Hex.toHexString(secrets.mac));
-        System.out.println("aes " + Hex.toHexString(secrets.aes));
-        System.out.println("shared " + Hex.toHexString(sharedSecret));
-        System.out.println("ecdhe " + Hex.toHexString(agreedSecret));
+//        System.out.println("mac " + Hex.toHexString(secrets.mac));
+//        System.out.println("aes " + Hex.toHexString(secrets.aes));
+//        System.out.println("shared " + Hex.toHexString(sharedSecret));
+//        System.out.println("ecdhe " + Hex.toHexString(agreedSecret));
 
         SHA3Digest mac1 = new SHA3Digest(MAC_SIZE);
         mac1.update(xor(secrets.mac, responderNonce), 0, secrets.mac.length);
         byte[] buf = new byte[32];
         new SHA3Digest(mac1).doFinal(buf, 0);
-        System.out.println("1a " + Hex.toHexString(buf));
-        System.out.println("auth " + Hex.toHexString(initiatePacket));
         mac1.update(initiatePacket, 0, initiatePacket.length);
         new SHA3Digest(mac1).doFinal(buf, 0);
-        System.out.println("1b " + Hex.toHexString(buf));
         SHA3Digest mac2 = new SHA3Digest(MAC_SIZE);
         mac2.update(xor(secrets.mac, initiatorNonce), 0, secrets.mac.length);
         new SHA3Digest(mac2).doFinal(buf, 0);
-        System.out.println("2a " + Hex.toHexString(buf));
         mac2.update(responsePacket, 0, responsePacket.length);
         new SHA3Digest(mac2).doFinal(buf, 0);
-        System.out.println("2b " + Hex.toHexString(buf));
         if (isInitiator) {
             secrets.egressMac = mac1;
             secrets.ingressMac = mac2;
