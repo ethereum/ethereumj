@@ -913,7 +913,7 @@ public class Program {
 
     public void validateJumpDest(int nextPC) {
         if (!jumpdest.contains(nextPC)) {
-            throw Program.Exception.undefinedProgramCounterJump(nextPC);
+            throw Program.Exception.badJumpDestination(nextPC);
         }
     }
 
@@ -1012,8 +1012,8 @@ public class Program {
             return new IllegalOperationException("Invalid operation code: opCode[%s];", Hex.toHexString(opCode, 0, 1));
         }
 
-        public static BadJumpDestinationException undefinedProgramCounterJump(int pc) {
-            return new BadJumpDestinationException("Undefined program counter for jump: PC[%d];", pc);
+        public static BadJumpDestinationException badJumpDestination(int pc) {
+            return new BadJumpDestinationException("Operation with pc isn't 'JUMPDEST': PC[%d];", pc);
         }
 
         public static StackTooSmallException tooSmallStack(int expectedSize, int actualSize) {
