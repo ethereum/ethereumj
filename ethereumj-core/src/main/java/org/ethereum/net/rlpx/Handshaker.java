@@ -13,9 +13,7 @@ import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Socket;
 import java.util.Arrays;
 
@@ -39,6 +37,22 @@ public class Handshaker {
         System.out.println("Node ID " + Hex.toHexString(nodeId));
     }
 
+    /**
+     * Sample output:
+     * <pre>
+     Node ID b7fb52ddb1f269fef971781b9568ad65d30ac3b6055ebd6a0a762e6b67a7c92bd7c1fdf3c7c722d65ae70bfe6a9a58443297485aa29e3acd9bdf2ee0df4f5c45
+     packet f86b0399476574682f76302e392e372f6c696e75782f676f312e342e32ccc5836574683cc5837368680280b840f1c041a7737e8e06536d9defb92cb3db6ecfeb1b1208edfca6953c0c683a31ff0a478a832bebb6629e4f5c13136478842cc87a007729f3f1376f4462eb424ded
+     [eth:60, shh:2]
+     packet type 16
+     packet f8453c7b80a0fd4af92a79c7fc2fd8bf0d342f2e832e1d4f485c85b9152d2039e03bc604fdcaa0fd4af92a79c7fc2fd8bf0d342f2e832e1d4f485c85b9152d2039e03bc604fdca
+     packet type 24
+     packet c102
+     packet type 3
+     packet c0
+     packet type 1
+     packet c180
+     </pre>
+     */
     public void doHandshake(String host, int port, String remoteIdHex) throws IOException {
         byte[] remoteId = Hex.decode(remoteIdHex);
         byte[] remotePublicBytes = new byte[remoteId.length + 1];
@@ -74,8 +88,6 @@ public class Handshaker {
                 nodeId
         );
 
-
-
         conn.sendProtocolHandshake(handshakeMessage);
         conn.handleNextMessage();
         if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
@@ -84,6 +96,14 @@ public class Handshaker {
         conn.writeMessage(new PingMessage());
         conn.writeMessage(new DisconnectMessage(ReasonCode.PEER_QUITING));
         conn.handleNextMessage();
+
+        while (true) {
+            try {
+                conn.handleNextMessage();
+            } catch (EOFException e) {
+                break;
+            }
+        }
 
         this.secrets = initiator.getSecrets();
     }

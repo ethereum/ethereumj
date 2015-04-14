@@ -8,7 +8,6 @@ import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 
@@ -38,6 +37,7 @@ public class FrameCodec {
     }
 
     private AESFastEngine makeMacCipher() {
+        // Stateless AES encryption
         AESFastEngine macc = new AESFastEngine();
         macc.init(true, new KeyParameter(mac));
         return macc;
@@ -135,13 +135,13 @@ public class FrameCodec {
         byte[] macBuffer = new byte[egressMac.getDigestSize()];
         doSum(egressMac, macBuffer); // fmacseed
         updateMac(egressMac, macBuffer, 0, macBuffer, 0);
-        out.write(macBuffer, 0, macBuffer.length);
+        out.write(macBuffer, 0, 16);
     }
 
     private void dumpEgress() {
         byte[] buf = new byte[32];
         new SHA3Digest(egressMac).doFinal(buf, 0);
-        System.out.println("egress MAC " + Hex.toHexString(buf));
+//        System.out.println("egress MAC " + Hex.toHexString(buf));
     }
 
     public Frame readFrame(ByteBuf in) throws IOException {
@@ -183,6 +183,8 @@ public class FrameCodec {
         inp.readFully(buffer);
         dec.processBytes(buffer, 0, buffer.length, buffer, 0);
         int pos = 0;
+        byte[] macBuffer = new byte[ingressMac.getDigestSize()];
+        inp.readFully(macBuffer, 0, 16);
         long type = RLP.decodeInt(buffer, pos); // FIXME long
         pos = RLP.getNextElementIndex(buffer, pos);
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalSize - pos);
@@ -192,19 +194,17 @@ public class FrameCodec {
 
     private byte[] updateMac(SHA3Digest mac, byte[] seed, int offset, byte[] buf, int outOffset) {
         byte[] aesBlock = new byte[mac.getDigestSize()];
-        // doFinal without resetting the MAC
         doSum(mac, aesBlock);
         makeMacCipher().processBlock(aesBlock, 0, aesBlock, 0);
-        System.out.println(Hex.toHexString(aesBlock));
-        // go-ethereum is confused about block size. The cipher is 256 bits (32 bytes),
-        // but the output buffer is only 16 bytes.
+        // Note that although the mac digest size is 32 bytes, we only use 16 bytes in the computation
         int length = 16;
         for (int i = 0; i < length; i++) {
             aesBlock[i] ^= seed[i + offset];
         }
+//        System.out.println("update seed " + Hex.toHexString(seed, offset, length));
+//        System.out.println("update aesbuf ^ seed " + Hex.toHexString(aesBlock));
         mac.update(aesBlock, 0, length);
         byte[] result = new byte[mac.getDigestSize()];
-        // doFinal without resetting the MAC
         doSum(mac, result);
         for (int i = 0; i < length ; i++) {
             buf[i + outOffset] = result[i];
@@ -213,6 +213,7 @@ public class FrameCodec {
     }
 
     private void doSum(SHA3Digest mac, byte[] out) {
+        // doFinal without resetting the MAC by using clone of digest state
         new SHA3Digest(mac).doFinal(out, 0);
     }
 }
