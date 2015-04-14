@@ -60,10 +60,10 @@ public class Handshaker {
         RlpxConnection conn =  new RlpxConnection(initiator.getSecrets(), inp, out);
         HandshakeMessage handshakeMessage = new HandshakeMessage(
                 3,
-                "abcd",
+                "computronium1",
                 Lists.newArrayList(
-                        new Capability("zz", (byte) 1),
-                        new Capability("yy", (byte) 3)
+                        new Capability("eth", (byte) 60),
+                        new Capability("shh", (byte) 2)
                 ),
                 3333,
                 nodeId
@@ -73,6 +73,7 @@ public class Handshaker {
         conn.handleNextMessage();
         if (!Arrays.equals(remoteId, conn.getHandshakeMessage().nodeId))
             throw new IOException("returns node ID doesn't match the node ID we dialed to");
+        System.out.println(conn.getHandshakeMessage().caps);
     }
 
     private void delay(int millis) {
