@@ -26,7 +26,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author Roman Mandeleil
  * @since 01.11.2014
  */
-@Component
+//@Component
 public class PeerServer {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
@@ -34,7 +34,6 @@ public class PeerServer {
     @Autowired
     public ChannelManager channelManager;
 
-    @Autowired
     public EthereumChannelInitializer ethereumChannelInitializer;
 
     @Autowired

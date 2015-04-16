@@ -33,37 +33,39 @@ public class MessageDecoder extends ByteToMessageDecoder {
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
+    private boolean active = false;
+    private FrameCodec frameCodec;
+
+    public void setFrameCodec(FrameCodec frameCodec) {
+        this.active = true;
+        this.frameCodec = frameCodec;
+    }
+
     @Autowired
     WorldManager worldManager;
+
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
-        if (worldManager.frameCodec == null){
-            System.out.println("You don't have RLPx set... than die painfully");
-            System.exit(1);
+        if (!active){
+            out.add(in);
+            return;
         }
 
-        Frame frame = worldManager.frameCodec.readFrame(in);
+        int readableBytes = in.readableBytes();
+        Frame frame = frameCodec.readFrame(in);
         if (frame == null) return;  // here we check if the buffer was fully read
                                     // the return means read more !!!
 
-        if (!isValidEthereumPacket(in)) {
-            return;
-        }
-
-
-        if (!isValidEthereumPacket(in)) {
-            return;
-        }
-
-        byte[] encoded = new byte[in.readInt()];
-        in.readBytes(encoded);
+        int size = frame.getPayload().available();
+        byte[] payload =  new byte[size];
+        frame.getPayload().read(payload);
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
+            loggerWire.debug("Encoded: [{}]", Hex.toHexString(payload));
 
-        Message msg = MessageFactory.createMessage(encoded);
+        Message msg = MessageFactory.createMessage(payload);
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);

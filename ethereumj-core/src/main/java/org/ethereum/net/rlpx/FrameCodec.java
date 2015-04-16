@@ -59,6 +59,14 @@ public class FrameCodec {
             this.size = payload.length;
             this.payload = new ByteArrayInputStream(payload);
         }
+
+        public int getSize() {
+            return size;
+        }
+
+        public InputStream getPayload() {
+            return payload;
+        }
     }
 
 

@@ -91,22 +91,16 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.peerDiscoveryMode = peerDiscoveryMode;
     }
 
-    @Override
-    public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        active = true;
-        msgQueue.activate(ctx);
-        // Send HELLO once when channel connection has been established
-        msgQueue.sendMessage(HELLO_MESSAGE);
-        startTimers();
-    }
-
     public void activate() {
-
-//        logger.info("Incoming connection from: {}", ch.remoteAddress().toString());
-
         logger.info("P2P protocol activated");
         worldManager.getListener().trace("P2P protocol activated");
+        active = true;
+        // Send HELLO once when channel connection has been established
+//        msgQueue.sendMessage(HELLO_MESSAGE);
+//        startTimers();
+
     }
+
 
     public boolean isActive() {
         return active;

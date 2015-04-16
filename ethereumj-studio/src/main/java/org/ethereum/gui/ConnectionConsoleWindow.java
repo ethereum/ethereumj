@@ -82,7 +82,7 @@ public class ConnectionConsoleWindow extends JFrame {
             public void run() {
 
                 UIEthereumManager.ethereum.connect(SystemProperties.CONFIG.activePeerIP(),
-                        SystemProperties.CONFIG.activePeerPort());
+                        SystemProperties.CONFIG.activePeerPort(), "");
             }
         };
 

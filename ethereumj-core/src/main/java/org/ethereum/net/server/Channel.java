@@ -6,6 +6,8 @@ import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
+import org.ethereum.net.rlpx.FrameCodec;
+import org.ethereum.net.rlpx.RLPXHandler;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
@@ -42,6 +44,10 @@ public class Channel {
     ShhHandler shhHandler;
 
     @Autowired
+    RLPXHandler rlpxHandler;
+
+
+    @Autowired
     MessageDecoder messageDecoder;
 
     @Autowired
@@ -56,13 +62,26 @@ public class Channel {
     public Channel() {
     }
 
-    public void init() {
+    public void init(String remoteId) {
+
+        rlpxHandler.setActive(true);
+        rlpxHandler.setRemoteId(remoteId, this);
+        rlpxHandler.setMsgQueue(msgQueue);
+
         p2pHandler.setMsgQueue(msgQueue);
         ethHandler.setMsgQueue(msgQueue);
         shhHandler.setMsgQueue(msgQueue);
 
         startupTS = System.currentTimeMillis();
     }
+
+    public void publicRLPxHandshakeFinished(FrameCodec frameCodec){
+        rlpxHandler.setActive(false);
+        messageDecoder.setFrameCodec(frameCodec);
+        messageEncoder.setFrameCodec(frameCodec);
+        p2pHandler.activate();
+    }
+
 
     public P2pHandler getP2pHandler() {
         return p2pHandler;
@@ -74,6 +93,10 @@ public class Channel {
 
     public ShhHandler getShhHandler() {
         return shhHandler;
+    }
+
+    public RLPXHandler getRlpxHandler() {
+        return rlpxHandler;
     }
 
     public MessageDecoder getMessageDecoder() {

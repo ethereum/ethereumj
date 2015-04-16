@@ -147,6 +147,9 @@ public class HelloMessage extends P2pMessage {
         return P2pMessageCodes.HELLO;
     }
 
+    public void setPeerId(String peerId) {
+        this.peerId = peerId;
+    }
 
     @Override
     public Class<?> getAnswerMessage() {

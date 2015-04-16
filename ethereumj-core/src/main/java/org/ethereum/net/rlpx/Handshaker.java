@@ -26,6 +26,13 @@ public class Handshaker {
     private Secrets secrets;
 
     public static void main(String[] args) throws IOException {
+
+        args = new String[]{
+                "192.168.1.146",
+                "10101",
+                "b8425bd5941c72b68890bdaeea228d65a1316e9aeed8c824683a4504e6d8e5cfd3e6d15c8c4b507009abc51fb1251336ebd78ce5e92dd1b952c7dc6b4f868469"};
+
+
         new Handshaker().doHandshake(args[0], Integer.parseInt(args[1]), args[2]);
     }
 
@@ -76,6 +83,7 @@ public class Handshaker {
         byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
         new SHA3Digest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
         new SHA3Digest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
+/*
         RlpxConnection conn =  new RlpxConnection(initiator.getSecrets(), inp, out);
         HandshakeMessage handshakeMessage = new HandshakeMessage(
                 3,
@@ -104,6 +112,7 @@ public class Handshaker {
                 break;
             }
         }
+*/
 
         this.secrets = initiator.getSecrets();
     }

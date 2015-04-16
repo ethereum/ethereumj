@@ -9,7 +9,6 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
-import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.net.server.ChannelManager;
 
 import org.slf4j.Logger;
@@ -43,8 +42,6 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class WorldManager {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
-
-    public FrameCodec frameCodec;
 
     @Autowired
     private Blockchain blockchain;

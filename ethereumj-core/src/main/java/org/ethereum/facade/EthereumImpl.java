@@ -47,7 +47,7 @@ public class EthereumImpl implements Ethereum {
     @Autowired
     ChannelManager channelManager;
 
-    @Autowired
+
     PeerServer peerServer;
 
     @Autowired
@@ -64,7 +64,7 @@ public class EthereumImpl implements Ethereum {
             Executors.newSingleThreadExecutor().submit(
                     new Runnable() {
                         public void run() {
-                            peerServer.start(CONFIG.listenPort());
+//                            peerServer.start(CONFIG.listenPort());
                         }
                     }
             );
@@ -140,12 +140,12 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public void connect(InetAddress addr, int port) {
-        connect(addr.getHostName(), port);
+    public void connect(InetAddress addr, int port, String remoteId) {
+        connect(addr.getHostName(), port, remoteId);
     }
 
     @Override
-    public void connect(String ip, int port) {
+    public void connect(String ip, int port, String remoteId) {
         logger.info("Connecting to: {}:{}", ip, port);
 
         PeerClient peerClient = worldManager.getActivePeer();
@@ -153,7 +153,7 @@ public class EthereumImpl implements Ethereum {
             peerClient = ctx.getBean(PeerClient.class);
         worldManager.setActivePeer(peerClient);
 
-        peerClient.connect(ip, port);
+        peerClient.connect(ip, port, remoteId);
     }
 
     @Override
@@ -246,9 +246,5 @@ public class EthereumImpl implements Ethereum {
         return getBlockchain().getPendingTransactions();
     }
 
-    @Override
-    public void setFrameCode(FrameCodec frameCode){
-            worldManager.frameCodec = frameCode;
-    }
 
 }

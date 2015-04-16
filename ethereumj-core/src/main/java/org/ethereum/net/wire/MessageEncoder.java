@@ -34,8 +34,19 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
     @Autowired
     WorldManager worldManager;
 
+    private boolean active = false;
+    private FrameCodec frameCodec;
+
+    public void setFrameCodec(FrameCodec frameCodec) {
+        this.active = true;
+        this.frameCodec = frameCodec;
+    }
+
+
     @Override
     protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
+
+        if (!active) return;
 
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
         worldManager.getListener().trace(output);
@@ -48,13 +59,13 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
 
-        if (worldManager.frameCodec == null){
+        if (frameCodec == null){
             System.out.println("You don't have RLPx set... than die painfully");
             System.exit(1);
         }
 
         /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
         Frame frame = new Frame(msg.getCode(), msg.getEncoded());
-        worldManager.frameCodec.writeFrame(frame, out);
+        frameCodec.writeFrame(frame, out);
     }
 }

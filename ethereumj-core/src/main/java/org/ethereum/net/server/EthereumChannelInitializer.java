@@ -14,7 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
@@ -26,6 +28,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @since 01.11.2014
  */
 @Component
+@Scope("prototype")
 public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChannel> {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
@@ -42,7 +45,12 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     @Autowired
     WorldManager worldManager;
 
-    public EthereumChannelInitializer() {
+
+    String remoteId;
+
+
+    public EthereumChannelInitializer(String remoteId) {
+        this.remoteId = remoteId;
     }
 
     public void initChannel(NioSocketChannel ch) throws Exception {
@@ -50,13 +58,13 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         logger.info("Open connection, channel: {}", ch.toString());
 
         Channel channel = ctx.getBean(Channel.class);
-        channel.init();
+        channel.init(remoteId);
 
         channelManager.addChannel(channel);
-        channel.getP2pHandler().activate();
 
         ch.pipeline().addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
+        ch.pipeline().addLast("rlpx", channel.getRlpxHandler());
         ch.pipeline().addLast("out encoder", channel.getMessageEncoder());
         ch.pipeline().addLast("in  encoder", channel.getMessageDecoder());
         ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());

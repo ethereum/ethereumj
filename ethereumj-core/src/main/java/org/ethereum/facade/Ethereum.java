@@ -68,9 +68,9 @@ public interface Ethereum {
 
     public void stopPeerDiscovery();
 
-    public void connect(InetAddress addr, int port);
+    public void connect(InetAddress addr, int port, String remoteId);
 
-    public void connect(String ip, int port);
+    public void connect(String ip, int port, String remoteId);
 
     public Blockchain getBlockchain();
 
@@ -136,6 +136,5 @@ public interface Ethereum {
 
     public Set<Transaction> getPendingTransactions();
 
-    public void setFrameCode(FrameCodec frameCode);
 
 }

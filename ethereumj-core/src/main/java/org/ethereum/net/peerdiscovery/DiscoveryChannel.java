@@ -88,7 +88,6 @@ public class DiscoveryChannel {
 
             p2pHandler.setMsgQueue(messageQueue);
             p2pHandler.setPeerDiscoveryMode(true);
-            p2pHandler.activate();
 
             ethHandler.setMsgQueue(messageQueue);
             ethHandler.setPeerDiscoveryMode(true);
