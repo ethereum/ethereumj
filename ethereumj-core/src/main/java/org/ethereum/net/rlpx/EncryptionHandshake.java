@@ -68,7 +68,7 @@ public class EncryptionHandshake {
         byte[] signed = xor(token, nonce);
         message.signature = ephemeralKey.sign(signed);
         message.isTokenUsed = isToken;
-        message.ephemeralPublicHash = sha3(ephemeralKey.getPubKeyPoint().getEncoded(false), 1, 32);
+        message.ephemeralPublicHash = sha3(ephemeralKey.getPubKeyPoint().getEncoded(false), 1, 64);
         message.publicKey = key.getPubKeyPoint();
         message.nonce = initiatorNonce;
         return message;
