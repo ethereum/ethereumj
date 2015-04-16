@@ -21,8 +21,7 @@ import org.ethereum.util.RLP;
  */
 public class MessageFactory {
 
-    public static Message createMessage(byte[] encoded) {
-        byte code = RLP.getCommandCode(encoded);
+    public static Message createMessage(byte code, byte[] encoded) {
 
         if (P2pMessageCodes.inRange(code)) {
 

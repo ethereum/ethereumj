@@ -64,7 +64,9 @@ public class FrameCodec {
             return size;
         }
 
-        public InputStream getPayload() {
+        public long getType() {return  type;}
+
+        public InputStream getStream() {
             return payload;
         }
     }
