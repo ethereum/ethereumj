@@ -64,12 +64,12 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
         ch.pipeline().addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
+//        ch.pipeline().addLast("in  encoder", channel.getMessageDecoder());
+//        ch.pipeline().addLast("out encoder", channel.getMessageEncoder());
+//        ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());
+//        ch.pipeline().addLast(Capability.ETH, channel.getEthHandler());
+//        ch.pipeline().addLast(Capability.SHH, channel.getShhHandler());
         ch.pipeline().addLast("rlpx", channel.getRlpxHandler());
-        ch.pipeline().addLast("out encoder", channel.getMessageEncoder());
-        ch.pipeline().addLast("in  encoder", channel.getMessageDecoder());
-        ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());
-        ch.pipeline().addLast(Capability.ETH, channel.getEthHandler());
-        ch.pipeline().addLast(Capability.SHH, channel.getShhHandler());
 
         // limit the size of receiving buffer to 1024
         ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));

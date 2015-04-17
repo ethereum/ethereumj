@@ -36,6 +36,8 @@ public abstract class Message {
      */
     public abstract String toString();
 
+    public abstract Enum getCommand();
+
     public byte getCode() {
             return code;
     }

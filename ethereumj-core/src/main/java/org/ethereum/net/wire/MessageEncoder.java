@@ -1,9 +1,13 @@
 package org.ethereum.net.wire;
 
 import org.ethereum.manager.WorldManager;
+import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.StaticMessages;
+import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.rlpx.FrameCodec;
+import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.util.ByteUtil;
 
 import io.netty.buffer.ByteBuf;
@@ -19,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 import static org.ethereum.net.rlpx.FrameCodec.*;
 
 /**
@@ -34,19 +39,15 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
     @Autowired
     WorldManager worldManager;
 
-    private boolean active = false;
     private FrameCodec frameCodec;
 
     public void setFrameCodec(FrameCodec frameCodec) {
-        this.active = true;
         this.frameCodec = frameCodec;
     }
 
 
     @Override
     protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
-
-        if (!active) return;
 
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
         worldManager.getListener().trace(output);
@@ -59,13 +60,32 @@ public class MessageEncoder extends MessageToByteEncoder<Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
 
-        if (frameCodec == null){
-            System.out.println("You don't have RLPx set... than die painfully");
-            System.exit(1);
+        /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
+        byte code = getCode(msg.getCommand());
+        Frame frame = new Frame(code, msg.getEncoded());
+        frameCodec.writeFrame(frame, out);
+    }
+
+
+
+    /* TODO: this dirty hack is here cause we need to use message
+       TODO: adaptive id on high message abstraction level,
+       TODO: need a solution here*/
+    private byte getCode(Enum msgCommand){
+        byte code = 0;
+
+        if (msgCommand instanceof P2pMessageCodes){
+            code = ((P2pMessageCodes)msgCommand).asByte();
         }
 
-        /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
-        Frame frame = new Frame(msg.getCode(), msg.getEncoded());
-        frameCodec.writeFrame(frame, out);
+        if (msgCommand instanceof EthMessageCodes){
+            code = ((EthMessageCodes)msgCommand).asByte();
+        }
+
+        if (msgCommand instanceof ShhMessageCodes){
+            code = ((ShhMessageCodes)msgCommand).asByte();
+        }
+
+        return code;
     }
 }

@@ -83,7 +83,7 @@ public class Handshaker {
         byte[] buf = new byte[initiator.getSecrets().getEgressMac().getDigestSize()];
         new SHA3Digest(initiator.getSecrets().getEgressMac()).doFinal(buf, 0);
         new SHA3Digest(initiator.getSecrets().getIngressMac()).doFinal(buf, 0);
-/*
+
         RlpxConnection conn =  new RlpxConnection(initiator.getSecrets(), inp, out);
         HandshakeMessage handshakeMessage = new HandshakeMessage(
                 3,
@@ -112,7 +112,7 @@ public class Handshaker {
                 break;
             }
         }
-*/
+
 
         this.secrets = initiator.getSecrets();
     }

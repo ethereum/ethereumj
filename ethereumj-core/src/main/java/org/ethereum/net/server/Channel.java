@@ -1,8 +1,12 @@
 package org.ethereum.net.server;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
+import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.net.MessageQueue;
+import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
@@ -12,13 +16,17 @@ import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
 
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.math.BigInteger;
 
 import java.net.InetSocketAddress;
+
+import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 
 /**
  * @author Roman Mandeleil
@@ -64,7 +72,6 @@ public class Channel {
 
     public void init(String remoteId) {
 
-        rlpxHandler.setActive(true);
         rlpxHandler.setRemoteId(remoteId, this);
         rlpxHandler.setMsgQueue(msgQueue);
 
@@ -75,12 +82,37 @@ public class Channel {
         startupTS = System.currentTimeMillis();
     }
 
-    public void publicRLPxHandshakeFinished(FrameCodec frameCodec){
-        rlpxHandler.setActive(false);
+    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec, HelloMessage helloRemote, byte[] nodeId) throws IOException, InterruptedException {
+
+
         messageDecoder.setFrameCodec(frameCodec);
         messageEncoder.setFrameCodec(frameCodec);
-        p2pHandler.activate();
+
+        ctx.pipeline().addLast("in  encoder", messageDecoder);
+        ctx.pipeline().addLast("out encoder", messageEncoder);
+        ctx.pipeline().addLast(Capability.P2P, p2pHandler);
+
+
+        p2pHandler.setChannel(this);
+        p2pHandler.setHandshake(helloRemote, ctx);
+        sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
+
+
+//        ctx.pipeline().addLast(Capability.ETH, getEthHandler());
+//        ctx.pipeline().addLast(Capability.SHH, getShhHandler());
     }
+
+
+    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId) throws IOException, InterruptedException {
+
+        HELLO_MESSAGE.setPeerId(nodeId);
+        byte[] payload = HELLO_MESSAGE.getEncoded();
+
+        ByteBuf byteBufMsg = ctx.alloc().buffer();
+        frameCodec.writeFrame(new FrameCodec.Frame(HELLO_MESSAGE.getCode(), payload), byteBufMsg);
+        ctx.writeAndFlush(byteBufMsg).sync();
+    }
+
 
 
     public P2pHandler getP2pHandler() {

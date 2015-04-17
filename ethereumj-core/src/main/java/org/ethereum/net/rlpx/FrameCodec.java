@@ -106,7 +106,7 @@ public class FrameCodec {
         byte[] macBuffer = new byte[egressMac.getDigestSize()];
         doSum(egressMac, macBuffer); // fmacseed
         updateMac(egressMac, macBuffer, 0, macBuffer, 0);
-        out.writeBytes(macBuffer, 0, macBuffer.length);
+        out.writeBytes(macBuffer, 0, 16);
     }
 
 
@@ -171,6 +171,8 @@ public class FrameCodec {
         in.readBytes(buffer);
         dec.processBytes(buffer, 0, buffer.length, buffer, 0);
         int pos = 0;
+        byte[] macBuffer = new byte[16];
+        in.readBytes(macBuffer);
         long type = RLP.decodeInt(buffer, pos); // FIXME long
         pos = RLP.getNextElementIndex(buffer, pos);
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalSize - pos);
