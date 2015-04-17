@@ -46,6 +46,8 @@ public class TrieImpl implements Trie {
 
     private static final Logger logger = LoggerFactory.getLogger("trie");
 
+    private static final ByteArrayWrapper EMPTY_TRIE_HASH_WRAPPED = new ByteArrayWrapper( EMPTY_TRIE_HASH );
+
     private static byte PAIR_SIZE = 2;
     private static byte LIST_SIZE = 17;
 
@@ -59,8 +61,13 @@ public class TrieImpl implements Trie {
 
     public TrieImpl(KeyValueDataSource db, Object root) {
         this.cache = new Cache(db);
-        this.root = root;
-        this.prevRoot = root;
+
+	if ( root instanceof byte[] )
+	    this.setRoot( (byte[]) root );
+	else
+	    this.root = root;
+
+        this.prevRoot = this.root;
     }
 
     public TrieIterator getIterator() {
@@ -85,7 +92,11 @@ public class TrieImpl implements Trie {
 
     @Override
     public void setRoot(byte[] root) {
-        this.root = root;
+	if ( EMPTY_TRIE_HASH_WRAPPED.equals( new ByteArrayWrapper( root ) ) ) {
+	    this.root = "";
+	} else {
+	    this.root = root;
+	}
     }
 
     /**************************************
