@@ -74,7 +74,6 @@ public class FrameCodec {
     }
 
     public void writeFrame(Frame frame, OutputStream out) throws IOException {
-        dumpEgress();
         byte[] headBuffer = new byte[32];
         byte[] ptype = RLP.encodeInt((int) frame.type); // FIXME encodeLong
         int totalSize = frame.size + ptype.length;
@@ -82,8 +81,9 @@ public class FrameCodec {
         headBuffer[1] = (byte)(totalSize >> 8);
         headBuffer[2] = (byte)(totalSize);
         enc.processBytes(headBuffer, 0, 16, headBuffer, 0);
-        updateMac(egressMac, headBuffer, 0, headBuffer, 16);
-        dumpEgress();
+
+        // Header MAC
+        updateMac(egressMac, headBuffer, 0, headBuffer, 16, true);
 
         byte[] buff = new byte[256];
         out.write(headBuffer);
@@ -104,16 +104,12 @@ public class FrameCodec {
             egressMac.update(buff, 0, padding);
             out.write(buff, 0, padding);
         }
+
+        // Frame MAC
         byte[] macBuffer = new byte[egressMac.getDigestSize()];
         doSum(egressMac, macBuffer); // fmacseed
-        updateMac(egressMac, macBuffer, 0, macBuffer, 0);
+        updateMac(egressMac, macBuffer, 0, macBuffer, 0, true);
         out.write(macBuffer, 0, 16);
-    }
-
-    private void dumpEgress() {
-        byte[] buf = new byte[32];
-        new SHA3Digest(egressMac).doFinal(buf, 0);
-//        System.out.println("egress MAC " + Hex.toHexString(buf));
     }
 
     public Frame readFrame(ByteBuf buf) throws IOException {
@@ -123,6 +119,9 @@ public class FrameCodec {
     public Frame readFrame(DataInput inp) throws IOException {
         byte[] headBuffer = new byte[32];
         inp.readFully(headBuffer);
+        // Header MAC
+        updateMac(ingressMac, headBuffer, 0, headBuffer, 16, false);
+
         dec.processBytes(headBuffer, 0, 16, headBuffer, 0);
         int totalSize;
         totalSize = headBuffer[0];
@@ -132,18 +131,25 @@ public class FrameCodec {
         if (padding == 16) padding = 0;
         byte[] buffer = new byte[totalSize + padding];
         inp.readFully(buffer);
+        ingressMac.update(buffer, 0, buffer.length);
         dec.processBytes(buffer, 0, buffer.length, buffer, 0);
         int pos = 0;
-        byte[] macBuffer = new byte[ingressMac.getDigestSize()];
-        inp.readFully(macBuffer, 0, 16);
         long type = RLP.decodeInt(buffer, pos); // FIXME long
         pos = RLP.getNextElementIndex(buffer, pos);
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalSize - pos);
         int size = totalSize - pos;
+        byte[] macBuffer = new byte[ingressMac.getDigestSize()];
+
+        // Frame MAC
+        byte[] shouldMac = new byte[ingressMac.getDigestSize()];
+        inp.readFully(shouldMac, 0, 16);
+        doSum(ingressMac, macBuffer); // fmacseed
+        updateMac(ingressMac, macBuffer, 0, shouldMac, 0, false);
+
         return new Frame(type, size, payload);
     }
 
-    private byte[] updateMac(SHA3Digest mac, byte[] seed, int offset, byte[] buf, int outOffset) {
+    private byte[] updateMac(SHA3Digest mac, byte[] seed, int offset, byte[] out, int outOffset, boolean egress) throws IOException {
         byte[] aesBlock = new byte[mac.getDigestSize()];
         doSum(mac, aesBlock);
         makeMacCipher().processBlock(aesBlock, 0, aesBlock, 0);
@@ -152,13 +158,19 @@ public class FrameCodec {
         for (int i = 0; i < length; i++) {
             aesBlock[i] ^= seed[i + offset];
         }
-//        System.out.println("update seed " + Hex.toHexString(seed, offset, length));
-//        System.out.println("update aesbuf ^ seed " + Hex.toHexString(aesBlock));
         mac.update(aesBlock, 0, length);
         byte[] result = new byte[mac.getDigestSize()];
         doSum(mac, result);
-        for (int i = 0; i < length ; i++) {
-            buf[i + outOffset] = result[i];
+        if (egress) {
+            for (int i = 0; i < length; i++) {
+                out[i + outOffset] = result[i];
+            }
+        } else {
+            for (int i = 0; i < length; i++) {
+                if (out[i + outOffset] != result[i]) {
+                    throw new IOException("MAC mismatch");
+                }
+            }
         }
         return result;
     }

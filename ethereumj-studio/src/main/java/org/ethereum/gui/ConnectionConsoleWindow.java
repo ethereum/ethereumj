@@ -81,8 +81,10 @@ public class ConnectionConsoleWindow extends JFrame {
         Thread t = new Thread() {
             public void run() {
 
-                UIEthereumManager.ethereum.connect(SystemProperties.CONFIG.activePeerIP(),
-                        SystemProperties.CONFIG.activePeerPort(), "");
+                UIEthereumManager.ethereum.connect(
+                        SystemProperties.CONFIG.activePeerIP(),
+                        SystemProperties.CONFIG.activePeerPort(),
+                        SystemProperties.CONFIG.activePeerNodeid());
             }
         };
 
