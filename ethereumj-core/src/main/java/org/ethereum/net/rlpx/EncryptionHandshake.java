@@ -221,4 +221,8 @@ public class EncryptionHandshake {
             return egressMac;
         }
     }
+
+    public boolean isInitiator() {
+        return isInitiator;
+    }
 }

@@ -28,7 +28,6 @@ public class Handshaker {
     private Secrets secrets;
 
     public static void main(String[] args) throws IOException, URISyntaxException {
-
         URI uri = new URI(args[0]);
         if (!uri.getScheme().equals("enode"))
             throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");

@@ -27,7 +27,7 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
     private final static Logger logger = LoggerFactory.getLogger("net");
     private String remoteId = "00";
 
-    EncryptionHandshake initiator;
+    EncryptionHandshake handshake;
     ECKey myKey;
     byte[] initiatePacket;
     byte[] nodeId;
@@ -57,9 +57,9 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
         System.arraycopy(remoteId, 0, remotePublicBytes, 1, remoteId.length);
         remotePublicBytes[0] = 0x04; // uncompressed
         ECPoint remotePublic = ECKey.fromPublicOnly(remotePublicBytes).getPubKeyPoint();
-        initiator = new EncryptionHandshake(remotePublic);
-        AuthInitiateMessage initiateMessage = initiator.createAuthInitiate(null, myKey);
-        initiatePacket = initiator.encryptAuthMessage(initiateMessage);
+        handshake = new EncryptionHandshake(remotePublic);
+        AuthInitiateMessage initiateMessage = handshake.createAuthInitiate(null, myKey);
+        initiatePacket = handshake.encryptAuthMessage(initiateMessage);
 
         final ByteBuf byteBufMsg = ctx.alloc().buffer(initiatePacket.length);
         byteBufMsg.writeBytes(initiatePacket);
@@ -73,25 +73,40 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
 
         ByteBuf buffer = ((ByteBuf)msg);
 
-        if (frameCodec == null){
+        if (handshake.isInitiator()) {
+            if (frameCodec == null) {
+                byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
+                buffer.readBytes(responsePacket);
 
-            byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
-            buffer.readBytes(responsePacket);
+                this.handshake.handleAuthResponse(myKey, initiatePacket, responsePacket);
+                Secrets secrets = this.handshake.getSecrets();
+                this.frameCodec = new FrameCodec(secrets);
 
-            this.initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
-            Secrets secrets = this.initiator.getSecrets();
-            this.frameCodec = new FrameCodec(secrets);
+                logger.info("auth exchange done");
+                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
+            } else {
+                Frame frame = frameCodec.readFrame(buffer);
+                byte[] payload = ByteStreams.toByteArray(frame.getStream());
+                HelloMessage helloMessage = new HelloMessage(payload);
+                logger.info("hello message received");
+                ctx.pipeline().remove(this);
+                this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+            }
+        } else {
+            if (frameCodec == null) {
+                // Respond to auth
+                throw new UnsupportedOperationException();
+            } else {
+                Frame frame = frameCodec.readFrame(buffer);
+                byte[] payload = ByteStreams.toByteArray(frame.getStream());
+                HelloMessage helloMessage = new HelloMessage(payload);
+                System.out.println("hello message received");
 
-            System.out.println("[Auth exchange done]");
-        } else{
-
-            Frame frame = frameCodec.readFrame(buffer);
-            byte[] payload = ByteStreams.toByteArray(frame.getStream());
-            HelloMessage helloMessage = new HelloMessage(payload);
-
-            // Secret authentication finish here
-            ctx.pipeline().remove(this);
-            this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+                // Secret authentication finish here
+                ctx.pipeline().remove(this);
+                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
+                this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+            }
         }
     }
 

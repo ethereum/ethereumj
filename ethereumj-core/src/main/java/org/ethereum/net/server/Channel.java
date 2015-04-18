@@ -1,7 +1,6 @@
 package org.ethereum.net.server;
 
 import io.netty.buffer.ByteBuf;
-import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
@@ -15,15 +14,12 @@ import org.ethereum.net.rlpx.RLPXHandler;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
-
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.math.BigInteger;
-
 import java.net.InetSocketAddress;
 
 import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
@@ -95,8 +91,6 @@ public class Channel {
 
         p2pHandler.setChannel(this);
         p2pHandler.setHandshake(helloRemote, ctx);
-        sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
-
 
 //        ctx.pipeline().addLast(Capability.ETH, getEthHandler());
 //        ctx.pipeline().addLast(Capability.SHH, getShhHandler());
