@@ -107,10 +107,10 @@ public class ChannelManager {
                 Iterator<Channel> iter = channels.iterator();
                 while (iter.hasNext()) {
                     Channel channel = iter.next();
-                    if (!channel.p2pHandler.isActive()) {
-                        iter.remove();
-                        logger.info("Channel removed: {}", channel.p2pHandler.getHandshakeHelloMessage());
-                    }
+
+                    // todo: identify how to remove channels
+//                        iter.remove();
+//                        logger.info("Channel removed: {}", channel.p2pHandler.getHandshakeHelloMessage());
                 }
 
                 if (channels.size() == 0) {

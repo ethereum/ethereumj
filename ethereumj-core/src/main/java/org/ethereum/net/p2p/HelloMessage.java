@@ -65,13 +65,13 @@ public class HelloMessage extends P2pMessage {
         // The message does not distinguish between 0 and null,
         // so we check command code for null.
 
-        byte[] p2pVersionBytes = paramsList.get(1).getRLPData();
+        byte[] p2pVersionBytes = paramsList.get(0).getRLPData();
         this.p2pVersion = p2pVersionBytes != null ? p2pVersionBytes[0] : 0;
 
-        byte[] clientIdBytes = paramsList.get(2).getRLPData();
+        byte[] clientIdBytes = paramsList.get(1).getRLPData();
         this.clientId = new String(clientIdBytes != null ? clientIdBytes : EMPTY_BYTE_ARRAY);
 
-        RLPList capabilityList = (RLPList) paramsList.get(3);
+        RLPList capabilityList = (RLPList) paramsList.get(2);
         this.capabilities = new ArrayList<>();
         for (Object aCapabilityList : capabilityList) {
 
@@ -85,16 +85,15 @@ public class HelloMessage extends P2pMessage {
             this.capabilities.add(cap);
         }
 
-        byte[] peerPortBytes = paramsList.get(4).getRLPData();
+        byte[] peerPortBytes = paramsList.get(3).getRLPData();
         this.listenPort = ByteUtil.byteArrayToInt(peerPortBytes);
 
-        byte[] peerIdBytes = paramsList.get(5).getRLPData();
+        byte[] peerIdBytes = paramsList.get(4).getRLPData();
         this.peerId = Hex.toHexString(peerIdBytes);
         this.parsed = true;
     }
 
     private void encode() {
-        byte[] command = RLP.encodeByte(HELLO.asByte());
         byte[] p2pVersion = RLP.encodeByte(this.p2pVersion);
         byte[] clientId = RLP.encodeString(this.clientId);
         byte[][] capabilities = new byte[this.capabilities.size()][];
@@ -108,7 +107,7 @@ public class HelloMessage extends P2pMessage {
         byte[] peerPort = RLP.encodeInt(this.listenPort);
         byte[] peerId = RLP.encodeElement(Hex.decode(this.peerId));
 
-        this.encoded = RLP.encodeList(command, p2pVersion, clientId,
+        this.encoded = RLP.encodeList(p2pVersion, clientId,
                 capabilityList, peerPort, peerId);
     }
 
@@ -148,6 +147,9 @@ public class HelloMessage extends P2pMessage {
         return P2pMessageCodes.HELLO;
     }
 
+    public void setPeerId(String peerId) {
+        this.peerId = peerId;
+    }
 
     @Override
     public Class<?> getAnswerMessage() {

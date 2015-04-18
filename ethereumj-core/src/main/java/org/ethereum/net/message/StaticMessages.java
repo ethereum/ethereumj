@@ -43,7 +43,8 @@ public class StaticMessages {
         byte p2pVersion = P2pHandler.VERSION;
         List<Capability> capabilities = Arrays.asList(
                 new Capability(Capability.ETH, EthHandler.VERSION),
-                new Capability(Capability.SHH, ShhHandler.VERSION));
+                new Capability(Capability.SHH, ShhHandler.VERSION)
+        );
         int listenPort = SystemProperties.CONFIG.listenPort();
 
         return new HelloMessage(p2pVersion, helloAnnouncement,
