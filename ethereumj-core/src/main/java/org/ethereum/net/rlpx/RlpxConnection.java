@@ -3,9 +3,7 @@ package org.ethereum.net.rlpx;
 import org.ethereum.net.p2p.P2pMessage;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 /**
  * Created by devrandom on 2015-04-12.
@@ -13,25 +11,24 @@ import java.io.OutputStream;
 public class RlpxConnection {
     private final EncryptionHandshake.Secrets secrets;
     private final FrameCodec codec;
+    private final DataInputStream inp;
+    private final OutputStream out;
     private HandshakeMessage handshakeMessage;
 
     public RlpxConnection(EncryptionHandshake.Secrets secrets, InputStream inp, OutputStream out) {
         this.secrets = secrets;
-        this.codec = new FrameCodec(secrets, inp, out);
-    }
-
-    public RlpxConnection(EncryptionHandshake.Secrets secrets, FrameCodec codec) {
-        this.secrets = secrets;
-        this.codec = codec;
+        this.inp = new DataInputStream(inp);
+        this.out = out;
+        this.codec = new FrameCodec(secrets);
     }
 
     public void sendProtocolHandshake(HandshakeMessage message) throws IOException {
         byte[] payload = message.encode();
-        codec.writeFrame(new FrameCodec.Frame(HandshakeMessage.HANDSHAKE_MESSAGE_TYPE, payload));
+        codec.writeFrame(new FrameCodec.Frame(HandshakeMessage.HANDSHAKE_MESSAGE_TYPE, payload), out);
     }
 
     public void handleNextMessage() throws IOException {
-        FrameCodec.Frame frame = codec.readFrame();
+        FrameCodec.Frame frame = codec.readFrame(inp);
         if (handshakeMessage == null) {
             if (frame.type != HandshakeMessage.HANDSHAKE_MESSAGE_TYPE)
                 throw new IOException("expected handshake or disconnect");
@@ -54,6 +51,6 @@ public class RlpxConnection {
 
     public void writeMessage(P2pMessage message) throws IOException {
         byte[] payload = message.getEncoded();
-        codec.writeFrame(new FrameCodec.Frame(message.getCommand().asByte(), payload));
+        codec.writeFrame(new FrameCodec.Frame(message.getCommand().asByte(), payload), out);
     }
 }

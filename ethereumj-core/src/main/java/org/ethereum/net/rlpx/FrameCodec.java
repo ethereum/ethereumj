@@ -1,6 +1,8 @@
 package org.ethereum.net.rlpx;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
+import io.netty.buffer.ByteBufOutputStream;
 import org.ethereum.util.RLP;
 import org.spongycastle.crypto.StreamCipher;
 import org.spongycastle.crypto.digests.SHA3Digest;
@@ -19,13 +21,9 @@ public class FrameCodec {
     private final StreamCipher dec;
     private final SHA3Digest egressMac;
     private final SHA3Digest ingressMac;
-    private final DataInput inp;
-    private final OutputStream out;
     private final byte[] mac;
 
-    public FrameCodec(EncryptionHandshake.Secrets secrets, InputStream inp, OutputStream out) {
-        this.inp = new DataInputStream(inp);
-        this.out = out;
+    public FrameCodec(EncryptionHandshake.Secrets secrets) {
         this.mac = secrets.mac;
         int blockSize = secrets.aes.length * 8;
         enc = new SICBlockCipher(new AESFastEngine());
@@ -71,47 +69,11 @@ public class FrameCodec {
         }
     }
 
-
-    public void writeFrame(Frame frame, ByteBuf out) throws IOException {
-        dumpEgress();
-        byte[] headBuffer = new byte[32];
-        byte[] ptype = RLP.encodeInt((int) frame.type); // FIXME encodeLong
-        int totalSize = frame.size + ptype.length;
-        headBuffer[0] = (byte)(totalSize >> 16);
-        headBuffer[1] = (byte)(totalSize >> 8);
-        headBuffer[2] = (byte)(totalSize);
-        enc.processBytes(headBuffer, 0, 16, headBuffer, 0);
-        updateMac(egressMac, headBuffer, 0, headBuffer, 16);
-        dumpEgress();
-
-        byte[] buff = new byte[256];
-        out.writeBytes(headBuffer);
-        enc.processBytes(ptype, 0, ptype.length, buff, 0);
-        out.writeBytes(buff, 0, ptype.length);
-        egressMac.update(buff, 0, ptype.length);
-        while (true) {
-            int n = frame.payload.read(buff);
-            if (n <= 0) break;
-            enc.processBytes(buff, 0, n, buff, 0);
-            egressMac.update(buff, 0, n);
-            out.writeBytes(buff, 0, n);
-        }
-        int padding = 16 - (totalSize % 16);
-        byte[] pad = new byte[16];
-        if (padding < 16) {
-            enc.processBytes(pad, 0, padding, buff, 0);
-            egressMac.update(buff, 0, padding);
-            out.writeBytes(buff, 0, padding);
-        }
-        byte[] macBuffer = new byte[egressMac.getDigestSize()];
-        doSum(egressMac, macBuffer); // fmacseed
-        updateMac(egressMac, macBuffer, 0, macBuffer, 0);
-        out.writeBytes(macBuffer, 0, 16);
+    public void writeFrame(Frame frame, ByteBuf buf) throws IOException {
+        writeFrame(frame, new ByteBufOutputStream(buf));
     }
 
-
-
-    public void writeFrame(Frame frame) throws IOException {
+    public void writeFrame(Frame frame, OutputStream out) throws IOException {
         dumpEgress();
         byte[] headBuffer = new byte[32];
         byte[] ptype = RLP.encodeInt((int) frame.type); // FIXME encodeLong
@@ -154,34 +116,11 @@ public class FrameCodec {
 //        System.out.println("egress MAC " + Hex.toHexString(buf));
     }
 
-    public Frame readFrame(ByteBuf in) throws IOException {
-        byte[] headBuffer = new byte[32];
-        in.readBytes(headBuffer);
-        dec.processBytes(headBuffer, 0, 16, headBuffer, 0);
-        int totalSize;
-        totalSize = headBuffer[0];
-        totalSize = (totalSize << 8) + headBuffer[1];
-        totalSize = (totalSize << 8) + headBuffer[2];
-        int padding = 16 - (totalSize % 16);
-        if (padding == 16) padding = 0;
-
-        if (in.readableBytes() < totalSize) return null;
-
-        byte[] buffer = new byte[totalSize + padding];
-        in.readBytes(buffer);
-        dec.processBytes(buffer, 0, buffer.length, buffer, 0);
-        int pos = 0;
-        byte[] macBuffer = new byte[16];
-        in.readBytes(macBuffer);
-        long type = RLP.decodeInt(buffer, pos); // FIXME long
-        pos = RLP.getNextElementIndex(buffer, pos);
-        InputStream payload = new ByteArrayInputStream(buffer, pos, totalSize - pos);
-        int size = totalSize - pos;
-        return new Frame(type, size, payload);
+    public Frame readFrame(ByteBuf buf) throws IOException {
+        return readFrame(new ByteBufInputStream(buf));
     }
 
-
-    public Frame readFrame() throws IOException {
+    public Frame readFrame(DataInput inp) throws IOException {
         byte[] headBuffer = new byte[32];
         inp.readFully(headBuffer);
         dec.processBytes(headBuffer, 0, 16, headBuffer, 0);

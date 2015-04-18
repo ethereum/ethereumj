@@ -80,7 +80,7 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
 
             this.initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
             Secrets secrets = this.initiator.getSecrets();
-            this.frameCodec = new FrameCodec(secrets, null, null);
+            this.frameCodec = new FrameCodec(secrets);
 
             System.out.println("[Auth exchange done]");
         } else{

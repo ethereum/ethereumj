@@ -5,16 +5,18 @@ import com.google.common.collect.Lists;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.rlpx.EncryptionHandshake.Secrets;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
+import org.ethereum.net.rlpx.EncryptionHandshake.Secrets;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 
 /**
@@ -25,15 +27,13 @@ public class Handshaker {
     private final byte[] nodeId;
     private Secrets secrets;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, URISyntaxException {
 
-        args = new String[]{
-                "192.168.1.146",
-                "10101",
-                "b8425bd5941c72b68890bdaeea228d65a1316e9aeed8c824683a4504e6d8e5cfd3e6d15c8c4b507009abc51fb1251336ebd78ce5e92dd1b952c7dc6b4f868469"};
+        URI uri = new URI(args[0]);
+        if (!uri.getScheme().equals("enode"))
+            throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
 
-
-        new Handshaker().doHandshake(args[0], Integer.parseInt(args[1]), args[2]);
+        new Handshaker().doHandshake(uri.getHost(), uri.getPort(), uri.getUserInfo());
     }
 
     public Handshaker() {

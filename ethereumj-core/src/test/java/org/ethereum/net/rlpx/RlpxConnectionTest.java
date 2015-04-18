@@ -3,12 +3,8 @@ package org.ethereum.net.rlpx;
 import com.google.common.collect.Lists;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.client.Capability;
-import org.ethereum.util.DecodeResult;
-import org.ethereum.util.RLP;
 import org.junit.Before;
 import org.junit.Test;
-import org.spongycastle.crypto.digests.SHA3Digest;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 import java.security.SecureRandom;
@@ -24,6 +20,10 @@ public class RlpxConnectionTest {
     private EncryptionHandshake initiator;
     private EncryptionHandshake responder;
     private HandshakeMessage iMessage;
+    private PipedInputStream to;
+    private PipedOutputStream toOut;
+    private PipedInputStream from;
+    private PipedOutputStream fromOut;
 
     @Before
     public void setUp() throws IOException {
@@ -35,12 +35,12 @@ public class RlpxConnectionTest {
         byte[] initiatePacket = initiator.encryptAuthMessage(initiate);
         byte[] responsePacket = responder.handleAuthInitiate(initiatePacket, remoteKey);
         initiator.handleAuthResponse(myKey, initiatePacket, responsePacket);
-        PipedInputStream to = new PipedInputStream(1024*1024);
-        PipedOutputStream toOut = new PipedOutputStream(to);
-        PipedInputStream from = new PipedInputStream(1024*1024);
-        PipedOutputStream fromOut = new PipedOutputStream(from);
-        iCodec = new FrameCodec(initiator.getSecrets(), to, fromOut);
-        rCodec = new FrameCodec(responder.getSecrets(), from, toOut);
+        to = new PipedInputStream(1024*1024);
+        toOut = new PipedOutputStream(to);
+        from = new PipedInputStream(1024*1024);
+        fromOut = new PipedOutputStream(from);
+        iCodec = new FrameCodec(initiator.getSecrets());
+        rCodec = new FrameCodec(responder.getSecrets());
         byte[] nodeId = {1, 2, 3, 4};
         iMessage = new HandshakeMessage(
                 123,
@@ -59,8 +59,8 @@ public class RlpxConnectionTest {
         byte[] payload = new byte[123];
         new SecureRandom().nextBytes(payload);
         FrameCodec.Frame frame = new FrameCodec.Frame(12345, 123, new ByteArrayInputStream(payload));
-        iCodec.writeFrame(frame);
-        FrameCodec.Frame frame1 = rCodec.readFrame();
+        iCodec.writeFrame(frame, toOut);
+        FrameCodec.Frame frame1 = rCodec.readFrame(new DataInputStream(to));
         byte[] payload1 = new byte[frame1.size];
         assertEquals(frame.size, frame1.size);
         frame1.payload.read(payload1);
@@ -81,43 +81,12 @@ public class RlpxConnectionTest {
 
     @Test
     public void testHandshake() throws IOException {
-        RlpxConnection iConn =  new RlpxConnection(initiator.getSecrets(), iCodec);
-        RlpxConnection rConn =  new RlpxConnection(responder.getSecrets(), rCodec);
+        RlpxConnection iConn =  new RlpxConnection(initiator.getSecrets(), from, toOut);
+        RlpxConnection rConn =  new RlpxConnection(responder.getSecrets(), to, fromOut);
         iConn.sendProtocolHandshake(iMessage);
         rConn.handleNextMessage();
         HandshakeMessage receivedMessage = rConn.getHandshakeMessage();
         assertNotNull(receivedMessage);
         assertArrayEquals(iMessage.nodeId, receivedMessage.nodeId);
-    }
-
-    @Test
-    public void blah() {
-        Object[] stuff = new Object[]{1L, 3, "asdf"};
-        byte[] res = RLP.encode(stuff);
-        DecodeResult result = RLP.decode(res, 0);
-        System.out.println(result.getDecoded());
-
-        SHA3Digest d = new SHA3Digest();
-        d.update((byte)11);
-        d.update((byte) 22);
-        byte[] buf = new byte[d.getDigestSize()];
-        new SHA3Digest(d).doFinal(buf, 0);
-        System.out.println(Hex.toHexString(buf));
-        d.update((byte) 33);
-        d.doFinal(buf, 0);
-        System.out.println(Hex.toHexString(buf));
-
-        d = new SHA3Digest();
-        d.update((byte) 11);
-        d.update((byte) 22);
-        d.doFinal(buf, 0);
-        System.out.println(Hex.toHexString(buf));
-        d = new SHA3Digest();
-        d.update((byte) 11);
-        d.update((byte) 22);
-        d.update((byte) 33);
-        d.doFinal(buf, 0);
-        System.out.print(Hex.toHexString(buf));
-        System.out.println(".");
     }
 }
