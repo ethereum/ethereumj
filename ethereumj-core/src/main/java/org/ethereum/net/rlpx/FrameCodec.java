@@ -125,8 +125,8 @@ public class FrameCodec {
         dec.processBytes(headBuffer, 0, 16, headBuffer, 0);
         int totalSize;
         totalSize = headBuffer[0];
-        totalSize = (totalSize << 8) + headBuffer[1];
-        totalSize = (totalSize << 8) + headBuffer[2];
+        totalSize = (totalSize << 8) + headBuffer[1] & 0xFF;
+        totalSize = (totalSize << 8) + headBuffer[2] & 0xFF;
         int padding = 16 - (totalSize % 16);
         if (padding == 16) padding = 0;
         byte[] buffer = new byte[totalSize + padding];
