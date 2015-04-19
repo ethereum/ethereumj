@@ -10,6 +10,7 @@ import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 
@@ -119,6 +120,9 @@ public class FrameCodec {
     public Frame readFrame(DataInput inp) throws IOException {
         byte[] headBuffer = new byte[32];
         inp.readFully(headBuffer);
+
+        System.out.println(Hex.toHexString(headBuffer));
+
         // Header MAC
         updateMac(ingressMac, headBuffer, 0, headBuffer, 16, false);
 
