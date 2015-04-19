@@ -27,20 +27,19 @@ public class NewBlockMessage extends EthMessage {
     }
 
     private void encode() {
-        byte[] command = RLP.encodeByte(this.getCommand().asByte());
         byte[] block = this.block.getEncoded();
         byte[] diff = RLP.encodeElement(this.difficulty);
 
-        this.encoded = RLP.encodeList(command, block, diff);
+        this.encoded = RLP.encodeList(block, diff);
         parsed = true;
     }
 
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        RLPList blockRLP = ((RLPList) paramsList.get(1));
+        RLPList blockRLP = ((RLPList) paramsList.get(0));
         block = new Block(blockRLP.getRLPData());
-        difficulty = paramsList.get(2).getRLPData();
+        difficulty = paramsList.get(1).getRLPData();
 
         parsed = true;
     }

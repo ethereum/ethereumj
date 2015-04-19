@@ -14,6 +14,8 @@ import org.ethereum.net.rlpx.RLPXHandler;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.wire.MessageDecoder;
 import org.ethereum.net.wire.MessageEncoder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -31,6 +33,8 @@ import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 @Component
 @Scope("prototype")
 public class Channel {
+
+    private final static Logger logger = LoggerFactory.getLogger("net");
 
     @Autowired
     ChannelManager channelManager;
@@ -105,6 +109,10 @@ public class Channel {
         ByteBuf byteBufMsg = ctx.alloc().buffer();
         frameCodec.writeFrame(new FrameCodec.Frame(HELLO_MESSAGE.getCode(), payload), byteBufMsg);
         ctx.writeAndFlush(byteBufMsg).sync();
+
+        if (logger.isInfoEnabled())
+            logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), HELLO_MESSAGE);
+
     }
 
 

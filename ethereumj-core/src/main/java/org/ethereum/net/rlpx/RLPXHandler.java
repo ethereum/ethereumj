@@ -91,7 +91,8 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
                 Frame frame = frameCodec.readFrame(buffer);
                 byte[] payload = ByteStreams.toByteArray(frame.getStream());
                 HelloMessage helloMessage = new HelloMessage(payload);
-                logger.info("hello message received");
+                if (logger.isInfoEnabled())
+                    logger.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
                 ctx.pipeline().remove(this);
                 this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
             }

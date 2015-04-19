@@ -60,14 +60,13 @@ public class StatusMessage extends EthMessage {
     }
 
     private void encode() {
-        byte[] command = RLP.encodeByte(STATUS.asByte());
         byte[] protocolVersion = RLP.encodeByte(this.protocolVersion);
         byte[] networkId = RLP.encodeByte(this.networkId);
         byte[] totalDifficulty = RLP.encodeElement(this.totalDifficulty);
         byte[] bestHash = RLP.encodeElement(this.bestHash);
         byte[] genesisHash = RLP.encodeElement(this.genesisHash);
 
-        this.encoded = RLP.encodeList(command, protocolVersion, networkId,
+        this.encoded = RLP.encodeList( protocolVersion, networkId,
                 totalDifficulty, bestHash, genesisHash);
     }
 

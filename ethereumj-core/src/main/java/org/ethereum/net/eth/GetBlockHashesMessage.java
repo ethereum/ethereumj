@@ -38,17 +38,16 @@ public class GetBlockHashesMessage extends EthMessage {
     }
 
     private void encode() {
-        byte[] command = RLP.encodeByte(GET_BLOCK_HASHES.asByte());
         byte[] hash = RLP.encodeElement(this.bestHash);
         byte[] maxBlocks = RLP.encodeInt(this.maxBlocks);
-        this.encoded = RLP.encodeList(command, hash, maxBlocks);
+        this.encoded = RLP.encodeList(hash, maxBlocks);
     }
 
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        this.bestHash = paramsList.get(1).getRLPData();
-        byte[] maxBlocksBytes = paramsList.get(2).getRLPData();
+        this.bestHash = paramsList.get(0).getRLPData();
+        byte[] maxBlocksBytes = paramsList.get(1).getRLPData();
         this.maxBlocks = ByteUtil.byteArrayToInt(maxBlocksBytes);
 
         parsed = true;
