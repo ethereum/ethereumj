@@ -58,4 +58,9 @@ public class EthereumListenerAdapter implements EthereumListener {
     public void onBlockReciepts(List<TransactionReceipt> receipts) {
 
     }
+
+    @Override
+    public void onVMTraceCreated(String transactionHash, String trace) {
+
+    }
 }

@@ -4,16 +4,12 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.MessageCall.MsgType;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,12 +75,14 @@ public class VM {
 
         try {
             OpCode op = OpCode.code(program.getCurrentOp());
-            if (op == null)
-                throw new Program.IllegalOperationException();
+            if (op == null) {
+                throw Program.Exception.invalidOpCode(program.getCurrentOp());
+            }
+
 
             program.setLastOp(op.val());
             program.stackRequire(op.require());
-            program.stackMax(op.require(), op.ret()); //Check not exceeding stack limits 
+            program.stackMax(op.require(), op.ret()); //Check not exceeding stack limits
 
             long oldMemSize = program.getMemSize();
             BigInteger newMemSize = BigInteger.ZERO;
@@ -175,7 +173,7 @@ public class VM {
                     gasCost = GasCost.CALL;
                     DataWord callGasWord = stack.get(stack.size() - 1);
                     if (callGasWord.compareTo(program.getGas()) == 1) {
-                        throw program.new OutOfGasException();
+                        throw Program.Exception.notEnoughOpGas(op, callGasWord, program.getGas());
                     }
 
                     DataWord callAddressWord = stack.get(stack.size() - 2);
@@ -210,7 +208,7 @@ public class VM {
                     BigInteger dataSize = stack.get(stack.size() - 2).value();
                     BigInteger dataCost = dataSize.multiply(BigInteger.valueOf(GasCost.LOG_DATA_GAS));
                     if (program.getGas().value().compareTo(dataCost) < 0) {
-                        throw program.new OutOfGasException();
+                        throw Program.Exception.notEnoughOpGas(op, dataCost, program.getGas().value());
                     }
 
                     gasCost = GasCost.LOG_GAS +
@@ -231,8 +229,9 @@ public class VM {
             program.spendGas(gasCost, op.name());
 
             // Avoid overflows
-            if (newMemSize.compareTo(MAX_GAS) == 1)
-                throw program.new OutOfGasException();
+            if (newMemSize.compareTo(MAX_GAS) == 1) {
+                throw Program.Exception.gasOverflow(newMemSize, MAX_GAS);
+            }
 
             // memory gas calc
             long memoryUsage = (newMemSize.longValue() + 31) / 32 * 32;

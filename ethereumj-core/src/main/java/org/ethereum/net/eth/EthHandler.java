@@ -54,7 +54,8 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
 @Scope("prototype")
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    public final static byte VERSION = 54;
+    public final static byte VERSION = 60;
+
     public final static byte NETWORK_ID = 0x0;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
@@ -66,7 +67,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private MessageQueue msgQueue = null;
 
     private SyncStatus syncStatus = SyncStatus.INIT;
-    private boolean active = false;
     private StatusMessage handshakeStatusMessage = null;
 
     private BigInteger totalDifficulty = Genesis.getInstance().getCumulativeDifficulty();
@@ -96,9 +96,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void activate() {
         logger.info("ETH protocol activated");
         worldManager.getListener().trace("ETH protocol activated");
-
-        active = true;
-        sendStatus();
+//        sendStatus();
     }
 
     public void setBlockchain(Blockchain blockchain) {
@@ -106,14 +104,15 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
 
-    public boolean isActive() {
-        return active;
-    }
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
-        if (!isActive()) return;
+        if (1==1){
+            System.out.println("Got message: " + msg.getCommand().toString());
+            System.out.println("Neglecting for now");
+            return;
+        }
 
         if (EthMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("EthHandler invoke: [{}]", msg.getCommand());
@@ -186,7 +185,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         logger.debug("handlerRemoved: kill timers in EthHandler");
-        active = false;
         this.killTimers();
     }
 

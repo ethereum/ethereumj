@@ -1,10 +1,8 @@
 package org.ethereum.crypto;
 
+import com.google.common.base.Throwables;
 import org.ethereum.ConcatKDFBytesGenerator;
-import org.spongycastle.crypto.AsymmetricCipherKeyPair;
-import org.spongycastle.crypto.BufferedBlockCipher;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.crypto.KeyGenerationParameters;
+import org.spongycastle.crypto.*;
 import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
@@ -28,7 +26,7 @@ public class ECIESCoder {
     public static final int KEY_SIZE = 128;
 
 
-    public static byte[] decrypt(BigInteger privKey, byte[] cipher) throws Throwable {
+    public static byte[] decrypt(BigInteger privKey, byte[] cipher) throws IOException, InvalidCipherTextException {
 
         byte[] plaintext;
 
@@ -47,7 +45,7 @@ public class ECIESCoder {
         return plaintext;
     }
 
-    public static byte[] decrypt(ECPoint ephem, BigInteger prv, byte[] IV, byte[] cipher) throws Throwable {
+    public static byte[] decrypt(ECPoint ephem, BigInteger prv, byte[] IV, byte[] cipher) throws InvalidCipherTextException {
         AESFastEngine aesFastEngine = new AESFastEngine();
 
         EthereumIESEngine iesEngine = new EthereumIESEngine(
@@ -71,7 +69,7 @@ public class ECIESCoder {
     }
 
 
-    public static byte[] encrypt(ECPoint toPub, byte[] plaintext) throws InvalidCipherTextException, IOException {
+    public static byte[] encrypt(ECPoint toPub, byte[] plaintext) {
 
         ECKeyPairGenerator eGen = new ECKeyPairGenerator();
         SecureRandom random = new SecureRandom();
@@ -95,12 +93,19 @@ public class ECIESCoder {
         ECKeyPairGenerator gen = new ECKeyPairGenerator();
         gen.init(new ECKeyGenerationParameters(ECKey.CURVE, random));
 
-        byte[] cipher = iesEngine.processBlock(plaintext, 0, plaintext.length);
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        bos.write(pub.getEncoded(false));
-        bos.write(IV);
-        bos.write(cipher);
-        return bos.toByteArray();
+        byte[] cipher;
+        try {
+            cipher = iesEngine.processBlock(plaintext, 0, plaintext.length);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            bos.write(pub.getEncoded(false));
+            bos.write(IV);
+            bos.write(cipher);
+            return bos.toByteArray();
+        } catch (InvalidCipherTextException e) {
+            throw Throwables.propagate(e);
+        } catch (IOException e) {
+            throw Throwables.propagate(e);
+        }
     }
 
 
@@ -125,4 +130,8 @@ public class ECIESCoder {
         return iesEngine;
     }
 
+    public static int getOverhead() {
+        // 256 bit EC public key, IV, 256 bit MAC
+        return 65 + KEY_SIZE/8 + 32;
+    }
 }

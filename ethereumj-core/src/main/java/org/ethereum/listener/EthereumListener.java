@@ -6,6 +6,7 @@ import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 
+import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Set;
 
@@ -15,24 +16,25 @@ import java.util.Set;
  */
 public interface EthereumListener {
 
-    public void trace(String output);
+    void trace(String output);
 
-    public void onBlock(Block block);
+    void onBlock(Block block);
 
-    public void onBlockReciepts(List<TransactionReceipt> receipts);
+    void onBlockReciepts(List<TransactionReceipt> receipts);
 
-    public void onRecvMessage(Message message);
+    void onRecvMessage(Message message);
 
-    public void onSendMessage(Message message);
+    void onSendMessage(Message message);
 
-    public void onPeerDisconnect(String host, long port);
+    void onPeerDisconnect(String host, long port);
 
-    public void onPendingTransactionsReceived(Set<Transaction> transactions);
+    void onPendingTransactionsReceived(Set<Transaction> transactions);
 
-    public void onSyncDone();
+    void onSyncDone();
 
-    public void onNoConnections();
+    void onNoConnections();
 
-    public void onHandShakePeer(HelloMessage helloMessage);
+    void onHandShakePeer(HelloMessage helloMessage);
 
+    void onVMTraceCreated(String transactionHash, String trace);
 }

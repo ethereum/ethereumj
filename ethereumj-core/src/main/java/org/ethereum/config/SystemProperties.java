@@ -3,15 +3,8 @@ package org.ethereum.config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-
-import java.util.Arrays;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.Properties;
+import java.io.*;
+import java.util.*;
 
 /**
  * Utility class to retrieve property values from the system.properties files
@@ -24,8 +17,9 @@ public class SystemProperties {
     private static Logger logger = LoggerFactory.getLogger("general");
 
     private final static int DEFAULT_TX_APPROVE_TIMEOUT = 10;
-    private final static String DEFAULT_DISCOVERY_PEER_LIST = "poc-7.ethdev.com:30303";
-    private final static String DEFAULT_ACTIVE_PEER_IP = "poc-7.ethdev.com";
+    private final static String DEFAULT_DISCOVERY_PEER_LIST = "poc-9.ethdev.com:30303";
+    private final static String DEFAULT_ACTIVE_PEER_NODEID = ""; // FIXME
+    private final static String DEFAULT_ACTIVE_PEER_IP = "poc-9.ethdev.com";
     private final static int DEFAULT_ACTIVE_PORT = 30303;
     private final static String DEFAULT_SAMPLES_DIR = "samples";
     private final static String DEFAULT_COINBASE_SECRET = "monkey";
@@ -132,6 +126,14 @@ public class SystemProperties {
 
     public void setDatabaseReset(Boolean reset) {
         prop.setProperty("database.reset", reset.toString());
+    }
+
+    public String activePeerNodeid() {
+        return prop.getProperty("peer.active.nodeid", DEFAULT_ACTIVE_PEER_NODEID);
+    }
+
+    public void setActivePeerNodeid(String nodeId) {
+        prop.setProperty("peer.active.nodeid", nodeId);
     }
 
     public String activePeerIP() {
@@ -258,9 +260,9 @@ public class SystemProperties {
     public String getKeyValueDataSource() {
         return prop.getProperty("keyvalue.datasource", DEFAULT_KEY_VALUE_DATA_SOURCE);
     }
-    
+
     public boolean isRedisEnabled() {
-        return boolProperty("redis.enabled", DEFAULT_REDIS_ENABLED);    
+        return boolProperty("redis.enabled", DEFAULT_REDIS_ENABLED);
     }
 
     public void setListenPort(Integer port) {

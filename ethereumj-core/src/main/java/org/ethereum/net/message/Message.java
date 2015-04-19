@@ -35,4 +35,11 @@ public abstract class Message {
      * @return A string with all attributes of the message
      */
     public abstract String toString();
+
+    public abstract Enum getCommand();
+
+    public byte getCode() {
+            return code;
+    }
+
 }

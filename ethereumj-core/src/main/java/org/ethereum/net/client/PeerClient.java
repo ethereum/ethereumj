@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -35,18 +36,20 @@ public class PeerClient {
     private boolean peerDiscoveryMode = false;
 
     @Autowired
+    private ApplicationContext ctx;
+
+    @Autowired
     WorldManager worldManager;
 
     @Autowired
     public ChannelManager channelManager;
 
-    @Autowired
-    public EthereumChannelInitializer ethereumChannelInitializer;
-
-    public void connect(String host, int port) {
+    public void connect(String host, int port, String remoteId) {
 
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         worldManager.getListener().trace("Connecting to: " + host + ":" + port);
+
+        EthereumChannelInitializer ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, remoteId);
 
         try {
             Bootstrap b = new Bootstrap();

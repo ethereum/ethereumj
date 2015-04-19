@@ -2,8 +2,9 @@ package org.ethereum.cli;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.stereotype.Component;
+
+import java.net.URI;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -46,12 +47,14 @@ public class CLIInterface {
                 // override the connect host:port directory
                 if (args[i].equals("-connect") && i + 1 < args.length) {
                     String connectStr = args[i + 1];
-                    logger.info("Connect host:port set to [{}]", connectStr);
-                    String[] params = connectStr.split(":");
-                    String host = params[0];
-                    String port = params[1];
-                    CONFIG.setActivePeerIP(host);
-                    CONFIG.setActivePeerPort(Integer.valueOf(port));
+                    logger.info("Connect URI set to [{}]", connectStr);
+                    URI uri = new URI(connectStr);
+                    if (!uri.getScheme().equals("enode"))
+                        throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
+
+                    CONFIG.setActivePeerIP(uri.getHost());
+                    CONFIG.setActivePeerPort(uri.getPort());
+                    CONFIG.setActivePeerNodeid(uri.getUserInfo());
                 }
 
                 // override the listen port directory

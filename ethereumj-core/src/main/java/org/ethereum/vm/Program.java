@@ -9,36 +9,23 @@ import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
 import org.ethereum.vmtrace.Op;
 import org.ethereum.vmtrace.ProgramTrace;
-
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.SerializationConfig;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.nio.ByteBuffer;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.Stack;
-
+import static java.lang.String.format;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.springframework.util.StringUtils.isEmpty;
 
 /**
  * @author Roman Mandeleil
@@ -210,8 +197,7 @@ public class Program {
      */
     public void stackRequire(int stackSize) {
         if (stack.size() < stackSize) {
-            throw new StackTooSmallException("Expected: " + stackSize
-                    + ", found: " + stack.size());
+            throw Program.Exception.tooSmallStack(stackSize, stack.size());
         }
     }
 
@@ -578,8 +564,9 @@ public class Program {
         gasLogger.info("[{}] Spent for cause: [{}], gas: [{}]", invokeHash, cause, gasValue);
 
         long afterSpend = invokeData.getGas().longValue() - gasValue - result.getGasUsed();
-        if (afterSpend < 0)
-            throw new OutOfGasException();
+        if (afterSpend < 0) {
+            throw Program.Exception.notEnoughSpendingGas(cause, gasValue, this);
+        }
         result.spendGas(gasValue);
     }
 
@@ -734,7 +721,7 @@ public class Program {
             secondLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
             if ((i + 1) % 8 == 0) {
-                String tmp = String.format("%4s", Integer.toString(i - 7, 16)).replace(" ", "0");
+                String tmp = format("%4s", Integer.toString(i - 7, 16)).replace(" ", "0");
                 memoryData.append("").append(tmp).append(" ");
                 memoryData.append(firstLine).append(" ");
                 memoryData.append(secondLine);
@@ -778,7 +765,7 @@ public class Program {
                 oneLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
                 if ((i + 1) % 16 == 0) {
-                    String tmp = String.format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
+                    String tmp = format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
                             Integer.toString(i, 16)).replace(" ", "0");
                     memoryData.append("").append(tmp).append(" ");
                     memoryData.append(oneLine);
@@ -845,7 +832,7 @@ public class Program {
 
         Op op = new Op();
         op.setPc(pc);
-
+        op.setDeep(invokeData.getCallDeep());
         op.setOp(ops[pc]);
         op.saveGas(getGas());
 
@@ -860,7 +847,7 @@ public class Program {
 
     public void saveProgramTraceToFile(String fileName) {
 
-        if (!CONFIG.vmTrace()) return;
+        if (!CONFIG.vmTrace() || isEmpty(CONFIG.vmTraceDir())) return;
 
         String dir = CONFIG.databaseDir() + "/" + CONFIG.vmTraceDir() + "/";
 
@@ -869,21 +856,12 @@ public class Program {
         BufferedWriter bw = null;
 
         try {
-
             dumpFile.getParentFile().mkdirs();
             dumpFile.createNewFile();
 
             fw = new FileWriter(dumpFile.getAbsoluteFile());
             bw = new BufferedWriter(fw);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.configure(SerializationConfig.Feature.INDENT_OUTPUT, true);
-
-            String originalJson = programTrace.getJsonString();
-            JsonNode tree = objectMapper.readTree(originalJson);
-            String formattedJson = objectMapper.writeValueAsString(tree);
-            bw.write(formattedJson);
-
+            bw.write(programTrace.asJsonString(true));
         } catch (IOException e) {
             logger.error(e.getMessage(), e);
         } finally {
@@ -919,7 +897,12 @@ public class Program {
         if (code == null || code.length == 0)
             return result;
 
-        OpCode op = OpCode.code(code[index]);
+        final byte opCode = code[index];
+        OpCode op = OpCode.code(opCode);
+        if (op == null) {
+            throw Program.Exception.invalidOpCode(opCode);
+        }
+
         final byte[] continuedCode;
 
         if (op == null) throw new IllegalOperationException("Invalid operation: " +
@@ -952,7 +935,9 @@ public class Program {
     }
 
     public void validateJumpDest(int nextPC) {
-        if (!jumpdest.contains(nextPC)) throw new BadJumpDestinationException();
+        if (!jumpdest.contains(nextPC)) {
+            throw Program.Exception.badJumpDestination(nextPC);
+        }
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
@@ -1007,27 +992,68 @@ public class Program {
     }
 
     @SuppressWarnings("serial")
-    public class OutOfGasException extends RuntimeException {
+    public static class OutOfGasException extends RuntimeException {
+
+        public OutOfGasException(String message, Object... args) {
+            super(format(message, args));
+        }
     }
 
     @SuppressWarnings("serial")
     public static class IllegalOperationException extends RuntimeException {
-        public IllegalOperationException(String message) {
-            super(message);
-        }
 
-        public IllegalOperationException() {
+        public IllegalOperationException(String message, Object... args) {
+            super(format(message, args));
         }
     }
 
     @SuppressWarnings("serial")
-    public class BadJumpDestinationException extends RuntimeException {
+    public static class BadJumpDestinationException extends RuntimeException {
+
+        public BadJumpDestinationException(String message, Object... args) {
+            super(format(message, args));
+        }
     }
 
     @SuppressWarnings("serial")
-    public class StackTooSmallException extends RuntimeException {
-        public StackTooSmallException(String message) {
-            super(message);
+    public static class StackTooSmallException extends RuntimeException {
+
+        public StackTooSmallException(String message, Object... args) {
+            super(format(message, args));
+        }
+    }
+
+    public static class Exception {
+
+        public static OutOfGasException notEnoughOpGas(OpCode op, long opGas, long programGas) {
+            return new OutOfGasException("Not enough gas for '%s' operation executing: opGas[%d], programGas[%d];", op, opGas, programGas);
+        }
+        public static OutOfGasException notEnoughOpGas(OpCode op, DataWord opGas, DataWord programGas) {
+            return notEnoughOpGas(op, opGas.longValue(), programGas.longValue());
+        }
+        public static OutOfGasException notEnoughOpGas(OpCode op, BigInteger opGas, BigInteger programGas) {
+            return notEnoughOpGas(op, opGas.longValue(), programGas.longValue());
+        }
+
+        public static OutOfGasException notEnoughSpendingGas(String cause, long gasValue, Program program) {
+            return new OutOfGasException("Not enough gas for '%s' cause spending: invokeGas[%d], gas[%d], usedGas[%d];",
+                    cause, program.invokeData.getGas().longValue(), gasValue, program.result.getGasUsed());
+        }
+
+        public static OutOfGasException gasOverflow(BigInteger actualGas, BigInteger gasLimit) {
+            return new OutOfGasException("Gas value overflow: actualGas[%d], gasLimit[%d];", actualGas.longValue(), gasLimit.longValue());
+        }
+
+        public static IllegalOperationException invalidOpCode(byte... opCode) {
+            return new IllegalOperationException("Invalid operation code: opCode[%s];", Hex.toHexString(opCode, 0, 1));
+        }
+
+        public static BadJumpDestinationException badJumpDestination(int pc) {
+            return new BadJumpDestinationException("Operation with pc isn't 'JUMPDEST': PC[%d];", pc);
+        }
+
+        public static StackTooSmallException tooSmallStack(int expectedSize, int actualSize) {
+            return new StackTooSmallException("Expected stack size %d but actual %d;", expectedSize, actualSize);
         }
     }
 

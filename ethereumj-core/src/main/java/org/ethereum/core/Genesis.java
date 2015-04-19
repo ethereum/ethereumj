@@ -15,7 +15,6 @@ import java.util.Set;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_LIST_HASH;
 import static org.ethereum.util.ByteUtil.wrap;
-
 /**
  * The genesis block is the first block in the chain and has fixed values according to
  * the protocol specification. The genesis block is 13 items, and is specified thus:
@@ -87,7 +86,6 @@ public class Genesis extends Block {
 
         // The proof-of-concept series include a development pre-mine, making the state root hash
         // some value stateRoot. The latest documentation should be consulted for the value of the state root.
-
         Trie state = parseGenesis();
         setStateRoot(state.getRootHash());
     }
@@ -132,7 +130,10 @@ public class Genesis extends Block {
         return instance;
     }
 
+
     public Map<ByteArrayWrapper, AccountState> getPremine() {
         return premine;
     }
+
+
 }

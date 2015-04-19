@@ -268,10 +268,10 @@ public class BlockchainImpl implements Blockchain {
           logger.error("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
           //return false;
         }
-        
+
         String logBloomHash = Hex.toHexString( block.getLogBloom() );
         String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
-        
+
         if( !logBloomHash.equals(logBloomListHash) ) {
           logger.error("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
           //track.rollback();
@@ -433,7 +433,7 @@ public class BlockchainImpl implements Blockchain {
                 if (!isValid(uncle)) return false;
 
                 //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
-                isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT) ); 
+                isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT) );
                 if (!isValid){
                     logger.error("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
                     return false;
@@ -473,7 +473,7 @@ public class BlockchainImpl implements Blockchain {
 
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
                     track, blockStore,
-                    programInvokeFactory, block);
+                    programInvokeFactory, block, listener);
             executor.execute();
 
             TransactionReceipt receipt = executor.getReceipt();
@@ -532,7 +532,7 @@ public class BlockchainImpl implements Blockchain {
         // Add extra rewards based on number of uncles
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
-                track.addBalance(uncle.getCoinbase(), 
+                track.addBalance(uncle.getCoinbase(),
                   new BigDecimal(block.BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
 
                 totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD);

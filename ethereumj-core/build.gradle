@@ -220,6 +220,8 @@ install {
 }
 
 task publish {
+
+    println "publishing if master current branch: " + branchName
     description = "Publishes snapshots to oss.jfrog.org and releases to Bintray/JCenter"
     dependsOn artifactoryPublish, bintrayUpload
 }

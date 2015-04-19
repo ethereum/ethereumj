@@ -2,7 +2,19 @@ package org.ethereum.core;
 
 import org.ethereum.db.BlockStore;
 import org.ethereum.facade.Repository;
-import org.ethereum.vm.*;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.EthereumListenerAdapter;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.GasCost;
+import org.ethereum.vm.LogInfo;
+import org.ethereum.vm.Program;
+import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.ProgramResult;
+import org.ethereum.vm.VM;
+
+import org.ethereum.vmtrace.ProgramTrace;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -34,9 +46,16 @@ public class TransactionExecutor {
     private ProgramResult result = new ProgramResult();
     private Block currentBlock;
 
+    private final EthereumListener listener;
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
+
+        this(tx, coinbase, track, blockStore, programInvokeFactory, currentBlock, new EthereumListenerAdapter());
+    }
+
+    public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
+                               ProgramInvokeFactory programInvokeFactory, Block currentBlock, EthereumListener listener) {
 
         this.tx = tx;
         this.coinbase = coinbase;
@@ -44,6 +63,7 @@ public class TransactionExecutor {
         this.blockStore = blockStore;
         this.programInvokeFactory = programInvokeFactory;
         this.currentBlock = currentBlock;
+        this.listener = listener;
     }
 
 /* jeff:
@@ -58,7 +78,8 @@ public class TransactionExecutor {
     public void execute() {
 
 
-        logger.info("applyTransaction: [{}]", Hex.toHexString(tx.getHash()));
+        final String txHash = Hex.toHexString(tx.getHash());
+        logger.info("applyTransaction: [{}]", txHash);
 
         TransactionReceipt receipt = new TransactionReceipt();
 
@@ -199,6 +220,7 @@ public class TransactionExecutor {
         if (isContractCreation || code != EMPTY_BYTE_ARRAY) {
 
             // START TRACKING FOR REVERT CHANGES OPTION
+            Program program = null;
             Repository trackTx = track.startTracking();
             trackTx.addBalance(receiverAddress, BigInteger.ZERO); // the contract created for anycase but SUICIDE call
 
@@ -215,7 +237,6 @@ public class TransactionExecutor {
                             new BigInteger(tx.getValue()));
             }
 
-
             logger.info("Start tracking VM run");
             try {
 
@@ -230,12 +251,13 @@ public class TransactionExecutor {
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, trackTx, blockStore);
 
                 VM vm = new VM();
-                Program program = new Program(code, programInvoke);
+                program = new Program(code, programInvoke);
 
                 if (CONFIG.playVM())
                     vm.play(program);
 
-                program.saveProgramTraceToFile(Hex.toHexString(tx.getHash()));
+                program.saveProgramTraceToFile(txHash);
+
                 result = program.getResult();
                 applyProgramResult(result, gasDebit, gasPrice, trackTx,
                         senderAddress, receiverAddress, coinbase, isContractCreation);
@@ -248,6 +270,18 @@ public class TransactionExecutor {
                 receipt.setCumulativeGas(tx.getGasLimit());
                 this.receipt = receipt;
                 return;
+            } finally {
+                if (CONFIG.vmTrace()) {
+                    String traceAsJson = "{}";
+                    if (program != null) {
+                        ProgramResult result = program.getResult();
+                        ProgramTrace trace = program.getProgramTrace();
+//                        trace.setResult(result.getHReturn());
+                        trace.setError(result.getException());
+                        traceAsJson = trace.asJsonString();
+                    }
+                    listener.onVMTraceCreated(txHash, traceAsJson);
+                }
             }
             trackTx.commit();
         } else {

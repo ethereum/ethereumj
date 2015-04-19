@@ -8,7 +8,6 @@ subprojects {
     apply plugin: 'java'
 
     group = 'org.ethereum'
-
     version = '0.9.0-SNAPSHOT'
 
     compileJava.options.encoding = 'UTF-8'
