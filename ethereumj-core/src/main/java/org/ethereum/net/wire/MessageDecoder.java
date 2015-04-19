@@ -42,6 +42,8 @@ public class MessageDecoder extends ByteToMessageDecoder {
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
+        if (in.readableBytes() == 0) return;
+        
         Frame frame = frameCodec.readFrame(in);
         if (frame == null) return;  // here we check if the buffer was fully read
                                     // the return means read more !!!
@@ -52,7 +54,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
             loggerWire.debug("Encoded: [{}]", Hex.toHexString(payload));
 
         Message msg = MessageFactory.createMessage((byte)frame.getType(), payload);
-        
+
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
 

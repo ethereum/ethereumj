@@ -54,7 +54,7 @@ import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
 @Scope("prototype")
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    public final static byte VERSION = 60;
+    public final static byte VERSION = 16;
 
     public final static byte NETWORK_ID = 0x0;
 
@@ -96,7 +96,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void activate() {
         logger.info("ETH protocol activated");
         worldManager.getListener().trace("ETH protocol activated");
-//        sendStatus();
+        sendStatus();
     }
 
     public void setBlockchain(Blockchain blockchain) {
@@ -107,12 +107,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
-
-        if (1==1){
-            System.out.println("Got message: " + msg.getCommand().toString());
-            System.out.println("Neglecting for now");
-            return;
-        }
 
         if (EthMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("EthHandler invoke: [{}]", msg.getCommand());

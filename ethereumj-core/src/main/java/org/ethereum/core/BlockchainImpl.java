@@ -114,7 +114,6 @@ public class BlockchainImpl implements Blockchain {
     public BlockchainImpl() {
     }
 
-    ;
 
     //todo: autowire over constructor
     public BlockchainImpl(BlockStore blockStore, Repository repository,

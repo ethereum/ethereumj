@@ -65,6 +65,9 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
         byteBufMsg.writeBytes(initiatePacket);
         ctx.writeAndFlush(byteBufMsg).sync();
 
+        if (logger.isInfoEnabled())
+            logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), initiateMessage);
+
     }
 
 

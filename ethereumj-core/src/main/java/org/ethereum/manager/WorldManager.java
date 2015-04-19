@@ -153,7 +153,7 @@ public class WorldManager {
             blockStore.saveBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>());
 
             blockchain.setBestBlock(Genesis.getInstance());
-            blockchain.setTotalDifficulty(BigInteger.ZERO);
+            blockchain.setTotalDifficulty(Genesis.getInstance().getCumulativeDifficulty());
 
             listener.onBlock(Genesis.getInstance());
             repository.dumpState(Genesis.getInstance(), 0, 0, null);
