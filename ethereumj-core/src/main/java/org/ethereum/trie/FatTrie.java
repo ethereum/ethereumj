@@ -55,7 +55,7 @@ public class FatTrie implements Trie{
     public void setRoot(byte[] root) {
 
         secureTrie.setRoot(root);
-        throw new UnsupportedOperationException("Fat trie doesn't support root rollbacks");
+//        throw new UnsupportedOperationException("Fat trie doesn't support root rollbacks");
     }
 
     @Override

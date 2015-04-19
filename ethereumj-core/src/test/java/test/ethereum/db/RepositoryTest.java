@@ -351,15 +351,10 @@ public class RepositoryTest {
         Repository repository = new RepositoryImpl(new LevelDbDataSource(), new LevelDbDataSource());
         Repository track = repository.startTracking();
 
-<<<<<<< HEAD
         Genesis genesis = (Genesis)Genesis.getInstance();
         for (ByteArrayWrapper key : genesis.getPremine().keySet()) {
             repository.createAccount(key.getData());
             repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
-=======
-        for (PremineRaw raw : Genesis.getPremine()) {
-            track.addBalance(raw.getAddr(), raw.getValue().multiply(raw.getDenomination().value()));
->>>>>>> poc-9-merge-rlpx-pr
         }
 
         track.commit();
@@ -557,9 +552,9 @@ public class RepositoryTest {
         repoTrack.delete(horse);
 
         assertEquals(true, repoTrack2.isExist(cow));
-        assertEquals(false, repoTrack2.isExist(horse)); 
-        assertEquals(false, repoTrack2.isExist(pig)); 
-        assertEquals(false, repoTrack2.isExist(precompiled)); 
+        assertEquals(false, repoTrack2.isExist(horse));
+        assertEquals(false, repoTrack2.isExist(pig));
+        assertEquals(false, repoTrack2.isExist(precompiled));
     }
 
 }
