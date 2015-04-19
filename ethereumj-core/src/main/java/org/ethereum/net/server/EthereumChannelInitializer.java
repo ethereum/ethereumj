@@ -72,8 +72,8 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         ch.pipeline().addLast("rlpx", channel.getRlpxHandler());
 
         // limit the size of receiving buffer to 1024
-        ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(32368));
-        ch.config().setOption(ChannelOption.SO_RCVBUF, 32368);
+        ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(16_777_216));
+        ch.config().setOption(ChannelOption.SO_RCVBUF, 16_777_216);
         ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
     }
 
