@@ -247,6 +247,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         // or peer doesn't have the best hash anymore
         if (receivedHashes.isEmpty()
                 || !this.peerId.equals(hashRetrievalLock)) {
+            chainQueue.addHash( blockchain.getBestBlockHash() );
             sendGetBlocks(); // start getting blocks from hash queue
             return;
         }
@@ -259,6 +260,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 chainQueue.addHash(foundHash);    // store unknown hashes in queue until known hash is found
             } else {
 
+                chainQueue.addHash(blockchain.getBestBlockHash());
                 logger.trace("Catch up with the hashes until: {[]}", foundHash);
                 // if known hash is found, ignore the rest
                 sendGetBlocks(); // start getting blocks from hash queue

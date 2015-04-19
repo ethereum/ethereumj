@@ -2,27 +2,16 @@ package org.ethereum.net;
 
 import org.ethereum.core.Block;
 import org.ethereum.facade.Blockchain;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.*;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -48,7 +37,7 @@ public class BlockQueue {
     /**
      * Queue with blocks to be validated and added to the blockchain
      */
-    private Queue<Block> blockReceivedQueue = new ConcurrentLinkedQueue<>();
+    private BlockingQueue<Block> blockReceivedQueue = new ArrayBlockingQueue<>(2000);
 
     /**
      * Highest known total difficulty, representing the heaviest chain on the network
@@ -66,30 +55,34 @@ public class BlockQueue {
     Blockchain blockchain;
 
     public BlockQueue() {
-        timer.scheduleAtFixedRate(new TimerTask() {
+
+        Runnable queueProducer = new Runnable(){
+
+            @Override
             public void run() {
-                nudgeQueue();
+                produceQueue();
             }
-        }, 10, 10);
+        };
+
+        Thread t=new Thread (queueProducer);
+        t. start ( );
     }
 
     /**
      * Processing the queue adding blocks to the chain.
      */
-    private void nudgeQueue() {
-        try {
-            if (blockReceivedQueue.isEmpty())
-                return;
+    private void produceQueue() {
 
-            logger.info("BlockQueue size: {}", blockReceivedQueue.size());
-            while (!blockReceivedQueue.isEmpty()) {
-                Block block = blockReceivedQueue.poll();
+        while (1==1){
 
-                logger.info("Processing block index: {}", block.getNumber());
+            try {
+                Block block = blockReceivedQueue.take();
+                logger.info("BlockQueue size: {}", blockReceivedQueue.size());
                 blockchain.tryToConnect(block);
+            } catch (Throwable e) {
+                logger.error("Error: {} ", e.getMessage());
             }
-        } catch (Throwable e) {
-            logger.error("Error: {} ", e.getMessage());
+
         }
     }
 
@@ -105,7 +98,9 @@ public class BlockQueue {
      */
     public void addBlocks(List<Block> blockList) {
 
-        blockReceivedQueue.addAll(blockList);
+        for (Block block : blockList)
+            blockReceivedQueue.offer(block);
+
         lastBlock = blockList.get(blockList.size() - 1);
 
         logger.info("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
@@ -254,4 +249,6 @@ public class BlockQueue {
         timer.cancel();
         timer.purge();
     }
+
+
 }

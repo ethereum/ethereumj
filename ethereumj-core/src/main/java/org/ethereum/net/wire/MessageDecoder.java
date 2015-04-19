@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.io.EOFException;
+import java.io.IOException;
 import java.util.List;
 
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
@@ -43,8 +45,16 @@ public class MessageDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
 
         if (in.readableBytes() == 0) return;
-        
-        Frame frame = frameCodec.readFrame(in);
+
+        Frame frame = null;
+        try {
+            frame = frameCodec.readFrame(in);
+        } catch (EOFException e) {
+            loggerWire.info("should read more");
+            return;
+        }
+
+
         if (frame == null) return;  // here we check if the buffer was fully read
                                     // the return means read more !!!
 
