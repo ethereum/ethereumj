@@ -36,7 +36,7 @@ public class Genesis extends Block {
 
     public final static BigInteger PREMINE_AMOUNT = BigInteger.valueOf(2).pow(200);
 
-
+    // Genesis reference:  https://github.com/ethereum/cpp-ethereum/blob/[#branch#]/libethereum/GenesisInfo.cpp
     static String GENESIS_JSON =
             "{" +
                     "'0000000000000000000000000000000000000001': { 'wei': '1' }" +
@@ -70,7 +70,7 @@ public class Genesis extends Block {
     public static byte[] LOG_BLOOM = zeroHash2048;
     public static byte[] DIFFICULTY = BigInteger.valueOf(2).pow(17).toByteArray();
     public static long NUMBER = 0;
-    public static long GAS_LIMIT = 1000000;
+    public static long GAS_LIMIT = 0x2FEFD8;
     public static long GAS_USED = 0;
     public static long TIMESTAMP = 0;
     public static byte[] EXTRA_DATA = new byte[0];
