@@ -79,6 +79,8 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
         if (handshake.isInitiator()) {
             if (frameCodec == null) {
                 byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
+                if (!buffer.isReadable(responsePacket.length))
+                    return;
                 buffer.readBytes(responsePacket);
 
                 this.handshake.handleAuthResponse(myKey, initiatePacket, responsePacket);
@@ -89,6 +91,8 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
             } else {
                 Frame frame = frameCodec.readFrame(buffer);
+                if (frame == null)
+                    return;
                 byte[] payload = ByteStreams.toByteArray(frame.getStream());
                 HelloMessage helloMessage = new HelloMessage(payload);
                 if (logger.isInfoEnabled())
@@ -102,6 +106,8 @@ public class RLPXHandler extends SimpleChannelInboundHandler {
                 throw new UnsupportedOperationException();
             } else {
                 Frame frame = frameCodec.readFrame(buffer);
+                if (frame == null)
+                    return;
                 byte[] payload = ByteStreams.toByteArray(frame.getStream());
                 HelloMessage helloMessage = new HelloMessage(payload);
                 System.out.println("hello message received");
