@@ -10,7 +10,6 @@ import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
 
@@ -23,6 +22,8 @@ public class FrameCodec {
     private final SHA3Digest egressMac;
     private final SHA3Digest ingressMac;
     private final byte[] mac;
+    boolean isHeadRead;
+    private int totalBodySize;
 
     public FrameCodec(EncryptionHandshake.Secrets secrets) {
         this.mac = secrets.mac;
@@ -118,30 +119,39 @@ public class FrameCodec {
     }
 
     public Frame readFrame(DataInput inp) throws IOException {
-        byte[] headBuffer = new byte[32];
-        inp.readFully(headBuffer);
+        if (!isHeadRead) {
+            byte[] headBuffer = new byte[32];
+            try {
+                inp.readFully(headBuffer);
+            } catch (IndexOutOfBoundsException e) {
+                return null;
+            }
 
-        System.out.println(Hex.toHexString(headBuffer));
+            // Header MAC
+            updateMac(ingressMac, headBuffer, 0, headBuffer, 16, false);
 
-        // Header MAC
-        updateMac(ingressMac, headBuffer, 0, headBuffer, 16, false);
+            dec.processBytes(headBuffer, 0, 16, headBuffer, 0);
+            totalBodySize = headBuffer[0];
+            totalBodySize = (totalBodySize << 8) + (headBuffer[1] & 0xFF);
+            totalBodySize = (totalBodySize << 8) + (headBuffer[2] & 0xFF);
+            isHeadRead = true;
+        }
 
-        dec.processBytes(headBuffer, 0, 16, headBuffer, 0);
-        int totalSize;
-        totalSize = headBuffer[0];
-        totalSize = (totalSize << 8) + (headBuffer[1] & 0xFF);
-        totalSize = (totalSize << 8) + (headBuffer[2] & 0xFF);
-        int padding = 16 - (totalSize % 16);
+        int padding = 16 - (totalBodySize % 16);
         if (padding == 16) padding = 0;
-        byte[] buffer = new byte[totalSize + padding];
-        inp.readFully(buffer);
+        byte[] buffer = new byte[totalBodySize + padding];
+        try {
+            inp.readFully(buffer);
+        } catch (IndexOutOfBoundsException e) {
+            return null;
+        }
         ingressMac.update(buffer, 0, buffer.length);
         dec.processBytes(buffer, 0, buffer.length, buffer, 0);
         int pos = 0;
         long type = RLP.decodeInt(buffer, pos); // FIXME long
         pos = RLP.getNextElementIndex(buffer, pos);
-        InputStream payload = new ByteArrayInputStream(buffer, pos, totalSize - pos);
-        int size = totalSize - pos;
+        InputStream payload = new ByteArrayInputStream(buffer, pos, totalBodySize - pos);
+        int size = totalBodySize - pos;
         byte[] macBuffer = new byte[ingressMac.getDigestSize()];
 
         // Frame MAC
@@ -150,6 +160,7 @@ public class FrameCodec {
         doSum(ingressMac, macBuffer); // fmacseed
         updateMac(ingressMac, macBuffer, 0, shouldMac, 0, false);
 
+        isHeadRead = false;
         return new Frame(type, size, payload);
     }
 
