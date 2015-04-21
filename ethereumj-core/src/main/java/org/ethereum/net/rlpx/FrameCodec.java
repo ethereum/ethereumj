@@ -123,7 +123,7 @@ public class FrameCodec {
             byte[] headBuffer = new byte[32];
             try {
                 inp.readFully(headBuffer);
-            } catch (IndexOutOfBoundsException e) {
+            } catch (EOFException e) {
                 return null;
             }
 
@@ -142,7 +142,7 @@ public class FrameCodec {
         byte[] buffer = new byte[totalBodySize + padding];
         try {
             inp.readFully(buffer);
-        } catch (IndexOutOfBoundsException e) {
+        } catch (EOFException e) {
             return null;
         }
         ingressMac.update(buffer, 0, buffer.length);
