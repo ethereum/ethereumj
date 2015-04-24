@@ -3,6 +3,9 @@ package org.ethereum.net.rlpx;
 import org.ethereum.crypto.ECKey;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
+import org.spongycastle.util.encoders.Hex;
+
+import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.merge;
 
@@ -75,5 +78,19 @@ public class AuthInitiateMessage {
         buffer[offset] = (byte)(isTokenUsed ? 0x01 : 0x00);
         offset += 1;
         return buffer;
+    }
+
+    @Override
+    public String toString() {
+
+        byte[] sigBytes = merge(BigIntegers.asUnsignedByteArray(signature.r),
+                BigIntegers.asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
+
+        return "AuthInitiateMessage{" +
+                "\n  sigBytes=" + Hex.toHexString(sigBytes) +
+                "\n  ephemeralPublicHash=" + Hex.toHexString(ephemeralPublicHash) +
+                "\n  publicKey=" + Hex.toHexString(publicKey.getEncoded(false)) +
+                "\n  nonce=" + Hex.toHexString(nonce) +
+                "\n}";
     }
 }
