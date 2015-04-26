@@ -33,6 +33,9 @@ import java.util.*;
 import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
+import static org.ethereum.core.ImportResult.EXIST;
+import static org.ethereum.core.ImportResult.NO_PARENT;
+import static org.ethereum.core.ImportResult.SUCCESS;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
@@ -170,7 +173,7 @@ public class BlockchainImpl implements Blockchain {
         return txsState.getRootHash();
     }
 
-    public void tryToConnect(Block block) {
+    public ImportResult tryToConnect(Block block) {
 
         recordBlock(block);
 
@@ -187,19 +190,22 @@ public class BlockchainImpl implements Blockchain {
                         block.getNumber());
 
             // retry of well known block
-            return;
+            return EXIST;
         }
 
         // The simple case got the block
         // to connect to the main chain
         if (bestBlock.isParentOf(block)) {
             add(block);
-            return;
+            return SUCCESS;
+        } else {
+            if (1 == 1) // FIXME: WORKARROUND
+                return NO_PARENT;
         }
 
         //TODO POC9 add rollback support
         if (1 == 1)
-            return; // todo: temporary cancel the rollback
+            return SUCCESS; // todo: temporary cancel the rollback
 
         // cut on the chain got lastBlock + 1 > n
         if (block.getNumber() > bestBlock.getNumber() + 1) {
@@ -209,7 +215,7 @@ public class BlockchainImpl implements Blockchain {
         if (!hasParentOnTheChain(block) && block.getNumber() > bestBlock.getNumber()) {
 
             if (1 == 1)
-                return; // todo: temporary cancel the rollback
+                return SUCCESS; // todo: temporary cancel the rollback
 
             logger.info("*** Blockchain will rollback and resynchronise now ");
 
@@ -227,13 +233,14 @@ public class BlockchainImpl implements Blockchain {
 
             blockQueue.clear();
             channelManager.ethSync();
-            return;
+            return SUCCESS;
         }
 
         // provisional, by the garbage will be
         // defined how to deal with it in the
         // future.
         garbage.add(block);
+        return SUCCESS;
     }
 
 

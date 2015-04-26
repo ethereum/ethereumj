@@ -13,11 +13,13 @@ import java.util.Arrays;
 public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
 
     private final byte[] data;
+    private int hashCode = 0;
 
     public ByteArrayWrapper(byte[] data) {
         if (data == null)
             throw new NullPointerException("Data must not be null");
         this.data = data;
+        this.hashCode = Arrays.hashCode(data);
     }
 
     public boolean equals(Object other) {
@@ -31,7 +33,7 @@ public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(data);
+        return hashCode;
     }
 
     @Override

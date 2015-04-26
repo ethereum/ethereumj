@@ -3,6 +3,7 @@ package org.ethereum.net.eth;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,18 @@ public class GetBlocksMessage extends EthMessage {
     public EthMessageCodes getCommand() {
         return EthMessageCodes.GET_BLOCKS;
     }
+
+    public String getDetailedString(){
+
+        StringBuilder stringBuilder = new StringBuilder();
+
+        for (byte[] hash : getBlockHashes()){
+            stringBuilder.append(Hex.toHexString(hash)).append("\n");
+        }
+
+        return "[" + this.getCommand().name() + "\n" + stringBuilder.toString() + "]";
+    }
+
 
     public String toString() {
         final String hashListShort = Utils.getHashListShort(getBlockHashes());

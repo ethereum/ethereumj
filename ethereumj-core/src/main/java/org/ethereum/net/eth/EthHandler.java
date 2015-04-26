@@ -3,6 +3,7 @@ package org.ethereum.net.eth;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
@@ -24,17 +25,11 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.Vector;
+import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
+import static org.ethereum.util.ByteUtil.wrap;
 
 /**
  * Process the messages between peers with 'eth' capability on the network.
@@ -81,7 +76,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     @Autowired
     private WorldManager worldManager;
-    private List<byte[]> sentHashes;
+    private List<ByteArrayWrapper> sentHashes;
     private Block lastBlock = Genesis.getInstance();
 
     public EthHandler() {
@@ -282,15 +277,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 lastBlock = blockList.get(blockList.size() - 1);
         }
 
-        // check if you got less blocks than you asked
-        if (blockList.size() < sentHashes.size()) {
-            for (int i = 0; i < blockList.size(); ++i)
-                sentHashes.remove(0);
-
-            logger.info("Got less blocks: [{}], return [{}] hashes to the queue",
-                    blockList.size(), sentHashes.size());
-            blockchain.getQueue().returnHashes(sentHashes);
+        // check if you got less blocks than you asked,
+        // and keep the missing to ask again
+        sentHashes.remove(wrap(Genesis.getInstance().getHash()));
+        for (Block block : blockList){
+            ByteArrayWrapper hash = wrap(block.getHash());
+            sentHashes.remove(hash);
         }
+        blockchain.getQueue().returnHashes(sentHashes);
 
         if (blockchain.getQueue().isHashesEmpty()) {
             logger.info(" The peer sync process fully complete");
@@ -404,13 +398,20 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         // save them locally in case the remote peer
         // will return less blocks than requested.
         List<byte[]> hashes = queue.getHashes();
-        this.sentHashes = hashes;
+        this.sentHashes = new ArrayList<>();
+        for (byte[] hash : hashes)
+            this.sentHashes.add(wrap(hash));
 
         if (hashes.isEmpty()) {
             return;
         }
 
+        Collections.shuffle(hashes);
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
+
+        if (logger.isDebugEnabled())
+            logger.debug(msg.getDetailedString());
+
         msgQueue.sendMessage(msg);
     }
 

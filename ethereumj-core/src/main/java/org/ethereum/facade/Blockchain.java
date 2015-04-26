@@ -16,7 +16,7 @@ public interface Blockchain {
 
     public void add(Block block);
 
-    public void tryToConnect(Block block);
+    public ImportResult tryToConnect(Block block);
 
     public void storeBlock(Block block, List<TransactionReceipt> receipts);
 
