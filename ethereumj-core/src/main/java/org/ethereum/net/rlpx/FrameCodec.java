@@ -139,26 +139,26 @@ public class FrameCodec {
 
         int padding = 16 - (totalBodySize % 16);
         if (padding == 16) padding = 0;
-        byte[] buffer = new byte[totalBodySize + padding];
+        int macSize = 16;
+        byte[] buffer = new byte[totalBodySize + padding + macSize];
         try {
             inp.readFully(buffer);
         } catch (EOFException e) {
             return null;
         }
-        ingressMac.update(buffer, 0, buffer.length);
-        dec.processBytes(buffer, 0, buffer.length, buffer, 0);
+        int frameSize = buffer.length - macSize;
+        ingressMac.update(buffer, 0, frameSize);
+        dec.processBytes(buffer, 0, frameSize, buffer, 0);
         int pos = 0;
         long type = RLP.decodeInt(buffer, pos); // FIXME long
         pos = RLP.getNextElementIndex(buffer, pos);
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalBodySize - pos);
         int size = totalBodySize - pos;
-        byte[] macBuffer = new byte[ingressMac.getDigestSize()];
+        byte[] macBuffer = new byte[macSize];
 
         // Frame MAC
-        byte[] shouldMac = new byte[ingressMac.getDigestSize()];
-        inp.readFully(shouldMac, 0, 16);
         doSum(ingressMac, macBuffer); // fmacseed
-        updateMac(ingressMac, macBuffer, 0, shouldMac, 0, false);
+        updateMac(ingressMac, macBuffer, 0, buffer, frameSize, false);
 
         isHeadRead = false;
         return new Frame(type, size, payload);
