@@ -1,5 +1,10 @@
 package org.ethereum.net.peerdiscovery;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.channel.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
@@ -8,23 +13,9 @@ import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.shh.ShhHandler;
-import org.ethereum.net.wire.MessageDecoder;
-import org.ethereum.net.wire.MessageEncoder;
-
-import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.DefaultMessageSizeEstimator;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.FixedRecvByteBufAllocator;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-
+import org.ethereum.net.wire.MessageCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
@@ -94,8 +85,7 @@ public class DiscoveryChannel {
 
             shhHandler.setMsgQueue(messageQueue);
 
-            final MessageDecoder decoder = ctx.getBean(MessageDecoder.class);
-            final MessageEncoder encoder = ctx.getBean(MessageEncoder.class);
+            final MessageCodec decoder = ctx.getBean(MessageCodec.class);
 
             b.handler(
 
@@ -107,8 +97,8 @@ public class DiscoveryChannel {
 
                             ch.pipeline().addLast("readTimeoutHandler",
                                     new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-                            ch.pipeline().addLast("out encoder", encoder);
-                            ch.pipeline().addLast("in  encoder", decoder);
+                            ch.pipeline().addLast("initiator", decoder.getInitiator());
+                            ch.pipeline().addLast("messageCodec", decoder);
                             ch.pipeline().addLast(Capability.P2P, p2pHandler);
                             ch.pipeline().addLast(Capability.ETH, ethHandler);
                             ch.pipeline().addLast(Capability.SHH, shhHandler);

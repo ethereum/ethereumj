@@ -1,20 +1,15 @@
 package org.ethereum.net.server;
 
-import org.ethereum.facade.Blockchain;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.Capability;
-
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.FixedRecvByteBufAllocator;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.timeout.ReadTimeoutHandler;
-
+import org.ethereum.facade.Blockchain;
+import org.ethereum.manager.WorldManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -53,6 +48,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         this.remoteId = remoteId;
     }
 
+    @Override
     public void initChannel(NioSocketChannel ch) throws Exception {
 
         logger.info("Open connection, channel: {}", ch.toString());
@@ -69,7 +65,8 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 //        ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());
 //        ch.pipeline().addLast(Capability.ETH, channel.getEthHandler());
 //        ch.pipeline().addLast(Capability.SHH, channel.getShhHandler());
-        ch.pipeline().addLast("rlpx", channel.getRlpxHandler());
+        ch.pipeline().addLast("initiator", channel.getMessageCodec().getInitiator());
+        ch.pipeline().addLast("messageCodec", channel.getMessageCodec());
 
         // limit the size of receiving buffer to 1024
         ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(16_777_216));
