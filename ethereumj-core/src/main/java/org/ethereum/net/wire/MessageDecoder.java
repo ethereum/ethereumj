@@ -51,6 +51,7 @@ public class MessageDecoder extends ByteToMessageDecoder {
             frame = frameCodec.readFrame(in);
         } catch (EOFException e) {
             loggerWire.info("should read more");
+            in.resetReaderIndex();
             return;
         }
 
