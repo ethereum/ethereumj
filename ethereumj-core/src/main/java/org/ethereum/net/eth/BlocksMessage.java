@@ -32,7 +32,7 @@ public class BlocksMessage extends EthMessage {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blocks = new ArrayList<>();
-        for (int i = 1; i < paramsList.size(); ++i) {
+        for (int i = 0; i < paramsList.size(); ++i) {
             RLPList rlpData = ((RLPList) paramsList.get(i));
             Block blockData = new Block(rlpData.getRLPData());
             blocks.add(blockData);
