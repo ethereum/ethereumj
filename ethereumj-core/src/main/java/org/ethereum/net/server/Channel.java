@@ -10,10 +10,8 @@ import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
-import org.ethereum.net.rlpx.RLPXHandler;
 import org.ethereum.net.shh.ShhHandler;
-import org.ethereum.net.wire.MessageDecoder;
-import org.ethereum.net.wire.MessageEncoder;
+import org.ethereum.net.wire.MessageCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,14 +50,7 @@ public class Channel {
     ShhHandler shhHandler;
 
     @Autowired
-    RLPXHandler rlpxHandler;
-
-
-    @Autowired
-    MessageDecoder messageDecoder;
-
-    @Autowired
-    MessageEncoder messageEncoder;
+    MessageCodec messageCodec;
 
     InetSocketAddress inetSocketAddress;
 
@@ -72,8 +63,8 @@ public class Channel {
 
     public void init(String remoteId) {
 
-        rlpxHandler.setRemoteId(remoteId, this);
-        rlpxHandler.setMsgQueue(msgQueue);
+        messageCodec.setRemoteId(remoteId, this);
+        //messageCodec.setMsgQueue(msgQueue);
 
         p2pHandler.setMsgQueue(msgQueue);
         ethHandler.setMsgQueue(msgQueue);
@@ -83,13 +74,6 @@ public class Channel {
     }
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec, HelloMessage helloRemote, byte[] nodeId) throws IOException, InterruptedException {
-
-
-        messageDecoder.setFrameCodec(frameCodec);
-        messageEncoder.setFrameCodec(frameCodec);
-
-        ctx.pipeline().addLast("in  encoder", messageDecoder);
-        ctx.pipeline().addLast("out encoder", messageEncoder);
         ctx.pipeline().addLast(Capability.P2P, p2pHandler);
 
 
@@ -129,16 +113,8 @@ public class Channel {
         return shhHandler;
     }
 
-    public RLPXHandler getRlpxHandler() {
-        return rlpxHandler;
-    }
-
-    public MessageDecoder getMessageDecoder() {
-        return messageDecoder;
-    }
-
-    public MessageEncoder getMessageEncoder() {
-        return messageEncoder;
+    public MessageCodec getMessageCodec() {
+        return messageCodec;
     }
 
     public void sendTransaction(Transaction tx) {
