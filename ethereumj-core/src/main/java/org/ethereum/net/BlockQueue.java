@@ -18,6 +18,7 @@ import java.util.concurrent.PriorityBlockingQueue;
 import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.ImportResult.NO_PARENT;
+import static org.ethereum.core.ImportResult.SUCCESS;
 
 /**
  * The processing queue for blocks to be validated and added to the blockchain.
@@ -91,6 +92,10 @@ public class BlockQueue {
                     blockReceivedQueue.add(block);
                     sleep(2000);
                 }
+
+
+                if (importResult == SUCCESS)
+                    logger.info("Success importing: block number: {}", block.getNumber());
 
             } catch (Throwable e) {
                 logger.error("Error: {} ", e.getMessage());
