@@ -154,7 +154,7 @@ public class FrameCodec {
         pos = RLP.getNextElementIndex(buffer, pos);
         InputStream payload = new ByteArrayInputStream(buffer, pos, totalBodySize - pos);
         int size = totalBodySize - pos;
-        byte[] macBuffer = new byte[macSize];
+        byte[] macBuffer = new byte[ingressMac.getDigestSize()];
 
         // Frame MAC
         doSum(ingressMac, macBuffer); // fmacseed
