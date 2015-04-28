@@ -13,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
+import org.springframework.orm.jpa.JpaTransactionManager;
 
 import java.sql.SQLException;
 
@@ -49,16 +50,27 @@ public class TestContext {
 
         prop.put("hibernate.format_sql", "true");
 
-// todo: useful but annoying consider define by system.properties
+        // todo: useful but annoying consider define by system.properties
 //        prop.put("hibernate.show_sql", "true");
         prop.put("hibernate.dialect",
                 "org.hibernate.dialect.HSQLDialect");
+
+        prop.put("hibernate.connection.autocommit",
+                "true");
+
         return prop;
     }
 
 
+/*
+    <bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+        <property name="entityManagerFactory" ref="entityManagerFactory" />
+    </bean>
+*/
+
     @Bean
     public DataSourceTransactionManager transactionManager() {
+
         DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
         dataSourceTransactionManager.setDataSource(dataSource());
 
@@ -83,7 +95,6 @@ public class TestContext {
         ds.setDriverClassName("org.hsqldb.jdbcDriver");
         ds.setUrl(url);
         ds.setUsername("sa");
-
 
         return ds;
     }

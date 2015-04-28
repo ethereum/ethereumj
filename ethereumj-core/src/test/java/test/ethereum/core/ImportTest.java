@@ -5,19 +5,24 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Genesis;
+import org.ethereum.db.BlockStore;
+import org.ethereum.db.BlockStoreImpl;
 import org.ethereum.manager.WorldManager;
-import org.junit.Ignore;
+import org.hibernate.SessionFactory;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import test.ethereum.TestContext;
 
 import java.io.File;
@@ -41,7 +46,15 @@ public class ImportTest {
     static class ContextConfiguration extends TestContext {
         static {
             SystemProperties.CONFIG.setDataBaseDir("test_db/" + ImportTest.class);
+            SystemProperties.CONFIG.setDatabaseReset(true);
         }
+
+        @Bean
+        @Transactional(propagation = Propagation.SUPPORTS)
+        public BlockStore blockStore(SessionFactory sessionFactory){
+            return new BlockStoreImpl(sessionFactory);
+        }
+
     }
 
     @Autowired
