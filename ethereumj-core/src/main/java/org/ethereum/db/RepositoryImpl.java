@@ -7,7 +7,8 @@ import org.ethereum.datasource.HashMapDB;
 import org.ethereum.facade.Repository;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
-import org.ethereum.trie.FatTrie;
+
+import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.vm.DataWord;
 
@@ -75,13 +76,13 @@ public class RepositoryImpl implements Repository {
 
         detailsDB = new DatabaseImpl(detailsDS);
         stateDB = new DatabaseImpl(stateDS);
-        worldState = new FatTrie(new HashMapDB(), stateDB.getDb());
+        worldState = new SecureTrie(stateDB.getDb());
     }
 
     public RepositoryImpl(String detailsDbName, String stateDbName) {
         detailsDB = new DatabaseImpl(detailsDbName);
         stateDB = new DatabaseImpl(stateDbName);
-        worldState = new FatTrie(new HashMapDB(), stateDB.getDb());
+        worldState = new SecureTrie(stateDB.getDb());
     }
 
 
@@ -94,7 +95,7 @@ public class RepositoryImpl implements Repository {
 
         stateDS.init();
         stateDB = new DatabaseImpl(stateDS);
-        worldState = new FatTrie(null, stateDB.getDb());
+        worldState = new SecureTrie(stateDB.getDb());
     }
 
     @Override
