@@ -113,7 +113,7 @@ dependencies {
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
-    compile "org.hsqldb:hsqldb:1.8.0.10" // best performance - do not upgrade!
+    compile "org.hsqldb:hsqldb:2.3.2"
     compile "org.hibernate:hibernate-core:${hibernateVersion}"
     compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
     compile "commons-dbcp:commons-dbcp:1.4"
