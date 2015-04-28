@@ -42,7 +42,7 @@ public class BlockQueue {
     /**
      * Queue with blocks to be validated and added to the blockchain
      */
-    private BlockingQueue<Block> blockReceivedQueue = new PriorityBlockingQueue<>(1000, new BlockByNumberComparator());
+    private PriorityBlockingQueue<Block> blockReceivedQueue = new PriorityBlockingQueue<>(1000, new BlockByNumberComparator());
 
     /**
      * Highest known total difficulty, representing the heaviest chain on the network
@@ -117,7 +117,7 @@ public class BlockQueue {
     public void addBlocks(List<Block> blockList) {
 
         for (Block block : blockList)
-            blockReceivedQueue.offer(block);
+            blockReceivedQueue.put(block);
 
         lastBlock = blockList.get(blockList.size() - 1);
 
