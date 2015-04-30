@@ -3,6 +3,7 @@ package org.ethereum.core;
 import org.ethereum.config.Constants;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -177,8 +178,8 @@ public class BlockchainImpl implements Blockchain {
 
         recordBlock(block);
 
-        if (logger.isDebugEnabled())
-            logger.debug("Try connect block hash: {}, number: {}",
+        if (logger.isInfoEnabled())
+            logger.info("Try connect block hash: {}, number: {}",
                     Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
@@ -414,10 +415,12 @@ public class BlockchainImpl implements Blockchain {
             String trieHash = Hex.toHexString( block.getTxTrieRoot() );
             String trieListHash = Hex.toHexString(calcTxTrie(block.getTransactionsList()));
 
+/* FIXME: temporary comment out tx.trie validation
             if( !trieHash.equals(trieListHash) ) {
               logger.error("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
               return false;
             }
+*/
 
             String unclesHash = Hex.toHexString(block.getHeader().getUnclesHash());
             String unclesListHash = Hex.toHexString( HashUtil.sha3(block.getHeader().getUnclesEncoded( block.getUncleList() ) ) );
@@ -469,6 +472,7 @@ public class BlockchainImpl implements Blockchain {
 
     private List<TransactionReceipt> applyBlock(Block block) {
 
+        logger.info("applyBlock: block: [{}] tx.list: [{}]", block.getNumber(), block.getTransactionsList().size());
         long saveTime = System.nanoTime();
         int i = 1;
         long totalGasUsed = 0;

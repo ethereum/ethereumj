@@ -125,6 +125,7 @@ public class TransactionExecutor {
             return;
         }
 
+/* FIXME: remove gas usage validation, find out the correct way
         BigInteger blockGasUsed = toBI(currentBlock.getGasUsed());
         BigInteger blockGasLimit = toBI(currentBlock.getGasLimit());
         if (isNotCovers(blockGasLimit, sum(blockGasUsed, txGasLimit))) {
@@ -133,6 +134,7 @@ public class TransactionExecutor {
             this.receipt = receipt;
             return;
         }
+*/
 
         // GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
         BigInteger gasPrice = toBI(tx.getGasPrice());
@@ -259,7 +261,7 @@ public class TransactionExecutor {
                 program.saveProgramTraceToFile(txHash);
 
                 result = program.getResult();
-                applyProgramResult(result, gasDebit, gasPrice, trackTx,
+                gasUsed = applyProgramResult(result, gasDebit, gasPrice, trackTx,
                         senderAddress, receiverAddress, coinbase, isContractCreation);
 
                 List<LogInfo> logs = result.getLogInfoList();
@@ -306,9 +308,11 @@ public class TransactionExecutor {
      * After any contract code finish the run the certain result should take place,
      * according to the given circumstances.
      */
-    private void applyProgramResult(ProgramResult result, BigInteger gasDebit,
+    private long applyProgramResult(ProgramResult result, BigInteger gasDebit,
                                     BigInteger gasPrice, Repository repository, byte[] senderAddress,
                                     byte[] contractAddress, byte[] coinbase, boolean initResults) {
+
+        long gasUsed = result.getGasUsed();
 
         if (result.getException() != null) {
             stateLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
@@ -367,8 +371,10 @@ public class TransactionExecutor {
                                     Hex.toHexString(contractAddress),
                                     Hex.toHexString(bodyCode));
 
-                BigInteger storageCost = gasPrice.multiply(BigInteger.valueOf(bodyCode.length * GasCost
-                        .CREATE_DATA));
+                BigInteger returnDataGasValue = BigInteger.valueOf(bodyCode.length * GasCost.CREATE_DATA);
+                gasUsed += returnDataGasValue.longValue();
+
+                BigInteger storageCost = gasPrice.multiply(returnDataGasValue);
                 BigInteger balance = repository.getBalance(senderAddress);
 
                 // check if can be charged for the contract data save
@@ -382,11 +388,12 @@ public class TransactionExecutor {
         }
 
         // delete the marked to die accounts
-        if (result.getDeleteAccounts() == null) return;
-        for (DataWord address : result.getDeleteAccounts()) {
-            repository.delete(address.getLast20Bytes());
-        }
+        if (result.getDeleteAccounts() != null)
+            for (DataWord address : result.getDeleteAccounts()) {
+                repository.delete(address.getLast20Bytes());
+            }
 
+        return gasUsed;
     }
 
 

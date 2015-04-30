@@ -7,6 +7,7 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Genesis;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreImpl;
+import org.ethereum.db.InMemoryBlockStore;
 import org.ethereum.manager.WorldManager;
 import org.hibernate.SessionFactory;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class ImportTest {
         @Bean
         @Transactional(propagation = Propagation.SUPPORTS)
         public BlockStore blockStore(SessionFactory sessionFactory){
-            return new BlockStoreImpl(sessionFactory);
+            return new InMemoryBlockStore();
         }
 
     }
@@ -63,6 +64,8 @@ public class ImportTest {
 
     @Test
     public void testScenario1() throws URISyntaxException, IOException {
+
+        logger.error("Started");
 
         BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
 

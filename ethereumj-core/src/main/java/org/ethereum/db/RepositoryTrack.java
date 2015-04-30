@@ -233,10 +233,10 @@ public class RepositoryTrack implements Repository {
 
     @Override
     public void commit() {
-        logger.debug("commit changes");
         repository.updateBatch(cacheAccounts, cacheDetails);
         cacheAccounts.clear();
         cacheDetails.clear();
+        logger.debug("committed changes");
     }
 
 
