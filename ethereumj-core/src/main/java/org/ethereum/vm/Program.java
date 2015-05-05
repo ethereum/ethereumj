@@ -732,10 +732,14 @@ public class Program {
         if (logger.isTraceEnabled() || listener != null) {
 
             StringBuilder stackData = new StringBuilder();
-            for (int i = 0; i < stack.size(); ++i) {
-                stackData.append(" ").append(stack.get(i));
-                if (i < stack.size() - 1) stackData.append("\n");
-            }
+            if (stack.size() > 8)
+                stackData.append("...Stack data folded...").append(" (").append(stack.size()).append(") elementts");
+            else
+                for (int i = 0; i < stack.size(); ++i) {
+                    stackData.append(" ").append(stack.get(i));
+                    if (i < stack.size() - 1) stackData.append("\n");
+                }
+
             if (stackData.length() > 0) stackData.insert(0, "\n");
 
             ContractDetails contractDetails = this.result.getRepository().
@@ -753,20 +757,26 @@ public class Program {
 
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();
-            for (int i = 0; memory != null && i < memory.limit(); ++i) {
+            if (memory != null && memory.limit() > 32)
+                memoryData.append("... Memory Folded.... ")
+                        .append("(")
+                        .append(memory.limit())
+                        .append(") bytes");
+            else
+                for (int i = 0; memory != null && i < memory.limit(); ++i) {
 
-                byte value = memory.get(i);
-                oneLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
+                    byte value = memory.get(i);
+                    oneLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
-                if ((i + 1) % 16 == 0) {
-                    String tmp = format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
-                            Integer.toString(i, 16)).replace(" ", "0");
-                    memoryData.append("").append(tmp).append(" ");
-                    memoryData.append(oneLine);
-                    if (i < memory.limit()) memoryData.append("\n");
-                    oneLine.setLength(0);
+                    if ((i + 1) % 16 == 0) {
+                        String tmp = format("[%4s]-[%4s]", Integer.toString(i - 15, 16),
+                                Integer.toString(i, 16)).replace(" ", "0");
+                        memoryData.append("").append(tmp).append(" ");
+                        memoryData.append(oneLine);
+                        if (i < memory.limit()) memoryData.append("\n");
+                        oneLine.setLength(0);
+                    }
                 }
-            }
             if (memoryData.length() > 0) memoryData.insert(0, "\n");
 
             StringBuilder opsString = new StringBuilder();
