@@ -27,8 +27,8 @@ public class GitHubStateTest {
     @Ignore
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "mload32bitBound_Msize");
+        String json = JSONReader.loadJSONFromCommit("StateTests/stInitCodeTest.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, "TransactionCreateAutoSuicideContract");
     }
 
     //@Ignore
@@ -168,8 +168,8 @@ public class GitHubStateTest {
         List<String> fileNames = getFileNamesForTreeSha(sha);
         List<String> includedFiles =
                 Arrays.asList(
-                        "st201504081841JAVA.json", 
-                        "st201504081842JAVA.json", 
+                        "st201504081841JAVA.json",
+                        "st201504081842JAVA.json",
                         "st201504081843JAVA.json"
                 );
 

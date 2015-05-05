@@ -98,7 +98,7 @@ public class BlockQueue {
                     logger.info("Success importing: block number: {}", block.getNumber());
 
             } catch (Throwable e) {
-                logger.error("Error: {} ", e.getMessage());
+                logger.error("Error: {} ", e);
             }
 
         }

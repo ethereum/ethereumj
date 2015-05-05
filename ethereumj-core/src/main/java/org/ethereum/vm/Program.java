@@ -300,26 +300,19 @@ public class Program {
     }
 
 
-    public void suicide(DataWord obtainer) {
+    public void suicide(DataWord obtainerDW) {
 
-        // 0) detect if this is a coinbase suicide
-        BigInteger gasDebit = invokeData.getGas().value().multiply(invokeData.getMinGasPrice().value());
-        boolean coinbaseSuicide = getCoinbase().equals(this.getOwnerAddress());
-        DataWord suicideBalance = new DataWord(getBalance(this.getOwnerAddress()).value().subtract(gasDebit).toByteArray());
+        byte[] owner = getOwnerAddress().getLast20Bytes();
+        byte[] obtainer = obtainerDW.getLast20Bytes();
+        BigInteger balance = result.getRepository().getBalance(owner);
 
-        DataWord balance = coinbaseSuicide ? suicideBalance : getBalance(this.getOwnerAddress());
-        // 1) pass full endowment to the obtainer
         if (logger.isInfoEnabled())
             logger.info("Transfer to: [{}] heritage: [{}]",
-                    Hex.toHexString(obtainer.getLast20Bytes()),
-                    balance.bigIntValue());
+                    Hex.toHexString(obtainer),
+                    balance);
 
-        this.result.getRepository().addBalance(obtainer.getLast20Bytes(), balance.value());
-        this.result.getRepository().addBalance(this.getOwnerAddress().getLast20Bytes(), balance.value().negate());
-
-        // 2) mark the account as for delete
+        transfer(result.getRepository(), owner, obtainer, balance);
         result.addDeleteAccount(this.getOwnerAddress());
-
     }
 
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
@@ -580,6 +573,7 @@ public class Program {
     }
 
     public void futureRefundGas(long gasValue) {
+        logger.info("Future refund added: [{}]", gasValue);
         result.futureRefundGas(gasValue);
     }
 

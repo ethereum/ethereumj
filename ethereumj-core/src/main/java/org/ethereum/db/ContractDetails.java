@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.ByteUtil;
@@ -33,7 +34,7 @@ public class ContractDetails {
     private boolean dirty = false;
     private boolean deleted = false;
 
-    private Trie storageTrie = new TrieImpl(null);
+    private Trie storageTrie = new SecureTrie(null);
 
     public ContractDetails() {
     }
@@ -96,7 +97,7 @@ public class ContractDetails {
 
     public byte[] getStorageHash() {
 
-        storageTrie = new TrieImpl(null);
+        storageTrie = new SecureTrie(null);
         // calc the trie for root hash
         for (int i = 0; i < storageKeys.size(); ++i) {
             storageTrie.update(storageKeys.get(i).getData(), RLP

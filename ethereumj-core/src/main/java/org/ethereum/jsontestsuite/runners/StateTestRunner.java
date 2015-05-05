@@ -51,10 +51,13 @@ public class StateTestRunner {
         Repository track = repository.startTracking();
         TransactionExecutor executor =
                 new TransactionExecutor(transaction, env.getCurrentCoinbase(), track, new BlockStoreDummy(),
-                        invokeFactory, blockchain.getBestBlock(), new EthereumListenerAdapter());
+                        invokeFactory, blockchain.getBestBlock());
 
         try{
-            executor.execute();
+            executor.init();
+            executor.execute2();
+            executor.go();
+            executor.finalization();
         } catch (StackOverflowError soe){
             logger.error(" !!! StackOverflowError: update your java run command with -Xss32M !!!");
             System.exit(-1);
@@ -64,7 +67,6 @@ public class StateTestRunner {
         track.commit();
         repository.flush();
 
-        logger.info("--------- POST Validation---------");
         List<LogInfo> origLogs = executor.getResult().getLogInfoList();
         List<LogInfo> postLogs = LogBuilder.build(stateTestCase2.getLogs());
 
@@ -73,6 +75,7 @@ public class StateTestRunner {
         Repository postRepository = RepositoryBuilder.build(stateTestCase2.getPost());
         List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
 
+        logger.info("--------- POST Validation---------");
         List<String> outputResults =
                 OutputValidator.valid(Hex.toHexString(executor.getResult().getHReturn()), stateTestCase2.getOut());
 

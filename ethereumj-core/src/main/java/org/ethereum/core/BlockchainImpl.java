@@ -483,13 +483,17 @@ public class BlockchainImpl implements Blockchain {
 
             TransactionExecutor executor = new TransactionExecutor(tx, block.getCoinbase(),
                     track, blockStore,
-                    programInvokeFactory, block, listener);
-            executor.execute();
+                    programInvokeFactory, block, listener, totalGasUsed);
 
-            TransactionReceipt receipt = executor.getReceipt();
-            totalGasUsed += receipt.getCumulativeGasLong();
+            executor.init();
+            executor.execute2();
+            executor.go();
+            executor.finalization();
+
+            totalGasUsed += executor.getGasUsed();
 
             track.commit();
+            TransactionReceipt receipt = new TransactionReceipt();
             receipt.setCumulativeGas(totalGasUsed);
             receipt.setPostTxState(repository.getRoot());
             receipt.setTransaction(tx);
@@ -718,5 +722,6 @@ public class BlockchainImpl implements Blockchain {
     public void commitTracking() {
         track.commit();
     }
+
 
 }
