@@ -53,6 +53,8 @@ public class DataWord implements Comparable<DataWord> {
     public DataWord(byte[] data) {
         if (data == null)
             this.data = ByteUtil.EMPTY_BYTE_ARRAY;
+        else if (data.length == 32)
+            this.data = data;
         else if (data.length <= 32)
             System.arraycopy(data, 0, this.data, 32 - data.length, data.length);
         else
