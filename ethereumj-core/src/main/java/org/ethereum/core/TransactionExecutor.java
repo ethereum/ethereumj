@@ -182,7 +182,7 @@ public class TransactionExecutor {
     private void create() {
 
         byte[] newContractAddress = tx.getContractAddress();
-        if (!(tx.getData().length == 0)){
+        if (tx.getData() != null && !(tx.getData().length == 0)){
 
             ProgramInvoke programInvoke =
                     programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
