@@ -81,7 +81,6 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
-    @Ignore // todo: to run this test with: [ -Xms2g -Xmx2g  -XX:NewSize=2000m -XX:MaxNewSize=2000m ]
     @Test
     public void stMemoryTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
