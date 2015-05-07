@@ -165,7 +165,7 @@ public class VMCustomTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
     @Test // CALLDATACOPY OP
@@ -182,7 +182,7 @@ public class VMCustomTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
 
@@ -200,7 +200,7 @@ public class VMCustomTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
 
@@ -219,7 +219,7 @@ public class VMCustomTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
     @Test // CALLDATACOPY OP
@@ -237,7 +237,7 @@ public class VMCustomTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
 

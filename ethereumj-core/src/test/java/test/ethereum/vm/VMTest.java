@@ -1216,7 +1216,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(expected, Hex.toHexString(program.getMemory()));
     }
 
 
@@ -1357,7 +1357,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(expected, Hex.toHexString(program.getMemory()));
     }
 
     @Test // MSTORE OP
@@ -1378,7 +1378,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(expected, Hex.toHexString(program.getMemory()));
     }
 
     @Test // MSTORE OP
@@ -1398,7 +1398,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(expected, Hex.toHexString(program.getMemory()));
     }
 
     @Test(expected = StackTooSmallException.class) // MSTORE OP
@@ -1425,7 +1425,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()));
         assertEquals(s_expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
@@ -1442,7 +1442,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()).toUpperCase());
         assertEquals(s_expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
@@ -1459,7 +1459,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()));
         assertEquals(s_expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
@@ -1478,7 +1478,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()));
         assertEquals(s_expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
@@ -1497,7 +1497,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()));
         assertEquals(s_expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
@@ -1524,7 +1524,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()));
     }
 
 
@@ -1539,7 +1539,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()));
     }
 
     @Test // MSTORE8 OP
@@ -1554,7 +1554,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected, Hex.toHexString(program.getMemory().array()));
+        assertEquals(m_expected, Hex.toHexString(program.getMemory()));
     }
 
     @Test(expected = StackTooSmallException.class) // MSTORE8 OP mal
@@ -2516,7 +2516,7 @@ public class VMTest {
         vm.step(program);
 
         long gas = program.getResult().getGasUsed();
-        assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected_1, Hex.toHexString(program.getMemory()).toUpperCase());
         assertEquals(6, gas);
     }
 
@@ -2538,7 +2538,7 @@ public class VMTest {
         vm.step(program);
 
         long gas = program.getResult().getGasUsed();
-        assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected_1, Hex.toHexString(program.getMemory()).toUpperCase());
         assertEquals(10, gas);
     }
 
@@ -2638,7 +2638,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected_1, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
     @Test // EXTCODECOPY OP
@@ -2658,7 +2658,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected_1, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
     @Test // EXTCODECOPY OP
@@ -2678,7 +2678,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        assertEquals(m_expected_1, Hex.toHexString(program.getMemory().array()).toUpperCase());
+        assertEquals(m_expected_1, Hex.toHexString(program.getMemory()).toUpperCase());
     }
 
     @Test // EXTCODECOPY OP

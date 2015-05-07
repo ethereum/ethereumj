@@ -66,9 +66,8 @@ public class Op {
         }
     }
 
-    public void saveMemory(ByteBuffer memory) {
-        if (memory != null)
-            this.memory = Arrays.copyOf(memory.array(), memory.array().length);
+    public void saveMemory(byte[] memory) {
+        this.memory = memory;
     }
 
     public void saveStack(Stack<DataWord> stack) {

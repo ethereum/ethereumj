@@ -3,7 +3,6 @@ package org.ethereum.vm;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.facade.Repository;
-import org.ethereum.util.BIUtil;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
@@ -53,7 +52,7 @@ public class Program {
     private ProgramListener listener;
 
     Stack<DataWord> stack = new Stack<>();
-    ByteBuffer memory = null;
+    MemoryBuffer memory = new MemoryBuffer();
     DataWord programAddress;
 
     ProgramResult result = new ProgramResult();
@@ -163,8 +162,8 @@ public class Program {
         stopped = true;
     }
 
-    public void setHReturn(ByteBuffer buff) {
-        result.setHReturn(buff.array());
+    public void setHReturn(byte[] buff) {
+        result.setHReturn(buff);
     }
 
     public void step() {
@@ -208,15 +207,15 @@ public class Program {
     }
 
     public int getMemSize() {
-        return memory != null ? memory.limit() : 0;
+        return memory.getSize();
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
-        memorySave(addrB.intValue(), value.getData());
+        memory.memorySave(addrB.intValue(), value.getData());
     }
 
     public void memorySave(int addr, byte[] value) {
-        memorySave(addr, value.length, value);
+        memory.memorySave(addr, value);
     }
 
     public void memoryExpand(DataWord outDataOffs, DataWord outDataSize) {
@@ -224,10 +223,7 @@ public class Program {
         if (outDataSize.isZero())
             return ;
 
-        int maxAddress = outDataOffs.intValue() + outDataSize.intValue();
-        if (getMemSize() < maxAddress) {
-            memorySave(maxAddress, new byte[]{0});
-        }
+        memory.memoryExpand(outDataOffs.intValue(), outDataSize.intValue());
     }
 
     /**
@@ -238,47 +234,20 @@ public class Program {
      * @param value the data to write to memory
      */
     public void memorySave(int addr, int allocSize, byte[] value) {
-
-        allocateMemory(addr, allocSize);
-        System.arraycopy(value, 0, memory.array(), addr, value.length);
+        memory.memorySave(addr, allocSize, value);
     }
 
     public DataWord memoryLoad(DataWord addr) {
-        return memoryLoad(addr.intValue());
+        return memory.memoryLoad(addr.intValue());
     }
 
     public DataWord memoryLoad(int address) {
 
-        allocateMemory(address, DataWord.ZERO.getData().length);
-
-        DataWord newMem = new DataWord();
-        System.arraycopy(memory.array(), address, newMem.getData(), 0, newMem.getData().length);
-
-        return newMem;
+        return memory.memoryLoad(address);
     }
 
-    public ByteBuffer memoryChunk(DataWord offsetData, DataWord sizeData) {
-        return memoryChunk(offsetData.intValue(), sizeData.intValue());
-    }
-
-    /**
-     * Returns a piece of memory from a given offset and specified size
-     * If the offset + size exceed the current memory-size,
-     * the remainder will be filled with empty bytes.
-     *
-     * @param offset byte address in memory
-     * @param size the amount of bytes to return
-     * @return ByteBuffer containing the chunk of memory data
-     */
-    public ByteBuffer memoryChunk(int offset, int size) {
-
-        allocateMemory(offset, size);
-        byte[] chunk;
-        if (memory != null && size != 0)
-            chunk = Arrays.copyOfRange(memory.array(), offset, offset + size);
-        else
-            chunk = new byte[size];
-        return ByteBuffer.wrap(chunk);
+    public byte[] memoryChunk(int offset, int size) {
+        return memory.memoryChunk(offset, size);
     }
 
     /**
@@ -289,14 +258,7 @@ public class Program {
      * @param size the number of bytes to allocate
      */
     public void allocateMemory(int offset, int size) {
-
-        int memSize = memory != null ? memory.limit() : 0;
-        double newMemSize = Math.max(memSize, size != 0 ?
-                Math.ceil((double) (offset + size) / 32) * 32 : 0);
-        ByteBuffer tmpMem = ByteBuffer.allocate((int) newMemSize);
-        if (memory != null)
-            tmpMem.put(memory.array(), 0, memory.limit());
-        memory = tmpMem;
+        memory.memoryExpand(offset, size);
     }
 
 
@@ -331,7 +293,7 @@ public class Program {
         }
 
         // [1] FETCH THE CODE FROM THE MEMORY
-        byte[] programCode = memoryChunk(memStart, memSize).array();
+        byte[] programCode = memoryChunk(memStart.intValue(), memSize.intValue());
 
         if (logger.isInfoEnabled())
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
@@ -452,7 +414,7 @@ public class Program {
             return;
         }
 
-        byte[] data = memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
+        byte[] data = memoryChunk(msg.getInDataOffs().intValue(), msg.getInDataSize().intValue());
 
         // FETCH THE SAVED STORAGE
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
@@ -703,28 +665,7 @@ public class Program {
     }
 
     public String memoryToString() {
-        StringBuilder memoryData = new StringBuilder();
-        StringBuilder firstLine = new StringBuilder();
-        StringBuilder secondLine = new StringBuilder();
-        for (int i = 0; memory != null && i < memory.limit(); ++i) {
-
-            byte value = memory.get(i);
-            // Check if value is ASCII
-            String character = ((byte) 0x20 <= value && value <= (byte) 0x7e) ? new String(new byte[]{value}) : "?";
-            firstLine.append(character).append("");
-            secondLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
-
-            if ((i + 1) % 8 == 0) {
-                String tmp = format("%4s", Integer.toString(i - 7, 16)).replace(" ", "0");
-                memoryData.append("").append(tmp).append(" ");
-                memoryData.append(firstLine).append(" ");
-                memoryData.append(secondLine);
-                if (i + 1 < memory.limit()) memoryData.append("\n");
-                firstLine.setLength(0);
-                secondLine.setLength(0);
-            }
-        }
-        return memoryData.toString();
+        return memory.memoryToString();
     }
 
     public void fullTrace() {
@@ -757,15 +698,15 @@ public class Program {
 
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();
-            if (memory != null && memory.limit() > 32)
+            if (memory.getSize() > 32)
                 memoryData.append("... Memory Folded.... ")
                         .append("(")
-                        .append(memory.limit())
+                        .append(memory.getSize())
                         .append(") bytes");
             else
-                for (int i = 0; memory != null && i < memory.limit(); ++i) {
+                for (int i = 0; i < memory.getSize(); ++i) {
 
-                    byte value = memory.get(i);
+                    byte value = memory.getByte(i);
                     oneLine.append(ByteUtil.oneByteToHexString(value)).append(" ");
 
                     if ((i + 1) % 16 == 0) {
@@ -773,7 +714,7 @@ public class Program {
                                 Integer.toString(i, 16)).replace(" ", "0");
                         memoryData.append("").append(tmp).append(" ");
                         memoryData.append(oneLine);
-                        if (i < memory.limit()) memoryData.append("\n");
+                        if (i < memory.getSize()) memoryData.append("\n");
                         oneLine.setLength(0);
                     }
                 }
@@ -843,7 +784,7 @@ public class Program {
         ContractDetails contractDetails = this.result.getRepository().
                 getContractDetails(this.programAddress.getLast20Bytes());
         op.saveStorageMap(contractDetails.getStorage());
-        op.saveMemory(memory);
+        op.saveMemory(memory.memoryChunk(0, memory.getSize()));
         op.saveStack(stack);
 
         programTrace.addOp(op);
@@ -958,7 +899,8 @@ public class Program {
             return;
         }
 
-        byte[] data = this.memoryChunk(msg.getInDataOffs(), msg.getInDataSize()).array();
+        byte[] data = this.memoryChunk(msg.getInDataOffs().intValue(),
+                msg.getInDataSize().intValue());
 
         transfer(track, senderAddress, codeAddress, msg.getEndowment().value());
 
@@ -1071,15 +1013,15 @@ public class Program {
     /**
      * used mostly for testing reasons
      */
-    public ByteBuffer getMemory() {
-        return memory;
+    public byte[] getMemory() {
+        return memory.memoryChunk(0, memory.getSize());
     }
 
     /**
      * used mostly for testing reasons
      */
-    public void initMem(ByteBuffer memory) {
-        this.memory = memory;
+    public void initMem(byte[] data) {
+        this.memory.memorySave(0, data);
     }
 
 

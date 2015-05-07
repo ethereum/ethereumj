@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.Stack;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.vm.OpCode.*;
 
 /**
@@ -261,7 +263,7 @@ public class VM {
                  * Stop and Arithmetic Operations
                  */
                 case STOP: {
-                    program.setHReturn(ByteBuffer.allocate(0));
+                    program.setHReturn(EMPTY_BYTE_ARRAY);
                     program.stop();
                 }
                 break;
@@ -576,9 +578,9 @@ public class VM {
                 case SHA3: {
                     DataWord memOffsetData = program.stackPop();
                     DataWord lengthData = program.stackPop();
-                    ByteBuffer buffer = program.memoryChunk(memOffsetData, lengthData);
+                    byte[] buffer = program.memoryChunk(memOffsetData.intValue(), lengthData.intValue());
 
-                    byte[] encoded = HashUtil.sha3(buffer.array());
+                    byte[] encoded = sha3(buffer);
                     DataWord word = new DataWord(encoded);
 
                     if (logger.isInfoEnabled())
@@ -702,7 +704,7 @@ public class VM {
                 case CODECOPY:
                 case EXTCODECOPY: {
 
-                    byte[] fullCode = ByteUtil.EMPTY_BYTE_ARRAY;
+                    byte[] fullCode = EMPTY_BYTE_ARRAY;
                     if (op == OpCode.CODECOPY)
                         fullCode = program.getCode();
 
@@ -856,10 +858,10 @@ public class VM {
                         topics.add(topic);
                     }
 
-                    ByteBuffer data = program.memoryChunk(memStart, memOffset);
+                    byte[] data = program.memoryChunk(memStart.intValue(), memOffset.intValue());
 
                     LogInfo logInfo =
-                            new LogInfo(address.getLast20Bytes(), topics, data.array());
+                            new LogInfo(address.getLast20Bytes(), topics, data);
 
                     if (logger.isInfoEnabled())
                         hint = logInfo.toString();
@@ -1098,11 +1100,11 @@ public class VM {
                     DataWord offset = program.stackPop();
                     DataWord size = program.stackPop();
 
-                    ByteBuffer hReturn = program.memoryChunk(offset, size);
+                    byte[] hReturn = program.memoryChunk(offset.intValue(), size.intValue());
                     program.setHReturn(hReturn);
 
                     if (logger.isInfoEnabled())
-                        hint = "data: " + Hex.toHexString(hReturn.array())
+                        hint = "data: " + Hex.toHexString(hReturn)
                                 + " offset: " + offset.value()
                                 + " size: " + size.value();
 

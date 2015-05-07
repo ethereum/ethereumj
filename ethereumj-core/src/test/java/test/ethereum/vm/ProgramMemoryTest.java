@@ -25,7 +25,7 @@ public class ProgramMemoryTest {
 
     @Test
     public void testGetMemSize() {
-        ByteBuffer memory = ByteBuffer.allocate(64);
+        byte[] memory = new byte[64];
         program.initMem(memory);
         assertEquals(64, program.getMemSize());
     }
@@ -44,7 +44,7 @@ public class ProgramMemoryTest {
 
     @Test
     public void testMemoryChunk1() {
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 128;
         int size = 32;
         program.memoryChunk(offset, size);
@@ -53,7 +53,7 @@ public class ProgramMemoryTest {
 
     @Test // size 0 doesn't increate memory
     public void testMemoryChunk2() {
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 96;
         int size = 0;
         program.memoryChunk(offset, size);
@@ -63,7 +63,7 @@ public class ProgramMemoryTest {
     @Test
     public void testAllocateMemory1() {
 
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 32;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -75,7 +75,7 @@ public class ProgramMemoryTest {
 
         // memory.limit() > offset, == size
         // memory.limit() < offset + size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 32;
         int size = 64;
         program.allocateMemory(offset, size);
@@ -86,7 +86,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory3() {
 
         // memory.limit() > offset, > size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 0;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -96,7 +96,7 @@ public class ProgramMemoryTest {
     @Test
     public void testAllocateMemory4() {
 
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 0;
         int size = 64;
         program.allocateMemory(offset, size);
@@ -106,7 +106,7 @@ public class ProgramMemoryTest {
     @Test
     public void testAllocateMemory5() {
 
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 0;
         int size = 0;
         program.allocateMemory(offset, size);
@@ -117,7 +117,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory6() {
 
         // memory.limit() == offset, > size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 64;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -128,7 +128,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory7() {
 
         // memory.limit() == offset - size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 96;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -138,7 +138,7 @@ public class ProgramMemoryTest {
     @Test
     public void testAllocateMemory8() {
 
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 0;
         int size = 96;
         program.allocateMemory(offset, size);
@@ -150,7 +150,7 @@ public class ProgramMemoryTest {
 
         // memory.limit() < offset, > size
         // memory.limit() < offset - size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 96;
         int size = 0;
         program.allocateMemory(offset, size);
@@ -184,7 +184,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory12() {
 
         // memory.limit() < offset, < size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 64;
         int size = 96;
         program.allocateMemory(offset, size);
@@ -195,7 +195,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory13() {
 
         // memory.limit() > offset, < size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 32;
         int size = 128;
         program.allocateMemory(offset, size);
@@ -206,7 +206,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory14() {
 
         // memory.limit() < offset, == size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 96;
         int size = 64;
         program.allocateMemory(offset, size);
@@ -217,7 +217,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory15() {
 
         // memory.limit() == offset, < size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 64;
         int size = 96;
         program.allocateMemory(offset, size);
@@ -229,7 +229,7 @@ public class ProgramMemoryTest {
 
         // memory.limit() == offset, == size
         // memory.limit() > offset - size
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 64;
         int size = 64;
         program.allocateMemory(offset, size);
@@ -240,7 +240,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemory17() {
 
         // memory.limit() > offset + size
-        program.initMem(ByteBuffer.allocate(96));
+        program.initMem(new byte[96]);
         int offset = 32;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -251,7 +251,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemoryUnrounded1() {
 
         // memory unrounded
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 64;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -262,7 +262,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemoryUnrounded2() {
 
         // offset unrounded
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 16;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -273,7 +273,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemoryUnrounded3() {
 
         // size unrounded
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 64;
         int size = 16;
         program.allocateMemory(offset, size);
@@ -284,7 +284,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemoryUnrounded4() {
 
         // memory + offset unrounded
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 16;
         int size = 32;
         program.allocateMemory(offset, size);
@@ -295,7 +295,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemoryUnrounded5() {
 
         // memory + size unrounded
-        program.initMem(ByteBuffer.allocate(64));
+        program.initMem(new byte[64]);
         int offset = 32;
         int size = 16;
         program.allocateMemory(offset, size);
@@ -306,7 +306,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemoryUnrounded6() {
 
         // offset + size unrounded
-        program.initMem(ByteBuffer.allocate(32));
+        program.initMem(new byte[32]);
         int offset = 16;
         int size = 16;
         program.allocateMemory(offset, size);
@@ -317,7 +317,7 @@ public class ProgramMemoryTest {
     public void testAllocateMemoryUnrounded7() {
 
         // memory + offset + size unrounded
-        program.initMem(ByteBuffer.allocate(32));
+        program.initMem(new byte[32]);
         int offset = 16;
         int size = 16;
         program.allocateMemory(offset, size);
