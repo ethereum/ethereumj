@@ -1,15 +1,12 @@
 package org.ethereum.vm;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

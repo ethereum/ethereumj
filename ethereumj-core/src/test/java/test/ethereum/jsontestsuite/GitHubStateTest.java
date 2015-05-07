@@ -44,6 +44,8 @@ public class GitHubStateTest {
         excluded.add("createJS_ExampleContract"); //FIXME Bug on CPP testrunner, storage/SSTORE
         excluded.add("Callcode1024OOG");
         excluded.add("Call1024OOG");
+        excluded.add("callcodeWithHighValue");
+        excluded.add("callWithHighValue");
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }

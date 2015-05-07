@@ -86,10 +86,14 @@ public class DataWord implements Comparable<DataWord> {
      * @throws ArithmeticException - if this will not fit in an int.
      */
     public int intValue() {
-        BigDecimal tmpValue = new BigDecimal(this.value());
-        if (this.bytesOccupied() > 4)
-            return Integer.MAX_VALUE;
-        return tmpValue.intValueExact();
+        int intVal = 0;
+
+        for (int i = 0; i < data.length; i++)
+        {
+            intVal = (intVal << 8) + (data[i] & 0xff);
+        }
+
+        return intVal;
     }
 
     /**
@@ -101,9 +105,16 @@ public class DataWord implements Comparable<DataWord> {
      * @throws ArithmeticException - if this will not fit in a long.
      */
     public long longValue() {
-        BigDecimal tmpValue = new BigDecimal(this.value());
-        return tmpValue.longValueExact();
+
+        long longVal = 0;
+        for (int i = 0; i < data.length; i++)
+        {
+            longVal = (longVal << 8) + (data[i] & 0xff);
+        }
+
+        return longVal;
     }
+
 
     public BigInteger sValue() {
         return new BigInteger(data);
