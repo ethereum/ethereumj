@@ -41,6 +41,11 @@ public class MemoryBuffer {
         memorySoftSize = Math.max(memorySoftSize, (int) Math.ceil((double) (address + data.length) / 32) * 32);
     }
 
+    public void memorySave(int address, int allocSize, byte[] value){
+        memoryExpand(address, allocSize);
+        memorySave(address, value);
+    }
+
     public DataWord memoryLoad(int address){
 
         ensureAvailable(address, 32);
@@ -69,19 +74,12 @@ public class MemoryBuffer {
     }
 
 
-    public void memoryExpand(DataWord offsetDW, DataWord sizeDW){
-
-        int offset = offsetDW.intValue();
-        int size = sizeDW.intValue();
-
+    public void memoryExpand(int offset, int size){
         ensureAvailable(offset, size);
         memorySoftSize = Math.max(memorySoftSize,offset + size);
     }
 
-    public byte[] memoryChunk(DataWord offsetDW, DataWord sizeDW) {
-
-        int offset = offsetDW.intValue();
-        int size = sizeDW.intValue();
+    public byte[] memoryChunk(int offset, int size) {
 
         byte[] data = new byte[size];
         ensureAvailable(offset, size);
@@ -92,7 +90,7 @@ public class MemoryBuffer {
         int toGrab = data.length;
         int start = 0;
 
-        while(toGrab > 0){
+        while (toGrab > 0) {
             int copied = grabMax(chunkIndex, chunkOffset, toGrab, data, start);
 
             // read next chunk from the start
@@ -136,6 +134,10 @@ public class MemoryBuffer {
         }
 
         return memoryData.toString();
+    }
+
+    public int getSize(){
+        return memorySoftSize;
     }
 
 /*****************************/

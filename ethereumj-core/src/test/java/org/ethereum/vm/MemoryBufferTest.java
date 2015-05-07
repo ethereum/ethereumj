@@ -1,7 +1,5 @@
 package org.ethereum.vm;
 
-import org.ethereum.vm.DataWord;
-import org.ethereum.vm.MemoryBuffer;
 import org.junit.Assert;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
@@ -243,6 +241,27 @@ public class MemoryBufferTest {
         Assert.assertTrue(memoryBuffer.memorySoftSize == 2080);
     }
 
+    @Test
+    public void memorySave_8() {
+
+        MemoryBuffer memoryBuffer = new MemoryBuffer();
+
+        byte[] data1 = new byte[128];
+        Arrays.fill(data1, (byte) 1);
+
+        memoryBuffer.memorySave(0, 256, data1);
+
+        int ones = 0; int zeroes = 0;
+        for (int i = 0; i < memoryBuffer.getSize(); ++i){
+            if (memoryBuffer.getByte(i) == 1) ++ones;
+            if (memoryBuffer.getByte(i) == 0) ++zeroes;
+        }
+
+        Assert.assertTrue(ones == zeroes);
+        Assert.assertTrue(256 == memoryBuffer.memorySoftSize);
+    }
+
+
 
     @Test
     public void memoryLoad_1() {
@@ -324,7 +343,7 @@ public class MemoryBufferTest {
     public void memoryExpand_1(){
 
         MemoryBuffer memoryBuffer = new MemoryBuffer();
-        memoryBuffer.memoryExpand(new DataWord(0), new DataWord(32));
+        memoryBuffer.memoryExpand(0, 32);
         Assert.assertTrue(memoryBuffer.memorySoftSize == 32);
         Assert.assertTrue(1 == memoryBuffer.chunks.size());
     }
@@ -333,7 +352,7 @@ public class MemoryBufferTest {
     public void memoryExpand_2(){
 
         MemoryBuffer memoryBuffer = new MemoryBuffer();
-        memoryBuffer.memoryExpand(new DataWord(0), new DataWord(64));
+        memoryBuffer.memoryExpand(0, 64);
         Assert.assertTrue(memoryBuffer.memorySoftSize == 64);
         Assert.assertTrue(1 == memoryBuffer.chunks.size());
     }
@@ -353,15 +372,13 @@ public class MemoryBufferTest {
         memoryBuffer.memorySave(0, data1);
         memoryBuffer.memorySave(32, data2);
 
-
-        byte[] data = memoryBuffer.memoryChunk(new DataWord(0), new DataWord(64));
+        byte[] data = memoryBuffer.memoryChunk(0, 64);
 
         Assert.assertArrayEquals(
                 Hex.decode("0101010101010101010101010101010101010101010101010101010101010101" +
                            "0202020202020202020202020202020202020202020202020202020202020202"),
                 data
         );
-
 
         Assert.assertTrue(64 == memoryBuffer.memorySoftSize);
     }
@@ -377,7 +394,7 @@ public class MemoryBufferTest {
         memoryBuffer.memorySave(0, data1);
         Assert.assertTrue(32 == memoryBuffer.memorySoftSize);
 
-        byte[] data = memoryBuffer.memoryChunk(new DataWord(0), new DataWord(64));
+        byte[] data = memoryBuffer.memoryChunk(0, 64);
 
         Assert.assertArrayEquals(
                 Hex.decode("0101010101010101010101010101010101010101010101010101010101010101" +
@@ -402,7 +419,7 @@ public class MemoryBufferTest {
         memoryBuffer.memorySave(0, data1);
         memoryBuffer.memorySave(1024, data2);
 
-        byte[] data = memoryBuffer.memoryChunk(new DataWord(0), new DataWord(2048));
+        byte[] data = memoryBuffer.memoryChunk(0, 2048);
 
         int ones = 0; int twos = 0;
         for (int i = 0; i < data.length; ++i){
@@ -428,7 +445,7 @@ public class MemoryBufferTest {
         memoryBuffer.memorySave(0, data1);
         memoryBuffer.memorySave(1024, data2);
 
-        byte[] data = memoryBuffer.memoryChunk(new DataWord(0), new DataWord(2049));
+        byte[] data = memoryBuffer.memoryChunk(0, 2049);
 
         int ones = 0; int twos = 0; int zero = 0;
         for (int i = 0; i < data.length; ++i){
