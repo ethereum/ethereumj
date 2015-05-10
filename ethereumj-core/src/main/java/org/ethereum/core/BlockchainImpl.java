@@ -561,19 +561,19 @@ public class BlockchainImpl implements Blockchain {
     public void storeBlock(Block block, List<TransactionReceipt> receipts) {
 
         /* Debug check to see if the state is still as expected */
-        if (logger.isWarnEnabled()) {
-            String blockStateRootHash = Hex.toHexString(block.getStateRoot());
-            String worldStateRootHash = Hex.toHexString(repository.getRoot());
-            if (!blockStateRootHash.equals(worldStateRootHash)) {
+        String blockStateRootHash = Hex.toHexString(block.getStateRoot());
+        String worldStateRootHash = Hex.toHexString(repository.getRoot());
+        if (!blockStateRootHash.equals(worldStateRootHash)) {
 
-                stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
-                adminInfo.lostConsensus();
+            stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+            adminInfo.lostConsensus();
 
-                // in case of rollback hard move the root
+            //System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
+            //System.exit(1);
+            // in case of rollback hard move the root
 //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
 //                repository.syncToRoot(parentBlock.getStateRoot());
-                // todo: after the rollback happens other block should be requested
-            }
+            // todo: after the rollback happens other block should be requested
         }
 
         blockStore.saveBlock(block, receipts);

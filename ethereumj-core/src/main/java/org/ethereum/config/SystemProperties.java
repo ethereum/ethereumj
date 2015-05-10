@@ -45,6 +45,7 @@ public class SystemProperties {
     private final static int DEFAULT_PEER_LISTEN_PORT = 30303;
     private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
     private final static boolean DEFAULT_REDIS_ENABLED = true;
+    private static final String DEFAULT_BLOCKS_LOADER = "";
 
 
     /* Testing */
@@ -287,6 +288,11 @@ public class SystemProperties {
     public boolean vmTestLoadLocal() {
         return Boolean.parseBoolean(prop.getProperty("GitHubTests.VMTest.loadLocal", String.valueOf(DEFAULT_VMTEST_LOAD_LOCAL)));
     }
+
+    public String blocksLoader() {
+        return prop.getProperty("blocks.loader", DEFAULT_BLOCKS_LOADER);
+    }
+
 
     public static void main(String args[]) {
         SystemProperties systemProperties = new SystemProperties();

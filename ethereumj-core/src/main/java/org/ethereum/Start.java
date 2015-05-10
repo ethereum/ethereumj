@@ -8,6 +8,8 @@ import org.ethereum.facade.EthereumFactory;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 /**
  * @author Roman Mandeleil
  * @since 14.11.2014
@@ -18,10 +20,13 @@ public class Start {
         CLIInterface.call(args);
         Ethereum ethereum = EthereumFactory.createEthereum();
 
-        ethereum.connect(
-                SystemProperties.CONFIG.activePeerIP(),
-                SystemProperties.CONFIG.activePeerPort(),
-                SystemProperties.CONFIG.activePeerNodeid());
+        if (CONFIG.blocksLoader().equals(""))
+            ethereum.connect(
+                    CONFIG.activePeerIP(),
+                    CONFIG.activePeerPort(),
+                    CONFIG.activePeerNodeid());
+        else
+            ethereum.getBlockLoader().loadBlocks();
     }
 
 }

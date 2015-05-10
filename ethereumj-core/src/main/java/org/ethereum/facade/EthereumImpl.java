@@ -4,10 +4,10 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
+import org.ethereum.manager.BlockLoader;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
-import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
@@ -52,6 +52,9 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     ApplicationContext ctx;
+
+    @Autowired
+    BlockLoader blockLoader;
 
     public EthereumImpl() {
         System.out.println();
@@ -246,5 +249,8 @@ public class EthereumImpl implements Ethereum {
         return getBlockchain().getPendingTransactions();
     }
 
-
+    @Override
+    public BlockLoader getBlockLoader(){
+        return  blockLoader;
+    }
 }

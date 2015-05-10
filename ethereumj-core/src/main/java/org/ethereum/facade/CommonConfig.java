@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -75,7 +76,7 @@ public class CommonConfig {
     }
 
     @Bean
-    public SessionFactory sessionFactory() throws SQLException {
+    public SessionFactory sessionFactory() {
         LocalSessionFactoryBuilder builder =
                 new LocalSessionFactoryBuilder(dataSource());
         builder.scanPackages("org.ethereum.db")
@@ -100,13 +101,9 @@ public class CommonConfig {
         return prop;
     }
 
-
     @Bean
-    public DataSourceTransactionManager transactionManager() {
-        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
-        dataSourceTransactionManager.setDataSource(dataSource());
-
-        return dataSourceTransactionManager;
+    public HibernateTransactionManager txManager() {
+        return new HibernateTransactionManager(sessionFactory());
     }
 
     @Bean(name = "dataSource")
@@ -127,6 +124,7 @@ public class CommonConfig {
         ds.setDriverClassName("org.hsqldb.jdbcDriver");
         ds.setUrl(url);
         ds.setUsername("sa");
+
 
 
         return ds;

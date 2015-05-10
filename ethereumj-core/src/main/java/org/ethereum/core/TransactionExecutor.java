@@ -189,6 +189,11 @@ public class TransactionExecutor {
 
             this.vm = new VM();
             this.program = new Program(tx.getData(), programInvoke);
+        } else {
+
+
+            m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
+            cacheTrack.createAccount(tx.getContractAddress());
         }
 
         BigInteger endowment = toBI(tx.getValue());

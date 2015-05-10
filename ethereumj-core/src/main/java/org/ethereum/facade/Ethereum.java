@@ -4,15 +4,13 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
+import org.ethereum.manager.BlockLoader;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
-import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.net.server.ChannelManager;
 
 import java.math.BigInteger;
-
 import java.net.InetAddress;
-
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -136,5 +134,5 @@ public interface Ethereum {
 
     public Set<Transaction> getPendingTransactions();
 
-
+    public BlockLoader getBlockLoader();
 }
