@@ -30,6 +30,7 @@ public class BlockStoreImpl implements BlockStore {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public byte[] getBlockHashByNumber(long blockNumber) {
 
         Block block = getBlockByNumber(blockNumber);
@@ -177,6 +178,7 @@ public class BlockStoreImpl implements BlockStore {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
 
         List result = sessionFactory.getCurrentSession().

@@ -568,8 +568,8 @@ public class BlockchainImpl implements Blockchain {
             stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
             adminInfo.lostConsensus();
 
-            //System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
-            //System.exit(1);
+            System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
+            System.exit(1);
             // in case of rollback hard move the root
 //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
 //                repository.syncToRoot(parentBlock.getStateRoot());
