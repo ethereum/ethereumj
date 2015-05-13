@@ -405,7 +405,11 @@ public class ByteUtil {
     }
 
     public static boolean isNullOrZeroArray(byte[] array){
-        return (array == null) || (array.length == 0) || (array.length == 1 && array[0] == 0);
+        return (array == null) || (array.length == 0);
+    }
+
+    public static boolean isSingleZero(byte[] array){
+        return (array.length == 1 && array[0] == 0);
     }
 
 

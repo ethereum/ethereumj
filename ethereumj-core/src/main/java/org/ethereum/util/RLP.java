@@ -7,6 +7,7 @@ import java.util.*;
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.ethereum.util.ByteUtil.isNullOrZeroArray;
+import static org.ethereum.util.ByteUtil.isSingleZero;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
@@ -748,6 +749,8 @@ public class RLP {
 
         if (isNullOrZeroArray(srcData))
             return new byte[]{(byte) OFFSET_SHORT_ITEM};
+        else if(isSingleZero(srcData))
+            return new byte[]{00};
         else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
             return srcData;
         } else if (srcData.length < SIZE_THRESHOLD) {

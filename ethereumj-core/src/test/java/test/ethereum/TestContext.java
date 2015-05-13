@@ -68,14 +68,6 @@ public class TestContext {
     </bean>
 */
 
-    @Bean
-    public DataSourceTransactionManager transactionManager() {
-
-        DataSourceTransactionManager dataSourceTransactionManager = new DataSourceTransactionManager();
-        dataSourceTransactionManager.setDataSource(dataSource());
-
-        return dataSourceTransactionManager;
-    }
 
     @Bean(name = "dataSource")
     public DriverManagerDataSource dataSource() {

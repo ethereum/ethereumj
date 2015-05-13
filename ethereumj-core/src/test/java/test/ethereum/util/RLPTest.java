@@ -294,7 +294,7 @@ public class RLPTest {
     public void testEncodeElementZero() {
 
         byte[] actuals = RLP.encodeElement(new byte[]{0x00});
-        assertArrayEquals(new byte[]{(byte) 0x80}, actuals);
+        assertArrayEquals(new byte[]{0x00}, actuals);
     }
 
     @Test

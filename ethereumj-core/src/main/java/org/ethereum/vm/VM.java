@@ -182,7 +182,7 @@ public class VM {
                       gasCost += GasCost.NEW_ACCT_CALL;
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
-                    if (stack.get(stack.size() - 3).intValue() > 0 )
+                    if (!stack.get(stack.size() - 3).isZero() )
                       gasCost += GasCost.VT_CALL;
 
                     callGas = callGasWord.longValue();
@@ -1055,7 +1055,7 @@ public class VM {
                     DataWord codeAddress = program.stackPop();
                     DataWord value = program.stackPop();
 
-                    if( value.intValue() > 0)
+                    if( !value.isZero())
                       gas = new DataWord(gas.intValue() + GasCost.STIPEND_CALL);
 
                     DataWord inDataOffs = program.stackPop();

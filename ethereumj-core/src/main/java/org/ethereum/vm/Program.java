@@ -511,7 +511,7 @@ public class Program {
                             refundGas.toString());
             }
         } else {
-            this.refundGas(msg.getGas().longValue(), "remaining gas from the internal call");
+                this.refundGas(msg.getGas().longValue(), "remaining gas from the internal call");
         }
     }
 
@@ -673,13 +673,10 @@ public class Program {
         if (logger.isTraceEnabled() || listener != null) {
 
             StringBuilder stackData = new StringBuilder();
-            if (stack.size() > 8)
-                stackData.append("...Stack data folded...").append(" (").append(stack.size()).append(") elementts");
-            else
-                for (int i = 0; i < stack.size(); ++i) {
-                    stackData.append(" ").append(stack.get(i));
-                    if (i < stack.size() - 1) stackData.append("\n");
-                }
+            for (int i = 0; i < stack.size(); ++i) {
+                stackData.append(" ").append(stack.get(i));
+                if (i < stack.size() - 1) stackData.append("\n");
+            }
 
             if (stackData.length() > 0) stackData.insert(0, "\n");
 
