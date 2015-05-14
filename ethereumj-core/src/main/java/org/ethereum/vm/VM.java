@@ -10,7 +10,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Stack;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -86,7 +85,7 @@ public class VM {
             long oldMemSize = program.getMemSize();
             BigInteger newMemSize = BigInteger.ZERO;
             long copySize = 0;
-            Stack<DataWord> stack = program.getStack();
+            Stack stack = program.getStack();
 
             String hint = "";
             long callGas = 0, memWords = 0; // parameters for logging
@@ -829,11 +828,8 @@ public class VM {
                 case SWAP13: case SWAP14: case SWAP15: case SWAP16:{
 
                     int n = op.val() - OpCode.SWAP1.val() + 2;
-                    DataWord word_1 = stack.peek();
-                    stack.set(stack.size() - 1, stack.get(stack.size() - n));
-                    stack.set(stack.size() - n, word_1);
+                    stack.swap(stack.size() - 1, stack.size() - n);
                     program.step();
-
                 }
                 break;
                 case LOG0:

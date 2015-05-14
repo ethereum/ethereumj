@@ -46,6 +46,7 @@ public abstract class AbstractRedisTest {
                 connected = jedis.ping().equals("PONG");
                 jedis.close();
             } catch (Exception e) {
+                connected = false;
                 System.out.printf("Cannot connect to '%s' Redis cloud.\n", url);
             }
 

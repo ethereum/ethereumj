@@ -51,7 +51,7 @@ public class ProgramMemoryTest {
         assertEquals(160, program.getMemSize());
     }
 
-    @Test // size 0 doesn't increate memory
+    @Test // size 0 doesn't increase memory
     public void testMemoryChunk2() {
         program.initMem(new byte[64]);
         int offset = 96;

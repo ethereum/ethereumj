@@ -15,7 +15,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 
-final class Serializers {
+public final class Serializers {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("vmtrace");
 

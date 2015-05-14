@@ -197,7 +197,8 @@ public class TestRunner {
                 vmDidThrowAnEception = true;
                 e = ex;
             }
-            program.saveProgramTraceToFile(testCase.getName());
+            String content = program.getProgramTrace().asJsonString(true);
+            program.saveProgramTraceToFile(testCase.getName(), content);
 
             if (testCase.getPost().size() == 0) {
                 if (vmDidThrowAnEception != true) {
