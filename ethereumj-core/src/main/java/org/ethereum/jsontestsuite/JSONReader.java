@@ -21,8 +21,12 @@ import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JSONReader {
+
+    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     public static String loadJSON(String filename) {
         String json = "";
@@ -68,7 +72,7 @@ public class JSONReader {
             conn.connect();
             InputStream in = conn.getInputStream();
             rd = new BufferedReader(new InputStreamReader(in));
-            System.out.println("Loading remote file: " + urlToRead);
+            logger.info("Loading remote file: " + urlToRead);
             while ((line = rd.readLine()) != null) {
                 result += line;
             }

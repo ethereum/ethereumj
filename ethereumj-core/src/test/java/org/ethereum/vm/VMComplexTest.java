@@ -9,6 +9,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -21,6 +23,8 @@ import static org.junit.Assert.assertEquals;
  */
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class VMComplexTest {
+
+    private static Logger logger = LoggerFactory.getLogger("TCK-Test");
 
     @Ignore //TODO #POC9
     @Test // contract call recursive
@@ -331,8 +335,7 @@ public class VMComplexTest {
             program.setRuntimeFailure(e);
         }
 
-        System.out.println();
-        System.out.println("============ Results ============");
+        logger.info("============ Results ============");
 
         System.out.println("*** Used gas: " + program.getResult().getGasUsed());
         // TODO: check that the value pushed after exec is the new address
