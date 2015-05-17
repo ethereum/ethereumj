@@ -38,9 +38,8 @@ public class DisconnectMessage extends P2pMessage {
     }
 
     private void encode() {
-        byte[] encodedCommand = RLP.encodeByte(DISCONNECT.asByte());
         byte[] encodedReason = RLP.encodeByte(this.reason.asByte());
-        this.encoded = RLP.encodeList(encodedCommand, encodedReason);
+        this.encoded = RLP.encodeList(encodedReason);
     }
 
     @Override

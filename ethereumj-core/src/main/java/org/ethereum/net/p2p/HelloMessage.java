@@ -61,9 +61,6 @@ public class HelloMessage extends P2pMessage {
 
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-        // TODO: find out if it can be 0x00. Do we need to check for this?
-        // The message does not distinguish between 0 and null,
-        // so we check command code for null.
 
         byte[] p2pVersionBytes = paramsList.get(0).getRLPData();
         this.p2pVersion = p2pVersionBytes != null ? p2pVersionBytes[0] : 0;
