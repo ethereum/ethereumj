@@ -67,17 +67,27 @@ public class Program {
     ProgramInvoke invokeData;
 
     public Program(byte[] ops, ProgramInvoke invokeData) {
-        this.memory.setTraceListener(traceListener);
-        this.stack.setTraceListener(traceListener);
+        setupTraceListener(this.memory);
+        setupTraceListener(this.stack);
+
         this.ops = (ops == null) ? EMPTY_BYTE_ARRAY : ops;
 
         if (invokeData != null) {
-            this.invokeData = invokeData;
             this.programAddress = invokeData.getOwnerAddress();
+            this.invokeData = invokeData;
             this.invokeHash = invokeData.hashCode();
-            this.result.setRepository(invokeData.getRepository());
+            
+            Repository repository = invokeData.getRepository();
+            this.result.setRepository(setupTraceListener(new Storage(this.programAddress, repository)));
+            this.programTrace.initStorage(repository.getContractDetails(this.programAddress.getLast20Bytes()));
+            
             precompile();
         }
+    }
+    
+    private <T extends ProgramTraceListenerAware> T setupTraceListener(T traceListenerAware) {
+        traceListenerAware.setTraceListener(traceListener);
+        return traceListenerAware;
     }
 
     public byte getOp(int pc) {
@@ -770,10 +780,6 @@ public class Program {
         if (this.pc < ops.length) {
             programTrace.addOp(ops[pc], pc, invokeData.getCallDeep(), getGas(), traceListener.resetActions());
         }
-/*
-        byte[] address = this.programAddress.getLast20Bytes();
-        ContractDetails contractDetails = this.result.getRepository().getContractDetails(address);
-*/
     }
 
     public static void saveProgramTraceToFile(String txHash, String content) {

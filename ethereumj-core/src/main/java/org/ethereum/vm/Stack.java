@@ -32,6 +32,6 @@ public class Stack extends java.util.Stack<DataWord> implements ProgramTraceList
     }
 
     private boolean isAccessible(int from) {
-        return from > 0 && from < size();
+        return from >= 0 && from < size();
     }
 }

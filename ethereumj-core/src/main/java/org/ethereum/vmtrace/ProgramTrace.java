@@ -1,6 +1,7 @@
 package org.ethereum.vmtrace;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
 
@@ -42,6 +43,14 @@ public class ProgramTrace {
         this.initStorage = initStorage;
     }
 
+    public ProgramTrace initStorage(ContractDetails details) {
+        initStorage = new HashMap<>();
+        for (Map.Entry<DataWord, DataWord> entry : details.getStorage().entrySet()) {
+            initStorage.put(entry.getKey().toString(), entry.getValue().toString());
+        }
+        return this;
+    }
+    
     public ProgramTrace result(byte[] result) {
         setResult(toHexString(result));
         return this;

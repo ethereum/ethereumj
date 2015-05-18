@@ -19,7 +19,8 @@ public class OpActions {
         extend,
         write,
         put,
-        remove;
+        remove,
+        clear;
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -38,6 +39,9 @@ public class OpActions {
 
         Action addParam(String name, Object value) {
             if (value != null) {
+                if (params == null) {
+                    params = new HashMap<>();
+                }
                 params.put(name, value.toString());
             }
             return this;
@@ -63,7 +67,6 @@ public class OpActions {
     private static Action addAction(List<Action> container, ActionType type) {
         Action action = new Action();
         action.setAction(type);
-        action.setParams(new HashMap<String, String>());
 
         container.add(action);
 
@@ -97,13 +100,17 @@ public class OpActions {
     }
 
     public Action addStoragePut(DataWord key, DataWord value) {
-        return addAction(storage, ActionType.write)
+        return addAction(storage, ActionType.put)
                 .addParam("key", key)
                 .addParam("value", value);
     }
 
     public Action addStorageRemove(DataWord key) {
-        return addAction(storage, ActionType.write)
+        return addAction(storage, ActionType.remove)
                 .addParam("key", key);
+    }
+
+    public Action addStorageClear() {
+        return addAction(storage, ActionType.clear);
     }
 }

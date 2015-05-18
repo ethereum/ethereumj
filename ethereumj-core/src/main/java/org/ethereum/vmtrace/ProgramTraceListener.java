@@ -30,11 +30,17 @@ public class ProgramTraceListener {
     }
 
     public void onStoragePut(DataWord key, DataWord value) {
-        if (enabled) actions.addStoragePut(key, value);
+        if (enabled) {
+            if (value.equals(DataWord.ZERO)) {
+                actions.addStorageRemove(key);
+            } else {
+                actions.addStoragePut(key, value);
+            }
+        }
     }
 
-    public void onStorageRemove(DataWord key) {
-        if (enabled) actions.addStorageRemove(key);
+    public void onStorageClear() {
+        actions.addStorageClear();
     }
 
     public OpActions resetActions() {
