@@ -827,8 +827,8 @@ public class VM {
                 case SWAP9: case SWAP10: case SWAP11: case SWAP12:
                 case SWAP13: case SWAP14: case SWAP15: case SWAP16:{
 
-                    int n = op.val() - OpCode.SWAP1.val() + 2;
-                    stack.swap(stack.size() - 1, stack.size() - n);
+                    int n = op.val() - OpCode.SWAP1.val() + 1;
+                    stack.swap(0, n);
                     program.step();
                 }
                 break;

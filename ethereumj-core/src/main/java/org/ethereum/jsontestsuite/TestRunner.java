@@ -219,7 +219,8 @@ public class TestRunner {
 
                 this.trace = program.getProgramTrace();
 
-                System.out.println("--------- POST --------");
+                logger.info("--------- POST --------");
+
                 /* 5. Assert Post values */
                 for (ByteArrayWrapper key : testCase.getPost().keySet()) {
 

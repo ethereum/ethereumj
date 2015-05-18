@@ -8,7 +8,7 @@ public class Stack extends java.util.Stack<DataWord> implements ProgramTraceList
 
     @Override
     public void setTraceListener(ProgramTraceListener listener) {
-        this.traceListener = listener;   
+        this.traceListener = listener;
     }
 
     @Override
@@ -22,7 +22,7 @@ public class Stack extends java.util.Stack<DataWord> implements ProgramTraceList
         if (traceListener != null) traceListener.onStackPush(item);
         return super.push(item);
     }
-    
+
     public void swap(int from, int to) {
         if (isAccessible(from) && isAccessible(to) && (from != to)) {
             if (traceListener != null) traceListener.onStackSwap(from, to);
