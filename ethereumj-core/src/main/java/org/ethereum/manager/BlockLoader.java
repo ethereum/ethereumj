@@ -47,7 +47,7 @@ public class BlockLoader {
                     blockchain.tryToConnect(block);
                     long t1_ = System.nanoTime();
                     String result = String.format("Imported block #%d took: [%02.2f msec]",
-                            block.getNumber(), (float)((t1_ - t1) / 1_000_000));
+                            block.getNumber(), ((float)(t1_ - t1) / 1_000_000));
 
                     System.out.println(result);
                 } else
