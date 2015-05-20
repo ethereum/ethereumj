@@ -12,28 +12,36 @@ import static org.ethereum.util.ByteUtil.toHexString;
 
 public class OpActions {
 
-    public enum ActionType {
-        pop,
-        push,
-        swap,
-        extend,
-        write,
-        put,
-        remove,
-        clear;
-    }
-
     @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class Action {
 
-        private ActionType action;
-        private Map<String, String> params;
-
-        public void setAction(ActionType action) {
-            this.action = action;
+        public enum Name {
+            pop,
+            push,
+            swap,
+            extend,
+            write,
+            put,
+            remove,
+            clear;
         }
 
-        public void setParams(Map<String, String> params) {
+        private Name name;
+        private Map<String, Object> params;
+
+        public Name getName() {
+            return name;
+        }
+
+        public void setName(Name name) {
+            this.name = name;
+        }
+
+        public Map<String, Object> getParams() {
+            return params;
+        }
+
+        public void setParams(Map<String, Object> params) {
             this.params = params;
         }
 
@@ -52,21 +60,33 @@ public class OpActions {
     private List<Action> memory = new ArrayList<>();
     private List<Action> storage = new ArrayList<>();
 
+    public List<Action> getStack() {
+        return stack;
+    }
+
     public void setStack(List<Action> stack) {
         this.stack = stack;
+    }
+
+    public List<Action> getMemory() {
+        return memory;
     }
 
     public void setMemory(List<Action> memory) {
         this.memory = memory;
     }
 
+    public List<Action> getStorage() {
+        return storage;
+    }
+
     public void setStorage(List<Action> storage) {
         this.storage = storage;
     }
 
-    private static Action addAction(List<Action> container, ActionType type) {
+    private static Action addAction(List<Action> container, Action.Name name) {
         Action action = new Action();
-        action.setAction(type);
+        action.setName(name);
 
         container.add(action);
 
@@ -74,43 +94,43 @@ public class OpActions {
     }
 
     public Action addStackPop() {
-        return addAction(stack, ActionType.pop);
+        return addAction(stack, Action.Name.pop);
     }
 
     public Action addStackPush(DataWord value) {
-        return addAction(stack, ActionType.push)
+        return addAction(stack, Action.Name.push)
                 .addParam("value", value);
     }
 
     public Action addStackSwap(int from, int to) {
-        return addAction(stack, ActionType.swap)
+        return addAction(stack, Action.Name.swap)
                 .addParam("from", from)
                 .addParam("to", to);
     }
 
     public Action addMemoryExtend(long delta) {
-        return addAction(memory, ActionType.extend)
+        return addAction(memory, Action.Name.extend)
                 .addParam("delta", delta);
     }
 
     public Action addMemoryWrite(int address, byte[] data) {
-        return addAction(memory, ActionType.write)
+        return addAction(memory, Action.Name.write)
                 .addParam("address", address)
                 .addParam("data", toHexString(data));
     }
 
     public Action addStoragePut(DataWord key, DataWord value) {
-        return addAction(storage, ActionType.put)
+        return addAction(storage, Action.Name.put)
                 .addParam("key", key)
                 .addParam("value", value);
     }
 
     public Action addStorageRemove(DataWord key) {
-        return addAction(storage, ActionType.remove)
+        return addAction(storage, Action.Name.remove)
                 .addParam("key", key);
     }
 
     public Action addStorageClear() {
-        return addAction(storage, ActionType.clear);
+        return addAction(storage, Action.Name.clear);
     }
 }

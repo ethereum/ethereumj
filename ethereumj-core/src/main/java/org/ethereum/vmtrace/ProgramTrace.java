@@ -1,6 +1,5 @@
 package org.ethereum.vmtrace;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
@@ -16,27 +15,37 @@ import static org.ethereum.vmtrace.Serializers.serializeFieldsOnly;
 
 public class ProgramTrace {
 
-    @JsonIgnore
-    private byte[] txHash;
     private List<Op> ops = new ArrayList<>();
     private String result;
     private String error;
     private Map<String, String> initStorage = new HashMap<>();
 
-    public void setTxHash(byte[] txHash) {
-        this.txHash = txHash;
+    public List<Op> getOps() {
+        return ops;
     }
 
     public void setOps(List<Op> ops) {
         this.ops = ops;
     }
 
+    public String getResult() {
+        return result;
+    }
+
     public void setResult(String result) {
         this.result = result;
     }
 
+    public String getError() {
+        return error;
+    }
+
     public void setError(String error) {
         this.error = error;
+    }
+
+    public Map<String, String> getInitStorage() {
+        return initStorage;
     }
 
     public void setInitStorage(Map<String, String> initStorage) {
@@ -50,7 +59,7 @@ public class ProgramTrace {
         }
         return this;
     }
-    
+
     public ProgramTrace result(byte[] result) {
         setResult(toHexString(result));
         return this;
@@ -66,11 +75,11 @@ public class ProgramTrace {
         op.setActions(actions);
         op.setCode(OpCode.code(code));
         op.setDeep(deep);
-        op.setGas(gas);
+        op.setGas(gas.value());
         op.setPc(pc);
-        
+
         ops.add(op);
-        
+
         return op;
     }
 
@@ -81,7 +90,12 @@ public class ProgramTrace {
         this.ops.addAll(programTrace.ops);
     }
 
-    public String asJsonString(boolean needFormat) {
-        return serializeFieldsOnly(this, true);
+    public String asJsonString(boolean formatted) {
+        return serializeFieldsOnly(this, formatted);
+    }
+
+    @Override
+    public String toString() {
+        return asJsonString(true);
     }
 }

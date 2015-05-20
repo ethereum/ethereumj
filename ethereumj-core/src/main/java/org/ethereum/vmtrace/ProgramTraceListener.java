@@ -16,11 +16,11 @@ public class ProgramTraceListener {
     public void onMemoryWrite(int address, byte[] data) {
         if (enabled) actions.addMemoryWrite(address, data);
     }
-    
+
     public void onStackPop() {
         if (enabled) actions.addStackPop();
     }
-    
+
     public void onStackPush(DataWord value) {
         if (enabled) actions.addStackPush(value);
     }

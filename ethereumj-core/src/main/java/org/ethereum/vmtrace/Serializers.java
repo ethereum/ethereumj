@@ -48,7 +48,7 @@ public final class Serializers {
         try {
             ObjectMapper mapper = createMapper(pretty);
             mapper.setVisibilityChecker(fieldsOnlyVisibilityChecker(mapper));
-                    
+
             return mapper.writeValueAsString(value);
         } catch (Exception e) {
             LOGGER.error("JSON serialization error: ", e);
