@@ -21,6 +21,13 @@ plugins {
 apply plugin: 'propdeps-maven'
 apply plugin: 'com.jfrog.artifactory-upload'
 
+repositories {
+  mavenCentral()
+  maven {
+    url 'http://oss.sonatype.org/content/repositories/snapshots'
+  }
+}
+
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
@@ -118,6 +125,7 @@ dependencies {
     compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
     compile "commons-dbcp:commons-dbcp:1.4"
     compile "redis.clients:jedis:2.6.0"
+    compile "com.mchange:consuela_2.11:0.0.1-SNAPSHOT"
 
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
@@ -193,6 +201,12 @@ artifactoryPublish.onlyIf {
             branchName != null &&
             branchName.startsWith('master')
 }
+
+/*
+run {
+    args "-dag", "300000"
+}
+*/
 
 bintray {
     user = bintrayUsername
