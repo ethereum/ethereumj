@@ -119,13 +119,14 @@ dependencies {
     compile "commons-dbcp:commons-dbcp:1.4"
     compile "redis.clients:jedis:2.6.0"
 
+    compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
+    compile "log4j:apache-log4j-extras:${log4jVersion}"
+
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'
     }
     optional "commons-logging:commons-logging:1.0"
     optional "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
-    optional "org.slf4j:slf4j-log4j12:${slf4jVersion}"
-    optional "log4j:apache-log4j-extras:${log4jVersion}"
     testCompile "junit:junit:${junitVersion}"
     testCompile "org.springframework:spring-test:${springVersion}"
 }
