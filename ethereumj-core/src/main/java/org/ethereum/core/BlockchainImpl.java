@@ -293,6 +293,8 @@ public class BlockchainImpl implements Blockchain {
         repository.flush(); // saving to the disc
 
 
+        storeBlock(block, receipts);
+
         // Remove all wallet transactions as they already approved by the net
         wallet.removeTransactions(block.getTransactionsList());
 
@@ -465,7 +467,6 @@ public class BlockchainImpl implements Blockchain {
                 wallet.processBlock(block);
             }
         }
-        storeBlock(block, receipts);
 
         return receipts;
     }
