@@ -42,6 +42,7 @@ public class SystemProperties {
     private final static String DEFAULT_HELLO_PHRASE = "Dev";
     private final static Boolean DEFAULT_VM_TRACE = false;
     private final static String DEFAULT_VM_TRACE_DIR = "dmp";
+    private final static Boolean DEFAULT_VM_TRACE_COMPRESSED = false;
     private final static int DEFAULT_PEER_LISTEN_PORT = 30303;
     private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
     private final static boolean DEFAULT_REDIS_ENABLED = true;
@@ -244,6 +245,10 @@ public class SystemProperties {
 
     public boolean vmTrace() {
         return boolProperty("vm.structured.trace", DEFAULT_VM_TRACE);
+    }
+
+    public boolean vmTraceCompressed() {
+        return boolProperty("vm.structured.compressed", DEFAULT_VM_TRACE_COMPRESSED);
     }
 
     private boolean boolProperty(String key, Boolean defaultValue) {

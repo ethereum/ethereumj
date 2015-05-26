@@ -782,32 +782,6 @@ public class Program {
         }
     }
 
-    public static void saveProgramTraceToFile(String txHash, String content) {
-
-        if (!CONFIG.vmTrace() || isEmpty(CONFIG.vmTraceDir())) return;
-
-        File file = new File(format("%s/%s/%s/%s.json", getProperty("user.dir"), CONFIG.databaseDir(), CONFIG.vmTraceDir(), txHash));
-        Writer fw = null;
-        Writer bw = null;
-        try {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-
-            fw = new FileWriter(file.getAbsoluteFile());
-            bw = new BufferedWriter(fw);
-            bw.write(content);
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        } finally {
-            try {
-                if (bw != null) bw.close();
-                if (fw != null) fw.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
     public ProgramTrace getProgramTrace() {
         return programTrace;
     }
@@ -825,7 +799,6 @@ public class Program {
             }
         }
     }
-
 
     public static String stringify(byte[] code, int index, String result) {
         if (code == null || code.length == 0)
