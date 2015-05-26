@@ -49,6 +49,7 @@ public class TransactionExecutor {
 
     long m_endGas = 0;
     long basicTxCost = 0;
+    List<LogInfo> logs = null;
 
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
@@ -294,9 +295,14 @@ public class TransactionExecutor {
         // Keep execution logs  todo: that yet
 //*cpp*        if (m_ext)
 //                m_logs = m_ext->sub.logs;
+
+        if (result.getLogInfoList() != null){
+
+        }
     }
 
 
+/*
     @Deprecated
     public void execute() {
 
@@ -488,10 +494,12 @@ public class TransactionExecutor {
         transfer(track, tx.getSender(), currentBlock.getCoinbase(), feesEarned);
     }
 
-    /**
+    */
+/**
      * After any contract code finish the run the certain result should take place,
      * according to the given circumstances.
-     */
+     *//*
+
     private long applyProgramResult(ProgramResult result, BigInteger gasDebit,
                                     BigInteger gasPrice, Repository repository, byte[] senderAddress,
                                     byte[] contractAddress, byte[] coinbase, boolean initResults) {
@@ -579,11 +587,13 @@ public class TransactionExecutor {
 
         return gasUsed;
     }
+*/
 
 
     public TransactionReceipt getReceipt() {
         return receipt;
     }
+    public List<LogInfo> getVMLogs() { return logs;  }
 
     public ProgramResult getResult() {
         return result;

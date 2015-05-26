@@ -76,15 +76,15 @@ public class Program {
             this.programAddress = invokeData.getOwnerAddress();
             this.invokeData = invokeData;
             this.invokeHash = invokeData.hashCode();
-            
+
             Repository repository = invokeData.getRepository();
             this.result.setRepository(setupTraceListener(new Storage(this.programAddress, repository)));
             this.programTrace.initStorage(repository.getContractDetails(this.programAddress.getLast20Bytes()));
-            
+
             precompile();
         }
     }
-    
+
     private <T extends ProgramTraceListenerAware> T setupTraceListener(T traceListenerAware) {
         traceListenerAware.setTraceListener(traceListener);
         return traceListenerAware;
@@ -285,6 +285,7 @@ public class Program {
         result.addDeleteAccount(this.getOwnerAddress());
     }
 
+    @SuppressWarnings("ThrowableResultOfMethodCallIgnored")
     public void createContract(DataWord value, DataWord memStart, DataWord memSize) {
 
         if (invokeData.getCallDeep() == MAX_DEPTH) {
@@ -348,8 +349,7 @@ public class Program {
                 this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
                 newBalance, null, track, this.invokeData.getBlockStore(), invokeData.byTestingSuite());
 
-        ProgramResult result = null;
-
+        ProgramResult result = new ProgramResult();
         if (programCode.length != 0) {
             VM vm = new VM();
             Program program = new Program(programCode, programInvoke);
@@ -359,8 +359,7 @@ public class Program {
             this.result.addLogInfos(result.getLogInfoList());
         }
 
-        if (result != null &&
-                result.getException() != null) {
+        if (result.getException() != null) {
             logger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(newAddress),
                     result.getException());
@@ -409,7 +408,7 @@ public class Program {
 
     /**
      * That method is for internal code invocations
-     * <p>
+     *
      * - Normal calls invoke a specified contract which updates itself
      * - Stateless calls invoke code from another contract, within the context of the caller
      *

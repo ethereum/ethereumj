@@ -85,7 +85,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         byte[] payload = ByteStreams.toByteArray(frame.getStream());
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Encoded: [{}]", Hex.toHexString(payload));
+            loggerWire.debug("Recv: Encoded: [{}]", Hex.toHexString(payload));
 
         Message msg = MessageFactory.createMessage((byte) frame.getType(), payload);
 
@@ -110,7 +110,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         byte[] encoded = msg.getEncoded();
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Encoded: [{}]", Hex.toHexString(encoded));
+            loggerWire.debug("Send: Encoded: [{}]", Hex.toHexString(encoded));
 
         /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
         byte code = getCode(msg.getCommand());
