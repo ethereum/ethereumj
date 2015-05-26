@@ -46,8 +46,9 @@ public final class VMUtils {
                 if (file.isFile() && file.canWrite()) {
                     result = file;
                 }
-            } else if (file.getParentFile().mkdirs()) {
+            } else {
                 try {
+                    file.getParentFile().mkdirs();
                     file.createNewFile();
                     result = file;
                 } catch (IOException e) {
