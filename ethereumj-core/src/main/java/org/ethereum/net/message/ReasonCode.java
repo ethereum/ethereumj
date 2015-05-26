@@ -34,10 +34,11 @@ public enum ReasonCode {
      */
     TOO_MANY_PEERS(0x04),
 
+
     /**
      * [0x05] Already have a running connection with this peer
      */
-    ALREADY_CONNECTED(0x05),
+    DUPLICATE_PEER(0x05),
 
     /**
      * [0x06] Version of the p2p protocol is not the same as ours
@@ -45,14 +46,22 @@ public enum ReasonCode {
     INCOMPATIBLE_PROTOCOL(0x06),
 
     /**
-     * [0x07] Peer identifies itself with the wrong networkId
+     * [0x07]
      */
-    INCOMPATIBLE_NETWORK(0x07),
+    NULL_IDENTITY(0x07),
 
     /**
      * [0x08] Peer quit voluntarily
      */
     PEER_QUITING(0x08),
+
+    UNEXPECTED_IDENTITY(0x09),
+
+    LOCAL_IDENTITY(0x0A),
+
+    PING_TIMEOUT(0x0B),
+
+    USER_REASON(0x10),
 
     /**
      * [0xFF] Reason not specified

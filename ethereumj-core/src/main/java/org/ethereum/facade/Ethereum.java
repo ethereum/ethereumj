@@ -135,4 +135,6 @@ public interface Ethereum {
     public Set<Transaction> getPendingTransactions();
 
     public BlockLoader getBlockLoader();
+
+    public void exitOn(long number);
 }

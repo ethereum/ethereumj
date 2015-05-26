@@ -114,6 +114,7 @@ public class BlockchainImpl implements Blockchain {
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
 
+    long exitOn = Long.MAX_VALUE;
 
     public BlockchainImpl() {
     }
@@ -247,6 +248,12 @@ public class BlockchainImpl implements Blockchain {
 
     @Override
     public void add(Block block) {
+
+        if (exitOn < block.getNumber()){
+            System.out.print("Exiting after block.number: " + getBestBlock().getNumber());
+            System.exit(-1);
+        }
+
 
         if(!isValid(block)){
             logger.warn("Invalid block with number: {}", block.getNumber());
@@ -498,6 +505,7 @@ public class BlockchainImpl implements Blockchain {
             receipt.setCumulativeGas(totalGasUsed);
             receipt.setPostTxState(repository.getRoot());
             receipt.setTransaction(tx);
+            receipt.setLogInfoList(executor.getVMLogs());
 
             stateLogger.info("block: [{}] executed tx: [{}] \n  state: [{}]", block.getNumber(), i,
                     Hex.toHexString(repository.getRoot()));
@@ -648,7 +656,7 @@ public class BlockchainImpl implements Blockchain {
 
         if (!CONFIG.recordBlocks()) return;
 
-        if (bestBlock.isGenesis()) {
+        if (block.getNumber() == 1) {
             FileSystemUtils.deleteRecursively(new File(CONFIG.dumpDir()));
         }
 
@@ -724,5 +732,7 @@ public class BlockchainImpl implements Blockchain {
         track.commit();
     }
 
-
+    public void setExitOn(long exitOn) {
+        this.exitOn = exitOn;
+    }
 }

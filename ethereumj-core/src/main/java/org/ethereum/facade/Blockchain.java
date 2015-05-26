@@ -56,5 +56,5 @@ public interface Blockchain {
     public void addPendingTransactions(Set<Transaction> transactions);
     public void clearPendingTransactions(List<Transaction> receivedTransactions);
 
-
+    public void setExitOn(long exitOn);
 }

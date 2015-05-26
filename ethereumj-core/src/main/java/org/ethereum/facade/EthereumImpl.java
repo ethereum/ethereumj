@@ -253,4 +253,9 @@ public class EthereumImpl implements Ethereum {
     public BlockLoader getBlockLoader(){
         return  blockLoader;
     }
+
+    @Override
+    public void exitOn(long number) {
+        worldManager.getBlockchain().setExitOn(number);
+    }
 }

@@ -40,14 +40,14 @@ public class DisconnectMessageTest {
     @Test /* DisconnectMessage 2 - from constructor */
     public void test_3() {
 
-        DisconnectMessage disconnectMessage = new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK);
+        DisconnectMessage disconnectMessage = new DisconnectMessage(ReasonCode.NULL_IDENTITY);
 
         logger.trace("{}" + disconnectMessage);
 
         String expected = "c107";
         assertEquals(expected, Hex.toHexString(disconnectMessage.getEncoded()));
 
-        assertEquals(ReasonCode.INCOMPATIBLE_NETWORK, disconnectMessage.getReason());
+        assertEquals(ReasonCode.NULL_IDENTITY, disconnectMessage.getReason());
     }
 
     @Test //handling boundary-high
