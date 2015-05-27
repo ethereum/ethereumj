@@ -9,7 +9,16 @@ import java.util.List;
  */
 public class NodeBucket {
 
+    private final int depth;
     private LinkedList<NodeEntry> nodes = new LinkedList<>();
+
+    NodeBucket(int depth) {
+        this.depth = depth;
+    }
+
+    public int getDepth() {
+        return depth;
+    }
 
     public void addNode(NodeEntry e) {
         if (!nodes.contains(e)) {
