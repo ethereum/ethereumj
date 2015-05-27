@@ -22,7 +22,7 @@ public class Storage implements Repository, ProgramTraceListenerAware {
         this.address = address;
         this.repository = repository;
     }
-    
+
     @Override
     public void setTraceListener(ProgramTraceListener listener) {
         this.traceListener = listener;

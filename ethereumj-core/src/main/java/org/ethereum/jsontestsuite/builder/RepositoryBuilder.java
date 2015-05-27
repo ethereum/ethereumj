@@ -2,10 +2,8 @@ package org.ethereum.jsontestsuite.builder;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryDummy;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.model.AccountTck;

@@ -1,7 +1,7 @@
 package org.ethereum.jsontestsuite.builder;
 
 import org.ethereum.core.AccountState;
-import org.ethereum.db.ContractDetails;
+import org.ethereum.db.ContractDetailsImpl;
 import org.ethereum.jsontestsuite.model.AccountTck;
 import org.ethereum.vm.DataWord;
 
@@ -16,7 +16,7 @@ public class AccountBuilder {
 
     public static StateWrap build(AccountTck account) {
 
-        ContractDetails details = new ContractDetails();
+        ContractDetailsImpl details = new ContractDetailsImpl();
         details.setCode(parseData(account.getCode()));
         details.setStorage(convertStorage(account.getStorage()));
 
@@ -50,9 +50,9 @@ public class AccountBuilder {
     public static class StateWrap {
 
         AccountState accountState;
-        ContractDetails contractDetails;
+        ContractDetailsImpl contractDetails;
 
-        public StateWrap(AccountState accountState, ContractDetails contractDetails) {
+        public StateWrap(AccountState accountState, ContractDetailsImpl contractDetails) {
             this.accountState = accountState;
             this.contractDetails = contractDetails;
         }
@@ -61,7 +61,7 @@ public class AccountBuilder {
             return accountState;
         }
 
-        public ContractDetails getContractDetails() {
+        public ContractDetailsImpl getContractDetails() {
             return contractDetails;
         }
     }

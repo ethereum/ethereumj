@@ -7,7 +7,7 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
-import org.ethereum.db.ContractDetails;
+import org.ethereum.db.ContractDetailsImpl;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -134,21 +134,21 @@ public final class Serializers {
         }
     }
 
-    private static class ContractDetailsSerializer extends BaseRedisSerializer<ContractDetails> {
+    private static class ContractDetailsSerializer extends BaseRedisSerializer<ContractDetailsImpl> {
 
         @Override
         public boolean supports(Class<?> aClass) {
-            return ContractDetails.class.isAssignableFrom(aClass);
+            return ContractDetailsImpl.class.isAssignableFrom(aClass);
         }
 
         @Override
-        public byte[] serialize(ContractDetails contractDetails) {
+        public byte[] serialize(ContractDetailsImpl contractDetails) {
             return (contractDetails == null) ? EMPTY_ARRAY : contractDetails.getEncoded();
         }
 
         @Override
-        public ContractDetails deserialize(byte[] bytes) {
-            return isEmpty(bytes) ? null : new ContractDetails(bytes);
+        public ContractDetailsImpl deserialize(byte[] bytes) {
+            return isEmpty(bytes) ? null : new ContractDetailsImpl(bytes);
         }
     }
 

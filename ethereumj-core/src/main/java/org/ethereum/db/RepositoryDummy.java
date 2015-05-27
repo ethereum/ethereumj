@@ -264,7 +264,7 @@ public class RepositoryDummy extends RepositoryImpl {
         AccountState accountState = new AccountState();
         worldState.put(wrap(addr), accountState);
 
-        ContractDetails contractDetails = new ContractDetails();
+        ContractDetails contractDetails = new ContractDetailsImpl();
         detailsDB.put(wrap(addr), contractDetails);
 
         return accountState;
@@ -293,7 +293,7 @@ public class RepositoryDummy extends RepositoryImpl {
             account = account.clone();
 
         if (details == null)
-            details = new ContractDetails();
+            details = new ContractDetailsImpl();
         else
             details = details.clone();
 

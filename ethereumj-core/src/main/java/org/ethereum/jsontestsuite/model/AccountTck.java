@@ -1,12 +1,5 @@
 package org.ethereum.jsontestsuite.model;
 
-import org.ethereum.db.ContractDetails;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.DataWord;
-import org.json.simple.JSONObject;
-import org.spongycastle.util.encoders.Hex;
-
-import java.math.BigInteger;
 import java.util.*;
 
 /**

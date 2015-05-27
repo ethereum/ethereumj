@@ -47,7 +47,7 @@ public class RepositoryTrack implements Repository {
         AccountState accountState = new AccountState();
         cacheAccounts.put(wrap(addr), accountState);
 
-        ContractDetails contractDetails = new ContractDetails();
+        ContractDetails contractDetails = new ContractDetailsCacheImpl();
         cacheDetails.put(wrap(addr), contractDetails);
 
         return accountState;

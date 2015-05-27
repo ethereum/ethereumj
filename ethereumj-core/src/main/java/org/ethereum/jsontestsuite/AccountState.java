@@ -1,6 +1,6 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.db.ContractDetails;
+import org.ethereum.db.ContractDetailsImpl;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 
@@ -93,7 +93,7 @@ public class AccountState {
         return storage;
     }
 
-    public List<String> compareToReal(org.ethereum.core.AccountState state, ContractDetails details) {
+    public List<String> compareToReal(org.ethereum.core.AccountState state, ContractDetailsImpl details) {
 
         List<String> results = new ArrayList<>();
 
