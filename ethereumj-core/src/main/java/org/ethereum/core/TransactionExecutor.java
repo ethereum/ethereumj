@@ -16,7 +16,8 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.toHexString;
-import static org.springframework.util.StringUtils.isEmpty;
+import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
+import static org.ethereum.vm.VMUtils.zipAndEncode;
 
 /**
  * @author Roman Mandeleil
@@ -237,18 +238,19 @@ public class TransactionExecutor {
             m_endGas = 0;
         } finally {
             if (CONFIG.vmTrace()) {
-                boolean needSaveToFile = !isEmpty(CONFIG.vmTraceDir());
-                String txHash = toHexString(tx.getHash());
-                String traceAsJson = (program == null) ? "{}" : program.getProgramTrace()
+                String trace = (program == null) ? "{}" : program.getProgramTrace()
                         .result(result.getHReturn())
                         .error(result.getException())
-                        .asJsonString(needSaveToFile);
+                        .toString();
 
-                if (needSaveToFile) {
-                    program.saveProgramTraceToFile(txHash, traceAsJson);
+
+                if (CONFIG.vmTraceCompressed()) {
+                    trace = zipAndEncode(trace);
                 }
 
-                listener.onVMTraceCreated(txHash, traceAsJson);
+                String txHash = toHexString(tx.getHash());
+                saveProgramTraceFile(txHash, trace);
+                listener.onVMTraceCreated(txHash, trace);
             }
         }
     }
@@ -456,17 +458,19 @@ public class TransactionExecutor {
                 return;
             } finally {
                 if (CONFIG.vmTrace()) {
-                    boolean needSaveToFile = !isEmpty(CONFIG.vmTraceDir());
-                    String traceAsJson = (program == null) ? "{}" : program.getProgramTrace()
+                    String trace = (program == null) ? "{}" : program.getProgramTrace()
                             .result(result.getHReturn())
                             .error(result.getException())
-                            .asJsonString(needSaveToFile);
+                            .toString();
 
-                    if (needSaveToFile) {
-                        program.saveProgramTraceToFile(txHash, traceAsJson);
+
+                    if (CONFIG.vmTraceCompressed()) {
+                        trace = zipAndEncode(trace);
                     }
 
-                    listener.onVMTraceCreated(txHash, traceAsJson);
+                    saveProgramTraceFile(txHash, trace);
+
+                    listener.onVMTraceCreated(txHash, trace);
                 }
             }
             trackTx.commit();
