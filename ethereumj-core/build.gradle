@@ -202,9 +202,18 @@ artifactoryPublish.onlyIf {
             branchName.startsWith('master')
 }
 
+
 /*
 run {
     args "-dag", "300000"
+    minHeapSize "4g"
+    maxHeapSize "4g"
+}
+*/
+
+/*
+run {
+    args "--help"
 }
 */
 

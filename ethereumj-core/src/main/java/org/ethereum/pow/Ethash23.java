@@ -18,11 +18,22 @@ public final class Ethash23 {
 
     private static final Logger logger = LoggerFactory.getLogger("ethash23");
 
+    private static final double IN_MEM_COMPUTE_MULTIPLIER = 2.5d;
+
     private static final JavaMonitorFactory MONITOR_FACTORY = new JavaMonitorFactory() {
 	public Implementation.Monitor create() {
 	    return new LoggingMonitor();
 	}
     };
+
+    private static boolean shouldInMemCompute( long blockNumber ) {
+	long mem = Runtime.getRuntime().totalMemory();
+	long fullSize = JavaHelpers.getFullSizeForBlock( blockNumber );
+	long needed = Math.round( fullSize * IN_MEM_COMPUTE_MULTIPLIER );
+	boolean out = mem > needed;
+ 	logger.info(  "DAG size: " + fullSize + ", JVM memory: " + mem + ", In-memory compute? " + out + " (only if mem is at least " + IN_MEM_COMPUTE_MULTIPLIER + " times size)" );
+	return out;
+    }
 
     private static class LoggingMonitor implements Implementation.Monitor {
 	String runID = Integer.toString( System.identityHashCode(this), 16 );
@@ -47,7 +58,11 @@ public final class Ethash23 {
     }
 
     public static boolean cacheDagForBlockNumber( long blockNumber ) {
-	return JavaHelpers.streamDagFileForBlockNumber( blockNumber, MONITOR_FACTORY );
+	if ( shouldInMemCompute( blockNumber ) ) {
+	    return JavaHelpers.precomputeCacheDatasetForBlockNumber( blockNumber, MONITOR_FACTORY );
+	} else {
+	    return JavaHelpers.streamDagFileForBlockNumber( blockNumber, MONITOR_FACTORY );
+	}
     }
 
     private Ethash23() {}
