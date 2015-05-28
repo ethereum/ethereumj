@@ -257,11 +257,11 @@ public class BlockHeader {
         return this.getEncoded(true); // with nonce
     }
 
-    public byte[] getEncodedWithoutNonce() {
+    public byte[] getEncodedWithoutMixHashAndNonce() {
         return this.getEncoded(false);
     }
 
-    public byte[] getEncoded(boolean withNonce) {
+    public byte[] getEncoded(boolean withMixHashAndNonce) {
         byte[] parentHash = RLP.encodeElement(this.parentHash);
 
         byte[] unclesHash = RLP.encodeElement(this.unclesHash);
@@ -283,8 +283,8 @@ public class BlockHeader {
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
 
         byte[] extraData = RLP.encodeElement(this.extraData);
-        byte[] mixHash = RLP.encodeElement(this.mixHash);
-        if (withNonce) {
+        if (withMixHashAndNonce) {
+	    byte[] mixHash = RLP.encodeElement(this.mixHash);
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
@@ -292,7 +292,7 @@ public class BlockHeader {
         } else {
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, extraData, mixHash);
+                    gasLimit, gasUsed, timestamp, extraData);
         }
     }
 

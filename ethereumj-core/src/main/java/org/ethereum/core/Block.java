@@ -1,5 +1,7 @@
 package org.ethereum.core;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
@@ -14,6 +16,9 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import com.mchange.sc.v1.consuela.ethereum.pow.ethash23.JavaHelpers;
+import com.mchange.sc.v1.consuela.ethereum.pow.ethash23.JHashimoto;
 
 /**
  * The block in Ethereum is the collection of relevant pieces of information
@@ -35,6 +40,8 @@ public class Block {
             BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
     public static final BigInteger INCLUSION_REWARD = BLOCK_REWARD
             .divide(BigInteger.valueOf(32));
+
+    final static BigInteger NONCE_THRESHOLD_NUMERATOR = BigInteger.valueOf(2).pow(256);
 
     private BlockHeader header;
 
@@ -162,16 +169,20 @@ public class Block {
         return this.header.calcDifficulty();
     }
 
-    public boolean validateNonce() {
-        if (!parsed) parseRLP();
-        BigInteger max = BigInteger.valueOf(2).pow(256);
-        byte[] target = BigIntegers.asUnsignedByteArray(32, max.divide(new BigInteger(1, this.getDifficulty())));
-        byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
-        byte[] concat = Arrays.concatenate(hash, this.getNonce());
-        byte[] result = HashUtil.sha3(concat);
-        return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
+    private BigInteger nonceThreshold( BigInteger difficulty ) {
+	return NONCE_THRESHOLD_NUMERATOR.divide( difficulty );
     }
 
+    public boolean validateMixHashAndNonce() {
+        if (!parsed) parseRLP();
+        BigInteger threshold = nonceThreshold(new BigInteger(1, this.getDifficulty()));
+        byte[] truncHeaderRLP = this.getEncodedWithoutMixHashAndNonce();
+	BigInteger nonce = new BigInteger( 1, this.getNonce() );
+	JHashimoto hashimoto = JavaHelpers.jhashimoto( CONFIG.isMiner(), truncHeaderRLP, nonce );
+	return
+	    (hashimoto.result().compareTo( threshold ) < 0) &&                                           //okay, this hashes to a small emough value for the current difficulty
+	    FastByteComparisons.compareTo( hashimoto.mixBytes(), 0, 32, this.getMixHash(), 0, 32 ) == 0; //and mixBytes are correct
+    }
 
     public byte[] getParentHash() {
         if (!parsed) parseRLP();
@@ -408,9 +419,9 @@ public class Block {
         return rlpEncoded;
     }
 
-    public byte[] getEncodedWithoutNonce() {
+    public byte[] getEncodedWithoutMixHashAndNonce() {
         if (!parsed) parseRLP();
-        return this.header.getEncodedWithoutNonce();
+        return this.header.getEncodedWithoutMixHashAndNonce();
     }
 
     public String getShortHash() {

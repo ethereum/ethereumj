@@ -73,7 +73,7 @@ public class Miner {
                 (newBlock.getGasLimit() * (1024 - 1) + (newBlock.getGasUsed() * 6 / 5)) / 1024);
         newBlock.getHeader().setGasLimit(newGasLimit);
 
-        byte[] hash = SHA3Helper.sha3(newBlock.getEncodedWithoutNonce());
+        byte[] hash = SHA3Helper.sha3(newBlock.getEncodedWithoutMixHashAndNonce()); // TEMPORARY!
 
         byte[] testNonce = new byte[32];
         byte[] concat;
