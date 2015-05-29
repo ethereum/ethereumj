@@ -2,6 +2,7 @@ package test.ethereum.net;
 
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.*;
+import org.ethereum.net.rlpx.discover.KademliaOptions;
 import org.ethereum.net.rlpx.discover.NodeBucket;
 import org.ethereum.net.rlpx.discover.NodeEntry;
 import org.ethereum.net.rlpx.discover.NodeTable;
@@ -64,11 +65,36 @@ public class KademliaTest {
         assertNotEquals(closest1, closest2);
     }
 
+    @Test
+    public void test4() {
+        NodeTable t = getTestNodeTable(0);
+        Node homeNode = t.getNode();
+
+        //t.getBucketsCount() returns non empty buckets
+        assertEquals(t.getBucketsCount(), 1);
+
+        //creates very close nodes
+        for (int i = 1; i < KademliaOptions.BUCKET_SIZE; i++) {
+            Node n= getNode(homeNode.getId(), i);
+            t.addNode(n);
+        }
+
+        assertEquals(t.getBucketsCount(), 1);
+        assertEquals(t.getBuckets()[0].getNodesCount(), KademliaOptions.BUCKET_SIZE);
+    }
+
     public static byte[] getNodeId() {
         Random gen = new Random();
         byte[] id = new byte[64];
         gen.nextBytes(id);
         return id;
+    }
+
+    public static Node getNode(byte[] id, int i) {
+        id[0] += (byte) i;
+        Node n = getNode();
+        n.setId(id);
+        return n;
     }
 
     public static Node getNode() {
