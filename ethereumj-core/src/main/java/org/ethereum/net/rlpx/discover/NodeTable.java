@@ -3,6 +3,7 @@ package org.ethereum.net.rlpx.discover;
 import org.ethereum.net.dht.Bucket;
 import org.ethereum.net.rlpx.Node;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 
@@ -35,13 +36,17 @@ public class NodeTable {
         }
     }
 
-    public void addNode(Node n) {
+    public synchronized Node addNode(Node n) {
         NodeEntry e = new NodeEntry(node.getId(), n);
+        NodeEntry placed = buckets[getBucketId(e)].addNode(e);
+        if (placed != null) {
+            return placed.getNode();
+        }
         nodes.add(e);
-        buckets[getBucketId(e)].addNode(e);
+        return null;
     }
 
-    public void dropNode(Node n) {
+    public synchronized void dropNode(Node n) {
         NodeEntry e = new NodeEntry(node.getId(), n);
         buckets[getBucketId(e)].dropNode(e);
         nodes.remove(e);
@@ -57,7 +62,7 @@ public class NodeTable {
         return i;
     }
 
-    public NodeBucket[] getBuckets() {
+    public synchronized NodeBucket[] getBuckets() {
         return buckets;
     }
 
@@ -66,7 +71,11 @@ public class NodeTable {
         return id < 0 ? 0 : id;
     }
 
-    public List<NodeEntry> getAllNodes()
+    public synchronized int getNodesCount() {
+        return nodes.size();
+    }
+
+    public synchronized List<NodeEntry> getAllNodes()
     {
         List<NodeEntry> nodes = new ArrayList<>();
 
@@ -74,14 +83,16 @@ public class NodeTable {
         {
             for (NodeEntry e : b.getNodes())
             {
-                nodes.add(e);
+                if (!e.getNode().equals(node)) {
+                    nodes.add(e);
+                }
             }
         }
 
         return nodes;
     }
 
-    public List<Node> getClosestNodes(byte[] targetId) {
+    public synchronized List<Node> getClosestNodes(byte[] targetId) {
         List<NodeEntry> closestEntries = getAllNodes();
         List<Node> closestNodes = new ArrayList<>();
         Collections.sort(closestEntries, new NodeEntryComparator(targetId));

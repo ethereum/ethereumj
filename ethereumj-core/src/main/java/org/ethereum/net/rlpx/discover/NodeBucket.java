@@ -20,18 +20,19 @@ public class NodeBucket {
         return depth;
     }
 
-    public void addNode(NodeEntry e) {
+    public synchronized NodeEntry addNode(NodeEntry e) {
         if (!nodes.contains(e)) {
             if (nodes.size() >= KademliaOptions.BUCKET_SIZE) {
-                nodes.removeFirst();
-                nodes.addLast(e);
+                return nodes.getFirst();
             } else {
                 nodes.addLast(e);
             }
         }
+
+        return null;
     }
 
-    public void dropNode(NodeEntry entry) {
+    public synchronized void dropNode(NodeEntry entry) {
         for (NodeEntry e : nodes) {
             if (e.getId().equals(entry.getId())) {
                 nodes.remove(e);
