@@ -129,6 +129,10 @@ public class Block {
         this.parsed = true;
     }
 
+    public Block deepCopy() {
+	return new Block( this.getEncoded() );
+    }
+
     private void parseRLP() {
 
         RLPList params = RLP.decode2(rlpEncoded);
@@ -173,15 +177,33 @@ public class Block {
 	return NONCE_THRESHOLD_NUMERATOR.divide( difficulty );
     }
 
-    public boolean validateMixHashAndNonce() {
+    private JHashimoto computeJHashimoto() {
         if (!parsed) parseRLP();
-        BigInteger threshold = nonceThreshold(new BigInteger(1, this.getDifficulty()));
         byte[] truncHeaderRLP = this.getEncodedWithoutMixHashAndNonce();
 	BigInteger nonce = new BigInteger( 1, this.getNonce() );
-	JHashimoto hashimoto = JavaHelpers.jhashimoto( CONFIG.isMiner(), truncHeaderRLP, nonce );
+	return JavaHelpers.jhashimoto( CONFIG.isMiner(), truncHeaderRLP, nonce );
+    }
+
+    private boolean difficultySatisfied( JHashimoto hashimoto ) {
+        BigInteger threshold = nonceThreshold(new BigInteger(1, this.getDifficulty()));
+	return hashimoto.result().compareTo( threshold ) < 0;
+    }
+
+    public boolean updateMixHashForGoodNonce() {
+	JHashimoto hashimoto = computeJHashimoto();
+	if ( difficultySatisfied( hashimoto ) ) {
+	    this.setMixHash( hashimoto.mixHash() );
+	    return true;
+	} else {
+	    return false;
+	}
+    }
+
+    public boolean validateMixHashAndNonce() {
+	JHashimoto hashimoto = computeJHashimoto();
 	return
-	    (hashimoto.result().compareTo( threshold ) < 0) &&                                           //okay, this hashes to a small emough value for the current difficulty
-	    FastByteComparisons.compareTo( hashimoto.mixBytes(), 0, 32, this.getMixHash(), 0, 32 ) == 0; //and mixBytes are correct
+	    difficultySatisfied( hashimoto ) &&                                                          //okay, this hashes to a small emough value for the current difficulty
+	    FastByteComparisons.compareTo( hashimoto.mixHash(), 0, 32, this.getMixHash(), 0, 32 ) == 0; //and mixBytes are correct
     }
 
     public byte[] getParentHash() {
@@ -235,7 +257,6 @@ public class Block {
         return this.header.getDifficultyBI();
     }
 
-
     public BigInteger getCumulativeDifficulty() {
         if (!parsed) parseRLP();
         BigInteger calcDifficulty = new BigInteger(1, this.header.getDifficulty());
@@ -265,7 +286,6 @@ public class Block {
         return this.header.getGasUsed();
     }
 
-
     public byte[] getExtraData() {
         if (!parsed) parseRLP();
         return this.header.getExtraData();
@@ -276,6 +296,10 @@ public class Block {
         return this.header.getMixHash();
     }
 
+    public void setMixHash(byte[] mixHash) {
+        this.header.setMixHash(mixHash);
+        rlpEncoded = null;
+    }
 
     public byte[] getNonce() {
         if (!parsed) parseRLP();
