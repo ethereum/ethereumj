@@ -5,6 +5,8 @@ import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Objects;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeroes;
@@ -28,9 +30,25 @@ public class Node {
 
         byte[] hostB = nodeRLP.get(0).getRLPData();
         byte[] portB = nodeRLP.get(1).getRLPData();
-        byte[] idB = nodeRLP.get(2).getRLPData();
+        byte[] idB;
 
-        String host = new String(hostB, Charset.forName("UTF-8"));
+        if (nodeRLP.size() > 3) {
+            idB = nodeRLP.get(3).getRLPData();
+        } else {
+            idB = nodeRLP.get(2).getRLPData();
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(hostB[0] & 0xFF);
+        sb.append(".");
+        sb.append(hostB[1] & 0xFF);
+        sb.append(".");
+        sb.append(hostB[2] & 0xFF);
+        sb.append(".");
+        sb.append(hostB[3] & 0xFF);
+
+//        String host = new String(hostB, Charset.forName("UTF-8"));
+        String host = sb.toString();
         int port = byteArrayToInt(portB);
 
         this.host = host;
@@ -80,5 +98,22 @@ public class Node {
                 ", port=" + port +
                 ", id=" + Hex.toHexString(id) +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) {
+            return false;
+        }
+
+        if (o == this) {
+            return true;
+        }
+
+        if (o instanceof Node) {
+            return Arrays.equals(((Node) o).getId(), this.getId());
+        }
+
+        return false;
     }
 }

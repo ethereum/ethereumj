@@ -71,6 +71,8 @@ public abstract class Message {
         /* [2] Crate signature*/
         ECKey.ECDSASignature signature = privKey.sign(forSig);
 
+        signature.v -= 27;
+
         byte[] sigBytes =
                 merge(BigIntegers.asUnsignedByteArray(signature.r),
                         BigIntegers.asUnsignedByteArray(signature.s), new byte[]{signature.v});

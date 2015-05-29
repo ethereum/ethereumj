@@ -28,11 +28,20 @@ public class PingMessage extends Message {
         byte[] tmpPort = longToBytes(port);
         byte[] rlpPort = RLP.encodeElement(stripLeadingZeroes(tmpPort));
 
+        byte[] rlpIpTo = RLP.encodeElement(host.getBytes());
+
+        byte[] tmpPortTo = longToBytes(port);
+        byte[] rlpPortTo = RLP.encodeElement(stripLeadingZeroes(tmpPortTo));
+
         byte[] tmpExp = longToBytes(expiration);
         byte[] rlpExp = RLP.encodeElement(stripLeadingZeroes(tmpExp));
 
         byte[] type = new byte[]{1};
-        byte[] data = RLP.encodeList(rlpIp, rlpPort, rlpExp);
+        byte[] version = new byte[]{4};
+        byte[] rlpVer = RLP.encodeElement(version);
+        byte[] rlpFromList = RLP.encodeList(rlpIp, rlpPort, rlpPort);
+        byte[] rlpToList = RLP.encodeList(rlpIpTo, rlpPortTo, rlpPortTo);
+        byte[] data = RLP.encodeList(rlpVer, rlpFromList, rlpToList, rlpExp);
 
         PingMessage ping = new PingMessage();
         ping.encode(type, data, privKey);
@@ -48,14 +57,15 @@ public class PingMessage extends Message {
     public void parse(byte[] data) {
 
         RLPList list = RLP.decode2(data);
-        list = (RLPList) list.get(0);
+        RLPList dataList = (RLPList) list.get(0);
+        RLPList fromList = (RLPList) dataList.get(2);
 
-        byte[] ipB = list.get(0).getRLPData();
+        byte[] ipB = fromList.get(0).getRLPData();
         this.host = new String(ipB, Charset.forName("UTF-8"));
 
-        this.port = ByteUtil.byteArrayToInt(list.get(1).getRLPData());
+        this.port = ByteUtil.byteArrayToInt(fromList.get(1).getRLPData());
 
-        RLPItem expires = (RLPItem) list.get(2);
+        RLPItem expires = (RLPItem) dataList.get(3);
         this.expires = ByteUtil.byteArrayToLong(expires.getRLPData());
     }
 
