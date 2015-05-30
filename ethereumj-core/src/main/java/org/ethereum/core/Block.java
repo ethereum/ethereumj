@@ -202,7 +202,7 @@ public class Block {
     public boolean validateMixHashAndNonce() {
 	JHashimoto hashimoto = computeJHashimoto();
 	return
-	    difficultySatisfied( hashimoto ) &&                                                          //okay, this hashes to a small emough value for the current difficulty
+	    difficultySatisfied( hashimoto ) &&                                                         //okay, this hashes to a small enough value for the current difficulty
 	    FastByteComparisons.compareTo( hashimoto.mixHash(), 0, 32, this.getMixHash(), 0, 32 ) == 0; //and mixBytes are correct
     }
 
