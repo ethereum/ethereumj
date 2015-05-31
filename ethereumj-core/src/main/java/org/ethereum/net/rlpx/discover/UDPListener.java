@@ -82,8 +82,8 @@ public class UDPListener {
     }
 
     public static void main(String[] args) throws Exception {
-        String address = "127.0.0.1";
-        int port = 30301;
+        String address = "0.0.0.0";
+        int port = 30303;
         if (args.length >= 2) {
             address = args[0];
             port = Integer.parseInt(args[1]);
