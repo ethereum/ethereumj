@@ -125,7 +125,7 @@ dependencies {
     compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
     compile "commons-dbcp:commons-dbcp:1.4"
     compile "redis.clients:jedis:2.6.0"
-    compile "com.mchange:consuela_2.11:0.0.1-SNAPSHOT"
+    compile "com.mchange:consuela_2.11:0.0.1"
 
     compile("com.googlecode.json-simple:json-simple:1.1.1") {
         exclude group: 'junit', module: 'junit'

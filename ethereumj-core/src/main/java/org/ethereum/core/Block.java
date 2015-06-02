@@ -129,6 +129,16 @@ public class Block {
         this.parsed = true;
     }
 
+    public void overwrite( byte[] newRawData ) {
+	this.header = null;
+	this.transactionsList = new CopyOnWriteArrayList<Transaction>();
+	this.uncleList = new CopyOnWriteArrayList<BlockHeader>();
+	this.parsed = false;
+	this.txsState = null;
+
+	this.rlpEncoded = newRawData;
+    }
+
     public Block deepCopy() {
 	return new Block( this.getEncoded() );
     }
@@ -177,8 +187,7 @@ public class Block {
 	return NONCE_THRESHOLD_NUMERATOR.divide( difficulty );
     }
 
-    private JHashimoto computeJHashimoto() {
-        if (!parsed) parseRLP();
+    private JHashimoto computeJHashimoto() { // we should be parsed and have a non-null nonce when this is called
         byte[] truncHeaderRLP = this.getEncodedWithoutMixHashAndNonce();
 	BigInteger nonce = new BigInteger( 1, this.getNonce() );
 	return JavaHelpers.jhashimoto( CONFIG.isMiner(), truncHeaderRLP, nonce );
@@ -190,20 +199,30 @@ public class Block {
     }
 
     public boolean updateMixHashForGoodNonce() {
-	JHashimoto hashimoto = computeJHashimoto();
-	if ( difficultySatisfied( hashimoto ) ) {
-	    this.setMixHash( hashimoto.mixHash() );
-	    return true;
-	} else {
+        if (!parsed) parseRLP();
+	if ( this.getNonce() == null )
 	    return false;
+	else {
+	    JHashimoto hashimoto = computeJHashimoto();
+	    if ( difficultySatisfied( hashimoto ) ) {
+		this.setMixHash( hashimoto.mixHash() );
+		return true;
+	    } else {
+		return false;
+	    }
 	}
     }
 
     public boolean validateMixHashAndNonce() {
-	JHashimoto hashimoto = computeJHashimoto();
-	return
-	    difficultySatisfied( hashimoto ) &&                                                         //okay, this hashes to a small enough value for the current difficulty
-	    FastByteComparisons.compareTo( hashimoto.mixHash(), 0, 32, this.getMixHash(), 0, 32 ) == 0; //and mixBytes are correct
+        if (!parsed) parseRLP();
+	if ( this.getMixHash() == null || this.getNonce() == null )
+	    return false;
+	else {
+	    JHashimoto hashimoto = computeJHashimoto();
+	    return
+		difficultySatisfied( hashimoto ) &&                                                         //okay, this hashes to a small enough value for the current difficulty
+		FastByteComparisons.compareTo( hashimoto.mixHash(), 0, 32, this.getMixHash(), 0, 32 ) == 0; //and mixBytes are correct
+	}
     }
 
     public byte[] getParentHash() {
@@ -229,6 +248,7 @@ public class Block {
     public void setStateRoot(byte[] stateRoot) {
         if (!parsed) parseRLP();
         this.header.setStateRoot(stateRoot);
+	rlpEncoded = null;
     }
 
     public byte[] getTxTrieRoot() {
@@ -250,6 +270,12 @@ public class Block {
     public byte[] getDifficulty() {
         if (!parsed) parseRLP();
         return this.header.getDifficulty();
+    }
+
+    public void setDifficulty(byte[] difficulty) {
+        if (!parsed) parseRLP();
+        this.header.setDifficulty( difficulty );
+	rlpEncoded = null;
     }
 
     public BigInteger getDifficultyBI() {
@@ -297,6 +323,7 @@ public class Block {
     }
 
     public void setMixHash(byte[] mixHash) {
+        if (!parsed) parseRLP();
         this.header.setMixHash(mixHash);
         rlpEncoded = null;
     }
@@ -307,6 +334,7 @@ public class Block {
     }
 
     public void setNonce(byte[] nonce) {
+        if (!parsed) parseRLP();
         this.header.setNonce(nonce);
         rlpEncoded = null;
     }
@@ -409,6 +437,7 @@ public class Block {
     }
 
     public boolean isGenesis() {
+        if (!parsed) parseRLP();
         return this.header.isGenesis();
     }
 

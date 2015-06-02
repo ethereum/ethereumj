@@ -27,7 +27,7 @@ public class ForkGenTest {
         Block newBlock = MinerThread.createBlock(block, coinbase);
         newBlock.setStateRoot(Hex.decode("43bb67bea1931eca8f9e06f9cca66a9f9914cc3e3d4e9ceb2e08e58ab9f92bab"));
 
-        Miner miner = new Miner();
+        MinerAdapter miner = new MinerAdapter();
         miner.mine(newBlock, newBlock.getDifficulty());
 
         System.out.println(newBlock);

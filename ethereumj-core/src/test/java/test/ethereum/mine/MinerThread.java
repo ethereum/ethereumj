@@ -28,7 +28,7 @@ public class MinerThread implements Runnable {
     private MineSwarm mineSwarm;
     private String name;
     private boolean done = false;
-    private Miner miner = new Miner();
+    private MinerAdapter miner = new MinerAdapter();
 
     private Chain mainChain = new Chain();
     private List<Chain> altChains = new ArrayList<>();
