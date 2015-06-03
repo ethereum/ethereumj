@@ -63,7 +63,7 @@ public class Miner {
 	BigInteger startNonce = nonceBI;
 	for ( int i = 0; i < concurrency; ++i ) {
 	    boolean last = (i == concurrency - 1);
-	    BigInteger stopNonce = ( last ? nonceBI : startNonce.add( nonceIncrement ) );
+	    BigInteger stopNonce = ( last ? nonceBI : startNonce.add( nonceIncrement ).mod( NONCE_SPACE ) );
 
 	    Thread t = new WorkThread(original, startNonce.toByteArray(), stopNonce.toByteArray() );
 	    active.add( t );
@@ -170,14 +170,13 @@ public class Miner {
 	    } catch ( InterruptedException e ) { // may be thrown in wait() prior to the loop
 		handleInterrupt();
 	    } catch ( Throwable t ) {
+		logger.debug( "An error occurred in a mining thread that was already about to terminate.", t );
 		synchronized( Miner.this ) {
 		    if ( Miner.this.state == Miner.State.MINING ) {
 			Miner.this.state = Miner.State.ERROR;
 			Miner.this.error = t;
 			Miner.this.notifyAll();
-		    } else {
-			logger.debug( "An error occurred in a mining thread that was already about to terminate.", t );
-		    }
+		    } 
 		}
 	    } finally {
 		synchronized( Miner.this ) {
