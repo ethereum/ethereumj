@@ -14,7 +14,7 @@ public class NodeTable {
 
     private final Node node;  // our node
     private transient NodeBucket[] buckets;
-    private transient Set<NodeEntry> nodes;
+    private transient List<NodeEntry> nodes;
 
     public NodeTable(Node n) {
         this.node = n;
@@ -28,7 +28,7 @@ public class NodeTable {
 
     public final void initialize()
     {
-        nodes = new HashSet<>();
+        nodes = new ArrayList<>();
         buckets = new NodeBucket[KademliaOptions.BINS];
         for (int i = 0; i < KademliaOptions.BINS; i++)
         {
@@ -42,7 +42,9 @@ public class NodeTable {
         if (placed != null) {
             return placed.getNode();
         }
-        nodes.add(e);
+        if (!nodes.contains(e)) {
+            nodes.add(e);
+        }
         return null;
     }
 

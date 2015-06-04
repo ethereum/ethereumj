@@ -62,7 +62,8 @@ public class InputPacketHandler extends SimpleChannelInboundHandler<DatagramPack
     private void handlePing(ChannelHandlerContext ctx, Message inputMsg, InetSocketAddress sender) {
         PingMessage ping = (PingMessage) inputMsg;
         logger.info("{}", String.format("PING from %s", sender.toString()));
-        Message pong = PongMessage.create(ping.getMdc(), ping.getHost(), ping.getPort(), key);
+        expectedPongs.put(new Node(ping.getNodeId(), sender.getHostName(), sender.getPort()), new Date());
+        Message pong = PongMessage.create(ping.getMdc(), sender.getHostName(), sender.getPort(), key);
         DatagramPacket packet = new DatagramPacket(
                 Unpooled.copiedBuffer(pong.getPacket()), sender);
         ctx.write(packet);
@@ -71,22 +72,41 @@ public class InputPacketHandler extends SimpleChannelInboundHandler<DatagramPack
     private void handlePong(ChannelHandlerContext ctx, Message inputMsg, InetSocketAddress sender) {
         logger.info("{}", String.format("PONG from %s", sender.toString()));
         PongMessage pong = (PongMessage) inputMsg;
-        Node n = new Node(pong.getData());
-        if (expectedPongs.containsKey(n) && evictedCandidates.containsKey(n)) {
+        Node n = new Node(pong.getNodeId(), sender.getHostName(), sender.getPort());
+        if (expectedPongs.containsKey(n)) {
             if (System.currentTimeMillis() - expectedPongs.get(n).getTime()
                     < KademliaOptions.REQ_TIMEOUT) {
-                logger.info("{}","Eviction1");
-                table.dropNode(evictedCandidates.get(n));
-                table.addNode(n);
-                expectedPongs.remove(n);
-                evictedCandidates.remove(n);
+                if (evictedCandidates.containsKey(n)) {
+                    logger.info("{}",String.format("Evicted node remains %s:%d, remove expected node %s:%d", n, evictedCandidates.get(n)));
+                    expectedPongs.remove(n);
+                    evictedCandidates.remove(n);
+                } else {
+                    Node contested = table.addNode(n);
+                    if (contested != null) {
+                        expectedPongs.put(contested, new Date());
+                        evictedCandidates.put(contested, n);
+                        Message ping = PingMessage.create(table.getNode().getHost(), table.getNode().getPort(), key);
+                        DatagramPacket packet = new DatagramPacket(
+                                Unpooled.copiedBuffer(ping.getPacket()), new InetSocketAddress(n.getHost(), n.getPort()));
+                        ctx.write(packet);
+                    }
+                }
             } else {
-                logger.info("{}","Eviction2");
-                expectedPongs.remove(n);
-                evictedCandidates.remove(n);
+                if (evictedCandidates.containsKey(n)) {
+                    logger.info("{}", String.format("Drop evicted %s:%d, add node %s:%d", n, evictedCandidates.get(n)));
+                    table.dropNode(n);
+                    table.addNode(evictedCandidates.get(n));
+                    expectedPongs.remove(n);
+                    evictedCandidates.remove(n);
+                }
             }
         } else {
-            table.addNode(n);
+            logger.info("{}", String.format("Unexpected PONG from %s. Sending PING back.", sender.toString()));
+            Message ping = PingMessage.create(table.getNode().getHost(), table.getNode().getPort(), key);
+            DatagramPacket packet = new DatagramPacket(
+                    Unpooled.copiedBuffer(ping.getPacket()), sender);
+            ctx.write(packet);
+            expectedPongs.put(n, new Date());
         }
     }
 
@@ -98,14 +118,17 @@ public class InputPacketHandler extends SimpleChannelInboundHandler<DatagramPack
             if (contested != null) {
                 expectedPongs.put(contested, new Date());
                 evictedCandidates.put(contested, n);
-                Message ping = PingMessage.create(contested.getHost(), contested.getPort(), key);
+                Message ping = PingMessage.create(table.getNode().getHost(), table.getNode().getPort(), key);
                 DatagramPacket packet = new DatagramPacket(
-                        Unpooled.copiedBuffer(ping.getPacket()), sender);
+                        Unpooled.copiedBuffer(ping.getPacket()),
+                        new InetSocketAddress(contested.getHost(), contested.getPort()));
                 ctx.write(packet);
             } else {
-                Message ping = PingMessage.create(n.getHost(), n.getPort(), key);
+                Message ping = PingMessage.create(table.getNode().getHost(), table.getNode().getPort(), key);
                 DatagramPacket packet = new DatagramPacket(
-                        Unpooled.copiedBuffer(ping.getPacket()), sender);
+                        Unpooled.copiedBuffer(ping.getPacket()),
+                        new InetSocketAddress(n.getHost(), n.getPort()));
+                logger.info("{}", String.format("PING to %s:%d", n.getHost(), n.getPort()));
                 ctx.write(packet);
             }
         }

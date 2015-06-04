@@ -19,8 +19,10 @@ public class NodeEntryComparator implements Comparator<NodeEntry>  {
 
         if (d1 > d2) {
             return 1;
-        } else {
+        } else if (d1 <= 2) {
             return -1;
+        } else {
+            return 0;
         }
     }
 }

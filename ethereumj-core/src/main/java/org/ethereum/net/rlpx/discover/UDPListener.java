@@ -13,7 +13,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.socket.oio.OioDatagramChannel;
 import io.netty.util.CharsetUtil;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Message;
+import org.ethereum.net.rlpx.NeighborsMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.PingMessage;
 import org.slf4j.LoggerFactory;
@@ -47,18 +49,18 @@ public class UDPListener {
         table = new NodeTable(homeNode);
 
         //add default node on local to connect
-//        byte[] peerId = Hex.decode("80bddb71035e60a63a8a711e0e9c1d40af8b82857c49f813f451d4dbf782e553c0fd798d26e0f9f570e42f80b7a6a931aa807920f8983c59e18957977dcdf29e");
+//        byte[] peerId = Hex.decode("621168019b7491921722649cd1aa9608f23f8857d782e7495fb6765b821002c4aac6ba5da28a5c91b432e5fcc078931f802ffb5a3ababa42adee7a0c927ff49e");
 //        Node p = new Node(peerId, "127.0.0.1", 30303);
 //        table.addNode(p);
 
         //Persist the list of known nodes with their reputation
-        byte[] cppId = Hex.decode("24f904a876975ab5c7acbedc8ec26e6f7559b527c073c6e822049fee4df78f2e9c74840587355a068f2cdb36942679f7a377a6d8c5713ccf40b1d4b99046bba0");
-        Node cppBootstrap = new Node(cppId, "5.1.83.226", 30303);
-        table.addNode(cppBootstrap);
+//        byte[] cppId = Hex.decode("24f904a876975ab5c7acbedc8ec26e6f7559b527c073c6e822049fee4df78f2e9c74840587355a068f2cdb36942679f7a377a6d8c5713ccf40b1d4b99046bba0");
+//        Node cppBootstrap = new Node(cppId, "5.1.83.226", 30303);
+//        table.addNode(cppBootstrap);
 
-        byte[] goId = Hex.decode("6cdd090303f394a1cac34ecc9f7cda18127eafa2a3a06de39f6d920b0e583e062a7362097c7c65ee490a758b442acd5c80c6fce4b148c6a391e946b45131365b");
-        Node goBootstrap = new Node(goId, "54.169.166.226", 30303);
-        table.addNode(goBootstrap);
+        byte[] cpp2Id = Hex.decode("1637a970d987ddb8fd18c5ca01931210cd2ac5d2fe0f42873c0b31f110c5cbedf68589ec608ec5421e1d259b06cba224127c6bbddbb7c26eaaea56423a23bd31");
+        Node cpp2Bootstrap = new Node(cpp2Id, "69.140.163.94", 30320);
+        table.addNode(cpp2Bootstrap);
 
         try {
             Bootstrap b = new Bootstrap();
