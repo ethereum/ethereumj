@@ -101,6 +101,11 @@ public class Node {
     }
 
     @Override
+    public int hashCode() {
+        return this.toString().hashCode();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (o == null) {
             return false;

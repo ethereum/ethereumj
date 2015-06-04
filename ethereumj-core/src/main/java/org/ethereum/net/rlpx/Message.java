@@ -118,6 +118,12 @@ public abstract class Message {
         return outKey;
     }
 
+    public byte[] getNodeId() {
+        byte[] nodeID = new byte[64];
+        System.arraycopy(getKey().getPubKey(), 1, nodeID, 0, 64);
+        return nodeID;
+    }
+
     public byte[] getPacket() {
         return wire;
     }
