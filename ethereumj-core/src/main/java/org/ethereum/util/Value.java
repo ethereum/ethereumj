@@ -87,6 +87,15 @@ public class Value {
         return ByteUtil.EMPTY_BYTE_ARRAY;
     }
 
+    public String getHex(){
+        return Hex.toHexString(this.encode());
+    }
+
+    public byte[] getData(){
+        return this.encode();
+    }
+
+
     public int[] asSlice() {
         return (int[]) value;
     }

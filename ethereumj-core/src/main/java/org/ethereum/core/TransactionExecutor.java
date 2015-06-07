@@ -47,6 +47,7 @@ public class TransactionExecutor {
     private VM vm;
     private Program program;
 
+    PrecompiledContracts.PrecompiledContract precompiledContract;
 
     long m_endGas = 0;
     long basicTxCost = 0;
@@ -138,7 +139,7 @@ public class TransactionExecutor {
         readyToExecute = true;
     }
 
-    public void execute2() {
+    public void execute() {
 
         if (!readyToExecute) return;
 
@@ -147,6 +148,7 @@ public class TransactionExecutor {
         long txGasLimit = toBI(tx.getGasLimit()).longValue();
         BigInteger txGasCost = toBI(tx.getGasPrice()).multiply(toBI(txGasLimit));
         track.addBalance(tx.getSender(), txGasCost.negate());
+
 
         if (logger.isInfoEnabled())
             logger.info("Paying: txGasCost: [{}], gasPrice: [{}], gasLimit: [{}]", txGasCost, toBI(tx.getGasPrice()), txGasLimit);
@@ -162,17 +164,43 @@ public class TransactionExecutor {
         if (!readyToExecute) return;
 
         byte[] targetAddress = tx.getReceiveAddress();
-        byte[] code = track.getCode(targetAddress);
-        if (code.length > 0) {
-            ProgramInvoke programInvoke =
-                    programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
-            this.vm = new VM();
-            this.program = new Program(code, programInvoke);
+        precompiledContract =
+                PrecompiledContracts.getContractForAddress(new DataWord(targetAddress));
+
+        if (precompiledContract != null) {
+
+            long requiredGas = precompiledContract.getGasForData(tx.getData());
+            long txGasLimit = toBI(tx.getGasLimit()).longValue();
+
+            if (requiredGas > txGasLimit) {
+                // no refund
+                // no endowment
+                return;
+            } else {
+
+                m_endGas = txGasLimit - requiredGas - basicTxCost;
+//                BigInteger refundCost = toBI(m_endGas * toBI( tx.getGasPrice() ).longValue() );
+//                track.addBalance(tx.getSender(), refundCost);
+
+                // FIXME: save return for vm trace
+                byte[] out = precompiledContract.execute(tx.getData());
+            }
 
         } else {
 
-            m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
+            byte[] code = track.getCode(targetAddress);
+            if (code.length > 0) {
+                ProgramInvoke programInvoke =
+                        programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
+
+                this.vm = new VM();
+                this.program = new Program(code, programInvoke);
+
+            } else {
+
+                m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
+            }
         }
 
         BigInteger endowment = toBI(tx.getValue());
@@ -224,6 +252,8 @@ public class TransactionExecutor {
                     m_endGas -= returnDataGasValue.longValue();
                     initCode = result.getHReturn();
                     cacheTrack.saveCode(tx.getContractAddress(), initCode);
+                } else {
+                    result.setHReturn(initCode);
                 }
             }
 
@@ -257,7 +287,7 @@ public class TransactionExecutor {
 
 
     public void finalization() {
-        if (!readyToExecute) return;
+        if (!readyToExecute ) return;
 
         cacheTrack.commit();
 

@@ -4,6 +4,7 @@ import org.ethereum.crypto.HashUtil;
 
 import com.cedarsoftware.util.DeepEquals;
 
+import org.ethereum.db.ByteArrayWrapper;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -19,9 +20,7 @@ import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.util.*;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
 import static org.junit.Assert.*;
@@ -978,6 +977,54 @@ public class RLPTest {
         byte[] encodedData = RLP.encodeBigInteger(integer);
         System.out.println(Hex.toHexString(encodedData));
     }
+
+    @Test
+    public void testEncodeListHeader(){
+
+        byte[] header = RLP.encodeListHeader(10);
+        String expected_1 = "ca";
+        assertEquals(expected_1, Hex.toHexString(header));
+
+        header = RLP.encodeListHeader(1000);
+        String expected_2 = "f903e8";
+        assertEquals(expected_2, Hex.toHexString(header));
+
+        header = RLP.encodeListHeader(1000000000);
+        String expected_3 = "fb3b9aca00";
+        assertEquals(expected_3, Hex.toHexString(header));
+    }
+
+
+    @Test
+    public void testEncodeSet_1(){
+
+        Set<ByteArrayWrapper> data = new HashSet<>();
+
+        ByteArrayWrapper element1 =
+                new ByteArrayWrapper(Hex.decode("1111111111111111111111111111111111111111111111111111111111111111"));
+
+        ByteArrayWrapper element2 =
+                new ByteArrayWrapper(Hex.decode("2222222222222222222222222222222222222222222222222222222222222222"));
+
+        data.add(element1);
+        data.add(element2);
+
+        byte[] setEncoded = RLP.encodeSet(data);
+
+        assertEquals("f840" +
+                    "2222222222222222222222222222222222222222222222222222222222222222" +
+                    "1111111111111111111111111111111111111111111111111111111111111111",
+                Hex.toHexString(setEncoded));
+    }
+
+    @Test
+    public void testEncodeSet_2(){
+
+        Set<ByteArrayWrapper> data = new HashSet<>();
+        byte[] setEncoded = RLP.encodeSet(data);
+        assertEquals("c0", Hex.toHexString(setEncoded));
+    }
+
 
 
 }

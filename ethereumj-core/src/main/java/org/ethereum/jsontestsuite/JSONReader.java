@@ -15,6 +15,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -62,8 +63,8 @@ public class JSONReader {
         URL url;
         HttpURLConnection conn;
         BufferedReader rd;
+        StringBuilder result = new StringBuilder();
         String line;
-        String result = "";
         try {
             url = new URL(urlToRead);
             conn = (HttpURLConnection) url.openConnection();
@@ -71,16 +72,17 @@ public class JSONReader {
             conn.setDoOutput(true);
             conn.connect();
             InputStream in = conn.getInputStream();
-            rd = new BufferedReader(new InputStreamReader(in));
+            rd = new BufferedReader(new InputStreamReader(in), 819200);
+
             logger.info("Loading remote file: " + urlToRead);
             while ((line = rd.readLine()) != null) {
-                result += line;
+                result.append(line);
             }
             rd.close();
         } catch (Throwable e) {
             e.printStackTrace();
         }
-        return result;
+        return result.toString();
     }
 
     public static String getTestBlobForTreeSha(String shacommit, String testcase){

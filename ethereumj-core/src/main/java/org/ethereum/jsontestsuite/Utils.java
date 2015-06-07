@@ -7,6 +7,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
 
 /**
  * @author Roman Mandeleil
@@ -36,7 +37,7 @@ public class Utils {
     public static byte[] parseNumericData(String data){
 
         if (data == null || data.equals("")) return EMPTY_BYTE_ARRAY;
-        byte[] dataB = new BigInteger(data, 10).toByteArray();
+        byte[] dataB = unifiedNumericToBigInteger(data).toByteArray();
         return ByteUtil.stripLeadingZeroes(dataB);
     }
 
@@ -45,7 +46,11 @@ public class Utils {
     }
 
     public static byte parseByte(String data) {
-        return data.equals("") ? 0 : Byte.parseByte(data);
+        if (data.startsWith("0x")) {
+            data = data.substring(2);
+            return data.equals("") ? 0 : Byte.parseByte(data, 16);
+        } else
+            return data.equals("") ? 0 : Byte.parseByte(data);
     }
 
 

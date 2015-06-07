@@ -68,8 +68,9 @@ public class VM {
 
     public void step(Program program) {
 
-        if (CONFIG.vmTrace())
+        if (CONFIG.vmTrace()) {
             program.saveOpTrace();
+        }
 
         try {
             OpCode op = OpCode.code(program.getCurrentOp());
@@ -168,11 +169,14 @@ public class VM {
                     break;
                 case CALL:
                 case CALLCODE:
+
                     gasCost = GasCost.CALL;
                     DataWord callGasWord = stack.get(stack.size() - 1);
                     if (callGasWord.compareTo(program.getGas()) == 1) {
                         throw Program.Exception.notEnoughOpGas(op, callGasWord, program.getGas());
                     }
+
+                    gasCost += callGasWord.longValue();
 
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
@@ -184,8 +188,6 @@ public class VM {
                     if (!stack.get(stack.size() - 3).isZero() )
                       gasCost += GasCost.VT_CALL;
 
-                    callGas = callGasWord.longValue();
-                    gasCost += callGas;
                     BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
                     newMemSize = in.max(out);
@@ -1051,8 +1053,9 @@ public class VM {
                     DataWord codeAddress = program.stackPop();
                     DataWord value = program.stackPop();
 
-                    if( !value.isZero())
-                      gas = new DataWord(gas.intValue() + GasCost.STIPEND_CALL);
+                    if( !value.isZero()) {
+                        gas = new DataWord(gas.intValue() + GasCost.STIPEND_CALL);
+                    }
 
                     DataWord inDataOffs = program.stackPop();
                     DataWord inDataSize = program.stackPop();
@@ -1157,11 +1160,15 @@ public class VM {
 
             if (program.invokeData.byTestingSuite()) return;
 
-            while (!program.isStopped())
+            while (!program.isStopped()) {
                 this.step(program);
+            }
 
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
+        } catch (StackOverflowError soe){
+            logger.error("\n !!! StackOverflowError: update your java run command with -Xss32M !!!\n");
+            System.exit(-1);
         }
     }
 

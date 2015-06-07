@@ -12,16 +12,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
 import java.math.BigInteger;
 import java.util.*;
 
 import static java.lang.String.format;
-import static java.lang.System.getProperty;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
-import static org.springframework.util.StringUtils.isEmpty;
 
 /**
  * @author Roman Mandeleil
@@ -332,7 +328,7 @@ public class Program {
         Repository track = result.getRepository().startTracking();
 
         //In case of hashing collisions, check for any balance before createAccount()
-        BigInteger oldBalance = result.getRepository().getBalance(newAddress);
+        BigInteger oldBalance = track.getBalance(newAddress);
         track.createAccount(newAddress);
         track.addBalance(newAddress, oldBalance);
 
@@ -378,8 +374,8 @@ public class Program {
         // 4. CREATE THE CONTRACT OUT OF RETURN
         byte[] code = result.getHReturn();
 
-        long storageCost = code.length * GasCost.CREATE_DATA_BYTE;
-        long afterSpend = invokeData.getGas().longValue() - storageCost - result.getGasUsed();
+        long storageCost = code.length * GasCost.CREATE_DATA;
+        long afterSpend = programInvoke.getGas().longValue() - storageCost - result.getGasUsed();
         if (afterSpend < 0) {
             track.saveCode(newAddress, EMPTY_BYTE_ARRAY);
         } else {
@@ -418,6 +414,7 @@ public class Program {
 
         if (invokeData.getCallDeep() == MAX_DEPTH) {
             stackPushZero();
+            this.refundGas(msg.getGas().longValue(), " call deep limit reach");
             return;
         }
 
@@ -428,9 +425,6 @@ public class Program {
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         byte[] contextAddress = msg.getType() == MsgType.STATELESS ? senderAddress : codeAddress;
 
-        // FETCH THE CODE
-        byte[] programCode = this.result.getRepository().getCode(codeAddress);
-
         if (logger.isInfoEnabled())
             logger.info(msg.getType().name() + " for existing contract: address: [{}], outDataOffs: [{}], outDataSize: [{}]  ",
                     Hex.toHexString(contextAddress), msg.getOutDataOffs().longValue(), msg.getOutDataSize().longValue());
@@ -438,12 +432,19 @@ public class Program {
         Repository trackRepository = result.getRepository().startTracking();
 
         // 2.1 PERFORM THE VALUE (endowment) PART
-        BigInteger endowment = msg.getEndowment().value(); //TODO #POC9 add 1024 stack check <=
+        BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = trackRepository.getBalance(senderAddress);
         if (isNotCovers(senderBalance, endowment)) {
             stackPushZero();
             this.refundGas(msg.getGas().longValue(), "refund gas from message call");
             return;
+        }
+
+
+        // FETCH THE CODE
+        byte[] programCode = EMPTY_BYTE_ARRAY;
+        if (this.result.getRepository().isExist(codeAddress)){
+            programCode = this.result.getRepository().getCode(codeAddress);
         }
 
         trackRepository.addBalance(senderAddress, endowment.negate());
@@ -478,7 +479,7 @@ public class Program {
         }
 
         if (result != null &&
-                result.getException() != null) {
+            result.getException() != null) {
             gasLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(contextAddress),
                     result.getException());
@@ -588,6 +589,11 @@ public class Program {
 
     public DataWord getBalance(DataWord address) {
         if (invokeData == null) return DataWord.ZERO_EMPTY_ARRAY;
+        byte[] addressBytes = address.getLast20Bytes();
+
+        if (!result.getRepository().isExist(addressBytes)){
+            return DataWord.ZERO.clone();
+        }
 
         BigInteger balance = result.getRepository().getBalance(address.getLast20Bytes());
 
@@ -702,7 +708,7 @@ public class Program {
 
             StringBuilder memoryData = new StringBuilder();
             StringBuilder oneLine = new StringBuilder();
-            if (memory.size() > 32)
+            if (memory.size() > 320)
                 memoryData.append("... Memory Folded.... ")
                         .append("(")
                         .append(memory.size())
@@ -875,6 +881,12 @@ public class Program {
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
+
+        if (invokeData.getCallDeep() == MAX_DEPTH) {
+            stackPushZero();
+            this.refundGas(msg.getGas().longValue(), " call deep limit reach");
+            return;
+        }
 
         Repository track = this.getResult().getRepository().startTracking();
 

@@ -3,6 +3,7 @@ package org.ethereum.jsontestsuite.builder;
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetailsImpl;
 import org.ethereum.jsontestsuite.model.AccountTck;
+import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 
 import java.math.BigInteger;
@@ -11,6 +12,7 @@ import java.util.Map;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.jsontestsuite.Utils.parseData;
+import static org.ethereum.util.Utils.unifiedNumericToBigInteger;
 
 public class AccountBuilder {
 
@@ -21,8 +23,9 @@ public class AccountBuilder {
         details.setStorage(convertStorage(account.getStorage()));
 
         AccountState state = new AccountState();
-        state.addToBalance(new BigInteger(account.getBalance()));
-        state.setNonce(new BigInteger(account.getNonce()));
+
+        state.addToBalance(unifiedNumericToBigInteger(account.getBalance()));
+        state.setNonce(unifiedNumericToBigInteger(account.getNonce()));
         state.setStateRoot(details.getStorageHash());
         state.setCodeHash(sha3(details.getCode()));
 

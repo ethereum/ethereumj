@@ -2,9 +2,7 @@ package org.ethereum.jsontestsuite.builder;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.db.ContractDetails;
-import org.ethereum.db.RepositoryImpl;
+import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.model.AccountTck;
 
@@ -29,11 +27,12 @@ public class RepositoryBuilder {
             ContractDetails details = stateWrap.getContractDetails();
 
             stateBatch.put(wrap(parseData(address)), state);
-            detailsBatch.put(wrap(parseData(address)), details);
+            detailsBatch.put(wrap(parseData(address)), new ContractDetailsCacheImpl(details));
         }
 
         RepositoryImpl repositoryDummy = new RepositoryImpl(new HashMapDB(), new HashMapDB());
         repositoryDummy.updateBatch(stateBatch, detailsBatch);
+        repositoryDummy.flush();
 
         return repositoryDummy;
     }

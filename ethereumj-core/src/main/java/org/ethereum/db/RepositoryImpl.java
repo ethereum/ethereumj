@@ -47,10 +47,13 @@ public class RepositoryImpl implements Repository {
     public final static String STATE_DB = "state";
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
+    private static final Logger gLogger = LoggerFactory.getLogger("general");
 
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
+    private HashMap<ByteArrayWrapper, ContractDetails> detailsDBCache = new HashMap<>();
+
     private DatabaseImpl stateDB = null;
 
     KeyValueDataSource detailsDS = null;
@@ -127,19 +130,34 @@ public class RepositoryImpl implements Repository {
 
             if (accountState.isDeleted()) {
                 worldState.delete(hash.getData());
-                detailsDB.delete(hash.getData());
+                detailsDBCache.remove(hash);
+
+//                detailsDB.delete(hash.getData()); // todo: move to flush
 
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
 
             } else {
 
-                if (accountState.isDirty() || contractDetails.isDirty()) {
-                    detailsDB.put(hash.getData(), contractDetails.getEncoded());
+                    ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetails;
+                    if (contractDetailsCache.origContract == null){
+                        contractDetailsCache.origContract = new ContractDetailsImpl();
+                        contractDetailsCache.commit();
+                    }
+
+                    contractDetails = contractDetailsCache.origContract;
+
+                    detailsDBCache.put(hash, contractDetails);
+//                    detailsDB.put(hash.getData(), contractDetails.getEncoded()); // TODO: flush related
+
                     accountState.setStateRoot(contractDetails.getStorageHash());
                     accountState.setCodeHash(sha3(contractDetails.getCode()));
                     worldState.update(hash.getData(), accountState.getEncoded());
-                    if (logger.isDebugEnabled()) {
+
+//                    System.out.println(hash.toString());
+//                    System.out.println(accountState);
+
+                if (logger.isDebugEnabled()) {
                         logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
                                 Hex.toHexString(hash.getData()),
                                 accountState.getNonce(),
@@ -147,7 +165,6 @@ public class RepositoryImpl implements Repository {
                                 contractDetails.getStorage());
                     }
 
-                }
 
             }
         }
@@ -161,8 +178,23 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void flush() {
-        logger.info("flush to disk");
+        gLogger.info("flushing to disk");
+        long t = System.nanoTime();
+
+        for (ByteArrayWrapper key : detailsDBCache.keySet()){
+
+            ContractDetails contractDetails = detailsDBCache.get(key);
+            byte[] value = contractDetails.getEncoded();
+
+            detailsDB.put(key.getData(), value);
+        }
+
+        long t_ = System.nanoTime();
+        gLogger.info("Flush details in: {} ms", ((float)(t_ - t) / 1_000_000));
+
+        long t__ = System.nanoTime();
         worldState.sync();
+        gLogger.info("Flush state in: {} ms", ((float)(t__ - t_) / 1_000_000));
     }
 
 
@@ -287,7 +319,13 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        return detailsDB.getDb().keys();
+
+        Set<byte[]> result = new HashSet<>();
+        for (ByteArrayWrapper key :  detailsDBCache.keySet() ){
+            result.add(key.getData());
+        }
+
+        return result; // TODO: according to cache policy
     }
 
     @Override
@@ -337,7 +375,9 @@ public class RepositoryImpl implements Repository {
         }
 
         details.put(key, value);
-        detailsDB.put(addr, details.getEncoded());
+
+        detailsDBCache.put(wrap(addr), details);
+//        detailsDB.put(addr, details.getEncoded()); // todo flush policy
     }
 
     @Override
@@ -361,7 +401,9 @@ public class RepositoryImpl implements Repository {
         }
 
         details.setCode(code);
-        detailsDB.put(addr, details.getEncoded());
+
+        detailsDBCache.put(wrap(addr), details);
+//        detailsDB.put(addr, details.getEncoded());
     }
 
 
@@ -407,17 +449,20 @@ public class RepositoryImpl implements Repository {
     @Override
     public void delete(byte[] addr) {
         worldState.delete(addr);
-        detailsDB.delete(addr);
+        detailsDBCache.remove(wrap(addr));
+
+//        detailsDB.delete(addr); // flush db
     }
 
     @Override
     public ContractDetails getContractDetails(byte[] addr) {
 
         ContractDetails result = null;
-        byte[] detailsData = detailsDB.get(addr);
-
-        if (detailsData != null)
-            result = new ContractDetailsImpl(detailsData);
+//        byte[] detailsData = detailsDB.get(addr); // todo: flush policy
+//
+//        if (detailsData != null)
+//            result = new ContractDetailsImpl(detailsData);
+        result = detailsDBCache.get(wrap(addr));
 
         return result;
     }
@@ -441,7 +486,9 @@ public class RepositoryImpl implements Repository {
         worldState.update(addr, accountState.getEncoded());
 
         ContractDetails contractDetails = new ContractDetailsImpl();
-        detailsDB.put(addr, contractDetails.getEncoded());
+
+        detailsDBCache.put(wrap(addr), contractDetails);
+//        detailsDB.put(addr, contractDetails.getEncoded());
 
         return accountState;
     }
@@ -464,20 +511,15 @@ public class RepositoryImpl implements Repository {
         else
             account = account.clone();
 
-        if (details == null)
-            details = new ContractDetailsCacheImpl();
+        if (details == null) {
+            details = new ContractDetailsCacheImpl(null);
+        }
         else
-            details = new ContractDetailsCacheImpl(details.getEncoded());
+            details = new ContractDetailsCacheImpl(details);
 
         cacheAccounts.put(wrap(addr), account);
         cacheDetails.put(wrap(addr), details);
     }
-
-    public Set<ByteArrayWrapper> getFullAddressSet() {
-        Set<ByteArrayWrapper> setKeys = new HashSet<>(detailsDB.dumpKeys());
-        return setKeys;
-    }
-
 
     @Override
     public byte[] getRoot() {
