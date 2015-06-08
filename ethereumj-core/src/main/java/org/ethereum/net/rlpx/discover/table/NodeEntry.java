@@ -1,4 +1,4 @@
-package org.ethereum.net.rlpx.discover;
+package org.ethereum.net.rlpx.discover.table;
 
 import org.ethereum.net.rlpx.Node;
 
@@ -12,12 +12,14 @@ public class NodeEntry {
     Node node;
     private String entryId;
     private int distance;
+    private long modified;
 
     public NodeEntry(Node n) {
         this.node = n;
         this.ownerId = n.getId();
         entryId = n.toString();
         distance = distance(ownerId, n.getId());
+        touch();
     }
 
     public NodeEntry(byte[] ownerId, Node n) {
@@ -25,6 +27,11 @@ public class NodeEntry {
         this.ownerId = ownerId;
         entryId = n.toString();
         distance = distance(ownerId, n.getId());
+        touch();
+    }
+
+    public void touch() {
+        modified = System.currentTimeMillis();
     }
 
     public int getDistance() {
@@ -39,6 +46,10 @@ public class NodeEntry {
         return node;
     }
 
+    public long getModified() {
+        return modified;
+    }
+
     @Override
     public boolean equals(Object o) {
         boolean ret = false;
@@ -49,6 +60,11 @@ public class NodeEntry {
         }
 
         return ret;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.node.hashCode();
     }
 
     public static int distance(byte[] ownerId, byte[] targetId) {

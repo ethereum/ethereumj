@@ -1,9 +1,6 @@
-package org.ethereum.net.rlpx.discover;
+package org.ethereum.net.rlpx.discover.table;
 
-import org.ethereum.net.dht.Bucket;
 import org.ethereum.net.rlpx.Node;
-import org.spongycastle.util.encoders.Hex;
-import org.springframework.stereotype.Component;
 
 import java.util.*;
 
@@ -15,6 +12,8 @@ public class NodeTable {
     private final Node node;  // our node
     private transient NodeBucket[] buckets;
     private transient List<NodeEntry> nodes;
+    private Map<Node, Node> evictedCandidates = new HashMap<>();
+    private Map<Node, Date> expectedPongs = new HashMap<>();
 
     public NodeTable(Node n) {
         this.node = n;
@@ -38,9 +37,9 @@ public class NodeTable {
 
     public synchronized Node addNode(Node n) {
         NodeEntry e = new NodeEntry(node.getId(), n);
-        NodeEntry placed = buckets[getBucketId(e)].addNode(e);
-        if (placed != null) {
-            return placed.getNode();
+        NodeEntry lastSeen = buckets[getBucketId(e)].addNode(e);
+        if (lastSeen != null) {
+            return lastSeen.getNode();
         }
         if (!nodes.contains(e)) {
             nodes.add(e);
@@ -52,6 +51,26 @@ public class NodeTable {
         NodeEntry e = new NodeEntry(node.getId(), n);
         buckets[getBucketId(e)].dropNode(e);
         nodes.remove(e);
+    }
+
+    public synchronized boolean contains(Node n) {
+        NodeEntry e = new NodeEntry(node.getId(), n);
+        for (NodeBucket b : buckets) {
+            if (b.getNodes().contains(e)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public synchronized void touchNode(Node n) {
+        NodeEntry e = new NodeEntry(node.getId(), n);
+        for (NodeBucket b : buckets) {
+            if (b.getNodes().contains(e)) {
+                b.getNodes().get(b.getNodes().indexOf(e)).touch();
+                break;
+            }
+        }
     }
 
     public int getBucketsCount() {
@@ -97,7 +116,7 @@ public class NodeTable {
     public synchronized List<Node> getClosestNodes(byte[] targetId) {
         List<NodeEntry> closestEntries = getAllNodes();
         List<Node> closestNodes = new ArrayList<>();
-        Collections.sort(closestEntries, new NodeEntryComparator(targetId));
+        Collections.sort(closestEntries, new DistanceComparator(targetId));
         if (closestEntries.size() > KademliaOptions.BUCKET_SIZE) {
             closestEntries = closestEntries.subList(0, KademliaOptions.BUCKET_SIZE);
         }

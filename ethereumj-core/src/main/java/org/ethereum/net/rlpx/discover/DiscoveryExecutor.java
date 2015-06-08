@@ -2,8 +2,8 @@ package org.ethereum.net.rlpx.discover;
 
 import io.netty.channel.Channel;
 import org.ethereum.crypto.ECKey;
-
-import java.util.concurrent.ExecutorService;
+import org.ethereum.net.rlpx.discover.table.KademliaOptions;
+import org.ethereum.net.rlpx.discover.table.NodeTable;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;

@@ -1,4 +1,4 @@
-package org.ethereum.net.rlpx.discover;
+package org.ethereum.net.rlpx.discover.table;
 
 /**
  * Created by kest on 5/25/15.

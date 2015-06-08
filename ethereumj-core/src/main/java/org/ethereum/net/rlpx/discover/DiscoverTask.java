@@ -7,9 +7,10 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.FindNodeMessage;
 import org.ethereum.net.rlpx.Message;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.table.KademliaOptions;
+import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
 import java.net.InetSocketAddress;
 import java.util.ArrayList;
@@ -62,7 +63,7 @@ public class DiscoverTask implements Runnable {
                         DatagramPacket packet = new DatagramPacket(
                                 Unpooled.copiedBuffer(findNode.getPacket()),
                                 new InetSocketAddress(n.getHost(), n.getPort()));
-                        channel.writeAndFlush(packet);
+                        channel.write(packet);
                         tried.add(n);
                     } catch (Exception ex) {
                         logger.info("{}", ex);
@@ -72,6 +73,8 @@ public class DiscoverTask implements Runnable {
                     break;
                 }
             }
+
+            channel.flush();
 
             if (tried.isEmpty()) {
                 logger.info("{}", String.format("Terminating discover after %d rounds.", round));

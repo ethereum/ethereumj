@@ -3,6 +3,7 @@ package org.ethereum.net.rlpx.discover;
 import io.netty.channel.Channel;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,29 +1,18 @@
 package org.ethereum.net.rlpx.discover;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.DatagramChannel;
-import io.netty.channel.socket.DatagramPacket;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.channel.socket.oio.OioDatagramChannel;
-import io.netty.util.CharsetUtil;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.rlpx.Message;
-import org.ethereum.net.rlpx.NeighborsMessage;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.rlpx.PingMessage;
+import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.net.InetSocketAddress;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class UDPListener {
@@ -54,9 +43,9 @@ public class UDPListener {
 //        table.addNode(p);
 
         //Persist the list of known nodes with their reputation
-//        byte[] cppId = Hex.decode("24f904a876975ab5c7acbedc8ec26e6f7559b527c073c6e822049fee4df78f2e9c74840587355a068f2cdb36942679f7a377a6d8c5713ccf40b1d4b99046bba0");
-//        Node cppBootstrap = new Node(cppId, "5.1.83.226", 30303);
-//        table.addNode(cppBootstrap);
+        byte[] cppId = Hex.decode("487611428e6c99a11a9795a6abe7b529e81315ca6aad66e2a2fc76e3adf263faba0d35466c2f8f68d561dbefa8878d4df5f1f2ddb1fbeab7f42ffb8cd328bd4a");
+        Node cppBootstrap = new Node(cppId, "5.1.83.226", 30303);
+        table.addNode(cppBootstrap);
 
         byte[] cpp2Id = Hex.decode("1637a970d987ddb8fd18c5ca01931210cd2ac5d2fe0f42873c0b31f110c5cbedf68589ec608ec5421e1d259b06cba224127c6bbddbb7c26eaaea56423a23bd31");
         Node cpp2Bootstrap = new Node(cpp2Id, "69.140.163.94", 30320);
@@ -67,7 +56,14 @@ public class UDPListener {
             b.group(group)
             .option(ChannelOption.SO_TIMEOUT, 1000)
             .channel(NioDatagramChannel.class)
-            .handler(new InputPacketHandler(key, table));
+                    .handler(new ChannelInitializer<NioDatagramChannel>() {
+                        @Override
+                        public void initChannel(NioDatagramChannel ch)
+                                throws Exception {
+                            ch.pipeline().addLast(new PacketDecoder());
+                            ch.pipeline().addLast(new MessageHandler(key, table));
+                        }
+                    });
 
             Channel channel = b.bind(address, port).sync().channel();
 

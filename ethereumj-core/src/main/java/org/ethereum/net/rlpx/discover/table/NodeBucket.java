@@ -1,6 +1,7 @@
-package org.ethereum.net.rlpx.discover;
+package org.ethereum.net.rlpx.discover.table;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
 public class NodeBucket {
 
     private final int depth;
-    private LinkedList<NodeEntry> nodes = new LinkedList<>();
+    private List<NodeEntry> nodes = new ArrayList<>();
 
     NodeBucket(int depth) {
         this.depth = depth;
@@ -23,13 +24,19 @@ public class NodeBucket {
     public synchronized NodeEntry addNode(NodeEntry e) {
         if (!nodes.contains(e)) {
             if (nodes.size() >= KademliaOptions.BUCKET_SIZE) {
-                return nodes.getFirst();
+                return getLastSeen();
             } else {
-                nodes.addLast(e);
+                nodes.add(e);
             }
         }
 
         return null;
+    }
+
+    private NodeEntry getLastSeen() {
+        List<NodeEntry> sorted = nodes;
+        Collections.sort(sorted, new TimeComparator());
+        return sorted.get(0);
     }
 
     public synchronized void dropNode(NodeEntry entry) {
