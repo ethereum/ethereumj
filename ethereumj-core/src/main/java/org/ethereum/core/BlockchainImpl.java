@@ -181,7 +181,8 @@ public class BlockchainImpl implements Blockchain {
                     Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
-        if (blockStore.getBlockByHash(block.getHash()) != null) {
+        if (blockStore.getBestBlock().getNumber() >= block.getNumber() &&
+                blockStore.getBlockByHash(block.getHash()) != null) {
 
             if (logger.isDebugEnabled())
                 logger.debug("Block already exist hash: {}, number: {}",
@@ -295,12 +296,13 @@ public class BlockchainImpl implements Blockchain {
         //System.out.println(" Receipts listroot is: " + receiptListHash + " logbloomlisthash is " + logBloomListHash);
 
         track.commit();
-
-        if (block.getNumber() % 100_000 == 0)
-         repository.flush();
-
         storeBlock(block, receipts);
 
+
+        if (block.getNumber() % 100_000 == 0) {
+            repository.flush();
+            blockStore.flush();
+        }
 
         // Remove all wallet transactions as they already approved by the net
         wallet.removeTransactions(block.getTransactionsList());

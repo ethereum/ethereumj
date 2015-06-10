@@ -3,6 +3,7 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.crypto.HashUtil;
+import org.hibernate.SessionFactory;
 
 import java.math.BigInteger;
 
@@ -75,4 +76,17 @@ public class BlockStoreDummy implements BlockStore {
     public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
         return null;
     }
+
+    @Override
+    public void flush() {
+    }
+
+    @Override
+    public void load() {
+    }
+
+    @Override
+    public void setSessionFactory(SessionFactory sessionFactory) {
+    }
+    
 }

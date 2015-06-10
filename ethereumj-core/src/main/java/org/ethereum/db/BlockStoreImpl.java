@@ -3,17 +3,10 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.util.ByteUtil;
-
 import org.hibernate.SessionFactory;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -191,4 +184,17 @@ public class BlockStoreImpl implements BlockStore {
         return new TransactionReceipt(vo.rlp);
 
     }
+
+    @Override
+    public void flush() {
+    }
+
+    @Override
+    public void load() {
+    }
+
+    @Override
+    public void setSessionFactory(SessionFactory sessionFactory) {
+    }
+    
 }

@@ -140,6 +140,9 @@ public class WorldManager {
 
     public void loadBlockchain() {
 
+        if (!CONFIG.databaseReset())
+            blockStore.load();
+
         Block bestBlock = blockStore.getBestBlock();
         if (bestBlock == null) {
             logger.info("DB is empty - adding Genesis");
