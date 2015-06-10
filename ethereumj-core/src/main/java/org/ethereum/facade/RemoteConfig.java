@@ -21,12 +21,12 @@ public class RemoteConfig {
 
     @Autowired CommonConfig commonConfig;
 
-    // todo: init total difficulty
-    // todo: init last 1000 blocks
-
     @Bean
     @Transactional(propagation = Propagation.SUPPORTS)
     public BlockStore blockStore(SessionFactory sessionFactory){
-        return new InMemoryBlockStore();
+
+        BlockStore blockStore = new InMemoryBlockStore();
+        blockStore.setSessionFactory(sessionFactory);
+        return blockStore;
     }
 }

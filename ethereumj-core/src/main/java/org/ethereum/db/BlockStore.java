@@ -3,6 +3,7 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 import org.ethereum.core.TransactionReceipt;
 
+import org.hibernate.SessionFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
@@ -40,4 +41,10 @@ public interface BlockStore {
     void reset();
 
     TransactionReceipt getTransactionReceiptByHash(byte[] hash);
+
+    public void flush();
+    public void load();
+    public void setSessionFactory(SessionFactory sessionFactory);
+
+
 }

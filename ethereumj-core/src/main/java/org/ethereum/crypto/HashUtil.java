@@ -1,5 +1,6 @@
 package org.ethereum.crypto;
 
+import org.ethereum.crypto.cryptohash.Keccak256;
 import org.ethereum.util.RLP;
 import org.ethereum.util.Utils;
 import org.spongycastle.crypto.Digest;
@@ -35,7 +36,9 @@ public class HashUtil {
     }
 
     public static byte[] sha3(byte[] input) {
-        return SHA3Helper.sha3(input);
+        Keccak256 digest =  new Keccak256();
+        digest.update(input);
+        return digest.digest();
     }
 
     public static byte[] sha3(byte[] input, int start, int length) {

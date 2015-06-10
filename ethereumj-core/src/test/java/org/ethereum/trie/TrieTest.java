@@ -4,7 +4,9 @@ import org.ethereum.core.AccountState;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.DatabaseImpl;
+import org.ethereum.util.*;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -30,6 +32,7 @@ import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.util.ByteUtil.wrap;
 import static org.junit.Assert.*;
 
 public class TrieTest {
@@ -1028,5 +1031,62 @@ public class TrieTest {
         Assert.assertEquals("5991bb8c6514148a29db676a14ac506cd2cd5775ace63c30a4fe457715e9ac84", origRoot);
     }
 
+
+    @Test
+    public void testSerialize_1(){
+
+        long t = System.nanoTime();
+
+        TrieImpl trie = new SecureTrie(new HashMapDB());
+
+        byte[] k1 = "do".getBytes();
+        byte[] v1 = "verb".getBytes();
+
+        byte[] k2 = "ether".getBytes();
+        byte[] v2 = "wookiedoo".getBytes();
+
+        byte[] k3 = "horse".getBytes();
+        byte[] v3 = "stallion".getBytes();
+
+        byte[] k4 = "shaman".getBytes();
+        byte[] v4 = "horse".getBytes();
+
+        byte[] k5 = "doge".getBytes();
+        byte[] v5 = "coin".getBytes();
+
+        byte[] k6 = "ether".getBytes();
+        byte[] v6 = "".getBytes();
+
+        byte[] k7 = "dog".getBytes();
+        byte[] v7 = "puppy".getBytes();
+
+        byte[] k8 = "shaman".getBytes();
+        byte[] v8 = "".getBytes();
+
+        trie.update(k1, v1);
+        trie.update(k2, v2);
+        trie.update(k3, v3);
+        trie.update(k4, v4);
+        trie.update(k5, v5);
+        trie.update(k6, v6);
+        trie.update(k7, v7);
+        trie.update(k8, v8);
+
+        byte[] data = trie.serialize();
+        String original = trie.getTrieDump();
+
+        TrieImpl trie2 = new SecureTrie(new HashMapDB());
+
+        long t_ = System.nanoTime();
+
+        trie2.deserialize(data);
+
+        String expected = trie2.getTrieDump();
+        assertEquals(original, expected);
+
+        System.out.println("took: " + ((float)(t_ - t) / 1_000_000) + "ms");
+        System.out.println("size: " + ((float)(data.length) / 1_000) + "KB");
+
+    }
 
 }

@@ -50,8 +50,11 @@ public class BlockLoader {
                             block.getNumber(), ((float)(t1_ - t1) / 1_000_000));
 
                     System.out.println(result);
-                } else
-                    System.out.println("Skipping block #" + block.getNumber());
+                } else{
+
+                    if (block.getNumber() % 10000 == 0)
+                        System.out.println("Skipping block #" + block.getNumber());
+                }
 
 
             }

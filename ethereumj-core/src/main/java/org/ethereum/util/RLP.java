@@ -1,5 +1,7 @@
 package org.ethereum.util;
 
+import org.ethereum.db.ByteArrayWrapper;
+
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -784,6 +786,105 @@ public class RLP {
         }
     }
 
+    public static byte[] encodeListHeader(int size) {
+
+        if (size == 0) {
+            return new byte[]{(byte) OFFSET_SHORT_LIST};
+        }
+
+        int totalLength = size;
+
+        byte[] header;
+        if (totalLength < SIZE_THRESHOLD) {
+
+            header = new byte[1];
+            header[0] = (byte) (OFFSET_SHORT_LIST + totalLength);
+        } else {
+            // length of length = BX
+            // prefix = [BX, [length]]
+            int tmpLength = totalLength;
+            byte byteNum = 0;
+            while (tmpLength != 0) {
+                ++byteNum;
+                tmpLength = tmpLength >> 8;
+            }
+            tmpLength = totalLength;
+
+            byte[] lenBytes = new byte[byteNum];
+            for (int i = 0; i < byteNum; ++i) {
+                lenBytes[byteNum - 1 - i] = (byte) ((tmpLength >> (8 * i)) & 0xFF);
+            }
+            // first byte = F7 + bytes.length
+            header = new byte[1 + lenBytes.length];
+            header[0] = (byte) (OFFSET_LONG_LIST + byteNum);
+            System.arraycopy(lenBytes, 0, header, 1, lenBytes.length);
+
+        }
+
+        return header;
+    }
+
+
+    public static byte[] encodeLongElementHeader(int length) {
+
+        if (length < SIZE_THRESHOLD) {
+
+            if (length == 0)
+                return new byte[] {(byte)0x80};
+            else
+                return new byte[] {(byte)(0x80 + length)};
+
+        } else {
+
+            // length of length = BX
+            // prefix = [BX, [length]]
+            int tmpLength = length;
+            byte byteNum = 0;
+            while (tmpLength != 0) {
+                ++byteNum;
+                tmpLength = tmpLength >> 8;
+            }
+
+            byte[] lenBytes = new byte[byteNum];
+            for (int i = 0; i < byteNum; ++i) {
+                lenBytes[byteNum - 1 - i] = (byte) ((length >> (8 * i)) & 0xFF);
+            }
+
+            // first byte = F7 + bytes.length
+            byte[] header = new byte[1 + lenBytes.length];
+            header[0] = (byte) (OFFSET_LONG_ITEM + byteNum);
+            System.arraycopy(lenBytes, 0, header, 1, lenBytes.length);
+
+            return header;
+        }
+    }
+
+    public static byte[] encodeSet(Set<ByteArrayWrapper> data){
+
+        int dataLength = 0;
+        Set<byte[]> encodedElements = new HashSet<>();
+        for (ByteArrayWrapper element : data){
+
+            byte[] encodedElement = RLP.encodeElement(element.getData());
+            dataLength += encodedElement.length;
+            encodedElements.add(encodedElement);
+        }
+
+        byte[] listHeader = encodeListHeader(dataLength);
+
+        byte[] output = new byte[listHeader.length + dataLength];
+
+        System.arraycopy(listHeader, 0, output, 0, listHeader.length);
+
+        int cummStart = listHeader.length;
+        for (byte[] element : encodedElements){
+            System.arraycopy(element, 0, output, cummStart, element.length);
+            cummStart += element.length;
+        }
+
+        return output;
+    }
+
     public static byte[] encodeList(byte[]... elements) {
 
         if (elements == null) {
@@ -872,4 +973,7 @@ public class RLP {
             throw new RuntimeException("wrong decode attempt");
         }
     }
+
+
+
 }

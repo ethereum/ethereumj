@@ -1,8 +1,6 @@
 package org.ethereum.trie;
 
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.datasource.KeyValueDataSource;
-import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -62,5 +60,26 @@ public class SecureTrie extends TrieImpl implements Trie{
     @Override
     public boolean validate() {
     return super.validate();
+    }
+
+    @Override
+    public byte[] serialize() {
+        return super.serialize();
+    }
+
+    @Override
+    public void deserialize(byte[] data) {
+        super.deserialize(data);
+    }
+
+    @Override
+    public SecureTrie clone(){
+
+        this.getCache();
+
+        this.getRoot();
+
+
+        return null;
     }
 }

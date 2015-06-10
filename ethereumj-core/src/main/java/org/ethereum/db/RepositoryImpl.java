@@ -1,33 +1,26 @@
 package org.ethereum.db;
 
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.facade.Repository;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
-
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
 import org.ethereum.vm.DataWord;
-
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
 import org.springframework.util.FileSystemUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-
 import java.math.BigInteger;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,10 +40,13 @@ public class RepositoryImpl implements Repository {
     public final static String STATE_DB = "state";
 
     private static final Logger logger = LoggerFactory.getLogger("repository");
+    private static final Logger gLogger = LoggerFactory.getLogger("general");
 
     private Trie worldState;
 
     private DatabaseImpl detailsDB = null;
+    private DetailsDataStore dds = new DetailsDataStore();
+
     private DatabaseImpl stateDB = null;
 
     KeyValueDataSource detailsDS = null;
@@ -74,12 +70,16 @@ public class RepositoryImpl implements Repository {
         this.stateDS = stateDS;
 
         detailsDB = new DatabaseImpl(detailsDS);
+        dds.setDB(detailsDB);
+
         stateDB = new DatabaseImpl(stateDS);
         worldState = new SecureTrie(stateDB.getDb());
     }
 
     public RepositoryImpl(String detailsDbName, String stateDbName) {
         detailsDB = new DatabaseImpl(detailsDbName);
+        dds.setDB(detailsDB);
+
         stateDB = new DatabaseImpl(stateDbName);
         worldState = new SecureTrie(stateDB.getDb());
     }
@@ -127,19 +127,27 @@ public class RepositoryImpl implements Repository {
 
             if (accountState.isDeleted()) {
                 worldState.delete(hash.getData());
-                detailsDB.delete(hash.getData());
-
+                dds.remove(hash.getData());
                 logger.debug("delete: [{}]",
                         Hex.toHexString(hash.getData()));
 
             } else {
 
-                if (accountState.isDirty() || contractDetails.isDirty()) {
-                    detailsDB.put(hash.getData(), contractDetails.getEncoded());
+                    ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetails;
+                    if (contractDetailsCache.origContract == null){
+                        contractDetailsCache.origContract = new ContractDetailsImpl();
+                        contractDetailsCache.commit();
+                    }
+
+                    contractDetails = contractDetailsCache.origContract;
+
+                    dds.update(hash.getData(), contractDetails);
+
                     accountState.setStateRoot(contractDetails.getStorageHash());
                     accountState.setCodeHash(sha3(contractDetails.getCode()));
                     worldState.update(hash.getData(), accountState.getEncoded());
-                    if (logger.isDebugEnabled()) {
+
+                if (logger.isDebugEnabled()) {
                         logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
                                 Hex.toHexString(hash.getData()),
                                 accountState.getNonce(),
@@ -147,7 +155,6 @@ public class RepositoryImpl implements Repository {
                                 contractDetails.getStorage());
                     }
 
-                }
 
             }
         }
@@ -161,8 +168,15 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void flush() {
-        logger.info("flush to disk");
+        gLogger.info("flushing to disk");
+
+        dds.flush();
+
+        long t = System.nanoTime();
         worldState.sync();
+        long t__ = System.nanoTime();
+
+        gLogger.info("Flush state in: {} ms", ((float)(t__ - t) / 1_000_000));
     }
 
 
@@ -287,7 +301,13 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        return detailsDB.getDb().keys();
+
+        Set<byte[]> result = new HashSet<>();
+        for (ByteArrayWrapper key :  dds.keys() ){
+            result.add(key.getData());
+        }
+
+        return result;
     }
 
     @Override
@@ -337,7 +357,8 @@ public class RepositoryImpl implements Repository {
         }
 
         details.put(key, value);
-        detailsDB.put(addr, details.getEncoded());
+
+        dds.update(addr, details);
     }
 
     @Override
@@ -361,7 +382,8 @@ public class RepositoryImpl implements Repository {
         }
 
         details.setCode(code);
-        detailsDB.put(addr, details.getEncoded());
+
+        dds.update(addr, details);
     }
 
 
@@ -407,19 +429,12 @@ public class RepositoryImpl implements Repository {
     @Override
     public void delete(byte[] addr) {
         worldState.delete(addr);
-        detailsDB.delete(addr);
+        dds.remove(addr);
     }
 
     @Override
     public ContractDetails getContractDetails(byte[] addr) {
-
-        ContractDetails result = null;
-        byte[] detailsData = detailsDB.get(addr);
-
-        if (detailsData != null)
-            result = new ContractDetailsImpl(detailsData);
-
-        return result;
+        return dds.get(addr);
     }
 
     @Override
@@ -441,7 +456,8 @@ public class RepositoryImpl implements Repository {
         worldState.update(addr, accountState.getEncoded());
 
         ContractDetails contractDetails = new ContractDetailsImpl();
-        detailsDB.put(addr, contractDetails.getEncoded());
+
+        dds.update(addr, contractDetails);
 
         return accountState;
     }
@@ -464,20 +480,15 @@ public class RepositoryImpl implements Repository {
         else
             account = account.clone();
 
-        if (details == null)
-            details = new ContractDetailsCacheImpl();
+        if (details == null) {
+            details = new ContractDetailsCacheImpl(null);
+        }
         else
-            details = new ContractDetailsCacheImpl(details.getEncoded());
+            details = new ContractDetailsCacheImpl(details);
 
         cacheAccounts.put(wrap(addr), account);
         cacheDetails.put(wrap(addr), details);
     }
-
-    public Set<ByteArrayWrapper> getFullAddressSet() {
-        Set<ByteArrayWrapper> setKeys = new HashSet<>(detailsDB.dumpKeys());
-        return setKeys;
-    }
-
 
     @Override
     public byte[] getRoot() {

@@ -20,7 +20,7 @@ public final class VMUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("VM");
     private static final SystemProperties CONFIG = new SystemProperties();
-    
+
     private VMUtils() {
     }
 
@@ -33,12 +33,12 @@ public final class VMUtils {
             // ignore
         }
     }
-    
+
     private static File createProgramTraceFile(String txHash) {
         File result = null;
-        
+
         if (CONFIG.vmTrace() && !isEmpty(CONFIG.vmTraceDir())) {
-            
+
             String pathname = format("%s/%s/%s/%s.json", getProperty("user.dir"), CONFIG.databaseDir(), CONFIG.vmTraceDir(), txHash);
             File file = new File(pathname);
 
@@ -56,7 +56,7 @@ public final class VMUtils {
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -73,7 +73,7 @@ public final class VMUtils {
             closeQuietly(out);
         }
     }
-    
+
     public static void saveProgramTraceFile(String txHash, String content) {
         File file = createProgramTraceFile(txHash);
         if (file != null) {

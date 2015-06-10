@@ -1,13 +1,16 @@
 package org.ethereum.db;
 
 import org.ethereum.trie.SecureTrie;
-import org.ethereum.trie.Trie;
 import org.ethereum.util.*;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
 
-import javax.xml.crypto.Data;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
  * @author Roman Mandeleil
@@ -17,33 +20,23 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
     private Map<DataWord, DataWord> storage = new HashMap<>();
 
+    ContractDetails origContract = new ContractDetailsImpl();
 
-    private byte[] code = ByteUtil.EMPTY_BYTE_ARRAY;
+
+    private byte[] code = EMPTY_BYTE_ARRAY;
 
     private boolean dirty = false;
     private boolean deleted = false;
 
 
-    public ContractDetailsCacheImpl() {
-    }
-
-    public ContractDetailsCacheImpl(byte[] rlpCode) {
-        decode(rlpCode);
-    }
-
-    public ContractDetailsCacheImpl(Map<DataWord, DataWord> storage, byte[] code) {
+    public ContractDetailsCacheImpl(ContractDetails origContract) {
+        this.origContract = origContract;
+        this.code = origContract != null ? origContract.getCode() : EMPTY_BYTE_ARRAY;
     }
 
     @Override
     public void put(DataWord key, DataWord value) {
-
-        if (value.equals(DataWord.ZERO)) {
-            storage.remove(key);
-        } else {
-
-            storage.put(key, value);
-        }
-
+        storage.put(key, value);
         this.setDirty(true);
     }
 
@@ -51,8 +44,17 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     public DataWord get(DataWord key) {
 
         DataWord value = storage.get(key);
-        if (value != null) value = value.clone();
-        return value;
+        if (value != null)
+            value = value.clone();
+        else{
+            if (origContract == null) return null;
+            value = origContract.get(key);
+        }
+
+        if (value == null || value.isZero())
+            return null;
+        else
+            return value;
     }
 
     @Override
@@ -100,7 +102,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
             storage.put(new DataWord(key.getRLPData()), new DataWord(value.getRLPData()));
         }
 
-        this.code = (code.getRLPData() == null) ? ByteUtil.EMPTY_BYTE_ARRAY : code.getRLPData();
+        this.code = (code.getRLPData() == null) ? EMPTY_BYTE_ARRAY : code.getRLPData();
     }
 
     @Override
@@ -159,9 +161,10 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         for (int i = 0; i < storageKeys.size(); ++i){
 
             DataWord key   = storageKeys.get(i);
-            DataWord value = storageKeys.get(i);
+            DataWord value = storageValues.get(i);
 
-            storage.put(key, value);
+            if (value.isZero())
+                storage.put(key, null);
         }
 
     }
@@ -175,7 +178,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     @Override
     public ContractDetails clone() {
 
-        ContractDetailsCacheImpl contractDetails = new ContractDetailsCacheImpl();
+        ContractDetailsCacheImpl contractDetails = new ContractDetailsCacheImpl(origContract);
 
         Object storageClone = ((HashMap<DataWord, DataWord>)storage).clone();
 
@@ -191,6 +194,17 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         ret += "  Storage: " + getStorage().toString();
 
         return ret;
+    }
+
+    public void commit(){
+
+        if (origContract == null) return;
+
+        for (DataWord key : storage.keySet()) {
+            origContract.put(key, storage.get(key));
+        }
+
+        origContract.setCode(code);
     }
 
 }

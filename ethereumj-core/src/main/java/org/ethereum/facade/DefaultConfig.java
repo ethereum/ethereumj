@@ -19,7 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Import(CommonConfig.class)
 public class DefaultConfig {
     
-    @Autowired CommonConfig commonConfig;
+    @Autowired 
+    CommonConfig commonConfig;
 
     @Bean
     @Transactional(propagation = Propagation.SUPPORTS)

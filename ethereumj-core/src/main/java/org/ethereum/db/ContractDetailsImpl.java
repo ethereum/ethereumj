@@ -1,21 +1,19 @@
 package org.ethereum.db;
 
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.trie.SecureTrie;
-import org.ethereum.trie.Trie;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
-
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.wrap;
 
 /**
  * @author Roman Mandeleil
@@ -25,15 +23,13 @@ public class ContractDetailsImpl implements ContractDetails {
 
     private byte[] rlpEncoded;
 
-    private List<DataWord> storageKeys = new ArrayList<>();
-    private List<DataWord> storageValues = new ArrayList<>();
-
-    private byte[] code = ByteUtil.EMPTY_BYTE_ARRAY;
+    private byte[] code = EMPTY_BYTE_ARRAY;
 
     private boolean dirty = false;
     private boolean deleted = false;
 
-    private Trie storageTrie = new SecureTrie(null);
+    private SecureTrie storageTrie = new SecureTrie(new HashMapDB());
+    private Set<ByteArrayWrapper> keys = new HashSet<>(); // FIXME: sync to the disk
 
     public ContractDetailsImpl() {
     }
@@ -42,30 +38,22 @@ public class ContractDetailsImpl implements ContractDetails {
         decode(rlpCode);
     }
 
-    public ContractDetailsImpl(Map<DataWord, DataWord> storage, byte[] code) {
+    public ContractDetailsImpl(SecureTrie storageTrie, byte[] code) {
+        this.storageTrie = storageTrie;
+        this.code = code;
     }
 
     @Override
     public void put(DataWord key, DataWord value) {
 
-        if (value.equals(DataWord.ZERO)) {
+        if (value.equals(DataWord.ZERO)){
 
             storageTrie.delete(key.getData());
-            int index = storageKeys.indexOf(key);
-            if (index != -1) {
-                storageKeys.remove(index);
-                storageValues.remove(index);
-            }
-        } else {
+            keys.remove(wrap(key.getData()));
+        } else{
 
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
-            int index = storageKeys.indexOf(key);
-            if (index != -1) {
-                storageKeys.remove(index);
-                storageValues.remove(index);
-            }
-            storageKeys.add(key);
-            storageValues.add(value);
+            keys.add(wrap(key.getData()));
         }
 
         this.setDirty(true);
@@ -75,15 +63,14 @@ public class ContractDetailsImpl implements ContractDetails {
     @Override
     public DataWord get(DataWord key) {
 
-        if (storageKeys.size() == 0)
-            return null;
+        byte[] data = storageTrie.get(key.getData());
 
-        int foundIndex = storageKeys.indexOf(key);
-        if (foundIndex != -1) {
-            DataWord value = storageValues.get(foundIndex);
-            return value.clone();
-        } else
+        if (data.length == 0)
             return null;
+        else{
+            byte[] dataDecoded = RLP.decode2(data).get(0).getRLPData();
+            return new DataWord(dataDecoded);
+        }
     }
 
     @Override
@@ -100,13 +87,6 @@ public class ContractDetailsImpl implements ContractDetails {
 
     @Override
     public byte[] getStorageHash() {
-
-        storageTrie = new SecureTrie(null);
-        // calc the trie for root hash
-        for (int i = 0; i < storageKeys.size(); ++i) {
-            storageTrie.update(storageKeys.get(i).getData(), RLP
-                    .encodeElement(storageValues.get(i).getNoLeadZeroesData()));
-        }
         return storageTrie.getRootHash();
     }
 
@@ -115,34 +95,35 @@ public class ContractDetailsImpl implements ContractDetails {
         RLPList data = RLP.decode2(rlpCode);
         RLPList rlpList = (RLPList) data.get(0);
 
-        RLPList keys = (RLPList) rlpList.get(0);
-        RLPList values = (RLPList) rlpList.get(1);
-        RLPElement code = rlpList.get(2);
+        RLPItem storage = (RLPItem) rlpList.get(0);
+        RLPElement code = rlpList.get(1);
+        RLPList keys = (RLPList) rlpList.get(2);
 
-        if (keys.size() > 0) {
-            storageKeys = new ArrayList<>();
-            storageValues = new ArrayList<>();
+        this.storageTrie.deserialize(storage.getRLPData());
+        this.code = (code.getRLPData() == null) ? EMPTY_BYTE_ARRAY : code.getRLPData();
+
+        for (int i = 0; i < keys.size(); ++i){
+            byte[] key = keys.get(i).getRLPData();
+            this.keys.add(wrap(key));
         }
 
-        for (Object key : keys) {
-            RLPItem rlpItem = (RLPItem) key;
-            storageKeys.add(new DataWord(rlpItem.getRLPData()));
-        }
-
-        for (Object value : values) {
-            RLPItem rlpItem = (RLPItem) value;
-            storageValues.add(new DataWord(rlpItem.getRLPData()));
-        }
-
-        for (int i = 0; i < keys.size(); ++i) {
-            DataWord key = storageKeys.get(i);
-            DataWord value = storageValues.get(i);
-            storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
-        }
-
-        this.code = (code.getRLPData() == null) ? ByteUtil.EMPTY_BYTE_ARRAY : code.getRLPData();
         this.rlpEncoded = rlpCode;
     }
+
+    @Override
+    public byte[] getEncoded() {
+
+        if (rlpEncoded == null) {
+
+            byte[] storage = RLP.encodeElement(storageTrie.serialize());
+            byte[] rlpCode = RLP.encodeElement(code);
+            byte[] rlpKeys = RLP.encodeSet(keys);
+
+            this.rlpEncoded = RLP.encodeList(storage, rlpCode, rlpKeys);
+        }
+        return rlpEncoded;
+    }
+
 
     @Override
     public void setDirty(boolean dirty) {
@@ -165,76 +146,51 @@ public class ContractDetailsImpl implements ContractDetails {
     }
 
 
-    @Override
-    public byte[] getEncoded() {
-
-        if (rlpEncoded == null) {
-
-            int size = storageKeys == null ? 0 : storageKeys.size();
-
-            byte[][] keys = new byte[size][];
-            byte[][] values = new byte[size][];
-
-            for (int i = 0; i < size; ++i) {
-                DataWord key = storageKeys.get(i);
-                keys[i] = RLP.encodeElement(key.getData());
-            }
-            for (int i = 0; i < size; ++i) {
-                DataWord value = storageValues.get(i);
-                values[i] = RLP.encodeElement(value.getNoLeadZeroesData());
-            }
-
-            byte[] rlpKeysList = RLP.encodeList(keys);
-            byte[] rlpValuesList = RLP.encodeList(values);
-            byte[] rlpCode = RLP.encodeElement(code);
-
-            this.rlpEncoded = RLP.encodeList(rlpKeysList, rlpValuesList, rlpCode);
-        }
-        return rlpEncoded;
-    }
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
+
         Map<DataWord, DataWord> storage = new HashMap<>();
-        for (int i = 0; storageKeys != null && i < storageKeys.size(); ++i) {
-            storage.put(storageKeys.get(i), storageValues.get(i));
+
+        for (ByteArrayWrapper keyBytes : keys){
+
+            DataWord key = new DataWord(keyBytes);
+            DataWord value = get(key);
+            storage.put(key, value);
         }
-        return Collections.unmodifiableMap(storage);
+
+        return storage;
     }
 
     @Override
     public void setStorage(List<DataWord> storageKeys, List<DataWord> storageValues) {
-        this.storageKeys = storageKeys;
-        this.storageValues = storageValues;
+
+        for (int i = 0; i < storageKeys.size(); ++i)
+            put(storageKeys.get(i), storageValues.get(i));
     }
 
     @Override
     public void setStorage(Map<DataWord, DataWord> storage) {
 
-        List<DataWord> keys = new ArrayList<>();
-        keys.addAll(storage.keySet());
-
-        List<DataWord> values = new ArrayList<>();
-        for (DataWord key : keys) {
+        for (DataWord key : storage.keySet()) {
 
             DataWord value = storage.get(key);
-            values.add(value);
+            put(key, value);
         }
-
-        this.storageKeys = keys;
-        this.storageValues = values;
     }
 
 
     @Override
     public ContractDetails clone() {
 
-        ContractDetailsImpl contractDetails = new ContractDetailsImpl();
+        // FIXME: clone is not working now !!!
+        // FIXME: should be fixed
 
-        contractDetails.setCode(this.getCode());
-        contractDetails.setStorage(new ArrayList<>(this.storageKeys),
-                new ArrayList<>(this.storageValues));
-        return contractDetails;
+        byte[] cloneCode = Arrays.clone(this.getCode());
+
+        storageTrie.getRoot();
+
+        return new ContractDetailsImpl(null, cloneCode);
     }
 
     @Override

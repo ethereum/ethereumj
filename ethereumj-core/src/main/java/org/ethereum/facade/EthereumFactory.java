@@ -19,11 +19,11 @@ public class EthereumFactory {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
     public static ApplicationContext context = null;
-    
+
     public static Ethereum createEthereum() {
-        return createEthereum(DefaultConfig.class);
+        return createEthereum(RemoteConfig.class);
     }
-    
+
     public static Ethereum createEthereum(Class clazz) {
 
         logger.info("capability eth version: [{}]", EthHandler.VERSION);

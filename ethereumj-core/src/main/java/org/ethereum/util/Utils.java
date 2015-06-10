@@ -23,16 +23,19 @@ public class Utils {
     private static SecureRandom random = new SecureRandom();
 
     /**
-     * @param hexNum should be in form '0x34fabd34....'
+     * @param number should be in form '0x34fabd34....'
      * @return String
      */
-    public static String hexStringToDecimalString(String hexNum) {
+    public static BigInteger unifiedNumericToBigInteger(String number) {
 
-        boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", hexNum);
-        if (!match) throw new Error("The string doesn't contains hex num in form 0x.. : [" + hexNum + "]");
+        boolean match = Pattern.matches("0[xX][0-9a-fA-F]+", number);
+        if (!match)
+            return (new BigInteger(number));
+        else{
 
-        byte[] numberBytes = Hex.decode(hexNum.substring(2));
-        return (new BigInteger(1, numberBytes)).toString();
+            byte[] numberBytes = Hex.decode(number.substring(2));
+            return (new BigInteger(1, numberBytes));
+        }
     }
 
     /**

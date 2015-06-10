@@ -87,13 +87,22 @@ public class CommonConfig {
 
         Properties prop = new Properties();
 
-        prop.put("hibernate.hbm2ddl.auto", "update");
+        if (CONFIG.databaseReset())
+            prop.put("hibernate.hbm2ddl.auto", "create-drop");
+        else
+            prop.put("hibernate.hbm2ddl.auto", "update");
+
         prop.put("hibernate.format_sql", "true");
+        prop.put("hibernate.connection.autocommit", "false");
+        prop.put("hibernate.connection.release_mode", "after_transaction");
+        prop.put("hibernate.jdbc.batch_size", "1000");
+        prop.put("hibernate.order_inserts", "true");
+        prop.put("hibernate.order_updates", "true");
 
 // todo: useful but annoying consider define by system.properties
 //        prop.put("hibernate.show_sql", "true");
         prop.put("hibernate.dialect",
-                "org.hibernate.dialect.HSQLDialect");
+                "org.hibernate.dialect.H2Dialect");
         return prop;
     }
 
@@ -101,6 +110,7 @@ public class CommonConfig {
     public HibernateTransactionManager txManager() {
         return new HibernateTransactionManager(sessionFactory());
     }
+
 
     @Bean(name = "dataSource")
     public DriverManagerDataSource dataSource() {
@@ -110,18 +120,17 @@ public class CommonConfig {
         System.setProperty("hsqldb.reconfig_logging", "false");
 
         String url =
-                String.format("jdbc:hsqldb:file:./%s/blockchain/blockchain.db;" +
-                                "create=true;hsqldb.default_table_type=cached",
-
+                String.format("jdbc:h2:./%s/blockchain/blockchain.db;CACHE_SIZE=200000",
                         SystemProperties.CONFIG.databaseDir());
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
-        ds.setDriverClassName("org.hsqldb.jdbcDriver");
+        ds.setDriverClassName("org.h2.Driver");
         ds.setUrl(url);
         ds.setUsername("sa");
 
-
         return ds;
+
     }
+
 
 }

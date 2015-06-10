@@ -2,10 +2,7 @@ package org.ethereum.db;
 
 import java.math.BigInteger;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Lob;
-import javax.persistence.Table;
+import javax.persistence.*;
 
 /**
  * @author Roman Mandeleil
@@ -21,6 +18,7 @@ public class BlockVO {
     Long number;
 
     @Lob
+    @Column(length=102400)
     byte[] rlp;
 
     BigInteger cumulativeDifficulty;

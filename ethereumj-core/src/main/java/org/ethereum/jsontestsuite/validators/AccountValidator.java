@@ -46,7 +46,7 @@ public class AccountValidator {
         }
 
         if (!Arrays.equals(expectedDetails.getCode(), currentDetails.getCode())) {
-            String formattedString = String.format("Account: %s: has unexpected nonce, expected nonce: %s found nonce: %s",
+            String formattedString = String.format("Account: %s: has unexpected code, expected code: %s found code: %s",
                     address, Hex.toHexString(expectedDetails.getCode()), Hex.toHexString(currentDetails.getCode()));
             results.add(formattedString);
         }

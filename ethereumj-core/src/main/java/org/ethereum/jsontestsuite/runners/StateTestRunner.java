@@ -13,7 +13,6 @@ import org.ethereum.jsontestsuite.builder.*;
 import org.ethereum.jsontestsuite.validators.LogsValidator;
 import org.ethereum.jsontestsuite.validators.OutputValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
-import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.LogInfo;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -55,14 +54,13 @@ public class StateTestRunner {
 
         try{
             executor.init();
-            executor.execute2();
+            executor.execute();
             executor.go();
             executor.finalization();
         } catch (StackOverflowError soe){
             logger.error(" !!! StackOverflowError: update your java run command with -Xss32M !!!");
             System.exit(-1);
         }
-
 
         track.commit();
         repository.flush();

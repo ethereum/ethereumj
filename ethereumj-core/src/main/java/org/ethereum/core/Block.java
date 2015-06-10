@@ -56,7 +56,6 @@ public class Block {
     public Block(byte[] rawData) {
         logger.debug("new from [" + Hex.toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
-        this.parsed = false;
     }
 
     public Block(BlockHeader header, List<Transaction> transactionsList, List<BlockHeader> uncleList) {
@@ -360,7 +359,7 @@ public class Block {
         parseTxs(txTransactions);
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
-            logger.error("Added tx receipts don't match the given txsStateRoot");
+            logger.error("Transactions trie root validation failed for block #{}", this.header.getNumber());
     }
 
     /**

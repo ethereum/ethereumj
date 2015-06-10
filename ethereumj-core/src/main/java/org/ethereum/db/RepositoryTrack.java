@@ -47,7 +47,7 @@ public class RepositoryTrack implements Repository {
         AccountState accountState = new AccountState();
         cacheAccounts.put(wrap(addr), accountState);
 
-        ContractDetails contractDetails = new ContractDetailsCacheImpl();
+        ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
         cacheDetails.put(wrap(addr), contractDetails);
 
         return accountState;
@@ -99,7 +99,9 @@ public class RepositoryTrack implements Repository {
             repository.loadAccount(addr, cacheAccounts, cacheDetails);
         } else {
             cacheAccounts.put(wrap(addr), accountState.clone());
-            cacheDetails.put(wrap(addr), contractDetails.clone());
+
+            ContractDetails contractDetailsLvl2 = new ContractDetailsCacheImpl(contractDetails);
+            cacheDetails.put(wrap(addr), contractDetailsLvl2);
         }
     }
 
@@ -221,7 +223,10 @@ public class RepositoryTrack implements Repository {
     @Override
     public Repository startTracking() {
         logger.debug("start tracking");
-        return new RepositoryTrack(this);
+
+        Repository repository = new RepositoryTrack(this);
+
+        return repository;
     }
 
 
@@ -233,6 +238,13 @@ public class RepositoryTrack implements Repository {
 
     @Override
     public void commit() {
+
+        for (ContractDetails contractDetails : cacheDetails.values()) {
+
+            ContractDetailsCacheImpl contractDetailsCache = (ContractDetailsCacheImpl)contractDetails;
+            contractDetailsCache.commit();
+        }
+
         repository.updateBatch(cacheAccounts, cacheDetails);
         cacheAccounts.clear();
         cacheDetails.clear();
@@ -262,7 +274,12 @@ public class RepositoryTrack implements Repository {
         }
 
         for (ByteArrayWrapper hash : contractDetailes.keySet()) {
-            cacheDetails.put(hash, contractDetailes.get(hash));
+
+            ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetailes.get(hash);
+            if (contractDetailsCache.origContract != null && !(contractDetailsCache.origContract instanceof ContractDetailsImpl))
+                cacheDetails.put(hash, contractDetailsCache.origContract);
+            else
+                cacheDetails.put(hash, contractDetailsCache);
         }
     }
 

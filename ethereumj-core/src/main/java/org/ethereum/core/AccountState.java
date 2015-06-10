@@ -71,6 +71,7 @@ public class AccountState {
     }
 
     public void setNonce(BigInteger nonce) {
+        rlpEncoded = null;
         this.nonce = nonce;
     }
 

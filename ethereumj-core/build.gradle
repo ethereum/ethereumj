@@ -24,7 +24,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xms2g"]
+applicationDefaultJvmArgs = ["-server", "-Xms3g", "-Xss32m"]
 
 ext.generatedSrcDir = file('src/gen/java')
 
@@ -114,11 +114,11 @@ dependencies {
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
     compile "org.springframework:spring-orm:${springVersion}"
-    compile "org.hsqldb:hsqldb:2.3.2"
     compile "org.hibernate:hibernate-core:${hibernateVersion}"
     compile "org.hibernate:hibernate-entitymanager:${hibernateVersion}"
     compile "commons-dbcp:commons-dbcp:1.4"
     compile "redis.clients:jedis:2.6.0"
+    compile "com.h2database:h2:1.4.187"
 
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "log4j:apache-log4j-extras:${log4jVersion}"

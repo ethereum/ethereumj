@@ -140,6 +140,9 @@ public class WorldManager {
 
     public void loadBlockchain() {
 
+        if (!CONFIG.databaseReset())
+            blockStore.load();
+
         Block bestBlock = blockStore.getBestBlock();
         if (bestBlock == null) {
             logger.info("DB is empty - adding Genesis");
@@ -155,7 +158,7 @@ public class WorldManager {
             blockchain.setBestBlock(Genesis.getInstance());
             blockchain.setTotalDifficulty(Genesis.getInstance().getCumulativeDifficulty());
 
-            listener.onBlock(Genesis.getInstance());
+            listener.onBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>() );
             repository.dumpState(Genesis.getInstance(), 0, 0, null);
 
             logger.info("Genesis block loaded");
