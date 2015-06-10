@@ -12,15 +12,15 @@ import java.util.zip.InflaterOutputStream;
 
 import static java.lang.String.format;
 import static java.lang.System.getProperty;
-import static java.util.Base64.getDecoder;
-import static java.util.Base64.getEncoder;
+import static org.apache.commons.codec.binary.Base64.decodeBase64;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.springframework.util.StringUtils.isEmpty;
 
 public final class VMUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger("VM");
     private static final SystemProperties CONFIG = new SystemProperties();
-    
+
     private VMUtils() {
     }
 
@@ -33,12 +33,12 @@ public final class VMUtils {
             // ignore
         }
     }
-    
+
     private static File createProgramTraceFile(String txHash) {
         File result = null;
-        
+
         if (CONFIG.vmTrace() && !isEmpty(CONFIG.vmTraceDir())) {
-            
+
             String pathname = format("%s/%s/%s/%s.json", getProperty("user.dir"), CONFIG.databaseDir(), CONFIG.vmTraceDir(), txHash);
             File file = new File(pathname);
 
@@ -56,7 +56,7 @@ public final class VMUtils {
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -73,7 +73,7 @@ public final class VMUtils {
             closeQuietly(out);
         }
     }
-    
+
     public static void saveProgramTraceFile(String txHash, String content) {
         File file = createProgramTraceFile(txHash);
         if (file != null) {
@@ -119,7 +119,7 @@ public final class VMUtils {
 
     public static String zipAndEncode(String content) {
         try {
-            return getEncoder().encodeToString(compress(content));
+            return encodeBase64String(compress(content));
         } catch (Exception e) {
             LOGGER.error("Cannot zip or encode: ", e);
             return content;
@@ -128,7 +128,7 @@ public final class VMUtils {
 
     public static String unzipAndDecode(String content) {
         try {
-            return decompress(getDecoder().decode(content));
+            return decompress(decodeBase64(content));
         } catch (Exception e) {
             LOGGER.error("Cannot unzip or decode: ", e);
             return content;
