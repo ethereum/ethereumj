@@ -299,7 +299,7 @@ public class BlockchainImpl implements Blockchain {
         storeBlock(block, receipts);
 
 
-        if (block.getNumber() % 100_000 == 0) {
+        if (block.getNumber() % 20_000 == 0) {
             repository.flush();
             blockStore.flush();
         }
