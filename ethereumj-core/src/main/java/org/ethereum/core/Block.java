@@ -359,7 +359,7 @@ public class Block {
         parseTxs(txTransactions);
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
         if (!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
-            logger.error("Transactions trie root validation failed for block #{}", getNumber());
+            logger.error("Transactions trie root validation failed for block #{}", this.header.getNumber());
     }
 
     /**
