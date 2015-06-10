@@ -56,7 +56,6 @@ public class Block {
     public Block(byte[] rawData) {
         logger.debug("new from [" + Hex.toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
-        this.parsed = false;
     }
 
     public Block(BlockHeader header, List<Transaction> transactionsList, List<BlockHeader> uncleList) {

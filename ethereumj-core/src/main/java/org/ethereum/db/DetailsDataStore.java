@@ -76,10 +76,10 @@ public class DetailsDataStore {
 
 
     public Set<ByteArrayWrapper> keys(){
-
-        Set<ByteArrayWrapper> keys = cache.keySet();
+        
+        Set<ByteArrayWrapper> keys = new HashSet<>();
+        keys.addAll(cache.keySet());
         keys.addAll(db.dumpKeys());
-
         return keys;
     }
 }

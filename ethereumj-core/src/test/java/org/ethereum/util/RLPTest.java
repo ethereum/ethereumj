@@ -23,6 +23,7 @@ import java.net.UnknownHostException;
 import java.util.*;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
+import static org.ethereum.util.ByteUtil.wrap;
 import static org.junit.Assert.*;
 import static org.ethereum.util.RlpTestData.*;
 
@@ -1011,10 +1012,13 @@ public class RLPTest {
 
         byte[] setEncoded = RLP.encodeSet(data);
 
-        assertEquals("f840" +
-                    "2222222222222222222222222222222222222222222222222222222222222222" +
-                    "1111111111111111111111111111111111111111111111111111111111111111",
-                Hex.toHexString(setEncoded));
+        RLPList list = (RLPList)RLP.decode2(setEncoded).get(0);
+
+        byte[] element1_ = list.get(0).getRLPData();
+        byte[] element2_ = list.get(1).getRLPData();
+
+        assertTrue(data.contains(wrap(element1_)));
+        assertTrue(data.contains(wrap(element2_)));
     }
 
     @Test
