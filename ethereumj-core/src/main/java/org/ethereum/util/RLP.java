@@ -862,8 +862,13 @@ public class RLP {
     public static byte[] encodeSet(Set<ByteArrayWrapper> data){
 
         int dataLength = 0;
-        for (ByteArrayWrapper element : data)
-            dataLength += element.getData().length;
+        Set<byte[]> encodedElements = new HashSet<>();
+        for (ByteArrayWrapper element : data){
+
+            byte[] encodedElement = RLP.encodeElement(element.getData());
+            dataLength += encodedElement.length;
+            encodedElements.add(encodedElement);
+        }
 
         byte[] listHeader = encodeListHeader(dataLength);
 
@@ -872,9 +877,9 @@ public class RLP {
         System.arraycopy(listHeader, 0, output, 0, listHeader.length);
 
         int cummStart = listHeader.length;
-        for (ByteArrayWrapper element : data){
-            System.arraycopy(element.getData(), 0, output, cummStart, element.getData().length);
-            cummStart += element.getData().length;
+        for (byte[] element : encodedElements){
+            System.arraycopy(element, 0, output, cummStart, element.length);
+            cummStart += element.length;
         }
 
         return output;
