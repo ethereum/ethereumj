@@ -311,8 +311,7 @@ public class BlockchainImpl implements Blockchain {
         clearPendingTransactions(block.getTransactionsList());
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
-        listener.onBlock(block);
-        listener.onBlockReciepts(receipts);
+        listener.onBlock(block, receipts);
 
         if (blockQueue != null &&
             blockQueue.size() == 0 &&

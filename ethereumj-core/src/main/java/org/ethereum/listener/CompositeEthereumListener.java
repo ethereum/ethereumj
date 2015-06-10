@@ -29,15 +29,9 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onBlock(Block block) {
+    public void onBlock(Block block, List<TransactionReceipt> receipts) {
         for (EthereumListener listener : listeners)
-            listener.onBlock(block);
-    }
-
-    @Override
-    public void onBlockReciepts(List<TransactionReceipt> receipts) {
-        for (EthereumListener listener : listeners)
-            listener.onBlockReciepts(receipts);
+            listener.onBlock(block, receipts);
     }
 
     @Override

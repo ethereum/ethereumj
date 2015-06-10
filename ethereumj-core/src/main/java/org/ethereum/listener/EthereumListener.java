@@ -18,9 +18,7 @@ public interface EthereumListener {
 
     void trace(String output);
 
-    void onBlock(Block block);
-
-    void onBlockReciepts(List<TransactionReceipt> receipts);
+    void onBlock(Block block, List<TransactionReceipt> receipts);
 
     void onRecvMessage(Message message);
 

@@ -20,7 +20,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onBlock(Block block) {
+    public void onBlock(Block block, List<TransactionReceipt> receipts) {
     }
 
     @Override
@@ -54,10 +54,6 @@ public class EthereumListenerAdapter implements EthereumListener {
 
     }
 
-    @Override
-    public void onBlockReciepts(List<TransactionReceipt> receipts) {
-
-    }
 
     @Override
     public void onVMTraceCreated(String transactionHash, String trace) {
