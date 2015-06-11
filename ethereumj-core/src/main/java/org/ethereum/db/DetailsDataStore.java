@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import static org.ethereum.util.ByteUtil.wrap;
@@ -55,11 +56,15 @@ public class DetailsDataStore {
 
         long t = System.nanoTime();
 
+        Map<byte[], byte[]> batch = new HashMap<>();
         for (ByteArrayWrapper key : cache.keySet()){
             ContractDetails contractDetails = cache.get(key);
             byte[] value = contractDetails.getEncoded();
             db.put(key.getData(), value);
+            batch.put(key.getData(), value);
         }
+
+        db.getDb().updateBatch(batch);
 
         for (ByteArrayWrapper key : removes){
             db.delete(key.getData());
@@ -76,7 +81,7 @@ public class DetailsDataStore {
 
 
     public Set<ByteArrayWrapper> keys(){
-        
+
         Set<ByteArrayWrapper> keys = new HashSet<>();
         keys.addAll(cache.keySet());
         keys.addAll(db.dumpKeys());
