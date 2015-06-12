@@ -128,7 +128,7 @@ public class RLPTest {
         data = RLP.encodeByte((byte) 120);
         assertArrayEquals(expected2, data);
 
-        byte[] expected3 = {(byte) 0x81, (byte) 0x7F};
+        byte[] expected3 = {(byte) 0x7F};
         data = RLP.encodeByte((byte) 127);
         assertArrayEquals(expected3, data);
     }
@@ -145,7 +145,7 @@ public class RLPTest {
         data = RLP.encodeShort((byte) 120);
         assertArrayEquals(expected2, data);
 
-        byte[] expected3 = {(byte) 0x81, (byte) 0x7F};
+        byte[] expected3 = { (byte) 0x7F};
         data = RLP.encodeShort((byte) 127);
         assertArrayEquals(expected3, data);
 
@@ -170,7 +170,7 @@ public class RLPTest {
         data = RLP.encodeInt(120);
         assertArrayEquals(expected2, data);
 
-        byte[] expected3 = {(byte) 0x81, (byte) 0x7F};
+        byte[] expected3 = {(byte) 0x7F};
         data = RLP.encodeInt(127);
         assertArrayEquals(expected3, data);
 
