@@ -1029,6 +1029,21 @@ public class RLPTest {
         assertEquals("c0", Hex.toHexString(setEncoded));
     }
 
+    @Test
+    public void testEncodeInt_7f(){
+        String result =  Hex.toHexString(RLP.encodeInt(0x7f));
+        String expected = "7f";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testEncodeInt_80(){
+        String result =  Hex.toHexString(RLP.encodeInt(0x80));
+        String expected = "8180";
+        assertEquals(expected, result);
+    }
+
+
 
 
 }

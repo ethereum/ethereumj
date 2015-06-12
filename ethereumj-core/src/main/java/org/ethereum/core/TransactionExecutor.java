@@ -324,9 +324,8 @@ public class TransactionExecutor {
                 track.delete(address.getLast20Bytes());
             }
 
-        // Keep execution logs  todo: that yet
-//*cpp*        if (m_ext)
-//                m_logs = m_ext->sub.logs;
+        if (result != null)
+            logs = result.getLogInfoList();
 
         if (result.getLogInfoList() != null){
 
