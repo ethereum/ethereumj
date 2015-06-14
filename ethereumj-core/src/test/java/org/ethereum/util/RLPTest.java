@@ -128,7 +128,7 @@ public class RLPTest {
         data = RLP.encodeByte((byte) 120);
         assertArrayEquals(expected2, data);
 
-        byte[] expected3 = {(byte) 0x81, (byte) 0x7F};
+        byte[] expected3 = {(byte) 0x7F};
         data = RLP.encodeByte((byte) 127);
         assertArrayEquals(expected3, data);
     }
@@ -145,7 +145,7 @@ public class RLPTest {
         data = RLP.encodeShort((byte) 120);
         assertArrayEquals(expected2, data);
 
-        byte[] expected3 = {(byte) 0x81, (byte) 0x7F};
+        byte[] expected3 = { (byte) 0x7F};
         data = RLP.encodeShort((byte) 127);
         assertArrayEquals(expected3, data);
 
@@ -170,7 +170,7 @@ public class RLPTest {
         data = RLP.encodeInt(120);
         assertArrayEquals(expected2, data);
 
-        byte[] expected3 = {(byte) 0x81, (byte) 0x7F};
+        byte[] expected3 = {(byte) 0x7F};
         data = RLP.encodeInt(127);
         assertArrayEquals(expected3, data);
 
@@ -1028,6 +1028,21 @@ public class RLPTest {
         byte[] setEncoded = RLP.encodeSet(data);
         assertEquals("c0", Hex.toHexString(setEncoded));
     }
+
+    @Test
+    public void testEncodeInt_7f(){
+        String result =  Hex.toHexString(RLP.encodeInt(0x7f));
+        String expected = "7f";
+        assertEquals(expected, result);
+    }
+
+    @Test
+    public void testEncodeInt_80(){
+        String result =  Hex.toHexString(RLP.encodeInt(0x80));
+        String expected = "8180";
+        assertEquals(expected, result);
+    }
+
 
 
 

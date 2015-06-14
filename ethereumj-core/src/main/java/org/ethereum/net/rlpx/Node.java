@@ -7,7 +7,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.nio.charset.Charset;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.intToBytesNoLeadZeroes;
+import static org.ethereum.util.ByteUtil.intToBytes;
+
 
 public class Node {
 
@@ -66,7 +67,7 @@ public class Node {
     public byte[] getRLP() {
 
         byte[] rlphost = RLP.encodeElement(host.getBytes(Charset.forName("UTF-8")));
-        byte[] rlpPort = RLP.encodeElement(intToBytesNoLeadZeroes(port));
+        byte[] rlpPort = RLP.encodeElement(intToBytes(port));
         byte[] rlpId = RLP.encodeElement(id);
 
         byte[] data = RLP.encodeList(rlphost, rlpPort, rlpId);

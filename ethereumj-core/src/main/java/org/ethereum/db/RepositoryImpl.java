@@ -171,12 +171,7 @@ public class RepositoryImpl implements Repository {
         gLogger.info("flushing to disk");
 
         dds.flush();
-
-        long t = System.nanoTime();
         worldState.sync();
-        long t__ = System.nanoTime();
-
-        gLogger.info("Flush state in: {} ms", ((float)(t__ - t) / 1_000_000));
     }
 
 

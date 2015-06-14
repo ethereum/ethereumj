@@ -46,10 +46,15 @@ public class BlockLoader {
                 if (block.getNumber() > blockchain.getBestBlock().getNumber()){
                     blockchain.tryToConnect(block);
                     long t1_ = System.nanoTime();
-                    String result = String.format("Imported block #%d took: [%02.2f msec]",
-                            block.getNumber(), ((float)(t1_ - t1) / 1_000_000));
 
-                    System.out.println(result);
+                    float elapsed = ((float)(t1_ - t1) / 1_000_000);
+
+                    if (block.getNumber() % 5000 == 0 || elapsed > 10_000) {
+                        String result = String.format("Imported block #%d took: [%02.2f msec]",
+                                block.getNumber(), elapsed);
+
+                        System.out.println(result);
+                    }
                 } else{
 
                     if (block.getNumber() % 10000 == 0)

@@ -115,17 +115,30 @@ public class ByteUtil {
         return stripLeadingZeroes(data);
     }
 
+    public static byte[] intToBytes(int val){
 
-    /**
-     * Converts a int value into a byte array.
-     *
-     * @param val - int value to convert
-     * @return decimal value with leading byte that are zeroes striped
-     */
-    public static byte[] intToBytesNoLeadZeroes(int val) {
-        return longToBytesNoLeadZeroes((long)val);
+        if (val == 0) return EMPTY_BYTE_ARRAY;
+
+        int lenght = 0;
+
+        int tmpVal = val;
+        while (tmpVal != 0){
+            tmpVal = tmpVal >> 8;
+            ++lenght;
+        }
+
+        byte[] result = new byte[lenght];
+
+        int index = result.length - 1;
+        while(val != 0){
+
+            result[index] = (byte)(val & 0xFF);
+            val = val >> 8;
+            index -= 1;
+        }
+
+        return result;
     }
-
 
 
     /**

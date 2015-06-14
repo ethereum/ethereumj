@@ -7,9 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 import static java.util.Arrays.copyOfRange;
-import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.isNullOrZeroArray;
-import static org.ethereum.util.ByteUtil.isSingleZero;
+import static org.ethereum.util.ByteUtil.*;
 import static org.spongycastle.util.Arrays.concatenate;
 import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
@@ -687,7 +685,7 @@ public class RLP {
         } else if (length < MAX_ITEM_LENGTH) {
             byte[] binaryLength;
             if (length > 0xFF)
-                binaryLength = BigInteger.valueOf(length).toByteArray();
+                binaryLength = intToBytes(length);
             else
                 binaryLength = new byte[]{(byte) length};
             byte firstByte = (byte) (binaryLength.length + offset + SIZE_THRESHOLD - 1);
@@ -700,7 +698,7 @@ public class RLP {
     public static byte[] encodeByte(byte singleByte) {
         if ((singleByte & 0xFF) == 0) {
             return new byte[]{(byte) OFFSET_SHORT_ITEM};
-        } else if ((singleByte & 0xFF) < 0x7F) {
+        } else if ((singleByte & 0xFF) <= 0x7F) {
             return new byte[]{singleByte};
         } else {
             return new byte[]{(byte) (OFFSET_SHORT_ITEM + 1), singleByte};

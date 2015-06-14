@@ -57,11 +57,13 @@ public class DetailsDataStore {
         long t = System.nanoTime();
 
         Map<byte[], byte[]> batch = new HashMap<>();
+        long totalSize = 0;
         for (ByteArrayWrapper key : cache.keySet()){
             ContractDetails contractDetails = cache.get(key);
             byte[] value = contractDetails.getEncoded();
             db.put(key.getData(), value);
             batch.put(key.getData(), value);
+            totalSize += value.length;
         }
 
         db.getDb().updateBatch(batch);
@@ -76,7 +78,9 @@ public class DetailsDataStore {
         removes.clear();
 
         long t_ = System.nanoTime();
-        gLogger.info("Flush details in: {} ms, {} keys", ((float)(t_ - t) / 1_000_000), keys);
+        String sizeFmt = String.format("%02.2f", ((float)totalSize) / 1048576);
+        gLogger.info("Flush details in: {} ms, {} keys, {}MB",
+                ((float)(t_ - t) / 1_000_000), keys, sizeFmt);
     }
 
 

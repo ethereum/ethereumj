@@ -163,8 +163,7 @@ public class TrieImpl implements Trie {
             return (byte[]) this.getRoot();
         } else {
             Value rootValue = new Value(this.getRoot());
-            byte[] val = rootValue.encode();
-            return HashUtil.sha3(val);
+            return rootValue.hash();
         }
     }
 
