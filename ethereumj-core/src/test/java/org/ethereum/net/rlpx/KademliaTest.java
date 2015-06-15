@@ -1,31 +1,20 @@
-package test.ethereum.net;
+package org.ethereum.net.rlpx;
 
-import org.ethereum.crypto.ECKey;
-import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.KademliaOptions;
 import org.ethereum.net.rlpx.discover.table.NodeBucket;
 import org.ethereum.net.rlpx.discover.table.NodeEntry;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
-import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.merge;
 import static org.junit.Assert.*;
 
 public class KademliaTest {
 
+    @Ignore
     @Test
     public void test1() {
         //init table with one home node
