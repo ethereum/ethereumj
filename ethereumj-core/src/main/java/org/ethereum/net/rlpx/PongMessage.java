@@ -7,13 +7,42 @@ import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
-import java.nio.charset.Charset;
+//import java.nio.charset.Charset;
+
+import static org.ethereum.util.ByteUtil.longToBytes;
+import static org.ethereum.util.ByteUtil.stripLeadingZeroes;
 
 public class PongMessage extends Message {
 
     byte[] token; // token is the MDC of the ping
     long expires;
 
+    public static PongMessage create(byte[] token, String host, int port, ECKey privKey) {
+
+        long expiration = 3 + System.currentTimeMillis() / 1000;
+
+        byte[] rlpIp = RLP.encodeElement(host.getBytes());
+
+        byte[] tmpPort = longToBytes(port);
+        byte[] rlpPort = RLP.encodeElement(stripLeadingZeroes(tmpPort));
+        byte[] rlpToList = RLP.encodeList(rlpIp, rlpPort, rlpPort);
+
+        /* RLP Encode data */
+        byte[] rlpToken = RLP.encodeElement(token);
+        byte[] tmpExp = longToBytes(expiration);
+        byte[] rlpExp = RLP.encodeElement(stripLeadingZeroes(tmpExp));
+
+        byte[] type = new byte[]{2};
+        byte[] data = RLP.encodeList(rlpToList, rlpToken, rlpExp);
+
+        PongMessage pong = new PongMessage();
+        pong.encode(type, data, privKey);
+
+        pong.token = token;
+        pong.expires = expiration;
+
+        return pong;
+    }
 
     public static PongMessage create(byte[] token, ECKey privKey) {
 
