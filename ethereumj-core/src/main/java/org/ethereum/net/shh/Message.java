@@ -1,8 +1,5 @@
 package org.ethereum.net.shh;
 
-
-import com.sun.tools.javac.util.ArrayUtils;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.spongycastle.util.BigIntegers;
