@@ -101,10 +101,11 @@ public class Cache {
 
         dataSource.updateBatch(batch);
         this.isDirty = false;
+        this.nodes.clear();
 
         long t_ = System.nanoTime();
         String sizeFmt = String.format("%02.2f", ((float)size) / 1048576);
-        gLogger.info("Flush state in: {} ms, {} keys, {}MB",
+        gLogger.info("Flush state in: {} ms, {} nodes, {}MB",
                 ((float)(t_ - t) / 1_000_000), keys, sizeFmt);
 
     }

@@ -299,8 +299,8 @@ public class BlockchainImpl implements Blockchain {
         storeBlock(block, receipts);
 
         if (adminInfo.isConsensus() &&
-            block.getNumber() % 20_000 == 0) {
-            
+            block.getNumber() % 5_000 == 0) {
+
             repository.flush();
             blockStore.flush();
         }

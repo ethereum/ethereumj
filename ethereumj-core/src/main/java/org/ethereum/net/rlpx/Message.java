@@ -71,6 +71,8 @@ public abstract class Message {
         /* [2] Crate signature*/
         ECKey.ECDSASignature signature = privKey.sign(forSig);
 
+        signature.v -= 27;
+
         byte[] sigBytes =
                 merge(BigIntegers.asUnsignedByteArray(signature.r),
                         BigIntegers.asUnsignedByteArray(signature.s), new byte[]{signature.v});
@@ -114,6 +116,12 @@ public abstract class Message {
         }
 
         return outKey;
+    }
+
+    public byte[] getNodeId() {
+        byte[] nodeID = new byte[64];
+        System.arraycopy(getKey().getPubKey(), 1, nodeID, 0, 64);
+        return nodeID;
     }
 
     public byte[] getPacket() {
