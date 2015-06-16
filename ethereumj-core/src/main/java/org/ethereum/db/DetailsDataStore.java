@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -35,6 +36,12 @@ public class DetailsDataStore {
 
             details = new ContractDetailsImpl(data);
             cache.put( wrap(key), details);
+
+            float out = ((float)data.length) / 1048576;
+            if (out > 10) {
+                String sizeFmt = String.format("%02.2f", out);
+                System.out.println("loaded: key: " + Hex.toHexString(key) + " size: " + sizeFmt + "MB");
+            }
         }
 
         return details;
@@ -74,8 +81,13 @@ public class DetailsDataStore {
 
         long keys = cache.size();
 
+        byte[] aKey = Hex.decode("b61662398570293e4f0d25525e2b3002b7fe0836");
+        ContractDetails aDetails = cache.get(wrap(aKey));
+
         cache.clear();
         removes.clear();
+
+        if (aDetails != null) cache.put(wrap(aKey), aDetails);
 
         long t_ = System.nanoTime();
         String sizeFmt = String.format("%02.2f", ((float)totalSize) / 1048576);
