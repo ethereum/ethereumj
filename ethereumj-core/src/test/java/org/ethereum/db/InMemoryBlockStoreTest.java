@@ -29,7 +29,7 @@ import static org.junit.Assert.*;
  * @author: Roman Mandeleil
  * Created on: 30/01/2015 11:04
  */
-
+@Ignore
 public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
