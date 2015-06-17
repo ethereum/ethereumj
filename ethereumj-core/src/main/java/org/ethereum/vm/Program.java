@@ -215,11 +215,15 @@ public class Program {
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
-        memory.write(addrB.intValue(), value.getData());
+        memory.write(addrB.intValue(), value.getData(), false);
+    }
+
+    public void memorySaveLimited(int addr, byte[] value) {
+        memory.write(addr, value, true);
     }
 
     public void memorySave(int addr, byte[] value) {
-        memory.write(addr, value);
+        memory.write(addr, value, false);
     }
 
     public void memoryExpand(DataWord outDataOffs, DataWord outDataSize) {
@@ -240,6 +244,8 @@ public class Program {
     public void memorySave(int addr, int allocSize, byte[] value) {
         memory.extendAndWrite(addr, allocSize, value);
     }
+
+
 
     public DataWord memoryLoad(DataWord addr) {
         return memory.readWord(addr.intValue());
@@ -493,15 +499,8 @@ public class Program {
         // 3. APPLY RESULTS: result.getHReturn() into out_memory allocated
         if (result != null) {
             byte[] buffer = result.getHReturn();
-            int allocSize = msg.getOutDataSize().intValue();
-            if (buffer != null && allocSize > 0) {
-                int retSize = buffer.length;
-                int offset = msg.getOutDataOffs().intValue();
-                if (retSize > allocSize)
-                    this.memorySave(offset, buffer);
-                else
-                    this.memorySave(offset, allocSize, buffer);
-            }
+            int offset = msg.getOutDataOffs().intValue();
+            this.memorySaveLimited(offset, buffer);
         }
 
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
@@ -1024,7 +1023,7 @@ public class Program {
      * used mostly for testing reasons
      */
     public void initMem(byte[] data) {
-        this.memory.write(0, data);
+        this.memory.write(0, data, false);
     }
 
 

@@ -914,7 +914,7 @@ public class VM {
                     DataWord value = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = "addr: " + addr + " value: " + value;
+                        hint = "[" + program.programAddress.toPrefixString() + "] key: " + addr + " value: " + value;
 
                     program.storageSave(addr, value);
                     program.step();
