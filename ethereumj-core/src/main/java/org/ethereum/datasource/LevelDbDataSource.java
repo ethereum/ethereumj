@@ -2,12 +2,15 @@ package org.ethereum.datasource;
 
 import org.ethereum.config.SystemProperties;
 
+import org.fusesource.leveldbjni.JniDBFactory;
+import org.fusesource.leveldbjni.internal.JniDB;
 import org.iq80.leveldb.CompressionType;
 import org.iq80.leveldb.DB;
 import org.iq80.leveldb.DBIterator;
 import org.iq80.leveldb.Options;
 import org.iq80.leveldb.WriteBatch;
 
+import org.iq80.leveldb.impl.Iq80DBFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +64,19 @@ public class LevelDbDataSource implements KeyValueDataSource {
             }
 
             logger.debug("Initializing new or existing database: '{}'", name);
-            db = factory.open(fileLocation, options);
+
+            db = JniDBFactory.factory.open(fileLocation, options);
+
+            String cpu = System.getProperty("sun.arch.data.model");
+            String os = System.getProperty("os.name");
+
+            if (db instanceof JniDB)
+                System.out.println("Native version of LevelDB loaded for: " + os + "." + cpu + "bit");
+            else{
+                System.out.println("Pure Java version of LevelDB loaded");
+                db = Iq80DBFactory.factory.open(fileLocation, options);
+            }
+
 
         } catch (IOException ioe) {
             logger.error(ioe.getMessage(), ioe);
