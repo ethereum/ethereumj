@@ -65,7 +65,11 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
             logger.debug("Initializing new or existing database: '{}'", name);
 
-            db = JniDBFactory.factory.open(fileLocation, options);
+            try {
+                db = JniDBFactory.factory.open(fileLocation, options);
+            } catch (Throwable e) {
+                System.out.println("No native version of LevelDB found");
+            }
 
             String cpu = System.getProperty("sun.arch.data.model");
             String os = System.getProperty("os.name");
