@@ -296,6 +296,17 @@ public class DataWord implements Comparable<DataWord> {
         return Hex.toHexString(data);
     }
 
+    public String toPrefixString() {
+
+        byte[] pref = getNoLeadZeroesData();
+        if (pref.length == 0) return "";
+
+        if (pref.length < 7)
+            return Hex.toHexString(pref);
+
+        return Hex.toHexString(pref).substring(0, 6);
+    }
+
     public String shortHex() {
         String hexValue = Hex.toHexString(getNoLeadZeroesData()).toUpperCase();
         return "0x" + hexValue.replaceFirst("^0+(?!$)", "");
