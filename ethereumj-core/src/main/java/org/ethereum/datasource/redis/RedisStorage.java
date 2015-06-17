@@ -15,7 +15,7 @@ import static org.ethereum.util.Functional.*;
 
 public abstract class RedisStorage<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger("db");
+    protected static final Logger log = LoggerFactory.getLogger("redis");
 
     private byte[] name;
     private final JedisPool pool;
