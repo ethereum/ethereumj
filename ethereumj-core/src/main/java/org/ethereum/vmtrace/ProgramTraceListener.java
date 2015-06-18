@@ -13,8 +13,8 @@ public class ProgramTraceListener {
         if (enabled) actions.addMemoryExtend(delta);
     }
 
-    public void onMemoryWrite(int address, byte[] data) {
-        if (enabled) actions.addMemoryWrite(address, data);
+    public void onMemoryWrite(int address, byte[] data, int size) {
+        if (enabled) actions.addMemoryWrite(address, data, size);
     }
 
     public void onStackPop() {

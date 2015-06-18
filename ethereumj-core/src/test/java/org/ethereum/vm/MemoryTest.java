@@ -45,7 +45,7 @@ public class MemoryTest {
         Memory memoryBuffer = new Memory();
         byte[] data = {1, 1, 1, 1};
 
-        memoryBuffer.write(0, data, false);
+        memoryBuffer.write(0, data, data.length, false);
 
         assertTrue(1 == memoryBuffer.getChunks().size());
 
@@ -65,7 +65,7 @@ public class MemoryTest {
         Memory memoryBuffer = new Memory();
         byte[] data = Hex.decode("0101010101010101010101010101010101010101010101010101010101010101");
 
-        memoryBuffer.write(0, data, false);
+        memoryBuffer.write(0, data, data.length, false);
 
         assertTrue(1 == memoryBuffer.getChunks().size());
 
@@ -86,7 +86,7 @@ public class MemoryTest {
         Memory memoryBuffer = new Memory();
         byte[] data = Hex.decode("010101010101010101010101010101010101010101010101010101010101010101");
 
-        memoryBuffer.write(0, data, false);
+        memoryBuffer.write(0, data, data.length, false);
 
         assertTrue(1 == memoryBuffer.getChunks().size());
 
@@ -109,7 +109,7 @@ public class MemoryTest {
         byte[] data = new byte[1024];
         Arrays.fill(data, (byte) 1);
 
-        memoryBuffer.write(0, data, false);
+        memoryBuffer.write(0, data, data.length, false);
 
         assertTrue(1 == memoryBuffer.getChunks().size());
 
@@ -131,7 +131,7 @@ public class MemoryTest {
         byte[] data = new byte[1025];
         Arrays.fill(data, (byte) 1);
 
-        memoryBuffer.write(0, data, false);
+        memoryBuffer.write(0, data, data.length, false);
 
         assertTrue(2 == memoryBuffer.getChunks().size());
 
@@ -160,8 +160,8 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1, false);
-        memoryBuffer.write(1024, data2, false);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
         assertTrue(2 == memoryBuffer.getChunks().size());
 
@@ -196,9 +196,9 @@ public class MemoryTest {
         byte[] data3 = new byte[1];
         Arrays.fill(data3, (byte) 3);
 
-        memoryBuffer.write(0, data1, false);
-        memoryBuffer.write(1024, data2, false);
-        memoryBuffer.write(2048, data3, false);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
+        memoryBuffer.write(2048, data3, data3.length, false);
 
         assertTrue(3 == memoryBuffer.getChunks().size());
 
@@ -295,8 +295,8 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1, false);
-        memoryBuffer.write(1024, data2, false);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
         assertTrue(memoryBuffer.getChunks().size() == 2);
         assertTrue(memoryBuffer.size() == 2048);
@@ -330,8 +330,8 @@ public class MemoryTest {
         byte[] data2 = new byte[32];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1, false);
-        memoryBuffer.write(32, data2, false);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(32, data2, data2.length, false);
 
         byte[] data = memoryBuffer.read(0, 64);
 
@@ -352,7 +352,7 @@ public class MemoryTest {
         byte[] data1 = new byte[32];
         Arrays.fill(data1, (byte) 1);
 
-        memoryBuffer.write(0, data1, false);
+        memoryBuffer.write(0, data1, data1.length, false);
         assertTrue(32 == memoryBuffer.size());
 
         byte[] data = memoryBuffer.read(0, 64);
@@ -377,8 +377,8 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1, false);
-        memoryBuffer.write(1024, data2, false);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
         byte[] data = memoryBuffer.read(0, 2048);
 
@@ -403,8 +403,8 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1, false);
-        memoryBuffer.write(1024, data2, false);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
         byte[] data = memoryBuffer.read(0, 2049);
 
@@ -430,7 +430,7 @@ public class MemoryTest {
         byte[] data1 = new byte[6272];
         Arrays.fill(data1, (byte) 1);
 
-        memoryBuffer.write(2720, data1, true);
+        memoryBuffer.write(2720, data1, data1.length, true);
 
         byte lastZero = memoryBuffer.readByte(2719);
         byte firstOne = memoryBuffer.readByte(2721);
@@ -450,5 +450,36 @@ public class MemoryTest {
         assertTrue(ones == data.length);
         assertTrue(zero == 0);
     }
+
+    @Test
+    public void memoryWriteLimited_2(){
+
+        Memory memoryBuffer = new Memory();
+        memoryBuffer.extend(0, 3072);
+
+        byte[] data1 = new byte[6272];
+        Arrays.fill(data1, (byte) 1);
+
+        memoryBuffer.write(2720, data1, 300, true);
+
+        byte lastZero = memoryBuffer.readByte(2719);
+        byte firstOne = memoryBuffer.readByte(2721);
+
+        assertTrue(memoryBuffer.internalSize() == 3072);
+        assertTrue(lastZero == 0);
+        assertTrue(firstOne == 1);
+
+        byte[] data = memoryBuffer.read(2720, 352);
+
+        int ones = 0; int zero = 0;
+        for (int i = 0; i < data.length; ++i){
+            if (data[i] == 1) ++ones;
+            if (data[i] == 0) ++zero;
+        }
+
+        assertTrue(ones == 300);
+        assertTrue(zero == 52);
+    }
+
 
 }

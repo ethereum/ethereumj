@@ -215,15 +215,15 @@ public class Program {
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
-        memory.write(addrB.intValue(), value.getData(), false);
+        memory.write(addrB.intValue(), value.getData(), value.getData().length, false);
     }
 
-    public void memorySaveLimited(int addr, byte[] value) {
-        memory.write(addr, value, true);
+    public void memorySaveLimited(int addr, byte[] data, int dataSize) {
+        memory.write(addr, data, dataSize, true);
     }
 
     public void memorySave(int addr, byte[] value) {
-        memory.write(addr, value, false);
+        memory.write(addr, value, value.length, false);
     }
 
     public void memoryExpand(DataWord outDataOffs, DataWord outDataSize) {
@@ -500,7 +500,9 @@ public class Program {
         if (result != null) {
             byte[] buffer = result.getHReturn();
             int offset = msg.getOutDataOffs().intValue();
-            this.memorySaveLimited(offset, buffer);
+            int size   = msg.getOutDataSize().intValue();
+
+            this.memorySaveLimited(offset, buffer, size);
         }
 
         // 4. THE FLAG OF SUCCESS IS ONE PUSHED INTO THE STACK
@@ -1023,7 +1025,7 @@ public class Program {
      * used mostly for testing reasons
      */
     public void initMem(byte[] data) {
-        this.memory.write(0, data, false);
+        this.memory.write(0, data, data.length, false);
     }
 
 

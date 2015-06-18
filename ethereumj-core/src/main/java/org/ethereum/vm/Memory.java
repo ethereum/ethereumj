@@ -53,23 +53,21 @@ public class Memory implements ProgramTraceListenerAware {
         return data;
     }
 
-
-    public void write(int address, byte[] data, boolean limited) {
+    public void write(int address, byte[] data, int dataSize, boolean limited) {
 
         if (!limited)
-            extend(address, data.length);
+            extend(address, dataSize);
 
         int chunkIndex = address / CHUNK_SIZE;
         int chunkOffset = address % CHUNK_SIZE;
 
         int toCapture = 0;
         if (limited)
-            toCapture = (address + data.length > softSize) ? softSize - address : data.length;
+            toCapture = (address + dataSize > softSize) ? softSize - address : dataSize;
         else
-            toCapture = data.length;
+            toCapture = dataSize;
 
         int start = 0;
-
         while (toCapture > 0) {
             int captured = captureMax(chunkIndex, chunkOffset, toCapture, data, start);
 
@@ -82,12 +80,13 @@ public class Memory implements ProgramTraceListenerAware {
             start += captured;
         }
 
-        if (traceListener != null) traceListener.onMemoryWrite(address, data);
+        if (traceListener != null) traceListener.onMemoryWrite(address, data, dataSize);
     }
+
 
     public void extendAndWrite(int address, int allocSize, byte[] data) {
         extend(address, allocSize);
-        write(address, data, false);
+        write(address, data, data.length, false);
     }
 
     public void extend(int address, int size) {
