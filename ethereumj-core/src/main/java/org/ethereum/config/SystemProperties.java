@@ -47,7 +47,7 @@ public class SystemProperties {
     private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
     private final static boolean DEFAULT_REDIS_ENABLED = true;
     private static final String DEFAULT_BLOCKS_LOADER = "";
-
+    private final static boolean DEFAULT_MINER = false;
 
     /* Testing */
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
@@ -269,6 +269,10 @@ public class SystemProperties {
 
     public boolean isRedisEnabled() {
         return boolProperty("redis.enabled", DEFAULT_REDIS_ENABLED);
+    }
+
+    public boolean isMiner() {
+        return boolProperty("miner", DEFAULT_MINER);
     }
 
     public void setListenPort(Integer port) {

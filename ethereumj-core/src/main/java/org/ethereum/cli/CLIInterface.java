@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import org.ethereum.pow.Ethash23;
+
 import java.net.URI;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -63,6 +65,13 @@ public class CLIInterface {
                     logger.info("Resetting db set to [{}]", resetStr);
                     CONFIG.setDatabaseReset(resetStr);
                 }
+
+                // override the listen port directory
+                if (args[i].equals("-dag") && i + 1 < args.length) {
+		    long blockNumber = Long.parseLong( args[i + 1] );
+		    Ethash23.cacheDagForBlockNumber( blockNumber );
+		    System.exit(0);
+                }
             }
             logger.info("");
         } catch (Throwable e) {
@@ -86,6 +95,7 @@ public class CLIInterface {
         System.out.println("-db <db>              -- to setup the path for the database directory ");
         System.out.println("-listen  <port>       -- port to listen on for incoming connections ");
         System.out.println("-connect <host:port>  -- address actively connect to  ");
+        System.out.println("-dag <blocknum>       -- cache the ethash DAG for the given block number, then exit");
         System.out.println("");
         System.out.println("e.g: cli -reset no -db db-1 -listen 20202 -connect poc-7.ethdev.com:30300 ");
         System.out.println("");
