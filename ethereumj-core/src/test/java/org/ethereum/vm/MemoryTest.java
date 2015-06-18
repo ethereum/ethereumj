@@ -435,7 +435,7 @@ public class MemoryTest {
         byte lastZero = memoryBuffer.readByte(2719);
         byte firstOne = memoryBuffer.readByte(2721);
 
-        assertTrue(memoryBuffer.internalSize() == 3072);
+        assertTrue(memoryBuffer.size() == 3072);
         assertTrue(lastZero == 0);
         assertTrue(firstOne == 1);
 
@@ -465,7 +465,7 @@ public class MemoryTest {
         byte lastZero = memoryBuffer.readByte(2719);
         byte firstOne = memoryBuffer.readByte(2721);
 
-        assertTrue(memoryBuffer.internalSize() == 3072);
+        assertTrue(memoryBuffer.size() == 3072);
         assertTrue(lastZero == 0);
         assertTrue(firstOne == 1);
 
@@ -480,6 +480,37 @@ public class MemoryTest {
         assertTrue(ones == 300);
         assertTrue(zero == 52);
     }
+
+    @Test
+    public void memoryWriteLimited_3(){
+
+        Memory memoryBuffer = new Memory();
+        memoryBuffer.extend(0, 128);
+
+        byte[] data1 = new byte[20];
+        Arrays.fill(data1, (byte) 1);
+
+        memoryBuffer.write(10, data1, 40, true);
+
+        byte lastZero = memoryBuffer.readByte(9);
+        byte firstOne = memoryBuffer.readByte(10);
+
+        assertTrue(memoryBuffer.size() == 128);
+        assertTrue(lastZero == 0);
+        assertTrue(firstOne == 1);
+
+        byte[] data = memoryBuffer.read(10, 30);
+
+        int ones = 0; int zero = 0;
+        for (int i = 0; i < data.length; ++i){
+            if (data[i] == 1) ++ones;
+            if (data[i] == 0) ++zero;
+        }
+
+        assertTrue(ones == 20);
+        assertTrue(zero == 10);
+    }
+
 
 
 }

@@ -55,6 +55,9 @@ public class Memory implements ProgramTraceListenerAware {
 
     public void write(int address, byte[] data, int dataSize, boolean limited) {
 
+        if (data.length < dataSize)
+            dataSize = data.length;
+
         if (!limited)
             extend(address, dataSize);
 
