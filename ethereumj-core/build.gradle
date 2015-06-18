@@ -102,8 +102,6 @@ dependencies {
 
     compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
 
-    compile "org.fusesource.leveldbjni:leveldbjni:1.8"
-
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.antlr:antlr4-runtime:4.5" // for serpent compilation
     compile "com.yuvalshavit:antlr-denter:1.1"
