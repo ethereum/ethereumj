@@ -119,7 +119,6 @@ public class BlockHeader {
         this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
     }
 
-
     /**
      * Calculate Difficulty
      * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
@@ -137,7 +136,6 @@ public class BlockHeader {
             return this.getDifficulty();
         }
     }
-
 
     public boolean isGenesis() {
         return this.getNumber() == Genesis.NUMBER;
@@ -187,7 +185,6 @@ public class BlockHeader {
         this.txTrieRoot = stateRoot;
     }
 
-
     public byte[] getLogsBloom() {
         return logsBloom;
     }
@@ -199,7 +196,6 @@ public class BlockHeader {
     public BigInteger getDifficultyBI() {
         return new BigInteger(1, difficulty);
     }
-
 
     public void setDifficulty(byte[] difficulty) {
         this.difficulty = difficulty;
@@ -241,6 +237,10 @@ public class BlockHeader {
         return mixHash;
     }
 
+    public void setMixHash(byte[] mixHash) {
+	this.mixHash = mixHash;
+    }
+
     public byte[] getExtraData() {
         return extraData;
     }
@@ -257,11 +257,11 @@ public class BlockHeader {
         return this.getEncoded(true); // with nonce
     }
 
-    public byte[] getEncodedWithoutNonce() {
+    public byte[] getEncodedWithoutMixHashAndNonce() {
         return this.getEncoded(false);
     }
 
-    public byte[] getEncoded(boolean withNonce) {
+    public byte[] getEncoded(boolean withMixHashAndNonce) {
         byte[] parentHash = RLP.encodeElement(this.parentHash);
 
         byte[] unclesHash = RLP.encodeElement(this.unclesHash);
@@ -283,8 +283,8 @@ public class BlockHeader {
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
 
         byte[] extraData = RLP.encodeElement(this.extraData);
-        byte[] mixHash = RLP.encodeElement(this.mixHash);
-        if (withNonce) {
+        if (withMixHashAndNonce) {
+	    byte[] mixHash = RLP.encodeElement(this.mixHash);
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
@@ -292,7 +292,7 @@ public class BlockHeader {
         } else {
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, extraData, mixHash);
+                    gasLimit, gasUsed, timestamp, extraData);
         }
     }
 
