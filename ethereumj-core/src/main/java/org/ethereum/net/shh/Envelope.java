@@ -6,6 +6,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
+import sun.security.tools.PathList;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -15,6 +16,7 @@ import java.util.Vector;
 
 import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.util.ByteUtil.merge;
 
 /**
  * Created by kest on 6/12/15.
@@ -45,12 +47,14 @@ public class Envelope extends ShhMessage {
         if (!parsed) {
             parse();
         }
-        byte[] data = this.data;
 
+        byte[] data = this.data;
         long sent = this.expire - this.ttl;
+        int flags = data[0] < 0 ? (data[0] & 0xFF) : data[0];
+
         Message m = new Message(data[0], sent, this.ttl, hash());
 
-        if ((m.getFlags() & Message.SIGNATURE_FLAG) == Message.SIGNATURE_FLAG) {
+        if ((flags & Message.SIGNATURE_FLAG) == Message.SIGNATURE_FLAG) {
             if (data.length < Message.SIGNATURE_LENGTH) {
                 throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
             }
@@ -77,7 +81,9 @@ public class Envelope extends ShhMessage {
 
     private void parse() {
         if (encoded == null) encode();
-        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+        if (isEmpty()) return;
+
+        RLPList paramsList = (RLPList)((RLPList) RLP.decode2(encoded).get(0)).get(0);
 
         this.expire = ByteUtil.byteArrayToLong(paramsList.get(0).getRLPData());
         this.ttl = ByteUtil.byteArrayToLong(paramsList.get(1).getRLPData());
@@ -110,7 +116,7 @@ public class Envelope extends ShhMessage {
         byte[] data = RLP.encodeElement(this.data);
         byte[] nonce = RLP.encodeInt(this.nonce);
 
-        this.encoded = RLP.encodeList(expire, ttl, encodedTopics, data, nonce);
+        this.encoded = RLP.encodeList(RLP.encodeList(expire, ttl, encodedTopics, data, nonce));
     }
 
     private byte[] encodeWithoutNonce() {
@@ -177,6 +183,22 @@ public class Envelope extends ShhMessage {
         return data;
     }
 
+    public boolean isEmpty() {
+        if (encoded == null) encode();
+        return encoded.length < 2;
+    }
+
+    private String topicsToString() {
+        StringBuilder topics = new StringBuilder();
+        topics.append("[");
+        for (Topic t : this.topics) {
+            topics.append(Hex.toHexString(t.getBytes()));
+            topics.append(", ");
+        }
+        topics.append("]");
+        return topics.toString();
+    }
+
     @Override
     public ShhMessageCodes getCommand() {
         return MESSAGE;
@@ -195,6 +217,17 @@ public class Envelope extends ShhMessage {
 
     @Override
     public String toString() {
-        return this.toString();
+        if (!parsed) parse();
+        if (isEmpty()) {
+            return "[" + this.getCommand().name() + " empty envelope]";
+        } else {
+            return "[" + this.getCommand().name() +
+                    " expire=" + this.expire +
+                    " ttl=" + this.ttl +
+                    " topics=" + topicsToString() +
+                    " data=" + Hex.toHexString(this.data) +
+                    " nonce=" + Hex.toHexString(new byte[]{(byte) this.nonce}) +
+                    "]";
+        }
     }
 }

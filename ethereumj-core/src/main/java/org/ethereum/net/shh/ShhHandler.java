@@ -1,17 +1,23 @@
 package org.ethereum.net.shh;
 
+import org.ethereum.crypto.ECKey;
+import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.net.eth.*;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import java.math.BigInteger;
 
 /**
  * Process the messages between peers with 'shh' capability on the network.
@@ -22,8 +28,9 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
-    public final static byte VERSION = 1;
+    public final static byte VERSION = 2;
     private MessageQueue msgQueue = null;
+    private ECKey privKey;
 
     private boolean active = false;
 
@@ -39,6 +46,10 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         this.msgQueue = msgQueue;
     }
 
+    public void setPrivKey(ECKey privKey) {
+        this.privKey = privKey;
+    }
+
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, ShhMessage msg) throws InterruptedException {
 
@@ -51,8 +62,10 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
         switch (msg.getCommand()) {
             case STATUS:
+                worldManager.getListener().trace("[Recv: " + msg + "]");
                 break;
             case MESSAGE:
+                processEnvelop((Envelope) msg);
                 break;
             case ADD_FILTER:
                 break;
@@ -81,7 +94,21 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     public void activate() {
         logger.info("SHH protocol activated");
         worldManager.getListener().trace("SHH protocol activated");
+        sendStatus();
         this.active = true;
+    }
+
+    private void sendStatus() {
+        byte protocolVersion = ShhHandler.VERSION;
+        StatusMessage msg = new StatusMessage(protocolVersion);
+        msgQueue.sendMessage(msg);
+    }
+
+    private void processEnvelop(Envelope envelope) {
+        if (!envelope.isEmpty()) {
+            Message m = envelope.open(privKey);
+            logger.info("ShhHandler invoke: [{}]", m);
+        }
     }
 
     public boolean isActive() {
