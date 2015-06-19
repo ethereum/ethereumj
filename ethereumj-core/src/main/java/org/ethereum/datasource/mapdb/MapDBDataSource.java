@@ -29,7 +29,6 @@ public class MapDBDataSource implements KeyValueDataSource {
         }
 
         db = DBMaker.newFileDB(new File(dbLocation, name))
-                .transactionDisable()
                 .asyncWriteEnable()
                 .mmapFileEnableIfSupported()
                 .compressionEnable()
