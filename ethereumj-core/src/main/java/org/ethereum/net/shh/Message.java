@@ -5,7 +5,9 @@ import org.ethereum.crypto.ECKey;
 import org.spongycastle.util.BigIntegers;
 
 import org.spongycastle.math.ec.ECPoint;
+import org.spongycastle.util.encoders.Hex;
 
+import java.nio.charset.Charset;
 import java.security.SignatureException;
 import java.util.Random;
 
@@ -21,13 +23,16 @@ public class Message extends ShhMessage {
     private byte flags;
     private byte[] signature;
     private byte[] payload;
+    private byte[] to;
 
-    private long sent;
-    private long ttl;
+    private int sent;
+    private int ttl;
 
     private byte[] envelopeHash;
 
-    public static final byte SIGNATURE_FLAG = 127;
+    private boolean decrypted;
+
+    public static final int SIGNATURE_FLAG = 128;
     public static final int SIGNATURE_LENGTH = 65;
 
 //    public Message(byte[] encoded) {
@@ -39,21 +44,24 @@ public class Message extends ShhMessage {
         Random r = new Random();
         byte[] randByte = new byte[1];
         r.nextBytes(randByte);
-        flags = randByte[0];
-        if (flags < 0) {
-            flags = (byte)(flags & 0xF);
-        }
+        int flags = r.nextInt(256);
+//        if (flags < 0) {
+//            flags = (byte)(flags & 0xF);
+//        }
         flags &= ~SIGNATURE_FLAG;
 
-        this.sent = System.currentTimeMillis();
+        this.sent = (int) (System.currentTimeMillis()/1000);
         this.payload = payload;
+        this.flags = (byte) flags;
+        this.decrypted = false;
     }
 
-    public Message(byte flags, long sent, long ttl, byte[] envelopeHash) {
+    public Message(byte flags, int sent, int ttl, byte[] envelopeHash) {
         this.flags = flags;
         this.sent = sent;
         this.ttl = ttl;
         this.envelopeHash = envelopeHash;
+        this.decrypted = false;
     }
 
     public Envelope wrap(long pow, Options options) {
@@ -67,7 +75,16 @@ public class Message extends ShhMessage {
         }
 
         Envelope e = new Envelope(options.getTtl(), options.getTopics(), this);
+        e.seal(pow);
         return e;
+    }
+
+    public byte[] getTo() {
+        return to;
+    }
+
+    public void setTo(byte[] from) {
+        this.to = from;
     }
 
     public byte getFlags() {
@@ -103,6 +120,7 @@ public class Message extends ShhMessage {
             ECKey key = ECKey.fromPublicOnly(toPublicKey);
             ECPoint pubKeyPoint = key.getPubKeyPoint();
             payload = ECIESCoder.encrypt(pubKeyPoint, payload);
+            this.decrypted = true;
         } catch (Exception e) {
 
         }
@@ -111,6 +129,8 @@ public class Message extends ShhMessage {
     public boolean decrypt(ECKey privateKey) {
         try {
             payload = ECIESCoder.decrypt(privateKey.getPrivKey(), payload);
+            this.decrypted = false;
+            setTo(privateKey.decompress().getPubKey());
             return true;
         } catch (Exception e) {
             System.out.println("The message payload isn't encrypted or something is wrong");
@@ -159,6 +179,14 @@ public class Message extends ShhMessage {
         return outKey;
     }
 
+    private byte[] getPubKey() {
+        ECKey key = recover();
+        if (key != null) {
+            return key.decompress().getPubKey();
+        }
+        return null;
+    }
+
     private byte[] hash() {
         return sha3(merge(new byte[]{flags}, payload));
     }
@@ -180,7 +208,20 @@ public class Message extends ShhMessage {
 
     @Override
     public String toString() {
-        return this.toString();
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        sb.append(" flags=" + Hex.toHexString(new byte[]{flags}));
+        if (signature != null) {
+            sb.append(" signature=" + Hex.toHexString(signature));
+        }
+        if (payload != null) {
+            sb.append(" payload=" + new String(this.payload, Charset.forName("UTF-8")));
+        }
+        if (getPubKey() != null)  {
+            sb.append(" publicKey=" + Hex.toHexString(getPubKey()));
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
 }

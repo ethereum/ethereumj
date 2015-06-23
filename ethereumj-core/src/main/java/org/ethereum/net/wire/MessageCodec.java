@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.List;
 
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
@@ -124,6 +125,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         loggerNet.info("RLPX protocol activated");
 
         myKey = new ECKey().decompress();
+        channel.getShhHandler().setPrivKey(myKey);
         byte[] nodeIdWithFormat = myKey.getPubKey();
         nodeId = new byte[nodeIdWithFormat.length - 1];
         System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);

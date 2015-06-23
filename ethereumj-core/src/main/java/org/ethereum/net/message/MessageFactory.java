@@ -14,6 +14,7 @@ import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.PeersMessage;
 import org.ethereum.net.shh.ShhMessageCodes;
+import org.ethereum.net.shh.Envelope;
 import org.ethereum.util.RLP;
 
 /**
@@ -72,9 +73,9 @@ public class MessageFactory {
             ShhMessageCodes receivedCommand = ShhMessageCodes.fromByte(code);
             switch (receivedCommand) {
                 case STATUS:
-                    break;
+                    return new org.ethereum.net.shh.StatusMessage(encoded);
                 case MESSAGE:
-                    break;
+                    return new Envelope(encoded);
                 case ADD_FILTER:
                     break;
                 case REMOVE_FILTER:
