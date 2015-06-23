@@ -1,5 +1,8 @@
 package org.ethereum.net.shh;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
@@ -21,5 +24,13 @@ public class Topic {
 
     public byte[] getBytes() {
         return topic;
+    }
+
+    public static Topic[] createTopics(String[] topicsString) {
+        Topic[] topics = new Topic[topicsString.length];
+        for (int i = 0; i < topicsString.length; i++) {
+            topics[i] = new Topic(topicsString[i]);
+        }
+        return topics;
     }
 }

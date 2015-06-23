@@ -32,6 +32,8 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     private MessageQueue msgQueue = null;
     private ECKey privKey;
 
+    private Whisper whisper;
+
     private boolean active = false;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
@@ -65,7 +67,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
                 worldManager.getListener().trace("[Recv: " + msg + "]");
                 break;
             case MESSAGE:
-                processEnvelop((Envelope) msg);
+                whisper.processEnvelope((Envelope) msg);
                 break;
             case ADD_FILTER:
                 break;
@@ -94,6 +96,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     public void activate() {
         logger.info("SHH protocol activated");
         worldManager.getListener().trace("SHH protocol activated");
+        whisper = new Whisper(msgQueue);
         sendStatus();
         this.active = true;
     }

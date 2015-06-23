@@ -23,8 +23,8 @@ import static org.ethereum.util.ByteUtil.merge;
  */
 public class Envelope extends ShhMessage {
 
-    private long expire;
-    private long ttl;
+    private int expire;
+    private int ttl;
 
     private Topic[] topics;
     private byte[] data;
@@ -35,8 +35,8 @@ public class Envelope extends ShhMessage {
         super(encoded);
     }
 
-    public Envelope(long ttl, Topic[] topics, Message msg) {
-        this.expire = System.currentTimeMillis() + ttl;
+    public Envelope(int ttl, Topic[] topics, Message msg) {
+        this.expire = (int)(System.currentTimeMillis()/1000 + ttl);
         this.ttl = ttl;
         this.topics = topics;
         this.data = msg.getBytes();
@@ -49,7 +49,7 @@ public class Envelope extends ShhMessage {
         }
 
         byte[] data = this.data;
-        long sent = this.expire - this.ttl;
+        int sent = this.expire - this.ttl;
         int flags = data[0] < 0 ? (data[0] & 0xFF) : data[0];
 
         Message m = new Message(data[0], sent, this.ttl, hash());
@@ -74,7 +74,9 @@ public class Envelope extends ShhMessage {
             return m;
         }
 
-        m.decrypt(privKey);
+        if (!m.decrypt(privKey)) {
+            return null;
+        }
 
         return m;
     }
@@ -85,8 +87,8 @@ public class Envelope extends ShhMessage {
 
         RLPList paramsList = (RLPList)((RLPList) RLP.decode2(encoded).get(0)).get(0);
 
-        this.expire = ByteUtil.byteArrayToLong(paramsList.get(0).getRLPData());
-        this.ttl = ByteUtil.byteArrayToLong(paramsList.get(1).getRLPData());
+        this.expire = ByteUtil.byteArrayToInt(paramsList.get(0).getRLPData());
+        this.ttl = ByteUtil.byteArrayToInt(paramsList.get(1).getRLPData());
 
         List<Topic> topics = new ArrayList<>();
         RLPList topicsList = (RLPList) RLP.decode2(paramsList.get(2).getRLPData()).get(0);
@@ -104,7 +106,7 @@ public class Envelope extends ShhMessage {
 
     private void encode() {
         byte[] expire = RLP.encode(this.expire);
-        byte[] ttl = RLP.encode(this.expire);
+        byte[] ttl = RLP.encode(this.ttl);
 
         List<byte[]> topics = new Vector<>();
         for (Topic t : this.topics) {

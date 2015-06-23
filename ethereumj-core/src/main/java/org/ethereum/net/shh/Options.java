@@ -1,17 +1,22 @@
 package org.ethereum.net.shh;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 
 /**
  * Created by kest on 6/13/15.
  */
 public class Options {
+
+    public static int DEFAULT_TTL = 100;
+    public static int DEFAULT_POW = 50 * 1000;
+
     private ECKey privateKey;
     private byte[] toPublicKey;
     private Topic[] topics;
-    private long ttl;
+    private int ttl;
 
-    public Options(ECKey privateKey, byte[] toPublicKey, Topic[] topics, long ttl) {
+    public Options(ECKey privateKey, byte[] toPublicKey, Topic[] topics, int ttl) {
         this.privateKey = privateKey;
         this.toPublicKey = toPublicKey;
         this.topics = topics;
@@ -42,11 +47,11 @@ public class Options {
         this.topics = topics;
     }
 
-    public long getTtl() {
+    public int getTtl() {
         return ttl;
     }
 
-    public void setTtl(long ttl) {
+    public void setTtl(int ttl) {
         this.ttl = ttl;
     }
 }

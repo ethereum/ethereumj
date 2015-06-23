@@ -24,8 +24,8 @@ public class Message extends ShhMessage {
     private byte[] signature;
     private byte[] payload;
 
-    private long sent;
-    private long ttl;
+    private int sent;
+    private int ttl;
 
     private byte[] envelopeHash;
 
@@ -49,13 +49,13 @@ public class Message extends ShhMessage {
 //        }
         flags &= ~SIGNATURE_FLAG;
 
-        this.sent = System.currentTimeMillis();
+        this.sent = (int) (System.currentTimeMillis()/1000);
         this.payload = payload;
         this.flags = (byte) flags;
         this.decrypted = false;
     }
 
-    public Message(byte flags, long sent, long ttl, byte[] envelopeHash) {
+    public Message(byte flags, int sent, int ttl, byte[] envelopeHash) {
         this.flags = flags;
         this.sent = sent;
         this.ttl = ttl;
