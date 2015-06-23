@@ -8,11 +8,9 @@ import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 import sun.security.tools.PathList;
 
+import java.lang.reflect.Array;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Vector;
+import java.util.*;
 
 import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -121,35 +119,45 @@ public class Envelope extends ShhMessage {
         this.encoded = RLP.encodeList(RLP.encodeList(expire, ttl, encodedTopics, data, nonce));
     }
 
-    private byte[] encodeWithoutNonce() {
-        byte[] expire = RLP.encode(this.expire);
-        byte[] ttl = RLP.encode(this.expire);
-
-        List<byte[]> topics = new Vector<>();
-        for (Topic t : this.topics) {
-            topics.add(RLP.encodeElement(t.getBytes()));
-        }
-        byte[][] topicsArray = topics.toArray(new byte[topics.size()][]);
-        byte[] encodedTopics = RLP.encodeList(topicsArray);
-
-        byte[] data = RLP.encodeElement(this.data);
-
-        return RLP.encodeList(expire, ttl, encodedTopics, data);
-    }
-
-    //TODO: complete the nonce implementation
     public void seal(long pow) {
         byte[] d = new byte[64];
         Arrays.fill(d, (byte) 0);
-        byte[] rlp = encodeWithoutNonce();
+        encode();
+        byte[] rlp = this.encoded;
+        System.arraycopy(rlp, 0, d, 0, 32);
 
         long then = System.currentTimeMillis() + pow;
-        this.nonce = 0;
-        for (int bestBit = 0; System.currentTimeMillis() < then; ) {
-            for (int i = 0; i < 1024; ++i, ++bestBit) {
 
+        for (int bestBit = 0; System.currentTimeMillis() < then;) {
+            for (int i = 0, nonce = 0; i < 1024; ++i, ++nonce) {
+                byte[] nonceBytes = intToByteArray(nonce);
+                System.arraycopy(nonceBytes, 0, d, 60, nonceBytes.length);
+                int fbs = getFirstBitSet(sha3(d));
+                if (fbs > bestBit) {
+                    this.nonce = nonce;
+                    bestBit = fbs;
+                }
             }
         }
+        this.encoded = null;
+    }
+
+    private int getFirstBitSet(byte[] bytes) {
+        BitSet b = BitSet.valueOf(bytes);
+        for (int i = 0; i < b.length(); i++) {
+            if (b.get(i)) {
+                return i;
+            }
+        }
+        return 0;
+    }
+
+    private byte[] intToByteArray(int value) {
+        return new byte[] {
+                (byte)(value >>> 24),
+                (byte)(value >>> 16),
+                (byte)(value >>> 8),
+                (byte)value};
     }
 
     private byte[] hash() {

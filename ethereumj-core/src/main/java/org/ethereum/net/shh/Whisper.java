@@ -20,7 +20,7 @@ public class Whisper {
 
     public Whisper(MessageQueue messageQueue) {
         this.msgQueue = messageQueue;
-//        WhisperForm form = new WhisperForm(this);
+        WhisperForm form = new WhisperForm(this);
     }
 
     public void post(String from, String to, String[] topics, String payload, int ttl, int pow) {
@@ -88,8 +88,10 @@ public class Whisper {
         matchMessage(m);
     }
 
-    public Filter createFilter() {
-        return null;
+    public Filter createFilter(byte[] from, byte[] to, String[] topics) {
+        TopicMatcher topicMatcher = new TopicMatcher(topics);
+        Filter f = new Filter(Hex.toHexString(from), Hex.toHexString(to), topicMatcher);
+        return f;
     }
 
     //TODO: add filter matching

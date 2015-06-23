@@ -9,7 +9,7 @@ import org.ethereum.crypto.ECKey;
 public class Options {
 
     public static int DEFAULT_TTL = 100;
-    public static int DEFAULT_POW = 50 * 1000;
+    public static int DEFAULT_POW = 50;
 
     private ECKey privateKey;
     private byte[] toPublicKey;

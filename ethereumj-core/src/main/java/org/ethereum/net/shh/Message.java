@@ -23,6 +23,7 @@ public class Message extends ShhMessage {
     private byte flags;
     private byte[] signature;
     private byte[] payload;
+    private byte[] to;
 
     private int sent;
     private int ttl;
@@ -74,7 +75,16 @@ public class Message extends ShhMessage {
         }
 
         Envelope e = new Envelope(options.getTtl(), options.getTopics(), this);
+        e.seal(pow);
         return e;
+    }
+
+    public byte[] getTo() {
+        return to;
+    }
+
+    public void setTo(byte[] from) {
+        this.to = from;
     }
 
     public byte getFlags() {
@@ -120,6 +130,7 @@ public class Message extends ShhMessage {
         try {
             payload = ECIESCoder.decrypt(privateKey.getPrivKey(), payload);
             this.decrypted = false;
+            setTo(privateKey.decompress().getPubKey());
             return true;
         } catch (Exception e) {
             System.out.println("The message payload isn't encrypted or something is wrong");

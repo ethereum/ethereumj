@@ -7,6 +7,14 @@ import java.util.List;
 public class TopicMatcher {
     private List<List<Topic>> conditions = new ArrayList<>();
 
+    public TopicMatcher(Topic[] inputTopics) {
+        for (Topic t : inputTopics) {
+            List<Topic> topics = new ArrayList<>();
+            topics.add(t);
+            conditions.add(topics);
+        }
+    }
+
     public TopicMatcher(String[] topicStrings) {
         for (String s : topicStrings) {
             List<Topic> topics = new ArrayList<>();
