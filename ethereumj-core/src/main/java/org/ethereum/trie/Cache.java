@@ -64,8 +64,7 @@ public class Cache {
     }
 
     public void delete(byte[] key) {
-        ByteArrayWrapper keyObj = new ByteArrayWrapper(key);
-        this.nodes.remove(keyObj);
+        this.nodes.remove(wrap(key));
 
         if (dataSource == null) return;
         this.dataSource.delete(key);

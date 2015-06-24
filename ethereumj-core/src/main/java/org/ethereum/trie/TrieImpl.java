@@ -1,6 +1,5 @@
 package org.ethereum.trie;
 
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;

@@ -16,6 +16,8 @@ import static java.lang.System.getProperty;
 import static org.ethereum.util.ByteUtil.wrap;
 
 public class MapDBDataSource implements KeyValueDataSource {
+
+    private static final int BATCH_SIZE = 100;
     
     private DB db;
     private HTreeMap<ByteArrayWrapper, byte[]> map;
@@ -28,11 +30,12 @@ public class MapDBDataSource implements KeyValueDataSource {
             dbLocation.mkdirs();
         }
 
+
         db = DBMaker.newFileDB(new File(dbLocation, name))
                 .asyncWriteEnable()
                 .mmapFileEnableIfSupported()
                 .compressionEnable()
-                .cacheSize(512)
+//                .cacheSize(512)
                 .closeOnJvmShutdown()
                 .make();
 
@@ -79,8 +82,11 @@ public class MapDBDataSource implements KeyValueDataSource {
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
         try {
+            int i = 0;
             for (byte[] key : rows.keySet()) {
                 map.put(wrap(key), rows.get(key));
+                
+                if (i++ > BATCH_SIZE) db.commit();
             }
         } finally {
             db.commit();
