@@ -17,7 +17,7 @@ import static org.ethereum.util.ByteUtil.wrap;
 
 public class MapDBDataSource implements KeyValueDataSource {
 
-    private static final int BATCH_SIZE = 100;
+    private static final int BATCH_SIZE = 1024 * 1000 * 10;
     
     private DB db;
     private HTreeMap<ByteArrayWrapper, byte[]> map;
@@ -34,10 +34,12 @@ public class MapDBDataSource implements KeyValueDataSource {
         db = DBMaker.newFileDB(new File(dbLocation, name))
                 .asyncWriteEnable()
                 .mmapFileEnableIfSupported()
-                .compressionEnable()
-//                .cacheSize(512)
+//                .compressionEnable()
+                .cacheDisable()
+//                .asyncWriteFlushDelay(1000)
                 .closeOnJvmShutdown()
                 .make();
+
 
         this.map = db.createHashMap(name).makeOrGet();
     }
@@ -74,19 +76,24 @@ public class MapDBDataSource implements KeyValueDataSource {
     public Set<byte[]> keys() {
         HashSet<byte[]> result = new HashSet<>();
         for (ByteArrayWrapper key : map.keySet()) {
-            result.add(key.getData());    
+            result.add(key.getData());
         }
         return result;
     }
 
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
+        int savedSize = 0;
         try {
-            int i = 0;
             for (byte[] key : rows.keySet()) {
-                map.put(wrap(key), rows.get(key));
+                byte[] value = rows.get(key);
+                savedSize += value.length;
                 
-                if (i++ > BATCH_SIZE) db.commit();
+                map.put(wrap(key), value);
+                if (savedSize > BATCH_SIZE) {
+                    db.commit();
+                    savedSize = 0;
+                }
             }
         } finally {
             db.commit();
