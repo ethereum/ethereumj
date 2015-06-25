@@ -20,7 +20,6 @@ public class Whisper {
 
     public Whisper(MessageQueue messageQueue) {
         this.msgQueue = messageQueue;
-        WhisperForm form = new WhisperForm(this);
     }
 
     public void post(String from, String to, String[] topics, String payload, int ttl, int pow) {
