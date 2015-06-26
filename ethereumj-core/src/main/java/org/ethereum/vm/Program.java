@@ -334,9 +334,12 @@ public class Program {
         Repository track = result.getRepository().startTracking();
 
         //In case of hashing collisions, check for any balance before createAccount()
-        BigInteger oldBalance = track.getBalance(newAddress);
-        track.createAccount(newAddress);
-        track.addBalance(newAddress, oldBalance);
+        if (track.isExist(newAddress)) {
+            BigInteger oldBalance = track.getBalance(newAddress);
+            track.createAccount(newAddress);
+            track.addBalance(newAddress, oldBalance);
+        } else
+            track.createAccount(newAddress);
 
         // [4] TRANSFER THE BALANCE
         track.addBalance(senderAddress, endowment.negate());
@@ -894,7 +897,7 @@ public class Program {
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
         BigInteger endowment = msg.getEndowment().value();
-        BigInteger senderBalance = result.getRepository().getBalance(senderAddress);
+        BigInteger senderBalance = track.getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
             stackPushZero();
             this.refundGas(msg.getGas().longValue(), "refund gas from message call");

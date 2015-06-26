@@ -28,9 +28,6 @@ public class DetailsDataStore {
         ContractDetails details = cache.get(wrap(key));
 
         if (details == null){
-
-            if ( removes.contains(wrap(key)))  return null;
-
             byte[] data = db.get(key);
             if (data == null) return null;
 

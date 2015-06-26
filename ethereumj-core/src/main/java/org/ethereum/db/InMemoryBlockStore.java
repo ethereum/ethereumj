@@ -198,7 +198,10 @@ public class InMemoryBlockStore implements BlockStore{
         s.beginTransaction();
 
         int lastIndex = blocks.size() - 1;
-        for (int i = 0; i < 1000; ++i){
+        for (int i = 0;
+             i < (blocks.size() > 1000 ? 1000 : blocks.size());
+             ++i){
+
             Block block = blocks.get(lastIndex - i);
             BlockVO blockVO = new BlockVO(block.getNumber(), block.getHash(), block.getEncoded(), block.getCumulativeDifficulty());
             s.save(blockVO);

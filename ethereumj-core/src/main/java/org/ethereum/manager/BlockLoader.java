@@ -60,8 +60,6 @@ public class BlockLoader {
                     if (block.getNumber() % 10000 == 0)
                         System.out.println("Skipping block #" + block.getNumber());
                 }
-
-
             }
         } catch (IOException e) {
             e.printStackTrace();

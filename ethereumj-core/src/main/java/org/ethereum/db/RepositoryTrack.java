@@ -48,6 +48,7 @@ public class RepositoryTrack implements Repository {
         cacheAccounts.put(wrap(addr), accountState);
 
         ContractDetails contractDetails = new ContractDetailsCacheImpl(null);
+        contractDetails.setDirty(true);
         cacheDetails.put(wrap(addr), contractDetails);
 
         return accountState;
@@ -96,13 +97,15 @@ public class RepositoryTrack implements Repository {
         ContractDetails contractDetails = this.cacheDetails.get(wrap(addr));
 
         if (accountState == null) {
-            repository.loadAccount(addr, cacheAccounts, cacheDetails);
-        } else {
-            cacheAccounts.put(wrap(addr), accountState.clone());
-
-            ContractDetails contractDetailsLvl2 = new ContractDetailsCacheImpl(contractDetails);
-            cacheDetails.put(wrap(addr), contractDetailsLvl2);
+            repository.loadAccount(addr, this.cacheAccounts, this.cacheDetails);
+            accountState = this.cacheAccounts.get(wrap(addr));
+            contractDetails = this.cacheDetails.get(wrap(addr));
         }
+
+        cacheAccounts.put(wrap(addr), accountState);
+        ContractDetails contractDetailsLvl2 = new ContractDetailsCacheImpl(contractDetails);
+        cacheDetails.put(wrap(addr), contractDetailsLvl2);
+
     }
 
 
@@ -122,6 +125,8 @@ public class RepositoryTrack implements Repository {
         if (accountState == null)
             accountState = createAccount(addr);
 
+        getContractDetails(addr).setDirty(true);
+
         BigInteger saveNonce = accountState.getNonce();
         accountState.incrementNonce();
 
@@ -136,6 +141,8 @@ public class RepositoryTrack implements Repository {
 
         if (accountState == null)
             accountState = createAccount(addr);
+
+        getContractDetails(addr).setDirty(true);
 
         BigInteger saveNonce = accountState.getNonce();
         accountState.setNonce(bigInteger);
@@ -168,6 +175,7 @@ public class RepositoryTrack implements Repository {
             accountState = createAccount(addr);
         }
 
+        getContractDetails(addr).setDirty(true);
         BigInteger newBalance = accountState.addToBalance(value);
 
         logger.trace("adding to balance addr: [{}], balance: [{}], delta: [{}]", Hex.toHexString(addr),
@@ -181,6 +189,7 @@ public class RepositoryTrack implements Repository {
         logger.trace("saving code addr: [{}], code: [{}]", Hex.toHexString(addr),
                 Hex.toHexString(code));
         getContractDetails(addr).setCode(code);
+        getContractDetails(addr).setDirty(true);
         getAccountState(addr).setCodeHash(sha3(code));
     }
 

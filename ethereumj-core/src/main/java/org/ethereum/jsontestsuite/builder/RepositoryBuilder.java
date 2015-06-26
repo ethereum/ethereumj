@@ -27,7 +27,11 @@ public class RepositoryBuilder {
             ContractDetails details = stateWrap.getContractDetails();
 
             stateBatch.put(wrap(parseData(address)), state);
-            detailsBatch.put(wrap(parseData(address)), new ContractDetailsCacheImpl(details));
+
+            ContractDetailsCacheImpl detailsCache = new ContractDetailsCacheImpl(details);
+            detailsCache.setDirty(true);
+
+            detailsBatch.put(wrap(parseData(address)), detailsCache);
         }
 
         RepositoryImpl repositoryDummy = new RepositoryImpl(new HashMapDB(), new HashMapDB());

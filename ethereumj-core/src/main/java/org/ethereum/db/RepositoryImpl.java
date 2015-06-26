@@ -133,6 +133,7 @@ public class RepositoryImpl implements Repository {
 
             } else {
 
+                if (!contractDetails.isDirty()) continue;
                     ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetails;
                     if (contractDetailsCache.origContract == null){
                         contractDetailsCache.origContract = new ContractDetailsImpl();
@@ -472,8 +473,6 @@ public class RepositoryImpl implements Repository {
 
         if (account == null)
             account = new AccountState();
-        else
-            account = account.clone();
 
         if (details == null) {
             details = new ContractDetailsCacheImpl(null);
