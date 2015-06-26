@@ -102,7 +102,7 @@ public class RepositoryTrack implements Repository {
             contractDetails = this.cacheDetails.get(wrap(addr));
         }
 
-        cacheAccounts.put(wrap(addr), accountState);
+        cacheAccounts.put(wrap(addr), accountState.clone());
         ContractDetails contractDetailsLvl2 = new ContractDetailsCacheImpl(contractDetails);
         cacheDetails.put(wrap(addr), contractDetailsLvl2);
 
