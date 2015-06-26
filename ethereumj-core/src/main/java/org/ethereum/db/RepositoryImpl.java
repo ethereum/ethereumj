@@ -473,6 +473,8 @@ public class RepositoryImpl implements Repository {
 
         if (account == null)
             account = new AccountState();
+        else
+            account = account.clone();
 
         if (details == null) {
             details = new ContractDetailsCacheImpl(null);
