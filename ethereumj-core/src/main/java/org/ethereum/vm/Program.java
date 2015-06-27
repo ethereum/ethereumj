@@ -360,8 +360,6 @@ public class Program {
             Program program = new Program(programCode, programInvoke);
             vm.play(program);
             result = program.getResult();
-            this.result.addDeleteAccounts(result.getDeleteAccounts());
-            this.result.addLogInfos(result.getLogInfoList());
         }
 
         if (result.getException() != null) {
@@ -394,6 +392,8 @@ public class Program {
         }
 
         track.commit();
+        this.result.addDeleteAccounts(result.getDeleteAccounts());
+        this.result.addLogInfos(result.getLogInfoList());
 
         // IN SUCCESS PUSH THE ADDRESS INTO THE STACK
         stackPush(new DataWord(newAddress));

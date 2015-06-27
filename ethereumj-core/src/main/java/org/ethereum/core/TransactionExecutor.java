@@ -257,8 +257,12 @@ public class TransactionExecutor {
                 }
             }
 
-            if (result.getException() != null)
+            if (result.getException() != null){
+                result.getDeleteAccounts().clear();
+                result.getLogInfoList().clear();
+                result.futureRefundGas(0);
                 throw result.getException();
+            }
 
         } catch (Throwable e) {
 

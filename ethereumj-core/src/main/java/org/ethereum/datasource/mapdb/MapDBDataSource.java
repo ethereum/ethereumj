@@ -18,7 +18,7 @@ import static org.ethereum.util.ByteUtil.wrap;
 public class MapDBDataSource implements KeyValueDataSource {
 
     private static final int BATCH_SIZE = 1024 * 1000 * 10;
-    
+
     private DB db;
     private HTreeMap<ByteArrayWrapper, byte[]> map;
     private String name;
@@ -88,7 +88,7 @@ public class MapDBDataSource implements KeyValueDataSource {
             for (byte[] key : rows.keySet()) {
                 byte[] value = rows.get(key);
                 savedSize += value.length;
-                
+
                 map.put(wrap(key), value);
                 if (savedSize > BATCH_SIZE) {
                     db.commit();
