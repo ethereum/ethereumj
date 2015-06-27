@@ -1,6 +1,5 @@
 package org.ethereum.net.shh;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 
 /**

@@ -1,8 +1,6 @@
 package org.ethereum.net.shh;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 

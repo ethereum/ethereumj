@@ -1,6 +1,5 @@
 package org.ethereum.net.shh;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,5 +38,13 @@ public class TopicMatcher {
         }
 
         return true;
+    }
+
+    public List<Topic> getTopics() {
+        List<Topic> topics = new ArrayList<>();
+        for (List<Topic> topicsList : conditions) {
+            topics.addAll(topicsList);
+        }
+        return topics;
     }
 }

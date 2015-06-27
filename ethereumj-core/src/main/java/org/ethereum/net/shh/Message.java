@@ -83,8 +83,8 @@ public class Message extends ShhMessage {
         return to;
     }
 
-    public void setTo(byte[] from) {
-        this.to = from;
+    public void setTo(byte[] to) {
+        this.to = to;
     }
 
     public byte getFlags() {
@@ -179,7 +179,7 @@ public class Message extends ShhMessage {
         return outKey;
     }
 
-    private byte[] getPubKey() {
+    public byte[] getPubKey() {
         ECKey key = recover();
         if (key != null) {
             return key.decompress().getPubKey();

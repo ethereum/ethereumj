@@ -46,7 +46,7 @@ public class Whisper {
 
         Envelope e = m.wrap(pow, options);
 
-        addMessage(m);
+        addMessage(m, e.getTopics());
         msgQueue.sendMessage(e);
     }
 
@@ -55,7 +55,7 @@ public class Whisper {
         if (m == null) {
             return;
         }
-        addMessage(m);
+        addMessage(m, e.getTopics());
     }
 
     private Message open(Envelope e) {
@@ -82,22 +82,22 @@ public class Whisper {
         filters.remove(f);
     }
 
-    private void addMessage(Message m) {
+    private void addMessage(Message m, Topic[] topics) {
         known.add(m);
-        matchMessage(m);
+        matchMessage(m, topics);
     }
 
-    public Filter createFilter(byte[] from, byte[] to, String[] topics) {
+    public Filter createFilter(byte[] to, byte[] from, Topic[] topics) {
         TopicMatcher topicMatcher = new TopicMatcher(topics);
-        Filter f = new Filter(Hex.toHexString(from), Hex.toHexString(to), topicMatcher);
+        Filter f = new Filter(to, from, topicMatcher);
         return f;
     }
 
-    //TODO: add filter matching
-    private void matchMessage(Message m) {
+    private void matchMessage(Message m, Topic[] topics) {
+        Filter msgFilter = createFilter(m.getTo(), m.getPubKey(), topics);
         for (Filter f : filters) {
-            if (f.matchMessage(m)) {
-                break;
+            if (f.match(msgFilter)) {
+                f.trigger();
             }
         }
     }

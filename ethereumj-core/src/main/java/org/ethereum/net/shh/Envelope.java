@@ -6,15 +6,11 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
-import sun.security.tools.PathList;
 
-import java.lang.reflect.Array;
-import java.nio.ByteBuffer;
 import java.util.*;
 
 import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
 import static org.ethereum.crypto.HashUtil.sha3;
-import static org.ethereum.util.ByteUtil.merge;
 
 /**
  * Created by kest on 6/12/15.
@@ -121,10 +117,10 @@ public class Envelope extends ShhMessage {
 
     public void seal(long pow) {
         byte[] d = new byte[64];
-        Arrays.fill(d, (byte) 0);
         encode();
         byte[] rlp = this.encoded;
-        System.arraycopy(rlp, 0, d, 0, 32);
+        int l = rlp.length < 32 ? rlp.length : 32;
+        System.arraycopy(rlp, 0, d, 0, l);
 
         long then = System.currentTimeMillis() + pow;
 
