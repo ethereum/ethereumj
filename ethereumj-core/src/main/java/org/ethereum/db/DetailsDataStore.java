@@ -4,6 +4,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -11,7 +13,6 @@ import java.util.Set;
 
 import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.wrap;
-import static org.spongycastle.util.encoders.Hex.decode;
 
 public class DetailsDataStore {
 
@@ -64,14 +65,9 @@ public class DetailsDataStore {
     public void flush() {
         long keys = cache.size();
 
-        ByteArrayWrapper largeDetailsKey = wrap(decode("b61662398570293e4f0d25525e2b3002b7fe0836"));
-        ContractDetails largeDetails = cache.get(largeDetailsKey);
-
         long start = System.nanoTime();
         long totalSize = flushInternal();
         long finish = System.nanoTime();
-
-        if (largeDetails != null) cache.put(largeDetailsKey, largeDetails);
 
         float flushSize = (float) totalSize / 1_048_576;
         float flushTime = (float) (finish - start) / 1_000_000;
@@ -109,5 +105,15 @@ public class DetailsDataStore {
         keys.addAll(db.dumpKeys());
 
         return keys;
+    }
+
+
+    private void temporarySave(String addr, byte[] data){
+        try {
+            FileOutputStream fos = new FileOutputStream(addr);
+            fos.write(data);
+            fos.close();
+            System.out.println("drafted: " + addr);
+        } catch (IOException e) {e.printStackTrace();}
     }
 }

@@ -21,7 +21,7 @@ import static org.ethereum.util.Value.fromRlpEncoded;
  */
 public class Cache {
 
-    private static final Logger gLogger = LoggerFactory.getLogger("general");
+    private static final Logger logger = LoggerFactory.getLogger("general");
 
     private final KeyValueDataSource dataSource;
     private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
@@ -56,7 +56,7 @@ public class Cache {
         if (node == null) {
             byte[] data = this.dataSource.get(key);
             node = new Node(fromRlpEncoded(data), false);
-            
+
             this.nodes.put(wrappedKey, node);
         }
 
@@ -80,10 +80,10 @@ public class Cache {
         Map<byte[], byte[]> batch = new HashMap<>();
         for (ByteArrayWrapper key : this.nodes.keySet()) {
             Node node = this.nodes.get(key);
-            
+
             if (node.isDirty()) {
                 node.setDirty(false);
-                
+
                 byte[] value = node.getValue().encode();
                 batch.put(key.getData(), value);
 
@@ -96,10 +96,10 @@ public class Cache {
         this.nodes.clear();
 
         long finish = System.nanoTime();
-        
+
         float flushSize = (float) totalSize / 1048576;
         float flushTime = (float) (finish - start) / 1_000_000;
-        gLogger.info(format("Flush state in: %02.2f ms, %d nodes, %02.2fMB", flushTime, batch.size(), flushSize));
+        logger.info(format("Flush state in: %02.2f ms, %d nodes, %02.2fMB", flushTime, batch.size(), flushSize));
     }
 
     public void undo() {

@@ -1397,6 +1397,11 @@ public class TrieTest {
         String root2 = Hex.toHexString(trie2.getRootHash());
         assertEquals("d7b597b334b78c63ddf7beafc96484f5604472c40d438ea514882fab0813f074", root2);
 
+        String dump1 = trie.getTrieDump();
+        String dump2 = trie2.getTrieDump();
+
+        assertEquals(dump1, dump2);
+
         // bug that updates the value somewhere before 505k flush
         trie2.update(Hex.decode("8c8998c70d860b06ebe80ce22500ec1192083a59ca111194cf2a7612d84b0e2a"), RLP.encodeElement(Hex.decode("0166")));
         String root3 = Hex.toHexString(trie2.getRootHash());

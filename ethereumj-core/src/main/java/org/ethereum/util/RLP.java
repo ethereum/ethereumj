@@ -1,6 +1,8 @@
 package org.ethereum.util;
 
 import org.ethereum.db.ByteArrayWrapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -41,6 +43,9 @@ import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
  * @since 01.04.2014
  */
 public class RLP {
+
+    private static final Logger logger = LoggerFactory.getLogger("rlp");
+
 
     /**
      * Allow for content up to size of 2^64 bytes *
@@ -477,6 +482,10 @@ public class RLP {
             int pos = startPos;
 
             while (pos < endPos) {
+
+                logger.debug("fullTraverse: level: " + level + " startPos: " + pos + " endPos: " + endPos);
+
+
                 // It's a list with a payload more than 55 bytes
                 // data[0] - 0xF7 = how many next bytes allocated
                 // for the length of the list
@@ -749,7 +758,7 @@ public class RLP {
 
         if (isNullOrZeroArray(srcData))
             return new byte[]{(byte) OFFSET_SHORT_ITEM};
-        else if(isSingleZero(srcData))
+        else if (isSingleZero(srcData))
             return new byte[]{00};
         else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
             return srcData;
@@ -783,6 +792,31 @@ public class RLP {
             return data;
         }
     }
+
+    public static int calcElementPrefixSize(byte[] srcData) {
+
+        if (isNullOrZeroArray(srcData))
+            return 0;
+        else if (isSingleZero(srcData))
+            return 0;
+        else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
+            return 0;
+        } else if (srcData.length < SIZE_THRESHOLD) {
+            return 1;
+        } else {
+            // length of length = BX
+            // prefix = [BX, [length]]
+            int tmpLength = srcData.length;
+            byte byteNum = 0;
+            while (tmpLength != 0) {
+                ++byteNum;
+                tmpLength = tmpLength >> 8;
+            }
+
+            return 1 + byteNum;
+        }
+    }
+
 
     public static byte[] encodeListHeader(int size) {
 
@@ -828,9 +862,9 @@ public class RLP {
         if (length < SIZE_THRESHOLD) {
 
             if (length == 0)
-                return new byte[] {(byte)0x80};
+                return new byte[]{(byte) 0x80};
             else
-                return new byte[] {(byte)(0x80 + length)};
+                return new byte[]{(byte) (0x80 + length)};
 
         } else {
 
@@ -857,11 +891,11 @@ public class RLP {
         }
     }
 
-    public static byte[] encodeSet(Set<ByteArrayWrapper> data){
+    public static byte[] encodeSet(Set<ByteArrayWrapper> data) {
 
         int dataLength = 0;
         Set<byte[]> encodedElements = new HashSet<>();
-        for (ByteArrayWrapper element : data){
+        for (ByteArrayWrapper element : data) {
 
             byte[] encodedElement = RLP.encodeElement(element.getData());
             dataLength += encodedElement.length;
@@ -875,7 +909,7 @@ public class RLP {
         System.arraycopy(listHeader, 0, output, 0, listHeader.length);
 
         int cummStart = listHeader.length;
-        for (byte[] element : encodedElements){
+        for (byte[] element : encodedElements) {
             System.arraycopy(element, 0, output, cummStart, element.length);
             cummStart += element.length;
         }
@@ -971,7 +1005,6 @@ public class RLP {
             throw new RuntimeException("wrong decode attempt");
         }
     }
-
 
 
 }

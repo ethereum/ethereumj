@@ -17,6 +17,7 @@ import static java.util.Arrays.copyOfRange;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.*;
 import static org.ethereum.util.CompactEncoder.*;
+import static org.ethereum.util.RLP.calcElementPrefixSize;
 import static org.spongycastle.util.Arrays.concatenate;
 
 /**
@@ -519,7 +520,7 @@ public class TrieImpl implements Trie {
             keysTotalSize += keyBytes.length;
 
             byte[] valBytes = map.get(key).getValue().getData();
-            valsTotalSize += valBytes.length;
+            valsTotalSize += valBytes.length + calcElementPrefixSize(valBytes);
         }
 
         byte[] root = null;
@@ -568,7 +569,7 @@ public class TrieImpl implements Trie {
 
             k_1 += key.getData().length;
 
-            byte[] valBytes = map.get(key).getValue().getData();
+            byte[] valBytes =  RLP.encodeElement( map.get(key).getValue().getData() );
 
             System.arraycopy(valBytes, 0, rlpData,
                     listHeader.length + keysHeader.length + keysTotalSize + valsHeader.length + k_2,

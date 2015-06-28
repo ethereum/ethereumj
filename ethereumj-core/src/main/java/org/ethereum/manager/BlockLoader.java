@@ -64,6 +64,9 @@ public class BlockLoader {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println(" * Done * ");
+        System.exit(0);
     }
 
 
