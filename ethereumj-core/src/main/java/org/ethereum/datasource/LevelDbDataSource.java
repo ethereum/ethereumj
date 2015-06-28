@@ -18,7 +18,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
+//import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
+import static org.fusesource.leveldbjni.JniDBFactory.factory;
 
 /**
  * @author Roman Mandeleil

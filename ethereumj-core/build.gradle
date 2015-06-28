@@ -24,7 +24,7 @@ apply plugin: 'com.jfrog.artifactory-upload'
 sourceCompatibility = 1.7
 
 mainClassName = 'org.ethereum.Start'
-applicationDefaultJvmArgs = ["-server", "-Xss32m"]
+applicationDefaultJvmArgs = ["-server", "-Xss32m", "-Xms3500m"]
 
 ext.generatedSrcDir = file('src/gen/java')
 
@@ -101,6 +101,9 @@ dependencies {
     compile "com.madgag.spongycastle:prov:${scastleVersion}" // for SHA3 and SECP256K1
 
     compile "org.iq80.leveldb:leveldb:${leveldbVersion}"
+
+    compile "org.fusesource.leveldbjni:leveldbjni:1.8"
+    compile "org.fusesource.leveldbjni:leveldbjni-all:1.8"
 
     compile "com.cedarsoftware:java-util:1.8.0" // for deep equals
     compile "org.antlr:antlr4-runtime:4.5" // for serpent compilation
