@@ -301,6 +301,7 @@ public class BlockchainImpl implements Blockchain {
         if (needFlush(block)) {
             repository.flush();
             blockStore.flush();
+            System.gc();
         }
 
         // Remove all wallet transactions as they already approved by the net
@@ -326,7 +327,7 @@ public class BlockchainImpl implements Blockchain {
     private boolean needFlush(Block block) {
         boolean isBatchReached = block.getNumber() % CONFIG.flushBatchSize() == 0;
         boolean isConsensus = CONFIG.flushIgnoreConsensus() || adminInfo.isConsensus();
-        
+
         return isConsensus && isBatchReached;
     }
 
