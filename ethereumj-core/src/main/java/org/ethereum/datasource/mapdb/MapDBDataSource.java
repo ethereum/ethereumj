@@ -2,25 +2,22 @@ package org.ethereum.datasource.mapdb;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.db.ByteArrayWrapper;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
-import org.mapdb.HTreeMap;
+import org.mapdb.Serializer;
 
 import java.io.File;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import static java.lang.System.getProperty;
-import static org.ethereum.util.ByteUtil.wrap;
 
 public class MapDBDataSource implements KeyValueDataSource {
 
     private static final int BATCH_SIZE = 1024 * 1000 * 10;
 
     private DB db;
-    private HTreeMap<ByteArrayWrapper, byte[]> map;
+    private Map<byte[], byte[]> map;
     private String name;
 
     @Override
@@ -36,8 +33,10 @@ public class MapDBDataSource implements KeyValueDataSource {
                 .closeOnJvmShutdown()
                 .make();
 
-
-        this.map = db.hashMap(name);
+        this.map = db.hashMapCreate(name)
+                .keySerializer(Serializer.BYTE_ARRAY)
+                .valueSerializer(Serializer.BYTE_ARRAY)
+                .makeOrGet();
     }
 
     @Override
@@ -47,13 +46,13 @@ public class MapDBDataSource implements KeyValueDataSource {
 
     @Override
     public byte[] get(byte[] key) {
-        return map.get(wrap(key));
+        return map.get(key);
     }
 
     @Override
     public byte[] put(byte[] key, byte[] value) {
         try {
-            return map.put(wrap(key), value);
+            return map.put(key, value);
         } finally {
             db.commit();
         }
@@ -70,11 +69,7 @@ public class MapDBDataSource implements KeyValueDataSource {
 
     @Override
     public Set<byte[]> keys() {
-        HashSet<byte[]> result = new HashSet<>();
-        for (ByteArrayWrapper key : map.keySet()) {
-            result.add(key.getData());
-        }
-        return result;
+        return map.keySet();
     }
 
     @Override
@@ -85,7 +80,7 @@ public class MapDBDataSource implements KeyValueDataSource {
                 byte[] value = rows.get(key);
                 savedSize += value.length;
 
-                map.put(wrap(key), value);
+                map.put(key, value);
                 if (savedSize > BATCH_SIZE) {
                     db.commit();
                     savedSize = 0;

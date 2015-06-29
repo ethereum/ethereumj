@@ -1,25 +1,19 @@
 package org.ethereum.datasource;
 
 import org.ethereum.config.SystemProperties;
-
-import org.iq80.leveldb.CompressionType;
-import org.iq80.leveldb.DB;
-import org.iq80.leveldb.DBIterator;
-import org.iq80.leveldb.Options;
-import org.iq80.leveldb.WriteBatch;
-
+import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-//import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
+
+//import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 /**
  * @author Roman Mandeleil
@@ -57,6 +51,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
             File dbLocation = new File(System.getProperty("user.dir") + "/" +
                     SystemProperties.CONFIG.databaseDir() + "/");
             File fileLocation = new File(dbLocation, name);
+            if (!dbLocation.exists()) dbLocation.mkdirs();
 
             if (SystemProperties.CONFIG.databaseReset()) {
                 destroyDB(fileLocation);
@@ -106,26 +101,33 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     @Override
     public Set<byte[]> keys() {
+        try {
+            try (DBIterator dbIterator = db.iterator()) {
+                Set<byte[]> keys = new HashSet<>();
+                while (dbIterator.hasNext()) {
+                    keys.add(dbIterator.next().getKey());
+                }
 
-        DBIterator dbIterator = db.iterator();
-        Set<byte[]> keys = new HashSet<>();
-        while (dbIterator.hasNext()) {
-
-            Map.Entry<byte[], byte[]> entry = dbIterator.next();
-            keys.add(entry.getKey());
+                return keys;
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return keys;
     }
 
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
+        try {
+            try (WriteBatch batch = db.createWriteBatch()) {
+                for (Map.Entry<byte[], byte[]> row : rows.entrySet()) {
+                    batch.put(row.getKey(), row.getValue());
+                }
 
-        WriteBatch batch = db.createWriteBatch();
-
-        for (Map.Entry<byte[], byte[]> row : rows.entrySet())
-            batch.put(row.getKey(), row.getValue());
-
-        db.write(batch);
+                db.write(batch);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
