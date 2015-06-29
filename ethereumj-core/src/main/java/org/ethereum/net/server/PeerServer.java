@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -26,10 +27,13 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author Roman Mandeleil
  * @since 01.11.2014
  */
-//@Component
+@Component
 public class PeerServer {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
+
+    @Autowired
+    private ApplicationContext ctx;
 
     @Autowired
     public ChannelManager channelManager;
@@ -48,6 +52,8 @@ public class PeerServer {
 
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
+
+        ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, "");
 
         worldManger.getListener().trace("Listening on port " + port);
 

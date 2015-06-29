@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.ByteToMessageCodec;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
@@ -30,6 +31,7 @@ import java.math.BigInteger;
 import java.util.List;
 
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The PacketDecoder parses every valid Ethereum packet to a Message object
@@ -42,7 +44,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
     private FrameCodec frameCodec;
-    private ECKey myKey;
+    private ECKey myKey = ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress();
     private byte[] nodeId;
     private byte[] remoteId;
     private EncryptionHandshake handshake;
@@ -58,7 +60,14 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public class InitiateHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            initiate(ctx);
+            if (remoteId.length == 64) {
+                initiate(ctx);
+            } else {
+                handshake = new EncryptionHandshake();
+                byte[] nodeIdWithFormat = myKey.getPubKey();
+                nodeId = new byte[nodeIdWithFormat.length - 1];
+                System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+            }
         }
     }
 
@@ -176,15 +185,31 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
             }
         } else {
             if (frameCodec == null) {
-                // Respond to auth
-                throw new UnsupportedOperationException();
+                byte[] authInitPacket = new byte[AuthInitiateMessage.getLength() + ECIESCoder.getOverhead()];
+                if (!buffer.isReadable(authInitPacket.length))
+                    return;
+                buffer.readBytes(authInitPacket);
+
+                this.handshake = new EncryptionHandshake();
+                byte[] responsePacket = this.handshake.handleAuthInitiate(authInitPacket, myKey);
+                EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();
+                this.frameCodec = new FrameCodec(secrets);
+
+                ECPoint remotePubKey = this.handshake.getRemotePublicKey();
+                this.remoteId = remotePubKey.getEncoded();
+                this.channel.init(Hex.toHexString(this.remoteId));
+
+                final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);
+                byteBufMsg.writeBytes(responsePacket);
+                ctx.writeAndFlush(byteBufMsg).sync();
             } else {
                 Frame frame = frameCodec.readFrame(buffer);
                 if (frame == null)
                     return;
                 byte[] payload = ByteStreams.toByteArray(frame.getStream());
                 HelloMessage helloMessage = new HelloMessage(payload);
-                System.out.println("hello message received");
+                if (loggerNet.isInfoEnabled())
+                    loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
 
                 // Secret authentication finish here
                 isHandshakeDone = true;
