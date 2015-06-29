@@ -31,17 +31,18 @@ public class MapDBDataSource implements KeyValueDataSource {
         }
 
 
-        db = DBMaker.newFileDB(new File(dbLocation, name))
-                .asyncWriteEnable()
-                .mmapFileEnableIfSupported()
+        db = DBMaker.fileDB(new File(dbLocation, name))
+//                .asyncWriteEnable()
+//                .mmapFileEnableIfSupported()
 //                .compressionEnable()
-                .cacheDisable()
+//                .cacheDisable()
 //                .asyncWriteFlushDelay(1000)
+                .transactionDisable()
                 .closeOnJvmShutdown()
                 .make();
 
 
-        this.map = db.createHashMap(name).makeOrGet();
+        this.map = db.hashMap(name);
     }
 
     @Override
