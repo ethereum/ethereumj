@@ -87,16 +87,16 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
     /*****  END  *******/
 
     public void storeRequest(final Key key) {
-        Future<?> res = storeRequestExecutor.submit(new Runnable() {
-            @Override
-            public void run() {
+//        Future<?> res = storeRequestExecutor.submit(new Runnable() {
+//            @Override
+//            public void run() {
                 long id = idGenerator.incrementAndGet();
 //                Chunk chunk = netStore.localStore.dbStore.get(key);// ??? Why DB ?
                 Chunk chunk = netStore.localStore.get(key);
                 BzzStoreReqMessage msg = new BzzStoreReqMessage(id, key, chunk.getData());
                 sendMessage(msg);
-            }
-        });
+//            }
+//        });
     }
 
     private void handshakeOut() {
