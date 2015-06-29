@@ -4,15 +4,12 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
-import org.antlr.v4.runtime.misc.Triple;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.KademliaOptions;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.*;
 

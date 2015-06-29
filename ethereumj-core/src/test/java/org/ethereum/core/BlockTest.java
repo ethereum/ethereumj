@@ -89,11 +89,11 @@ public class BlockTest {
         JSONParser parser = new JSONParser();
         JSONObject genesisMap = (JSONObject) parser.parse(TEST_GENESIS);
 
-        Set<String> keys = genesisMap.keySet();
+        Set keys = genesisMap.keySet();
 
         Trie state = new SecureTrie(null);
 
-        for (String key : keys) {
+        for (Object key : keys) {
 
             JSONObject val = (JSONObject) genesisMap.get(key);
             String denom = (String) val.keySet().toArray()[0];
@@ -102,7 +102,7 @@ public class BlockTest {
             BigInteger wei = Denomination.valueOf(denom.toUpperCase()).value().multiply(new BigInteger(value));
 
             AccountState acctState = new AccountState(BigInteger.ZERO, wei);
-            state.update(Hex.decode(key), acctState.getEncoded());
+            state.update(Hex.decode(key.toString()), acctState.getEncoded());
         }
 
         logger.info("root: " + Hex.toHexString(state.getRootHash()));
