@@ -6,7 +6,7 @@ import org.ethereum.util.RLPList;
 import static org.ethereum.net.shh.ShhMessageCodes.STATUS;
 
 /**
- * Created by kest on 6/11/15.
+ * @author by Konstantin Shabalin
  */
 public class StatusMessage extends ShhMessage {
 

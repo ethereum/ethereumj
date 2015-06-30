@@ -3,7 +3,7 @@ package org.ethereum.net.shh;
 import org.ethereum.crypto.ECKey;
 
 /**
- * Created by kest on 6/13/15.
+ * @author by Konstantin Shabalin
  */
 public class Options {
 
