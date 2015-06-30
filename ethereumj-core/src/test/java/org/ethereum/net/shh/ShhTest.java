@@ -3,7 +3,6 @@ package org.ethereum.net.shh;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.math.BigInteger;
@@ -21,7 +20,7 @@ public class ShhTest {
     private byte[] payload = "Hello whisper!".getBytes();
     private ECKey privKey = ECKey.fromPrivate(BigInteger.TEN);
     private byte[] pubKey = privKey.decompress().getPubKey();
-    private long ttl = 10000;
+    private int ttl = 10000;
     private Topic[] topics = new Topic[]{
             new Topic("topic 1"),
             new Topic("topic 2"),
@@ -32,7 +31,7 @@ public class ShhTest {
     public void test1() {
         Message sent = new Message(payload);
         Options options = new Options(null, null, topics, ttl);
-        Envelope e = sent.wrap(0, options);
+        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
 
         RLPList rlpList = RLP.decode2(e.getEncoded());
         RLPList.recursivePrint(rlpList);
@@ -52,7 +51,7 @@ public class ShhTest {
     public void test2() {
         Message sent = new Message(payload);
         Options options = new Options(privKey, null, topics, ttl);
-        Envelope e = sent.wrap(0, options);
+        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
 
         assertEquals(Hex.toHexString(e.getData()), Hex.toHexString(sent.getBytes()));
         assertEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
@@ -68,7 +67,7 @@ public class ShhTest {
     public void test3() {
         Message sent = new Message(payload);
         Options options = new Options(null, pubKey, topics, ttl);
-        Envelope e = sent.wrap(0, options);
+        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
 
         assertEquals(Hex.toHexString(e.getData()), Hex.toHexString(sent.getBytes()));
         assertNotEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
@@ -86,7 +85,7 @@ public class ShhTest {
     public void test4() {
         Message sent = new Message(payload);
         Options options = new Options(privKey, pubKey, topics, ttl);
-        Envelope e = sent.wrap(0, options);
+        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
 
         assertEquals(Hex.toHexString(e.getData()), Hex.toHexString(sent.getBytes()));
         assertNotEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
