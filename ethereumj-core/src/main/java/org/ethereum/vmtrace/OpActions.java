@@ -113,10 +113,10 @@ public class OpActions {
                 .addParam("delta", delta);
     }
 
-    public Action addMemoryWrite(int address, byte[] data) {
+    public Action addMemoryWrite(int address, byte[] data, int size) {
         return addAction(memory, Action.Name.write)
                 .addParam("address", address)
-                .addParam("data", toHexString(data));
+                .addParam("data", toHexString(data).substring(0, size));
     }
 
     public Action addStoragePut(DataWord key, DataWord value) {

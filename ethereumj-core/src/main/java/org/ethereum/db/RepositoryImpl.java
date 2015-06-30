@@ -133,6 +133,7 @@ public class RepositoryImpl implements Repository {
 
             } else {
 
+                if (!contractDetails.isDirty()) continue;
                     ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetails;
                     if (contractDetailsCache.origContract == null){
                         contractDetailsCache.origContract = new ContractDetailsImpl();

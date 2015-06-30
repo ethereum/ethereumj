@@ -79,4 +79,9 @@ public class TrackDatabase implements Database {
     public void close() {
         db.close();
     }
+
+    @Override
+    public void init() {
+
+    }
 }

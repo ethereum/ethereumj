@@ -22,7 +22,6 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
     ContractDetails origContract = new ContractDetailsImpl();
 
-
     private byte[] code = EMPTY_BYTE_ARRAY;
 
     private boolean dirty = false;
@@ -49,6 +48,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         else{
             if (origContract == null) return null;
             value = origContract.get(key);
+            storage.put(key.clone(), value == null ? DataWord.ZERO.clone() : value.clone());
         }
 
         if (value == null || value.isZero())
@@ -65,11 +65,10 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     @Override
     public void setCode(byte[] code) {
         this.code = code;
-        this.setDirty(true);
     }
 
     @Override
-    public byte[] getStorageHash() {
+    public byte[] getStorageHash() { // todo: unsupported
 
         SecureTrie storageTrie = new SecureTrie(null);
 
@@ -205,6 +204,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         }
 
         origContract.setCode(code);
+        origContract.setDirty(this.dirty || origContract.isDirty());
     }
 
 }

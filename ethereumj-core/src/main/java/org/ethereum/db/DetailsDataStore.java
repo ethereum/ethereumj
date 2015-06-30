@@ -2,12 +2,16 @@ package org.ethereum.db;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.wrap;
 
 public class DetailsDataStore {
@@ -18,77 +22,98 @@ public class DetailsDataStore {
     private HashMap<ByteArrayWrapper, ContractDetails> cache = new HashMap<>();
     private Set<ByteArrayWrapper> removes = new HashSet<>();
 
-    public void setDB(DatabaseImpl db){
+    public void setDB(DatabaseImpl db) {
         this.db = db;
     }
 
-    public ContractDetails get(byte[] key){
+    public ContractDetails get(byte[] key) {
 
-        ContractDetails details = cache.get(wrap(key));
+        ByteArrayWrapper wrappedKey = wrap(key);
+        ContractDetails details = cache.get(wrappedKey);
 
-        if (details == null){
+        if (details == null) {
 
-            if ( removes.contains(wrap(key)))  return null;
-
+            if (removes.contains(wrappedKey)) return null;
             byte[] data = db.get(key);
             if (data == null) return null;
 
             details = new ContractDetailsImpl(data);
-            cache.put( wrap(key), details);
+            cache.put(wrappedKey, details);
+
+            float out = ((float) data.length) / 1048576;
+            if (out > 10) {
+                String sizeFmt = format("%02.2f", out);
+                System.out.println("loaded: key: " + Hex.toHexString(key) + " size: " + sizeFmt + "MB");
+            }
         }
 
         return details;
     }
 
-    public void update(byte[] key, ContractDetails contractDetails){
-        cache.put(wrap(key), contractDetails);
-
-        if (removes.contains(wrap(key)))
-            removes.remove(wrap(key));
+    public void update(byte[] key, ContractDetails contractDetails) {
+        ByteArrayWrapper wrappedKey = wrap(key);
+        cache.put(wrappedKey, contractDetails);
+        removes.remove(wrappedKey);
     }
 
-    public void remove(byte[] key){
-        cache.remove(wrap(key));
-        removes.add(wrap(key));
+    public void remove(byte[] key) {
+        ByteArrayWrapper wrappedKey = wrap(key);
+        cache.remove(wrappedKey);
+        removes.add(wrappedKey);
     }
 
-    public void flush(){
+    public void flush() {
+        long keys = cache.size();
 
-        long t = System.nanoTime();
+        long start = System.nanoTime();
+        long totalSize = flushInternal();
+        long finish = System.nanoTime();
+
+        float flushSize = (float) totalSize / 1_048_576;
+        float flushTime = (float) (finish - start) / 1_000_000;
+        gLogger.info(format("Flush details in: %02.2f ms, %d keys, %02.2fMB", flushTime, keys, flushSize));
+    }
+
+    private long flushInternal() {
+        long totalSize = 0;
 
         Map<byte[], byte[]> batch = new HashMap<>();
-        long totalSize = 0;
-        for (ByteArrayWrapper key : cache.keySet()){
-            ContractDetails contractDetails = cache.get(key);
-            byte[] value = contractDetails.getEncoded();
-            db.put(key.getData(), value);
-            batch.put(key.getData(), value);
+        for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
+            byte[] key = entry.getKey().getData();
+            byte[] value = entry.getValue().getEncoded();
+
+            batch.put(key, value);
             totalSize += value.length;
         }
 
         db.getDb().updateBatch(batch);
 
-        for (ByteArrayWrapper key : removes){
+        for (ByteArrayWrapper key : removes) {
             db.delete(key.getData());
         }
-
-        long keys = cache.size();
 
         cache.clear();
         removes.clear();
 
-        long t_ = System.nanoTime();
-        String sizeFmt = String.format("%02.2f", ((float)totalSize) / 1048576);
-        gLogger.info("Flush details in: {} ms, {} keys, {}MB",
-                ((float)(t_ - t) / 1_000_000), keys, sizeFmt);
+        return totalSize;
     }
 
 
-    public Set<ByteArrayWrapper> keys(){
-
+    public Set<ByteArrayWrapper> keys() {
         Set<ByteArrayWrapper> keys = new HashSet<>();
         keys.addAll(cache.keySet());
         keys.addAll(db.dumpKeys());
+
         return keys;
+    }
+
+
+    private void temporarySave(String addr, byte[] data){
+        try {
+            FileOutputStream fos = new FileOutputStream(addr);
+            fos.write(data);
+            fos.close();
+            System.out.println("drafted: " + addr);
+        } catch (IOException e) {e.printStackTrace();}
     }
 }

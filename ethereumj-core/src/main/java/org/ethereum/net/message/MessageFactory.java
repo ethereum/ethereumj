@@ -1,21 +1,12 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.eth.BlockHashesMessage;
-import org.ethereum.net.eth.BlocksMessage;
-import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.eth.GetBlockHashesMessage;
-import org.ethereum.net.eth.GetBlocksMessage;
-import org.ethereum.net.eth.NewBlockMessage;
-import org.ethereum.net.eth.PacketCountMessage;
-import org.ethereum.net.eth.StatusMessage;
-import org.ethereum.net.eth.TransactionsMessage;
+import org.ethereum.net.eth.*;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.PeersMessage;
-import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.shh.Envelope;
-import org.ethereum.util.RLP;
+import org.ethereum.net.shh.ShhMessageCodes;
 
 /**
  * Factory to create protocol message objects based on the RLP encoded data
@@ -63,8 +54,6 @@ public class MessageFactory {
                     return new BlocksMessage(encoded);
                 case NEW_BLOCK:
                     return new NewBlockMessage(encoded);
-                case PACKET_COUNT:
-                    return new PacketCountMessage(encoded);
             }
         }
 

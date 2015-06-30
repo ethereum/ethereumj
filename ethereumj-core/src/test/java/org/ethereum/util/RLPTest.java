@@ -1044,6 +1044,12 @@ public class RLPTest {
     }
 
 
+    @Test
+    public void testEncode_ED(){
+        String result =  Hex.toHexString(RLP.encode(0xED));
+        String expected = "81ed";
+        assertEquals(expected, result);
+    }
 
 
 }

@@ -29,7 +29,7 @@ public class DatabaseImpl implements Database {
         this.keyValueDataSource = keyValueDataSource;
     }
 
-    
+
     public DatabaseImpl(String name) {
 
         keyValueDataSource.setName(name);
@@ -62,6 +62,11 @@ public class DatabaseImpl implements Database {
 
     public KeyValueDataSource getDb() {
         return this.keyValueDataSource;
+    }
+
+    @Override
+    public void init(){
+        keyValueDataSource.init();
     }
 
     @Override

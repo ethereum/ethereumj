@@ -26,8 +26,8 @@ public class GitHubStateTest {
     @Test // this method is mostly for hands-on convenient testing
     public void stSingleTest() throws ParseException, IOException {
 
-        String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "createNameRegistratorPerTxsNotEnoughGas");
+        String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
+        GitHubJSONTestSuite.runStateTest(json, "CallEcrecover0_BonusGas");
     }
 
     @Test

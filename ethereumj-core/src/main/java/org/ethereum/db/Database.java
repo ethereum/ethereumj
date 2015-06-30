@@ -28,6 +28,8 @@ public interface Database {
      */
     public void delete(byte[] key);
 
+    void init();
+
     /**
      * Close the database connection
      */

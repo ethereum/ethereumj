@@ -49,7 +49,7 @@ public class BlockLoader {
 
                     float elapsed = ((float)(t1_ - t1) / 1_000_000);
 
-                    if (block.getNumber() % 5000 == 0 || elapsed > 10_000) {
+                    if (block.getNumber() % 1000 == 0 || elapsed > 10_000) {
                         String result = String.format("Imported block #%d took: [%02.2f msec]",
                                 block.getNumber(), elapsed);
 
@@ -60,12 +60,13 @@ public class BlockLoader {
                     if (block.getNumber() % 10000 == 0)
                         System.out.println("Skipping block #" + block.getNumber());
                 }
-
-
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+        System.out.println(" * Done * ");
+        System.exit(0);
     }
 
 

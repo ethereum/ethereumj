@@ -81,7 +81,6 @@ public class ContractDetailsImpl implements ContractDetails {
     @Override
     public void setCode(byte[] code) {
         this.code = code;
-        this.setDirty(true);
         this.rlpEncoded = null;
     }
 

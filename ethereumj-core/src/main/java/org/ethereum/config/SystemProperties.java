@@ -48,6 +48,8 @@ public class SystemProperties {
     private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
     private final static boolean DEFAULT_REDIS_ENABLED = true;
     private static final String DEFAULT_BLOCKS_LOADER = "";
+    private static final int DEFAULT_FLUSH_BATCH_SIZE = 5_000;
+    private static final boolean DEFAULT_FLUSH_IGNORE_CONSENSUS = false;
 
 
     /* Testing */
@@ -258,6 +260,19 @@ public class SystemProperties {
 
     private boolean boolProperty(String key, Boolean defaultValue) {
         return Boolean.parseBoolean(prop.getProperty(key, String.valueOf(defaultValue)));
+    }
+    
+    private int intProperty(String key, int defaultValue) {
+        return Integer.parseInt(prop.getProperty(key, String.valueOf(defaultValue)));
+    }
+    
+    public int flushBatchSize() {
+        return intProperty("flush.batch.size", DEFAULT_FLUSH_BATCH_SIZE);
+    }
+    
+    public boolean flushIgnoreConsensus() {
+        return boolProperty("flush.ignore.consensus", DEFAULT_FLUSH_IGNORE_CONSENSUS);
+        
     }
 
     public String vmTraceDir() {

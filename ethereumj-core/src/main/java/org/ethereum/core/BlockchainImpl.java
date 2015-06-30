@@ -298,11 +298,10 @@ public class BlockchainImpl implements Blockchain {
         track.commit();
         storeBlock(block, receipts);
 
-        if (adminInfo.isConsensus() &&
-            block.getNumber() % 20_000 == 0) {
-            
+        if (needFlush(block)) {
             repository.flush();
             blockStore.flush();
+            System.gc();
         }
 
         // Remove all wallet transactions as they already approved by the net
@@ -323,6 +322,13 @@ public class BlockchainImpl implements Blockchain {
             syncDoneCalled = true;
             listener.onSyncDone();
         }
+    }
+
+    private boolean needFlush(Block block) {
+        boolean isBatchReached = block.getNumber() % CONFIG.flushBatchSize() == 0;
+        boolean isConsensus = CONFIG.flushIgnoreConsensus() || adminInfo.isConsensus();
+
+        return isConsensus && isBatchReached;
     }
 
     private byte[] calcReceiptsTrie(List<TransactionReceipt> receipts){

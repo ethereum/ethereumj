@@ -13,7 +13,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Created by kest on 6/13/15.
+ * @author by Konstantin Shabalin
  */
 public class ShhTest {
 
@@ -99,4 +99,6 @@ public class ShhTest {
         assertEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
         assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.decompress().getPubKey()));
     }
+
+
 }

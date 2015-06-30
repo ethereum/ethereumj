@@ -1,9 +1,6 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.net.rlpx.*;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -15,7 +12,6 @@ import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
 import static org.ethereum.crypto.HashUtil.sha3;
 import static org.ethereum.util.ByteUtil.merge;
 import static org.junit.Assert.assertEquals;
@@ -25,6 +21,7 @@ public class RLPXTest {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger("test");
 
+    @Ignore
     @Test // ping test
     public void test1() {
 
@@ -65,6 +62,7 @@ public class RLPXTest {
         assertEquals(key.toString(), key2.toString());
     }
 
+    @Ignore
     @Test // neighbors message
     public void test3() {
 
@@ -133,6 +131,7 @@ public class RLPXTest {
     }
 
 
+    @Ignore
     @Test
     public void test6() {
 
@@ -153,7 +152,7 @@ public class RLPXTest {
     }
 
 
-
+    @Ignore
     @Test  // Neighbors parse data
     public void test7() {
 

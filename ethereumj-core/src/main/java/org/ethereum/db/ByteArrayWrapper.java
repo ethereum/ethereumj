@@ -4,13 +4,14 @@ import org.ethereum.util.FastByteComparisons;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
  * @author Roman Mandeleil
  * @since 11.06.2014
  */
-public class ByteArrayWrapper implements Comparable<ByteArrayWrapper> {
+public class ByteArrayWrapper implements Comparable<ByteArrayWrapper>, Serializable {
 
     private final byte[] data;
     private int hashCode = 0;

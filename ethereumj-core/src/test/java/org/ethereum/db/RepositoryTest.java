@@ -801,4 +801,48 @@ public class RepositoryTest {
         assertEquals(false, repoTrack2.isExist(precompiled));
     }
 
+    @Test
+    public void test19() {
+
+        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+
+        byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        DataWord cowKey1 = new DataWord("c1");
+        DataWord cowVal1 = new DataWord("c0a1");
+        DataWord cowVal0 = new DataWord("c0a0");
+
+        DataWord horseKey1 = new DataWord("e1");
+        DataWord horseVal1 = new DataWord("c0a1");
+        DataWord horseVal0 = new DataWord("c0a0");
+
+        repository.addStorageRow(cow, cowKey1, cowVal0);
+        repository.addStorageRow(horse, horseKey1, horseVal0);
+
+        Repository track2 = repository.startTracking(); //track
+
+        track2.addStorageRow(horse, horseKey1, horseVal0);
+        Repository track3 = track2.startTracking();
+
+        ContractDetails cowDetails = track3.getContractDetails(cow);
+        cowDetails.put(cowKey1, cowVal1);
+
+        ContractDetails horseDetails = track3.getContractDetails(horse);
+        horseDetails.put(horseKey1, horseVal1);
+
+        track3.commit();
+        track2.rollback();
+
+        ContractDetails cowDetailsOrigin = repository.getContractDetails(cow);
+        DataWord cowValOrin = cowDetailsOrigin.get(cowKey1);
+
+        ContractDetails horseDetailsOrigin = repository.getContractDetails(horse);
+        DataWord horseValOrin = horseDetailsOrigin.get(horseKey1);
+
+        assertEquals(cowVal0, cowValOrin);
+        assertEquals(horseVal0, horseValOrin);
+    }
+
+
 }

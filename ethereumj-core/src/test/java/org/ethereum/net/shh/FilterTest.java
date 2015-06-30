@@ -5,9 +5,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-/**
- * Created by kest on 6/26/15.
- */
 public class FilterTest {
 
     byte[] to = new ECKey().decompress().getPubKey();

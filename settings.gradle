@@ -1,4 +1,3 @@
 rootProject.name = "ethereumj"
 
 include "ethereumj-core"
-include "ethereumj-studio"

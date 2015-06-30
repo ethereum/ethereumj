@@ -1,5 +1,6 @@
 package org.ethereum.datasource.redis;
 
+import org.apache.commons.collections4.CollectionUtils;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -74,7 +75,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
 
     @Override
     public boolean remove(Object o) {
-        return removeAll(Arrays.asList(o));
+        return (o == null) || removeAll(Arrays.asList(o));
     }
 
     @Override
@@ -110,7 +111,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
 
     @Override
     public boolean removeAll(final Collection<?> c) {
-        return pooledWithResult(new Function<Jedis, Boolean>() {
+        return CollectionUtils.isEmpty(c) || pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
                 return jedis.srem(getName(), serialize(c)) == c.size();

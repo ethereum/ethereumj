@@ -5,7 +5,7 @@ import java.util.Arrays;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
- * Created by kest on 6/12/15.
+ * @author by Konstantin Shabalin
  */
 public class Topic {
 

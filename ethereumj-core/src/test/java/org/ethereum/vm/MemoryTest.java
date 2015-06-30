@@ -9,6 +9,7 @@ import java.util.Arrays;
 import static java.lang.Math.ceil;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class MemoryTest {
 
@@ -44,18 +45,18 @@ public class MemoryTest {
         Memory memoryBuffer = new Memory();
         byte[] data = {1, 1, 1, 1};
 
-        memoryBuffer.write(0, data);
+        memoryBuffer.write(0, data, data.length, false);
 
-        Assert.assertTrue(1 == memoryBuffer.getChunks().size());
+        assertTrue(1 == memoryBuffer.getChunks().size());
 
         byte[] chunk = memoryBuffer.getChunks().get(0);
-        Assert.assertTrue(chunk[0] == 1);
-        Assert.assertTrue(chunk[1] == 1);
-        Assert.assertTrue(chunk[2] == 1);
-        Assert.assertTrue(chunk[3] == 1);
-        Assert.assertTrue(chunk[4] == 0);
+        assertTrue(chunk[0] == 1);
+        assertTrue(chunk[1] == 1);
+        assertTrue(chunk[2] == 1);
+        assertTrue(chunk[3] == 1);
+        assertTrue(chunk[4] == 0);
 
-        Assert.assertTrue(memoryBuffer.size() == 32);
+        assertTrue(memoryBuffer.size() == 32);
     }
 
     @Test
@@ -64,19 +65,19 @@ public class MemoryTest {
         Memory memoryBuffer = new Memory();
         byte[] data = Hex.decode("0101010101010101010101010101010101010101010101010101010101010101");
 
-        memoryBuffer.write(0, data);
+        memoryBuffer.write(0, data, data.length, false);
 
-        Assert.assertTrue(1 == memoryBuffer.getChunks().size());
+        assertTrue(1 == memoryBuffer.getChunks().size());
 
         byte[] chunk = memoryBuffer.getChunks().get(0);
-        Assert.assertTrue(chunk[0] == 1);
-        Assert.assertTrue(chunk[1] == 1);
+        assertTrue(chunk[0] == 1);
+        assertTrue(chunk[1] == 1);
 
-        Assert.assertTrue(chunk[30] == 1);
-        Assert.assertTrue(chunk[31] == 1);
-        Assert.assertTrue(chunk[32] == 0);
+        assertTrue(chunk[30] == 1);
+        assertTrue(chunk[31] == 1);
+        assertTrue(chunk[32] == 0);
 
-        Assert.assertTrue(memoryBuffer.size() == 32);
+        assertTrue(memoryBuffer.size() == 32);
     }
 
     @Test
@@ -85,20 +86,20 @@ public class MemoryTest {
         Memory memoryBuffer = new Memory();
         byte[] data = Hex.decode("010101010101010101010101010101010101010101010101010101010101010101");
 
-        memoryBuffer.write(0, data);
+        memoryBuffer.write(0, data, data.length, false);
 
-        Assert.assertTrue(1 == memoryBuffer.getChunks().size());
+        assertTrue(1 == memoryBuffer.getChunks().size());
 
         byte[] chunk = memoryBuffer.getChunks().get(0);
-        Assert.assertTrue(chunk[0] == 1);
-        Assert.assertTrue(chunk[1] == 1);
+        assertTrue(chunk[0] == 1);
+        assertTrue(chunk[1] == 1);
 
-        Assert.assertTrue(chunk[30] == 1);
-        Assert.assertTrue(chunk[31] == 1);
-        Assert.assertTrue(chunk[32] == 1);
-        Assert.assertTrue(chunk[33] == 0);
+        assertTrue(chunk[30] == 1);
+        assertTrue(chunk[31] == 1);
+        assertTrue(chunk[32] == 1);
+        assertTrue(chunk[33] == 0);
 
-        Assert.assertTrue(memoryBuffer.size() == 64);
+        assertTrue(memoryBuffer.size() == 64);
     }
 
     @Test
@@ -108,18 +109,18 @@ public class MemoryTest {
         byte[] data = new byte[1024];
         Arrays.fill(data, (byte) 1);
 
-        memoryBuffer.write(0, data);
+        memoryBuffer.write(0, data, data.length, false);
 
-        Assert.assertTrue(1 == memoryBuffer.getChunks().size());
+        assertTrue(1 == memoryBuffer.getChunks().size());
 
         byte[] chunk = memoryBuffer.getChunks().get(0);
-        Assert.assertTrue(chunk[0] == 1);
-        Assert.assertTrue(chunk[1] == 1);
+        assertTrue(chunk[0] == 1);
+        assertTrue(chunk[1] == 1);
 
-        Assert.assertTrue(chunk[1022] == 1);
-        Assert.assertTrue(chunk[1023] == 1);
+        assertTrue(chunk[1022] == 1);
+        assertTrue(chunk[1023] == 1);
 
-        Assert.assertTrue(memoryBuffer.size() == 1024);
+        assertTrue(memoryBuffer.size() == 1024);
     }
 
     @Test
@@ -130,22 +131,22 @@ public class MemoryTest {
         byte[] data = new byte[1025];
         Arrays.fill(data, (byte) 1);
 
-        memoryBuffer.write(0, data);
+        memoryBuffer.write(0, data, data.length, false);
 
-        Assert.assertTrue(2 == memoryBuffer.getChunks().size());
+        assertTrue(2 == memoryBuffer.getChunks().size());
 
         byte[] chunk1 = memoryBuffer.getChunks().get(0);
-        Assert.assertTrue(chunk1[0] == 1);
-        Assert.assertTrue(chunk1[1] == 1);
+        assertTrue(chunk1[0] == 1);
+        assertTrue(chunk1[1] == 1);
 
-        Assert.assertTrue(chunk1[1022] == 1);
-        Assert.assertTrue(chunk1[1023] == 1);
+        assertTrue(chunk1[1022] == 1);
+        assertTrue(chunk1[1023] == 1);
 
         byte[] chunk2 = memoryBuffer.getChunks().get(1);
-        Assert.assertTrue(chunk2[0] == 1);
-        Assert.assertTrue(chunk2[1] == 0);
+        assertTrue(chunk2[0] == 1);
+        assertTrue(chunk2[1] == 0);
 
-        Assert.assertTrue(memoryBuffer.size() == 1056);
+        assertTrue(memoryBuffer.size() == 1056);
     }
 
     @Test
@@ -159,26 +160,26 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1);
-        memoryBuffer.write(1024, data2);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
-        Assert.assertTrue(2 == memoryBuffer.getChunks().size());
+        assertTrue(2 == memoryBuffer.getChunks().size());
 
         byte[] chunk1 = memoryBuffer.getChunks().get(0);
-        Assert.assertTrue(chunk1[0] == 1);
-        Assert.assertTrue(chunk1[1] == 1);
+        assertTrue(chunk1[0] == 1);
+        assertTrue(chunk1[1] == 1);
 
-        Assert.assertTrue(chunk1[1022] == 1);
-        Assert.assertTrue(chunk1[1023] == 1);
+        assertTrue(chunk1[1022] == 1);
+        assertTrue(chunk1[1023] == 1);
 
         byte[] chunk2 = memoryBuffer.getChunks().get(1);
-        Assert.assertTrue(chunk2[0] == 2);
-        Assert.assertTrue(chunk2[1] == 2);
+        assertTrue(chunk2[0] == 2);
+        assertTrue(chunk2[1] == 2);
 
-        Assert.assertTrue(chunk2[1022] == 2);
-        Assert.assertTrue(chunk2[1023] == 2);
+        assertTrue(chunk2[1022] == 2);
+        assertTrue(chunk2[1023] == 2);
 
-        Assert.assertTrue(memoryBuffer.size() == 2048);
+        assertTrue(memoryBuffer.size() == 2048);
     }
 
     @Test
@@ -195,30 +196,30 @@ public class MemoryTest {
         byte[] data3 = new byte[1];
         Arrays.fill(data3, (byte) 3);
 
-        memoryBuffer.write(0, data1);
-        memoryBuffer.write(1024, data2);
-        memoryBuffer.write(2048, data3);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
+        memoryBuffer.write(2048, data3, data3.length, false);
 
-        Assert.assertTrue(3 == memoryBuffer.getChunks().size());
+        assertTrue(3 == memoryBuffer.getChunks().size());
 
         byte[] chunk1 = memoryBuffer.getChunks().get(0);
-        Assert.assertTrue(chunk1[0] == 1);
-        Assert.assertTrue(chunk1[1] == 1);
+        assertTrue(chunk1[0] == 1);
+        assertTrue(chunk1[1] == 1);
 
-        Assert.assertTrue(chunk1[1022] == 1);
-        Assert.assertTrue(chunk1[1023] == 1);
+        assertTrue(chunk1[1022] == 1);
+        assertTrue(chunk1[1023] == 1);
 
         byte[] chunk2 = memoryBuffer.getChunks().get(1);
-        Assert.assertTrue(chunk2[0] == 2);
-        Assert.assertTrue(chunk2[1] == 2);
+        assertTrue(chunk2[0] == 2);
+        assertTrue(chunk2[1] == 2);
 
-        Assert.assertTrue(chunk2[1022] == 2);
-        Assert.assertTrue(chunk2[1023] == 2);
+        assertTrue(chunk2[1022] == 2);
+        assertTrue(chunk2[1023] == 2);
 
         byte[] chunk3 = memoryBuffer.getChunks().get(2);
-        Assert.assertTrue(chunk3[0] == 3);
+        assertTrue(chunk3[0] == 3);
 
-        Assert.assertTrue(memoryBuffer.size() == 2080);
+        assertTrue(memoryBuffer.size() == 2080);
     }
 
     @Test
@@ -237,8 +238,8 @@ public class MemoryTest {
             if (memoryBuffer.readByte(i) == 0) ++zeroes;
         }
 
-        Assert.assertTrue(ones == zeroes);
-        Assert.assertTrue(256 == memoryBuffer.size());
+        assertTrue(ones == zeroes);
+        assertTrue(256 == memoryBuffer.size());
     }
 
 
@@ -248,9 +249,9 @@ public class MemoryTest {
 
         Memory memoryBuffer = new Memory();
         DataWord value = memoryBuffer.readWord(100);
-        Assert.assertTrue(value.intValue() == 0);
-        Assert.assertTrue(memoryBuffer.getChunks().size() == 1);
-        Assert.assertTrue(memoryBuffer.size() == 32 * 5);
+        assertTrue(value.intValue() == 0);
+        assertTrue(memoryBuffer.getChunks().size() == 1);
+        assertTrue(memoryBuffer.size() == 32 * 5);
     }
 
     @Test
@@ -258,9 +259,9 @@ public class MemoryTest {
 
         Memory memoryBuffer = new Memory();
         DataWord value = memoryBuffer.readWord(2015);
-        Assert.assertTrue(value.intValue() == 0);
-        Assert.assertTrue(memoryBuffer.getChunks().size() == 2);
-        Assert.assertTrue(memoryBuffer.size() == 2048);
+        assertTrue(value.intValue() == 0);
+        assertTrue(memoryBuffer.getChunks().size() == 2);
+        assertTrue(memoryBuffer.size() == 2048);
     }
 
     @Test
@@ -268,9 +269,9 @@ public class MemoryTest {
 
         Memory memoryBuffer = new Memory();
         DataWord value = memoryBuffer.readWord(2016);
-        Assert.assertTrue(value.intValue() == 0);
-        Assert.assertTrue(memoryBuffer.getChunks().size() == 2);
-        Assert.assertTrue(memoryBuffer.size() == 2048);
+        assertTrue(value.intValue() == 0);
+        assertTrue(memoryBuffer.getChunks().size() == 2);
+        assertTrue(memoryBuffer.size() == 2048);
     }
 
     @Test
@@ -278,9 +279,9 @@ public class MemoryTest {
 
         Memory memoryBuffer = new Memory();
         DataWord value = memoryBuffer.readWord(2017);
-        Assert.assertTrue(value.intValue() == 0);
-        Assert.assertTrue(memoryBuffer.getChunks().size() == 3);
-        Assert.assertTrue(memoryBuffer.size() == 2080);
+        assertTrue(value.intValue() == 0);
+        assertTrue(memoryBuffer.getChunks().size() == 3);
+        assertTrue(memoryBuffer.size() == 2080);
     }
 
     @Test
@@ -294,11 +295,11 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1);
-        memoryBuffer.write(1024, data2);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
-        Assert.assertTrue(memoryBuffer.getChunks().size() == 2);
-        Assert.assertTrue(memoryBuffer.size() == 2048);
+        assertTrue(memoryBuffer.getChunks().size() == 2);
+        assertTrue(memoryBuffer.size() == 2048);
 
         DataWord val1 = memoryBuffer.readWord(0x3df);
         DataWord val2 = memoryBuffer.readWord(0x3e0);
@@ -315,7 +316,7 @@ public class MemoryTest {
         assertArrayEquals(
                 Hex.decode("0101010101010101010101010101010101010101010101010101010101010102"),
                 val3.getData());
-        Assert.assertTrue(memoryBuffer.size() == 2048);
+        assertTrue(memoryBuffer.size() == 2048);
     }
 
 
@@ -329,8 +330,8 @@ public class MemoryTest {
         byte[] data2 = new byte[32];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1);
-        memoryBuffer.write(32, data2);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(32, data2, data2.length, false);
 
         byte[] data = memoryBuffer.read(0, 64);
 
@@ -351,8 +352,8 @@ public class MemoryTest {
         byte[] data1 = new byte[32];
         Arrays.fill(data1, (byte) 1);
 
-        memoryBuffer.write(0, data1);
-        Assert.assertTrue(32 == memoryBuffer.size());
+        memoryBuffer.write(0, data1, data1.length, false);
+        assertTrue(32 == memoryBuffer.size());
 
         byte[] data = memoryBuffer.read(0, 64);
 
@@ -376,8 +377,8 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1);
-        memoryBuffer.write(1024, data2);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
         byte[] data = memoryBuffer.read(0, 2048);
 
@@ -387,8 +388,8 @@ public class MemoryTest {
             if (data[i] == 2) ++twos;
         }
 
-        Assert.assertTrue(ones == twos);
-        Assert.assertTrue(2048 == memoryBuffer.size());
+        assertTrue(ones == twos);
+        assertTrue(2048 == memoryBuffer.size());
     }
 
     @Test
@@ -402,8 +403,8 @@ public class MemoryTest {
         byte[] data2 = new byte[1024];
         Arrays.fill(data2, (byte) 2);
 
-        memoryBuffer.write(0, data1);
-        memoryBuffer.write(1024, data2);
+        memoryBuffer.write(0, data1, data1.length, false);
+        memoryBuffer.write(1024, data2, data2.length, false);
 
         byte[] data = memoryBuffer.read(0, 2049);
 
@@ -414,9 +415,100 @@ public class MemoryTest {
             if (data[i] == 0) ++zero;
         }
 
-        Assert.assertTrue(zero == 1);
-        Assert.assertTrue(ones == twos);
-        Assert.assertTrue(2080 == memoryBuffer.size());
+        assertTrue(zero == 1);
+        assertTrue(ones == twos);
+        assertTrue(2080 == memoryBuffer.size());
+    }
+
+
+    @Test
+    public void memoryWriteLimited_1(){
+
+        Memory memoryBuffer = new Memory();
+        memoryBuffer.extend(0, 3072);
+
+        byte[] data1 = new byte[6272];
+        Arrays.fill(data1, (byte) 1);
+
+        memoryBuffer.write(2720, data1, data1.length, true);
+
+        byte lastZero = memoryBuffer.readByte(2719);
+        byte firstOne = memoryBuffer.readByte(2721);
+
+        assertTrue(memoryBuffer.size() == 3072);
+        assertTrue(lastZero == 0);
+        assertTrue(firstOne == 1);
+
+        byte[] data = memoryBuffer.read(2720, 352);
+
+        int ones = 0; int zero = 0;
+        for (int i = 0; i < data.length; ++i){
+            if (data[i] == 1) ++ones;
+            if (data[i] == 0) ++zero;
+        }
+
+        assertTrue(ones == data.length);
+        assertTrue(zero == 0);
+    }
+
+    @Test
+    public void memoryWriteLimited_2(){
+
+        Memory memoryBuffer = new Memory();
+        memoryBuffer.extend(0, 3072);
+
+        byte[] data1 = new byte[6272];
+        Arrays.fill(data1, (byte) 1);
+
+        memoryBuffer.write(2720, data1, 300, true);
+
+        byte lastZero = memoryBuffer.readByte(2719);
+        byte firstOne = memoryBuffer.readByte(2721);
+
+        assertTrue(memoryBuffer.size() == 3072);
+        assertTrue(lastZero == 0);
+        assertTrue(firstOne == 1);
+
+        byte[] data = memoryBuffer.read(2720, 352);
+
+        int ones = 0; int zero = 0;
+        for (int i = 0; i < data.length; ++i){
+            if (data[i] == 1) ++ones;
+            if (data[i] == 0) ++zero;
+        }
+
+        assertTrue(ones == 300);
+        assertTrue(zero == 52);
+    }
+
+    @Test
+    public void memoryWriteLimited_3(){
+
+        Memory memoryBuffer = new Memory();
+        memoryBuffer.extend(0, 128);
+
+        byte[] data1 = new byte[20];
+        Arrays.fill(data1, (byte) 1);
+
+        memoryBuffer.write(10, data1, 40, true);
+
+        byte lastZero = memoryBuffer.readByte(9);
+        byte firstOne = memoryBuffer.readByte(10);
+
+        assertTrue(memoryBuffer.size() == 128);
+        assertTrue(lastZero == 0);
+        assertTrue(firstOne == 1);
+
+        byte[] data = memoryBuffer.read(10, 30);
+
+        int ones = 0; int zero = 0;
+        for (int i = 0; i < data.length; ++i){
+            if (data[i] == 1) ++ones;
+            if (data[i] == 0) ++zero;
+        }
+
+        assertTrue(ones == 20);
+        assertTrue(zero == 10);
     }
 
 

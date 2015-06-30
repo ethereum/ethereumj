@@ -1,8 +1,18 @@
 package org.ethereum.db;
 
 import org.ethereum.vm.DataWord;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 
@@ -150,5 +160,6 @@ public class ContractDetailsTest {
         assertEquals(Hex.toHexString(val_13),
                 Hex.toHexString(contractDetails_.get(new DataWord(key_13)).getData()));
     }
+
 
 }

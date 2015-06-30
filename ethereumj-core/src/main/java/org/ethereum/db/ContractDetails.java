@@ -1,12 +1,12 @@
 package org.ethereum.db;
 
-import org.ethereum.db.ContractDetailsImpl;
 import org.ethereum.vm.DataWord;
 
 import java.util.List;
 import java.util.Map;
 
 public interface ContractDetails {
+    
     void put(DataWord key, DataWord value);
 
     DataWord get(DataWord key);

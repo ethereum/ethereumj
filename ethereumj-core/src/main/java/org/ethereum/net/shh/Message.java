@@ -16,7 +16,7 @@ import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
 import static org.ethereum.util.ByteUtil.merge;
 
 /**
- * Created by kest on 6/12/15.
+ * @author by Konstantin Shabalin
  */
 public class Message extends ShhMessage {
 
