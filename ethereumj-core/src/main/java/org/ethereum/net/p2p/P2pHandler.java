@@ -269,12 +269,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
             if (capability.getName().equals(Capability.ETH)) {
                 EthMessageCodes.setOffset((byte)offset);
-                offset += EthMessageCodes.values().length + 1;
+                offset += EthMessageCodes.values().length;
             }
 
             if (capability.getName().equals(Capability.SHH)) {
                 ShhMessageCodes.setOffset((byte)offset);
-                offset += ShhMessageCodes.values().length + 1;
+                offset += ShhMessageCodes.values().length;
             }
         }
     }

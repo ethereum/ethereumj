@@ -113,11 +113,11 @@ public class AdaptiveMessageIdsTest {
         assertEquals(0x10 + 6, EthMessageCodes.BLOCKS.asByte());
         assertEquals(0x10 + 7, EthMessageCodes.NEW_BLOCK.asByte());
 
-        assertEquals(0x19 + 0, ShhMessageCodes.STATUS.asByte());
-        assertEquals(0x19 + 1, ShhMessageCodes.MESSAGE.asByte());
-        assertEquals(0x19 + 2, ShhMessageCodes.ADD_FILTER.asByte());
-        assertEquals(0x19 + 3, ShhMessageCodes.REMOVE_FILTER.asByte());
-        assertEquals(0x19 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
+        assertEquals(0x18 + 0, ShhMessageCodes.STATUS.asByte());
+        assertEquals(0x18 + 1, ShhMessageCodes.MESSAGE.asByte());
+        assertEquals(0x18 + 2, ShhMessageCodes.ADD_FILTER.asByte());
+        assertEquals(0x18 + 3, ShhMessageCodes.REMOVE_FILTER.asByte());
+        assertEquals(0x18 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
     }
 
     @Test // Capabilities should be read in alphabetical order
@@ -139,10 +139,10 @@ public class AdaptiveMessageIdsTest {
         assertEquals(0x10 + 6, EthMessageCodes.BLOCKS.asByte());
         assertEquals(0x10 + 7, EthMessageCodes.NEW_BLOCK.asByte());
 
-        assertEquals(0x19 + 0, ShhMessageCodes.STATUS.asByte());
-        assertEquals(0x19 + 1, ShhMessageCodes.MESSAGE.asByte());
-        assertEquals(0x19 + 2, ShhMessageCodes.ADD_FILTER.asByte());
-        assertEquals(0x19 + 3, ShhMessageCodes.REMOVE_FILTER.asByte());
-        assertEquals(0x19 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
+        assertEquals(0x18 + 0, ShhMessageCodes.STATUS.asByte());
+        assertEquals(0x18 + 1, ShhMessageCodes.MESSAGE.asByte());
+        assertEquals(0x18 + 2, ShhMessageCodes.ADD_FILTER.asByte());
+        assertEquals(0x18 + 3, ShhMessageCodes.REMOVE_FILTER.asByte());
+        assertEquals(0x18 + 4, ShhMessageCodes.PACKET_COUNT.asByte());
     }
 }
