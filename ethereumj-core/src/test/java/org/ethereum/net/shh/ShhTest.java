@@ -99,4 +99,6 @@ public class ShhTest {
         assertEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
         assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.decompress().getPubKey()));
     }
+
+
 }
