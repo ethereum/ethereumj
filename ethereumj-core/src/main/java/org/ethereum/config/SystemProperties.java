@@ -23,6 +23,7 @@ public class SystemProperties {
     private final static int DEFAULT_ACTIVE_PORT = 30303;
     private final static String DEFAULT_SAMPLES_DIR = "samples";
     private final static String DEFAULT_COINBASE_SECRET = "monkey";
+    private final static String DEFAULT_PRIVATE_KEY = "10";
     private final static int DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
     private final static Boolean DEFAULT_DB_RESET = false;
     private final static Boolean DEFAULT_DUMP_FULL = false;
@@ -102,6 +103,10 @@ public class SystemProperties {
         if (value != null) {
             prop.setProperty("keyvalue.datasource", value);
         }
+    }
+
+    public String privateKey() {
+        return prop.getProperty("peer.privateKey", DEFAULT_PRIVATE_KEY);
     }
 
     public boolean peerDiscovery() {
