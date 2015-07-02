@@ -98,7 +98,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
     @Override
     public Set<byte[]> keys() {
         try (DBIterator iterator = db.iterator()) {
-            HashSet<byte[]> result = new HashSet<>();
+            Set<byte[]> result = new HashSet<>();
             for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
                 result.add(iterator.peekNext().getKey());
             }

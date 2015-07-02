@@ -325,8 +325,8 @@ public class BlockchainImpl implements Blockchain {
     }
 
     private boolean needFlush(Block block) {
-        boolean isBatchReached = block.getNumber() % CONFIG.flushBatchSize() == 0;
-        boolean isConsensus = CONFIG.flushIgnoreConsensus() || adminInfo.isConsensus();
+        boolean isBatchReached = block.getNumber() % CONFIG.flushBlocksBatchSize() == 0;
+        boolean isConsensus = CONFIG.flushBlocksIgnoreConsensus() || adminInfo.isConsensus();
 
         return isConsensus && isBatchReached;
     }

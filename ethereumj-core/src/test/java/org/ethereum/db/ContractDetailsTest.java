@@ -1,13 +1,25 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.vm.DataWord;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.ethereum.TestUtils.randomAddress;
 import static org.ethereum.TestUtils.randomBytes;
+import static org.ethereum.TestUtils.randomDataWord;
+import static org.ethereum.util.ByteUtil.toHexString;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class ContractDetailsTest {
+
+    private static final int IN_MEMORY_STORAGE_LIMIT = SystemProperties.CONFIG.detailsInMemoryStorageLimit();
 
     @Test
     public void test_1(){
@@ -37,7 +49,6 @@ public class ContractDetailsTest {
 
         assertEquals(Hex.toHexString(val_2),
                 Hex.toHexString(contractDetails_.get(new DataWord(key_2)).getNoLeadZeroesData()));
-
     }
 
     @Test
@@ -157,5 +168,102 @@ public class ContractDetailsTest {
                 Hex.toHexString(contractDetails_.get(new DataWord(key_13)).getData()));
     }
 
+    @Test
+    public void testExternalStorageSerialization() {
+        byte[] address = randomAddress();
+        byte[] code = randomBytes(512);
+        Map<DataWord, DataWord> elements = new HashMap<>();
 
+        HashMapDB externalStorage = new HashMapDB();
+
+        ContractDetailsImpl original = new ContractDetailsImpl();
+        original.setExternalStorageDataSource(externalStorage);
+        original.setAddress(address);
+        original.setCode(code);
+
+        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT + 10; i++) {
+            DataWord key = randomDataWord();
+            DataWord value = randomDataWord();
+
+            elements.put(key, value);
+            original.put(key, value);
+        }
+
+        original.syncStorage();
+
+        byte[] rlp = original.getEncoded();
+
+        ContractDetailsImpl deserialized = new ContractDetailsImpl();
+        deserialized.setExternalStorageDataSource(externalStorage);
+        deserialized.decode(rlp);
+
+        assertEquals(toHexString(address), toHexString(deserialized.getAddress()));
+        assertEquals(toHexString(code), toHexString(deserialized.getCode()));
+
+        Map<DataWord, DataWord> storage = deserialized.getStorage();
+        assertEquals(elements.size(), storage.size());
+        for (DataWord key : elements.keySet()) {
+            assertEquals(elements.get(key), storage.get(key));
+        }
+
+        DataWord deletedKey = elements.keySet().iterator().next();
+
+        deserialized.put(deletedKey, DataWord.ZERO);
+        deserialized.put(randomDataWord(), DataWord.ZERO);
+    }
+
+    @Test
+    public void testExternalStorageTransition() {
+        byte[] address = randomAddress();
+        byte[] code = randomBytes(512);
+        Map<DataWord, DataWord> elements = new HashMap<>();
+
+        HashMapDB externalStorage = new HashMapDB();
+
+        ContractDetailsImpl original = new ContractDetailsImpl();
+        original.setExternalStorageDataSource(externalStorage);
+        original.setAddress(address);
+        original.setCode(code);
+
+        for (int i = 0; i < IN_MEMORY_STORAGE_LIMIT - 1; i++) {
+            DataWord key = randomDataWord();
+            DataWord value = randomDataWord();
+
+            elements.put(key, value);
+            original.put(key, value);
+        }
+
+        original.syncStorage();
+        assertTrue(externalStorage.getAddedItems() == 0);
+
+        ContractDetails deserialized = deserialize(original.getEncoded(), externalStorage);
+
+        // adds keys for in-memory storage limit overflow
+        for (int i = 0; i < 10; i++) {
+            DataWord key = randomDataWord();
+            DataWord value = randomDataWord();
+
+            elements.put(key, value);
+            deserialized.put(key, value);
+        }
+        
+        deserialized.syncStorage();
+        assertTrue(externalStorage.getAddedItems() > 0);
+
+        deserialized = deserialize(deserialized.getEncoded(), externalStorage);
+
+        Map<DataWord, DataWord> storage = deserialized.getStorage();
+        assertEquals(elements.size(), storage.size());
+        for (DataWord key : elements.keySet()) {
+            assertEquals(elements.get(key), storage.get(key));
+        }
+    }
+
+    private static ContractDetails deserialize(byte[] rlp, KeyValueDataSource externalStorage) {
+        ContractDetailsImpl result = new ContractDetailsImpl();
+        result.setExternalStorageDataSource(externalStorage);
+        result.decode(rlp);
+        
+        return result;
+    }
 }

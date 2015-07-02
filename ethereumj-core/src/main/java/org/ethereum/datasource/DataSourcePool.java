@@ -1,7 +1,5 @@
 package org.ethereum.datasource;
 
-import org.ethereum.datasource.mapdb.MapDBDataSource;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -20,18 +18,4 @@ public class DataSourcePool {
         
         return dataSource;
     }
-
-    public static KeyValueDataSource mapDbByName(String name) {
-        KeyValueDataSource dataSource = pool.get(name);
-        if (dataSource == null) {
-            dataSource = new MapDBDataSource();
-            dataSource.setName(name);
-            dataSource.init();
-            
-            pool.put(name, dataSource);
-        }
-        
-        return dataSource;
-    }
-
 }

@@ -1,5 +1,6 @@
 package org.ethereum.datasource;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.HashMap;
@@ -9,6 +10,7 @@ import static org.ethereum.TestUtils.randomBytes;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@Ignore
 public class LevelDbDataSourceTest {
 
     @Test

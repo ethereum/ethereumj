@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
@@ -21,8 +22,6 @@ import static org.ethereum.util.ByteUtil.*;
  */
 public class ContractDetailsImpl implements ContractDetails {
 
-    private static final int IN_MEMORY_KEYS_LIMIT = 100;
-
     private byte[] rlpEncoded;
 
     private byte[] address = EMPTY_BYTE_ARRAY;
@@ -32,9 +31,8 @@ public class ContractDetailsImpl implements ContractDetails {
 
     private boolean dirty = false;
     private boolean deleted = false;
-    private KeyValueDataSource externalStorageDataSource;
     private boolean externalStorage;
-    private static final DataWord SEARCHED_KEY = new DataWord(Hex.decode("9d10a06440bf66efc207276942de86de30017e710a3ccc79af8c10a4266bbfd8"));
+    private KeyValueDataSource externalStorageDataSource;
 
     public ContractDetailsImpl() {
     }
@@ -51,38 +49,18 @@ public class ContractDetailsImpl implements ContractDetails {
 
     @Override
     public void put(DataWord key, DataWord value) {
-        if (SEARCHED_KEY.equals(key)) {
-            System.out.println(DataWord.ZERO.equals(value) ? "-deleted" : "+putted");
-        }
-        
         if (value.equals(DataWord.ZERO)) {
             storageTrie.delete(key.getData());
             keys.remove(wrap(key.getData()));
-            printRootAfter("remove", key);
         } else {
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
             keys.add(wrap(key.getData()));
-            printRootAfter("add", key);
         }
 
         this.setDirty(true);
         this.rlpEncoded = null;
         
-        
-        boolean oldExternalStorage = externalStorage;
-        externalStorage = (keys.size() > IN_MEMORY_KEYS_LIMIT) || externalStorage;
-        
-        if (oldExternalStorage ^ externalStorage) {
-            System.out.println(toHexString(address) + " contract switched to external storage.");
-        }
-    }
-
-    private static final String ADDRESS = "2e9bd804a61255b2cc7106f915ed59af5fbf63cd";
-
-    private void printRootAfter(String actionName, DataWord key) {
-        if (ADDRESS.equals(key.toString())) {
-            System.out.println(ADDRESS + " root after " + actionName + " " + toHexString(getStorageHash()));
-        }
+        externalStorage = (keys.size() > SystemProperties.CONFIG.detailsInMemoryStorageLimit()) || externalStorage;
     }
 
     @Override
@@ -93,10 +71,6 @@ public class ContractDetailsImpl implements ContractDetails {
         if (data.length > 0) {
             byte[] dataDecoded = RLP.decode2(data).get(0).getRLPData();
             result = new DataWord(dataDecoded);
-        }
-
-        if (SEARCHED_KEY.equals(key)) {
-            System.out.println("<-getting result[" + result + "]");
         }
 
         return result;
@@ -137,13 +111,11 @@ public class ContractDetailsImpl implements ContractDetails {
         for (RLPElement key : keys) {
             this.keys.add(wrap(key.getRLPData()));
         }
-
+        
         if (externalStorage) {
-            this.storageTrie = new SecureTrie(getExternalStorageDataSource(), storageRoot.getRLPData());
+            storageTrie.setRoot(storageRoot.getRLPData());
+            storageTrie.getCache().changeDataSource(getExternalStorageDataSource());
         }
-
-        if (externalStorage)
-            System.out.println(toHexString(this.address) + " deserialized root " + toHexString(this.storageTrie.getRootHash()));
 
         this.rlpEncoded = rlpCode;
     }
@@ -158,9 +130,6 @@ public class ContractDetailsImpl implements ContractDetails {
             byte[] rlpStorage = RLP.encodeElement(storageTrie.serialize());
             byte[] rlpCode = RLP.encodeElement(code);
             byte[] rlpKeys = RLP.encodeSet(keys);
-
-            if (externalStorage)
-                System.out.println(toHexString(this.address) + " serialized root " + toHexString(rlpStorageRoot));
 
             this.rlpEncoded = RLP.encodeList(rlpAddress, rlpIsExternalStorage, rlpStorage, rlpCode, rlpKeys, rlpStorageRoot);
         }
@@ -269,17 +238,5 @@ public class ContractDetailsImpl implements ContractDetails {
 
         return ret;
     }
-
-/*
-    public static void main(String[] args) {
-        KeyValueDataSource dataSource = levelDbByName("details-storage/2e9bd804a61255b2cc7106f915ed59af5fbf63cd");
-        System.out.println(dataSource.keys().size());
-
-        ContractDetailsImpl contractDetails = new ContractDetailsImpl();
-        contractDetails.setExternalStorageDataSource(dataSource);
-        contractDetails
-    }
-*/
-
 }
 
