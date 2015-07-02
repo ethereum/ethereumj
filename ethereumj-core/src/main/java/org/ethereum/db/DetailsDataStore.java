@@ -51,6 +51,8 @@ public class DetailsDataStore {
     }
 
     public void update(byte[] key, ContractDetails contractDetails) {
+        contractDetails.setAddress(key);
+
         ByteArrayWrapper wrappedKey = wrap(key);
         cache.put(wrappedKey, contractDetails);
         removes.remove(wrappedKey);
@@ -79,9 +81,12 @@ public class DetailsDataStore {
 
         Map<byte[], byte[]> batch = new HashMap<>();
         for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
+            ContractDetails details = entry.getValue();
+            details.syncStorage();
+            
             byte[] key = entry.getKey().getData();
-            byte[] value = entry.getValue().getEncoded();
-
+            byte[] value = details.getEncoded();
+            
             batch.put(key, value);
             totalSize += value.length;
         }

@@ -134,19 +134,21 @@ public class RepositoryImpl implements Repository {
             } else {
 
                 if (!contractDetails.isDirty()) continue;
-                    ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetails;
-                    if (contractDetailsCache.origContract == null){
-                        contractDetailsCache.origContract = new ContractDetailsImpl();
-                        contractDetailsCache.commit();
-                    }
+                
+                ContractDetailsCacheImpl contractDetailsCache =  (ContractDetailsCacheImpl)contractDetails;
+                if (contractDetailsCache.origContract == null){
+                    contractDetailsCache.origContract = new ContractDetailsImpl();
+                    contractDetailsCache.origContract.setAddress(hash.getData());
+                    contractDetailsCache.commit();
+                }
 
-                    contractDetails = contractDetailsCache.origContract;
+                contractDetails = contractDetailsCache.origContract;
 
-                    dds.update(hash.getData(), contractDetails);
+                dds.update(hash.getData(), contractDetails);
 
-                    accountState.setStateRoot(contractDetails.getStorageHash());
-                    accountState.setCodeHash(sha3(contractDetails.getCode()));
-                    worldState.update(hash.getData(), accountState.getEncoded());
+                accountState.setStateRoot(contractDetails.getStorageHash());
+                accountState.setCodeHash(sha3(contractDetails.getCode()));
+                worldState.update(hash.getData(), accountState.getEncoded());
 
                 if (logger.isDebugEnabled()) {
                         logger.debug("update: [{}],nonce: [{}] balance: [{}] \n [{}]",
@@ -451,9 +453,7 @@ public class RepositoryImpl implements Repository {
         AccountState accountState = new AccountState();
         worldState.update(addr, accountState.getEncoded());
 
-        ContractDetails contractDetails = new ContractDetailsImpl();
-
-        dds.update(addr, contractDetails);
+        dds.update(addr, new ContractDetailsImpl());
 
         return accountState;
     }
@@ -471,19 +471,13 @@ public class RepositoryImpl implements Repository {
         AccountState account = getAccountState(addr);
         ContractDetails details = getContractDetails(addr);
 
-        if (account == null)
-            account = new AccountState();
-        else
-            account = account.clone();
+        account = (account == null) ? new AccountState() : account.clone();
+        details = new ContractDetailsCacheImpl(details);
+//        details.setAddress(addr);
 
-        if (details == null) {
-            details = new ContractDetailsCacheImpl(null);
-        }
-        else
-            details = new ContractDetailsCacheImpl(details);
-
-        cacheAccounts.put(wrap(addr), account);
-        cacheDetails.put(wrap(addr), details);
+        ByteArrayWrapper wrappedAddress = wrap(addr);
+        cacheAccounts.put(wrappedAddress, account);
+        cacheDetails.put(wrappedAddress, details);
     }
 
     @Override

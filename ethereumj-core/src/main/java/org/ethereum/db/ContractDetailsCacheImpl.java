@@ -173,6 +173,15 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         this.storage = storage;
     }
 
+    @Override
+    public byte[] getAddress() {
+         return (origContract == null) ? null : origContract.getAddress();
+    }
+
+    @Override
+    public void setAddress(byte[] address) {
+        if (origContract != null) origContract.setAddress(address);
+    }
 
     @Override
     public ContractDetails clone() {
@@ -193,6 +202,11 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         ret += "  Storage: " + getStorage().toString();
 
         return ret;
+    }
+
+    @Override
+    public void syncStorage() {
+        if (origContract != null) origContract.syncStorage();
     }
 
     public void commit(){

@@ -1,7 +1,6 @@
 package org.ethereum.datasource;
 
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.util.ByteUtil;
 import org.iq80.leveldb.DBException;
 
 import java.util.HashMap;
@@ -54,7 +53,6 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public Set<byte[]> keys() {
-
         Set<byte[]> keys = new HashSet<>();
         for (ByteArrayWrapper key : storage.keySet()){
             keys.add(key.getData());
@@ -64,10 +62,8 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
-
         for (byte[] key :  rows.keySet()){
-            byte[] value = rows.get(key);
-            storage.put(wrap(key), value);
+            storage.put(wrap(key), rows.get(key));
         }
     }
 
