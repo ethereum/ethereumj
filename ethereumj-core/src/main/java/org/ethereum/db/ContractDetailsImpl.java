@@ -114,7 +114,7 @@ public class ContractDetailsImpl implements ContractDetails {
         
         if (externalStorage) {
             storageTrie.setRoot(storageRoot.getRLPData());
-            storageTrie.getCache().changeDataSource(getExternalStorageDataSource());
+            storageTrie.getCache().setDB(getExternalStorageDataSource());
         }
 
         this.rlpEncoded = rlpCode;
@@ -201,7 +201,7 @@ public class ContractDetailsImpl implements ContractDetails {
     @Override
     public void syncStorage() {
         if (externalStorage) {
-            storageTrie.getCache().changeDataSource(getExternalStorageDataSource());
+            storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
         }
     }

@@ -140,7 +140,9 @@ public class Cache {
         return cacheDump.toString();
     }
 
-    public void changeDataSource(KeyValueDataSource dataSource) {
+    public void setDB(KeyValueDataSource dataSource) {
+        if (this.dataSource == dataSource) return;
+
         Map<byte[], byte[]> rows = new HashMap<>();
         if (this.dataSource == null) {
             for (ByteArrayWrapper key : nodes.keySet()) {
@@ -153,9 +155,11 @@ public class Cache {
             for (byte[] key : this.dataSource.keys()) {
                 rows.put(key, this.dataSource.get(key));
             }
+            this.dataSource.close();
         }
-        
+
         dataSource.updateBatch(rows);
         this.dataSource = dataSource;
     }
+
 }
