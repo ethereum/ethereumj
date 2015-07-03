@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
+import static org.ethereum.util.ByteUtil.length;
 import static org.ethereum.util.ByteUtil.wrap;
 import static org.ethereum.util.Value.fromRlpEncoded;
 
@@ -47,7 +48,7 @@ public class Cache {
             this.nodes.put(wrap(sha), new Node(value, true));
             this.isDirty = true;
 
-            allocatedMemorySize += (sha.length + enc.length);
+            allocatedMemorySize += length(sha, enc);
             
             return sha;
         }
@@ -64,7 +65,7 @@ public class Cache {
 
             this.nodes.put(wrappedKey, node);
             
-            allocatedMemorySize += (key.length + data.length);
+            allocatedMemorySize += length(key, data);
         }
 
         return node.getValue();
@@ -75,7 +76,7 @@ public class Cache {
 
         Node node = this.nodes.get(wrappedKey);
         if (node != null) {
-            this.allocatedMemorySize -= (key.length + node.getValue().encode().length);
+            this.allocatedMemorySize -= length(key, node.getValue().encode());
         }
         this.nodes.remove(wrappedKey);
 
@@ -178,4 +179,5 @@ public class Cache {
         return allocatedMemorySize;
     }
 
+    
 }
