@@ -33,6 +33,7 @@ public class ContractDetailsImpl implements ContractDetails {
     private boolean deleted = false;
     private boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
+    private int keysSize;
 
     public ContractDetailsImpl() {
     }
@@ -47,14 +48,25 @@ public class ContractDetailsImpl implements ContractDetails {
         this.code = code;
     }
 
+    private void addKey(byte[] key) {
+        keys.add(wrap(key));
+        keysSize += key.length;
+    }
+    
+    private void removeKey(byte[] key) {
+        if (keys.remove(wrap(key))) {
+            keysSize -= key.length;
+        }
+    }
+    
     @Override
     public void put(DataWord key, DataWord value) {
         if (value.equals(DataWord.ZERO)) {
             storageTrie.delete(key.getData());
-            keys.remove(wrap(key.getData()));
+            removeKey(key.getData());
         } else {
             storageTrie.update(key.getData(), RLP.encodeElement(value.getNoLeadZeroesData()));
-            keys.add(wrap(key.getData()));
+            addKey(key.getData());
         }
 
         this.setDirty(true);
@@ -109,7 +121,7 @@ public class ContractDetailsImpl implements ContractDetails {
         this.storageTrie.deserialize(storage.getRLPData());
         this.code = (code.getRLPData() == null) ? EMPTY_BYTE_ARRAY : code.getRLPData();
         for (RLPElement key : keys) {
-            this.keys.add(wrap(key.getRLPData()));
+            addKey(key.getRLPData());
         }
         
         if (externalStorage) {
@@ -237,6 +249,16 @@ public class ContractDetailsImpl implements ContractDetails {
         ret += "  Storage: " + getStorage().toString();
 
         return ret;
+    }
+    
+    @Override
+    public int getAllocatedMemorySize() {
+        int result = rlpEncoded == null ? 0 : rlpEncoded.length;
+        result += address.length;
+        result += code.length;
+        result += storageTrie.getCache().getAllocatedMemorySize();
+        
+        return result;
     }
 }
 

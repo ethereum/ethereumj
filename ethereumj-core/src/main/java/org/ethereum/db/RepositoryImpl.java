@@ -10,6 +10,7 @@ import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.trie.Trie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,6 +178,9 @@ public class RepositoryImpl implements Repository {
         worldState.sync();
     }
 
+    public int getAllocatedMemorySize() {
+        return dds.getAllocatedMemorySize() + ((TrieImpl) worldState).getCache().getAllocatedMemorySize();
+    }
 
     @Override
     public void rollback() {

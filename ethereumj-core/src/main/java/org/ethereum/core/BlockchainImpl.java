@@ -4,6 +4,7 @@ import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -325,10 +326,14 @@ public class BlockchainImpl implements Blockchain {
     }
 
     private boolean needFlush(Block block) {
-        boolean isBatchReached = block.getNumber() % CONFIG.flushBlocksBatchSize() == 0;
-        boolean isConsensus = CONFIG.flushBlocksIgnoreConsensus() || adminInfo.isConsensus();
+        if (CONFIG.flushBlocksRepoSize() > 0 && repository.getClass().isAssignableFrom(RepositoryImpl.class)) {
+            return ((RepositoryImpl) repository).getAllocatedMemorySize() > CONFIG.flushBlocksRepoSize();
+        } else {
+            boolean isBatchReached = block.getNumber() % CONFIG.flushBlocksBatchSize() == 0;
+            boolean isConsensus = CONFIG.flushBlocksIgnoreConsensus() || adminInfo.isConsensus();
 
-        return isConsensus && isBatchReached;
+            return isConsensus && isBatchReached;
+        }
     }
 
     private byte[] calcReceiptsTrie(List<TransactionReceipt> receipts){

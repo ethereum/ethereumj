@@ -121,4 +121,13 @@ public class DetailsDataStore {
             System.out.println("drafted: " + addr);
         } catch (IOException e) {e.printStackTrace();}
     }
+    
+    public int getAllocatedMemorySize() {
+        int result = 0;
+        for (ContractDetails details : cache.values()) {
+            result += details.getAllocatedMemorySize();
+        }
+        return result;
+        
+    }
 }

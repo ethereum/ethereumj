@@ -209,6 +209,13 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         if (origContract != null) origContract.syncStorage();
     }
 
+    @Override
+    public int getAllocatedMemorySize() {
+        return (origContract == null)
+                ? code.length + storage.size() * 32 * 2
+                : origContract.getAllocatedMemorySize();
+    }
+
     public void commit(){
 
         if (origContract == null) return;
