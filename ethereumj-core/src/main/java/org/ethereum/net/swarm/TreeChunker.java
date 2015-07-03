@@ -169,6 +169,10 @@ public class TreeChunker implements Chunker {
         chunkSize = hashSize * branches;
     }
 
+    public long getChunkSize() {
+        return chunkSize;
+    }
+
     @Override
     public Key split(SectionReader sectionReader, Collection<Chunk> consumer) {
         TreeSize ts = new TreeSize(sectionReader.getSize());

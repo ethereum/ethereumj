@@ -5,6 +5,7 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,10 +81,6 @@ public class BzzStatusMessage extends BzzMessage {
         return version;
     }
 
-    public String getId() {
-        return id;
-    }
-
     public byte[] getNodeId() {
         return nodeId;
     }
@@ -116,7 +113,7 @@ public class BzzStatusMessage extends BzzMessage {
         return "BzzStatusMessage{" +
                 "version=" + version +
                 ", id='" + id + '\'' +
-                ", nodeId=" + Arrays.toString(nodeId) +
+                ", nodeId=" + Hex.toHexString(nodeId) +
                 ", addr=" + addr +
                 ", networkId=" + networkId +
                 ", capabilities=" + capabilities +

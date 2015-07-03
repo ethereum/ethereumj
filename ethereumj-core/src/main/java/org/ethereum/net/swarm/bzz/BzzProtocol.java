@@ -1,10 +1,7 @@
 package org.ethereum.net.swarm.bzz;
 
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.p2p.Peer;
-import org.ethereum.net.swarm.Chunk;
-import org.ethereum.net.swarm.Key;
 import org.ethereum.net.swarm.NetStore;
 import org.ethereum.net.swarm.kademlia.stub.Address;
 import org.ethereum.net.swarm.kademlia.stub.Node;
@@ -12,11 +9,12 @@ import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -27,7 +25,7 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
 
     public static class PeerAddr {}
 
-    public final static AtomicLong idGenerator = new AtomicLong(0);
+    private final static AtomicLong idGenerator = new AtomicLong(0);
     public final static int Version            = 0;
     public final static long ProtocolLength     = 8;
     public final static long ProtocolMaxMsgSize = 10 * 1024 * 1024;
@@ -38,6 +36,7 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
     Functional.Consumer<BzzMessage> messageSender;
     public Peer peer;
     PeerAddress node;
+    Address addr;
 //    Node node;
 
     boolean handshaken = false;
@@ -66,7 +65,10 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
     /*****   Cademlia Node interface   *******/
 
     public Address addr() {
-        return new Address(node.getId());
+        if (addr == null) {
+            if (node != null) addr = new Address(node.getId());
+        }
+        return addr;
     }
 
     @Override
@@ -86,6 +88,7 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
 
     /*****  END  *******/
 
+/*
     public void storeRequest(final Key key) {
 //        Future<?> res = storeRequestExecutor.submit(new Runnable() {
 //            @Override
@@ -98,6 +101,7 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
 //            }
 //        });
     }
+*/
 
     private void handshakeOut() {
         if (!handshakeOut) {
@@ -106,27 +110,49 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
             BzzStatusMessage outStatus = new BzzStatusMessage(Version, "honey",
                     selfAddress.id, selfAddress, NetworkId,
                     Collections.singletonList(new Capability(Capability.BZZ, (byte) 1)));
-            sendMessage(outStatus);
+            sendMessageImpl(outStatus);
         }
     }
 
     private void handshakeIn(BzzStatusMessage msg) {
         if (!handshaken) {
+            netStore.statHandshakes.add(1);
             // TODO check status parameters
             node = msg.getAddr();
             netStore.hive.addPeer(this);
-            handshaken = true;
 
+            handshaken = true;
             handshakeOut();
 
+            for (BzzMessage pmsg : pendingHandshakeOutMessages) {
+                sendMessageImpl(pmsg);
+            }
+            pendingHandshakeOutMessages = null;
             // ping the peer for self neighbours
-            sendMessage(new BzzRetrieveReqMessage(new Address(netStore.self)));
+            sendMessageImpl(new BzzRetrieveReqMessage(new Address(netStore.self)));
+
+            for (BzzMessage pmsg : pendingHandshakeInMessages) {
+                handleMsg(pmsg);
+            }
+            pendingHandshakeInMessages = null;
+
         } else {
-            throw new RuntimeException("Already handshaken.");
+//            throw new RuntimeException("Already handshaken.");
         }
     }
 
-    public void sendMessage(BzzMessage msg) {
+    List<BzzMessage> pendingHandshakeOutMessages = new ArrayList<>();
+    List<BzzMessage> pendingHandshakeInMessages = new ArrayList<>();
+    public synchronized void sendMessage(BzzMessage msg) {
+        if (handshaken) {
+            sendMessageImpl(msg);
+        } else {
+            pendingHandshakeOutMessages.add(msg);
+        }
+    }
+    private void sendMessageImpl(BzzMessage msg) {
+        netStore.statOutMsg.add(1);
+        msg.setId(idGenerator.incrementAndGet());
         messageSender.accept(msg);
     }
 
@@ -136,23 +162,36 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
     }
 
     void handleMsg(BzzMessage msg) {
-        msg.setPeer(this);
-        LOG.trace(peer + " ===> " + netStore.self + ": " + msg);
-        switch (msg.getCommand()) {
-            case STATUS:
+        synchronized (netStore) {
+            netStore.statInMsg.add(1);
+            msg.setPeer(this);
+            LOG.trace(peer + " ===> " + netStore.self + ": " + msg);
+            if (msg.getCommand() == BzzMessageCodes.STATUS) {
                 handshakeIn((BzzStatusMessage) msg);
-                break;
-            case STORE_REQUEST:
-                netStore.addStoreRequest((BzzStoreReqMessage) msg);
-                break;
-            case RETRIEVE_REQUEST:
-                netStore.addRetrieveRequest((BzzRetrieveReqMessage) msg);
-                break;
-            case PEERS:
-                netStore.hive.addPeerRecords((BzzPeersMessage) msg);
-                break;
-            default:
-                throw new RuntimeException("Invalid BZZ command: " + msg.getCommand() + ": " + msg);
+            } else {
+                if (!handshaken) {
+                    pendingHandshakeInMessages.add(msg);
+                } else {
+                    switch (msg.getCommand()) {
+                        case STORE_REQUEST:
+                            netStore.addStoreRequest((BzzStoreReqMessage) msg);
+                            break;
+                        case RETRIEVE_REQUEST:
+                            netStore.addRetrieveRequest((BzzRetrieveReqMessage) msg);
+                            break;
+                        case PEERS:
+                            netStore.hive.addPeerRecords((BzzPeersMessage) msg);
+                            break;
+                        default:
+                            throw new RuntimeException("Invalid BZZ command: " + msg.getCommand() + ": " + msg);
+                    }
+                }
+            }
         }
+    }
+
+    @Override
+    public String toString() {
+        return netStore.self + " => " + peer + " (Node: " + node + ")";
     }
 }

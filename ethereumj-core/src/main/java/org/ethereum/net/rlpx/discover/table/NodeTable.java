@@ -102,12 +102,13 @@ public class NodeTable {
 
         for (NodeBucket b : buckets)
         {
-            for (NodeEntry e : b.getNodes())
-            {
-                if (!e.getNode().equals(node)) {
-                    nodes.add(e);
-                }
-            }
+            nodes.addAll(b.getNodes());
+//            for (NodeEntry e : b.getNodes())
+//            {
+//                if (!e.getNode().equals(node)) {
+//                    nodes.add(e);
+//                }
+//            }
         }
 
         return nodes;

@@ -1,5 +1,7 @@
 package org.ethereum.net.swarm.bzz;
 
+import com.google.common.base.Joiner;
+import org.apache.commons.codec.binary.StringUtils;
 import org.ethereum.net.p2p.Peer;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
@@ -73,6 +75,14 @@ public class PeerAddress {
         return new Peer(peerInfo.getAddress(), port, peerInfo.getPeerId());
     }
 
+    public Node toNode() {
+        try {
+            return new Node(id, InetAddress.getByAddress(ip).getHostAddress(), port);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static PeerAddress parse(RLPList l) {
         PeerAddress ret = new PeerAddress();
         ret.ip = l.get(0).getRLPData();
@@ -108,10 +118,14 @@ public class PeerAddress {
 
     @Override
     public String toString() {
+        String sip = "";
+        for (int i = 0; i < ip.length; i++) {
+            sip += (i == 0 ? "" : ".") + (int)ip[i];
+        }
         return "PeerAddress{" +
-                "ip=" + Arrays.toString(ip) +
+                "ip=" + sip +
                 ", port=" + port +
-                ", id=" + Arrays.toString(id) +
+                ", id=" + Hex.toHexString(id) +
                 '}';
     }
 }

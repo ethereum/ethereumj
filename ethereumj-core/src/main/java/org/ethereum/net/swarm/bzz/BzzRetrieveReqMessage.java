@@ -14,7 +14,6 @@ public class BzzRetrieveReqMessage extends BzzMessage {
     private Key key;
 
     // optional
-    long id = -1;
     long maxSize = -1;
     long maxPeers = -1;
     long timeout = -1;
@@ -85,10 +84,6 @@ public class BzzRetrieveReqMessage extends BzzMessage {
 
     public Key getKey() {
         return key;
-    }
-
-    public long getId() {
-        return id;
     }
 
     public long getMaxSize() {

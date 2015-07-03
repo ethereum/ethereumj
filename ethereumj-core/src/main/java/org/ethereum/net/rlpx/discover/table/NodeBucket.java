@@ -53,10 +53,10 @@ public class NodeBucket {
     }
 
     public List<NodeEntry> getNodes() {
-        List<NodeEntry> nodes = new ArrayList<>();
-        for (NodeEntry e : this.nodes) {
-            nodes.add(e);
-        }
+//        List<NodeEntry> nodes = new ArrayList<>();
+//        for (NodeEntry e : this.nodes) {
+//            nodes.add(e);
+//        }
         return nodes;
     }
 }

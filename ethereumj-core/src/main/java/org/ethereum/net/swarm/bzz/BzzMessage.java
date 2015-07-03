@@ -19,6 +19,7 @@ public abstract class BzzMessage extends Message {
 
     // non-null for incoming messages
     BzzProtocol peer;
+    long id = -1;
 
     public BzzMessage() {
     }
@@ -40,5 +41,13 @@ public abstract class BzzMessage extends Message {
 
     public void setPeer(BzzProtocol peer) {
         this.peer = peer;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
     }
 }

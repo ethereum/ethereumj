@@ -17,7 +17,6 @@ public class BzzStoreReqMessage extends BzzMessage {
     private byte[] data;
 
     // optional
-    long id = -1;
     byte[] metadata;
 
     public BzzStoreReqMessage(byte[] encoded) {
@@ -87,10 +86,6 @@ public class BzzStoreReqMessage extends BzzMessage {
 
     public byte[] getData() {
         return data;
-    }
-
-    public long getId() {
-        return id;
     }
 
     public byte[] getMetadata() {

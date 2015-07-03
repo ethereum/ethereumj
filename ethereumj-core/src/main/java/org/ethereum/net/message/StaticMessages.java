@@ -13,6 +13,7 @@ import org.ethereum.net.p2p.PingMessage;
 import org.ethereum.net.p2p.PongMessage;
 import org.ethereum.net.shh.ShhHandler;
 
+import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.Arrays;
@@ -43,7 +44,8 @@ public class StaticMessages {
         byte p2pVersion = P2pHandler.VERSION;
         List<Capability> capabilities = Arrays.asList(
                 new Capability(Capability.ETH, EthHandler.VERSION),
-                new Capability(Capability.SHH, ShhHandler.VERSION)
+                new Capability(Capability.SHH, ShhHandler.VERSION),
+                new Capability(Capability.BZZ, BzzHandler.VERSION)
         );
         int listenPort = SystemProperties.CONFIG.listenPort();
 
