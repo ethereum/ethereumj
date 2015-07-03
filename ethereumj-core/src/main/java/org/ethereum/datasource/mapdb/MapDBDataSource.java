@@ -22,13 +22,11 @@ public class MapDBDataSource implements KeyValueDataSource {
 
     @Override
     public void init() {
-        File dbLocation = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/");
-        if (!dbLocation.exists()) {
-            dbLocation.mkdirs();
-        }
+        File dbFile = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/" + name);
+        if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
 
 
-        db = DBMaker.fileDB(new File(dbLocation, name))
+        db = DBMaker.fileDB(dbFile)
                 .transactionDisable()
                 .closeOnJvmShutdown()
                 .make();

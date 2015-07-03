@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
+import static org.ethereum.util.ByteUtil.length;
 import static org.ethereum.util.ByteUtil.wrap;
 import static org.ethereum.util.Value.fromRlpEncoded;
 
@@ -23,9 +24,11 @@ public class Cache {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
-    private final KeyValueDataSource dataSource;
+    private KeyValueDataSource dataSource;
     private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
     private boolean isDirty;
+    
+    private int allocatedMemorySize;
 
     public Cache(KeyValueDataSource dataSource) {
         this.dataSource = dataSource;
@@ -44,6 +47,9 @@ public class Cache {
             byte[] sha = value.hash();
             this.nodes.put(wrap(sha), new Node(value, true));
             this.isDirty = true;
+
+            allocatedMemorySize += length(sha, enc);
+            
             return sha;
         }
         return value;
@@ -54,20 +60,29 @@ public class Cache {
         // First check if the key is the cache
         Node node = this.nodes.get(wrappedKey);
         if (node == null) {
-            byte[] data = this.dataSource.get(key);
+            byte[] data = (this.dataSource == null) ? null : this.dataSource.get(key);
             node = new Node(fromRlpEncoded(data), false);
 
             this.nodes.put(wrappedKey, node);
+            
+            allocatedMemorySize += length(key, data);
         }
 
         return node.getValue();
     }
 
     public void delete(byte[] key) {
-        this.nodes.remove(wrap(key));
+        ByteArrayWrapper wrappedKey = wrap(key);
 
-        if (dataSource == null) return;
-        this.dataSource.delete(key);
+        Node node = this.nodes.get(wrappedKey);
+        if (node != null) {
+            this.allocatedMemorySize -= length(key, node.getValue().encode());
+        }
+        this.nodes.remove(wrappedKey);
+
+        if (dataSource != null) {
+            this.dataSource.delete(key);
+        }
     }
 
     public void commit() {
@@ -76,7 +91,6 @@ public class Cache {
 
         long start = System.nanoTime();
 
-        long totalSize = 0;
         Map<byte[], byte[]> batch = new HashMap<>();
         for (ByteArrayWrapper key : this.nodes.keySet()) {
             Node node = this.nodes.get(key);
@@ -86,20 +100,20 @@ public class Cache {
 
                 byte[] value = node.getValue().encode();
                 batch.put(key.getData(), value);
-
-                totalSize += value.length;
             }
         }
 
-        dataSource.updateBatch(batch);
+        this.dataSource.updateBatch(batch);
         this.isDirty = false;
         this.nodes.clear();
 
         long finish = System.nanoTime();
 
-        float flushSize = (float) totalSize / 1048576;
+        float flushSize = (float) this.allocatedMemorySize / 1048576;
         float flushTime = (float) (finish - start) / 1_000_000;
         logger.info(format("Flush state in: %02.2f ms, %d nodes, %02.2fMB", flushTime, batch.size(), flushSize));
+        
+        this.allocatedMemorySize = 0;
     }
 
     public void undo() {
@@ -129,17 +143,41 @@ public class Cache {
     }
 
     public String cacheDump() {
-
         StringBuffer cacheDump = new StringBuffer();
-
         for (ByteArrayWrapper key : nodes.keySet()) {
-
             Node node = nodes.get(key);
-
             if (node.getValue() != null)
                 cacheDump.append(key.toString()).append(" : ").append(node.getValue().toString()).append("\n");
         }
 
         return cacheDump.toString();
     }
+
+    public void setDB(KeyValueDataSource dataSource) {
+        if (this.dataSource == dataSource) return;
+
+        Map<byte[], byte[]> rows = new HashMap<>();
+        if (this.dataSource == null) {
+            for (ByteArrayWrapper key : nodes.keySet()) {
+                Node node = nodes.get(key);
+                if (!node.isDirty()) {
+                    rows.put(key.getData(), node.getValue().encode());
+                }
+            }
+        } else {
+            for (byte[] key : this.dataSource.keys()) {
+                rows.put(key, this.dataSource.get(key));
+            }
+            this.dataSource.close();
+        }
+
+        dataSource.updateBatch(rows);
+        this.dataSource = dataSource;
+    }
+    
+    public int getAllocatedMemorySize() {
+        return allocatedMemorySize;
+    }
+
+    
 }

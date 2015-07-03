@@ -1,6 +1,5 @@
 package org.ethereum.datasource;
 
-import org.ethereum.config.SystemProperties;
 import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,9 +10,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import static java.lang.System.getProperty;
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.fusesource.leveldbjni.JniDBFactory.factory;
-
-//import static org.iq80.leveldb.impl.Iq80DBFactory.factory;
 
 /**
  * @author Roman Mandeleil
@@ -48,18 +47,16 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
         try {
             logger.debug("Opening database");
-            File dbLocation = new File(System.getProperty("user.dir") + "/" +
-                    SystemProperties.CONFIG.databaseDir() + "/");
-            File fileLocation = new File(dbLocation, name);
+            File fileLocation = new File(getProperty("user.dir") + "/" + CONFIG.databaseDir() + "/" + name);
+            File dbLocation = fileLocation.getParentFile();
             if (!dbLocation.exists()) dbLocation.mkdirs();
 
-            if (SystemProperties.CONFIG.databaseReset()) {
+            if (CONFIG.databaseReset()) {
                 destroyDB(fileLocation);
             }
 
             logger.debug("Initializing new or existing database: '{}'", name);
             db = factory.open(fileLocation, options);
-
         } catch (IOException ioe) {
             logger.error(ioe.getMessage(), ioe);
             throw new RuntimeException("Can't initialize database");
@@ -76,7 +73,6 @@ public class LevelDbDataSource implements KeyValueDataSource {
             logger.error(e.getMessage(), e);
         }
     }
-
 
     @Override
     public void setName(String name) {
@@ -101,15 +97,12 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     @Override
     public Set<byte[]> keys() {
-        try {
-            try (DBIterator dbIterator = db.iterator()) {
-                Set<byte[]> keys = new HashSet<>();
-                while (dbIterator.hasNext()) {
-                    keys.add(dbIterator.next().getKey());
-                }
-
-                return keys;
+        try (DBIterator iterator = db.iterator()) {
+            Set<byte[]> result = new HashSet<>();
+            for (iterator.seekToFirst(); iterator.hasNext(); iterator.next()) {
+                result.add(iterator.peekNext().getKey());
             }
+            return result;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -117,14 +110,12 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
-        try {
-            try (WriteBatch batch = db.createWriteBatch()) {
-                for (Map.Entry<byte[], byte[]> row : rows.entrySet()) {
-                    batch.put(row.getKey(), row.getValue());
-                }
-
-                db.write(batch);
+        try (WriteBatch batch = db.createWriteBatch()) {
+            for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
+                batch.put(entry.getKey(), entry.getValue());
             }
+
+            db.write(batch);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
