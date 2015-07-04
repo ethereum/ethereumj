@@ -10,6 +10,7 @@ import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.ethereum.util.Functional;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -349,6 +350,7 @@ public class BzzProtocolTest {
         Assert.assertArrayEquals(chunk.getData(), chunk1.getData());
     }
 
+    @Ignore
     @Test
     public void manyPeersTest() throws InterruptedException {
         TestPeer.AsyncPipe = true;
