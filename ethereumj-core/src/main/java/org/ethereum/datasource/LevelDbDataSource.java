@@ -51,10 +51,6 @@ public class LevelDbDataSource implements KeyValueDataSource {
             File dbLocation = fileLocation.getParentFile();
             if (!dbLocation.exists()) dbLocation.mkdirs();
 
-            if (CONFIG.databaseReset()) {
-                destroyDB(fileLocation);
-            }
-
             logger.debug("Initializing new or existing database: '{}'", name);
             db = factory.open(fileLocation, options);
         } catch (IOException ioe) {
