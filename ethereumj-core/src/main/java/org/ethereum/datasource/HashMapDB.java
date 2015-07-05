@@ -69,6 +69,6 @@ public class HashMapDB implements KeyValueDataSource {
 
     @Override
     public void close() {
-
+        this.storage.clear();
     }
 }
