@@ -74,12 +74,8 @@ public enum EthMessageCodes {
      * in the list (following the message ID) is a block in the format described
      * in the main Ethereum specification.
      */
-    NEW_BLOCK(0x07),
+    NEW_BLOCK(0x07);
 
-    /**
-     * [+0x08
-     */
-    PACKET_COUNT(0X08);
 
     static byte OFFSET = 0;
     private int cmd;
@@ -101,7 +97,7 @@ public enum EthMessageCodes {
     }
 
     public static boolean inRange(byte code) {
-        return code >= STATUS.asByte() && code <= PACKET_COUNT.asByte();
+        return code >= STATUS.asByte() && code <= NEW_BLOCK.asByte();
     }
 
     public static void setOffset(byte offset) {

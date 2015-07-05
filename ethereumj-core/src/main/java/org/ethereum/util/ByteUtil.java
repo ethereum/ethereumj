@@ -444,4 +444,12 @@ public class ByteUtil {
 
         return result;
     }
+    
+    public static int length(byte[]... bytes) {
+        int result = 0;
+        for (byte[] array : bytes) {
+            result += (array == null) ? 0 : array.length;
+        }
+        return result;
+    }
 }

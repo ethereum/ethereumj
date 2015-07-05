@@ -218,9 +218,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                         capability.getVersion() == ShhHandler.VERSION) {
 
                         // Activate ShhHandler for this peer
-//                        ShhHandler shhHandler =
-//                                (ShhHandler) ctx.pipeline().get(Capability.SHH);
-//                        shhHandler.activate();
+                        ShhHandler shhHandler = channel.getShhHandler();
+                        ctx.pipeline().addLast(Capability.SHH, shhHandler);
+                        shhHandler.activate();
                     }
                     capInCommon.add(capability);
                 }
@@ -263,17 +263,17 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void adaptMessageIds(List<Capability> capabilities) {
 
         Collections.sort(capabilities);
-        byte offset = (byte) (P2pMessageCodes.USER.asByte() + 1);
+        int offset = P2pMessageCodes.USER.asByte() + 1;
 
         for (Capability capability : capabilities) {
 
             if (capability.getName().equals(Capability.ETH)) {
-                EthMessageCodes.setOffset(offset);
+                EthMessageCodes.setOffset((byte)offset);
                 offset += EthMessageCodes.values().length;
             }
 
             if (capability.getName().equals(Capability.SHH)) {
-                ShhMessageCodes.setOffset(offset);
+                ShhMessageCodes.setOffset((byte)offset);
                 offset += ShhMessageCodes.values().length;
             }
         }

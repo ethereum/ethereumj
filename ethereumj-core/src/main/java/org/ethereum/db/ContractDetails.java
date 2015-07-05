@@ -35,7 +35,15 @@ public interface ContractDetails {
 
     void setStorage(Map<DataWord, DataWord> storage);
 
+    byte[] getAddress();
+
+    void setAddress(byte[] address);
+
     ContractDetails clone();
 
     String toString();
+
+    void syncStorage();
+
+    int getAllocatedMemorySize();
 }

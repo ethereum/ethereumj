@@ -1,15 +1,19 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.HashMapDB;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.vm.DataWord;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import javax.annotation.Nullable;
+import java.util.Map;
+
+import static org.ethereum.TestUtils.*;
+import static org.junit.Assert.*;
 
 public class DetailsDataStoreTest {
-
 
     @Test
     public void test1(){
@@ -24,6 +28,7 @@ public class DetailsDataStoreTest {
         byte[] value =  Hex.decode("aa");
 
         ContractDetails contractDetails = new ContractDetailsImpl();
+        contractDetails.setAddress(randomAddress());
         contractDetails.setCode(code);
         contractDetails.put(new DataWord(key), new DataWord(value));
 
@@ -57,6 +62,7 @@ public class DetailsDataStoreTest {
 
         ContractDetails contractDetails = new ContractDetailsImpl();
         contractDetails.setCode(code);
+        contractDetails.setAddress(randomAddress());
         contractDetails.put(new DataWord(key), new DataWord(value));
 
         dds.update(c_key, contractDetails);
@@ -130,6 +136,69 @@ public class DetailsDataStoreTest {
         ContractDetails contractDetails = dds.get(c_key);
         assertNull(contractDetails);
     }
+    
+    @Test
+    public void testExternalStorage() {
+        DatabaseImpl db = new DatabaseImpl(new HashMapDB());
+        DetailsDataStore dds = new DetailsDataStore();
+        dds.setDB(db);
+
+        byte[] addrWithExternalStorage = randomAddress();
+        byte[] addrWithInternalStorage = randomAddress();
+        final int inMemoryStorageLimit = SystemProperties.CONFIG.detailsInMemoryStorageLimit();
+
+        HashMapDB externalStorage = new HashMapDB();
+        HashMapDB internalStorage = new HashMapDB();
+
+        ContractDetails detailsWithExternalStorage = randomContractDetails(512, inMemoryStorageLimit + 1, externalStorage);
+        ContractDetails detailsWithInternalStorage = randomContractDetails(512, inMemoryStorageLimit - 1, internalStorage);
+        
+        dds.update(addrWithExternalStorage, detailsWithExternalStorage);
+        dds.update(addrWithInternalStorage, detailsWithInternalStorage);
+        
+        dds.flush();
+        
+        assertTrue(externalStorage.getAddedItems() > 0);
+        assertFalse(internalStorage.getAddedItems() > 0);
+
+        detailsWithExternalStorage = dds.get(addrWithExternalStorage);
+        assertNotNull(detailsWithExternalStorage);
+        Map<DataWord, DataWord> storage = detailsWithExternalStorage.getStorage();
+        assertNotNull(storage);
+        assertEquals(inMemoryStorageLimit + 1, storage.size());
+
+        byte[] withExternalStorageRlp = detailsWithExternalStorage.getEncoded();
+        ContractDetailsImpl decoded = new ContractDetailsImpl();
+        decoded.setExternalStorageDataSource(externalStorage);
+        decoded.decode(withExternalStorageRlp);
+
+        assertEquals(inMemoryStorageLimit + 1, decoded.getStorage().size());
+        assertTrue(withExternalStorageRlp.length < detailsWithInternalStorage.getEncoded().length);
 
 
+        detailsWithInternalStorage = dds.get(addrWithInternalStorage);
+        assertNotNull(detailsWithInternalStorage);
+        storage = detailsWithInternalStorage.getStorage();
+        assertNotNull(storage);
+        assertEquals(inMemoryStorageLimit - 1, storage.size());
+
+        // from inmemory to ondisk transition checking
+        externalStorage = new HashMapDB();
+        ((ContractDetailsImpl) detailsWithInternalStorage).setExternalStorageDataSource(externalStorage);
+        detailsWithInternalStorage.put(randomDataWord(), randomDataWord());
+    }
+    
+    private static ContractDetails randomContractDetails(int codeSize, int storageSize, @Nullable KeyValueDataSource storageDataSource) {
+        ContractDetailsImpl result = new ContractDetailsImpl();
+        result.setCode(randomBytes(codeSize));
+        if (storageDataSource != null) {
+            result.setExternalStorageDataSource(storageDataSource);
+        }
+
+        for (int i = 0; i < storageSize; i++) {
+            result.put(randomDataWord(), randomDataWord());
+        }
+        
+        return result;
+    }
 }
