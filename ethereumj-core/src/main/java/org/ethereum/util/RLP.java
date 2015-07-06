@@ -759,7 +759,7 @@ public class RLP {
         if (isNullOrZeroArray(srcData))
             return new byte[]{(byte) OFFSET_SHORT_ITEM};
         else if (isSingleZero(srcData))
-            return new byte[]{00};
+        return srcData;
         else if (srcData.length == 1 && (srcData[0] & 0xFF) < 0x80) {
             return srcData;
         } else if (srcData.length < SIZE_THRESHOLD) {
