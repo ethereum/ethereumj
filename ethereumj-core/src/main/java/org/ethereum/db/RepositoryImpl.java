@@ -171,6 +171,16 @@ public class RepositoryImpl implements Repository {
     }
 
     @Override
+    public void flushNoReconnect(){
+
+        gLogger.info("flushing to disk");
+
+        dds.flush();
+        worldState.sync();
+    }
+
+
+    @Override
     public void flush() {
         gLogger.info("flushing to disk");
 

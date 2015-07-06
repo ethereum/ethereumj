@@ -244,6 +244,10 @@ public class RepositoryTrack implements Repository {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public void flushNoReconnect() {
+        throw new UnsupportedOperationException();
+    }
 
     @Override
     public void commit() {

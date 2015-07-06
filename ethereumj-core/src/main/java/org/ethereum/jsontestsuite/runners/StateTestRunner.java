@@ -63,7 +63,7 @@ public class StateTestRunner {
         }
 
         track.commit();
-        repository.flush();
+        repository.flushNoReconnect();
 
         List<LogInfo> origLogs = executor.getResult().getLogInfoList();
         List<LogInfo> postLogs = LogBuilder.build(stateTestCase2.getLogs());
