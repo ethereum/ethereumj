@@ -210,12 +210,12 @@ public class Program {
         }
     }
 
-    public int getMemSize() {
+    public long getMemSize() {
         return memory.size();
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
-        memory.write(addrB.intValue(), value.getData(), value.getData().length, false);
+        memory.write(addrB.longValue(), value.getData(), value.getData().length, false);
     }
 
     public void memorySaveLimited(int addr, byte[] data, int dataSize) {
@@ -1021,7 +1021,7 @@ public class Program {
      * used mostly for testing reasons
      */
     public byte[] getMemory() {
-        return memory.read(0, memory.size());
+        return memory.read(0, (int) memory.size());
     }
 
     /**

@@ -9,11 +9,11 @@ public class ProgramTraceListener {
     private final boolean enabled = CONFIG.vmTrace();
     private OpActions actions = new OpActions();
 
-    public void onMemoryExtend(int delta) {
+    public void onMemoryExtend(long delta) {
         if (enabled) actions.addMemoryExtend(delta);
     }
 
-    public void onMemoryWrite(int address, byte[] data, int size) {
+    public void onMemoryWrite(long address, byte[] data, int size) {
         if (enabled) actions.addMemoryWrite(address, data, size);
     }
 

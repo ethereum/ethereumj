@@ -963,7 +963,7 @@ public class VM {
                 }
                 break;
                 case MSIZE: {
-                    int memSize = program.getMemSize();
+                    long memSize = program.getMemSize();
                     DataWord wordMemSize = new DataWord(memSize);
 
                     if (logger.isInfoEnabled())
