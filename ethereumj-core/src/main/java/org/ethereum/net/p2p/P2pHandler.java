@@ -21,6 +21,8 @@ import org.ethereum.net.shh.ShhMessageCodes;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
+import org.ethereum.net.swarm.bzz.BzzHandler;
+import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -221,6 +223,14 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                         ShhHandler shhHandler = channel.getShhHandler();
                         ctx.pipeline().addLast(Capability.SHH, shhHandler);
                         shhHandler.activate();
+                    } else if
+                       (capability.getName().equals(Capability.BZZ) &&
+                        capability.getVersion() == BzzHandler.VERSION) {
+
+                        // Activate ShhHandler for this peer
+                        BzzHandler bzzHandler = channel.getBzzHandler();
+                        ctx.pipeline().addLast(Capability.BZZ, bzzHandler);
+                        bzzHandler.activate();
                     }
                     capInCommon.add(capability);
                 }
@@ -275,6 +285,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             if (capability.getName().equals(Capability.SHH)) {
                 ShhMessageCodes.setOffset((byte)offset);
                 offset += ShhMessageCodes.values().length;
+            }
+
+            if (capability.getName().equals(Capability.BZZ)) {
+                BzzMessageCodes.setOffset((byte) offset);
+                offset += BzzMessageCodes.values().length + 4;
+                // FIXME: for some reason Go left 4 codes between BZZ and ETH message codes
             }
         }
     }

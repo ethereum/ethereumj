@@ -14,36 +14,6 @@ import static java.lang.Math.min;
  */
 public class ChunkerTest {
 
-    public static class ArrayReader implements SectionReader {
-        byte[] arr;
-
-        public ArrayReader(byte[] arr) {
-            this.arr = arr;
-        }
-
-        @Override
-        public long seek(long offset, int whence) {
-            throw new RuntimeException("Not implemented");
-        }
-
-        @Override
-        public int read(byte[] dest, int destOff) {
-            return readAt(dest, destOff, 0);
-        }
-
-        @Override
-        public int readAt(byte[] dest, int destOff, long readerOffset) {
-            int len = min(dest.length - destOff, arr.length - (int)readerOffset);
-            System.arraycopy(arr, (int) readerOffset, dest, destOff, len);
-            return len;
-        }
-
-        @Override
-        public long getSize() {
-            return arr.length;
-        }
-    }
-
     public static class SimpleChunkStore implements ChunkStore {
         Map<Key, byte[]> map = new HashMap<>();
         @Override
@@ -61,7 +31,7 @@ public class ChunkerTest {
     public void simpleTest() {
         byte[] arr = new byte[200];
         new Random(0).nextBytes(arr);
-        ArrayReader r = new ArrayReader(arr);
+        Util.ArrayReader r = new Util.ArrayReader(arr);
         TreeChunker tc = new TreeChunker(4, TreeChunker.DEFAULT_HASHER);
         ArrayList<Chunk> l = new ArrayList<>();
         Key root = tc.split(r, l);

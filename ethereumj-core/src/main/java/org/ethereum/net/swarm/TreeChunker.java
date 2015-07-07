@@ -1,6 +1,5 @@
 package org.ethereum.net.swarm;
 
-import com.google.common.base.Joiner;
 import org.ethereum.util.ByteUtil;
 
 import java.nio.ByteBuffer;
@@ -14,43 +13,34 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 /**
+ * From Go implementation:
+ *
  * The distributed storage implemented in this package requires fix sized chunks of content
- Chunker is the interface to a component that is responsible for disassembling and assembling larger data.
-
- TreeChunker implements a Chunker based on a tree structure defined as follows:
-
- 1 each node in the tree including the root and other branching nodes are stored as a chunk.
-
- 2 branching nodes encode data contents that includes the size of the dataslice covered by its entire subtree under the node as well as the hash keys of all its children :
- data_{i} := size(subtree_{i}) || key_{j} || key_{j+1} .... || key_{j+n-1}
-
- 3 Leaf nodes encode an actual subslice of the input data.
-
- 4 if data size is not more than maximum chunksize, the data is stored in a single chunk
- key = sha256(int64(size) + data)
-
- 2 if data size is more than chunksize*Branches^l, but no more than chunksize*
- Branches^(l+1), the data vector is split into slices of chunksize*
- Branches^l length (except the last one).
- key = sha256(int64(size) + key(slice0) + key(slice1) + ...)
-
+ * Chunker is the interface to a component that is responsible for disassembling and assembling larger data.
+ * TreeChunker implements a Chunker based on a tree structure defined as follows:
+ * 1 each node in the tree including the root and other branching nodes are stored as a chunk.
+ * 2 branching nodes encode data contents that includes the size of the dataslice covered by its
+ *   entire subtree under the node as well as the hash keys of all its children
+ *   data_{i} := size(subtree_{i}) || key_{j} || key_{j+1} .... || key_{j+n-1}
+ * 3 Leaf nodes encode an actual subslice of the input data.
+ * 4 if data size is not more than maximum chunksize, the data is stored in a single chunk
+ *   key = sha256(int64(size) + data)
+ * 2 if data size is more than chunksize*Branches^l, but no more than
+ *   chunksize*Branches^l length (except the last one).
+ *   key = sha256(int64(size) + key(slice0) + key(slice1) + ...)
+ *   Tree chunker is a concrete implementation of data chunking.
+ *   This chunker works in a simple way, it builds a tree out of the document so that each node either
+ *   represents a chunk of real data or a chunk of data representing an branching non-leaf node of the tree.
+ *   In particular each such non-leaf chunk will represent is a concatenation of the hash of its respective children.
+ *   This scheme simultaneously guarantees data integrity as well as self addressing. Abstract nodes are
+ *   transparent since their represented size component is strictly greater than their maximum data size,
+ *   since they encode a subtree.
+ *   If all is well it is possible to implement this by simply composing readers so that no extra allocation or
+ *   buffering is necessary for the data splitting and joining. This means that in principle there
+ *   can be direct IO between : memory, file system, network socket (bzz peers storage request is
+ *   read from the socket ). In practice there may be need for several stages of internal buffering.
+ *   Unfortunately the hashing itself does use extra copies and allocation though since it does need it.
  */
-/*
-Tree chunker is a concrete implementation of data chunking.
-This chunker works in a simple way, it builds a tree out of the document so that each node either
-represents a chunk of real data or a chunk of data representing an branching non-leaf node of the tree.
-In particular each such non-leaf chunk will represent is a concatenation of the hash of its respective children.
-This scheme simultaneously guarantees data integrity as well as self addressing. Abstract nodes are
-transparent since their represented size component is strictly greater than their maximum data size,
-since they encode a subtree.
-
-If all is well it is possible to implement this by simply composing readers so that no extra allocation or
-buffering is necessary for the data splitting and joining. This means that in principle there
-can be direct IO between : memory, file system, network socket (bzz peers storage request is
-read from the socket ). In practice there may be need for several stages of internal buffering.
-Unfortunately the hashing itself does use extra copies and allocation though since it does need it.
-*/
-
 public class TreeChunker implements Chunker {
 
     public static final MessageDigest DEFAULT_HASHER;
@@ -81,7 +71,7 @@ public class TreeChunker implements Chunker {
         }
 
         public long getSubtreeSize() {
-            return getSize();
+            return ByteBuffer.wrap(getData()).order(ByteOrder.LITTLE_ENDIAN).getLong(0);
         }
 
         public int getDataOffset() {
@@ -99,7 +89,7 @@ public class TreeChunker implements Chunker {
         public String toString() {
             String dataString = ByteUtil.toHexString(
                     Arrays.copyOfRange(getData(), getDataOffset(), getDataOffset() + 16)) + "...";
-            return "TreeChunk[" + getSize() + ", " + getKey() + ", " + dataString + "]";
+            return "TreeChunk[" + getSubtreeSize() + ", " + getKey() + ", " + dataString + "]";
         }
     }
 
@@ -135,7 +125,7 @@ public class TreeChunker implements Chunker {
                 hashes += (i == 0 ? "" : ", ") + getKey(i);
             }
             hashes += "}";
-            return "HashesChunk[" + getSize() + ", " + getKey() + ", " + hashes + "]";
+            return "HashesChunk[" + getSubtreeSize() + ", " + getKey() + ", " + hashes + "]";
         }
     }
 
@@ -228,7 +218,6 @@ public class TreeChunker implements Chunker {
     }
 
     @Override
-//    public SectionReader join(Collection<Chunk> chunks) {
     public SectionReader join(ChunkStore chunkStore, Key key) {
         return new LazyChunkReader(chunkStore, key);
     }
@@ -241,23 +230,23 @@ public class TreeChunker implements Chunker {
     private class LazyChunkReader implements SectionReader {
         Key key;
         ChunkStore chunkStore;
-        long size;
+        final long size;
 
-        Chunk root;
+        final Chunk root;
 
         public LazyChunkReader(ChunkStore chunkStore, Key key) {
             this.chunkStore = chunkStore;
             this.key = key;
             root = chunkStore.get(key);
-            this.size = root.getSize();
+            this.size = new TreeChunk(root).getSubtreeSize();
         }
 
         @Override
         public int readAt(byte[] dest, int destOff, long readerOffset) {
             int size = dest.length - destOff;
-            TreeSize ts = new TreeSize(root.getSize());
+            TreeSize ts = new TreeSize(this.size);
             return readImpl(dest, destOff, root, ts.treeSize, 0, readerOffset,
-                    readerOffset + min(size, root.getSize() - readerOffset));
+                    readerOffset + min(size, this.size - readerOffset));
         }
 
         private int readImpl(byte[] dest, int destOff, Chunk chunk, long chunkWidth, long chunkStart,
@@ -305,6 +294,41 @@ public class TreeChunker implements Chunker {
         @Override
         public int read(byte[] dest, int destOff) {
             return readAt(dest, destOff, 0);
+        }
+    }
+
+    /**
+     * A 'subReader'
+     */
+    public static class SlicedReader implements SectionReader {
+        SectionReader delegate;
+        long offset;
+        long len;
+
+        public SlicedReader(SectionReader delegate, long offset, long len) {
+            this.delegate = delegate;
+            this.offset = offset;
+            this.len = len;
+        }
+
+        @Override
+        public long seek(long offset, int whence) {
+            return delegate.seek(this.offset + offset, whence);
+        }
+
+        @Override
+        public int read(byte[] dest, int destOff) {
+            return delegate.readAt(dest, destOff, offset);
+        }
+
+        @Override
+        public int readAt(byte[] dest, int destOff, long readerOffset) {
+            return delegate.readAt(dest, destOff, offset + readerOffset);
+        }
+
+        @Override
+        public long getSize() {
+            return len;
         }
     }
 }

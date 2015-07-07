@@ -19,7 +19,7 @@ public class ManifestTest {
             "  {\"path\":\"a/bb/c\"}\n" +
             "]}";
 
-    static DPATmp dpa = new SimpleDPA();
+    static DPA dpa = new SimpleDPA();
 
 
     @Test
@@ -43,22 +43,14 @@ public class ManifestTest {
         System.out.println(mf1.dump());
     }
 
-//    @Test
+    @Test
     public void readWriteReadTest() throws Exception {
-        ByteBuf testBuf = Unpooled.copiedBuffer(testManifest, StandardCharsets.UTF_8);
-        String testManiHash = dpa.store(testBuf);
+        String testManiHash = dpa.store(Util.stringToReader(testManifest)).getHexString();
         Manifest m = Manifest.loadManifest(dpa, testManiHash);
-//        mi.iterator(); // save all entries
         System.out.println(m.dump());
 
         String nHash = m.save();
 
         Manifest m1 = Manifest.loadManifest(dpa, nHash);
-//        m1.iterator();
-        // compare iterators
-
-//        m1.get(new Manifest.Path("existing path"));
-//
-//        m1.get(new Manifest.Path("non-existing path"));
     }
 }

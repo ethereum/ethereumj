@@ -8,7 +8,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by Admin on 18.06.2015.
+ * Limited capacity memory storage. Last recently used chunks are purged when
+ * max memory threshold is reached.
+ *
+ * Created by Anton Nashatyrev on 18.06.2015.
  */
 public class MemStore implements ChunkStore {
     public final Statter statCurSize = Statter.create("net.swarm.memstore.curSize");
@@ -28,7 +31,7 @@ public class MemStore implements ChunkStore {
     public Map<Key, Chunk> store = Collections.synchronizedMap(new LRUMap<Key, Chunk>(10000) {
         @Override
         protected boolean removeLRU(LinkEntry<Key, Chunk> entry) {
-            curSizeBytes -= entry.getValue().getSize();
+            curSizeBytes -= entry.getValue().getData().length;
             boolean ret = super.removeLRU(entry);
             statCurSize.add(curSizeBytes);
             statCurChunks.add(size());
@@ -37,7 +40,7 @@ public class MemStore implements ChunkStore {
 
         @Override
         public Chunk put(Key key, Chunk value) {
-            curSizeBytes += value.getSize();
+            curSizeBytes += value.getData().length;
             Chunk ret = super.put(key, value);
             statCurSize.add(curSizeBytes);
             statCurChunks.add(size());

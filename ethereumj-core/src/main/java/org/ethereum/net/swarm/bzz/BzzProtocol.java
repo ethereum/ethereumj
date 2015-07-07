@@ -1,148 +1,111 @@
 package org.ethereum.net.swarm.bzz;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.p2p.Peer;
+import org.ethereum.net.swarm.Key;
 import org.ethereum.net.swarm.NetStore;
-import org.ethereum.net.swarm.kademlia.stub.Address;
-import org.ethereum.net.swarm.kademlia.stub.Node;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Created by Admin on 18.06.2015.
+ * The class is the lowest level right above the network layer.
+ * Responsible for BZZ handshaking, brokering inbound messages
+ * and delivering outbound messages.
+ *
+ * Created by Anton Nashatyrev on 18.06.2015.
  */
-public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
+public class BzzProtocol implements Functional.Consumer<BzzMessage> {
     private final static Logger LOG = LoggerFactory.getLogger("net.bzz");
 
-    public static class PeerAddr {}
-
     private final static AtomicLong idGenerator = new AtomicLong(0);
+
     public final static int Version            = 0;
     public final static long ProtocolLength     = 8;
     public final static long ProtocolMaxMsgSize = 10 * 1024 * 1024;
     public final static int NetworkId          = 0;
     public final static int Strategy           = 0;
 
-    NetStore netStore;
-    Functional.Consumer<BzzMessage> messageSender;
-    public Peer peer;
-    PeerAddress node;
-    Address addr;
-//    Node node;
+    private NetStore netStore;
+    private Functional.Consumer<BzzMessage> messageSender;
+    private PeerAddress node;
 
-    boolean handshaken = false;
-    boolean handshakeOut = false;
-
-    transient ExecutorService storeRequestExecutor = Executors.newSingleThreadExecutor();
+    private boolean handshaken = false;
+    private boolean handshakeOut = false;
+    private List<BzzMessage> pendingHandshakeOutMessages = new ArrayList<>();
+    private List<BzzMessage> pendingHandshakeInMessages = new ArrayList<>();
 
     public BzzProtocol(NetStore netStore) {
         this.netStore = netStore;
     }
 
+    /**
+     * Installs the message sender.
+     * Normally this is BzzHandler which just sends the message to the peer over the wire
+     * In the testing environment this could be a special handler which delivers the message
+     * without network stack
+     */
     public void setMessageSender(Functional.Consumer<BzzMessage> messageSender) {
         this.messageSender = messageSender;
     }
 
-    public void start(Peer peer) {
-        this.peer = peer;
-//        this.messageSender = messageSender;
+    public void start() {
         handshakeOut();
     }
 
+    /**
+     * Gets the address of the Peer connected to this instance.
+     */
     public PeerAddress getNode() {
         return node;
     }
 
-    /*****   Cademlia Node interface   *******/
-
-    public Address addr() {
-        if (addr == null) {
-            if (node != null) addr = new Address(node.getId());
-        }
-        return addr;
-    }
-
-    @Override
-    public String url() {
-        return null;
-    }
-
-    @Override
-    public Date lastActive() {
-        return null;
-    }
-
-    @Override
-    public void Drop() {
-
-    }
-
-    /*****  END  *******/
-
-/*
-    public void storeRequest(final Key key) {
-//        Future<?> res = storeRequestExecutor.submit(new Runnable() {
-//            @Override
-//            public void run() {
-                long id = idGenerator.incrementAndGet();
-//                Chunk chunk = netStore.localStore.dbStore.get(key);// ??? Why DB ?
-                Chunk chunk = netStore.localStore.get(key);
-                BzzStoreReqMessage msg = new BzzStoreReqMessage(id, key, chunk.getData());
-                sendMessage(msg);
-//            }
-//        });
-    }
-*/
-
+    /**
+     * Sends the Status message to the peer
+     */
     private void handshakeOut() {
         if (!handshakeOut) {
             handshakeOut = true;
-            PeerAddress selfAddress = new PeerAddress(netStore.self);
             BzzStatusMessage outStatus = new BzzStatusMessage(Version, "honey",
-                    selfAddress.id, selfAddress, NetworkId,
-                    Collections.singletonList(new Capability(Capability.BZZ, (byte) 1)));
+                    netStore.getSelfAddress(), NetworkId,
+                    Collections.singletonList(new Capability(Capability.BZZ, (byte) 0)));
             sendMessageImpl(outStatus);
         }
     }
 
+    /**
+     * Handles inbound Status Message
+     */
     private void handshakeIn(BzzStatusMessage msg) {
         if (!handshaken) {
             netStore.statHandshakes.add(1);
             // TODO check status parameters
             node = msg.getAddr();
-            netStore.hive.addPeer(this);
+            netStore.getHive().addPeer(this);
 
             handshaken = true;
             handshakeOut();
+
+            start();
 
             for (BzzMessage pmsg : pendingHandshakeOutMessages) {
                 sendMessageImpl(pmsg);
             }
             pendingHandshakeOutMessages = null;
             // ping the peer for self neighbours
-            sendMessageImpl(new BzzRetrieveReqMessage(new Address(netStore.self)));
+            sendMessageImpl(new BzzRetrieveReqMessage(Key.zeroKey()));
 
             for (BzzMessage pmsg : pendingHandshakeInMessages) {
                 handleMsg(pmsg);
             }
             pendingHandshakeInMessages = null;
-
-        } else {
-//            throw new RuntimeException("Already handshaken.");
         }
     }
 
-    List<BzzMessage> pendingHandshakeOutMessages = new ArrayList<>();
-    List<BzzMessage> pendingHandshakeInMessages = new ArrayList<>();
     public synchronized void sendMessage(BzzMessage msg) {
         if (handshaken) {
             sendMessageImpl(msg);
@@ -161,11 +124,11 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
         handleMsg(bzzMessage);
     }
 
-    void handleMsg(BzzMessage msg) {
+    private void handleMsg(BzzMessage msg) {
         synchronized (netStore) {
             netStore.statInMsg.add(1);
             msg.setPeer(this);
-            LOG.trace(peer + " ===> " + netStore.self + ": " + msg);
+            LOG.trace(node + " ===> " + netStore.getSelfAddress() + ": " + msg);
             if (msg.getCommand() == BzzMessageCodes.STATUS) {
                 handshakeIn((BzzStatusMessage) msg);
             } else {
@@ -180,7 +143,7 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
                             netStore.addRetrieveRequest((BzzRetrieveReqMessage) msg);
                             break;
                         case PEERS:
-                            netStore.hive.addPeerRecords((BzzPeersMessage) msg);
+                            netStore.getHive().addPeerRecords((BzzPeersMessage) msg);
                             break;
                         default:
                             throw new RuntimeException("Invalid BZZ command: " + msg.getCommand() + ": " + msg);
@@ -192,6 +155,6 @@ public class BzzProtocol implements Node, Functional.Consumer<BzzMessage> {
 
     @Override
     public String toString() {
-        return netStore.self + " => " + peer + " (Node: " + node + ")";
+        return netStore.getSelfAddress() + " => " + node + " (Node: " + node + ")";
     }
 }

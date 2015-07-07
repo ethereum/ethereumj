@@ -9,19 +9,25 @@ import org.ethereum.util.RLPList;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * The message is the immediate response on the {#RETRIEVE_REQUEST} with the nearest known nodes
+ * of the requested hash.
+ * Contains a list of nearest Nodes (addresses) to the requested hash.
+ */
 public class BzzPeersMessage extends BzzMessage {
 
     private List<PeerAddress> peers;
+    long timeout;
     // optional
     private Key key;
-    private long id;
 
     public BzzPeersMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public BzzPeersMessage(List<PeerAddress> peers, Key key, long id) {
+    public BzzPeersMessage(List<PeerAddress> peers, long timeout, Key key, long id) {
         this.peers = peers;
+        this.timeout = timeout;
         this.key = key;
         this.id = id;
     }
@@ -39,11 +45,12 @@ public class BzzPeersMessage extends BzzMessage {
         for (RLPElement a : addrs) {
             peers.add(PeerAddress.parse((RLPList) a));
         }
-        if (paramsList.size() > 1) {
-            key = new Key(paramsList.get(1).getRLPData());
-        }
+        timeout = ByteUtil.byteArrayToLong(paramsList.get(1).getRLPData());;
         if (paramsList.size() > 2) {
-            id = ByteUtil.byteArrayToLong(paramsList.get(2).getRLPData());;
+            key = new Key(paramsList.get(2).getRLPData());
+        }
+        if (paramsList.size() > 3) {
+            id = ByteUtil.byteArrayToLong(paramsList.get(3).getRLPData());;
         }
 
         parsed = true;
@@ -56,13 +63,15 @@ public class BzzPeersMessage extends BzzMessage {
             bPeers[i] = peer.encodeRlp();
         }
         byte[] bPeersList = RLP.encodeList(bPeers);
+        byte[] bTimeout = RLP.encodeInt((int) timeout);
 
         if (key == null) {
-            this.encoded = RLP.encodeList(bPeersList);
+            this.encoded = RLP.encodeList(bPeersList, bTimeout);
         } else {
             this.encoded = RLP.encodeList(bPeersList,
+                    bTimeout,
                     RLP.encodeElement(key.getBytes()),
-                    RLP.encodeElement(ByteUtil.longToBytes(id)));
+                    RLP.encodeInt((int) id));
         }
     }
 

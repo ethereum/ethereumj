@@ -5,6 +5,7 @@ import org.apache.commons.codec.binary.StringUtils;
 import org.ethereum.net.p2p.Peer;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.swarm.Key;
 import org.ethereum.net.swarm.Util;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -15,20 +16,21 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
+import static org.ethereum.crypto.HashUtil.sha3;
+
 /**
+ * Class similar for {@link Node} used in the swarm
+ *
  * Created by Admin on 25.06.2015.
  */
 public class PeerAddress {
-    byte[] ip;
-    int port;
-    byte[] id;
+    private byte[] ip;
+    private int port;
+    private byte[] id;
 
-    transient Peer node;
+    private Key addrKeyCached = null;
 
-    public PeerAddress(PeerInfo peerInfo) {
-        ip = peerInfo.getAddress().getAddress();
-        port = peerInfo.getPort();
-        id = Hex.decode(peerInfo.getPeerId());
+    private PeerAddress() {
     }
 
     public PeerAddress(Node discoverNode) {
@@ -47,7 +49,22 @@ public class PeerAddress {
         this.id = id;
     }
 
-    public PeerAddress() {
+    public Node toNode() {
+        try {
+            return new Node(id, InetAddress.getByAddress(ip).getHostAddress(), port);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Gets the SHA3 hash if this node ID
+     */
+    public Key getAddrKey() {
+        if (addrKeyCached == null) {
+            addrKeyCached = new Key(sha3(id));
+        }
+        return addrKeyCached;
     }
 
     public byte[] getIp() {
@@ -62,28 +79,7 @@ public class PeerAddress {
         return id;
     }
 
-    public PeerInfo toPeerInfo() {
-        try {
-            return new PeerInfo(InetAddress.getByAddress(ip), port, Hex.toHexString(id));
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Peer toPeer() {
-        PeerInfo peerInfo = toPeerInfo();
-        return new Peer(peerInfo.getAddress(), port, peerInfo.getPeerId());
-    }
-
-    public Node toNode() {
-        try {
-            return new Node(id, InetAddress.getByAddress(ip).getHostAddress(), port);
-        } catch (UnknownHostException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public static PeerAddress parse(RLPList l) {
+    static PeerAddress parse(RLPList l) {
         PeerAddress ret = new PeerAddress();
         ret.ip = l.get(0).getRLPData();
         ret.port = ByteUtil.byteArrayToInt(l.get(1).getRLPData());
@@ -91,9 +87,9 @@ public class PeerAddress {
         return ret;
     }
 
-    public byte[] encodeRlp() {
+    byte[] encodeRlp() {
         return RLP.encodeList(RLP.encodeElement(ip),
-                RLP.encodeElement(Util.uInt16ToBytes(port)),
+                RLP.encodeInt(port),
                 RLP.encodeElement(id));
     }
 
@@ -118,12 +114,8 @@ public class PeerAddress {
 
     @Override
     public String toString() {
-        String sip = "";
-        for (int i = 0; i < ip.length; i++) {
-            sip += (i == 0 ? "" : ".") + (int)ip[i];
-        }
         return "PeerAddress{" +
-                "ip=" + sip +
+                "ip=" + Util.ipBytesToString(ip) +
                 ", port=" + port +
                 ", id=" + Hex.toHexString(id) +
                 '}';

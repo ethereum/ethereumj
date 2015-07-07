@@ -5,36 +5,30 @@ import java.util.Map;
 
 public enum BzzMessageCodes {
 
+    /**
+     * Handshake BZZ message
+     */
+    STATUS(0x00),
 
     /**
-     * [0x00, [PROTOCOL_VERSION, NETWORK_ID, TD, BEST_HASH, GENESIS_HASH] <br>
-     * Inform a peer of it's current ethereum state. This message should be
-     * send after the initial handshake and prior to any ethereum related messages.
+     * Request to store a {@link org.ethereum.net.swarm.Chunk}
      */
-    STATUS(0x01),
+    STORE_REQUEST(0x01),
 
     /**
-     * [+0x01] Request the peer to send all transactions
-     * currently in the queue.
+     * Used for several purposes
+     * - the main is to ask for a {@link org.ethereum.net.swarm.Chunk} with the specified hash
+     * - ask to send back {#PEERS} message with the known nodes nearest to the specified hash
+     * - initial request after handshake with zero hash. On this request the nearest known
+     *   neighbours are sent back with the {#PEERS} message.
      */
-    STORE_REQUEST(0x02),
-
-
-    /**
-     * [+0x03, [hash : B_32, maxBlocks: P]: <br>
-     * Requests a BlockHashes message of at most maxBlocks entries,
-     * of block hashes from the blockchain, starting at the parent of block hash.
-     * Does not require the peer to give maxBlocks hashes -
-     * they could give somewhat fewer.
-     */
-    RETRIEVE_REQUEST(0x03),
+    RETRIEVE_REQUEST(0x02),
 
     /**
-     * [+0x04, [hash_0: B_32, hash_1: B_32, ....]: <br>Gives a series of hashes
-     * of blocks (each the child of the next). This implies that the blocks
-     * are ordered from youngest to oldest.
+     * The message is the immediate response on the {#RETRIEVE_REQUEST} with the nearest known nodes
+     * of the requested hash.
      */
-    PEERS(0x04);
+    PEERS(0x03);
 
     static byte OFFSET = 0;
     private int cmd;
@@ -47,7 +41,7 @@ public enum BzzMessageCodes {
         }
     }
 
-    private BzzMessageCodes(int cmd) {
+    BzzMessageCodes(int cmd) {
         this.cmd = cmd;
     }
 

@@ -1,7 +1,9 @@
 package org.ethereum.net.swarm;
 
 /**
- * Created by Admin on 18.06.2015.
+ * Self-explanatory interface
+ *
+ * Created by Anton Nashatyrev on 18.06.2015.
  */
 public interface ChunkStore {
 

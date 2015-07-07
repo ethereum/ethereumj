@@ -1,20 +1,16 @@
 package org.ethereum.net.swarm;
 
-import com.google.common.util.concurrent.AtomicDouble;
-
-import java.util.Map;
-
 /**
- * Created by Admin on 01.07.2015.
+ * The interface for gathering statistical information.
+ * Used similar to loggers and assumed to have minimal latency to
+ * not affect the performance in production.
+ * The implementation might be substituted to allow some advanced
+ * information processing like streaming it to the database
+ * or aggregating and displaying as graphics
+ *
+ * Created by Anton Nashatyrev on 01.07.2015.
  */
 public abstract class Statter {
-//    public static class SimpleStatter extends Statter {
-//        public static Map<String, >
-//        @Override
-//        public void add(double value) {
-//
-//        }
-//    }
 
     public static class SimpleStatter extends Statter {
 
@@ -56,6 +52,11 @@ public abstract class Statter {
 
     }
 
+    /**
+     * Used as a factory to create statters.
+     * @param name Normally the name is assumed to be a hierarchical path with '.' delimiters
+     *             similar to full Java class names.
+     */
     public static Statter create(String name) {
         return new SimpleStatter(name);
     }

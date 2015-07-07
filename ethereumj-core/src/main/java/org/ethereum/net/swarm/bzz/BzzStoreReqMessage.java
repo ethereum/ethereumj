@@ -17,7 +17,7 @@ public class BzzStoreReqMessage extends BzzMessage {
     private byte[] data;
 
     // optional
-    byte[] metadata;
+    byte[] metadata = new byte[0];
 
     public BzzStoreReqMessage(byte[] encoded) {
         super(encoded);
@@ -55,12 +55,12 @@ public class BzzStoreReqMessage extends BzzMessage {
         List<byte[]> elems = new ArrayList<>();
         elems.add(RLP.encodeElement(key.getBytes()));
         elems.add(RLP.encodeElement(data));
-        if (id >= 0 || metadata != null) {
-            elems.add(RLP.encodeElement(ByteUtil.longToBytes(id)));
-        }
-        if (metadata != null) {
-            elems.add(RLP.encodeElement(metadata));
-        }
+//        if (id >= 0 || metadata != null) {
+            elems.add(RLP.encodeInt((int) id));
+//        }
+//        if (metadata != null) {
+            elems.add(RLP.encodeList(metadata));
+//        }
         this.encoded = RLP.encodeList(elems.toArray(new byte[0][]));
     }
 

@@ -1,6 +1,7 @@
 package org.ethereum.net.swarm.bzz;
 
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.swarm.Util;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
@@ -11,11 +12,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static org.ethereum.net.swarm.Util.*;
+
+/**
+ * BZZ handshake message
+ */
 public class BzzStatusMessage extends BzzMessage {
 
     private long version;
     private String id;
-    private byte[] nodeId;
     private PeerAddress addr;
     private long networkId;
     private List<Capability> capabilities;
@@ -24,10 +29,9 @@ public class BzzStatusMessage extends BzzMessage {
         super(encoded);
     }
 
-    public BzzStatusMessage(int version, String id, byte[] nodeId, PeerAddress addr, long networkId, List<Capability> capabilities) {
+    public BzzStatusMessage(int version, String id, PeerAddress addr, long networkId, List<Capability> capabilities) {
         this.version = version;
         this.id = id;
-        this.nodeId = nodeId;
         this.addr = addr;
         this.networkId = networkId;
         this.capabilities = capabilities;
@@ -38,37 +42,28 @@ public class BzzStatusMessage extends BzzMessage {
     protected void decode() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
-        version = ByteUtil.byteArrayToLong(paramsList.get(0).getRLPData());
-        id = new String(paramsList.get(1).getRLPData());
-        nodeId = paramsList.get(2).getRLPData();
-        addr = PeerAddress.parse((RLPList) paramsList.get(3));
-        networkId = ByteUtil.byteArrayToLong(paramsList.get(4).getRLPData());
+        version = rlpDecodeLong(paramsList.get(0));
+        id = rlpDecodeString(paramsList.get(1));
+        addr = PeerAddress.parse((RLPList) paramsList.get(2));
+        networkId = rlpDecodeInt(paramsList.get(3));
 
         capabilities = new ArrayList<>();
-        RLPList caps = (RLPList) paramsList.get(5);
+        RLPList caps = (RLPList) paramsList.get(4);
         for (RLPElement c : caps) {
             RLPList e = (RLPList) c;
-            capabilities.add(new Capability(new String(e.get(0).getRLPData()),e.get(1).getRLPData()[0]));
+            capabilities.add(new Capability(rlpDecodeString(e.get(0)), rlpDecodeByte(e.get(1))));
         }
 
         parsed = true;
     }
 
     private void encode() {
-        byte[] bVersion = RLP.encodeElement(ByteUtil.longToBytes(version));
-        byte[] bId = RLP.encodeString(id);
-        byte[] bAddr = addr.encodeRlp();
-        byte[] bNetId = RLP.encodeElement(ByteUtil.longToBytes(networkId));
         byte[][] capabilities = new byte[this.capabilities.size()][];
         for (int i = 0; i < this.capabilities.size(); i++) {
             Capability capability = this.capabilities.get(i);
-            capabilities[i] = RLP.encodeList(
-                    RLP.encodeElement(capability.getName().getBytes()),
-                    RLP.encodeByte(capability.getVersion()));
+            capabilities[i] = rlpEncodeList(capability.getName(),capability.getVersion());
         }
-        byte[] bCapabilityList = RLP.encodeList(capabilities);
-
-        this.encoded = RLP.encodeList( bVersion, bId, RLP.encodeElement(nodeId), bAddr, bNetId, bCapabilityList);
+        this.encoded = rlpEncodeList(version, id, addr.encodeRlp(), networkId, rlpEncodeList(capabilities));
     }
 
     @Override
@@ -77,14 +72,16 @@ public class BzzStatusMessage extends BzzMessage {
         return encoded;
     }
 
+    /**
+     * BZZ protocol version
+     */
     public long getVersion() {
         return version;
     }
 
-    public byte[] getNodeId() {
-        return nodeId;
-    }
-
+    /**
+     * Gets the remote peer address
+     */
     public PeerAddress getAddr() {
         return addr;
     }
@@ -113,7 +110,6 @@ public class BzzStatusMessage extends BzzMessage {
         return "BzzStatusMessage{" +
                 "version=" + version +
                 ", id='" + id + '\'' +
-                ", nodeId=" + Hex.toHexString(nodeId) +
                 ", addr=" + addr +
                 ", networkId=" + networkId +
                 ", capabilities=" + capabilities +

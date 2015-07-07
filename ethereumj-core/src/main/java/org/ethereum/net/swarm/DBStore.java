@@ -1,14 +1,16 @@
 package org.ethereum.net.swarm;
 
-import org.ethereum.db.Database;
+import org.ethereum.datasource.KeyValueDataSource;
 
 /**
+ * ChunkStore backed up with KeyValueDataSource
+ *
  * Created by Admin on 18.06.2015.
  */
 public class DBStore implements ChunkStore {
-    private Database db;
+    private KeyValueDataSource db;
 
-    public DBStore(Database db) {
+    public DBStore(KeyValueDataSource db) {
         this.db = db;
     }
 

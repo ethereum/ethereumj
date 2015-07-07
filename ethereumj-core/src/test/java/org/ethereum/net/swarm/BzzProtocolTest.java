@@ -1,10 +1,7 @@
 package org.ethereum.net.swarm;
 
-import com.sun.jmx.remote.internal.ArrayQueue;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.net.swarm.bzz.BzzMessage;
-import org.ethereum.net.swarm.bzz.BzzPeersMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
 import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.ethereum.util.Functional;
@@ -12,14 +9,12 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
-import org.spongycastle.util.encoders.Hex;
 
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static java.lang.Math.min;
 import static org.ethereum.crypto.HashUtil.sha3;
 
 /**
@@ -117,10 +112,6 @@ public class BzzProtocolTest {
 
             boolean rev;
 
-            public AsyncConsumer(Functional.Consumer<BzzMessage> delegate) {
-                this.delegate = delegate;
-            }
-
             public AsyncConsumer(Functional.Consumer<BzzMessage> delegate, boolean rev) {
                 this.delegate = delegate;
                 this.rev = rev;
@@ -172,13 +163,14 @@ public class BzzProtocolTest {
 
     public static class SimpleHive extends Hive {
         Set<BzzProtocol> peers = new IdentitySet();
-        PeerAddress thisAddress;
+//        PeerAddress thisAddress;
         TestPeer thisPeer;
-        NodeTable nodeTable;
+//        NodeTable nodeTable;
 
         public SimpleHive(PeerAddress thisAddress) {
-            this.thisAddress = thisAddress;
-            nodeTable = new NodeTable(thisAddress.toNode());
+            super(thisAddress);
+//            this.thisAddress = thisAddress;
+//            nodeTable = new NodeTable(thisAddress.toNode());
         }
 
         public SimpleHive setThisPeer(TestPeer thisPeer) {
@@ -189,23 +181,24 @@ public class BzzProtocolTest {
         @Override
         public void addPeer(BzzProtocol peer) {
             peers.add(peer);
-            nodeTable.addNode(peer.getNode().toNode());
-            peersAdded();
+            super.addPeer(peer);
+//            nodeTable.addNode(peer.getNode().toNode());
+//            peersAdded();
         }
 
-        @Override
-        public void removePeer(BzzProtocol peer) {
-            peers.remove(peer);
-            nodeTable.dropNode(peer.getNode().toNode());
-        }
-
-        @Override
-        public void addPeerRecords(BzzPeersMessage req) {
-            for (PeerAddress peerAddress : req.getPeers()) {
-                nodeTable.addNode(peerAddress.toNode());
-            }
-            peersAdded();
-        }
+//        @Override
+//        public void removePeer(BzzProtocol peer) {
+//            peers.remove(peer);
+//            nodeTable.dropNode(peer.getNode().toNode());
+//        }
+//
+//        @Override
+//        public void addPeerRecords(BzzPeersMessage req) {
+//            for (PeerAddress peerAddress : req.getPeers()) {
+//                nodeTable.addNode(peerAddress.toNode());
+//            }
+//            peersAdded();
+//        }
 
         @Override
         public Collection<PeerAddress> getNodes(Key key, int max) {
@@ -219,7 +212,7 @@ public class BzzProtocolTest {
         }
 
         @Override
-        public Collection<BzzProtocol> getPeers(Key key, int max) {
+        public Collection<BzzProtocol> getPeers(Key key, int maxCount) {
             if (thisPeer == null) return peers;
 //            TreeMap<Key, TestPeer> sort = new TreeMap<Key, TestPeer>(new Comparator<Key>() {
 //                @Override
@@ -241,7 +234,7 @@ public class BzzProtocolTest {
             for (Node node : closestNodes) {
                 ret.add(thisPeer.getPeer(new PeerAddress(node)));
 
-                if (--max == 0) break;
+                if (--maxCount == 0) break;
             }
             return ret;
         }
@@ -274,7 +267,7 @@ public class BzzProtocolTest {
             hive = new SimpleHive(peerAddress).setThisPeer(this);
             netStore = new NetStore(localStore, hive);
 
-            netStore.start(peerAddress.toPeerInfo(), null);
+            netStore.start(peerAddress, null);
 
             staticMap.put(peerAddress, this);
         }
@@ -306,11 +299,11 @@ public class BzzProtocolTest {
             TestPipe pipe = AsyncPipe ? new TestAsyncPipe(myBzz, peerBzz) : new TestPipe(myBzz, peerBzz);
 
             pipe.setNames(this.name, peer.name);
-//            System.out.println("Connecting: " + this.name + " <=> " + peer.name);
+            System.out.println("Connecting: " + this.name + " <=> " + peer.name);
             myBzz.setMessageSender(pipe.createIn1());
             peerBzz.setMessageSender(pipe.createIn2());
-            myBzz.start(peer.peerAddress.toPeer());
-            peerBzz.start(this.peerAddress.toPeer());
+            myBzz.start();
+            peerBzz.start();
         }
 
         public void connect(PeerAddress addr) {
@@ -358,7 +351,7 @@ public class BzzProtocolTest {
 
         TestPeer p0 = new TestPeer(0);
         System.out.println("Creating chain of peers");
-        final TestPeer[] allPeers = new TestPeer[5000];
+        final TestPeer[] allPeers = new TestPeer[100];
         allPeers[0] = p0;
         for (int i = 1; i < allPeers.length; i++) {
             allPeers[i] = new TestPeer(i);
@@ -373,55 +366,48 @@ public class BzzProtocolTest {
         TestAsyncPipe.waitForCompletion();
 
         System.out.println("Connecting a new peer...");
-        TestPeer.MessageOut = true;
-        allPeers[allPeers.length-1].connect(new TestPeer(allPeers.length));
+//        allPeers[allPeers.length-1].connect(new TestPeer(allPeers.length));
 
-        Thread.sleep(10000000);
+//        Thread.sleep(10000000);
         System.out.println("Put chunk to 0");
 //        Key key = new Key(new byte[]{0x22, 0x33});
 //        Chunk chunk = new Chunk(key, new byte[] {0,0,0,0,0,0,0,0, 77, 88});
-        Chunk[] chunks = new Chunk[100];
+        Chunk[] chunks = new Chunk[10];
+        int shift = 0;
         for (int i = 0; i < chunks.length; i++) {
-            Key key = new Key(sha3(new byte[]{0x22, (byte) i}));
+            Key key = new Key(sha3(new byte[]{0x22, (byte) (i+shift)}));
 //            stdout.setFilter(Hex.toHexString(key.getBytes()));
             chunks[i] = new Chunk(key, new byte[] {0,0,0,0,0,0,0,0, 77, (byte) i});
             p0.netStore.put(chunks[i]);
+            TestAsyncPipe.waitForCompletion();
         }
 
-//        Thread.sleep(5000);
+        System.out.println("Waiting for net idle ");
+        TestAsyncPipe.waitForCompletion();
 
-//        new Thread() {
-//            @Override
-//            public void run() {
-//                try {
-//                    Thread.sleep(5000);
-//                } catch (InterruptedException e) {
-//                    e.printStackTrace();
-//                }
-//
-//                System.out.println("==== Storage statistics:");
-//
-//                System.out.println("Name\tChunks\tPeers\tMsgIn\tMsgOut");
-//                for (TestPeer peer : allPeers) {
-//                    System.out.println(peer.name + "\t" +
-//                            (int)((Statter.SimpleStatter)((MemStore) peer.localStore.memStore).statCurChunks).getLast() + "\t" +
-//                            ((Statter.SimpleStatter)(peer.netStore.statHandshakes)).getCount() + "\t" +
-//                            ((Statter.SimpleStatter)(peer.netStore.statInMsg)).getCount() + "\t" +
-//                            ((Statter.SimpleStatter)(peer.netStore.statOutMsg)).getCount());
-//                    for (Key key : ((MemStore) peer.localStore.memStore).store.keySet()) {
-//                        System.out.println("    " + key);
-//                    }
-//                }
-//            }
-//        }.start();
+        TestPeer.MessageOut = true;
+
+        System.out.println("==== Storage statistics:");
+
+        System.out.println("Name\tChunks\tPeers\tMsgIn\tMsgOut");
+        for (TestPeer peer : allPeers) {
+            System.out.println(peer.name + "\t" +
+                    (int)((Statter.SimpleStatter)((MemStore) peer.localStore.memStore).statCurChunks).getLast() + "\t" +
+                    ((Statter.SimpleStatter)(peer.netStore.statHandshakes)).getCount() + "\t" +
+                    ((Statter.SimpleStatter)(peer.netStore.statInMsg)).getCount() + "\t" +
+                    ((Statter.SimpleStatter)(peer.netStore.statOutMsg)).getCount());
+            for (Key key : ((MemStore) peer.localStore.memStore).store.keySet()) {
+                System.out.println("    " + key);
+            }
+        }
 
 //        TestPeer.MessageOut = true;
         System.out.println("Requesting chunk from the last...");
         for (int i = 0; i < chunks.length; i++) {
-            Key key = new Key(sha3(new byte[]{0x22, (byte) i}));
+            Key key = new Key(sha3(new byte[]{0x22, (byte) (i+shift)}));
             System.out.println("======== Looking for " + key);
             Chunk chunk1 = allPeers[allPeers.length - 1].netStore.get(key);
-            System.out.println(chunk1);
+            System.out.println("########### Found: " + chunk1);
             Assert.assertEquals(key, chunk1.getKey());
             Assert.assertArrayEquals(chunks[i].getData(), chunk1.getData());
         }
@@ -444,6 +430,7 @@ public class BzzProtocolTest {
 
     }
 
+    @Ignore // OutOfMemory
     @Test
     public void manyPeersLargeDataTest() {
         TestPeer.AsyncPipe = true;
@@ -470,7 +457,7 @@ public class BzzProtocolTest {
         }
 
         System.out.println("Split and put data to node 0...");
-        Key key = chunker.split(new ChunkerTest.ArrayReader(data),
+        Key key = chunker.split(new Util.ArrayReader(data),
                 new Util.ChunkConsumer(p0.netStore));
 
         System.out.println("Assemble data back from the last node ...");
@@ -510,8 +497,8 @@ public class BzzProtocolTest {
         NetStore netStore2 = new NetStore(localStore2, hive2);
 
 
-        netStore1.start(peerAddress1.toPeerInfo(), null);
-        netStore2.start(peerAddress2.toPeerInfo(), null);
+        netStore1.start(peerAddress1, null);
+        netStore2.start(peerAddress2, null);
 
         BzzProtocol bzz1 = new BzzProtocol(netStore1);
         BzzProtocol bzz2 = new BzzProtocol(netStore2);
@@ -521,8 +508,8 @@ public class BzzProtocolTest {
 
         bzz1.setMessageSender(pipe.createIn1());
         bzz2.setMessageSender(pipe.createIn2());
-        bzz1.start(peerAddress2.toPeer());
-        bzz2.start(peerAddress1.toPeer());
+        bzz1.start();
+        bzz2.start();
 
         Key key = new Key(new byte[]{0x22, 0x33});
         Chunk chunk = new Chunk(key, new byte[] {0,0,0,0,0,0,0,0, 77, 88});

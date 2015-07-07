@@ -9,14 +9,21 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Used for several purposes
+ * - the main is to ask for a {@link org.ethereum.net.swarm.Chunk} with the specified hash
+ * - ask to send back {#PEERS} message with the known nodes nearest to the specified hash
+ * - initial request after handshake with zero hash. On this request the nearest known
+ *   neighbours are sent back with the {#PEERS} message.
+ */
 public class BzzRetrieveReqMessage extends BzzMessage {
 
     private Key key;
 
     // optional
-    long maxSize = -1;
-    long maxPeers = -1;
-    long timeout = -1;
+    private long maxSize = -1;
+    private long maxPeers = -1;
+    private long timeout = -1;
 
     public BzzRetrieveReqMessage(byte[] encoded) {
         super(encoded);
@@ -24,11 +31,6 @@ public class BzzRetrieveReqMessage extends BzzMessage {
 
     public BzzRetrieveReqMessage(Key key) {
         this.key = key;
-    }
-
-    public BzzRetrieveReqMessage(long id, Key key) {
-        this.key = key;
-        this.id = id;
     }
 
     @Override
@@ -54,20 +56,12 @@ public class BzzRetrieveReqMessage extends BzzMessage {
     }
 
     private void encode() {
-//        this.encoded = RLP.encodeList(RLP.encodeElement(key.getBytes()));
         List<byte[]> elems = new ArrayList<>();
         elems.add(RLP.encodeElement(key.getBytes()));
-//        elems.add(RLP.encodeElement(data));
-//        if (id >= 0) {
-            elems.add(RLP.encodeElement(ByteUtil.longToBytes(id)));
-//        }
-//        if (maxSize >= 0) {
-            elems.add(RLP.encodeElement(ByteUtil.longToBytes(maxSize)));
-//        }
-//        if (maxPeers >= 0) {
-            elems.add(RLP.encodeElement(ByteUtil.longToBytes(maxPeers)));
-            elems.add(RLP.encodeElement(ByteUtil.longToBytes(timeout)));
-//        }
+        elems.add(RLP.encodeInt((int) id));
+        elems.add(RLP.encodeInt((int) maxSize));
+        elems.add(RLP.encodeInt((int) maxPeers));
+        elems.add(RLP.encodeInt((int) timeout));
         this.encoded = RLP.encodeList(elems.toArray(new byte[0][]));
 
     }
@@ -76,10 +70,6 @@ public class BzzRetrieveReqMessage extends BzzMessage {
     public byte[] getEncoded() {
         if (encoded == null) encode();
         return encoded;
-    }
-
-    public BzzProtocol getPeer() {
-        return peer;
     }
 
     public Key getKey() {

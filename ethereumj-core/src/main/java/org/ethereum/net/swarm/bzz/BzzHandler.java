@@ -6,6 +6,8 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.shh.ShhMessage;
 import org.ethereum.net.shh.ShhMessageCodes;
+import org.ethereum.net.swarm.NetStore;
+import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +19,17 @@ import org.springframework.stereotype.Component;
  */
 @Component
 @Scope("prototype")
-public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage> {
+public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
+        implements Functional.Consumer<BzzMessage> {
 
-    public final static byte VERSION = 1;
+    public final static byte VERSION = 0;
     private MessageQueue msgQueue = null;
 
     private boolean active = false;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
+
+    BzzProtocol bzzProtocol;
 
     @Autowired
     WorldManager worldManager;
@@ -41,25 +46,24 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage> {
 
         if (!isActive()) return;
 
-        if (ShhMessageCodes.inRange(msg.getCommand().asByte()))
+        if (BzzMessageCodes.inRange(msg.getCommand().asByte()))
             logger.info("BzzHandler invoke: [{}]", msg.getCommand());
 
         worldManager.getListener().trace(String.format("BzzHandler invoke: [%s]", msg.getCommand()));
 
-        switch (msg.getCommand()) {
-            case STATUS:
-                break;
-            case STORE_REQUEST:
-                break;
-            case RETRIEVE_REQUEST:
-                break;
-            case PEERS:
-                break;
+        if (bzzProtocol != null) {
+            bzzProtocol.accept(msg);
         }
     }
 
     @Override
+    public void accept(BzzMessage bzzMessage) {
+        msgQueue.sendMessage(bzzMessage);
+    }
+
+    @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
         logger.error(cause.getCause().toString());
         super.exceptionCaught(ctx, cause);
         ctx.close();
@@ -74,7 +78,13 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage> {
     public void activate() {
         logger.info("BZZ protocol activated");
         worldManager.getListener().trace("BZZ protocol activated");
+        createBzzProtocol();
         this.active = true;
+    }
+
+    private void createBzzProtocol() {
+        bzzProtocol = new BzzProtocol(NetStore.getInstance());
+        bzzProtocol.setMessageSender(this);
     }
 
     public boolean isActive() {

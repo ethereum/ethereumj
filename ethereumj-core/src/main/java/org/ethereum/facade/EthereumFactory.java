@@ -3,6 +3,7 @@ package org.ethereum.facade;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.shh.ShhHandler;
 
+import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,7 @@ public class EthereumFactory {
 
         logger.info("capability eth version: [{}]", EthHandler.VERSION);
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
+        logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 
         context = new AnnotationConfigApplicationContext(clazz);
         return context.getBean(Ethereum.class);

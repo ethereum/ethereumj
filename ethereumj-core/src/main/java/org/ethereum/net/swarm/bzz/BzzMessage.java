@@ -1,30 +1,20 @@
 package org.ethereum.net.swarm.bzz;
 
-import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.message.Message;
-import org.ethereum.net.p2p.Peer;
-import org.ethereum.net.peerdiscovery.PeerInfo;
-import org.ethereum.net.rlpx.Node;
-import org.ethereum.net.swarm.Util;
-import org.ethereum.util.ByteUtil;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
-import org.spongycastle.util.encoders.Hex;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.Arrays;
-
+/**
+ * Base class for all BZZ messages
+ */
 public abstract class BzzMessage extends Message {
 
     // non-null for incoming messages
-    BzzProtocol peer;
-    long id = -1;
+    private BzzProtocol peer;
+    protected long id = -1;
 
-    public BzzMessage() {
+    protected BzzMessage() {
     }
 
-    public BzzMessage(byte[] encoded) {
+    protected BzzMessage(byte[] encoded) {
         super(encoded);
         decode();
     }
@@ -35,19 +25,25 @@ public abstract class BzzMessage extends Message {
 
     protected abstract void decode();
 
+    /**
+     * Returns the {@link BzzProtocol} associated with incoming message
+     */
     public BzzProtocol getPeer() {
         return peer;
     }
 
-    public void setPeer(BzzProtocol peer) {
-        this.peer = peer;
-    }
-
+    /**
+     * Message ID. Should be unique across all outgoing messages
+     */
     public long getId() {
         return id;
     }
 
-    public void setId(long id) {
+    void setPeer(BzzProtocol peer) {
+        this.peer = peer;
+    }
+
+    void setId(long id) {
         this.id = id;
     }
 }
