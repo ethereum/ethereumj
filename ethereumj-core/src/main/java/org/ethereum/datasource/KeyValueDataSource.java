@@ -7,11 +7,7 @@ import java.util.Set;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
-public interface KeyValueDataSource {
-
-    void init();
-
-    void setName(String name);
+public interface KeyValueDataSource extends DataSource {
 
     byte[] get(byte[] key);
 
@@ -22,6 +18,4 @@ public interface KeyValueDataSource {
     Set<byte[]> keys();
 
     void updateBatch(Map<byte[], byte[]> rows);
-
-    void close();
 }

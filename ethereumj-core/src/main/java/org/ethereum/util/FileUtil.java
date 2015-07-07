@@ -12,7 +12,7 @@ public class FileUtil {
                 if ((file.list()).length > 0) {
                     for(String s:file.list()){
                         //call deletion of file individually
-                        recursiveDelete(fileName + "\\" + s);
+                        recursiveDelete(fileName + System.getProperty("file.separator") + s);
                     }
                 }
             }
