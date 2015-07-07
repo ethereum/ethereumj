@@ -65,7 +65,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         /***     CALLDATALOAD  op   ***/
         /***     CALLDATACOPY  op   ***/
         /***     CALLDATASIZE  op   ***/
-        byte[] data = tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData();
+        byte[] data = tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY :( tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData() );
 
         /***    PREVHASH  op  ***/
         byte[] lastHash = lastBlock.getHash();

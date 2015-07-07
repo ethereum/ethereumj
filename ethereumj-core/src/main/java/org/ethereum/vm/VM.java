@@ -1144,19 +1144,6 @@ public class VM {
 
     public void play(Program program) {
         try {
-            // In case the program invoked by wire got
-            // transaction, this will be the gas cost,
-            // otherwise the call done by other contract
-            // charged by CALL op
-            if (program.invokeData.byTransaction()) {
-                program.spendGas(GasCost.TRANSACTION, "TRANSACTION");
-                int dataSize = program.invokeData.getDataSize().intValue();
-                int nonZeroesVals = program.invokeData.countNonZeroData();
-                int zeroVals = dataSize - nonZeroesVals;
-
-                program.spendGas(GasCost.TX_NO_ZERO_DATA * nonZeroesVals, "DATA");
-                program.spendGas(GasCost.TX_ZERO_DATA * zeroVals, "DATA");
-            }
 
             if (program.invokeData.byTestingSuite()) return;
 

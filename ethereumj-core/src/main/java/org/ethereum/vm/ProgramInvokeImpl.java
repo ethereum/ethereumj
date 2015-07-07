@@ -194,17 +194,6 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     }
 
 
-    @Override
-    public int countNonZeroData() {
-
-        int counter = 0;
-        for (byte aMsgData : msgData) {
-
-            if (aMsgData != 0) ++counter;
-        }
-        return counter;
-    }
-
     /*     PREVHASH op    */
     public DataWord getPrevHash() {
         return prevHash;

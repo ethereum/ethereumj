@@ -29,8 +29,6 @@ public interface ProgramInvoke {
 
     public byte[] getDataCopy(DataWord offsetData, DataWord lengthData);
 
-    public int countNonZeroData();
-
     public DataWord getPrevHash();
 
     public DataWord getCoinbase();
