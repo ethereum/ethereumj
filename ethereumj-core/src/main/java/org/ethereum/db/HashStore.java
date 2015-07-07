@@ -3,6 +3,8 @@ package org.ethereum.db;
 import org.ethereum.datasource.QueueDataSource;
 import org.ethereum.datasource.mapdb.MapDBQueueDataSource;
 
+import java.util.Collection;
+
 /**
  * @author Mikhail Kalinin
  * @since 07.07.2015
@@ -17,15 +19,19 @@ public class HashStore {
     }
 
     public void add(byte[] hash) {
-        hashes.offer(hash);
+        hashes.offerLast(hash);
     }
 
     public byte[] peek() {
-        return hashes.peek();
+        return hashes.peekFirst();
     }
 
     public byte[] poll() {
-        return hashes.poll();
+        return hashes.pollFirst();
+    }
+
+    public void addFirst(byte[] hash) {
+        hashes.offerFirst(hash);
     }
 
     public boolean isEmpty() {

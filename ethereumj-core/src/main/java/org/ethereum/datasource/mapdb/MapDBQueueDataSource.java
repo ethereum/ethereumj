@@ -2,12 +2,13 @@ package org.ethereum.datasource.mapdb;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.QueueDataSource;
+import org.mapdb.BTreeMap;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 import java.io.File;
-import java.util.Queue;
+import java.util.Map;
 
 import static java.lang.System.getProperty;
 
@@ -18,7 +19,7 @@ import static java.lang.System.getProperty;
 public class MapDBQueueDataSource implements QueueDataSource {
 
     private DB db;
-    private Queue<byte[]> queue;
+    private BTreeMap<Long, byte[]> map;
     private String name;
 
     @Override
@@ -31,10 +32,10 @@ public class MapDBQueueDataSource implements QueueDataSource {
                 .closeOnJvmShutdown()
                 .make();
 
-        this.queue = db.getQueue(name);
-        if(this.queue == null) {
-            this.queue = db.createQueue(name, Serializer.BYTE_ARRAY, true);
-        }
+        map = db.treeMapCreate(name)
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(Serializer.BYTE_ARRAY)
+                .makeOrGet();
     }
 
     @Override
@@ -48,22 +49,65 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
-    public boolean offer(byte[] e) {
-        return queue.offer(e);
+    public void offerFirst(byte[] e) {
+        if(map.isEmpty()) {
+            offerEmpty(e);
+        } else {
+            map.put(map.firstKey() - 1, e);
+        }
     }
 
     @Override
-    public byte[] poll() {
-        return queue.poll();
+    public byte[] peekFirst() {
+        if(map.isEmpty()) {
+            return null;
+        } else {
+            return map.firstEntry().getValue();
+        }
+    }
+
+    @Override
+    public byte[] pollFirst() {
+        if(map.isEmpty()) {
+            return null;
+        } else {
+            return map.pollFirstEntry().getValue();
+        }
+    }
+
+    @Override
+    public void offerLast(byte[] e) {
+        if(map.isEmpty()) {
+            offerEmpty(e);
+        } else {
+            map.put(map.lastKey() + 1, e);
+        }
+    }
+
+    @Override
+    public byte[] peekLast() {
+        if(map.isEmpty()) {
+            return null;
+        } else {
+            return map.lastEntry().getValue();
+        }
+    }
+
+    @Override
+    public byte[] pollLast() {
+        if(map.isEmpty()) {
+            return null;
+        } else {
+            return map.pollLastEntry().getValue();
+        }
     }
 
     @Override
     public boolean isEmpty() {
-        return queue.isEmpty();
+        return map.isEmpty();
     }
 
-    @Override
-    public byte[] peek() {
-        return queue.peek();
+    private void offerEmpty(byte[] e) {
+        map.put(0L, e);
     }
 }

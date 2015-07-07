@@ -32,7 +32,7 @@ public class HashStoreTest {
         }
     }
 
-    @Test
+    @Test // FIFO, add first
     public void test() throws InstantiationException, IllegalAccessException {
         BigInteger bi = new BigInteger(32, new Random());
         String testDb = "test_db_" + bi;
@@ -44,6 +44,8 @@ public class HashStoreTest {
             for(byte[] hash : hashes) {
                 hashStore.add(hash);
             }
+
+            // testing peek and poll
             assertArrayEquals(hashes.get(0), hashStore.peek());
             for(byte[] hash : hashes) {
                 assertArrayEquals(hash, hashStore.poll());
@@ -51,6 +53,18 @@ public class HashStoreTest {
             assertEquals(true, hashStore.isEmpty());
             assertNull(hashStore.peek());
             assertNull(hashStore.poll());
+
+            // testing addFirst
+            for(int i = 0; i < 10; i++) {
+                hashStore.add(hashes.get(i));
+            }
+            for(int i = 10; i < 20; i++) {
+                hashStore.addFirst(hashes.get(i));
+            }
+            for(int i = 19; i >= 10; i--) {
+                assertArrayEquals(hashes.get(i), hashStore.poll());
+            }
+
         } finally {
             hashStore.close();
             FileUtil.recursiveDelete(testDb);
