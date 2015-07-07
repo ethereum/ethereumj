@@ -1,5 +1,7 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.util.FileUtil;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -34,22 +36,24 @@ public class HashStoreTest {
     public void test() throws InstantiationException, IllegalAccessException {
         BigInteger bi = new BigInteger(32, new Random());
         String testDb = "test_db_" + bi;
+        SystemProperties.CONFIG.setDataBaseDir(testDb);
 
-        HashStore hashStore = new HashStore.Builder()
-                .withName(testDb)
-                .build();
+        HashStore hashStore = new HashStore.Builder().build();
 
-        for(byte[] hash : hashes) {
-            hashStore.add(hash);
+        try {
+            for(byte[] hash : hashes) {
+                hashStore.add(hash);
+            }
+            assertArrayEquals(hashes.get(0), hashStore.peek());
+            for(byte[] hash : hashes) {
+                assertArrayEquals(hash, hashStore.poll());
+            }
+            assertEquals(true, hashStore.isEmpty());
+            assertNull(hashStore.peek());
+            assertNull(hashStore.poll());
+        } finally {
+            hashStore.close();
+            FileUtil.recursiveDelete(testDb);
         }
-        assertArrayEquals(hashes.get(0), hashStore.peek());
-        for(byte[] hash : hashes) {
-            assertArrayEquals(hash, hashStore.poll());
-        }
-        assertEquals(true, hashStore.isEmpty());
-        assertNull(hashStore.peek());
-        assertNull(hashStore.poll());
-
-        hashStore.close();
     }
 }
