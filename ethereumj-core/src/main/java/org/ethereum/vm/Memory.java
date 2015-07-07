@@ -18,7 +18,7 @@ public class Memory implements ProgramTraceListenerAware {
     private static final int WORD_SIZE = 32;
 
     private List<byte[]> chunks = new LinkedList<>();
-    private long softSize;
+    private int softSize;
     private ProgramTraceListener traceListener;
 
     @Override
@@ -53,7 +53,7 @@ public class Memory implements ProgramTraceListenerAware {
         return data;
     }
 
-    public void write(long address, byte[] data, int dataSize, boolean limited) {
+    public void write(int address, byte[] data, int dataSize, boolean limited) {
 
         if (data.length < dataSize)
             dataSize = data.length;
@@ -61,13 +61,12 @@ public class Memory implements ProgramTraceListenerAware {
         if (!limited)
             extend(address, dataSize);
 
-
-        int chunkIndex = (int) (address / CHUNK_SIZE);
-        int chunkOffset = (int) (address % CHUNK_SIZE);
+        int chunkIndex = address / CHUNK_SIZE;
+        int chunkOffset = address % CHUNK_SIZE;
 
         int toCapture = 0;
         if (limited)
-            toCapture = (address + dataSize > softSize) ? (int) (softSize - address) : dataSize;
+            toCapture = (address + dataSize > softSize) ? softSize - address : dataSize;
         else
             toCapture = dataSize;
 
@@ -93,19 +92,19 @@ public class Memory implements ProgramTraceListenerAware {
         write(address, data, data.length, false);
     }
 
-    public void extend(long address, long size) {
+    public void extend(int address, int size) {
         if (size <= 0) return;
 
-        final long newSize = address + size;
+        final int newSize = address + size;
 
-        long toAllocate = newSize - internalSize();
+        int toAllocate = newSize - internalSize();
         if (toAllocate > 0) {
             addChunks((int) ceil((double) toAllocate / CHUNK_SIZE));
         }
 
         toAllocate = newSize - softSize;
         if (toAllocate > 0) {
-            toAllocate = (long) ceil((double) toAllocate / WORD_SIZE) * WORD_SIZE;
+            toAllocate = (int) ceil((double) toAllocate / WORD_SIZE) * WORD_SIZE;
             softSize += toAllocate;
 
             if (traceListener != null) traceListener.onMemoryExtend(toAllocate);
@@ -157,7 +156,7 @@ public class Memory implements ProgramTraceListenerAware {
         return memoryData.toString();
     }
 
-    public long size() {
+    public int size() {
         return softSize;
     }
 

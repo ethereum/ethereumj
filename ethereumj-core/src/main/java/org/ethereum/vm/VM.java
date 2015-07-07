@@ -182,11 +182,11 @@ public class VM {
 
                     //check to see if account does not exist and is not a precompiled contract
                     if (op != CALLCODE && !program.result.getRepository().isExist(callAddressWord.getLast20Bytes()))
-                      gasCost += GasCost.NEW_ACCT_CALL;
+                        gasCost += GasCost.NEW_ACCT_CALL;
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
                     if (!stack.get(stack.size() - 3).isZero() )
-                      gasCost += GasCost.VT_CALL;
+                        gasCost += GasCost.VT_CALL;
 
                     BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
@@ -240,7 +240,7 @@ public class VM {
                 long memWordsOld = (oldMemSize / 32);
                 //TODO #POC9 c_quadCoeffDiv = 512, this should be a constant, not magic number
                 long memGas = ( GasCost.MEMORY * memWords + memWords * memWords / 512)
-                              - (GasCost.MEMORY * memWordsOld + memWordsOld * memWordsOld / 512);
+                        - (GasCost.MEMORY * memWordsOld + memWordsOld * memWordsOld / 512);
                 program.spendGas(memGas, op.name() + " (memory usage)");
                 gasCost += memGas;
             }
@@ -963,7 +963,7 @@ public class VM {
                 }
                 break;
                 case MSIZE: {
-                    long memSize = program.getMemSize();
+                    int memSize = program.getMemSize();
                     DataWord wordMemSize = new DataWord(memSize);
 
                     if (logger.isInfoEnabled())

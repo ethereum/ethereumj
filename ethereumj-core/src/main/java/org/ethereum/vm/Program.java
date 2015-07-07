@@ -210,12 +210,12 @@ public class Program {
         }
     }
 
-    public long getMemSize() {
+    public int getMemSize() {
         return memory.size();
     }
 
     public void memorySave(DataWord addrB, DataWord value) {
-        memory.write(addrB.longValue(), value.getData(), value.getData().length, false);
+        memory.write(addrB.intValue(), value.getData(), value.getData().length, false);
     }
 
     public void memorySaveLimited(int addr, byte[] data, int dataSize) {
@@ -488,7 +488,7 @@ public class Program {
         }
 
         if (result != null &&
-            result.getException() != null) {
+                result.getException() != null) {
             gasLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(contextAddress),
                     result.getException());
@@ -1021,7 +1021,7 @@ public class Program {
      * used mostly for testing reasons
      */
     public byte[] getMemory() {
-        return memory.read(0, (int) memory.size());
+        return memory.read(0, memory.size());
     }
 
     /**
