@@ -39,10 +39,13 @@ public class HashStoreTest {
                 .withName(testDb)
                 .build();
 
-        hashes.forEach(hashStore::add);
-
+        for(byte[] hash : hashes) {
+            hashStore.add(hash);
+        }
         assertArrayEquals(hashes.get(0), hashStore.peek());
-        hashes.forEach((hash) -> assertArrayEquals(hash, hashStore.poll()));
+        for(byte[] hash : hashes) {
+            assertArrayEquals(hash, hashStore.poll());
+        }
         assertEquals(true, hashStore.isEmpty());
         assertNull(hashStore.peek());
         assertNull(hashStore.poll());
