@@ -6,11 +6,17 @@ package org.ethereum.datasource;
  */
 public interface QueueDataSource extends DataSource {
 
-    boolean offer(byte[] e);
+    void offerFirst(byte[] e);
 
-    byte[] peek();
+    byte[] peekFirst();
 
-    byte[] poll();
+    byte[] pollFirst();
+
+    void offerLast(byte[] e);
+
+    byte[] peekLast();
+
+    byte[] pollLast();
 
     boolean isEmpty();
 }
