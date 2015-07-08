@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -44,21 +47,18 @@ public class LevelDbDataSource implements KeyValueDataSource {
         options.writeBufferSize(10 * 1024);
         options.cacheSize(0);
 
-
         try {
             logger.debug("Opening database");
-            File fileLocation = new File(getProperty("user.dir") + "/" + CONFIG.databaseDir() + "/" + name);
-            File dbLocation = fileLocation.getParentFile();
-            if (!dbLocation.exists()) dbLocation.mkdirs();
+            Path dbPath = Paths.get(getProperty("user.dir"), CONFIG.databaseDir(), name);
+            Files.createDirectories(dbPath.getParent());
 
             logger.debug("Initializing new or existing database: '{}'", name);
-            db = factory.open(fileLocation, options);
+            db = factory.open(dbPath.toFile(), options);
         } catch (IOException ioe) {
             logger.error(ioe.getMessage(), ioe);
             throw new RuntimeException("Can't initialize database");
         }
     }
-
 
     public void destroyDB(File fileLocation) {
         logger.debug("Destroying existing database");
