@@ -8,7 +8,6 @@ import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 import java.io.File;
-import java.util.Map;
 
 import static java.lang.System.getProperty;
 
@@ -41,6 +40,11 @@ public class MapDBQueueDataSource implements QueueDataSource {
     @Override
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public String getName() {
+        return name;
     }
 
     @Override
