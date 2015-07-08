@@ -9,6 +9,8 @@ public interface DataSource {
     void init();
 
     void setName(String name);
+    
+    String getName();
 
     void close();
 }

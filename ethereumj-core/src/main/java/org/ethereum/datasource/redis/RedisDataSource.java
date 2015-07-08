@@ -54,6 +54,11 @@ public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValu
     }
 
     @Override
+    public String getName() {
+        return new String(getNameBytes());
+    }
+
+    @Override
     public byte[] get(byte[] key) {
         return super.get(key);
     }

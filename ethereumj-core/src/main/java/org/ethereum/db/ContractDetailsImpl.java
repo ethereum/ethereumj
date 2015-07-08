@@ -217,7 +217,7 @@ public class ContractDetailsImpl implements ContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
 
-            DataSourcePool.close("details-storage/" + toHexString(address));
+            DataSourcePool.closeDataSource("details-storage/" + toHexString(address));
         }
     }
 

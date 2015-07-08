@@ -52,6 +52,11 @@ public class HashMapDB implements KeyValueDataSource {
     }
 
     @Override
+    public String getName() {
+        return "in-memory";
+    }
+
+    @Override
     public Set<byte[]> keys() {
         Set<byte[]> keys = new HashSet<>();
         for (ByteArrayWrapper key : storage.keySet()){
