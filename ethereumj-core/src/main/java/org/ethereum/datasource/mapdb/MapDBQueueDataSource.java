@@ -49,7 +49,7 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
-    public void offerFirst(byte[] e) {
+    public synchronized void offerFirst(byte[] e) {
         if(map.isEmpty()) {
             offerEmpty(e);
         } else {
@@ -58,7 +58,7 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
-    public byte[] peekFirst() {
+    public synchronized byte[] peekFirst() {
         if(map.isEmpty()) {
             return null;
         } else {
@@ -67,7 +67,7 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
-    public byte[] pollFirst() {
+    public synchronized byte[] pollFirst() {
         if(map.isEmpty()) {
             return null;
         } else {
@@ -76,7 +76,7 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
-    public void offerLast(byte[] e) {
+    public synchronized void offerLast(byte[] e) {
         if(map.isEmpty()) {
             offerEmpty(e);
         } else {
@@ -85,7 +85,7 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
-    public byte[] peekLast() {
+    public synchronized byte[] peekLast() {
         if(map.isEmpty()) {
             return null;
         } else {
@@ -94,7 +94,7 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
-    public byte[] pollLast() {
+    public synchronized byte[] pollLast() {
         if(map.isEmpty()) {
             return null;
         } else {
