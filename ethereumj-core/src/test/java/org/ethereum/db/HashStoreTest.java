@@ -114,7 +114,7 @@ public class HashStoreTest {
         r2.join();
     }
 
-    @Test // big data
+    // @Test // big data
     public void test3() {
         int itemsCount = 1_000_000;
         int iterCount = 2;
