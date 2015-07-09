@@ -49,6 +49,11 @@ public class RedisDataSource extends RedisMap<byte[], byte[]> implements KeyValu
     }
 
     @Override
+    public boolean isAlive() {
+        return true;
+    }
+
+    @Override
     public void setName(String name) {
         super.setName(name);
     }
