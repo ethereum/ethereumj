@@ -1,18 +1,32 @@
 package org.ethereum.db;
 
+import org.ethereum.TestContext;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.util.FileUtil;
+import org.hibernate.SessionFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.AnnotationConfigContextLoader;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -22,9 +36,19 @@ import static org.junit.Assert.assertNull;
  * @author Mikhail Kalinin
  * @since 07.07.2015
  */
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 public class HashStoreTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
+
+    @Configuration
+    @ComponentScan(basePackages = "org.ethereum")
+    static class ContextConfiguration extends TestContext {
+    }
+
+    @Autowired
+    private ApplicationContext context;
 
     private List<byte[]> hashes = new ArrayList<>();
     private HashStore hashStore;
@@ -42,7 +66,8 @@ public class HashStoreTest {
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
         SystemProperties.CONFIG.setDataBaseDir(testDb);
-        hashStore = new HashStore.Builder().build();
+
+        hashStore = context.getBean(HashStore.class);
     }
 
     @After
@@ -87,6 +112,60 @@ public class HashStoreTest {
         Thread r2 = new Thread(new Reader(2));
         r2.start();
         r2.join();
+    }
+
+    @Test // big data
+    public void test3() {
+        int itemsCount = 1_000_000;
+        int iterCount = 2;
+        Random rnd = new Random(System.currentTimeMillis());
+        long start, end;
+
+        for(int i = 0; i < iterCount; i++) {
+            logger.info("ITERATION {}", i+1);
+            logger.info("====================");
+
+            start = System.currentTimeMillis();
+            for(int k = 0; k < itemsCount; k++) {
+                BigInteger val = new BigInteger(32*8, rnd);
+                hashStore.add(val.toByteArray());
+                if(k > 0 && k % (itemsCount / 20) == 0) {
+                    logger.info("writing: {}% done", 100 * k / itemsCount);
+                }
+            }
+            end = System.currentTimeMillis();
+            logger.info("writing: 100% done");
+
+            logger.info("writing: total time {} ms", end - start);
+            logger.info("writing: time per item {} ms", (end - start) / (float)itemsCount);
+
+            start = System.currentTimeMillis();
+            Set<Long> keys = hashStore.getKeys();
+            assertEquals(keys.size(), itemsCount);
+            end = System.currentTimeMillis();
+            logger.info("getKeys time: {} ms", end - start);
+
+            int part = itemsCount / 10;
+            for(int k = 0; k < itemsCount - part; k++) {
+                hashStore.poll();
+                if(k > 0 && k % (itemsCount / 20) == 0) {
+                    logger.info("reading: {}% done", 100 * k / itemsCount);
+                }
+            }
+            start = System.currentTimeMillis();
+            for(int k = 0; k < part; k++) {
+                hashStore.poll();
+                if(k % (itemsCount / 20) == 0) {
+                    logger.info("reading: {}% done", 100 * (itemsCount - part + k) / itemsCount);
+                }
+            }
+            end = System.currentTimeMillis();
+            logger.info("reading: 100% done");
+
+            logger.info("reading: total time {} ms", end - start);
+            logger.info("reading: time per item {} ms", (end - start) / (float)part);
+            logger.info("====================");
+        }
     }
 
     private class Reader implements Runnable {
