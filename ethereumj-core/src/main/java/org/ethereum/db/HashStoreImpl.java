@@ -22,17 +22,25 @@ public class HashStoreImpl implements HashStore {
     private Map<Long, byte[]> hashes;
     private List<Long> index;
 
+    @Override
     @PostConstruct
-    public void init() {
+    public void open() {
         hashes = mapDBFactory.createHashStoreMap();
         index = new ArrayList<>(hashes.keySet());
         sortIndex();
     }
 
+    @Override
+    public void close() {
+        mapDBFactory.destroy(hashes);
+    }
+
+    @Override
     public synchronized void add(byte[] hash) {
         addInner(false, hash);
     }
 
+    @Override
     public synchronized void addFirst(byte[] hash) {
         addInner(true, hash);
     }
@@ -42,6 +50,7 @@ public class HashStoreImpl implements HashStore {
         hashes.put(idx, hash);
     }
 
+    @Override
     public synchronized byte[] peek() {
         if(!index.isEmpty()) {
             Long idx = index.get(0);
@@ -51,6 +60,7 @@ public class HashStoreImpl implements HashStore {
         }
     }
 
+    @Override
     public synchronized byte[] poll() {
         if(!index.isEmpty()) {
             Long idx = index.get(0);
@@ -63,12 +73,9 @@ public class HashStoreImpl implements HashStore {
         }
     }
 
+    @Override
     public boolean isEmpty() {
         return index.isEmpty();
-    }
-
-    public void close() {
-        mapDBFactory.destroy(hashes);
     }
 
     @Override
