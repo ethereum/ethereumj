@@ -260,6 +260,7 @@ public class ContractDetailsImpl implements ContractDetails {
         result += address.length;
         result += code.length;
         result += storageTrie.getCache().getAllocatedMemorySize();
+        result += keysSize;
 
         return result;
     }

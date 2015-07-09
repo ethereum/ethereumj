@@ -19,6 +19,7 @@ public class MapDBDataSource implements KeyValueDataSource {
     private DB db;
     private Map<byte[], byte[]> map;
     private String name;
+    private boolean alive;
 
     @Override
     public void init() {
@@ -35,6 +36,13 @@ public class MapDBDataSource implements KeyValueDataSource {
                 .keySerializer(Serializer.BYTE_ARRAY)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .makeOrGet();
+        
+        alive = true;
+    }
+
+    @Override
+    public boolean isAlive() {
+        return alive;
     }
 
     @Override
@@ -97,5 +105,6 @@ public class MapDBDataSource implements KeyValueDataSource {
     @Override
     public void close() {
         db.close();
+        alive = false;
     }
 }

@@ -2,6 +2,7 @@ package org.ethereum.datasource;
 
 import org.slf4j.Logger;
 
+import javax.annotation.Nonnull;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -9,25 +10,27 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 public class DataSourcePool {
 
-    private static Logger logger = getLogger("db");
+    private static final Logger logger = getLogger("db");
     private static ConcurrentMap<String, DataSource> pool = new ConcurrentHashMap<>();
 
     public static KeyValueDataSource levelDbByName(String name) {
-        return (KeyValueDataSource) getDataSourceFromPool(name, new LevelDbDataSource(name));
+        return (KeyValueDataSource) getDataSourceFromPool(name, new LevelDbDataSource());
     }
 
-    private static DataSource getDataSourceFromPool(String name, DataSource dataSource) {
+    private static DataSource getDataSourceFromPool(String name, @Nonnull DataSource dataSource) {
+        dataSource.setName(name);
         DataSource result = pool.putIfAbsent(name, dataSource);
         if (result == null) {
-            synchronized (dataSource) {
-                dataSource.init();
-                result = dataSource;
-            }
-            logger.info("Data source '{}' created and added to pool.", dataSource.getName());
+            result = dataSource;
+            logger.debug("Data source '{}' created and added to pool.", name);
         } else {
-            logger.info("Data source '{}' returned from pool.", dataSource.getName());
+            logger.debug("Data source '{}' returned from pool.", name);
         }
         
+        synchronized (result) {
+            if (!result.isAlive()) result.init();
+        }
+
         return result;
     }
 
@@ -36,7 +39,7 @@ public class DataSourcePool {
         if (dataSource != null){
             synchronized (dataSource) {
                 dataSource.close();
-                logger.info("Data source '{}' closed and removed from pool.", dataSource.getName());
+                logger.debug("Data source '%s' closed and removed from pool.\n", dataSource.getName());
             }
         }
     }

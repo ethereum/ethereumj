@@ -25,8 +25,9 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    String name;
+    private String name;
     private DB db;
+    private boolean alive;
 
     public LevelDbDataSource() {
     }
@@ -37,7 +38,8 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     @Override
     public void init() {
-
+        if (isAlive()) return;
+        
         if (name == null) throw new NullPointerException("no name set to the db");
 
         Options options = new Options();
@@ -54,10 +56,17 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
             logger.debug("Initializing new or existing database: '{}'", name);
             db = factory.open(dbPath.toFile(), options);
+            
+            alive = true;
         } catch (IOException ioe) {
             logger.error(ioe.getMessage(), ioe);
             throw new RuntimeException("Can't initialize database");
         }
+    }
+
+    @Override
+    public boolean isAlive() {
+        return alive;
     }
 
     public void destroyDB(File fileLocation) {
@@ -124,9 +133,13 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     @Override
     public void close() {
+        if (!isAlive()) return;
+        
         try {
-            logger.info("Close db: {}", name);
+            logger.debug("Close db: {}", name);
             db.close();
+            
+            alive = false;
         } catch (IOException e) {
             logger.error("Failed to find the db file on the close: {} ", name);
         }
