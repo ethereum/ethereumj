@@ -252,7 +252,7 @@ public class SystemProperties {
 
     public List<String> peerCapabilities() {
         String capabilitiesList = prop.getProperty("peer.capabilities", DEFAULT_PROTOCOL_LIST);
-        return Arrays.asList(capabilitiesList.split(","));
+        return Arrays.asList(capabilitiesList.trim().split(" *, *"));
     }
 
     public boolean vmTrace() {

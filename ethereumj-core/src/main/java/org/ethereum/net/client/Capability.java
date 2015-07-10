@@ -1,5 +1,15 @@
 package org.ethereum.net.client;
 
+import org.ethereum.config.SystemProperties;
+import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.shh.ShhHandler;
+import org.ethereum.net.swarm.bzz.BzzHandler;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
+
 /**
  * The protocols and versions of those protocols that this peer support
  */
@@ -9,6 +19,29 @@ public class Capability implements Comparable<Capability> {
     public final static String ETH = "eth";
     public final static String SHH = "shh";
     public final static String BZZ = "bzz";
+
+    private static SortedMap<String, Capability> AllCaps = new TreeMap<>();
+
+    static {
+        AllCaps.put(ETH, new Capability(Capability.ETH, EthHandler.VERSION));
+        AllCaps.put(SHH, new Capability(Capability.SHH, ShhHandler.VERSION));
+        AllCaps.put(BZZ, new Capability(Capability.BZZ, BzzHandler.VERSION));
+    }
+
+    /**
+     * Gets the capabilities listed in 'peer.capabilities' config property
+     * sorted by their names.
+     */
+    public static List<Capability> getConfigCapabilities() {
+        List<Capability> ret = new ArrayList<>();
+        List<String> caps = SystemProperties.CONFIG.peerCapabilities();
+        for (Capability capability : AllCaps.values()) {
+            if (caps.contains(capability.getName())) {
+                ret.add(capability);
+            }
+        }
+        return ret;
+    }
 
     private String name;
     private byte version;
