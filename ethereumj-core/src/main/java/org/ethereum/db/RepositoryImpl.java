@@ -218,7 +218,12 @@ public class RepositoryImpl implements Repository {
     }
 
     public int getAllocatedMemorySize() {
-        return dds.getAllocatedMemorySize() + ((TrieImpl) worldState).getCache().getAllocatedMemorySize();
+        return doWithAccessControlling(new Functional.InvokeWrapperWithResult<Integer>() {
+            @Override
+            public Integer invoke() {
+                return dds.getAllocatedMemorySize() + ((TrieImpl) worldState).getCache().getAllocatedMemorySize();
+            }
+        });
     }
 
     @Override
@@ -533,8 +538,10 @@ public class RepositoryImpl implements Repository {
     private void doWithLockedAccess(Functional.InvokeWrapper wrapper) {
         lock.lock();
         try {
-            // waiting for access ...
             while (accessCounter.get() > 0) {
+                if (logger.isDebugEnabled()) {
+                    logger.debug("waiting for access ...");
+                }
                 try {
                     sleep(100);
                 } catch (InterruptedException e) {
@@ -550,6 +557,9 @@ public class RepositoryImpl implements Repository {
 
     public <R> R doWithAccessControlling(Functional.InvokeWrapperWithResult<R> wrapper) {
         while (lock.isLocked()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("waiting for lock releasing ...");
+            }
             try {
                 sleep(100);
             } catch (InterruptedException e) {

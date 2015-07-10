@@ -7,12 +7,8 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.List;
 import java.util.Scanner;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -30,7 +26,6 @@ public class BlockLoader {
 
         String fileSrc = CONFIG.blocksLoader();
         try {
-
             FileInputStream inputStream = null;
             inputStream = new FileInputStream(fileSrc);
             scanner = new Scanner(inputStream, "UTF-8");
@@ -68,8 +63,4 @@ public class BlockLoader {
         System.out.println(" * Done * ");
         System.exit(0);
     }
-
-
-
-
 }
