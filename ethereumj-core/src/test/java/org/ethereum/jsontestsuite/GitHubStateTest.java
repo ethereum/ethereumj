@@ -71,19 +71,6 @@ public class GitHubStateTest {
     public void stPreCompiledContracts() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("sec80");
-        excluded.add("CallEcrecover0_Gas2999");
-        excluded.add("CallRipemd160_4_gas719");
-        excluded.add("CallIdentity_1_nonzeroValue");
-        excluded.add("CallEcrecover0_NoGas");
-        excluded.add("CallSha256_1_nonzeroValue");
-        excluded.add("CallSha256_5");
-        excluded.add("CallRipemd160_0");
-        excluded.add("CallIdentity_5");
-        excluded.add("CallRipemd16gra0_5");
-        excluded.add("CallIdentity_4_gas17");
-        excluded.add("CallRipemd160_5");
-
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
