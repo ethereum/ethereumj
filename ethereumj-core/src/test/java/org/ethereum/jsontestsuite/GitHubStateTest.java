@@ -27,7 +27,7 @@ public class GitHubStateTest {
     public void stSingleTest() throws ParseException, IOException {
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "CallSha256_3");
+        GitHubJSONTestSuite.runStateTest(json, "CallRipemd160_5");
     }
 
     @Test
@@ -80,8 +80,9 @@ public class GitHubStateTest {
         excluded.add("CallSha256_5");
         excluded.add("CallRipemd160_0");
         excluded.add("CallIdentity_5");
-        excluded.add("CallRipemd160_5");
+        excluded.add("CallRipemd16gra0_5");
         excluded.add("CallIdentity_4_gas17");
+        excluded.add("CallRipemd160_5");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
