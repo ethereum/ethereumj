@@ -58,7 +58,7 @@ public class VM {
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger dumpLogger = LoggerFactory.getLogger("dump");
     private static BigInteger _32_ = BigInteger.valueOf(32);
-    private static String logString = "[{}]\t Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
+    private static String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
 
     private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
 
@@ -1037,7 +1037,7 @@ public class VM {
                     DataWord inSize = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        logger.info(logString, program.getPC(),
+                        logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                                 String.format("%-12s", op.name()),
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
@@ -1068,7 +1068,7 @@ public class VM {
                                 + " gas: " + gas.shortHex()
                                 + " inOff: " + inDataOffs.shortHex()
                                 + " inSize: " + inDataSize.shortHex();
-                        logger.info(logString, program.getPC(),
+                        logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                                 String.format("%-12s", op.name()),
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
@@ -1126,7 +1126,8 @@ public class VM {
 
             if (logger.isInfoEnabled() && !op.equals(CALL)
                     && !op.equals(CREATE))
-                logger.info(logString, stepBefore, String.format("%-12s",
+                logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
+                        String.format("%-12s",
                                 op.name()), program.getGas().longValue(),
                         program.invokeData.getCallDeep(), hint);
 
