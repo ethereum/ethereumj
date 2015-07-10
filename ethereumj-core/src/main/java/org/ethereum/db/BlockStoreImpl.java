@@ -62,7 +62,7 @@ public class BlockStoreImpl implements BlockStore {
     @Override
     @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
-    public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
+    public List<byte[]> getListHashesEndWith(byte[] hash, long qty){
 
         List<byte[]> hashes = new ArrayList<>();
 
@@ -74,22 +74,12 @@ public class BlockStoreImpl implements BlockStore {
                 createQuery("select hash from BlockVO where number <= :number and number >= :limit order by number desc").
                 setParameter("number", block.getNumber()).
                 setParameter("limit", block.getNumber() - qty).
-                setMaxResults(qty).list();
+                setMaxResults((int)qty).list();
 
         for (byte[] h : result)
             hashes.add(h);
 
         return hashes;
-    }
-
-    @Override
-    @Transactional
-    public void deleteBlocksSince(long number) {
-
-        sessionFactory.getCurrentSession().
-                createQuery("delete from BlockVO where number > :number").
-                setParameter("number", number).
-                executeUpdate();
     }
 
 
@@ -110,16 +100,6 @@ public class BlockStoreImpl implements BlockStore {
         }
 
         sessionFactory.getCurrentSession().persist(blockVO);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public BigInteger getTotalDifficultySince(long number) {
-
-        return (BigInteger) sessionFactory.getCurrentSession().
-                createQuery("select sum(cumulativeDifficulty) from BlockVO where number > :number").
-                setParameter("number", number).
-                uniqueResult();
     }
 
 
@@ -148,44 +128,6 @@ public class BlockStoreImpl implements BlockStore {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    @SuppressWarnings("unchecked")
-    public List<Block> getAllBlocks() {
-
-        List<BlockVO> result = sessionFactory.getCurrentSession().
-                createQuery("from BlockVO").list();
-
-        ArrayList<Block> blocks = new ArrayList<>();
-        for (BlockVO blockVO : result) {
-            blocks.add(new Block(blockVO.getRlp()));
-        }
-
-        return blocks;
-    }
-
-    @Override
-    @Transactional
-    public void reset() {
-        sessionFactory.getCurrentSession().
-                createQuery("delete from BlockVO").executeUpdate();
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
-
-        List result = sessionFactory.getCurrentSession().
-                createQuery("from TransactionReceiptVO where hash = :hash").
-                setParameter("hash", hash).list();
-
-        if (result.size() == 0) return null;
-        TransactionReceiptVO vo = (TransactionReceiptVO) result.get(0);
-
-        return new TransactionReceipt(vo.rlp);
-
-    }
-
-    @Override
     public void flush() {
     }
 
@@ -196,5 +138,5 @@ public class BlockStoreImpl implements BlockStore {
     @Override
     public void setSessionFactory(SessionFactory sessionFactory) {
     }
-    
+
 }

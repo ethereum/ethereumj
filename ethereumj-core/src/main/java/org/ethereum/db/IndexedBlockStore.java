@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class IndexedBlockStore {
+public class IndexedBlockStore{
 
     IndexedBlockStore cache;
     Map<Long, List<BlockInfo>> index;
@@ -26,6 +26,15 @@ public class IndexedBlockStore {
         this.blocks = blocks;
     }
 
+    public Block getBestBlock(){
+        return getChainBlockByNumber(getMaxNumber());
+    }
+
+    public byte[] getBlockHashByNumber(long blockNumber){
+        return getChainBlockByNumber(blockNumber).getHash(); // FIXME: can be improved by accessing the hash directly in the index
+    }
+
+
     public void flush(){
 
         for (byte[] hash : cache.blocks.keys()){
@@ -39,11 +48,11 @@ public class IndexedBlockStore {
     }
 
 
-    public void addBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
+    public void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
         if (cache == null)
             addInternalBlock(block, cummDifficulty, mainChain);
         else
-            cache.addBlock(block, cummDifficulty, mainChain);
+            cache.saveBlock(block, cummDifficulty, mainChain);
     }
 
     private void addInternalBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
@@ -164,11 +173,11 @@ public class IndexedBlockStore {
             return bestIndex - 1L;
     }
 
-    public List<byte[]> getNHashesEndWith(byte[] hash, long number){
+    public List<byte[]> getListHashesEndWith(byte[] hash, long number){
 
         List<byte[]> cachedHashes = new ArrayList<>();
         if (cache != null)
-           cachedHashes = cache.getNHashesEndWith(hash, number);
+           cachedHashes = cache.getListHashesEndWith(hash, number);
 
         byte[] rlp = blocks.get(hash);
         if (rlp == null) return cachedHashes;
@@ -184,8 +193,8 @@ public class IndexedBlockStore {
         return cachedHashes;
     }
 
-    public List<byte[]> getNHashesStartWith(long number, long maxBlocks){
 
+    public List<byte[]> getListHashesStartWith(long number, long maxBlocks){
 
         List<byte[]> result = new ArrayList<>();
 
@@ -205,7 +214,7 @@ public class IndexedBlockStore {
         maxBlocks -= i;
 
         if (cache != null)
-            result.addAll( cache.getNHashesStartWith(number, maxBlocks) );
+            result.addAll( cache.getListHashesStartWith(number, maxBlocks) );
 
         return result;
     }

@@ -45,9 +45,11 @@ public class LevelDbDataSource implements KeyValueDataSource {
         Options options = new Options();
         options.createIfMissing(true);
         options.compressionType(CompressionType.NONE);
-        options.blockSize(10 * 1024);
-        options.writeBufferSize(10 * 1024);
+        options.blockSize(10 * 1024 * 1024);
+        options.writeBufferSize(10 * 1024 * 1024);
         options.cacheSize(0);
+        options.paranoidChecks(true);
+        options.verifyChecksums(true);
 
         try {
             logger.debug("Opening database");

@@ -258,7 +258,7 @@ public class SystemProperties {
     private boolean boolProperty(String key, Boolean defaultValue) {
         return Boolean.parseBoolean(prop.getProperty(key, String.valueOf(defaultValue)));
     }
-    
+
     private int intProperty(String key, int defaultValue) {
         return Integer.parseInt(prop.getProperty(key, String.valueOf(defaultValue)));
     }
@@ -266,11 +266,11 @@ public class SystemProperties {
     public int detailsInMemoryStorageLimit() {
         return intProperty("details.inmemory.storage.limit", DEFAULT_DETAILS_INMEMORY_STORAGE_LIMIT);
     }
-    
+
     public int flushBlocksBatchSize() {
         return intProperty("flush.blocks.batch.size", DEFAULT_FLUSH_BATCH_SIZE);
     }
-    
+
     public int flushBlocksRepoSize() {
         return intProperty("flush.blocks.repo.size", DEFAULT_FLUSH_REPO_SIZE);
     }

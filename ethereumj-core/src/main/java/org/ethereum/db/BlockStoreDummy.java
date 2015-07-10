@@ -33,23 +33,12 @@ public class BlockStoreDummy implements BlockStore {
     }
 
     @Override
-    public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
+    public List<byte[]> getListHashesEndWith(byte[] hash, long qty) {
         return null;
-    }
-
-    @Override
-    public void deleteBlocksSince(long number) {
-
     }
 
     @Override
     public void saveBlock(Block block, List<TransactionReceipt> receipts) {
-
-    }
-
-    @Override
-    public BigInteger getTotalDifficultySince(long number) {
-        return null;
     }
 
     @Override
@@ -62,20 +51,6 @@ public class BlockStoreDummy implements BlockStore {
         return null;
     }
 
-    @Override
-    public List<Block> getAllBlocks() {
-        return null;
-    }
-
-    @Override
-    public void reset() {
-
-    }
-
-    @Override
-    public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
-        return null;
-    }
 
     @Override
     public void flush() {
@@ -88,5 +63,5 @@ public class BlockStoreDummy implements BlockStore {
     @Override
     public void setSessionFactory(SessionFactory sessionFactory) {
     }
-    
+
 }
