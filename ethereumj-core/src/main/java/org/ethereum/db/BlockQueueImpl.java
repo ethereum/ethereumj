@@ -27,7 +27,8 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public void open() {
         blocks = mapDBFactory.createBlockQueueMap();
-        index = new ArrayList<>();
+        index = new ArrayList<>(blocks.keySet());
+        sortIndex();
     }
 
     @Override
@@ -43,14 +44,14 @@ public class BlockQueueImpl implements BlockQueue {
             numbers.add(b.getNumber());
         }
         index.addAll(numbers);
-        sort();
+        sortIndex();
     }
 
     @Override
     public synchronized void add(Block block) {
         blocks.put(block.getNumber(), block);
         index.add(block.getNumber());
-        sort();
+        sortIndex();
     }
 
     @Override
@@ -86,7 +87,7 @@ public class BlockQueueImpl implements BlockQueue {
         return index.isEmpty();
     }
 
-    private void sort() {
+    private void sortIndex() {
         Collections.sort(index);
     }
 }

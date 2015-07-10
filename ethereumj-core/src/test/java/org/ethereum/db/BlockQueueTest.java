@@ -88,10 +88,15 @@ public class BlockQueueTest extends AbstractSpringTest {
 
         blockQueue.poll();
 
-        // testing: addAll(), poll()
+        // testing: addAll(), close(), open()
         blockQueue.addAll(blocks);
+
+        blockQueue.close();
+        blockQueue.open();
+
         assertEquals(blocks.size(), blockQueue.size());
 
+        // testing: poll()
         long prevNumber = -1;
         for(int i = 0; i < blocks.size(); i++) {
             block = blockQueue.poll();
