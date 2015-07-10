@@ -1,11 +1,16 @@
 package org.ethereum.net.swarm;
 
 import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.table.NodeEntry;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
+import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.swarm.bzz.BzzPeersMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
 import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.hibernate.internal.util.collections.IdentitySet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
@@ -16,6 +21,7 @@ import java.util.*;
  * Created by Anton Nashatyrev on 18.06.2015.
  */
 public class Hive {
+    private final static Logger LOG = LoggerFactory.getLogger("net.bzz");
 
     private PeerAddress thisAddress;
     protected NodeTable nodeTable;
@@ -30,10 +36,15 @@ public class Hive {
     public void start() {}
     public void stop() {}
 
+    public PeerAddress getSelfAddress() {
+        return thisAddress;
+    }
+
     public void addPeer(BzzProtocol peer) {
         Node node = peer.getNode().toNode();
         nodeTable.addNode(node);
         connectedPeers.put(node, peer);
+        LOG.info("Hive added a new peer: " + peer);
         peersAdded();
     }
 
@@ -69,6 +80,9 @@ public class Hive {
             if (peer != null) {
                 ret.add(peer);
                 if (--maxCount == 0) break;
+            } else {
+                LOG.info("Hive connects to node " + node);
+                NetStore.getInstance().worldManager.getActivePeer().connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
             }
         }
         return ret;
@@ -83,6 +97,7 @@ public class Hive {
         for (PeerAddress peerAddress : req.getPeers()) {
             nodeTable.addNode(peerAddress.toNode());
         }
+        LOG.debug("Hive added new nodes: " + req.getPeers());
         peersAdded();
     }
 
@@ -90,8 +105,22 @@ public class Hive {
         for (HiveTask task : new ArrayList<>(hiveTasks)) {
             if (!task.peersAdded()) {
                 hiveTasks.remove(task);
+                LOG.debug("HiveTask removed from queue: " + task);
             }
         }
+    }
+
+    /**
+     * For testing
+     */
+    public Map<Node, BzzProtocol> getAllEntries() {
+        Map<Node, BzzProtocol> ret = new LinkedHashMap<>();
+        for (NodeEntry entry : nodeTable.getAllNodes()) {
+            Node node = entry.getNode();
+            BzzProtocol bzz = connectedPeers.get(node);
+            ret.put(node, bzz);
+        }
+        return ret;
     }
 
     /**
@@ -105,6 +134,7 @@ public class Hive {
      */
     public void addTask(HiveTask t) {
         if (t.peersAdded()) {
+            LOG.debug("Added a HiveTask to queue: " + t);
             hiveTasks.add(t);
         }
     }
@@ -127,6 +157,11 @@ public class Hive {
             this.maxPeers = maxPeers;
         }
 
+        /**
+         * Notifies the task that new peers were connected.
+         * @return true if the task wants to wait further for another peers
+         * false if the task is completed
+         */
         public boolean peersAdded() {
             if (Util.curTime() > expireTime) return false;
             Collection<BzzProtocol> peers = getPeers(targetKey, maxPeers);

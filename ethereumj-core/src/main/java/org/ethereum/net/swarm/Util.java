@@ -86,6 +86,13 @@ public class Util {
         return ret.toString();
     }
 
+    public static String align(String s, char fillChar, int targetLen, boolean alignRight) {
+        if (targetLen <= s.length()) return s;
+        String alignString = repeat("" + fillChar, targetLen - s.length());
+        return alignRight ? alignString + s : s + alignString;
+
+    }
+
     public static String ipBytesToString(byte[] ipAddr) {
         StringBuilder sip = new StringBuilder();
         for (int i = 0; i < ipAddr.length; i++) {

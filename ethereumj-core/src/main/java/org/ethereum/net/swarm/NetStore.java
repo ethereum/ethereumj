@@ -1,12 +1,20 @@
 package org.ethereum.net.swarm;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.swarm.bzz.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The main logic of communicating with BZZ peers.
@@ -17,35 +25,52 @@ import java.util.concurrent.Future;
  *
  * Created by Anton Nashatyrev on 18.06.2015.
  */
+@Component
 public class NetStore implements ChunkStore {
     private static NetStore INST;
 
     public synchronized static NetStore getInstance() {
-        if (INST == null) {
-            LocalStore localStore = new LocalStore(new MemStore(), new MemStore());
-            PeerAddress peerAddress = new PeerAddress(new byte[] {127,0,0,1}, 9999, HashUtil.sha3(new byte[] {0}));
-            Hive hive = new Hive(peerAddress);
-            INST = new NetStore(localStore, hive);
-            INST.start(peerAddress, null);
-        }
         return INST;
     }
 
-    private final int requesterCount = 3;
-    private final int maxStorePeers = 3;
-    private final int maxSearchPeers = 6;
-    private final int timeout = 600 * 1000;
+    @Autowired
+    WorldManager worldManager;
+
+
+    public static PeerAddress createSelfAddress() {
+        return new PeerAddress(new byte[] {127,0,0,1}, CONFIG.listenPort(), getSelfNodeId());
+    }
+
+    public static byte[] getSelfNodeId() {
+        ECKey myKey = ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress();
+        byte[] nodeIdWithFormat = myKey.getPubKey();
+        byte[] nodeId = new byte[nodeIdWithFormat.length - 1];
+        System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+        return nodeId;
+    }
+
+    public int requesterCount = 3;
+    public int maxStorePeers = 3;
+    public int maxSearchPeers = 6;
+    public int timeout = 600 * 1000;
 
     private LocalStore localStore;
     private Hive hive;
     private PeerAddress selfAddress;
+
+    public NetStore() {
+        this(new LocalStore(new MemStore(), new MemStore()), new Hive(createSelfAddress()));
+        start(hive.getSelfAddress());
+        // FIXME bad dirty hack to workaround Spring DI machinery
+        INST = this;
+    }
 
     public NetStore(LocalStore localStore, Hive hive) {
         this.localStore = localStore;
         this.hive = hive;
     }
 
-    public void start(PeerAddress self, Object connectListener /* ? */) {
+    public void start(PeerAddress self) {
         this.selfAddress = self;
         hive.start();
     }
@@ -278,7 +303,7 @@ public class NetStore implements ChunkStore {
 //        }
         Key key = req.getKey();
         if (key.isZero()) {
-            key = req.getPeer().getNode().getAddrKey();
+            key = new Key(req.getPeer().getNode().getId()); // .getAddrKey();
         }
         Collection<PeerAddress> nodes = hive.getNodes(key, maxSearchPeers);
         BzzPeersMessage msg = new BzzPeersMessage(new ArrayList<>(nodes), timeout, req.getKey(), req.getId());

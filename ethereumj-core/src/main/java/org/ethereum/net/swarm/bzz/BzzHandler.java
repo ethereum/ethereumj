@@ -4,8 +4,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
-import org.ethereum.net.shh.ShhMessage;
-import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.NetStore;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
@@ -33,6 +31,9 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
 
     @Autowired
     WorldManager worldManager;
+
+    @Autowired
+    NetStore netStore;
 
     public BzzHandler() {
     }
@@ -83,8 +84,9 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
     }
 
     private void createBzzProtocol() {
-        bzzProtocol = new BzzProtocol(NetStore.getInstance());
+        bzzProtocol = new BzzProtocol(netStore /*NetStore.getInstance()*/);
         bzzProtocol.setMessageSender(this);
+        bzzProtocol.start();
     }
 
     public boolean isActive() {
