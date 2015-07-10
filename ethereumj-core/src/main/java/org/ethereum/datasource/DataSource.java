@@ -6,9 +6,13 @@ package org.ethereum.datasource;
  */
 public interface DataSource {
 
-    void init();
-
     void setName(String name);
 
+    String getName();
+
+    void init();
+
+    boolean isAlive();
+    
     void close();
 }

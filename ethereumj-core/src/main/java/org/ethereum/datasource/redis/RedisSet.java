@@ -23,7 +23,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Integer>() {
             @Override
             public Integer apply(Jedis jedis) {
-                return jedis.scard(getName()).intValue();
+                return jedis.scard(getNameBytes()).intValue();
             }
         });
     }
@@ -38,7 +38,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.sismember(getName(), serialize((T) o));
+                return jedis.sismember(getNameBytes(), serialize((T) o));
             }
         });
     }
@@ -52,7 +52,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         Set<byte[]> members = pooledWithResult(new Function<Jedis, Set<byte[]>>() {
             @Override
             public Set<byte[]> apply(Jedis jedis) {
-                return jedis.smembers(getName());
+                return jedis.smembers(getNameBytes());
             }
         });
         return deserialize(members);
@@ -88,7 +88,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.sadd(getName(), serialize(c)) == c.size();
+                return jedis.sadd(getNameBytes(), serialize(c)) == c.size();
             }
         });
     }
@@ -101,7 +101,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
                 byte[] tempName = temporaryName();
                 try {
                     jedis.sadd(tempName, serialize(c));
-                    return jedis.scard(getName()) != jedis.sinterstore(getName(), getName(), tempName);
+                    return jedis.scard(getNameBytes()) != jedis.sinterstore(getNameBytes(), getNameBytes(), tempName);
                 } finally {
                     jedis.del(tempName);
                 }
@@ -114,7 +114,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         return CollectionUtils.isEmpty(c) || pooledWithResult(new Function<Jedis, Boolean>() {
             @Override
             public Boolean apply(Jedis jedis) {
-                return jedis.srem(getName(), serialize(c)) == c.size();
+                return jedis.srem(getNameBytes(), serialize(c)) == c.size();
             }
         });
     }
@@ -124,7 +124,7 @@ public class RedisSet<T> extends RedisStorage<T> implements Set<T> {
         pooled(new Consumer<Jedis>() {
             @Override
             public void accept(Jedis jedis) {
-                jedis.del(getName());
+                jedis.del(getNameBytes());
             }
         });
     }

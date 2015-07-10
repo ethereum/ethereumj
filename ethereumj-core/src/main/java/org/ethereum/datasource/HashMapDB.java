@@ -47,8 +47,18 @@ public class HashMapDB implements KeyValueDataSource {
     }
 
     @Override
+    public boolean isAlive() {
+        return true;
+    }
+
+    @Override
     public void setName(String name) {
 
+    }
+
+    @Override
+    public String getName() {
+        return "in-memory";
     }
 
     @Override

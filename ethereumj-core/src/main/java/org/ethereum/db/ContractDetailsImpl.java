@@ -217,7 +217,7 @@ public class ContractDetailsImpl implements ContractDetails {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
 
-            DataSourcePool.close("details-storage/" + toHexString(address));
+            DataSourcePool.closeDataSource("details-storage/" + toHexString(address));
         }
     }
 
@@ -260,6 +260,7 @@ public class ContractDetailsImpl implements ContractDetails {
         result += address.length;
         result += code.length;
         result += storageTrie.getCache().getAllocatedMemorySize();
+        result += keysSize;
 
         return result;
     }

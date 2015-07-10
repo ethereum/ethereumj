@@ -8,7 +8,6 @@ import org.mapdb.DBMaker;
 import org.mapdb.Serializer;
 
 import java.io.File;
-import java.util.Map;
 
 import static java.lang.System.getProperty;
 
@@ -21,6 +20,7 @@ public class MapDBQueueDataSource implements QueueDataSource {
     private DB db;
     private BTreeMap<Long, byte[]> map;
     private String name;
+    private boolean alive;
 
     @Override
     public void init() {
@@ -36,6 +36,13 @@ public class MapDBQueueDataSource implements QueueDataSource {
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .makeOrGet();
+
+        alive = true;
+    }
+
+    @Override
+    public boolean isAlive() {
+        return alive;
     }
 
     @Override
@@ -44,8 +51,14 @@ public class MapDBQueueDataSource implements QueueDataSource {
     }
 
     @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
     public void close() {
         db.close();
+        alive = false;
     }
 
     @Override
