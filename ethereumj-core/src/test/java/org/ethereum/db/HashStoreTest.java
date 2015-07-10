@@ -1,22 +1,15 @@
 package org.ethereum.db;
 
-import org.ethereum.TestContext;
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.test.context.support.AnnotationConfigContextLoader;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -32,19 +25,9 @@ import static org.junit.Assert.assertNull;
  * @author Mikhail Kalinin
  * @since 07.07.2015
  */
-@RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(loader = AnnotationConfigContextLoader.class)
 public class HashStoreTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
-
-    @Configuration
-    @ComponentScan(basePackages = "org.ethereum")
-    static class ContextConfiguration extends TestContext {
-    }
-
-    @Autowired
-    private ApplicationContext context;
 
     private List<byte[]> hashes = new ArrayList<>();
     private HashStore hashStore;
@@ -63,7 +46,10 @@ public class HashStoreTest {
         testDb = "test_db_" + bi;
         SystemProperties.CONFIG.setDataBaseDir(testDb);
 
-        hashStore = context.getBean(HashStore.class);
+        MapDBFactory mapDBFactory = new MapDBFactoryImpl();
+        hashStore = new HashStoreImpl();
+        ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
+        hashStore.open();
     }
 
     @After
@@ -80,7 +66,7 @@ public class HashStoreTest {
 
         // testing: closing and opening again
         hashStore.close();
-        hashStore = context.getBean(HashStore.class);
+        hashStore.open();
 
         // testing: peek() and poll()
         assertArrayEquals(hashes.get(0), hashStore.peek());

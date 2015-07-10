@@ -1,29 +1,20 @@
 package org.ethereum.db;
 
 import org.ethereum.datasource.mapdb.MapDBFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
  * @author Mikhail Kalinin
  * @since 07.07.2015
  */
-@Component
-@Scope("prototype")
 public class HashStoreImpl implements HashStore {
 
-    @Autowired
     private MapDBFactory mapDBFactory;
 
     private Map<Long, byte[]> hashes;
     private List<Long> index;
 
-    @Override
-    @PostConstruct
     public void open() {
         hashes = mapDBFactory.createHashStoreMap();
         index = new ArrayList<>(hashes.keySet());
@@ -100,5 +91,9 @@ public class HashStoreImpl implements HashStore {
 
     private void sortIndex() {
         Collections.sort(index);
+    }
+
+    public void setMapDBFactory(MapDBFactory mapDBFactory) {
+        this.mapDBFactory = mapDBFactory;
     }
 }
