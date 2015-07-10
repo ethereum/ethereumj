@@ -82,7 +82,11 @@ public class HashStoreTest {
             hashStore.add(hash);
         }
 
-        // testing peek and poll
+        // testing: closing and opening again
+        hashStore.close();
+        hashStore = context.getBean(HashStore.class);
+
+        // testing: peek() and poll()
         assertArrayEquals(hashes.get(0), hashStore.peek());
         for(byte[] hash : hashes) {
             assertArrayEquals(hash, hashStore.poll());
@@ -91,7 +95,7 @@ public class HashStoreTest {
         assertNull(hashStore.peek());
         assertNull(hashStore.poll());
 
-        // testing addFirst
+        // testing: addFirst()
         for(int i = 0; i < 10; i++) {
             hashStore.add(hashes.get(i));
         }

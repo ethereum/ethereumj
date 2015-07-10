@@ -6,10 +6,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author Mikhail Kalinin
@@ -28,7 +25,8 @@ public class HashStoreImpl implements HashStore {
     @PostConstruct
     public void init() {
         hashes = mapDBFactory.createHashStoreMap();
-        index = new ArrayList<>();
+        index = new ArrayList<>(hashes.keySet());
+        sortIndex();
     }
 
     public synchronized void add(byte[] hash) {
@@ -91,5 +89,9 @@ public class HashStoreImpl implements HashStore {
             index.add(idx);
         }
         return idx;
+    }
+
+    private void sortIndex() {
+        Collections.sort(index);
     }
 }
