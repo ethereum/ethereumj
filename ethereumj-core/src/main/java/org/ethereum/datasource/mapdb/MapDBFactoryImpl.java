@@ -1,6 +1,7 @@
 package org.ethereum.datasource.mapdb;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Block;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.mapdb.DB;
 import org.mapdb.DBMaker;
@@ -17,6 +18,7 @@ import static java.lang.System.getProperty;
 public class MapDBFactoryImpl implements MapDBFactory {
 
     private final static String HASH_STORE_NAME = "hash_store";
+    private final static String BLOCK_QUEUE_NAME = "block_queue";
 
     private Map<Integer, DB> allocated = new HashMap<>();
 
@@ -31,6 +33,17 @@ public class MapDBFactoryImpl implements MapDBFactory {
         Map<Long, byte[]> map = db.hashMapCreate(HASH_STORE_NAME)
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(Serializer.BYTE_ARRAY)
+                .makeOrGet();
+        allocate(map, db);
+        return map;
+    }
+
+    @Override
+    public Map<Long, Block> createBlockQueueMap() {
+        DB db = createDB(BLOCK_QUEUE_NAME);
+        Map<Long, Block> map = db.hashMapCreate(BLOCK_QUEUE_NAME)
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(Serializers.BLOCK)
                 .makeOrGet();
         allocate(map, db);
         return map;
