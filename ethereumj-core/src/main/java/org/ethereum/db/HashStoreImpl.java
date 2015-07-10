@@ -12,17 +12,13 @@ import java.util.*;
  * @author Mikhail Kalinin
  * @since 07.07.2015
  */
-@Component
-@Scope("prototype")
 public class HashStoreImpl implements HashStore {
 
-    @Autowired
     private MapDBFactory mapDBFactory;
 
     private Map<Long, byte[]> hashes;
     private List<Long> index;
 
-    @PostConstruct
     public void init() {
         hashes = mapDBFactory.createHashStoreMap();
         index = new ArrayList<>(hashes.keySet());
@@ -93,5 +89,9 @@ public class HashStoreImpl implements HashStore {
 
     private void sortIndex() {
         Collections.sort(index);
+    }
+
+    public void setMapDBFactory(MapDBFactory mapDBFactory) {
+        this.mapDBFactory = mapDBFactory;
     }
 }
