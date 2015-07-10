@@ -6,6 +6,7 @@ import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,7 +101,8 @@ public class HashStoreTest {
         r2.join();
     }
 
-    // @Test // big data
+    @Ignore("long stress test")
+    @Test // big data
     public void test3() {
         int itemsCount = 1_000_000;
         int iterCount = 2;
