@@ -1125,6 +1125,7 @@ public class VM {
             program.setPreviouslyExecutedOp(op.val());
 
             if (logger.isInfoEnabled() && !op.equals(CALL)
+                    && !op.equals(CALLCODE)
                     && !op.equals(CREATE))
                 logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                         String.format("%-12s",
