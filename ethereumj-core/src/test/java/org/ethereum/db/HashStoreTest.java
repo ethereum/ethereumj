@@ -6,6 +6,7 @@ import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +48,9 @@ public class HashStoreTest {
         SystemProperties.CONFIG.setDataBaseDir(testDb);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
-        HashStoreImpl hashStore = new HashStoreImpl();
-        hashStore.setMapDBFactory(mapDBFactory);
-        hashStore.init();
-        this.hashStore = hashStore;
+        hashStore = new HashStoreImpl();
+        ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
+        hashStore.open();
     }
 
     @After
@@ -67,7 +67,7 @@ public class HashStoreTest {
 
         // testing: closing and opening again
         hashStore.close();
-        ((HashStoreImpl)hashStore).init();
+        hashStore.open();
 
         // testing: peek() and poll()
         assertArrayEquals(hashes.get(0), hashStore.peek());
@@ -101,7 +101,8 @@ public class HashStoreTest {
         r2.join();
     }
 
-    // @Test // big data
+    @Ignore("long stress test")
+    @Test // big data
     public void test3() {
         int itemsCount = 1_000_000;
         int iterCount = 2;

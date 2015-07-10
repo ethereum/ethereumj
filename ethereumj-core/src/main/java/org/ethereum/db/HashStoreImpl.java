@@ -1,11 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.datasource.mapdb.MapDBFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 /**
@@ -19,16 +15,24 @@ public class HashStoreImpl implements HashStore {
     private Map<Long, byte[]> hashes;
     private List<Long> index;
 
-    public void init() {
+    @Override
+    public void open() {
         hashes = mapDBFactory.createHashStoreMap();
         index = new ArrayList<>(hashes.keySet());
         sortIndex();
     }
 
+    @Override
+    public void close() {
+        mapDBFactory.destroy(hashes);
+    }
+
+    @Override
     public synchronized void add(byte[] hash) {
         addInner(false, hash);
     }
 
+    @Override
     public synchronized void addFirst(byte[] hash) {
         addInner(true, hash);
     }
@@ -38,6 +42,7 @@ public class HashStoreImpl implements HashStore {
         hashes.put(idx, hash);
     }
 
+    @Override
     public synchronized byte[] peek() {
         if(!index.isEmpty()) {
             Long idx = index.get(0);
@@ -47,6 +52,7 @@ public class HashStoreImpl implements HashStore {
         }
     }
 
+    @Override
     public synchronized byte[] poll() {
         if(!index.isEmpty()) {
             Long idx = index.get(0);
@@ -59,12 +65,9 @@ public class HashStoreImpl implements HashStore {
         }
     }
 
+    @Override
     public boolean isEmpty() {
         return index.isEmpty();
-    }
-
-    public void close() {
-        mapDBFactory.destroy(hashes);
     }
 
     @Override
