@@ -14,6 +14,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static java.lang.Math.min;
+
 /**
  * The class is the lowest level right above the network layer.
  * Responsible for BZZ handshaking, brokering inbound messages
@@ -171,8 +173,10 @@ public class BzzProtocol implements Functional.Consumer<BzzMessage> {
     }
 
     public static String addressToShortString(PeerAddress addr) {
-        return Hex.toHexString(addr.getId()).substring(0,8) + "@" +
-                Util.ipBytesToString(addr.getIp()) + ":" + addr.getPort();
+        if (addr == null) return "<null>";
+        String s = Hex.toHexString(addr.getId());
+        s = s.substring(0, min(8, s.length()));
+        return s + "@" + Util.ipBytesToString(addr.getIp()) + ":" + addr.getPort();
     }
 
     @Override

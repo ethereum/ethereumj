@@ -4,6 +4,7 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.bzz.BzzMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
 import org.ethereum.net.swarm.bzz.PeerAddress;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Functional;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.junit.Assert;
@@ -14,6 +15,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.function.Predicate;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 
@@ -24,23 +26,34 @@ public class BzzProtocolTest {
 
     public static class FilterPrinter extends PrintWriter {
         String filter;
+        Predicate<String> pFilter;
         public FilterPrinter(OutputStream out) {
             super(out, true);
         }
 
         @Override
         public void println(String x) {
-            if (filter == null || x.contains(filter)) {
+            if (pFilter == null || pFilter.test(x)) {
+//            if (filter == null || x.contains(filter)) {
                 super.println(x);
             }
         }
 
-        public void setFilter(String filter) {
-            this.filter = filter;
+        public void setFilter(final String filter) {
+            pFilter = new Predicate<String>() {
+                @Override
+                public boolean test(String s) {
+                    return s.contains(filter);
+                }
+            };
+        }
+
+        public void setFilter(Predicate<String> pFilter) {
+            this.pFilter = pFilter;
         }
     }
 
-    static FilterPrinter stdout = new FilterPrinter(System.err);
+    static FilterPrinter stdout = new FilterPrinter(System.out);
 
     public static class TestPipe {
         protected Functional.Consumer<BzzMessage> out1;
@@ -267,7 +280,7 @@ public class BzzProtocolTest {
             hive = new SimpleHive(peerAddress).setThisPeer(this);
             netStore = new NetStore(localStore, hive);
 
-            netStore.start(peerAddress, null);
+            netStore.start(peerAddress);
 
             staticMap.put(peerAddress, this);
         }
@@ -343,18 +356,63 @@ public class BzzProtocolTest {
         Assert.assertArrayEquals(chunk.getData(), chunk1.getData());
     }
 
+    private String dumpPeers(TestPeer[] allPeers, Key key) {
+        String s = "Name\tChunks\tPeers\tMsgIn\tMsgOut\n";
+        for (TestPeer peer : allPeers) {
+            s += (peer.name + "\t" +
+                    (int)((Statter.SimpleStatter)((MemStore) peer.localStore.memStore).statCurChunks).getLast() + "\t" +
+                    ((Statter.SimpleStatter)(peer.netStore.statHandshakes)).getCount() + "\t" +
+                    ((Statter.SimpleStatter)(peer.netStore.statInMsg)).getCount() + "\t" +
+                    ((Statter.SimpleStatter)(peer.netStore.statOutMsg)).getCount()) + "\t" +
+                    (key != null ? ", keyDist: " + hex(getDistance(peer.peerAddress.getId(), key.getBytes())) : "") +"\n";
+            s += "  Chunks:\n";
+            for (Key k : ((MemStore) peer.localStore.memStore).store.keySet()) {
+                s += ("    " + k.toString().substring(0,8) + ", dist: "
+                        + hex(getDistance(peer.peerAddress.getId(), k.getBytes()))) + "\n";
+            }
+            s += "  Nodes:\n";
+            Map<Node, BzzProtocol> entries = peer.hive.getAllEntries();
+            SortedMap<Long, Node> sort = new TreeMap<>();
+            for (Node node : entries.keySet()) {
+                int dist = getDistance(node.getId(), key.getBytes());
+                sort.put(0xFFFFFFFFl & dist, node);
+            }
+            for (Node node : sort.values()) {
+                s += "  " + (entries.get(node) == null ? " " : "*") + " "
+                        + node.getHost() + ", dist: " +
+                        hex(getDistance(peer.peerAddress.getId(), node.getId())) +
+                        (key != null ? ", keyDist: " + hex(getDistance(node.getId(), key.getBytes())) : "") + "\n";
+            }
+        }
+        return s;
+    }
+
+    private String hex(int i ) {
+        return "0x" + Util.align(Integer.toHexString(i), '0', 8, true);
+    }
+
+    private int getDistance(byte[] k1, byte[] k2) {
+        int i1 = ByteUtil.byteArrayToInt(Arrays.copyOfRange(k1, 0, 4));
+        int i2 = ByteUtil.byteArrayToInt(Arrays.copyOfRange(k2, 0, 4));
+        return i1 ^ i2;
+    }
+
     @Ignore
     @Test
     public void manyPeersTest() throws InterruptedException {
         TestPeer.AsyncPipe = true;
 //        TestPeer.MessageOut = true;
 
+        final int maxStoreCount = 3;
+
         TestPeer p0 = new TestPeer(0);
+        p0.netStore.maxStorePeers = maxStoreCount;
         System.out.println("Creating chain of peers");
         final TestPeer[] allPeers = new TestPeer[100];
         allPeers[0] = p0;
         for (int i = 1; i < allPeers.length; i++) {
             allPeers[i] = new TestPeer(i);
+            allPeers[i].netStore.maxStorePeers = maxStoreCount;
 //            System.out.println("Connecting " + i + " <=> " + (i-1));
             allPeers[i].connect(allPeers[i-1]);
 //            System.out.println("Connecting " + i + " <=> " + (0));
@@ -364,8 +422,17 @@ public class BzzProtocolTest {
 
         System.out.println("Waiting for net idle ");
         TestAsyncPipe.waitForCompletion();
+        TestPeer.MessageOut = true;
+        stdout.setFilter(new Predicate<String>() {
+            @Override
+            public boolean test(String s) {
+                return s.startsWith("+") && s.contains("BzzStoreReqMessage");
+            }
+        });
+//        System.out.println("==== Storage statistics:\n" + dumpPeers(allPeers, null));
+//        System.out.println("Sleeping...");
 
-        System.out.println("Connecting a new peer...");
+//        System.out.println("Connecting a new peer...");
 //        allPeers[allPeers.length-1].connect(new TestPeer(allPeers.length));
 
 //        Thread.sleep(10000000);
@@ -373,13 +440,16 @@ public class BzzProtocolTest {
 //        Key key = new Key(new byte[]{0x22, 0x33});
 //        Chunk chunk = new Chunk(key, new byte[] {0,0,0,0,0,0,0,0, 77, 88});
         Chunk[] chunks = new Chunk[10];
-        int shift = 0;
+        int shift = 1;
         for (int i = 0; i < chunks.length; i++) {
             Key key = new Key(sha3(new byte[]{0x22, (byte) (i+shift)}));
 //            stdout.setFilter(Hex.toHexString(key.getBytes()));
             chunks[i] = new Chunk(key, new byte[] {0,0,0,0,0,0,0,0, 77, (byte) i});
+            System.out.println("==== Storage statistics before:\n" + dumpPeers(allPeers, key));
+            System.out.println("Putting chunk" + i);
             p0.netStore.put(chunks[i]);
             TestAsyncPipe.waitForCompletion();
+            System.out.println("==== Storage statistics after:\n" + dumpPeers(allPeers, key));
         }
 
         System.out.println("Waiting for net idle ");
@@ -497,8 +567,8 @@ public class BzzProtocolTest {
         NetStore netStore2 = new NetStore(localStore2, hive2);
 
 
-        netStore1.start(peerAddress1, null);
-        netStore2.start(peerAddress2, null);
+        netStore1.start(peerAddress1);
+        netStore2.start(peerAddress2);
 
         BzzProtocol bzz1 = new BzzProtocol(netStore1);
         BzzProtocol bzz2 = new BzzProtocol(netStore2);
