@@ -1,67 +1,24 @@
 package org.ethereum.db;
 
-import org.ethereum.datasource.QueueDataSource;
-import org.ethereum.datasource.mapdb.MapDBQueueDataSource;
-
-import java.util.Collection;
+import java.util.Set;
 
 /**
  * @author Mikhail Kalinin
- * @since 07.07.2015
+ * @since 09.07.2015
  */
-public class HashStore {
+public interface HashStore {
 
-    private static final String DEFAULT_NAME = "hashstore";
+    void add(byte[] hash);
 
-    private QueueDataSource hashes;
+    void addFirst(byte[] hash);
 
-    private HashStore() {
-    }
+    byte[] peek();
 
-    public void add(byte[] hash) {
-        hashes.offerLast(hash);
-    }
+    byte[] poll();
 
-    public byte[] peek() {
-        return hashes.peekFirst();
-    }
+    boolean isEmpty();
 
-    public byte[] poll() {
-        return hashes.pollFirst();
-    }
+    void close();
 
-    public void addFirst(byte[] hash) {
-        hashes.offerFirst(hash);
-    }
-
-    public boolean isEmpty() {
-        return hashes.isEmpty();
-    }
-
-    public void close() {
-        hashes.close();
-    }
-
-    static class Builder {
-        private String name = DEFAULT_NAME;
-        private Class<? extends QueueDataSource> dataSourceClass = MapDBQueueDataSource.class;
-
-        public Builder withDataSource(Class<? extends QueueDataSource> dataSourceClass) {
-            this.dataSourceClass = dataSourceClass;
-            return this;
-        }
-
-        public Builder withName(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public HashStore build() throws IllegalAccessException, InstantiationException {
-            HashStore store = new HashStore();
-            store.hashes = dataSourceClass.newInstance();
-            store.hashes.setName(name);
-            store.hashes.init();
-            return store;
-        }
-    }
+    Set<Long> getKeys();
 }
