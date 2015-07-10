@@ -3,6 +3,7 @@ package org.ethereum.vm;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.ByteUtil;
+import org.spongycastle.util.encoders.Hex;
 
 /**
  * @author Roman Mandeleil
@@ -121,7 +122,9 @@ public class PrecompiledContracts {
                 System.arraycopy(data, 0, h, 0, 32);
                 System.arraycopy(data, 32, v, 0, 32);
                 System.arraycopy(data, 64, r, 0, 32);
-                System.arraycopy(data, 96, s, 0, 32);
+
+                int sLength = data.length < 128 ? data.length - 96 : 32;
+                System.arraycopy(data, 96, s, 0, sLength);
 
 
                 ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v[31]);

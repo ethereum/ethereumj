@@ -912,7 +912,7 @@ public class Program {
                 msg.getInDataSize().intValue());
 
         // Charge for endowment - is not reversible by rollback
-        transfer(getResult().getRepository(), senderAddress, contextAddress, msg.getEndowment().value());
+        transfer(track, senderAddress, contextAddress, msg.getEndowment().value());
 
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test
