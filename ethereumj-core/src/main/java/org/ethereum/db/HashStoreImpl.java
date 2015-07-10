@@ -15,6 +15,7 @@ public class HashStoreImpl implements HashStore {
     private Map<Long, byte[]> hashes;
     private List<Long> index;
 
+    @Override
     public void open() {
         hashes = mapDBFactory.createHashStoreMap();
         index = new ArrayList<>(hashes.keySet());

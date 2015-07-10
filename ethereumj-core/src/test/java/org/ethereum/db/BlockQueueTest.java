@@ -1,9 +1,10 @@
 package org.ethereum.db;
 
-import org.ethereum.AbstractSpringTest;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
+import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.util.FileUtil;
 import org.junit.After;
 import org.junit.Before;
@@ -27,7 +28,7 @@ import static org.junit.Assert.*;
  * @author Mikhail Kalinin
  * @since 09.07.2015
  */
-public class BlockQueueTest extends AbstractSpringTest {
+public class BlockQueueTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
@@ -65,7 +66,10 @@ public class BlockQueueTest extends AbstractSpringTest {
         testDb = "test_db_" + bi;
         SystemProperties.CONFIG.setDataBaseDir(testDb);
 
-        blockQueue = context.getBean(BlockQueue.class);
+        MapDBFactory mapDBFactory = new MapDBFactoryImpl();
+        blockQueue = new BlockQueueImpl();
+        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
+        blockQueue.open();
     }
 
     @After

@@ -13,17 +13,13 @@ import java.util.*;
  * @author Mikhail Kalinin
  * @since 09.07.2015
  */
-@Component
-@Scope("prototype")
 public class BlockQueueImpl implements BlockQueue {
 
-    @Autowired
     private MapDBFactory mapDBFactory;
 
     private Map<Long, Block> blocks;
     private List<Long> index;
 
-    @PostConstruct
     @Override
     public void open() {
         blocks = mapDBFactory.createBlockQueueMap();
@@ -89,5 +85,9 @@ public class BlockQueueImpl implements BlockQueue {
 
     private void sortIndex() {
         Collections.sort(index);
+    }
+
+    public void setMapDBFactory(MapDBFactory mapDBFactory) {
+        this.mapDBFactory = mapDBFactory;
     }
 }
