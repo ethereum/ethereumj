@@ -97,26 +97,36 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void reset() {
-        close();
+        doWithLockedAccess(new Functional.InvokeWrapper() {
+            @Override
+            public void invoke() {
+                close();
 
-        detailsDS.init();
-        detailsDB = new DatabaseImpl(detailsDS);
+                detailsDS.init();
+                detailsDB = new DatabaseImpl(detailsDS);
 
-        stateDS.init();
-        stateDB = new DatabaseImpl(stateDS);
-        worldState = new SecureTrie(stateDB.getDb());
+                stateDS.init();
+                stateDB = new DatabaseImpl(stateDS);
+                worldState = new SecureTrie(stateDB.getDb());
+            }
+        });
     }
-
+    
     @Override
     public void close() {
-        if (this.detailsDB != null) {
-            detailsDB.close();
-            detailsDB = null;
-        }
-        if (this.stateDB != null) {
-            stateDB.close();
-            stateDB = null;
-        }
+        doWithLockedAccess(new Functional.InvokeWrapper() {
+            @Override
+            public void invoke() {
+                if (detailsDB != null) {
+                    detailsDB.close();
+                    detailsDB = null;
+                }
+                if (stateDB != null) {
+                    stateDB.close();
+                    stateDB = null;
+                }
+            }
+        });
     }
 
     @Override
@@ -178,7 +188,7 @@ public class RepositoryImpl implements Repository {
     }
 
     private void updateContractDetails(final byte[] address, final ContractDetails contractDetails) {
-        doWithAccessControlling(new Functional.InvokeWrapper() {
+        doWithAccessCounting(new Functional.InvokeWrapper() {
             @Override
             public void invoke() {
                 dds.update(address, contractDetails);
@@ -218,7 +228,7 @@ public class RepositoryImpl implements Repository {
     }
 
     public int getAllocatedMemorySize() {
-        return doWithAccessControlling(new Functional.InvokeWrapperWithResult<Integer>() {
+        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<Integer>() {
             @Override
             public Integer invoke() {
                 return dds.getAllocatedMemorySize() + ((TrieImpl) worldState).getCache().getAllocatedMemorySize();
@@ -237,8 +247,13 @@ public class RepositoryImpl implements Repository {
     }
 
     @Override
-    public void syncToRoot(byte[] root) {
-        worldState.setRoot(root);
+    public void syncToRoot(final byte[] root) {
+        doWithAccessCounting(new Functional.InvokeWrapper() {
+            @Override
+            public void invoke() {
+                worldState.setRoot(root);
+            }
+        });
     }
 
     @Override
@@ -306,7 +321,7 @@ public class RepositoryImpl implements Repository {
     }
 
     public String getTrieDump() {
-        return doWithAccessControlling(new Functional.InvokeWrapperWithResult<String>() {
+        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<String>() {
             @Override
             public String invoke() {
                 return worldState.getTrieDump();
@@ -352,7 +367,7 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public Set<byte[]> getAccountsKeys() {
-        return doWithAccessControlling(new Functional.InvokeWrapperWithResult<Set<byte[]>>() {
+        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<Set<byte[]>>() {
             @Override
             public Set<byte[]> invoke() {
                 Set<byte[]> result = new HashSet<>();
@@ -444,7 +459,7 @@ public class RepositoryImpl implements Repository {
     }
 
     private void updateAccountState(final byte[] addr, final AccountState accountState) {
-        doWithAccessControlling(new Functional.InvokeWrapper() {
+        doWithAccessCounting(new Functional.InvokeWrapper() {
             @Override
             public void invoke() {
                 worldState.update(addr, accountState.getEncoded());
@@ -463,7 +478,7 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public void delete(final byte[] addr) {
-        doWithAccessControlling(new Functional.InvokeWrapper() {
+        doWithAccessCounting(new Functional.InvokeWrapper() {
             @Override
             public void invoke() {
                 worldState.delete(addr);
@@ -474,7 +489,7 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public ContractDetails getContractDetails(final byte[] addr) {
-        return doWithAccessControlling(new Functional.InvokeWrapperWithResult<ContractDetails>() {
+        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<ContractDetails>() {
             @Override
             public ContractDetails invoke() {
                 return dds.get(addr);
@@ -484,7 +499,7 @@ public class RepositoryImpl implements Repository {
 
     @Override
     public AccountState getAccountState(final byte[] addr) {
-        return doWithAccessControlling(new Functional.InvokeWrapperWithResult<AccountState>() {
+        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<AccountState>() {
             @Override
             public AccountState invoke() {
                 AccountState result = null;
@@ -555,7 +570,7 @@ public class RepositoryImpl implements Repository {
         }
     }
 
-    public <R> R doWithAccessControlling(Functional.InvokeWrapperWithResult<R> wrapper) {
+    public <R> R doWithAccessCounting(Functional.InvokeWrapperWithResult<R> wrapper) {
         while (lock.isLocked()) {
             if (logger.isDebugEnabled()) {
                 logger.debug("waiting for lock releasing ...");
@@ -574,8 +589,8 @@ public class RepositoryImpl implements Repository {
         }
     }
 
-    public void doWithAccessControlling(final Functional.InvokeWrapper wrapper) {
-        doWithAccessControlling(new Functional.InvokeWrapperWithResult<Object>() {
+    public void doWithAccessCounting(final Functional.InvokeWrapper wrapper) {
+        doWithAccessCounting(new Functional.InvokeWrapperWithResult<Object>() {
             @Override
             public Object invoke() {
                 wrapper.invoke();
