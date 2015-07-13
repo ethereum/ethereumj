@@ -16,35 +16,23 @@ import java.util.List;
  */
 public interface BlockStore {
 
-    public byte[] getBlockHashByNumber(long blockNumber);
+    byte[] getBlockHashByNumber(long blockNumber);
 
     Block getBlockByNumber(long blockNumber);
 
     Block getBlockByHash(byte[] hash);
 
-    @SuppressWarnings("unchecked")
-    List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty);
-
-    void deleteBlocksSince(long number);
+    List<byte[]> getListHashesEndWith(byte[] hash, long qty);
 
     void saveBlock(Block block, List<TransactionReceipt> receipts);
-
-    BigInteger getTotalDifficultySince(long number);
 
     BigInteger getTotalDifficulty();
 
     Block getBestBlock();
 
-    @SuppressWarnings("unchecked")
-    List<Block> getAllBlocks();
-
-    void reset();
-
-    TransactionReceipt getTransactionReceiptByHash(byte[] hash);
-
-    public void flush();
-    public void load();
-    public void setSessionFactory(SessionFactory sessionFactory);
+    void flush();
+    void load();
+    void setSessionFactory(SessionFactory sessionFactory);
 
 
 }

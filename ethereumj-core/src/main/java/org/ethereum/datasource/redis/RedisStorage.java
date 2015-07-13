@@ -27,7 +27,7 @@ public abstract class RedisStorage<T> {
         this.serializer = serializer;
     }
 
-    protected byte[] getName() {
+    protected byte[] getNameBytes() {
         return name;
     }
 
@@ -36,7 +36,7 @@ public abstract class RedisStorage<T> {
     }
 
     protected byte[] formatName(String suffix) {
-        return Bytes.concat(getName(), suffix.getBytes());
+        return Bytes.concat(getNameBytes(), suffix.getBytes());
     }
 
     protected byte[] temporaryName() {

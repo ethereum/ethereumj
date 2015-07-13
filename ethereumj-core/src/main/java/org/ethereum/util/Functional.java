@@ -59,5 +59,15 @@ public interface Functional {
          */
         R apply(T t);
     }
+    
+    public static interface InvokeWrapper {
+        
+        void invoke();
+    }
+
+    public static interface InvokeWrapperWithResult<R> {
+
+        R invoke();
+    }
 
 }

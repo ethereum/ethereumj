@@ -148,8 +148,7 @@ public class BlockchainImpl implements Blockchain {
 
     @Override
     public TransactionReceipt getTransactionReceiptByHash(byte[] hash) {
-
-        return blockStore.getTransactionReceiptByHash(hash);
+        throw new UnsupportedOperationException("TODO: will be implemented soon "); // FIXME: go and fix me
     }
 
     @Override
@@ -159,7 +158,7 @@ public class BlockchainImpl implements Blockchain {
 
     @Override
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
-        return blockStore.getListOfHashesStartFrom(hash, qty);
+        return blockStore.getListHashesEndWith(hash, qty);
     }
 
     private byte[] calcTxTrie(List<Transaction> transactions){
@@ -205,43 +204,6 @@ public class BlockchainImpl implements Blockchain {
                 return NO_PARENT;
         }
 
-        //TODO POC9 add rollback support
-        if (1 == 1)
-            return SUCCESS; // todo: temporary cancel the rollback
-
-        // cut on the chain got lastBlock + 1 > n
-        if (block.getNumber() > bestBlock.getNumber() + 1) {
-            channelManager.ethSync();
-        }
-
-        if (!hasParentOnTheChain(block) && block.getNumber() > bestBlock.getNumber()) {
-
-            if (1 == 1)
-                return SUCCESS; // todo: temporary cancel the rollback
-
-            logger.info("*** Blockchain will rollback and resynchronise now ");
-
-            long rollbackIdx = bestBlock.getNumber() - 30;
-            if (rollbackIdx <= 0) rollbackIdx = bestBlock.getNumber() - bestBlock.getNumber() / 10;
-
-            Block rollbackBlock = blockStore.getBlockByNumber(rollbackIdx);
-            repository.syncToRoot(rollbackBlock.getStateRoot());
-
-            BigInteger deltaTD = blockStore.getTotalDifficultySince(rollbackBlock.getNumber());
-            totalDifficulty = totalDifficulty.subtract(deltaTD);
-            bestBlock = rollbackBlock;
-
-            blockStore.deleteBlocksSince(rollbackBlock.getNumber());
-
-            blockQueue.clear();
-            channelManager.ethSync();
-            return SUCCESS;
-        }
-
-        // provisional, by the garbage will be
-        // defined how to deal with it in the
-        // future.
-        garbage.add(block);
         return SUCCESS;
     }
 
@@ -299,6 +261,10 @@ public class BlockchainImpl implements Blockchain {
         track.commit();
         storeBlock(block, receipts);
 
+//        if (block.getNumber() == 708_461){
+//            System.exit(-1);
+//        }
+
         if (needFlush(block)) {
             repository.flush();
             blockStore.flush();
@@ -317,7 +283,7 @@ public class BlockchainImpl implements Blockchain {
         if (blockQueue != null &&
             blockQueue.size() == 0 &&
             !syncDoneCalled &&
-            channelManager.isAllSync()) {
+                channelManager.isAllSync()) {
 
             logger.info("Sync done");
             syncDoneCalled = true;
@@ -326,13 +292,16 @@ public class BlockchainImpl implements Blockchain {
     }
 
     private boolean needFlush(Block block) {
+
+        boolean possibleFlush = CONFIG.flushBlocksIgnoreConsensus() || adminInfo.isConsensus();
+        if (!possibleFlush)return false;
+
         if (CONFIG.flushBlocksRepoSize() > 0 && repository.getClass().isAssignableFrom(RepositoryImpl.class)) {
             return ((RepositoryImpl) repository).getAllocatedMemorySize() > CONFIG.flushBlocksRepoSize();
         } else {
             boolean isBatchReached = block.getNumber() % CONFIG.flushBlocksBatchSize() == 0;
-            boolean isConsensus = CONFIG.flushBlocksIgnoreConsensus() || adminInfo.isConsensus();
 
-            return isConsensus && isBatchReached;
+            return isBatchReached;
         }
     }
 
@@ -638,13 +607,6 @@ public class BlockchainImpl implements Blockchain {
     @Override
     public Block getBestBlock() {
         return bestBlock;
-    }
-
-    @Override
-    public void reset() {
-        blockStore.reset();
-        altChains = new ArrayList<>();
-        garbage = new ArrayList<>();
     }
 
     @Override

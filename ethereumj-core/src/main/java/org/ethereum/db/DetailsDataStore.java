@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.wrap;
@@ -19,7 +20,7 @@ public class DetailsDataStore {
     private static final Logger gLogger = LoggerFactory.getLogger("general");
 
     private DatabaseImpl db = null;
-    private HashMap<ByteArrayWrapper, ContractDetails> cache = new HashMap<>();
+    private Map<ByteArrayWrapper, ContractDetails> cache = new ConcurrentHashMap<>();
     private Set<ByteArrayWrapper> removes = new HashSet<>();
 
     public void setDB(DatabaseImpl db) {

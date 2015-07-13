@@ -19,7 +19,7 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "baf4b8479c0b524560137d27e61d7e573dc4ab17";
+    public String shacommit = "cfae68e67aa922e08428c274d1ddbbc2741a975b";
 
 
     @Ignore
@@ -27,11 +27,12 @@ public class GitHubStateTest {
     public void stSingleTest() throws ParseException, IOException {
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
-        GitHubJSONTestSuite.runStateTest(json, "CallEcrecover0_BonusGas");
+        GitHubJSONTestSuite.runStateTest(json, "CallRipemd160_5");
     }
 
     @Test
     public void stExample() throws ParseException, IOException {
+
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("StateTests/stExample.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
@@ -39,6 +40,7 @@ public class GitHubStateTest {
 
     @Test
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
+
         Set<String> excluded = new HashSet<>();
         excluded.add("createJS_ExampleContract"); //FIXME Bug on CPP testrunner, storage/SSTORE
         excluded.add("Callcode1024OOG");
@@ -46,7 +48,7 @@ public class GitHubStateTest {
         excluded.add("callcodeWithHighValue");
         excluded.add("callWithHighValue");
         excluded.add("Call1024PreCalls");
-        excluded.add("CallRecursiveBombPreCall");
+        excluded.add("CallRecursiveBombPreCall"); // FIXME gas not BI limit
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -100,7 +102,6 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
-    @Ignore
     @Test
     public void stSolidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -126,10 +127,8 @@ public class GitHubStateTest {
     @Test
     public void stSpecialTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("txfrom0_deja"); //  (!!!) FIXME fix them as soon as possible
         excluded.add("JUMPDEST_AttackwithJump"); //  (!!!) FIXME fix them as soon as possible
         excluded.add("JUMPDEST_Attack"); //  (!!!) FIXME fix them as soon as possible
-
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stSpecialTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
@@ -141,7 +140,6 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json);
     }
 
-    //@Ignore
     @Test
     public void stSystemOperationsTest() throws IOException {
 
@@ -155,6 +153,7 @@ public class GitHubStateTest {
 
     @Test
     public void stTransactionTest() throws ParseException, IOException {
+
         Set<String> excluded = new HashSet<>();
         excluded.add("OverflowGasRequire");    //FIXME wont work until we use gaslimit as long
         excluded.add("EmptyTransaction2"); // Buggy testcase

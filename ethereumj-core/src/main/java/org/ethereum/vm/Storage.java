@@ -120,6 +120,12 @@ public class Storage implements Repository, ProgramTraceListenerAware {
     }
 
     @Override
+    public void flushNoReconnect() {
+        throw new UnsupportedOperationException();
+    }
+
+
+    @Override
     public void commit() {
         repository.commit();
     }

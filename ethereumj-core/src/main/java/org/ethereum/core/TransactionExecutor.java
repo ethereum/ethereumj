@@ -237,6 +237,10 @@ public class TransactionExecutor {
         if (vm == null) return;
 
         try {
+
+            // Charge basic cost of the transaction
+            program.spendGas(tx.transactionCost(), "TRANSACTION COST");
+
             if (CONFIG.playVM())
                 vm.play(program);
 

@@ -111,7 +111,7 @@ public class Cache {
 
         float flushSize = (float) this.allocatedMemorySize / 1048576;
         float flushTime = (float) (finish - start) / 1_000_000;
-        logger.info(format("Flush state in: %02.2f ms, %d nodes, %02.2fMB", flushTime, batch.size(), flushSize));
+        logger.info(format("Flush '%s' in: %02.2f ms, %d nodes, %02.2fMB", dataSource.getName(), flushTime, batch.size(), flushSize));
         
         this.allocatedMemorySize = 0;
     }

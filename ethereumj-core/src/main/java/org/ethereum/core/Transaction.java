@@ -8,6 +8,7 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 
+import org.ethereum.vm.GasCost;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -108,6 +109,22 @@ public class Transaction {
         this.signature = signature;
     }
 
+    public long transactionCost(){
+
+        if (!parsed) rlpParse();
+
+        long nonZeroes = nonZeroDataBytes();
+        long zeroVals  = getDataSize() - nonZeroes;
+
+        return GasCost.TRANSACTION + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
+    }
+
+    private int getDataSize(){
+        if (data == null)
+            return 0;
+        else
+            return  data.length;
+    }
 
     public void rlpParse() {
 

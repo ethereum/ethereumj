@@ -151,6 +151,7 @@ public interface Repository {
     public Repository startTracking();
 
     public void flush();
+    public void flushNoReconnect();
 
 
     /**

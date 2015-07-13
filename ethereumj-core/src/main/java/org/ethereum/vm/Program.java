@@ -16,6 +16,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static java.lang.String.format;
+import static java.math.BigInteger.*;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
@@ -343,7 +344,7 @@ public class Program {
 
         // [4] TRANSFER THE BALANCE
         track.addBalance(senderAddress, endowment.negate());
-        BigInteger newBalance = BigInteger.ZERO;
+        BigInteger newBalance = ZERO;
         if (!invokeData.byTestingSuite()) {
             newBalance = track.addBalance(newAddress, endowment);
         }
@@ -458,7 +459,7 @@ public class Program {
 
         trackRepository.addBalance(senderAddress, endowment.negate());
 
-        BigInteger contextBalance = BigInteger.ZERO;
+        BigInteger contextBalance = ZERO;
         if (!invokeData.byTestingSuite()) {
             contextBalance = trackRepository.addBalance(contextAddress, endowment);
         }
@@ -488,7 +489,7 @@ public class Program {
         }
 
         if (result != null &&
-            result.getException() != null) {
+                result.getException() != null) {
             gasLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
                     Hex.toHexString(contextAddress),
                     result.getException());
@@ -896,6 +897,9 @@ public class Program {
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         byte[] codeAddress = msg.getCodeAddress().getLast20Bytes();
+        byte[] contextAddress = msg.getType() == MsgType.STATELESS ? senderAddress : codeAddress;
+
+
         BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = track.getBalance(senderAddress);
         if (senderBalance.compareTo(endowment) < 0) {
@@ -907,7 +911,8 @@ public class Program {
         byte[] data = this.memoryChunk(msg.getInDataOffs().intValue(),
                 msg.getInDataSize().intValue());
 
-        transfer(track, senderAddress, codeAddress, msg.getEndowment().value());
+        // Charge for endowment - is not reversible by rollback
+        transfer(track, senderAddress, contextAddress, msg.getEndowment().value());
 
         if (invokeData.byTestingSuite()) {
             // This keeps track of the calls created for a test

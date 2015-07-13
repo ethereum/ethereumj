@@ -58,7 +58,7 @@ public class VM {
     private static final Logger logger = LoggerFactory.getLogger("VM");
     private static final Logger dumpLogger = LoggerFactory.getLogger("dump");
     private static BigInteger _32_ = BigInteger.valueOf(32);
-    private static String logString = "[{}]\t Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
+    private static String logString = "{}    Op: [{}]  Gas: [{}] Deep: [{}]  Hint: [{}]";
 
     private static BigInteger MAX_GAS = BigInteger.valueOf(Long.MAX_VALUE);
 
@@ -182,11 +182,11 @@ public class VM {
 
                     //check to see if account does not exist and is not a precompiled contract
                     if (op != CALLCODE && !program.result.getRepository().isExist(callAddressWord.getLast20Bytes()))
-                      gasCost += GasCost.NEW_ACCT_CALL;
+                        gasCost += GasCost.NEW_ACCT_CALL;
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
                     if (!stack.get(stack.size() - 3).isZero() )
-                      gasCost += GasCost.VT_CALL;
+                        gasCost += GasCost.VT_CALL;
 
                     BigInteger in = memNeeded(stack.get(stack.size() - 4), stack.get(stack.size() - 5)); // in offset+size
                     BigInteger out = memNeeded(stack.get(stack.size() - 6), stack.get(stack.size() - 7)); // out offset+size
@@ -240,7 +240,7 @@ public class VM {
                 long memWordsOld = (oldMemSize / 32);
                 //TODO #POC9 c_quadCoeffDiv = 512, this should be a constant, not magic number
                 long memGas = ( GasCost.MEMORY * memWords + memWords * memWords / 512)
-                              - (GasCost.MEMORY * memWordsOld + memWordsOld * memWordsOld / 512);
+                        - (GasCost.MEMORY * memWordsOld + memWordsOld * memWordsOld / 512);
                 program.spendGas(memGas, op.name() + " (memory usage)");
                 gasCost += memGas;
             }
@@ -1037,7 +1037,7 @@ public class VM {
                     DataWord inSize = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        logger.info(logString, program.getPC(),
+                        logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                                 String.format("%-12s", op.name()),
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
@@ -1068,7 +1068,7 @@ public class VM {
                                 + " gas: " + gas.shortHex()
                                 + " inOff: " + inDataOffs.shortHex()
                                 + " inSize: " + inDataSize.shortHex();
-                        logger.info(logString, program.getPC(),
+                        logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                                 String.format("%-12s", op.name()),
                                 program.getGas().value(),
                                 program.invokeData.getCallDeep(), hint);
@@ -1125,8 +1125,10 @@ public class VM {
             program.setPreviouslyExecutedOp(op.val());
 
             if (logger.isInfoEnabled() && !op.equals(CALL)
+                    && !op.equals(CALLCODE)
                     && !op.equals(CREATE))
-                logger.info(logString, stepBefore, String.format("%-12s",
+                logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
+                        String.format("%-12s",
                                 op.name()), program.getGas().longValue(),
                         program.invokeData.getCallDeep(), hint);
 
@@ -1144,19 +1146,6 @@ public class VM {
 
     public void play(Program program) {
         try {
-            // In case the program invoked by wire got
-            // transaction, this will be the gas cost,
-            // otherwise the call done by other contract
-            // charged by CALL op
-            if (program.invokeData.byTransaction()) {
-                program.spendGas(GasCost.TRANSACTION, "TRANSACTION");
-                int dataSize = program.invokeData.getDataSize().intValue();
-                int nonZeroesVals = program.invokeData.countNonZeroData();
-                int zeroVals = dataSize - nonZeroesVals;
-
-                program.spendGas(GasCost.TX_NO_ZERO_DATA * nonZeroesVals, "DATA");
-                program.spendGas(GasCost.TX_ZERO_DATA * zeroVals, "DATA");
-            }
 
             if (program.invokeData.byTestingSuite()) return;
 

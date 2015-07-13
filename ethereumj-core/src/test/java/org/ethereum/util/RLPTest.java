@@ -5,6 +5,8 @@ import org.ethereum.crypto.HashUtil;
 import com.cedarsoftware.util.DeepEquals;
 
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.net.client.Capability;
+import org.ethereum.net.p2p.HelloMessage;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -1051,5 +1053,41 @@ public class RLPTest {
         assertEquals(expected, result);
     }
 
+
+    @Test // capabilities: (eth:60, bzz:0, shh:2)
+    public void testEncodeHelloMessageCap0(){
+
+        List<Capability> capabilities = new ArrayList<>();
+        capabilities.add(new Capability("eth", (byte) 0x60));
+        capabilities.add(new Capability("shh", (byte) 0x02));
+        capabilities.add(new Capability("bzz", (byte) 0x00));
+
+        HelloMessage helloMessage = new HelloMessage((byte)4,
+                "Geth/v0.9.29-4182e20e/windows/go1.4.2",
+                capabilities , 30303,
+                "a52205ce10b39be86507e28f6c3dc08ab4c3e8250e062ec47c6b7fa13cf4a4312d68d6c340315ef953ada7e19d69123a1b902ea84ec00aa5386e5d550e6c550e");
+
+        byte[] rlp = helloMessage.getEncoded();
+
+        HelloMessage helloMessage_ = new HelloMessage(rlp);
+
+        String eth    = helloMessage_.getCapabilities().get(0).getName();
+        byte   eth_60 = helloMessage_.getCapabilities().get(0).getVersion();
+
+        assertEquals("eth", eth);
+        assertEquals(0x60, eth_60);
+
+        String shh    = helloMessage_.getCapabilities().get(1).getName();
+        byte   shh_02 = helloMessage_.getCapabilities().get(1).getVersion();
+
+        assertEquals("shh", shh);
+        assertEquals(0x02, shh_02);
+
+        String bzz    = helloMessage_.getCapabilities().get(2).getName();
+        byte   bzz_00 = helloMessage_.getCapabilities().get(2).getVersion();
+
+        assertEquals("bzz", bzz);
+        assertEquals(0x00, bzz_00);
+    }
 
 }

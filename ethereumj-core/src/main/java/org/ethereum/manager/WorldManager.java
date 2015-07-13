@@ -1,35 +1,29 @@
 package org.ethereum.manager;
 
-import org.ethereum.core.*;
+import org.ethereum.core.Block;
+import org.ethereum.core.Genesis;
+import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Repository;
-import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.CompositeEthereumListener;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.server.ChannelManager;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.math.BigInteger;
+import java.util.ArrayList;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -195,13 +189,6 @@ public class WorldManager {
             System.exit(-1); //  todo: reset the repository and blockchain
         }
 */
-    }
-
-    public void reset() {
-        logger.info("Resetting blockchain ");
-        repository.reset();
-        blockchain.reset();
-        loadBlockchain();
     }
 
 

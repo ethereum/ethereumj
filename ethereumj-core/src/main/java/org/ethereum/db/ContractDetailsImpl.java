@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.SecureTrie;
 import org.ethereum.util.RLP;
@@ -52,13 +53,13 @@ public class ContractDetailsImpl implements ContractDetails {
         keys.add(wrap(key));
         keysSize += key.length;
     }
-    
+
     private void removeKey(byte[] key) {
         if (keys.remove(wrap(key))) {
             keysSize -= key.length;
         }
     }
-    
+
     @Override
     public void put(DataWord key, DataWord value) {
         if (value.equals(DataWord.ZERO)) {
@@ -71,7 +72,7 @@ public class ContractDetailsImpl implements ContractDetails {
 
         this.setDirty(true);
         this.rlpEncoded = null;
-        
+
         externalStorage = (keys.size() > SystemProperties.CONFIG.detailsInMemoryStorageLimit()) || externalStorage;
     }
 
@@ -123,7 +124,7 @@ public class ContractDetailsImpl implements ContractDetails {
         for (RLPElement key : keys) {
             addKey(key.getRLPData());
         }
-        
+
         if (externalStorage) {
             storageTrie.setRoot(storageRoot.getRLPData());
             storageTrie.getCache().setDB(getExternalStorageDataSource());
@@ -215,6 +216,8 @@ public class ContractDetailsImpl implements ContractDetails {
         if (externalStorage) {
             storageTrie.getCache().setDB(getExternalStorageDataSource());
             storageTrie.sync();
+
+            DataSourcePool.closeDataSource("details-storage/" + toHexString(address));
         }
     }
 
@@ -250,14 +253,15 @@ public class ContractDetailsImpl implements ContractDetails {
 
         return ret;
     }
-    
+
     @Override
     public int getAllocatedMemorySize() {
         int result = rlpEncoded == null ? 0 : rlpEncoded.length;
         result += address.length;
         result += code.length;
         result += storageTrie.getCache().getAllocatedMemorySize();
-        
+        result += keysSize;
+
         return result;
     }
 }
