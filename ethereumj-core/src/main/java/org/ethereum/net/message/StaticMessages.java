@@ -3,19 +3,10 @@ package org.ethereum.net.message;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.GetTransactionsMessage;
-import org.ethereum.net.p2p.DisconnectMessage;
-import org.ethereum.net.p2p.GetPeersMessage;
-import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.net.p2p.P2pHandler;
-import org.ethereum.net.p2p.PingMessage;
-import org.ethereum.net.p2p.PongMessage;
-import org.ethereum.net.shh.ShhHandler;
-
+import org.ethereum.net.p2p.*;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,10 +32,7 @@ public class StaticMessages {
     private static HelloMessage generateHelloMessage() {
         String helloAnnouncement = buildHelloAnnouncement();
         byte p2pVersion = P2pHandler.VERSION;
-        List<Capability> capabilities = Arrays.asList(
-                new Capability(Capability.ETH, EthHandler.VERSION),
-                new Capability(Capability.SHH, ShhHandler.VERSION)
-        );
+        List<Capability> capabilities = Capability.getConfigCapabilities();
         int listenPort = SystemProperties.CONFIG.listenPort();
 
         return new HelloMessage(p2pVersion, helloAnnouncement,
