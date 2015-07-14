@@ -51,7 +51,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public final static byte VERSION = 60;
 
-    public final static byte NETWORK_ID = 0x0;
+    public final static int NETWORK_ID = 0;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 

@@ -1,9 +1,12 @@
 package org.ethereum.net.rlpx;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 
@@ -15,6 +18,20 @@ public class Node {
     byte[] id;
     String host;
     int port;
+
+    public Node(String enodeURL) {
+        try {
+            URI uri = new URI(enodeURL);
+            if (!uri.getScheme().equals("enode")) {
+                throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT");
+            }
+            this.id = Hex.decode(uri.getUserInfo());
+            this.host = uri.getHost();
+            this.port = uri.getPort();
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("expecting URL in the format enode://PUBKEY@HOST:PORT", e);
+        }
+    }
 
     public Node(byte[] id, String host, int port) {
         this.id = id;

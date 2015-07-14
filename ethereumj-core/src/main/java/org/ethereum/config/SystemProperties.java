@@ -1,312 +1,366 @@
 package org.ethereum.config;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigObject;
+import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.crypto.SHA3Helper;
+import org.ethereum.net.rlpx.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
-import java.io.*;
+import java.io.File;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.lang.reflect.Method;
 import java.util.*;
 
 /**
- * Utility class to retrieve property values from the system.properties files
+ * Utility class to retrieve property values from the ethereumj.conf files
+ *
+ * The properties are taken from different sources and merged in the following order
+ * (the config option from the next source overrides option from previous):
+ * - resource ethereumj.conf : normally used as a reference config with default values
+ *          and shouldn't be changed
+ * - system property : each config entry might be altered via -D VM option
+ * - [user dir]/config/ethereumj.conf
+ * - config specified with the -Dethereumj.conf.file=[file.conf] VM option
+ * - CLI options
  *
  * @author Roman Mandeleil
  * @since 22.05.2014
  */
 public class SystemProperties {
-
     private static Logger logger = LoggerFactory.getLogger("general");
-    private final static int DEFAULT_TX_APPROVE_TIMEOUT = 10;
 
-    private final static String DEFAULT_DISCOVERY_PEER_LIST = "poc-9.ethdev.com:30303";
-    private final static String DEFAULT_ACTIVE_PEER_NODEID = ""; // FIXME
-    private final static String DEFAULT_ACTIVE_PEER_IP = "poc-9.ethdev.com";
-    private final static int DEFAULT_ACTIVE_PORT = 30303;
-    private final static String DEFAULT_SAMPLES_DIR = "samples";
-    private final static String DEFAULT_COINBASE_SECRET = "monkey";
-    private final static int DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT = 5;
-    private final static Boolean DEFAULT_DB_RESET = false;
-    private final static Boolean DEFAULT_DUMP_FULL = false;
-    private final static Boolean DEFAULT_RECORD_BLOCKS = false;
-    private final static String DEFAULT_DUMP_DIR = "dmp";
-    private final static String DEFAULT_DUMP_STYLE = "standard+";
-    private final static Integer DEFAULT_VMTRACE_BLOCK = 0;
-    private final static String DEFAULT_DATABASE_DIR = System.getProperty("user.dir");
-    private final static Boolean DEFAULT_DUMP_CLEAN_ON_RESTART = true;
-    private final static Boolean DEFAULT_PLAY_VM = true;
-    private final static Boolean DEFAULT_BLOCKCHAIN_ONLY = false;
-    private final static int DEFAULT_TRACE_STARTBLOCK = -1;
-    private final static int DEFAULT_MAX_HASHES_ASK = -1; // unlimited
-    private final static int DEFAULT_MAX_BLOCKS_ASK = 10;
-    private final static int DEFAULT_MAX_BLOCKS_QUEUED = 300;
-    private final static String DEFAULT_PROJECT_VERSION = "";
-    private final static String DEFAULT_HELLO_PHRASE = "Dev";
-    private final static Boolean DEFAULT_VM_TRACE = false;
-    private final static String DEFAULT_VM_TRACE_DIR = "dmp";
-    private final static Boolean DEFAULT_VM_TRACE_COMPRESSED = false;
-    private final static int DEFAULT_PEER_LISTEN_PORT = 30303;
-    private final static String DEFAULT_KEY_VALUE_DATA_SOURCE = "leveldb";
-    private final static boolean DEFAULT_REDIS_ENABLED = true;
-    private static final String DEFAULT_BLOCKS_LOADER = "";
-    private static final int DEFAULT_FLUSH_BATCH_SIZE = 5_000;
-    private static final boolean DEFAULT_FLUSH_IGNORE_CONSENSUS = false;
-    private static final int DEFAULT_DETAILS_INMEMORY_STORAGE_LIMIT = 1_000;
-    private static final int DEFAULT_FLUSH_REPO_SIZE = 128_000_000;
-
+    public final static String PROPERTY_DB_DIR = "database.dir";
+    public final static String PROPERTY_LISTEN_PORT = "peer.listen.port";
+    public final static String PROPERTY_PEER_ACTIVE = "peer.active";
+    public final static String PROPERTY_DB_RESET = "database.reset";
 
     /* Testing */
     private final static Boolean DEFAULT_VMTEST_LOAD_LOCAL = false;
+    private final static String DEFAULT_BLOCKS_LOADER = "";
 
-    private final static String DEFAULT_PROTOCOL_LIST = "eth,shh";
+    public final static SystemProperties CONFIG = new SystemProperties();
 
-    public static SystemProperties CONFIG = new SystemProperties();
-    private final Properties prop = new Properties();
+    /**
+     * Marks config accessor methods which need to be called (for value validation)
+     * upon config creation or modification
+     */
+    @Target(ElementType.METHOD)
+    @Retention(RetentionPolicy.RUNTIME)
+    private @interface ValidateMe {};
 
-    public SystemProperties() {
 
-        InputStream input = null;
+    private Config config;
+
+    // mutable options for tests
+    private String databaseDir = null;
+    private Boolean databaseReset = null;
+
+    private SystemProperties() {
         try {
-            String userDir = System.getProperty("user.dir");
-            String fileName = userDir + "/config/system.properties";
-            File file = new File(fileName);
+            Config referenceConfig = ConfigFactory.load("ethereumj.conf");
+            Config userDirConfig = ConfigFactory.parseFile(
+                    new File(System.getProperty("user.dir"), "/config/ethereumj.conf"));
+            String file = System.getProperty("ethereumj.conf.file");
+            Config sysPropConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
+                    ConfigFactory.empty();
+            config = sysPropConfig
+                    .withFallback(userDirConfig)
+                    .withFallback(referenceConfig);
+            validateConfig();
+        } catch (Exception e) {
+            logger.error("Can't read config.", e);
+            throw new RuntimeException(e);
+        }
+    }
 
-            if (file.exists()) {
-                logger.info("config loaded from {}", fileName);
-                input = new FileInputStream(file);
-            } else {
-                fileName = "system.properties";
-                input = SystemProperties.class.getClassLoader()
-                        .getResourceAsStream(fileName);
-                if (input == null) {
-                    logger.error("Sorry, unable to find {}", fileName);
-                    return;
+    /**
+     * Puts a new config atop of existing stack making the options
+     * in the supplied config overriding existing options
+     * Once put this config can't be removed
+     */
+    public void overrideParams(Config overrideOptions) {
+        config = overrideOptions.withFallback(config);
+        validateConfig();
+    }
+
+    /**
+     * Puts a new config atop of existing stack making the options
+     * in the supplied config overriding existing options
+     * Once put this config can't be removed
+     * @param keyValuePairs [name] [value] [name] [value] ...
+     */
+    public void overrideParams(String ... keyValuePairs) {
+        if (keyValuePairs.length % 2 != 0) throw new RuntimeException("Odd argument number");
+        Map<String, String> map = new HashMap<>();
+        for (int i = 0; i < keyValuePairs.length; i += 2) {
+            map.put(keyValuePairs[i], keyValuePairs[i + 1]);
+        }
+        overrideParams(map);
+    }
+
+    /**
+     * Puts a new config atop of existing stack making the options
+     * in the supplied config overriding existing options
+     * Once put this config can't be removed
+     */
+    public void overrideParams(Map<String, String> cliOptions) {
+        Config cliConf = ConfigFactory.parseMap(cliOptions);
+        overrideParams(cliConf);
+    }
+
+    private void validateConfig() {
+        for (Method method : getClass().getMethods()) {
+            try {
+                if (method.isAnnotationPresent(ValidateMe.class)) {
+                    method.invoke(this);
                 }
-            }
-            // load a properties file from class path, inside static method
-            prop.load(input);
-
-            overrideCLIParams();
-
-        } catch (IOException ex) {
-            logger.error(ex.getMessage(), ex);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    logger.error(e.getMessage(), e);
-                }
+            } catch (Exception e) {
+                throw new RuntimeException("Error validating config method: " + method, e);
             }
         }
     }
 
-    private void overrideCLIParams() {
-        String value = System.getProperty("keyvalue.datasource");
-        if (value != null) {
-            prop.setProperty("keyvalue.datasource", value);
-        }
-    }
-
+    @ValidateMe
     public boolean peerDiscovery() {
-        return Boolean.parseBoolean(prop.getProperty("peer.discovery", "true"));
+        return config.getBoolean("peer.discovery.enabled");
     }
 
+    @ValidateMe
     public int peerDiscoveryWorkers() {
-        return Integer.parseInt(prop.getProperty("peer.discovery.workers", "2"));
+        return config.getInt("peer.discovery.workers");
     }
 
+    @ValidateMe
     public int peerConnectionTimeout() {
-        return Integer.parseInt(prop.getProperty("peer.connection.timeout", "10")) * 1000;
+        return config.getInt("peer.connection.timeout") * 1000;
     }
 
+    @ValidateMe
     public int transactionApproveTimeout() {
-        return Integer.parseInt(prop.getProperty("transaction.approve.timeout", String.valueOf("DEFAULT_TX_APPROVE_TIMEOUT")));
+        return config.getInt("transaction.approve.timeout") * 1000;
     }
 
-    public String peerDiscoveryIPList() {
-        return prop.getProperty("peer.discovery.ip.list", DEFAULT_DISCOVERY_PEER_LIST);
+    @ValidateMe
+    public List<String> peerDiscoveryIPList() {
+        return config.getStringList("peer.discovery.ip.list");
     }
 
+    @ValidateMe
     public boolean databaseReset() {
-        return Boolean.parseBoolean(prop.getProperty("database.reset", String.valueOf(DEFAULT_DB_RESET)));
+        return databaseReset == null ? config.getBoolean("database.reset") : databaseReset;
     }
 
     public void setDatabaseReset(Boolean reset) {
-        prop.setProperty("database.reset", reset.toString());
+        databaseReset = reset;
     }
 
-    public String activePeerNodeid() {
-        return prop.getProperty("peer.active.nodeid", DEFAULT_ACTIVE_PEER_NODEID);
-    }
-
-    public void setActivePeerNodeid(String nodeId) {
-        prop.setProperty("peer.active.nodeid", nodeId);
-    }
-
-    public String activePeerIP() {
-        return prop.getProperty("peer.active.ip", DEFAULT_ACTIVE_PEER_IP);
-    }
-
-    public void setActivePeerIP(String host) {
-        prop.setProperty("peer.active.ip", host);
-    }
-
-    public int activePeerPort() {
-        return Integer.parseInt(prop.getProperty("peer.active.port", String.valueOf(DEFAULT_ACTIVE_PORT)));
-    }
-
-    public void setActivePeerPort(Integer port) {
-        prop.setProperty("peer.active.port", port.toString());
+    @ValidateMe
+    public List<Node> peerActive() {
+        if (!config.hasPath("peer.active")) {
+            return Collections.EMPTY_LIST;
+        }
+        List<Node> ret = new ArrayList<>();
+        List<? extends ConfigObject> list = config.getObjectList("peer.active");
+        for (ConfigObject configObject : list) {
+            Node n;
+            if (configObject.get("url") != null) {
+                String url = configObject.toConfig().getString("url");
+                n = new Node(url.startsWith("enode://") ? url : "enode://" + url);
+            } else if (configObject.get("ip") != null) {
+                String ip = configObject.toConfig().getString("ip");
+                int port = configObject.toConfig().getInt("port");
+                byte[] nodeId;
+                if (configObject.toConfig().hasPath("nodeId")) {
+                    nodeId = Hex.decode(configObject.toConfig().getString("nodeId").trim());
+                    if (nodeId.length != 64) {
+                        throw new RuntimeException("Invalid config nodeId '" + nodeId + "' at " + configObject);
+                    }
+                } else {
+                    if (configObject.toConfig().hasPath("nodeName")) {
+                        String nodeName = configObject.toConfig().getString("nodeName").trim();
+                        // FIXME should be sha3-512 here
+                        nodeId = SHA3Helper.sha3(nodeName.getBytes());
+                    } else {
+                        throw new RuntimeException("Either nodeId or nodeName should be specified: " + configObject);
+                    }
+                }
+                n = new Node(nodeId, ip, port);
+            } else {
+                throw new RuntimeException("Unexpected element within 'peer.active' config list: " + configObject);
+            }
+            ret.add(n);
+        }
+        return ret;
     }
 
     public String samplesDir() {
-        return prop.getProperty("samples.dir", DEFAULT_SAMPLES_DIR);
+        return config.getString("samples.dir");
     }
 
+    @ValidateMe
     public String coinbaseSecret() {
-        return prop.getProperty("coinbase.secret", DEFAULT_COINBASE_SECRET);
+        return config.getString("coinbase.secret");
     }
 
+    @ValidateMe
     public Integer peerChannelReadTimeout() {
-        return Integer.parseInt(prop.getProperty("peer.channel.read.timeout", String.valueOf(DEFAULT_ACTIVE_PEER_CHANNEL_TIMEOUT)));
+        return config.getInt("peer.channel.read.timeout");
     }
 
+    @ValidateMe
     public Integer traceStartBlock() {
-        return Integer.parseInt(prop.getProperty("trace.startblock", String.valueOf(DEFAULT_TRACE_STARTBLOCK)));
+        return config.getInt("trace.startblock");
     }
 
-    public Boolean recordBlocks() {
-        return Boolean.parseBoolean(prop.getProperty("record.blocks", String.valueOf(DEFAULT_RECORD_BLOCKS)));
+    @ValidateMe
+    public boolean recordBlocks() {
+        return config.getBoolean("record.blocks");
     }
 
-    public Boolean dumpFull() {
-        return Boolean.parseBoolean(prop.getProperty("dump.full", String.valueOf(DEFAULT_DUMP_FULL)));
+    @ValidateMe
+    public boolean dumpFull() {
+        return config.getBoolean("dump.full");
     }
 
+    @ValidateMe
     public String dumpDir() {
-        return prop.getProperty("dump.dir", DEFAULT_DUMP_DIR);
+        return config.getString("dump.dir");
     }
 
+    @ValidateMe
     public String dumpStyle() {
-        return prop.getProperty("dump.style", DEFAULT_DUMP_STYLE);
+        return config.getString("dump.style");
     }
 
-    public Integer dumpBlock() {
-        return Integer.parseInt(prop.getProperty("dump.block", String.valueOf(DEFAULT_VMTRACE_BLOCK)));
+    @ValidateMe
+    public int dumpBlock() {
+        return config.getInt("dump.block");
     }
 
+    @ValidateMe
     public String databaseDir() {
-        return prop.getProperty("database.dir", DEFAULT_DATABASE_DIR);
+        return databaseDir == null ? config.getString("database.dir") : databaseDir;
     }
 
     public void setDataBaseDir(String dataBaseDir) {
-        prop.setProperty("database.dir", dataBaseDir);
+        this.databaseDir = dataBaseDir;
     }
 
-    public Boolean dumpCleanOnRestart() {
-        return Boolean.parseBoolean(prop.getProperty("dump.clean.on.restart", String.valueOf(DEFAULT_DUMP_CLEAN_ON_RESTART)));
+    @ValidateMe
+    public boolean dumpCleanOnRestart() {
+        return config.getBoolean("dump.clean.on.restart");
     }
 
-    public Boolean playVM() {
-        return Boolean.parseBoolean(prop.getProperty("play.vm", String.valueOf(DEFAULT_PLAY_VM)));
+    @ValidateMe
+    public boolean playVM() {
+        return config.getBoolean("play.vm");
     }
 
-    public Boolean blockChainOnly() {
-        return Boolean.parseBoolean(prop.getProperty("blockchain.only", String.valueOf(DEFAULT_BLOCKCHAIN_ONLY)));
+    @ValidateMe
+    public boolean blockChainOnly() {
+        return config.getBoolean("blockchain.only");
     }
 
-    public Integer maxHashesAsk() {
-        return Integer.parseInt(prop.getProperty("max.hashes.ask", String.valueOf(DEFAULT_MAX_HASHES_ASK)));
+    @ValidateMe
+    public int maxHashesAsk() {
+        return config.getInt("max.hashes.ask");
     }
 
-    public Integer maxBlocksAsk() {
-        return Integer.parseInt(prop.getProperty("max.blocks.ask", String.valueOf(DEFAULT_MAX_BLOCKS_ASK)));
+    @ValidateMe
+    public int maxBlocksAsk() {
+        return config.getInt("max.blocks.ask");
     }
 
-    public Integer maxBlocksQueued() {
-        return Integer.parseInt(prop.getProperty("max.blocks.queued", String.valueOf(DEFAULT_MAX_BLOCKS_QUEUED)));
+    @ValidateMe
+    public int maxBlocksQueued() {
+        return config.getInt("max.blocks.queued");
     }
 
+    @ValidateMe
     public String projectVersion() {
-        return prop.getProperty("project.version", DEFAULT_PROJECT_VERSION);
+        return config.getString("project.version");
     }
 
+    @ValidateMe
     public String helloPhrase() {
-        return prop.getProperty("hello.phrase", DEFAULT_HELLO_PHRASE);
+        return config.getString("hello.phrase");
     }
 
+    @ValidateMe
     public String rootHashStart() {
-        if (prop.isEmpty()) return null;
-        String hash = prop.getProperty("root.hash.start");
-        if (hash == null || hash.equals("-1"))
-            return null;
-        return hash;
+        return config.hasPath("root.hash.start") ? config.getString("root.hash.start") : null;
     }
 
+    @ValidateMe
     public List<String> peerCapabilities() {
-        String capabilitiesList = prop.getProperty("peer.capabilities", DEFAULT_PROTOCOL_LIST);
-        return Arrays.asList(capabilitiesList.split(","));
+        return config.getStringList("peer.capabilities");
     }
 
+    @ValidateMe
     public boolean vmTrace() {
-        return boolProperty("vm.structured.trace", DEFAULT_VM_TRACE);
+        return config.getBoolean("vm.structured.trace");
     }
 
+    @ValidateMe
     public boolean vmTraceCompressed() {
-        return boolProperty("vm.structured.compressed", DEFAULT_VM_TRACE_COMPRESSED);
+        return config.getBoolean("vm.structured.compressed");
     }
 
-    private boolean boolProperty(String key, Boolean defaultValue) {
-        return Boolean.parseBoolean(prop.getProperty(key, String.valueOf(defaultValue)));
-    }
-
-    private int intProperty(String key, int defaultValue) {
-        return Integer.parseInt(prop.getProperty(key, String.valueOf(defaultValue)));
-    }
-
+    @ValidateMe
     public int detailsInMemoryStorageLimit() {
-        return intProperty("details.inmemory.storage.limit", DEFAULT_DETAILS_INMEMORY_STORAGE_LIMIT);
+        return config.getInt("details.inmemory.storage.limit");
     }
 
+    @ValidateMe
     public int flushBlocksBatchSize() {
-        return intProperty("flush.blocks.batch.size", DEFAULT_FLUSH_BATCH_SIZE);
+        return config.getInt("flush.blocks.batch.size");
     }
 
+    @ValidateMe
     public int flushBlocksRepoSize() {
-        return intProperty("flush.blocks.repo.size", DEFAULT_FLUSH_REPO_SIZE);
+        return config.getInt("flush.blocks.repo.size");
     }
 
+    @ValidateMe
     public boolean flushBlocksIgnoreConsensus() {
-        return boolProperty("flush.blocks.ignore.consensus", DEFAULT_FLUSH_IGNORE_CONSENSUS);
+        return config.getBoolean("flush.blocks.ignore.consensus");
     }
 
+    @ValidateMe
     public String vmTraceDir() {
-        return prop.getProperty("vm.structured.dir", DEFAULT_VM_TRACE_DIR);
+        return config.getString("vm.structured.dir");
     }
 
+    @ValidateMe
+    public String privateKey() {
+        return config.getString("peer.privateKey");
+    }
+
+
+    @ValidateMe
     public int listenPort() {
-        return Integer.parseInt(prop.getProperty("peer.listen.port", String.valueOf(DEFAULT_PEER_LISTEN_PORT)));
+        return config.getInt("peer.listen.port");
     }
 
+    @ValidateMe
     public String getKeyValueDataSource() {
-        return prop.getProperty("keyvalue.datasource", DEFAULT_KEY_VALUE_DATA_SOURCE);
+        return config.getString("keyvalue.datasource");
     }
 
+    @ValidateMe
     public boolean isRedisEnabled() {
-        return boolProperty("redis.enabled", DEFAULT_REDIS_ENABLED);
+        return config.getBoolean("redis.enabled");
     }
 
-    public void setListenPort(Integer port) {
-        prop.setProperty("peer.listen.port", port.toString());
-    }
-
-    public void print() {
-        Enumeration<?> e = prop.propertyNames();
-        while (e.hasMoreElements()) {
-            String key = (String) e.nextElement();
-            String value = prop.getProperty(key);
-            if (!key.equals("null"))
-                logger.info("Key: " + key + ", Value: " + value);
-        }
+    public String dump() {
+        return config.root().render(ConfigRenderOptions.defaults().setComments(false));
     }
 
     /*
@@ -315,16 +369,12 @@ public class SystemProperties {
      *
      */
     public boolean vmTestLoadLocal() {
-        return Boolean.parseBoolean(prop.getProperty("GitHubTests.VMTest.loadLocal", String.valueOf(DEFAULT_VMTEST_LOAD_LOCAL)));
+        return config.hasPath("GitHubTests.VMTest.loadLocal") ?
+                config.getBoolean("GitHubTests.VMTest.loadLocal") : DEFAULT_VMTEST_LOAD_LOCAL;
     }
 
     public String blocksLoader() {
-        return prop.getProperty("blocks.loader", DEFAULT_BLOCKS_LOADER);
-    }
-
-
-    public static void main(String args[]) {
-        SystemProperties systemProperties = new SystemProperties();
-        systemProperties.print();
+        return config.hasPath("blocks.loader") ?
+                config.getString("blocks.loader") : DEFAULT_BLOCKS_LOADER;
     }
 }

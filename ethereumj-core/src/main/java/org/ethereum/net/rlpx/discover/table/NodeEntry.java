@@ -68,8 +68,10 @@ public class NodeEntry {
     }
 
     public static int distance(byte[] ownerId, byte[] targetId) {
-        byte[] h1 = sha3(targetId);
-        byte[] h2 = sha3(ownerId);
+//        byte[] h1 = sha3(targetId);
+//        byte[] h2 = sha3(ownerId);
+        byte[] h1 = targetId;
+        byte[] h2 = ownerId;
 
         byte[] hash = new byte[Math.min(h1.length, h2.length)];
 

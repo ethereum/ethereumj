@@ -8,6 +8,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.merge;
+import static org.spongycastle.util.BigIntegers.asUnsignedByteArray;
 
 /**
  * Authentication initiation message, to be wrapped inside
@@ -24,7 +25,7 @@ public class AuthInitiateMessage {
     public AuthInitiateMessage() {
     }
 
-    public static int getLength() {
+    static int getLength() {
         return 65+32+64+32+1;
     }
 
@@ -60,9 +61,16 @@ public class AuthInitiateMessage {
     }
 
     public byte[] encode() {
-        // FIXME does this code generate a constant length for each item?
-        byte[] sigBytes = merge(BigIntegers.asUnsignedByteArray(signature.r),
-                BigIntegers.asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
+
+        byte[] rsigPad = new byte[32];
+        byte[] rsig = asUnsignedByteArray(signature.r);
+        System.arraycopy(rsig, 0, rsigPad, rsigPad.length - rsig.length, rsig.length);
+
+        byte[] ssigPad = new byte[32];
+        byte[] ssig = asUnsignedByteArray(signature.s);
+        System.arraycopy(ssig, 0, ssigPad, ssigPad.length - ssig.length, ssig.length);
+
+        byte[] sigBytes = merge(rsigPad, ssigPad, new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
 
         byte[] buffer = new byte[getLength()];
         int offset = 0;
@@ -83,8 +91,8 @@ public class AuthInitiateMessage {
     @Override
     public String toString() {
 
-        byte[] sigBytes = merge(BigIntegers.asUnsignedByteArray(signature.r),
-                BigIntegers.asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
+        byte[] sigBytes = merge(asUnsignedByteArray(signature.r),
+                asUnsignedByteArray(signature.s), new byte[]{EncryptionHandshake.recIdFromSignatureV(signature.v)});
 
         return "AuthInitiateMessage{" +
                 "\n  sigBytes=" + Hex.toHexString(sigBytes) +
