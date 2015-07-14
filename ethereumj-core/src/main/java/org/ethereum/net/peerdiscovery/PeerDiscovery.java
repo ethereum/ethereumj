@@ -13,7 +13,6 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -128,9 +127,8 @@ public class PeerDiscovery {
         executorPool.execute(workerThread);
     }
 
-    public List<PeerInfo> parsePeerDiscoveryIpList(final String peerDiscoveryIpList) {
+    public List<PeerInfo> parsePeerDiscoveryIpList(final List<String> ipList) {
 
-        final List<String> ipList = Arrays.asList(peerDiscoveryIpList.split(","));
         final List<PeerInfo> peers = new ArrayList<>();
 
         for (String ip : ipList) {
