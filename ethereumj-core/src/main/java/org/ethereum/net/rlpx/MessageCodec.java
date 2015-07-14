@@ -1,4 +1,4 @@
-package org.ethereum.net.wire;
+package org.ethereum.net.rlpx;
 
 import com.google.common.io.ByteStreams;
 import io.netty.buffer.ByteBuf;
