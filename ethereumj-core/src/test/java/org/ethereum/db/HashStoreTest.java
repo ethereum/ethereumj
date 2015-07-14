@@ -46,6 +46,7 @@ public class HashStoreTest {
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
         SystemProperties.CONFIG.setDataBaseDir(testDb);
+//        SystemProperties.CONFIG.overrideParams(SystemProperties.PROPERTY_DB_DIR, testDb);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         hashStore = new HashStoreImpl();

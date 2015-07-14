@@ -1,9 +1,10 @@
 package org.ethereum;
 
 import org.ethereum.cli.CLIInterface;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.facade.EthereumFactory;
+import org.ethereum.net.rlpx.Node;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -20,13 +21,15 @@ public class Start {
         CLIInterface.call(args);
         Ethereum ethereum = EthereumFactory.createEthereum();
 
-        if (CONFIG.blocksLoader().equals(""))
+        if (CONFIG.blocksLoader().equals("")) {
+            Node node = CONFIG.peerActive().get(0);
             ethereum.connect(
-                    CONFIG.activePeerIP(),
-                    CONFIG.activePeerPort(),
-                    CONFIG.activePeerNodeid());
-        else
+                    node.getHost(),
+                    node.getPort(),
+                    Hex.toHexString(node.getId()));
+        } else {
             ethereum.getBlockLoader().loadBlocks();
+        }
     }
 
 }
