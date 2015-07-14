@@ -1,16 +1,14 @@
 package org.ethereum.net.swarm;
 
+import io.netty.util.concurrent.DefaultPromise;
+import io.netty.util.concurrent.Promise;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.swarm.bzz.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -132,8 +130,8 @@ public class NetStore implements ChunkStore {
     // once a chunk is found propagate it its requesters unless timed out
     private synchronized void propagateResponse(Chunk chunk) {
         ChunkRequest chunkRequest = chunkRequestMap.get(chunk.getKey());
-        for (CompletableFuture<Chunk> localRequester : chunkRequest.localRequesters) {
-            localRequester.complete(chunk);
+        for (Promise<Chunk> localRequester : chunkRequest.localRequesters) {
+            localRequester.setSuccess(chunk);
         }
 
         for (Map.Entry<Long, Collection<BzzRetrieveReqMessage>> e :
@@ -190,7 +188,7 @@ public class NetStore implements ChunkStore {
 
     public synchronized Future<Chunk> getAsync(Key key) {
         Chunk chunk = localStore.get(key);
-        CompletableFuture<Chunk> ret = new CompletableFuture<>();
+        Promise<Chunk> ret = new DefaultPromise<Chunk>() {};
         if (chunk == null) {
 //            long timeout = 0; // TODO
             ChunkRequest chunkRequest = new ChunkRequest();
@@ -198,7 +196,7 @@ public class NetStore implements ChunkStore {
             chunkRequestMap.put(key, chunkRequest);
             startSearch(-1, key, timeout);
         } else {
-            ret.complete(chunk);
+            ret.setSuccess(chunk);
         }
         return ret;
     }
@@ -323,7 +321,7 @@ public class NetStore implements ChunkStore {
     private class ChunkRequest {
         EntryReqStatus status = EntryReqStatus.Searching;
         Map<Long, Collection<BzzRetrieveReqMessage>> requesters = new HashMap<>();
-        List<CompletableFuture<Chunk>> localRequesters = new ArrayList<>();
+        List<Promise<Chunk>> localRequesters = new ArrayList<>();
     }
 
     // Statistics gathers

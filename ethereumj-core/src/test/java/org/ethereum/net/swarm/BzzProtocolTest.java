@@ -15,7 +15,6 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.*;
-import java.util.function.Predicate;
 
 import static org.ethereum.crypto.HashUtil.sha3;
 
@@ -23,6 +22,8 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * Created by Admin on 24.06.2015.
  */
 public class BzzProtocolTest {
+
+    interface Predicate<T> { boolean test(T t);}
 
     public static class FilterPrinter extends PrintWriter {
         String filter;
