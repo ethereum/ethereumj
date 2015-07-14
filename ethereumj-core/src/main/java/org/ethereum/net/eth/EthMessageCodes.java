@@ -93,7 +93,7 @@ public enum EthMessageCodes {
     }
 
     public static EthMessageCodes fromByte(byte i) {
-        return intToTypeMap.get(i - OFFSET);
+        return intToTypeMap.get((int) i);
     }
 
     public static boolean inRange(byte code) {
@@ -105,6 +105,6 @@ public enum EthMessageCodes {
     }
 
     public byte asByte() {
-        return (byte) (cmd + OFFSET);
+        return (byte) (cmd);
     }
 }

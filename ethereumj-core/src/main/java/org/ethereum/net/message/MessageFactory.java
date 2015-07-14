@@ -5,6 +5,7 @@ import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.PeersMessage;
+import org.ethereum.net.rlpx.MessageCodesResolver;
 import org.ethereum.net.shh.Envelope;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.*;
@@ -14,11 +15,12 @@ import org.ethereum.net.swarm.bzz.*;
  */
 public class MessageFactory {
 
-    public static Message createMessage(byte code, byte[] encoded) {
+    public static Message createMessage(byte code, byte[] encoded, MessageCodesResolver codesResolver) {
 
-        if (P2pMessageCodes.inRange(code)) {
+        byte resolved = codesResolver.resolveP2p(code);
+        if (P2pMessageCodes.inRange(resolved)) {
 
-            P2pMessageCodes receivedCommand = P2pMessageCodes.fromByte(code);
+            P2pMessageCodes receivedCommand = P2pMessageCodes.fromByte(resolved);
             switch (receivedCommand) {
                 case HELLO:
                     return new HelloMessage(encoded);
@@ -35,9 +37,10 @@ public class MessageFactory {
             }
         }
 
-        if (EthMessageCodes.inRange(code)) {
+        resolved = codesResolver.resolveEth(code);
+        if (EthMessageCodes.inRange(resolved)) {
 
-            EthMessageCodes receivedCommand = EthMessageCodes.fromByte(code);
+            EthMessageCodes receivedCommand = EthMessageCodes.fromByte(resolved);
             switch (receivedCommand) {
                 case STATUS:
                     return new StatusMessage(encoded);
@@ -58,9 +61,10 @@ public class MessageFactory {
             }
         }
 
-        if (ShhMessageCodes.inRange(code)) {
+        resolved = codesResolver.resolveShh(code);
+        if (ShhMessageCodes.inRange(resolved)) {
 
-            ShhMessageCodes receivedCommand = ShhMessageCodes.fromByte(code);
+            ShhMessageCodes receivedCommand = ShhMessageCodes.fromByte(resolved);
             switch (receivedCommand) {
                 case STATUS:
                     return new org.ethereum.net.shh.StatusMessage(encoded);
@@ -75,9 +79,10 @@ public class MessageFactory {
             }
         }
 
-        if (BzzMessageCodes.inRange(code)) {
+        resolved = codesResolver.resolveBzz(code);
+        if (BzzMessageCodes.inRange(resolved)) {
 
-            BzzMessageCodes receivedCommand = BzzMessageCodes.fromByte(code);
+            BzzMessageCodes receivedCommand = BzzMessageCodes.fromByte(resolved);
             switch (receivedCommand) {
                 case STATUS:
                     return new BzzStatusMessage(encoded);

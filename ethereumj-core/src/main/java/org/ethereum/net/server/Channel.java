@@ -10,6 +10,8 @@ import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
+import org.ethereum.net.rlpx.HandshakeHelper;
+import org.ethereum.net.rlpx.MessageCodesResolver;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.rlpx.MessageCodec;
@@ -22,6 +24,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 
@@ -56,6 +59,8 @@ public class Channel {
     @Autowired
     MessageCodec messageCodec;
 
+    MessageCodesResolver messageCodesResolver = new MessageCodesResolver();
+    
     InetSocketAddress inetSocketAddress;
 
 
@@ -80,7 +85,6 @@ public class Channel {
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec, HelloMessage helloRemote, byte[] nodeId) throws IOException, InterruptedException {
         ctx.pipeline().addLast(Capability.P2P, p2pHandler);
-
 
         p2pHandler.setChannel(this);
         p2pHandler.setHandshake(helloRemote, ctx);
@@ -165,5 +169,9 @@ public class Channel {
 
     public void setInetSocketAddress(InetSocketAddress inetSocketAddress) {
         this.inetSocketAddress = inetSocketAddress;
+    }
+
+    public MessageCodesResolver getMessageCodesResolver() {
+        return messageCodesResolver;
     }
 }

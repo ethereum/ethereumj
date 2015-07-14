@@ -14,7 +14,6 @@ import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
-import org.ethereum.net.rlpx.*;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
@@ -27,7 +26,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.List;
 
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
@@ -49,6 +47,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     private EncryptionHandshake handshake;
     private byte[] initiatePacket;
     private Channel channel;
+    private MessageCodesResolver messageCodesResolver;
     private boolean isHandshakeDone;
     private final InitiateHandler initiator = new InitiateHandler();
 
@@ -89,7 +88,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Recv: Encoded: {} [{}]", frame.getType(), Hex.toHexString(payload));
 
-        Message msg = MessageFactory.createMessage((byte) frame.getType(), payload);
+        Message msg = MessageFactory.createMessage((byte) frame.getType(), payload, messageCodesResolver);
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
@@ -203,19 +202,19 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         byte code = 0;
 
         if (msgCommand instanceof P2pMessageCodes){
-            code = ((P2pMessageCodes)msgCommand).asByte();
+            code = messageCodesResolver.withP2pOffset(((P2pMessageCodes) msgCommand).asByte());
         }
 
         if (msgCommand instanceof EthMessageCodes){
-            code = ((EthMessageCodes)msgCommand).asByte();
+            code = messageCodesResolver.withEthOffset(((EthMessageCodes) msgCommand).asByte());
         }
 
         if (msgCommand instanceof ShhMessageCodes){
-            code = ((ShhMessageCodes)msgCommand).asByte();
+            code = messageCodesResolver.withShhOffset(((ShhMessageCodes)msgCommand).asByte());
         }
 
         if (msgCommand instanceof BzzMessageCodes){
-            code = ((BzzMessageCodes)msgCommand).asByte();
+            code = messageCodesResolver.withBzzOffset(((BzzMessageCodes) msgCommand).asByte());
         }
 
         return code;
@@ -224,5 +223,6 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
+        this.messageCodesResolver = channel.getMessageCodesResolver();
     }
 }

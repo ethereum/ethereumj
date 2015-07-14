@@ -46,7 +46,7 @@ public enum BzzMessageCodes {
     }
 
     public static BzzMessageCodes fromByte(byte i) {
-        return intToTypeMap.get(i - OFFSET);
+        return intToTypeMap.get((int) i);
     }
 
     public static boolean inRange(byte code) {
@@ -58,6 +58,6 @@ public enum BzzMessageCodes {
     }
 
     public byte asByte() {
-        return (byte) (cmd + OFFSET);
+        return (byte) (cmd);
     }
 }

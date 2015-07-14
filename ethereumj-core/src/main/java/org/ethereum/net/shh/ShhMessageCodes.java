@@ -56,7 +56,7 @@ public enum ShhMessageCodes {
     }
 
     public static ShhMessageCodes fromByte(byte i) {
-        return intToTypeMap.get(i - OFFSET);
+        return intToTypeMap.get((int) i);
     }
 
     public static void setOffset(byte offset) {
@@ -68,6 +68,6 @@ public enum ShhMessageCodes {
     }
 
     public byte asByte() {
-        return (byte) (cmd + OFFSET);
+        return (byte) (cmd);
     }
 }
