@@ -21,14 +21,14 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * @author Mikhail Kalinin
  * @since 10.07.2015
  */
-@Ignore("long stress test")
 public class BlockStressTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
@@ -56,6 +56,7 @@ public class BlockStressTest {
         blockSourceDB.close();
     }
 
+    @Ignore("long stress test")
     @Test // loads blocks from file and store them into disk DB
     public void prepareData() throws URISyntaxException, IOException {
         URL dataURL = ClassLoader.getSystemResource("blockstore/big_data.dmp");
@@ -80,6 +81,7 @@ public class BlockStressTest {
         logger.info("total blocks loaded: {}", blockSource.size());
     }
 
+    @Ignore("long stress test")
     @Test // interesting how much time will take reading block by its hash
     public void testBlockSource() {
         long start, end;
@@ -104,6 +106,7 @@ public class BlockStressTest {
         logger.info("reading: time per block {} ms", (end - start) / (float)hashes.size());
     }
 
+    @Ignore("long stress test")
     @Test // benchmarking block queue, writing and reading
     public void testBlockQueue() {
         long start, end;
@@ -139,5 +142,108 @@ public class BlockStressTest {
 
         logger.info("reading: total time {} ms", end - start);
         logger.info("reading: time per block {} ms", (end - start) / (float)hashes.size());
+    }
+
+    @Ignore("long stress test")
+    @Test // benchmarking block queue writing with multiple threads
+    public void testBlockQueueMultithreaded() throws InterruptedException {
+        long start, end;
+        int threadsCount = 5;
+
+        BlockQueue blockQueue = new BlockQueueImpl();
+        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
+        blockQueue.open();
+
+        try {
+            List<byte[]> hashes = new ArrayList<>(blockSource.keySet());
+            List<List<byte[]>> hashBunches = new ArrayList<>(threadsCount);
+            int bunchSize = hashes.size() / threadsCount;
+            for(int i = 0; i < threadsCount; i++) {
+                List<byte[]> bunch = new ArrayList<>(bunchSize);
+                for(int k = i * bunchSize; k < (i + 1) * bunchSize; k++) {
+                    bunch.add(hashes.get(k));
+                }
+                if(i == threadsCount - 1) {
+                    for(int k = (i + 1) * bunchSize; k < hashes.size(); k++) {
+                        bunch.add(hashes.get(k));
+                    }
+                }
+                hashBunches.add(bunch);
+            }
+
+            List<Thread> threads = new ArrayList<>();
+            for(int i = 0; i < hashBunches.size(); i++) {
+                Thread t = new Thread(new BlockQueueWriter(
+                        i + 1,
+                        hashBunches.get(i),
+                        blockQueue
+                ));
+                t.start();
+                threads.add(t);
+            }
+
+            start = System.currentTimeMillis();
+            for(Thread t : threads) {
+                t.join();
+            }
+            end = System.currentTimeMillis();
+
+            logger.info("writing: total time {} ms", end - start);
+            logger.info("writing: time per block {} ms", (end - start) / (float) hashes.size());
+
+            // testing: order and import completeness
+            Set<byte[]> importedHashes = new HashSet<>();
+            long prevNumber = -1;
+            Block block;
+            while (null != (block = blockQueue.poll())) {
+                assertTrue(block.getNumber() > prevNumber);
+                prevNumber = block.getNumber();
+                importedHashes.add(block.getHash());
+            }
+
+            for(byte[] hash : hashes) {
+                assertTrue(contains(importedHashes, hash));
+            }
+            for(byte[] hash : importedHashes) {
+                assertTrue(contains(hashes, hash));
+            }
+        } finally {
+            blockQueue.close();
+        }
+    }
+
+    private boolean contains(Collection<byte[]> hashes, byte[] hash) {
+        for(byte[] h : hashes) {
+            if(Arrays.equals(h, hash)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private class BlockQueueWriter implements Runnable {
+
+        private int threadNumber;
+        private List<byte[]> hashes;
+        private BlockQueue blockQueue;
+
+        public BlockQueueWriter(int threadNumber, List<byte[]> hashes, BlockQueue blockQueue) {
+            this.threadNumber = threadNumber;
+            this.hashes = hashes;
+            this.blockQueue = blockQueue;
+        }
+
+        @Override
+        public void run() {
+            logger.info("writer {}: starting", threadNumber);
+            int counter = 0;
+            for(byte[] hash : hashes) {
+                Block block = blockSource.get(hash);
+                blockQueue.add(block);
+                if(++counter % 10000 == 0) {
+                    logger.info("writer {}: {} done from {}", threadNumber, counter, hashes.size());
+                }
+            }
+        }
     }
 }
