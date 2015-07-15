@@ -339,6 +339,12 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public String privateKey() {
+        return config.getString("peer.privateKey");
+    }
+
+
+    @ValidateMe
     public int listenPort() {
         return config.getInt("peer.listen.port");
     }

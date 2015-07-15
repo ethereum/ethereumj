@@ -5,6 +5,7 @@ import io.netty.util.concurrent.Promise;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.swarm.bzz.*;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,8 +41,7 @@ public class NetStore implements ChunkStore {
     }
 
     public static byte[] getSelfNodeId() {
-        ECKey myKey = ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress();
-        byte[] nodeIdWithFormat = myKey.getPubKey();
+        byte[] nodeIdWithFormat = Hex.decode(CONFIG.privateKey());
         byte[] nodeId = new byte[nodeIdWithFormat.length - 1];
         System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
         return nodeId;
