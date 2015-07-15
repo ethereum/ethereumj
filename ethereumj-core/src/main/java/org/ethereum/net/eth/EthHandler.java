@@ -13,7 +13,6 @@ import org.ethereum.net.eth.sync.SyncStatus;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.util.FastByteComparisons;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -52,8 +51,6 @@ import static org.ethereum.util.ByteUtil.wrap;
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public final static byte VERSION = 60;
-
-    public final static int NETWORK_ID = 0;
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 
@@ -207,7 +204,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             logger.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
 //          msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
             ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
-        } else if (msg.getNetworkId() != NETWORK_ID)
+        } else if (msg.getNetworkId() != CONFIG.networkId())
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.NULL_IDENTITY));
         else {
             syncManager.handleStatus(this, msg);
@@ -286,7 +283,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     private void sendStatus() {
-        byte protocolVersion = EthHandler.VERSION, networkId = EthHandler.NETWORK_ID;
+        byte protocolVersion = EthHandler.VERSION, networkId = (byte) CONFIG.networkId();
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
         byte[] bestHash = blockchain.getBestBlockHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,

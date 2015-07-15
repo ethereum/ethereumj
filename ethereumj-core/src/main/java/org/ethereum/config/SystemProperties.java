@@ -343,6 +343,10 @@ public class SystemProperties {
         return config.getString("peer.privateKey");
     }
 
+    @ValidateMe
+    public int networkId() {
+        return config.getInt("peer.networkId");
+    }
 
     @ValidateMe
     public int listenPort() {
