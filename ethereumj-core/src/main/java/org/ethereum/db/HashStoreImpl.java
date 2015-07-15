@@ -80,6 +80,12 @@ public class HashStoreImpl implements HashStore {
         return index.size();
     }
 
+    @Override
+    public synchronized void clear() {
+        index.clear();
+        hashes.clear();
+    }
+
     private Long createIndex(boolean first) {
         Long idx;
         if(index.isEmpty()) {

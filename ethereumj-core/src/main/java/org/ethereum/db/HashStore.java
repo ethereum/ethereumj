@@ -21,4 +21,6 @@ public interface HashStore extends DiskStore {
     Set<Long> getKeys();
 
     int size();
+
+    void clear();
 }

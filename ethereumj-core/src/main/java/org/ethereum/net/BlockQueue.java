@@ -2,7 +2,11 @@ package org.ethereum.net;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.ImportResult;
+import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.db.HashStore;
+import org.ethereum.db.HashStoreImpl;
 import org.ethereum.facade.Blockchain;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +38,10 @@ public class BlockQueue {
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
     /**
-     * The list of hashes of the heaviest chain on the network,
+     * Store holding a list of hashes of the heaviest chain on the network,
      * for which this client doesn't have the blocks yet
      */
-    private Deque<byte[]> blockHashQueue = new ArrayDeque<>();
+    private HashStore hashStore;
 
     /**
      * Queue with blocks to be validated and added to the blockchain
@@ -60,6 +64,11 @@ public class BlockQueue {
     Blockchain blockchain;
 
     public BlockQueue() {
+
+        MapDBFactory mapDBFactory = new MapDBFactoryImpl();
+        hashStore = new HashStoreImpl();
+        ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
+        hashStore.open();
 
         Runnable queueProducer = new Runnable(){
 
@@ -163,8 +172,8 @@ public class BlockQueue {
      * @param hash - the best hash
      */
     public void setBestHash(byte[] hash) {
-        blockHashQueue.clear();
-        blockHashQueue.addLast(hash);
+        hashStore.clear();
+        hashStore.addFirst(hash);
     }
 
     /**
@@ -174,16 +183,16 @@ public class BlockQueue {
      * @return The best hash on the network known to the client
      */
     public byte[] getBestHash() {
-        return blockHashQueue.peekLast();
+        return hashStore.peek();
     }
 
     public void addHash(byte[] hash) {
-        blockHashQueue.addLast(hash);
+        hashStore.addFirst(hash);
 
         if (logger.isTraceEnabled()) {
             logger.trace("Adding hash to a hashQueue: [{}], hash queue size: {} ",
                     Hex.toHexString(hash).substring(0, 6),
-                    blockHashQueue.size());
+                    hashStore.size());
         }
     }
 
@@ -200,12 +209,12 @@ public class BlockQueue {
 
             if (logger.isDebugEnabled())
                 logger.debug("Return hash: [{}]", Hex.toHexString(hash));
-            blockHashQueue.addLast(hash);
+            hashStore.addFirst(hash);
         }
     }
 
     public void addNewBlockHash(byte[] hash) {
-        blockHashQueue.addFirst(hash);
+        hashStore.add(hash);
     }
 
     /**
@@ -216,8 +225,8 @@ public class BlockQueue {
     public List<byte[]> getHashes() {
 
         List<byte[]> hashes = new ArrayList<>();
-        while (!blockHashQueue.isEmpty() && hashes.size() < CONFIG.maxBlocksAsk()) {
-            hashes.add(blockHashQueue.removeLast());
+        while (!hashStore.isEmpty() && hashes.size() < CONFIG.maxBlocksAsk()) {
+            hashes.add(hashStore.poll());
         }
         return hashes;
     }
@@ -225,7 +234,7 @@ public class BlockQueue {
     // a bit ugly but really gives
     // good result
     public void logHashQueueSize() {
-        logger.info("Block hashes list size: [{}]", blockHashQueue.size());
+        logger.info("Block hashes list size: [{}]", hashStore.size());
     }
 
     private class BlockByNumberComparator implements Comparator<Block> {
@@ -263,11 +272,11 @@ public class BlockQueue {
     }
 
     public boolean isHashesEmpty() {
-        return blockHashQueue.size() == 0;
+        return hashStore.isEmpty();
     }
 
     public void clear() {
-        this.blockHashQueue.clear();
+        this.hashStore.clear();
         this.blockReceivedQueue.clear();
     }
 
