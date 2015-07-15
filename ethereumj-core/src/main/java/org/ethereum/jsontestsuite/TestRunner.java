@@ -64,6 +64,7 @@ public class TestRunner {
 
         BlockStore blockStore = new InMemoryBlockStore();
         blockStore.saveBlock(genesis, new ArrayList<TransactionReceipt>());
+        blockStore.setSessionFactory(SessionFactoryProvider.sessionFactory());
 
         Wallet wallet = new Wallet();
         AdminInfo adminInfo = new AdminInfo();
