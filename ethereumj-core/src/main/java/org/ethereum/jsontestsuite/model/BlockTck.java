@@ -8,8 +8,17 @@ public class BlockTck {
     List<TransactionTck> transactions;
     List<BlockHeaderTck> uncleHeaders;
     String rlp;
+    String blocknumber;
 
     public BlockTck() {
+    }
+
+    public String getBlocknumber() {
+        return blocknumber;
+    }
+
+    public void setBlocknumber(String blocknumber) {
+        this.blocknumber = blocknumber;
     }
 
     public BlockHeaderTck getBlockHeader() {
