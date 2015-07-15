@@ -133,6 +133,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public String privateKey() {
+        return config.getString("privateKey");
+    }
+
+    @ValidateMe
     public int peerDiscoveryWorkers() {
         return config.getInt("peer.discovery.workers");
     }

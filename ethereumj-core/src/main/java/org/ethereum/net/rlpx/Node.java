@@ -8,6 +8,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
@@ -99,11 +100,12 @@ public class Node {
 
     public byte[] getRLP() {
 
-        byte[] rlphost = RLP.encodeElement(host.getBytes(Charset.forName("UTF-8")));
-        byte[] rlpPort = RLP.encodeElement(intToBytes(port));
+        byte[] rlphost = RLP.encodeElement(host.getBytes(StandardCharsets.UTF_8));
+        byte[] rlpTCPPort = RLP.encodeInt(port);
+        byte[] rlpUDPPort = RLP.encodeInt(port);
         byte[] rlpId = RLP.encodeElement(id);
 
-        byte[] data = RLP.encodeList(rlphost, rlpPort, rlpId);
+        byte[] data = RLP.encodeList(rlphost, rlpUDPPort, rlpTCPPort, rlpId);
         return data;
     }
 

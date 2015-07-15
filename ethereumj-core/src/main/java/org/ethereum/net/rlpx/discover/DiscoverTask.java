@@ -8,6 +8,7 @@ import org.ethereum.net.rlpx.FindNodeMessage;
 import org.ethereum.net.rlpx.Message;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.KademliaOptions;
+import org.ethereum.net.rlpx.discover.table.NodeEntry;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +49,8 @@ public class DiscoverTask implements Runnable {
 //        }
 
             if (round == KademliaOptions.MAX_STEPS) {
-                logger.info("{}", String.format("Terminating discover after %d rounds.", round));
-                logger.info("{}", String.format("Nodes discovered %d ", table.getNodesCount()));
+                logger.info("{}", String.format("(KademliaOptions.MAX_STEPS) Terminating discover after %d rounds.", round));
+                logger.info("{}\n{}", String.format("Nodes discovered %d ", table.getNodesCount()), dumpNodes());
                 return;
             }
 
@@ -63,6 +64,7 @@ public class DiscoverTask implements Runnable {
                         DatagramPacket packet = new DatagramPacket(
                                 Unpooled.copiedBuffer(findNode.getPacket()),
                                 new InetSocketAddress(n.getHost(), n.getPort()));
+                        logger.info("<=== (to " + n.getHost() + ":" + n.getPort() + ") " + findNode);
                         channel.write(packet);
                         tried.add(n);
                     } catch (Exception ex) {
@@ -77,8 +79,8 @@ public class DiscoverTask implements Runnable {
             channel.flush();
 
             if (tried.isEmpty()) {
-                logger.info("{}", String.format("Terminating discover after %d rounds.", round));
-                logger.info("{}", String.format("Nodes discovered %d ", table.getNodesCount()));
+                logger.info("{}", String.format("(tried.isEmpty()) Terminating discover after %d rounds.", round));
+                logger.info("{}\n{}", String.format("Nodes discovered %d ", table.getNodesCount()), dumpNodes());
                 return;
             }
 
@@ -88,5 +90,13 @@ public class DiscoverTask implements Runnable {
         } catch (Exception ex) {
             logger.info("{}", ex);
         }
+    }
+
+    private String dumpNodes() {
+        String ret = "";
+        for (NodeEntry entry : table.getAllNodes()) {
+            ret += "    " + entry.getNode() + "\n";
+        }
+        return ret;
     }
 }
