@@ -6,6 +6,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
+import org.ethereum.facade.CommonConfig;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -99,6 +100,9 @@ public class BlockchainImpl implements Blockchain {
 
     @Autowired
     private BlockQueue blockQueue;
+
+    @Autowired
+    private CommonConfig config;
 
     @Autowired
     private ChannelManager channelManager;
@@ -564,8 +568,8 @@ public class BlockchainImpl implements Blockchain {
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
 //                System.exit(1);
                 // in case of rollback hard move the root
-    //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
-    //                repository.syncToRoot(parentBlock.getStateRoot());
+                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
+                repository.syncToRoot(parentBlock.getStateRoot());
                 // todo: after the rollback happens other block should be requested
             }
 
