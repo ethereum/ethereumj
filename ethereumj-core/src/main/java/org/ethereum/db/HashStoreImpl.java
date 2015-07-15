@@ -75,6 +75,11 @@ public class HashStoreImpl implements HashStore {
         return hashes.keySet();
     }
 
+    @Override
+    public int size() {
+        return index.size();
+    }
+
     private Long createIndex(boolean first) {
         Long idx;
         if(index.isEmpty()) {

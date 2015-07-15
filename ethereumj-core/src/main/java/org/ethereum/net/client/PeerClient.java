@@ -66,13 +66,8 @@ public class PeerClient {
             // Start the client.
             ChannelFuture f = b.connect().sync();
 
-            // Wait until the connection is closed.
-            f.channel().closeFuture().sync();
-            logger.debug("Connection is closed");
-
         } catch (Exception e) {
             logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
-        } finally {
             workerGroup.shutdownGracefully();
         }
     }

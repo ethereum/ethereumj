@@ -19,4 +19,6 @@ public interface HashStore extends DiskStore {
     boolean isEmpty();
 
     Set<Long> getKeys();
+
+    int size();
 }

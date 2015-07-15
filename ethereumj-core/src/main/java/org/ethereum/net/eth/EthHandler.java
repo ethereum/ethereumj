@@ -8,6 +8,8 @@ import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
+import org.ethereum.net.eth.sync.SyncManager;
+import org.ethereum.net.eth.sync.SyncStatus;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.util.ByteUtil;
@@ -70,6 +72,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
     private Timer getTxTimer = new Timer("GetTransactionsTimer");
+
+    @Autowired
+    private SyncManager syncManager;
 
     @Autowired
     private Blockchain blockchain;
@@ -205,68 +210,15 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         } else if (msg.getNetworkId() != NETWORK_ID)
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.NULL_IDENTITY));
         else {
-            BlockQueue chainQueue = blockchain.getQueue();
-            BigInteger peerTotalDifficulty = new BigInteger(1, msg.getTotalDifficulty());
-            BigInteger highestKnownTotalDifficulty = blockchain.getTotalDifficulty();
-
-            boolean synced =
-                    FastByteComparisons.compareTo(msg.getBestHash(), 0, 32, blockchain.getBestBlockHash(), 0, 32) == 0;
-
-            if (!synced && (highestKnownTotalDifficulty == null ||
-                    peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0)) {
-
-                logger.info(" Their chain is better: total difficulty : {} vs {}",
-                        peerTotalDifficulty.toString(),
-                        highestKnownTotalDifficulty == null ? "0" : highestKnownTotalDifficulty.toString());
-
-                hashRetrievalLock = this.peerId;
-                chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
-                chainQueue.setBestHash(msg.getBestHash());
-                syncStatus = SyncStatus.HASH_RETRIEVING;
-                sendGetBlockHashes();
-            } else {
-                logger.info("The peer sync process fully complete");
-                syncStatus = SyncStatus.SYNC_DONE;
-            }
+            syncManager.handleStatus(this, msg);
         }
     }
 
     private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
-
-        List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
-        BlockQueue chainQueue = blockchain.getQueue();
-
-        // result is empty, peer has no more hashes
-        // or peer doesn't have the best hash anymore
-        if (receivedHashes.isEmpty()
-                || !this.peerId.equals(hashRetrievalLock)) {
-            chainQueue.addHash( blockchain.getBestBlockHash() );
-            sendGetBlocks(); // start getting blocks from hash queue
-            return;
-        }
-
-        Iterator<byte[]> hashIterator = receivedHashes.iterator();
-        byte[] foundHash, latestHash = blockchain.getBestBlockHash();
-        while (hashIterator.hasNext()) {
-            foundHash = hashIterator.next();
-            if (FastByteComparisons.compareTo(foundHash, 0, 32, latestHash, 0, 32) != 0) {
-                chainQueue.addHash(foundHash);    // store unknown hashes in queue until known hash is found
-            } else {
-
-                chainQueue.addHash(blockchain.getBestBlockHash());
-                logger.trace("Catch up with the hashes until: {[]}", foundHash);
-                // if known hash is found, ignore the rest
-                sendGetBlocks(); // start getting blocks from hash queue
-                return;
-            }
-        }
-        // no known hash has been reached
-        chainQueue.logHashQueueSize();
-        sendGetBlockHashes(); // another getBlockHashes with last received hash.
+        syncManager.handleBlockHashes(this, blockHashesMessage);
     }
 
     private void processBlocks(BlocksMessage blocksMessage) {
-
         List<Block> blockList = blocksMessage.getBlocks();
 
         if (!blockList.isEmpty()) {
@@ -284,21 +236,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
         blockchain.getQueue().returnHashes(sentHashes);
 
-        if (blockchain.getQueue().isHashesEmpty()) {
-            logger.info(" The peer sync process fully complete");
-            syncStatus = SyncStatus.SYNC_DONE;
-            blockchain.getQueue().addBlocks(blockList);
-            blockchain.getQueue().logHashQueueSize();
-        } else {
-            if (blockList.isEmpty()) return;
-            blockchain.getQueue().addBlocks(blockList);
-            blockchain.getQueue().logHashQueueSize();
-            sendGetBlocks();
-        }
-
         for (Block block : blockList) {
             totalDifficulty.add(block.getCumulativeDifficulty());
         }
+
+        syncManager.handleBlocks(this, blocksMessage);
     }
 
 
@@ -371,14 +313,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         msgQueue.sendMessage(GET_TRANSACTIONS_MESSAGE);
     }
 
-    private void sendGetBlockHashes() {
+    public void sendGetBlockHashes() {
         byte[] bestHash = blockchain.getQueue().getBestHash();
         GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, CONFIG.maxHashesAsk());
         msgQueue.sendMessage(msg);
     }
 
     // Parallel download blocks based on hashQueue
-    private void sendGetBlocks() {
+    public void sendGetBlocks() {
         BlockQueue queue = blockchain.getQueue();
         if (queue.size() > CONFIG.maxBlocksQueued()) {
 
@@ -491,13 +433,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void setPeerId(String peerId) {
         this.peerId = peerId;
-    }
-
-    public enum SyncStatus {
-        INIT,
-        HASH_RETRIEVING,
-        BLOCK_RETRIEVING,
-        SYNC_DONE;
     }
 
     public void setBestHash(byte[] hash) {

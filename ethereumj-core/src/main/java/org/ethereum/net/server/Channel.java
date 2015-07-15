@@ -7,6 +7,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.sync.SyncStatus;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
@@ -147,7 +148,7 @@ public class Channel {
 
 
     public boolean isSync() {
-        return ethHandler.getSyncStatus() == EthHandler.SyncStatus.SYNC_DONE;
+        return ethHandler.getSyncStatus() == SyncStatus.SYNC_DONE;
     }
 
 

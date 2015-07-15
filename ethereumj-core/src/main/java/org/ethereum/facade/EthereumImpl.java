@@ -150,12 +150,7 @@ public class EthereumImpl implements Ethereum {
     @Override
     public void connect(String ip, int port, String remoteId) {
         logger.info("Connecting to: {}:{}", ip, port);
-
-        PeerClient peerClient = worldManager.getActivePeer();
-        if (peerClient == null)
-            peerClient = ctx.getBean(PeerClient.class);
-        worldManager.setActivePeer(peerClient);
-
+        PeerClient peerClient = ctx.getBean(PeerClient.class);
         peerClient.connect(ip, port, remoteId);
     }
 
