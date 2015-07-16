@@ -159,7 +159,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause.getCause().toString());
+        logger.error("P2p handling failed", cause);
         super.exceptionCaught(ctx, cause);
         ctx.close();
         killTimers();

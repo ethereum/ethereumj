@@ -82,7 +82,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause.getCause().toString());
+        logger.error("Shh handling failed", cause);
         super.exceptionCaught(ctx, cause);
         ctx.close();
     }
