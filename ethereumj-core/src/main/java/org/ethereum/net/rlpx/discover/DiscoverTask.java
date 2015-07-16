@@ -64,9 +64,10 @@ public class DiscoverTask implements Runnable {
                         DatagramPacket packet = new DatagramPacket(
                                 Unpooled.copiedBuffer(findNode.getPacket()),
                                 new InetSocketAddress(n.getHost(), n.getPort()));
-                        logger.info("<=== (to " + n.getHost() + ":" + n.getPort() + ") " + findNode);
+                        logger.info("<=== [FIND_NODE] (to " + n.getHost() + ":" + n.getPort() + ") ");
                         channel.write(packet);
                         tried.add(n);
+                        Thread.sleep(50);
                     } catch (Exception ex) {
                         logger.info("{}", ex);
                     }

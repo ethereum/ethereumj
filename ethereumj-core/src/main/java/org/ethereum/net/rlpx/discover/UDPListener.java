@@ -56,8 +56,22 @@ public class UDPListener {
 
 //          bootNodes.add(new Node("enode://8021cdf53c0ed64a3fdfe9fc922515b79d77c80e89794b19ae02ccfdf912d058fbaa4fd3a0e7b0746d9a68dd3b6157406c0c7c085aa29b9db0e833e28f8d5179" +
 //                "@127.0.0.1:30300"));
-        bootNodes.add(new Node("enode://ebe122fcc18aa2f46b0a881780ebed667f55b2d40957f7b82234f1f8492acd2650e6c89a30435d5a84b1fd803102aed7e9e953e6c5aa77e2ab9f3f01db789e51" +
-                "@134.213.132.179:30304"));
+//          bootNodes.add(new Node("enode://8021cdf53c0ed64a3fdfe9fc922515b79d77c80e89794b19ae02ccfdf912d058fbaa4fd3a0e7b0746d9a68dd3b6157406c0c7c085aa29b9db0e833e28f8d5179" +
+//                "@109.120.176.38:30303"));
+//        bootNodes.add(new Node("enode://ebe122fcc18aa2f46b0a881780ebed667f55b2d40957f7b82234f1f8492acd2650e6c89a30435d5a84b1fd803102aed7e9e953e6c5aa77e2ab9f3f01db789e51" +
+//                "@134.213.132.179:30304"));
+
+//		discover.MustParseNode("enode://a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c@52.16.188.185:30303"),
+//		discover.MustParseNode("enode://de471bccee3d042261d52e9bff31458daecc406142b401d4cd848f677479f73104b9fdeb090af9583d3391b7f10cb2ba9e26865dd5fca4fcdc0fb1e3b723c786@54.94.239.50:30303"),
+        // ETH/DEV cpp-ethereum (poc-9.ethdev.com)
+//		discover.MustParseNode("enode://487611428e6c99a11a9795a6abe7b529e81315ca6aad66e2a2fc76e3adf263faba0d35466c2f8f68d561dbefa8878d4df5f1f2ddb1fbeab7f42ffb8cd328bd4a@5.1.83.226:30303"),
+
+        bootNodes.add(new Node("enode://a979fb575495b8d6db44f750317d0f4622bf4c2aa3365d6af7c284339968eef29b69ad0dce72a4d8db5ebb4968de0e3bec910127f134779fbcb0cb6d3331163c@" +
+                "52.16.188.185:30303"));
+//        bootNodes.add(new Node("enode://de471bccee3d042261d52e9bff31458daecc406142b401d4cd848f677479f73104b9fdeb090af9583d3391b7f10cb2ba9e26865dd5fca4fcdc0fb1e3b723c786@" +
+//                "54.94.239.50:30303"));
+//        bootNodes.add(new Node("enode://487611428e6c99a11a9795a6abe7b529e81315ca6aad66e2a2fc76e3adf263faba0d35466c2f8f68d561dbefa8878d4df5f1f2ddb1fbeab7f42ffb8cd328bd4a@" +
+//                "5.1.83.226:30303"));
 
         //Persist the list of known nodes with their reputation
 //        byte[] cppId = Hex.decode("487611428e6c99a11a9795a6abe7b529e81315ca6aad66e2a2fc76e3adf263faba0d35466c2f8f68d561dbefa8878d4df5f1f2ddb1fbeab7f42ffb8cd328bd4a");
@@ -71,7 +85,8 @@ public class UDPListener {
         try {
             Bootstrap b = new Bootstrap();
             b.group(group)
-            .option(ChannelOption.SO_TIMEOUT, 1000)
+//            .option(ChannelOption.SO_TIMEOUT, 0)
+            .option(ChannelOption.SO_KEEPALIVE, true)
             .channel(NioDatagramChannel.class)
                     .handler(new ChannelInitializer<NioDatagramChannel>() {
                         @Override
@@ -79,7 +94,6 @@ public class UDPListener {
                                 throws Exception {
                             ch.pipeline().addLast(new PacketDecoder());
                             ch.pipeline().addLast(new MessageHandler(key, table, ch, bootNodes));
-//                            ch.pipeline().addLast(new MessageHandler(key, table));
                         }
                     });
 
