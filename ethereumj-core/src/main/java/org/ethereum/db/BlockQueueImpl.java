@@ -71,12 +71,12 @@ public class BlockQueueImpl implements BlockQueue {
 
     @Override
     public synchronized Block poll() {
-        if(index.isEmpty()) {
-            return null;
-        }
-
         Block block;
         synchronized (this) {
+            if(index.isEmpty()) {
+                return null;
+            }
+
             Long idx = index.get(0);
             block = blocks.get(idx);
             blocks.remove(idx);
@@ -88,11 +88,11 @@ public class BlockQueueImpl implements BlockQueue {
 
     @Override
     public synchronized Block peek() {
-        if(index.isEmpty()) {
-            return null;
-        }
-        
         synchronized (this) {
+            if(index.isEmpty()) {
+                return null;
+            }
+        
             Long idx = index.get(0);
             return blocks.get(idx);
         }

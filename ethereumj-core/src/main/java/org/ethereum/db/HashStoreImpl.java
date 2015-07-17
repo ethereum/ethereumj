@@ -68,11 +68,11 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public byte[] peek() {
-        if(index.isEmpty()) {
-            return null;
-        }
-
         synchronized (this) {
+            if(index.isEmpty()) {
+                return null;
+            }
+
             Long idx = index.get(0);
             return hashes.get(idx);
         }
@@ -103,12 +103,12 @@ public class HashStoreImpl implements HashStore {
     }
 
     private byte[] pollInner() {
-        if(index.isEmpty()) {
-            return null;
-        }
-
         byte[] hash;
         synchronized (this) {
+            if(index.isEmpty()) {
+                return null;
+            }
+
             Long idx = index.get(0);
             hash = hashes.get(idx);
             hashes.remove(idx);
@@ -135,7 +135,7 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public void clear() {
-        synchronized(this) {
+        synchronized (this) {
             index.clear();
             hashes.clear();
         }
