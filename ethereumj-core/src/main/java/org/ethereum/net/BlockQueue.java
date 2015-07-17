@@ -16,7 +16,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import static java.lang.Thread.sleep;
@@ -188,12 +187,22 @@ public class BlockQueue {
 
     public void addHash(byte[] hash) {
         hashStore.addFirst(hash);
+        if (logger.isTraceEnabled())
+            logAddHash(hash);
+    }
 
-        if (logger.isTraceEnabled()) {
-            logger.trace("Adding hash to a hashQueue: [{}], hash queue size: {} ",
-                    Hex.toHexString(hash).substring(0, 6),
-                    hashStore.size());
-        }
+    public void addHashes(Collection<byte[]> hashes) {
+        if (logger.isTraceEnabled())
+            for(byte[] hash : hashes)
+                logAddHash(hash);
+
+        hashStore.addFirstBatch(hashes);
+    }
+
+    private void logAddHash(byte[] hash) {
+        logger.trace("Adding hash to a hashQueue: [{}], hash queue size: {} ",
+                Hex.toHexString(hash).substring(0, 6),
+                hashStore.size());
     }
 
     public void returnHashes(List<ByteArrayWrapper> hashes) {
@@ -223,12 +232,7 @@ public class BlockQueue {
      * @return A list of hashes for which blocks need to be retrieved.
      */
     public List<byte[]> getHashes() {
-
-        List<byte[]> hashes = new ArrayList<>();
-        while (!hashStore.isEmpty() && hashes.size() < CONFIG.maxBlocksAsk()) {
-            hashes.add(hashStore.poll());
-        }
-        return hashes;
+        return hashStore.pollBatch(CONFIG.maxBlocksAsk());
     }
 
     // a bit ugly but really gives

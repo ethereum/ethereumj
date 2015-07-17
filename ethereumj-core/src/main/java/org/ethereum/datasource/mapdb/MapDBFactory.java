@@ -10,11 +10,11 @@ public interface MapDBFactory {
 
     KeyValueDataSource createDataSource();
 
-    Map<Long, byte[]> createHashStoreMap();
-
     Map<Long, Block> createBlockQueueMap();
 
     void destroy(Object resource);
 
     DB createDB(String name);
+
+    DB createTransactionalDB(String name);
 }

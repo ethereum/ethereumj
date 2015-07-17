@@ -17,7 +17,6 @@ import static java.lang.System.getProperty;
 @Component
 public class MapDBFactoryImpl implements MapDBFactory {
 
-    private final static String HASH_STORE_NAME = "hash_store";
     private final static String BLOCK_QUEUE_NAME = "block_queue";
 
     private Map<Integer, DB> allocated = new HashMap<>();
@@ -25,17 +24,6 @@ public class MapDBFactoryImpl implements MapDBFactory {
     @Override
     public KeyValueDataSource createDataSource() {
         return new MapDBDataSource();
-    }
-
-    @Override
-    public Map<Long, byte[]> createHashStoreMap() {
-        DB db = createDB(HASH_STORE_NAME);
-        Map<Long, byte[]> map = db.hashMapCreate(HASH_STORE_NAME)
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(Serializer.BYTE_ARRAY)
-                .makeOrGet();
-        allocate(map, db);
-        return map;
     }
 
     @Override
@@ -61,12 +49,23 @@ public class MapDBFactoryImpl implements MapDBFactory {
 
     @Override
     public DB createDB(String name) {
+        return createDB(name, false);
+    }
+
+    @Override
+    public DB createTransactionalDB(String name) {
+        return createDB(name, true);
+    }
+
+    private DB createDB(String name, boolean transactional) {
         File dbFile = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/" + name);
         if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
-        return DBMaker.fileDB(dbFile)
-                .transactionDisable()
-                .closeOnJvmShutdown()
-                .make();
+        DBMaker.Maker dbMaker =  DBMaker.fileDB(dbFile)
+                .closeOnJvmShutdown();
+        if(!transactional) {
+            dbMaker.transactionDisable();
+        }
+        return dbMaker.make();
     }
 
     private void allocate(Object resource, DB db) {

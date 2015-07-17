@@ -1,5 +1,7 @@
 package org.ethereum.net.eth.sync;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.net.BlockQueue;
@@ -92,17 +94,18 @@ public class SyncManager {
         if (receivedHashes.isEmpty()) {
             status = SyncStatus.HASHES_RETRIEVED;
         } else {
-            Iterator<byte[]> hashIterator = receivedHashes.iterator();
-            byte[] foundHash, latestHash = blockchain.getBestBlockHash();
-            while (hashIterator.hasNext()) {
-                foundHash = hashIterator.next();
-                if (FastByteComparisons.compareTo(foundHash, 0, 32, latestHash, 0, 32) != 0) {
-                    chainQueue.addHash(foundHash);    // store unknown hashes in queue until known hash is found
-                } else {
-                    status = SyncStatus.HASHES_RETRIEVED;
-                    logger.trace("Catch up with the hashes until: {[]}", foundHash);
-                    break;
+            chainQueue.addHashes(receivedHashes);
+            // store unknown hashes in queue until known hash is found
+            final byte[] latestHash = blockchain.getBestBlockHash();
+            byte[] foundHash = CollectionUtils.find(receivedHashes, new Predicate<byte[]>() {
+                @Override
+                public boolean evaluate(byte[] hash) {
+                    return FastByteComparisons.compareTo(hash, 0, 32, latestHash, 0, 32) == 0;
                 }
+            });
+            if (foundHash != null) {
+                status = SyncStatus.HASHES_RETRIEVED; // store unknown hashes in queue until known hash is found
+                logger.trace("Catch up with the hashes until: {[]}", foundHash);
             }
         }
 

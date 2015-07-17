@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -157,6 +154,33 @@ public class HashStoreTest {
         }
     }
 
+    @Test // batch operations
+    public void test4() throws InterruptedException {
+        hashStore.addFirstBatch(hashes);
+        List<byte[]> polled = hashStore.pollBatch(hashes.size() + 1);
+        ListIterator<byte[]> iterator = polled.listIterator(polled.size());
+        for(byte[] hash : hashes) {
+            assertArrayEquals(hash, iterator.previous());
+        }
+
+        // testing: multiple threads
+        List<Thread> readers = new ArrayList<>();
+        new Thread(new BatchWriter(1)).start();
+        new Thread(new BatchWriter(2)).start();
+        new Thread(new BatchWriter(3)).start();
+
+        for(int i = 0; i < 3; i++) {
+            new Thread(new BatchWriter(i + 1)).start();
+            Thread r = new Thread(new BatchReader(i + 1));
+            r.start();
+            readers.add(r);
+        }
+
+        for(Thread r : readers) {
+            r.join();
+        }
+    }
+
     private class Reader implements Runnable {
 
         private int index;
@@ -199,6 +223,56 @@ public class HashStoreTest {
                 for(byte[] hash : hashes) {
                     hashStore.add(hash);
                     logger.info("writer {}: {}", index, Hex.toHexString(hash));
+                    Thread.sleep(50);
+                }
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage());
+            }
+        }
+    }
+
+    private class BatchReader implements Runnable {
+
+        private int index;
+
+        public BatchReader(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public void run() {
+            try {
+                int nullsCount = 0;
+                while (nullsCount < 5) {
+                    List<byte[]> polled = hashStore.pollBatch(hashes.size());
+                    logger.info("reader {}: batch size {}", index, polled.size());
+                    if(polled.isEmpty()) {
+                        nullsCount++;
+                    } else {
+                        nullsCount = 0;
+                    }
+                    Thread.sleep(50);
+                }
+            } catch (InterruptedException e) {
+                logger.error(e.getMessage());
+            }
+        }
+    }
+
+    private class BatchWriter implements Runnable {
+
+        private int index;
+
+        public BatchWriter(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public void run() {
+            try {
+                for(int i = 0; i < 30; i++) {
+                    hashStore.addFirstBatch(hashes);
+                    logger.info("writer {}: batch {}", index, i);
                     Thread.sleep(50);
                 }
             } catch (InterruptedException e) {
