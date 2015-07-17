@@ -153,7 +153,11 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
-        return (origContract == null) ? Collections.unmodifiableMap(storage) : origContract.getStorage();
+        return Collections.unmodifiableMap(storage);
+    }
+
+    public Map<DataWord, DataWord> getOriginStorage() {
+        return (origContract == null) ? Collections.EMPTY_MAP : origContract.getStorage();
     }
 
     @Override

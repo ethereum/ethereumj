@@ -1,6 +1,7 @@
 package org.ethereum.vmtrace;
 
 import org.ethereum.db.ContractDetails;
+import org.ethereum.db.ContractDetailsCacheImpl;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
 
@@ -54,10 +55,16 @@ public class ProgramTrace {
 
     public ProgramTrace initStorage(ContractDetails details) {
         initStorage = new HashMap<>();
-        for (Map.Entry<DataWord, DataWord> entry : details.getStorage().entrySet()) {
+        for (Map.Entry<DataWord, DataWord> entry : getStorage(details).entrySet()) {
             initStorage.put(entry.getKey().toString(), entry.getValue().toString());
         }
         return this;
+    }
+
+    private static Map<DataWord, DataWord> getStorage(ContractDetails details) {
+        return (details instanceof ContractDetailsCacheImpl)
+                ? ((ContractDetailsCacheImpl) details).getOriginStorage()
+                : details.getStorage();
     }
 
     public ProgramTrace result(byte[] result) {

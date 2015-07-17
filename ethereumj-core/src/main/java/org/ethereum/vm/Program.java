@@ -78,18 +78,6 @@ public class Program {
             this.result.setRepository(setupTraceListener(new Storage(this.programAddress, repository)));
             this.programTrace.initStorage(repository.getContractDetails(this.programAddress.getLast20Bytes()));
 
-            
-            
-            Map<String, String> initStorage = programTrace.getInitStorage();
-            if (!initStorage.isEmpty()) {
-                System.out.println(initStorage.size());
-            }
-            ContractDetails details = repository.getContractDetails(this.programAddress.getLast20Bytes());
-            if (details != null && details.getStorageSize() > 0) {
-                System.out.println(details.getStorageSize());
-            }
-
-
             precompile();
         }
     }
