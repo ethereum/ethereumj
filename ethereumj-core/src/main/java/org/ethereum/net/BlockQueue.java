@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.ImportResult;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
+import org.ethereum.db.BlockQueueImpl;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.PriorityBlockingQueue;
 
 import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -45,7 +45,7 @@ public class BlockQueue {
     /**
      * Queue with blocks to be validated and added to the blockchain
      */
-    private PriorityBlockingQueue<Block> blockReceivedQueue = new PriorityBlockingQueue<>(1000, new BlockByNumberComparator());
+    private org.ethereum.db.BlockQueue blockQueue;
 
     /**
      * Highest known total difficulty, representing the heaviest chain on the network
@@ -69,6 +69,10 @@ public class BlockQueue {
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
         hashStore.open();
 
+        blockQueue = new BlockQueueImpl();
+        ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
+        blockQueue.open();
+
         Runnable queueProducer = new Runnable(){
 
             @Override
@@ -89,15 +93,15 @@ public class BlockQueue {
         while (1==1){
 
             try {
-                Block block = blockReceivedQueue.take();
-                logger.info("BlockQueue size: {}", blockReceivedQueue.size());
+                Block block = blockQueue.poll();
+                logger.info("BlockQueue size: {}", blockQueue.size());
                 ImportResult importResult = blockchain.tryToConnect(block);
 
                 // In case we don't have a parent on the chain
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT){
                     logger.info("No parent on the chain for block.number: [{}]", block.getNumber());
-                    blockReceivedQueue.add(block);
+                    blockQueue.add(block);
                     sleep(2000);
                 }
 
@@ -124,13 +128,12 @@ public class BlockQueue {
      */
     public void addBlocks(List<Block> blockList) {
 
-        for (Block block : blockList)
-            blockReceivedQueue.put(block);
+        blockQueue.addAll(blockList);
 
         lastBlock = blockList.get(blockList.size() - 1);
 
         logger.info("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
-                blockReceivedQueue.size(),
+                blockQueue.size(),
                 lastBlock.getNumber());
     }
 
@@ -142,11 +145,11 @@ public class BlockQueue {
      */
     public void addBlock(Block block) {
 
-        blockReceivedQueue.add(block);
+        blockQueue.add(block);
         lastBlock = block;
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
-                blockReceivedQueue.size(),
+                blockQueue.size(),
                 lastBlock.getNumber());
     }
 
@@ -159,7 +162,7 @@ public class BlockQueue {
      * always the Genesis block at the start of the chain.
      */
     public Block getLastBlock() {
-        if (blockReceivedQueue.isEmpty())
+        if (blockQueue.isEmpty())
             return blockchain.getBestBlock();
         return lastBlock;
     }
@@ -241,23 +244,6 @@ public class BlockQueue {
         logger.info("Block hashes list size: [{}]", hashStore.size());
     }
 
-    private class BlockByNumberComparator implements Comparator<Block> {
-
-        @Override
-        public int compare(Block o1, Block o2) {
-
-            if (o1 == null || o2 == null)
-                throw new NullPointerException();
-
-            if (o1.getNumber() > o2.getNumber())
-                return 1;
-            if (o1.getNumber() < o2.getNumber())
-                return -1;
-
-            return 0;
-        }
-    }
-
     public BigInteger getHighestTotalDifficulty() {
         return highestTotalDifficulty;
     }
@@ -272,7 +258,7 @@ public class BlockQueue {
      * @return the current number of blocks in the queue
      */
     public int size() {
-        return blockReceivedQueue.size();
+        return blockQueue.size();
     }
 
     public boolean isHashesEmpty() {
@@ -281,7 +267,7 @@ public class BlockQueue {
 
     public void clear() {
         this.hashStore.clear();
-        this.blockReceivedQueue.clear();
+        this.blockQueue.clear();
     }
 
     /**

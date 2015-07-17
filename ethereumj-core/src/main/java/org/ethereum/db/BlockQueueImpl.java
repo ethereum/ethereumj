@@ -99,6 +99,15 @@ public class BlockQueueImpl implements BlockQueue {
         return index.isEmpty();
     }
 
+    @Override
+    public void clear() {
+        synchronized(this) {
+            blocks.clear();
+            index.clear();
+        }
+        db.commit();
+    }
+
     private void sortIndex() {
         Collections.sort(index);
     }

@@ -21,4 +21,6 @@ public interface BlockQueue extends DiskStore {
     int size();
 
     boolean isEmpty();
+
+    void clear();
 }
