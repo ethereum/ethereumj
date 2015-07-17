@@ -131,9 +131,11 @@ public class HashStoreImpl implements HashStore {
     }
 
     @Override
-    public synchronized void clear() {
-        index.clear();
-        hashes.clear();
+    public void clear() {
+        synchronized(this) {
+            index.clear();
+            hashes.clear();
+        }
         db.commit();
     }
 
