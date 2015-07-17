@@ -47,45 +47,54 @@ public class BlockQueueImpl implements BlockQueue {
 
     @Override
     public synchronized void addAll(Collection<Block> blockList) {
-        List<Long> numbers = new ArrayList<>(blockList.size());
-        for(Block b : blockList) {
-            blocks.put(b.getNumber(), b);
-            numbers.add(b.getNumber());
+        synchronized (this) {
+            List<Long> numbers = new ArrayList<>(blockList.size());
+            for (Block b : blockList) {
+                blocks.put(b.getNumber(), b);
+                numbers.add(b.getNumber());
+            }
+            index.addAll(numbers);
+            sortIndex();
         }
         db.commit();
-        index.addAll(numbers);
-        sortIndex();
     }
 
     @Override
-    public synchronized void add(Block block) {
-        blocks.put(block.getNumber(), block);
+    public void add(Block block) {
+        synchronized (this) {
+            blocks.put(block.getNumber(), block);
+            index.add(block.getNumber());
+            sortIndex();
+        }
         db.commit();
-        index.add(block.getNumber());
-        sortIndex();
     }
 
     @Override
     public synchronized Block poll() {
-        if(!index.isEmpty()) {
-            Long idx = index.get(0);
-            Block block = blocks.get(idx);
-            blocks.remove(idx);
-            db.commit();
-            index.remove(0);
-            return block;
-        } else {
+        if(index.isEmpty()) {
             return null;
         }
+
+        Block block;
+        synchronized (this) {
+            Long idx = index.get(0);
+            block = blocks.get(idx);
+            blocks.remove(idx);
+            index.remove(0);
+        }
+        db.commit();
+        return block;
     }
 
     @Override
     public synchronized Block peek() {
-        if(!index.isEmpty()) {
+        if(index.isEmpty()) {
+            return null;
+        }
+        
+        synchronized (this) {
             Long idx = index.get(0);
             return blocks.get(idx);
-        } else {
-            return null;
         }
     }
 

@@ -42,13 +42,13 @@ public class HashStoreImpl implements HashStore {
     }
 
     @Override
-    public synchronized void add(byte[] hash) {
+    public void add(byte[] hash) {
         addInner(false, hash);
         db.commit();
     }
 
     @Override
-    public synchronized void addFirst(byte[] hash) {
+    public void addFirst(byte[] hash) {
         addInner(true, hash);
         db.commit();
     }
@@ -56,30 +56,30 @@ public class HashStoreImpl implements HashStore {
     @Override
     public void addFirstBatch(Collection<byte[]> hashes) {
         for (byte[] hash : hashes) {
-            synchronized (this) {
-                addInner(true, hash);
-            }
+            addInner(true, hash);
         }
         db.commit();
     }
 
-    private void addInner(boolean first, byte[] hash) {
+    private synchronized void addInner(boolean first, byte[] hash) {
         Long idx = createIndex(first);
         hashes.put(idx, hash);
     }
 
     @Override
-    public synchronized byte[] peek() {
-        if(!index.isEmpty()) {
+    public byte[] peek() {
+        if(index.isEmpty()) {
+            return null;
+        }
+
+        synchronized (this) {
             Long idx = index.get(0);
             return hashes.get(idx);
-        } else {
-            return null;
         }
     }
 
     @Override
-    public synchronized byte[] poll() {
+    public byte[] poll() {
         byte[] hash = pollInner();
         db.commit();
         return hash;
@@ -102,17 +102,20 @@ public class HashStoreImpl implements HashStore {
         return hashes;
     }
 
-    private synchronized byte[] pollInner() {
-        if(!index.isEmpty()) {
-            Long idx = index.get(0);
-            byte[] hash = hashes.get(idx);
-            hashes.remove(idx);
-            index.remove(0);
-            db.commit();
-            return hash;
-        } else {
+    private byte[] pollInner() {
+        if(index.isEmpty()) {
             return null;
         }
+
+        byte[] hash;
+        synchronized (this) {
+            Long idx = index.get(0);
+            hash = hashes.get(idx);
+            hashes.remove(idx);
+            index.remove(0);
+        }
+        db.commit();
+        return hash;
     }
 
     @Override
