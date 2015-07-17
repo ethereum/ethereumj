@@ -2,6 +2,9 @@ package org.ethereum.db;
 
 import org.ethereum.core.Block;
 import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.datasource.mapdb.Serializers;
+import org.mapdb.DB;
+import org.mapdb.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -15,21 +18,31 @@ import java.util.*;
  */
 public class BlockQueueImpl implements BlockQueue {
 
+    private final static String STORE_NAME = "blockqueue";
     private MapDBFactory mapDBFactory;
 
+    private DB db;
     private Map<Long, Block> blocks;
     private List<Long> index;
 
     @Override
     public void open() {
-        blocks = mapDBFactory.createBlockQueueMap();
+        db = mapDBFactory.createTransactionalDB(dbName());
+        blocks = db.hashMapCreate(STORE_NAME)
+                .keySerializer(Serializer.LONG)
+                .valueSerializer(Serializers.BLOCK)
+                .makeOrGet();
         index = new ArrayList<>(blocks.keySet());
         sortIndex();
     }
 
+    private String dbName() {
+        return String.format("%s/%s", STORE_NAME, STORE_NAME);
+    }
+
     @Override
     public void close() {
-        mapDBFactory.destroy(blocks);
+        db.close();
     }
 
     @Override
@@ -39,6 +52,7 @@ public class BlockQueueImpl implements BlockQueue {
             blocks.put(b.getNumber(), b);
             numbers.add(b.getNumber());
         }
+        db.commit();
         index.addAll(numbers);
         sortIndex();
     }
@@ -46,6 +60,7 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public synchronized void add(Block block) {
         blocks.put(block.getNumber(), block);
+        db.commit();
         index.add(block.getNumber());
         sortIndex();
     }
@@ -56,6 +71,7 @@ public class BlockQueueImpl implements BlockQueue {
             Long idx = index.get(0);
             Block block = blocks.get(idx);
             blocks.remove(idx);
+            db.commit();
             index.remove(0);
             return block;
         } else {
