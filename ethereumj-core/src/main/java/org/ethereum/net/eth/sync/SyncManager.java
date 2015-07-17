@@ -14,9 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -134,7 +132,21 @@ public class SyncManager {
         int cnt = counters.get(handler);
         cnt += blockList.size();
         counters.put(handler, cnt);
-        logger.info("handler {}: {} blocks loaded", blockHandlers.indexOf(handler), cnt);
+
+        if(logger.isInfoEnabled()) {
+            Long headNumber = null;
+            if (!blockList.isEmpty()) {
+                Block head = Collections.max(blockList, new Comparator<Block>() {
+                    @Override
+                    public int compare(Block o1, Block o2) {
+                        return Long.valueOf(o1.getNumber()).compareTo(o2.getNumber());
+                    }
+                });
+                headNumber = head.getNumber();
+            }
+            logger.info("handler {}: {} blocks loaded, max block number {}",
+                    blockHandlers.indexOf(handler), cnt, String.valueOf(headNumber));
+        }
 
         if(blockList.isEmpty()) {
             int failureCnt = failures.get(handler) + 1;
