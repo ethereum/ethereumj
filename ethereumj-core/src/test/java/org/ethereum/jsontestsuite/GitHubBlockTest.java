@@ -41,7 +41,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
+    @Ignore
     @Test
     public void runBCRPCAPITest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -58,7 +58,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
+    @Ignore
     @Test
      public void runBCUncleTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -66,7 +66,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    //    @Ignore
+    @Ignore
     @Test
     public void runBCValidBlockTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcValidBlockTest.json", shacommit);
@@ -83,7 +83,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
+    @Ignore
     @Test
     public void runBCBruncleTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcBruncleTest.json", shacommit);
@@ -91,7 +91,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
+    @Ignore
     @Test
     public void runBCForkBlockTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcForkBlockTest.json", shacommit);
@@ -123,7 +123,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
+    @Ignore
     @Test
     public void runBCWalletTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcWalletTest.json", shacommit);

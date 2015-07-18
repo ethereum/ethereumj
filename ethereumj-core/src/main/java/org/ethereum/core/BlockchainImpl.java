@@ -147,7 +147,7 @@ public class BlockchainImpl implements Blockchain {
 
     @Override
     public Block getBlockByNumber(long blockNr) {
-        return blockStore.getBlockByNumber(blockNr);
+        return blockStore.getChainBlockByNumber(blockNr);
     }
 
     @Override
@@ -185,8 +185,8 @@ public class BlockchainImpl implements Blockchain {
                     Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
-        if (blockStore.getBestBlock().getNumber() >= block.getNumber() &&
-                blockStore.getBlockByHash(block.getHash()) != null) {
+        if (blockStore.getMaxNumber() >= block.getNumber() &&
+                blockStore.isBlockExist(block.getHash())) {
 
             if (logger.isDebugEnabled())
                 logger.debug("Block already exist hash: {}, number: {}",
@@ -573,7 +573,7 @@ public class BlockchainImpl implements Blockchain {
                 // todo: after the rollback happens other block should be requested
             }
 
-        blockStore.saveBlock(block, receipts);
+        blockStore.saveBlock(block, totalDifficulty, true);
         setBestBlock(block);
 
         if (logger.isDebugEnabled())

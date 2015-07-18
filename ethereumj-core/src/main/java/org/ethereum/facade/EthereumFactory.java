@@ -31,7 +31,7 @@ public class EthereumFactory {
             logger.info("Database reset done");
         }
 
-        return createEthereum(RemoteConfig.class);
+        return createEthereum(DefaultConfig.class);
     }
 
     public static Ethereum createEthereum(Class clazz) {

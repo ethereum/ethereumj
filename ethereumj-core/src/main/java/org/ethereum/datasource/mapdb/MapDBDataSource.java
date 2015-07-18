@@ -36,7 +36,7 @@ public class MapDBDataSource implements KeyValueDataSource {
                 .keySerializer(Serializer.BYTE_ARRAY)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .makeOrGet();
-        
+
         alive = true;
     }
 

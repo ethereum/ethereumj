@@ -11,10 +11,7 @@ import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.*;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
 import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
@@ -79,6 +76,7 @@ public class CommonConfig {
     }
 
     @Bean
+    @Lazy
     public SessionFactory sessionFactory() {
         LocalSessionFactoryBuilder builder =
                 new LocalSessionFactoryBuilder(dataSource());
@@ -112,6 +110,7 @@ public class CommonConfig {
     }
 
     @Bean
+    @Lazy
     public HibernateTransactionManager txManager() {
         return new HibernateTransactionManager(sessionFactory());
     }

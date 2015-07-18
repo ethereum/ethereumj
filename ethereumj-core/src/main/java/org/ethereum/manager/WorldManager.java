@@ -147,7 +147,7 @@ public class WorldManager {
                 repository.addBalance(key.getData(), genesis.getPremine().get(key).getBalance());
             }
 
-            blockStore.saveBlock(Genesis.getInstance(), new ArrayList<TransactionReceipt>());
+            blockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
 
             blockchain.setBestBlock(Genesis.getInstance());
             blockchain.setTotalDifficulty(Genesis.getInstance().getCumulativeDifficulty());

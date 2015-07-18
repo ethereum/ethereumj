@@ -34,6 +34,8 @@ public class DPA {
     /**
      * Main entry point for document storage directly. Used by the
      * FS-aware API and httpaccess
+     *
+     * @return key
      */
     public Key store(SectionReader reader) {
         return chunker.split(reader, new Util.ChunkConsumer(chunkStore));
@@ -44,6 +46,8 @@ public class DPA {
      * FS-aware API and httpaccess
      * Chunk retrieval blocks on netStore requests with a timeout so reader will
      * report error if retrieval of chunks within requested range time out.
+     *
+     * @return key
      */
     public SectionReader retrieve(Key key) {
         return chunker.join(chunkStore, key);

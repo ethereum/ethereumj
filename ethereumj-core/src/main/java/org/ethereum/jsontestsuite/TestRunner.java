@@ -2,7 +2,6 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.TransactionReceipt;
 import org.ethereum.core.Wallet;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
@@ -64,7 +63,7 @@ public class TestRunner {
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
         BlockStore blockStore = new InMemoryBlockStore();
-        blockStore.saveBlock(genesis, new ArrayList<TransactionReceipt>());
+        blockStore.saveBlock(genesis, BigInteger.ZERO, true);
         blockStore.setSessionFactory(SessionFactoryProvider.sessionFactory());
 
         Wallet wallet = new Wallet();

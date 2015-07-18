@@ -1,7 +1,6 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.TransactionReceipt;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -48,7 +47,7 @@ public class InMemoryBlockStore implements BlockStore{
     }
 
     @Override
-    public Block getBlockByNumber(long blockNumber) {
+    public Block getChainBlockByNumber(long blockNumber) {
 
         Block block = numberIndex.get(blockNumber);
 
@@ -70,6 +69,12 @@ public class InMemoryBlockStore implements BlockStore{
     }
 
     @Override
+    public boolean isBlockExist(byte[] hash) {
+        Block block = hashIndex.get(wrap(hash));
+        return block != null || dbGetBlockByHash(hash) != null;
+    }
+
+    @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long qty){
 
 
@@ -81,7 +86,7 @@ public class InMemoryBlockStore implements BlockStore{
         List<byte[]> hashes = new ArrayList<>();
 
         for (long i = startBlock.getNumber();  i <= endIndex; ++i){
-            Block block = getBlockByNumber(i);
+            Block block = getChainBlockByNumber(i);
             hashes.add(block.getHash() );
         }
 
@@ -89,7 +94,7 @@ public class InMemoryBlockStore implements BlockStore{
     }
 
     @Override
-    public void saveBlock(Block block, List<TransactionReceipt> receipts) {
+    public void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain) {
         ByteArrayWrapper wHash = wrap(block.getHash());
         blocks.add(block);
         hashIndex.put(wHash, block);
@@ -186,7 +191,7 @@ public class InMemoryBlockStore implements BlockStore{
         hashIndex.clear();
         numberIndex.clear();
 
-        saveBlock(block, null);
+        saveBlock(block, BigInteger.ZERO, true);
 
         long t__ = System.nanoTime();
         logger.info("Flush block store in: {} ms", ((float)(t__ - t_) / 1_000_000));
@@ -213,13 +218,23 @@ public class InMemoryBlockStore implements BlockStore{
         BlockVO vo = (BlockVO) result.get(0);
 
         Block bestBlock = new Block(vo.rlp);
-        saveBlock(bestBlock, null);
+        saveBlock(bestBlock, ZERO, true);
 
         totalDifficulty =  (BigInteger) s.createQuery("select sum(cumulativeDifficulty) from BlockVO").uniqueResult();
 
         long t_ = System.nanoTime();
 
         logger.info("Loaded db in: {} ms", ((float)(t_ - t) / 1_000_000));
+    }
+
+    @Override
+    public long getMaxNumber() {
+        Session s = sessionFactory.openSession();
+
+        Long bestNumber = (Long)
+                s.createQuery("select max(number) from BlockVO").uniqueResult();
+
+        return bestNumber == null ? 0 : bestNumber;
     }
 
     @Override
