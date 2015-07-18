@@ -24,49 +24,20 @@ public class GitHubBlockTest {
     }
 
 
-    @Ignore
+//    @Ignore
     @Test
     public void runBCInvalidHeaderTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcInvalidHeaderTest.json", shacommit);
-        //TODO fix via blockchain rollbacks
-        excluded.add("wrongGasUsed");
-        excluded.add("wrongStateRoot");
-        //TODO need to make sure the checks match the cpp
-        excluded.add("wrongParentHash");
-        excluded.add("wrongTimestamp");
-        //TODO need to add some way to roll back repository from BlockChain.add()
-        excluded.add("wrongReceiptTrie");
-        excluded.add("log1_wrongBloom");
-
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json,excluded);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void runBCInvalidRLPTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcInvalidRLPTest.json", shacommit);
-        excluded.add("BLOCK_stateRoot_GivenAsList");
-        excluded.add("BLOCK_difficulty_GivenAsList");
-        excluded.add("BLOCK_mixHash_TooShort");
-        excluded.add("BLOCK__RandomByteAtRLP_8");
-        excluded.add("BLOCK__RandomByteAtRLP_9");
-        excluded.add("BLOCK__RandomByteAtRLP_7");
-        excluded.add("BLOCK__RandomByteAtRLP_6");
-        excluded.add("BLOCK__RandomByteAtRLP_5");
-        excluded.add("BLOCK__RandomByteAtRLP_4");
-        excluded.add("BLOCK_stateRoot_TooShort");
-        excluded.add("BLOCK_gasUsed_TooLarge");
-        excluded.add("BLOCK_stateRoot_TooLarge");
-        excluded.add("BLOCK_receiptTrie_Prefixed0000");
-        excluded.add("BLOCK_transactionsTrie_TooLarge");
-        excluded.add("TRANSCT_gasLimit_Prefixed0000");
-        excluded.add("TRANSCT_gasLimit_GivenAsList");
-        excluded.add("TRANSCT_svalue_TooLarge");
-        excluded.add("TRANSCT_svalue_TooShort");
-        excluded.add("TRANSCT_svalue_GivenAsList");
-        excluded.add("TRANSCT__RandomByteAtTheEnd");
+        excluded.add("BLOCK_gasLimit_GivenAsList");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
@@ -78,15 +49,12 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void runBCUncleHeaderValidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcUncleHeaderValiditiy.json", shacommit);
         //TODO need to make sure these are not passing on accident
-        excluded.add("timestampTooLow");
-        excluded.add("timestampTooHigh");
-        excluded.add("wrongParentHash");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
@@ -106,11 +74,12 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void runBCBlockGasLimitTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcBlockGasLimitTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
+//        excluded.add("GasUsedHigherThanBlockGasLimitButNotWithRefundsSuicideLast");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
@@ -130,7 +99,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void runBCGasPricerTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcGasPricerTest.json", shacommit);
@@ -138,12 +107,19 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+//    @Ignore
     @Test
     public void runBCTotalDifficultyTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcTotalDifficultyTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
         excluded.add("lotsOfBranchesOverrideAtTheEnd");
+        excluded.add("sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
+        excluded.add("uncleBlockAtBlock3afterBlock4");
+        excluded.add("lotsOfBranches");
+        excluded.add("lotsOfLeafs");
+        excluded.add("lotsOfBranchesOverrideAtTheMiddle");
+        excluded.add("sideChainWithMoreTransactions");
+        excluded.add("uncleBlockAtBlock3AfterBlock3");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 

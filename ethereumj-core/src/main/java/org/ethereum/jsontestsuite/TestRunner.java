@@ -9,6 +9,7 @@ import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
+import org.ethereum.jsontestsuite.validators.BlockHeaderValidator;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -100,15 +101,16 @@ public class TestRunner {
                 byte[] rlp = parseData(blockTck.getRlp());
                 tBlock = new Block(rlp);
 
-//            ArrayList<String> outputSummary =
-//                    BlockHeaderValidator.valid(tBlock.getHeader(), block.getHeader());
+                ArrayList<String> outputSummary =
+                        BlockHeaderValidator.valid(tBlock.getHeader(), block.getHeader());
 
-//            if (!outputSummary.isEmpty()){
-//                for (String output : outputSummary)
-//                    logger.error("%s", output);
-//
-//                System.exit(-1);
-//            }
+                if (!outputSummary.isEmpty()){
+                    for (String output : outputSummary)
+                        logger.error("%s", output);
+
+//                    System.exit(-1);
+                }
+
                 if(setNewStateRoot)
                   bestStateRoot = Hex.toHexString(tBlock.getStateRoot());
 
