@@ -1,6 +1,5 @@
 package org.ethereum.net.p2p;
 
-import io.netty.buffer.ByteBuf;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
@@ -13,7 +12,6 @@ import org.ethereum.net.eth.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerInfo;
-import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
@@ -26,12 +24,10 @@ import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
@@ -124,6 +120,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 break;
             case DISCONNECT:
                 msgQueue.receivedMessage(msg);
+                channel.getNodeStatistics().nodeDisconnectedRemote((DisconnectMessage) msg);
                 break;
             case PING:
                 msgQueue.receivedMessage(msg);
@@ -162,7 +159,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        logger.error(cause.getCause().toString());
+        logger.error("" + cause.getCause(), cause);
         super.exceptionCaught(ctx, cause);
         ctx.close();
         killTimers();

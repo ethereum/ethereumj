@@ -10,11 +10,15 @@ import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.wire.MessageCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -56,8 +60,13 @@ public class Channel {
     @Autowired
     MessageCodec messageCodec;
 
+    @Autowired
+    NodeManager nodeManager;
+
     InetSocketAddress inetSocketAddress;
 
+    Node node;
+    NodeStatistics nodeStatistics;
 
     private long startupTS;
 
@@ -66,7 +75,6 @@ public class Channel {
     }
 
     public void init(String remoteId) {
-
         messageCodec.setRemoteId(remoteId, this);
         //messageCodec.setMsgQueue(msgQueue);
 
@@ -87,6 +95,7 @@ public class Channel {
 
 //        ctx.pipeline().addLast(Capability.ETH, getEthHandler());
 //        ctx.pipeline().addLast(Capability.SHH, getShhHandler());
+        getNodeStatistics().rlpxHandshake.add();
     }
 
 
@@ -101,7 +110,7 @@ public class Channel {
 
         if (logger.isInfoEnabled())
             logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), HELLO_MESSAGE);
-
+        getNodeStatistics().rlpxOutHello.add();
     }
 
 
@@ -165,5 +174,18 @@ public class Channel {
 
     public void setInetSocketAddress(InetSocketAddress inetSocketAddress) {
         this.inetSocketAddress = inetSocketAddress;
+        if (this.inetSocketAddress == null) {
+            this.inetSocketAddress = new InetSocketAddress("localhost", 7777);
+        }
+        node = new Node(messageCodec.getRemoteId(),
+                inetSocketAddress.getHostName(), inetSocketAddress.getPort());
+
+    }
+
+    public NodeStatistics getNodeStatistics() {
+        if (nodeStatistics == null) {
+            nodeStatistics = nodeManager.getNodeStatistics(node);
+        }
+        return nodeStatistics;
     }
 }

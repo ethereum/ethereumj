@@ -25,7 +25,7 @@ public class AuthInitiateMessage {
     public AuthInitiateMessage() {
     }
 
-    static int getLength() {
+    public static int getLength() {
         return 65+32+64+32+1;
     }
 

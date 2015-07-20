@@ -10,6 +10,7 @@ import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
+import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.FastByteComparisons;
 
@@ -187,7 +188,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      * @param ctx the ChannelHandlerContext
      */
     public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
-
         this.handshakeStatusMessage = msg;
         if (peerDiscoveryMode) {
             msgQueue.sendMessage(new DisconnectMessage(ReasonCode.REQUESTED));

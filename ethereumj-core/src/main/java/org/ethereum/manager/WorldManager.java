@@ -13,6 +13,9 @@ import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
+import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.rlpx.discover.PeerConnectionManager;
+import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -65,6 +68,15 @@ public class WorldManager {
 
     @Autowired
     private EthereumListener listener;
+
+    @Autowired
+    private NodeManager nodeManager;
+
+    @Autowired
+    private PeerConnectionManager peerConnectionManager;
+
+    @Autowired
+    private UDPListener udpListener;
 
     @PostConstruct
     public void init() {

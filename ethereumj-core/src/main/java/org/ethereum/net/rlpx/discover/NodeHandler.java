@@ -1,6 +1,7 @@
 package org.ethereum.net.rlpx.discover;
 
 import org.ethereum.net.rlpx.*;
+import org.ethereum.net.swarm.Util;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
@@ -67,15 +68,18 @@ public class NodeHandler {
     }
 
     Node node;
-    MessageHandler messageHandler;
+    NodeManager nodeManager;
+    private NodeStatistics nodeStatistics;
 
     State state;
     boolean waitForPong = false;
+    long pingSent;
+    int pingTrials = 3;
     NodeHandler replaceCandidate;
 
-    public NodeHandler(Node node, MessageHandler messageHandler) {
+    public NodeHandler(Node node, NodeManager nodeManager) {
         this.node = node;
-        this.messageHandler = messageHandler;
+        this.nodeManager = nodeManager;
         changeState(State.Discovered);
     }
 
@@ -85,6 +89,17 @@ public class NodeHandler {
 
     public Node getNode() {
         return node;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public NodeStatistics getNodeStatistics() {
+        if (nodeStatistics == null) {
+            nodeStatistics = new NodeStatistics(node);
+        }
+        return nodeStatistics;
     }
 
     private void challengeWith(NodeHandler replaceCandidate) {
@@ -99,11 +114,11 @@ public class NodeHandler {
             sendPing();
         }
         if (newState == State.Alive) {
-            Node evictCandidate = messageHandler.table.addNode(this.node);
+            Node evictCandidate = nodeManager.table.addNode(this.node);
             if (evictCandidate == null) {
                 newState = State.Active;
             } else {
-                NodeHandler evictHandler = messageHandler.getNodeHandler(evictCandidate);
+                NodeHandler evictHandler = nodeManager.getNodeHandler(evictCandidate);
                 if (evictHandler.state == State.EvictCandidate) {
                     // already challenging for eviction
                     // adding to alive for later challenges
@@ -116,7 +131,7 @@ public class NodeHandler {
         if (newState == State.Active) {
             if (oldState == State.Alive) {
                 // new node won the challenge
-                messageHandler.table.addNode(node);
+                nodeManager.table.addNode(node);
             } else if (oldState == State.EvictCandidate) {
                 // nothing to do here the node is already in the table
             } else {
@@ -127,7 +142,7 @@ public class NodeHandler {
             if (oldState == State.EvictCandidate) {
                 // lost the challenge
                 // Removing ourselves from the table
-                messageHandler.table.dropNode(node);
+                nodeManager.table.dropNode(node);
                 // Congratulate the winner
                 replaceCandidate.changeState(State.Active);
             } else if (oldState == State.Alive) {
@@ -146,12 +161,14 @@ public class NodeHandler {
     }
 
     protected void stateChanged(State oldState, State newState) {
-        messageHandler.logger.info("State change " + oldState + " -> " + newState + ": " + this);
+        logger.debug("State change " + oldState + " -> " + newState + ": " + this);
+        nodeManager.stateChanged(this, oldState, newState);
     }
 
     void handlePing(PingMessage msg) {
         logger.debug(" ===> [PING] " + this);
-        if (!messageHandler.table.getNode().equals(node)) {
+        getNodeStatistics().discoverInPing.add();
+        if (!nodeManager.table.getNode().equals(node)) {
             sendPong(msg.getMdc());
         }
     }
@@ -160,30 +177,39 @@ public class NodeHandler {
         logger.debug(" ===> [PONG] " + this);
         if (waitForPong) {
             waitForPong = false;
+            getNodeStatistics().discoverInPong.add();
+            getNodeStatistics().discoverMessageLatency.add(Util.curTime() - pingSent);
             changeState(State.Alive);
         }
     }
 
     void handleNeighbours(NeighborsMessage msg) {
         logger.debug(" ===> [NEIGHBOURS] " + this + ", Count: " + msg.getNodes().size());
+        getNodeStatistics().discoverInNeighbours.add();
         for (Node n : msg.getNodes()) {
-            messageHandler.getNodeHandler(n);
+            nodeManager.getNodeHandler(n);
         }
     }
 
     void handleFindNode(FindNodeMessage msg) {
         logger.debug(" ===> [FIND_NODE] " + this);
-        List<Node> closest = messageHandler.table.getClosestNodes(msg.getTarget());
+        getNodeStatistics().discoverInFind.add();
+        List<Node> closest = nodeManager.table.getClosestNodes(msg.getTarget());
         sendNeighbours(closest);
     }
 
     void handleTimedOut() {
-        if (state == State.Discovered) {
-            changeState(State.Dead);
-        } else if (state == State.EvictCandidate) {
-            changeState(State.NonActive);
+        waitForPong = false;
+        if (--pingTrials > 0) {
+            sendPing();
         } else {
-            // TODO just influence to reputation
+            if (state == State.Discovered) {
+                changeState(State.Dead);
+            } else if (state == State.EvictCandidate) {
+                changeState(State.NonActive);
+            } else {
+                // TODO just influence to reputation
+            }
         }
     }
 
@@ -193,10 +219,12 @@ public class NodeHandler {
         }
         logger.debug("<===  [PING] " + this);
 
-        Message ping = PingMessage.create(messageHandler.table.getNode().getHost(),
-                messageHandler.table.getNode().getPort(), messageHandler.key);
+        Message ping = PingMessage.create(nodeManager.table.getNode().getHost(),
+                nodeManager.table.getNode().getPort(), nodeManager.key);
         waitForPong = true;
-        messageHandler.sendMessage(this, ping);
+        pingSent = Util.curTime();
+        sendMessage(ping);
+        getNodeStatistics().discoverOutPing.add();
 
         pongTimer.schedule(new Runnable() {
             public void run() {
@@ -210,26 +238,34 @@ public class NodeHandler {
 
     void sendPong(byte[] mdc) {
         logger.debug("<===  [PONG] " + this);
-        Message pong = PongMessage.create(mdc, node.getHost(), node.getPort(), messageHandler.key);
-        messageHandler.sendMessage(this, pong);
+        Message pong = PongMessage.create(mdc, node.getHost(), node.getPort(), nodeManager.key);
+        sendMessage(pong);
+        getNodeStatistics().discoverOutPong.add();
     }
 
     void sendNeighbours(List<Node> neighbours) {
         logger.debug("<===  [NEIGHBOURS] " + this);
-        NeighborsMessage neighbors = NeighborsMessage.create(neighbours, messageHandler.key);
-        messageHandler.sendMessage(this, neighbors);
+        NeighborsMessage neighbors = NeighborsMessage.create(neighbours, nodeManager.key);
+        sendMessage(neighbors);
+        getNodeStatistics().discoverOutNeighbours.add();
     }
 
     void sendFindNode(byte[] target) {
         logger.debug("<===  [FIND_NODE] " + this);
-        Message findNode = FindNodeMessage.create(target, messageHandler.key);
-        messageHandler.sendMessage(this, findNode);
+        Message findNode = FindNodeMessage.create(target, nodeManager.key);
+        sendMessage(findNode);
+        getNodeStatistics().discoverOutFind.add();
     }
 
+    private void sendMessage(Message msg) {
+        nodeManager.sendOutbound(new DiscoveryEvent(msg, getInetSocketAddress()));
+    }
 
     @Override
     public String toString() {
         return "NodeHandler[state: " + state + ", node: " + node.getHost() + ":" + node.getPort() + ", id="
                 + Hex.toHexString(node.getId(), 0, 4) + "]";
     }
+
+
 }

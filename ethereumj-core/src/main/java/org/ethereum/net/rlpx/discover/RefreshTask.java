@@ -13,9 +13,13 @@ import java.util.Random;
 public class RefreshTask extends DiscoverTask {
     private static final Logger logger = LoggerFactory.getLogger("discover");
 
-    RefreshTask(Channel channel, ECKey key, NodeTable table) {
-        super(getNodeId(), channel, key, table);
+    public RefreshTask(NodeManager nodeManager) {
+        super(nodeManager);
     }
+//
+//    RefreshTask(Channel channel, ECKey key, NodeTable table) {
+//        super(getNodeId(), channel, key, table);
+//    }
 
     public static byte[] getNodeId() {
         Random gen = new Random();

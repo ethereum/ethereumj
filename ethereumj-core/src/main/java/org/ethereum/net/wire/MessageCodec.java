@@ -15,6 +15,8 @@ import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.rlpx.*;
+import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.rlpx.discover.PeerConnectionManager;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
@@ -27,6 +29,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
@@ -59,6 +63,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public class InitiateHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
+            channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
             if (remoteId.length == 64) {
                 initiate(ctx);
             } else {
@@ -105,6 +110,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         listener.onRecvMessage(msg);
 
         out.add(msg);
+        channel.getNodeStatistics().rlpxInMessages.add();
     }
 
     @Override
@@ -125,6 +131,8 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         byte code = getCode(msg.getCommand());
         Frame frame = new Frame(code, msg.getEncoded());
         frameCodec.writeFrame(frame, out);
+
+        channel.getNodeStatistics().rlpxOutMessages.add();
     }
 
 
@@ -151,6 +159,8 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         final ByteBuf byteBufMsg = ctx.alloc().buffer(initiatePacket.length);
         byteBufMsg.writeBytes(initiatePacket);
         ctx.writeAndFlush(byteBufMsg).sync();
+
+        channel.getNodeStatistics().rlpxAuthMessagesSent.add();
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), initiateMessage);
@@ -217,6 +227,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
             }
         }
+        channel.getNodeStatistics().rlpxInHello.add();
     }
 
     /* TODO: this dirty hack is here cause we need to use message
@@ -247,5 +258,9 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
+    }
+
+    public byte[] getRemoteId() {
+        return remoteId;
     }
 }

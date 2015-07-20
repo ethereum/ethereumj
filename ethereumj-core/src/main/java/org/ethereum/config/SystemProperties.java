@@ -80,6 +80,10 @@ public class SystemProperties {
         }
     }
 
+    public Config getConfig() {
+        return config;
+    }
+
     /**
      * Puts a new config atop of existing stack making the options
      * in the supplied config overriding existing options
@@ -134,7 +138,7 @@ public class SystemProperties {
 
     @ValidateMe
     public String privateKey() {
-        return config.getString("privateKey");
+        return config.getString("peer.discovery.privateKey");
     }
 
     @ValidateMe
