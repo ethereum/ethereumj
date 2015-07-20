@@ -114,7 +114,6 @@ public class HashStoreImpl implements HashStore {
             hashes.remove(idx);
             index.remove(0);
         }
-        db.commit();
         return hash;
     }
 
