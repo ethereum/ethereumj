@@ -124,33 +124,27 @@ public class LevelDbDataSource implements KeyValueDataSource {
         }
     }
 
-    @Override
-    public void updateBatch(Map<byte[], byte[]> rows) {
-
-        WriteBatch batch;
-        try  {
-
-            batch = db.createWriteBatch();
+    private void updateBatchInternal(Map<byte[], byte[]> rows) throws IOException {
+        try (WriteBatch batch = db.createWriteBatch()) {
             for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
                 batch.put(entry.getKey(), entry.getValue());
             }
-
             db.write(batch);
-        } catch (DBException e) {
-
+        }
+    }
+    
+    @Override
+    public void updateBatch(Map<byte[], byte[]> rows) {
+        try  {
+            updateBatchInternal(rows);
+        } catch (Exception e) {
             // try one more time
             try {
-                batch = db.createWriteBatch();
-                for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
-                    batch.put(entry.getKey(), entry.getValue());
-                }
-                db.write(batch);
-            } catch (DBException e1) {
+                updateBatchInternal(rows);
+            } catch (Exception e1) {
                 throw new RuntimeException(e);
             }
-
         }
-
     }
 
     @Override
