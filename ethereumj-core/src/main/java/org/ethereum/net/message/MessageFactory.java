@@ -7,6 +7,7 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.PeersMessage;
 import org.ethereum.net.shh.Envelope;
 import org.ethereum.net.shh.ShhMessageCodes;
+import org.ethereum.net.swarm.bzz.*;
 
 /**
  * Factory to create protocol message objects based on the RLP encoded data
@@ -74,7 +75,21 @@ public class MessageFactory {
             }
         }
 
+        if (BzzMessageCodes.inRange(code)) {
+
+            BzzMessageCodes receivedCommand = BzzMessageCodes.fromByte(code);
+            switch (receivedCommand) {
+                case STATUS:
+                    return new BzzStatusMessage(encoded);
+                case STORE_REQUEST:
+                    return new BzzStoreReqMessage(encoded);
+                case RETRIEVE_REQUEST:
+                    return new BzzRetrieveReqMessage(encoded);
+                case PEERS:
+                    return new BzzPeersMessage(encoded);
+            }
+        }
+
         throw new IllegalArgumentException("No such message");
     }
-
 }

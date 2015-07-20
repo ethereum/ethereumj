@@ -17,6 +17,7 @@ import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
+import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.math.ec.ECPoint;
@@ -93,7 +94,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         byte[] payload = ByteStreams.toByteArray(frame.getStream());
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Recv: Encoded: [{}]", Hex.toHexString(payload));
+            loggerWire.debug("Recv: Encoded: {} [{}]", frame.getType(), Hex.toHexString(payload));
 
         Message msg = MessageFactory.createMessage((byte) frame.getType(), payload);
 
@@ -118,7 +119,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         byte[] encoded = msg.getEncoded();
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Send: Encoded: [{}]", Hex.toHexString(encoded));
+            loggerWire.debug("Send: Encoded: {} [{}]", getCode(msg.getCommand()), Hex.toHexString(encoded));
 
         /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
         byte code = getCode(msg.getCommand());
@@ -133,6 +134,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
         myKey = new ECKey().decompress();
         channel.getShhHandler().setPrivKey(myKey);
+//        channel.getBzzHandler().setPrivKey(myKey);
         byte[] nodeIdWithFormat = myKey.getPubKey();
         nodeId = new byte[nodeIdWithFormat.length - 1];
         System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
@@ -233,6 +235,10 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
         if (msgCommand instanceof ShhMessageCodes){
             code = ((ShhMessageCodes)msgCommand).asByte();
+        }
+
+        if (msgCommand instanceof BzzMessageCodes){
+            code = ((BzzMessageCodes)msgCommand).asByte();
         }
 
         return code;
