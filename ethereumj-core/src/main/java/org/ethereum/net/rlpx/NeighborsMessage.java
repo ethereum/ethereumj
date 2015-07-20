@@ -37,7 +37,7 @@ public class NeighborsMessage extends Message {
 
     public static NeighborsMessage create(List<Node> nodes, ECKey privKey) {
 
-        long expiration = System.currentTimeMillis() / 1000;
+        long expiration = 60 + System.currentTimeMillis() / 1000;
 
         byte[][] nodeRLPs = null;
 

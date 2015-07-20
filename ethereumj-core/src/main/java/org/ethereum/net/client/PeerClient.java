@@ -71,7 +71,8 @@ public class PeerClient {
             logger.debug("Connection is closed");
 
         } catch (Exception e) {
-            logger.debug("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            logger.error("Exception: {} ({})", e.getMessage(), e.getClass().getName());
+            logger.trace("Exception details:", e);
         } finally {
             workerGroup.shutdownGracefully();
         }
