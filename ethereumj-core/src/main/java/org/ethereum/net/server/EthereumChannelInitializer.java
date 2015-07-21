@@ -56,8 +56,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             logger.info("Open connection, channel: {}", ch.toString());
 
             Channel channel = ctx.getBean(Channel.class);
-            channel.init(remoteId);
-            channel.setDiscoveryMode(peerDiscoveryMode);
+            channel.init(remoteId, peerDiscoveryMode);
 
             channelManager.addChannel(channel);
 

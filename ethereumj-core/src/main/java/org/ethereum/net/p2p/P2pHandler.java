@@ -203,7 +203,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         else {
             List<Capability> capInCommon = new ArrayList<>();
             for (Capability capability : msg.getCapabilities()) {
-                if (HELLO_MESSAGE.getCapabilities().contains(capability)) {
+                if (Capability.getConfigCapabilities().contains(capability)) {
                     if (capability.getName().equals(Capability.ETH) &&
                         capability.getVersion() == EthHandler.VERSION) {
 

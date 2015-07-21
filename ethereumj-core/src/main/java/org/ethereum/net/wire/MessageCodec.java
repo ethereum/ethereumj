@@ -203,7 +203,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
                 ECPoint remotePubKey = this.handshake.getRemotePublicKey();
                 this.remoteId = remotePubKey.getEncoded();
-                this.channel.init(Hex.toHexString(this.remoteId));
+                this.channel.init(Hex.toHexString(this.remoteId), false);
 
                 final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);
                 byteBufMsg.writeBytes(responsePacket);
@@ -254,6 +254,14 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
+    }
+
+    /**
+     * Generate random Key (and thus NodeID) per channel for 'anonymous'
+     * connection (e.g. for peer discovery)
+     */
+    public void generateTempKey() {
+        myKey = new ECKey().decompress();
     }
 
     public byte[] getRemoteId() {
