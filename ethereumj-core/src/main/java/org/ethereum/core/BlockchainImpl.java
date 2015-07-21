@@ -6,6 +6,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
+import org.ethereum.facade.CommonConfig;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -101,6 +102,9 @@ public class BlockchainImpl implements Blockchain {
     private BlockQueue blockQueue;
 
     @Autowired
+    private CommonConfig config;
+
+    @Autowired
     private ChannelManager channelManager;
 
     private boolean syncDoneCalled = false;
@@ -143,7 +147,7 @@ public class BlockchainImpl implements Blockchain {
 
     @Override
     public Block getBlockByNumber(long blockNr) {
-        return blockStore.getBlockByNumber(blockNr);
+        return blockStore.getChainBlockByNumber(blockNr);
     }
 
     @Override
@@ -181,8 +185,8 @@ public class BlockchainImpl implements Blockchain {
                     Hex.toHexString(block.getHash()).substring(0, 6),
                     block.getNumber());
 
-        if (blockStore.getBestBlock().getNumber() >= block.getNumber() &&
-                blockStore.getBlockByHash(block.getHash()) != null) {
+        if (blockStore.getMaxNumber() >= block.getNumber() &&
+                blockStore.isBlockExist(block.getHash())) {
 
             if (logger.isDebugEnabled())
                 logger.debug("Block already exist hash: {}, number: {}",
@@ -564,12 +568,12 @@ public class BlockchainImpl implements Blockchain {
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
 //                System.exit(1);
                 // in case of rollback hard move the root
-    //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
-    //                repository.syncToRoot(parentBlock.getStateRoot());
+                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
+                repository.syncToRoot(parentBlock.getStateRoot());
                 // todo: after the rollback happens other block should be requested
             }
 
-        blockStore.saveBlock(block, receipts);
+        blockStore.saveBlock(block, totalDifficulty, true);
         setBestBlock(block);
 
         if (logger.isDebugEnabled())

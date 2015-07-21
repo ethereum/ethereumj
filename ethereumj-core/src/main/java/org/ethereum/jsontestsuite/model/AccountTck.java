@@ -14,7 +14,17 @@ public class AccountTck {
 
     Map<String, String> storage = new HashMap<>();
 
+    String privateKey;
+
     public AccountTck() {
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 
     public String getBalance() {

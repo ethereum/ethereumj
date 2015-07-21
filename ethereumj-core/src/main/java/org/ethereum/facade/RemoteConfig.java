@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 /**
  *
@@ -22,7 +20,6 @@ public class RemoteConfig {
     @Autowired CommonConfig commonConfig;
 
     @Bean
-    @Transactional(propagation = Propagation.SUPPORTS)
     public BlockStore blockStore(SessionFactory sessionFactory){
 
         BlockStore blockStore = new InMemoryBlockStore();

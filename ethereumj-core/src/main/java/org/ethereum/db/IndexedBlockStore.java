@@ -2,8 +2,12 @@ package org.ethereum.db;
 
 import org.ethereum.core.Block;
 import org.ethereum.datasource.KeyValueDataSource;
+import org.hibernate.SessionFactory;
+import org.mapdb.DB;
 import org.mapdb.DataIO;
 import org.mapdb.Serializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.math.BigInteger;
@@ -11,19 +15,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class IndexedBlockStore{
+public class IndexedBlockStore implements BlockStore{
+
+    private static final Logger logger = LoggerFactory.getLogger("general");
 
     IndexedBlockStore cache;
     Map<Long, List<BlockInfo>> index;
     KeyValueDataSource blocks;
 
+    DB indexDB;
+
     public IndexedBlockStore(){
     }
 
-    public void init(Map<Long, List<BlockInfo>> index, KeyValueDataSource blocks, IndexedBlockStore cache) {
+    public void init(Map<Long, List<BlockInfo>> index, KeyValueDataSource blocks, IndexedBlockStore cache, DB indexDB) {
         this.cache = cache;
         this.index = index;
         this.blocks = blocks;
+        this.indexDB  = indexDB;
     }
 
     public Block getBestBlock(){
@@ -35,7 +44,10 @@ public class IndexedBlockStore{
     }
 
 
+    @Override
     public void flush(){
+
+        long t1 = System.nanoTime();
 
         for (byte[] hash : cache.blocks.keys()){
             blocks.put(hash, cache.blocks.get(hash));
@@ -45,9 +57,18 @@ public class IndexedBlockStore{
 
         cache.blocks.close();
         cache.index.clear();
+
+        long t2 = System.nanoTime();
+
+        if (indexDB != null)
+            indexDB.commit();
+
+        logger.info("Flush block store in: {} ms", ((float)(t2 - t1) / 1_000_000));
+
     }
 
 
+    @Override
     public void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain){
         if (cache == null)
             addInternalBlock(block, cummDifficulty, mainChain);
@@ -73,6 +94,7 @@ public class IndexedBlockStore{
         blocks.put(block.getHash(), block.getEncoded());
     }
 
+
     public List<Block> getBlocksByNumber(long number){
 
         List<Block> result = new ArrayList<>();
@@ -94,6 +116,7 @@ public class IndexedBlockStore{
         return result;
     }
 
+    @Override
     public Block getChainBlockByNumber(long number){
 
         if (cache != null) {
@@ -119,6 +142,7 @@ public class IndexedBlockStore{
         return null;
     }
 
+    @Override
     public Block getBlockByHash(byte[] hash) {
 
         if (cache != null) {
@@ -133,6 +157,20 @@ public class IndexedBlockStore{
         return new Block(blockRlp);
     }
 
+    @Override
+    public boolean isBlockExist(byte[] hash) {
+
+        if (cache != null) {
+            Block cachedBlock = cache.getBlockByHash(hash);
+            return cachedBlock != null;
+        }
+
+        byte[] blockRlp = blocks.get(hash);
+        return blockRlp != null;
+    }
+
+
+    @Override
     public BigInteger getTotalDifficulty(){
 
         BigInteger cacheTotalDifficulty = BigInteger.ZERO;
@@ -159,6 +197,7 @@ public class IndexedBlockStore{
         return cacheTotalDifficulty;
     }
 
+    @Override
     public long getMaxNumber(){
 
         Long bestIndex = 0L;
@@ -173,6 +212,7 @@ public class IndexedBlockStore{
             return bestIndex - 1L;
     }
 
+    @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long number){
 
         List<byte[]> cachedHashes = new ArrayList<>();
@@ -281,4 +321,14 @@ public class IndexedBlockStore{
             return value;
         }
     };
+
+
+    @Override
+    public void load() {
+    }
+
+    public void setSessionFactory(SessionFactory sessionFactory){
+        throw new UnsupportedOperationException();
+    }
+
 }

@@ -26,6 +26,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.List;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -42,7 +43,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
     private FrameCodec frameCodec;
-    private ECKey myKey;
+    private ECKey myKey = ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress();
     private byte[] nodeId;
     private byte[] remoteId;
     private EncryptionHandshake handshake;
@@ -59,7 +60,15 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public class InitiateHandler extends ChannelInboundHandlerAdapter {
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            initiate(ctx);
+            channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
+            if (remoteId.length == 64) {
+                initiate(ctx);
+            } else {
+                handshake = new EncryptionHandshake();
+                byte[] nodeIdWithFormat = myKey.getPubKey();
+                nodeId = new byte[nodeIdWithFormat.length - 1];
+                System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+            }
         }
     }
 
@@ -98,6 +107,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         listener.onRecvMessage(msg);
 
         out.add(msg);
+        channel.getNodeStatistics().rlpxInMessages.add();
     }
 
     @Override
@@ -118,6 +128,8 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         byte code = getCode(msg.getCommand());
         Frame frame = new Frame(code, msg.getEncoded());
         frameCodec.writeFrame(frame, out);
+
+        channel.getNodeStatistics().rlpxOutMessages.add();
     }
 
 
@@ -144,6 +156,8 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         final ByteBuf byteBufMsg = ctx.alloc().buffer(initiatePacket.length);
         byteBufMsg.writeBytes(initiatePacket);
         ctx.writeAndFlush(byteBufMsg).sync();
+
+        channel.getNodeStatistics().rlpxAuthMessagesSent.add();
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), initiateMessage);
@@ -178,15 +192,31 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
             }
         } else {
             if (frameCodec == null) {
-                // Respond to auth
-                throw new UnsupportedOperationException();
+                byte[] authInitPacket = new byte[AuthInitiateMessage.getLength() + ECIESCoder.getOverhead()];
+                if (!buffer.isReadable(authInitPacket.length))
+                    return;
+                buffer.readBytes(authInitPacket);
+
+                this.handshake = new EncryptionHandshake();
+                byte[] responsePacket = this.handshake.handleAuthInitiate(authInitPacket, myKey);
+                EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();
+                this.frameCodec = new FrameCodec(secrets);
+
+                ECPoint remotePubKey = this.handshake.getRemotePublicKey();
+                this.remoteId = remotePubKey.getEncoded();
+                this.channel.init(Hex.toHexString(this.remoteId));
+
+                final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);
+                byteBufMsg.writeBytes(responsePacket);
+                ctx.writeAndFlush(byteBufMsg).sync();
             } else {
                 Frame frame = frameCodec.readFrame(buffer);
                 if (frame == null)
                     return;
                 byte[] payload = ByteStreams.toByteArray(frame.getStream());
                 HelloMessage helloMessage = new HelloMessage(payload);
-                System.out.println("hello message received");
+                if (loggerNet.isInfoEnabled())
+                    loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
 
                 // Secret authentication finish here
                 isHandshakeDone = true;
@@ -194,6 +224,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
             }
         }
+        channel.getNodeStatistics().rlpxInHello.add();
     }
 
     /* TODO: this dirty hack is here cause we need to use message
@@ -225,5 +256,9 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
         this.messageCodesResolver = channel.getMessageCodesResolver();
+    }
+
+    public byte[] getRemoteId() {
+        return remoteId;
     }
 }

@@ -14,9 +14,17 @@ public class BlockTestCase {
     private String genesisRLP;
     private Map<String, AccountTck> pre;
     private Map<String, AccountTck> postState;
-
+    private String lastblockhash;
 
     public BlockTestCase() {
+    }
+
+    public String getLastblockhash() {
+        return lastblockhash;
+    }
+
+    public void setLastblockhash(String lastblockhash) {
+        this.lastblockhash = lastblockhash;
     }
 
     public List<BlockTck> getBlocks() {

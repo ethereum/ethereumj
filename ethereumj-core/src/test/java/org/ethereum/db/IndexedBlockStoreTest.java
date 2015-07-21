@@ -71,7 +71,7 @@ public class IndexedBlockStoreTest {
     public void test1(){
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null);
+        indexedBlockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
 
         BigInteger cummDiff = BigInteger.ZERO;
         for (Block block : blocks){
@@ -177,10 +177,10 @@ public class IndexedBlockStoreTest {
     public void test2(){
 
         IndexedBlockStore cache = new IndexedBlockStore();
-        cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null);
+        cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), cache);
+        indexedBlockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), cache, null);
 
         BigInteger cummDiff = BigInteger.ZERO;
         for (Block block : blocks){
@@ -286,10 +286,10 @@ public class IndexedBlockStoreTest {
     public void test3(){
 
         IndexedBlockStore cache = new IndexedBlockStore();
-        cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null);
+        cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), cache);
+        indexedBlockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), cache, null);
 
         BigInteger cummDiff = BigInteger.ZERO;
         for (Block block : blocks){
@@ -402,14 +402,14 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.CONFIG.setDataBaseDir(testDir);
 
-        DB db = createMapDB(testDir);
-        Map<Long, List<IndexedBlockStore.BlockInfo>> indexDB = createIndexMap(db);
+        DB indexDB = createMapDB(testDir);
+        Map<Long, List<IndexedBlockStore.BlockInfo>> indexMap = createIndexMap(indexDB);
 
         KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
 
         IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(indexDB, blocksDB, null);
+        indexedBlockStore.init(indexMap, blocksDB, null, indexDB);
 
 
         BigInteger cummDiff = BigInteger.ZERO;
@@ -511,19 +511,19 @@ public class IndexedBlockStoreTest {
         }
 
         blocksDB.close();
-        db.close();
+        indexDB.close();
 
 
         // testing after: REOPEN
 
-        db = createMapDB(testDir);
-        indexDB = createIndexMap(db);
+        indexDB = createMapDB(testDir);
+        indexMap = createIndexMap(indexDB);
 
         blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
 
         indexedBlockStore = new IndexedBlockStore();
-        indexedBlockStore.init(indexDB, blocksDB, null);
+        indexedBlockStore.init(indexMap, blocksDB, null, indexDB);
 
         //  testing: getListHashesStartWith(long, long)
 
@@ -537,7 +537,7 @@ public class IndexedBlockStoreTest {
         }
 
         blocksDB.close();
-        db.close();
+        indexDB.close();
         FileUtil.recursiveDelete(testDir);
     }
 
@@ -548,8 +548,8 @@ public class IndexedBlockStoreTest {
         String testDir = "test_db_" + bi;
         SystemProperties.CONFIG.setDataBaseDir(testDir);
 
-        DB db = createMapDB(testDir);
-        Map<Long, List<IndexedBlockStore.BlockInfo>> indexDB = createIndexMap(db);
+        DB indexDB = createMapDB(testDir);
+        Map<Long, List<IndexedBlockStore.BlockInfo>> indexMap = createIndexMap(indexDB);
 
         KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
         blocksDB.init();
@@ -557,10 +557,10 @@ public class IndexedBlockStoreTest {
         try {
 
             IndexedBlockStore cache = new IndexedBlockStore();
-            cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null);
+            cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
 
             IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
-            indexedBlockStore.init(indexDB, blocksDB, cache);
+            indexedBlockStore.init(indexMap, blocksDB, cache, indexDB);
 
 
             BigInteger cummDiff = BigInteger.ZERO;
@@ -674,17 +674,17 @@ public class IndexedBlockStoreTest {
 
             indexedBlockStore.flush();
             blocksDB.close();
-            db.close();
+            indexDB.close();
             // testing after: REOPEN
 
-            db = createMapDB(testDir);
-            indexDB = createIndexMap(db);
+            indexDB = createMapDB(testDir);
+            indexMap = createIndexMap(indexDB);
 
             blocksDB = new LevelDbDataSource("blocks");
             blocksDB.init();
 
             indexedBlockStore = new IndexedBlockStore();
-            indexedBlockStore.init(indexDB, blocksDB, null);
+            indexedBlockStore.init(indexMap, blocksDB, null, indexDB);
 
 
             //  testing: getListHashesStartWith(long, long)
@@ -699,7 +699,7 @@ public class IndexedBlockStoreTest {
             }
         } finally {
             blocksDB.close();
-            db.close();
+            indexDB.close();
             FileUtil.recursiveDelete(testDir);
         }
 

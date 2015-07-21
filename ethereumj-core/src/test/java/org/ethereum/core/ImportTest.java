@@ -50,7 +50,10 @@ public class ImportTest {
         @Bean
         @Transactional(propagation = Propagation.SUPPORTS)
         public BlockStore blockStore(SessionFactory sessionFactory){
-            return new InMemoryBlockStore();
+
+            InMemoryBlockStore blockStore = new InMemoryBlockStore();
+            blockStore.setSessionFactory(sessionFactory);
+            return blockStore;
         }
     }
 

@@ -13,7 +13,6 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.HandshakeHelper;
-import org.ethereum.net.rlpx.MessageCodesResolver;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
@@ -121,6 +120,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 break;
             case DISCONNECT:
                 msgQueue.receivedMessage(msg);
+                channel.getNodeStatistics().nodeDisconnectedRemote((DisconnectMessage) msg);
                 break;
             case PING:
                 msgQueue.receivedMessage(msg);

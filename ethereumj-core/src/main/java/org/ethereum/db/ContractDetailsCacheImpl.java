@@ -1,15 +1,17 @@
 package org.ethereum.db;
 
 import org.ethereum.trie.SecureTrie;
-import org.ethereum.util.*;
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPItem;
+import org.ethereum.util.RLPList;
 import org.ethereum.vm.DataWord;
 import org.spongycastle.util.encoders.Hex;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -152,6 +154,38 @@ public class ContractDetailsCacheImpl implements ContractDetails {
     @Override
     public Map<DataWord, DataWord> getStorage() {
         return Collections.unmodifiableMap(storage);
+    }
+
+    public Map<DataWord, DataWord> getOriginStorage() {
+        return (origContract == null) ? Collections.EMPTY_MAP : origContract.getStorage();
+    }
+
+    @Override
+    public Map<DataWord, DataWord> getStorage(int offset, int limit) {
+        if (origContract != null) return origContract.getStorage(offset, limit);
+
+        Collection<DataWord> keys = storage.keySet();
+        int fromIndex = max(offset, 0);
+        int toIndex = min(keys.size(), offset + limit);
+        if (fromIndex >= toIndex) return Collections.EMPTY_MAP;
+        
+        List<DataWord> sortedKeys = new ArrayList<>(keys);
+        Collections.sort(sortedKeys);
+
+        keys = sortedKeys.subList(fromIndex, toIndex);
+        Map<DataWord, DataWord> result = new HashMap<>(keys.size());
+        for (DataWord key : keys) {
+            result.put(key, storage.get(key));
+        }
+        
+        return result;
+    }
+
+    @Override
+    public int getStorageSize() {
+        return (origContract == null)
+                ? storage.size()
+                : origContract.getStorageSize();
     }
 
     @Override

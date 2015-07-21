@@ -11,8 +11,10 @@ import org.ethereum.net.eth.sync.SyncStatus;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
-import org.ethereum.net.rlpx.HandshakeHelper;
 import org.ethereum.net.rlpx.MessageCodesResolver;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.rlpx.MessageCodec;
@@ -25,7 +27,6 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.InetSocketAddress;
-import java.util.List;
 
 import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 
@@ -60,10 +61,15 @@ public class Channel {
     @Autowired
     MessageCodec messageCodec;
 
+    @Autowired
+    NodeManager nodeManager;
+
     MessageCodesResolver messageCodesResolver = new MessageCodesResolver();
     
     InetSocketAddress inetSocketAddress;
 
+    Node node;
+    NodeStatistics nodeStatistics;
 
     private long startupTS;
 
@@ -92,6 +98,7 @@ public class Channel {
 
 //        ctx.pipeline().addLast(Capability.ETH, getEthHandler());
 //        ctx.pipeline().addLast(Capability.SHH, getShhHandler());
+        getNodeStatistics().rlpxHandshake.add();
     }
 
 
@@ -106,7 +113,7 @@ public class Channel {
 
         if (logger.isInfoEnabled())
             logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), HELLO_MESSAGE);
-
+        getNodeStatistics().rlpxOutHello.add();
     }
 
 
@@ -170,6 +177,16 @@ public class Channel {
 
     public void setInetSocketAddress(InetSocketAddress inetSocketAddress) {
         this.inetSocketAddress = inetSocketAddress;
+        node = new Node(messageCodec.getRemoteId(),
+                inetSocketAddress.getHostName(), inetSocketAddress.getPort());
+
+    }
+
+    public NodeStatistics getNodeStatistics() {
+        if (nodeStatistics == null) {
+            nodeStatistics = nodeManager.getNodeStatistics(node);
+        }
+        return nodeStatistics;
     }
 
     public MessageCodesResolver getMessageCodesResolver() {

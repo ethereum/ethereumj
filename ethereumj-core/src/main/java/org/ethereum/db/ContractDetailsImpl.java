@@ -14,6 +14,8 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static org.ethereum.datasource.DataSourcePool.levelDbByName;
 import static org.ethereum.util.ByteUtil.*;
 
@@ -173,7 +175,26 @@ public class ContractDetailsImpl implements ContractDetails {
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
+        return getStorageInternal(keys);
+    }
 
+    @Override
+    public Map<DataWord, DataWord> getStorage(int offset, int limit) {
+        int fromIndex = max(offset, 0);
+        int toIndex = min(keys.size(), offset + limit);
+        if (fromIndex >= toIndex) return Collections.EMPTY_MAP;
+
+        List<ByteArrayWrapper> sortedKeys = new ArrayList<>(keys);
+        Collections.sort(sortedKeys);
+        return getStorageInternal(sortedKeys.subList(fromIndex, toIndex));
+    }
+
+    @Override
+    public int getStorageSize() {
+        return keys.size();
+    }
+
+    private Map<DataWord, DataWord> getStorageInternal(Collection<ByteArrayWrapper> keys) {
         Map<DataWord, DataWord> storage = new HashMap<>();
 
         for (ByteArrayWrapper keyBytes : keys) {

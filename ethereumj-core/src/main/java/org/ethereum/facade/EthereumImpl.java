@@ -47,7 +47,7 @@ public class EthereumImpl implements Ethereum {
     @Autowired
     ChannelManager channelManager;
 
-
+    @Autowired
     PeerServer peerServer;
 
     @Autowired
@@ -67,7 +67,7 @@ public class EthereumImpl implements Ethereum {
             Executors.newSingleThreadExecutor().submit(
                     new Runnable() {
                         public void run() {
-//                            peerServer.start(CONFIG.listenPort());
+                            peerServer.start(CONFIG.listenPort());
                         }
                     }
             );

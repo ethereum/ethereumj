@@ -77,7 +77,7 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
         blockStore.setSessionFactory(sessionFactory());
 
         for( Block block : blocks ){
-            blockStore.saveBlock(block, null);
+            blockStore.saveBlock(block, ZERO, true);
         }
 
         blockStore.flush();
@@ -90,7 +90,7 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
         SessionFactory sessionFactory = sessionFactory();
 
         for( Block block : blocks ){
-            blockStore.saveBlock(block, null);
+            blockStore.saveBlock(block, ZERO, true);
         }
 
         blockStore.setSessionFactory(sessionFactory);
@@ -113,7 +113,7 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
 
         for( int i = 0; i < blocks.size(); ++i ){
 
-            blockStore.saveBlock(blocks.get(i), null);
+            blockStore.saveBlock(blocks.get(i), ZERO, true);
             if ( i % 1000 == 0){
                 blockStore.flush();
                 assertTrue(blockStore.blocks.size() == 1);
@@ -129,7 +129,7 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
         SessionFactory sessionFactory = sessionFactory();
 
         for( Block block : blocks ){
-            blockStore.saveBlock(block, null);
+            blockStore.saveBlock(block, ZERO, true);
         }
 
         String hash = Hex.toHexString(blockStore.getBlockHashByNumber(7000));
@@ -161,28 +161,28 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
         SessionFactory sessionFactory = sessionFactory();
 
         for( Block block : blocks ){
-            blockStore.saveBlock(block, null);
+            blockStore.saveBlock(block, ZERO, true);
         }
 
-        String hash = Hex.toHexString(blockStore.getBlockByNumber(7000).getHash());
+        String hash = Hex.toHexString(blockStore.getChainBlockByNumber(7000).getHash());
         assertTrue(hash.startsWith("459a8f"));
 
-        hash = Hex.toHexString(blockStore.getBlockByNumber(6000).getHash());
+        hash = Hex.toHexString(blockStore.getChainBlockByNumber(6000).getHash());
         assertTrue(hash.startsWith("7a577a"));
 
-        hash = Hex.toHexString(blockStore.getBlockByNumber(5000).getHash());
+        hash = Hex.toHexString(blockStore.getChainBlockByNumber(5000).getHash());
         assertTrue(hash.startsWith("820aa7"));
 
         blockStore.setSessionFactory(sessionFactory);
         blockStore.flush();
 
-        hash = Hex.toHexString(blockStore.getBlockByNumber(7000).getHash());
+        hash = Hex.toHexString(blockStore.getChainBlockByNumber(7000).getHash());
         assertTrue(hash.startsWith("459a8f"));
 
-        hash = Hex.toHexString(blockStore.getBlockByNumber(6000).getHash());
+        hash = Hex.toHexString(blockStore.getChainBlockByNumber(6000).getHash());
         assertTrue(hash.startsWith("7a577a"));
 
-        hash = Hex.toHexString(blockStore.getBlockByNumber(5000).getHash());
+        hash = Hex.toHexString(blockStore.getChainBlockByNumber(5000).getHash());
         assertTrue(hash.startsWith("820aa7"));
     }
 
@@ -195,7 +195,7 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
         blockStore.setSessionFactory(sessionFactory);
 
         for( Block block : blocks ){
-            blockStore.saveBlock(block, null);
+            blockStore.saveBlock(block, ZERO, true);
         }
 
         assertEquals("4312750101",  blockStore.getTotalDifficulty().toString());
@@ -213,7 +213,7 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
         blockStore.setSessionFactory(sessionFactory);
 
         for( Block block : blocks ){
-            blockStore.saveBlock(block, null);
+            blockStore.saveBlock(block, ZERO, true);
         }
 
         byte[] hash7000 = Hex.decode("459a8f0ee5d4b0c9ea047797606c94f0c1158ed0f30120490b96f7df9893e1fa");
@@ -251,7 +251,7 @@ public class InMemoryBlockStoreTest extends AbstractInMemoryBlockStoreTest {
 
             System.out.println(block.getNumber());
 
-            blockStore.saveBlock(block, null);
+            blockStore.saveBlock(block, ZERO, true);
 
             if (block.getNumber() > 100_000) break;
         }

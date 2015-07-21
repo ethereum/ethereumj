@@ -39,7 +39,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
     @Override
     public void init() {
         if (isAlive()) return;
-        
+
         if (name == null) throw new NullPointerException("no name set to the db");
 
         Options options = new Options();
@@ -58,7 +58,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
             logger.debug("Initializing new or existing database: '{}'", name);
             db = factory.open(dbPath.toFile(), options);
-            
+
             alive = true;
         } catch (IOException ioe) {
             logger.error(ioe.getMessage(), ioe);
@@ -93,7 +93,11 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     @Override
     public byte[] get(byte[] key) {
-        return db.get(key);
+        try {
+            return db.get(key);
+        } catch (DBException e) {
+            return db.get(key);
+        }
     }
 
     @Override
@@ -120,27 +124,37 @@ public class LevelDbDataSource implements KeyValueDataSource {
         }
     }
 
-    @Override
-    public void updateBatch(Map<byte[], byte[]> rows) {
+    private void updateBatchInternal(Map<byte[], byte[]> rows) throws IOException {
         try (WriteBatch batch = db.createWriteBatch()) {
             for (Map.Entry<byte[], byte[]> entry : rows.entrySet()) {
                 batch.put(entry.getKey(), entry.getValue());
             }
-
             db.write(batch);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        }
+    }
+    
+    @Override
+    public void updateBatch(Map<byte[], byte[]> rows) {
+        try  {
+            updateBatchInternal(rows);
+        } catch (Exception e) {
+            // try one more time
+            try {
+                updateBatchInternal(rows);
+            } catch (Exception e1) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
     @Override
     public void close() {
         if (!isAlive()) return;
-        
+
         try {
             logger.debug("Close db: {}", name);
             db.close();
-            
+
             alive = false;
         } catch (IOException e) {
             logger.error("Failed to find the db file on the close: {} ", name);
