@@ -1,24 +1,27 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.net.eth;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
 import org.ethereum.facade.Blockchain;
+import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.eth.BlockHashesMessage;
 import org.ethereum.net.eth.BlocksMessage;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.StatusMessage;
+import org.ethereum.net.eth.sync.SyncState;
+import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.util.FastByteComparisons;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.*;
 
 /**
  * @author Mikhail Kalinin
@@ -32,18 +35,88 @@ public class SyncManager {
     @Autowired
     private Blockchain blockchain;
 
+    private static final int MAX_PEERS_COUNT = 5;
     private static final int FAILURES_THRESHOLD = 5;
 
-    private volatile SyncStatus status = SyncStatus.INIT;
+    volatile EthHandler masterPeer;
+    List<EthHandler> peers = Collections.synchronizedList(new ArrayList<EthHandler>());
 
-    private volatile EthHandler masterSyncHandler;
-    private List<EthHandler> blockHandlers = new CopyOnWriteArrayList<>();
-    private Map<EthHandler, Integer> failures = new ConcurrentHashMap<>();
-    private Map<EthHandler, Integer> counters = new ConcurrentHashMap<>();
+    volatile SyncState state = SyncState.INIT;
+    volatile EthHandler masterSyncHandler;
+
+    List<EthHandler> blockHandlers = new CopyOnWriteArrayList<>();
+    Map<EthHandler, Integer> failures = new ConcurrentHashMap<>();
+    Map<EthHandler, Integer> counters = new ConcurrentHashMap<>();
+
+
+    ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
+
+    @PostConstruct
+    public void init() {
+        worker.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+
+            }
+        }, 0, 10, TimeUnit.SECONDS);
+    }
+
+    public void removePeer(EthHandler peer) {
+        //TODO stop
+        peers.remove(peer);
+    }
+
+    public void addPeer(EthHandler peer) {
+        peers.add(peer);
+        //TODO add and start
+    }
+
+    public void changeState(SyncState newState) {
+        if(newState == SyncState.HASHES_RETRIEVING) {
+            blockchain.getQueue().clearHashes();
+            masterPeer.
+        }
+        if(newState == SyncState.BLOCKS_RETRIEVING) {
+
+        }
+        if(newState == SyncState.DONE) {
+
+        }
+
+        switch(state) {
+            case INIT:
+                switch(newState) {
+                    case HASHES:
+                        masterPeer.sendGetBlockHashes();
+                        break;
+                    default:
+                        return;
+                }
+            case HASHES:
+                switch(newState) {
+                    case HASHES:
+                        //TODO stop downloading
+                        //clear
+                    case BLOCKS:
+                    default: return;
+                }
+            case BLOCKS:
+                switch(newState) {
+                    case HASHES:
+                    case DONE:
+                    default: return;
+                }
+            default:
+                return;
+        }
+        this.state = newState;
+    }
+
+    private void
 
     public void handleStatus(EthHandler handler, StatusMessage msg) {
 
-        if(status == SyncStatus.SYNC_DONE) {
+        if(status == SyncState.SYNC_DONE) {
             return;
         }
 
@@ -75,7 +148,7 @@ public class SyncManager {
                     blockchain.getTotalDifficulty()
             );
             addBlockHandler(handler);
-            if(status == SyncStatus.BLOCK_RETRIEVING) {
+            if(status == SyncState.BLOCK_RETRIEVING) {
                 handler.sendGetBlocks();
             }
         }
@@ -92,7 +165,7 @@ public class SyncManager {
         // result is empty, peer has no more hashes
         // or peer doesn't have the best hash anymore
         if (receivedHashes.isEmpty()) {
-            status = SyncStatus.HASHES_RETRIEVED;
+            status = SyncState.HASHES_RETRIEVED;
         } else {
             chainQueue.addHashes(receivedHashes);
             // store unknown hashes in queue until known hash is found
@@ -104,12 +177,12 @@ public class SyncManager {
                 }
             });
             if (foundHash != null) {
-                status = SyncStatus.HASHES_RETRIEVED; // store unknown hashes in queue until known hash is found
+                status = SyncState.HASHES_RETRIEVED; // store unknown hashes in queue until known hash is found
                 logger.trace("Catch up with the hashes until: {[]}", foundHash);
             }
         }
 
-        if(status == SyncStatus.HASHES_RETRIEVED) {
+        if(status == SyncState.HASHES_RETRIEVED) {
             logger.info(" Block hashes sync completed: {} hashes in queue", chainQueue.getHashes().size());
             chainQueue.addHash(blockchain.getBestBlockHash());
             initiateGetBlocks();
@@ -127,7 +200,7 @@ public class SyncManager {
 
         if(blockchain.getQueue().isHashesEmpty()) {
             logger.info(" Block retrieving process fully complete");
-            status = SyncStatus.BLOCKS_RETRIEVED;
+            status = SyncState.BLOCKS_RETRIEVED;
             clearBlockHandlers();
             return;
         }
@@ -185,8 +258,8 @@ public class SyncManager {
     }
 
     private void initiateGetBlocks() {
-        if(status != SyncStatus.BLOCK_RETRIEVING) {
-            status = SyncStatus.BLOCK_RETRIEVING;
+        if(status != SyncState.BLOCK_RETRIEVING) {
+            status = SyncState.BLOCK_RETRIEVING;
             for (EthHandler handler : blockHandlers) {
                 handler.sendGetBlocks();
             }
@@ -194,7 +267,14 @@ public class SyncManager {
     }
 
     private void initiateGetBlockHashes() {
-        status = SyncStatus.HASH_RETRIEVING;
+        status = SyncState.HASH_RETRIEVING;
         masterSyncHandler.sendGetBlockHashes();
+    }
+
+    private class NodeListener extends EthereumListenerAdapter {
+
+        public void onNodeDiscovered(NodeHandler node) {
+
+        }
     }
 }
