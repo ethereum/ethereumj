@@ -265,6 +265,10 @@ public class BlockQueue {
         return hashStore.isEmpty();
     }
 
+    public void adjustHashes() {
+        //TODO remove hashes for blocks existed in queue
+    }
+
     public void clear() {
         this.hashStore.clear();
         this.blockQueue.clear();

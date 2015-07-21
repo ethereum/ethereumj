@@ -138,4 +138,7 @@ public class Utils {
         return sb.append(" ").append(firstHash).append("...").append(lastHash).toString();
     }
 
+    public static String getNodeIdShort(String nodeId) {
+        return nodeId.substring(0, 8);
+    }
 }

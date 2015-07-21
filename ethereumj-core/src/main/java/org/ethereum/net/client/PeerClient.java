@@ -66,6 +66,11 @@ public class PeerClient {
             // Start the client.
             ChannelFuture f = b.connect().sync();
 
+            // Wait until the connection is closed.
+            f.channel().closeFuture().sync();
+
+            channelManager.notifyDisconnect(ethereumChannelInitializer.getChannel());
+            logger.debug("Connection is closed");
         } catch (Exception e) {
             logger.error("Exception: {} ({})", e.getMessage(), e.getClass().getName());
             logger.trace("Exception details:", e);
@@ -73,5 +78,4 @@ public class PeerClient {
             workerGroup.shutdownGracefully();
         }
     }
-
 }

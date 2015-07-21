@@ -286,8 +286,7 @@ public class BlockchainImpl implements Blockchain {
 
         if (blockQueue != null &&
             blockQueue.size() == 0 &&
-            !syncDoneCalled &&
-                channelManager.isAllSync()) {
+            !syncDoneCalled) {
 
             logger.info("Sync done");
             syncDoneCalled = true;

@@ -42,7 +42,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
 
     String remoteId;
-
+    Channel channel;
 
     public EthereumChannelInitializer(String remoteId) {
         this.remoteId = remoteId;
@@ -53,7 +53,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         try {
             logger.info("Open connection, channel: {}", ch.toString());
 
-            Channel channel = ctx.getBean(Channel.class);
+            channel = ctx.getBean(Channel.class);
             channel.init(remoteId);
 
             channelManager.addChannel(channel);
@@ -77,4 +77,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         }
     }
 
+    public Channel getChannel() {
+        return channel;
+    }
 }

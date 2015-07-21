@@ -5,8 +5,17 @@ package org.ethereum.net.eth;
  * @since 14.07.2015
  */
 public enum SyncState {
+
+    // Sync manager
     INIT,
-    HASHES_RETRIEVING,
-    BLOCKS_RETRIEVING,
-    DONE
+    DONE_SYNC,
+
+    // Common
+    HASH_RETRIEVING,
+    BLOCK_RETRIEVING,
+
+    // Peer
+    IDLE,
+    DONE_HASH_RETRIEVING,
+    NO_MORE_BLOCKS
 }

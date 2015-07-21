@@ -8,6 +8,7 @@ import org.ethereum.manager.BlockLoader;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
+import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
@@ -15,6 +16,7 @@ import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -148,10 +150,20 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public void connect(String ip, int port, String remoteId) {
+    public void connect(final String ip, final int port, final String remoteId) {
         logger.info("Connecting to: {}:{}", ip, port);
-        PeerClient peerClient = ctx.getBean(PeerClient.class);
-        peerClient.connect(ip, port, remoteId);
+        final PeerClient peerClient = ctx.getBean(PeerClient.class);
+        Executors.newSingleThreadExecutor().submit(new Runnable() {
+            @Override
+            public void run() {
+                peerClient.connect(ip, port, remoteId);
+            }
+        });
+    }
+
+    @Override
+    public void connect(Node node) {
+        connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
     }
 
     @Override

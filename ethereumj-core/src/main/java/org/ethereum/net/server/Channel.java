@@ -7,7 +7,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
-import org.ethereum.net.eth.sync.SyncStatus;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
@@ -25,7 +24,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.net.InetSocketAddress;
 
 import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
@@ -73,11 +71,14 @@ public class Channel {
 
     private long startupTS;
 
+    String remoteId;
+
 
     public Channel() {
     }
 
     public void init(String remoteId) {
+        this.remoteId = remoteId;
 
         messageCodec.setRemoteId(remoteId, this);
         //messageCodec.setMsgQueue(msgQueue);
@@ -153,20 +154,6 @@ public class Channel {
         return getP2pHandler().getHandshakeHelloMessage();
     }
 
-
-    public boolean isSync() {
-        return ethHandler.getSyncStatus() == SyncStatus.SYNC_DONE;
-    }
-
-
-    public BigInteger getTotalDifficulty() {
-        return ethHandler.getTotalDifficulty();
-    }
-
-    public void ethSync() {
-        ethHandler.doSync();
-    }
-
     public long getStartupTS() {
         return startupTS;
     }
@@ -191,5 +178,14 @@ public class Channel {
 
     public MessageCodesResolver getMessageCodesResolver() {
         return messageCodesResolver;
+    }
+
+
+    public boolean hasInitPassed() {
+        return ethHandler.hasInitPassed();
+    }
+
+    public boolean isUseful() {
+        return ethHandler.hasStatusSucceeded();
     }
 }
