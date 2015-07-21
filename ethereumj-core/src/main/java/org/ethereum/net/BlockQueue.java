@@ -50,7 +50,7 @@ public class BlockQueue {
     /**
      * Highest known total difficulty, representing the heaviest chain on the network
      */
-    private volatile BigInteger highestTotalDifficulty;
+    private BigInteger highestTotalDifficulty;
 
     /**
      * Last block in the queue to be processed

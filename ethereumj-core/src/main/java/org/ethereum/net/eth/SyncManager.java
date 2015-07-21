@@ -26,8 +26,8 @@ public class SyncManager {
 
     private static final int PEERS_COUNT = 5;
 
-    private volatile SyncState state = SyncState.INIT;
-    private volatile EthHandler masterPeer;
+    private SyncState state = SyncState.INIT;
+    private EthHandler masterPeer;
     private List<EthHandler> peers = Collections.synchronizedList(new ArrayList<EthHandler>());
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();

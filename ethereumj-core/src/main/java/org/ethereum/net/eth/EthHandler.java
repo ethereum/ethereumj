@@ -64,8 +64,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private MessageQueue msgQueue = null;
 
     private String peerId;
-    private volatile SyncState syncState = SyncState.IDLE;
-    private volatile EthState peerState = EthState.INIT;
+    private SyncState syncState = SyncState.IDLE;
+    private EthState peerState = EthState.INIT;
     private long blocksLoadedCnt = 0;
 
     private StatusMessage handshakeStatusMessage = null;
