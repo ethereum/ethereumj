@@ -50,8 +50,10 @@ public class BlockQueueImpl implements BlockQueue {
         synchronized (this) {
             List<Long> numbers = new ArrayList<>(blockList.size());
             for (Block b : blockList) {
-                blocks.put(b.getNumber(), b);
-                numbers.add(b.getNumber());
+                if(!index.contains(b.getNumber())) {
+                    blocks.put(b.getNumber(), b);
+                    numbers.add(b.getNumber());
+                }
             }
             index.addAll(numbers);
             sortIndex();
@@ -62,6 +64,9 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public void add(Block block) {
         synchronized (this) {
+            if(index.contains(block.getNumber())) {
+                return;
+            }
             blocks.put(block.getNumber(), block);
             index.add(block.getNumber());
             sortIndex();
