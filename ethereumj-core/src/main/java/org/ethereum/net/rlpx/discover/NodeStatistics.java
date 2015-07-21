@@ -13,6 +13,10 @@ import static java.lang.Math.max;
 import static java.lang.Math.min;
 
 /**
+ * Handles all possible statistics related to a Node
+ * The primary aim of this is collecting info about a Node
+ * for maintaining its reputation.
+ *
  * Created by Anton Nashatyrev on 16.07.2015.
  */
 public class NodeStatistics {
@@ -96,6 +100,10 @@ public class NodeStatistics {
 
     public void setPredefined(boolean isPredefined) {
         this.isPredefined = isPredefined;
+    }
+
+    public StatusMessage getEthLastInboundStatusMsg() {
+        return ethLastInboundStatusMsg;
     }
 
     private String getStatName() {

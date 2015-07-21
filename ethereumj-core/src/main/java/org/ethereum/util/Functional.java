@@ -70,4 +70,8 @@ public interface Functional {
         R invoke();
     }
 
+    public static interface Predicate<T> {
+        boolean test(T t);
+    }
+
 }

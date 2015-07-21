@@ -15,6 +15,12 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 /**
+ * The central class for Peer Discovery machinery.
+ *
+ * The NodeManager manages info on all the Nodes discovered by the peer discovery
+ * protocol, routes protocol messages to the corresponding NodeHandlers and
+ * supplies the info about discovered Nodes and their usage statistics
+ *
  * Created by Anton Nashatyrev on 16.07.2015.
  */
 @Component
@@ -30,8 +36,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     Functional.Consumer<DiscoveryEvent> messageSender;
 
     NodeTable table;
-    private Map<String, NodeHandler> nodeHandlerMap =
-            Collections.synchronizedMap(new HashMap<String, NodeHandler>());
+    private Map<String, NodeHandler> nodeHandlerMap = new HashMap<String, NodeHandler>();
     ECKey key;
     Node homeNode;
 
@@ -39,6 +44,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     boolean inboundOnlyFromKnownNodes = true;
 
     private boolean discoveryEnabled = SystemProperties.CONFIG.peerDiscovery();
+
+    private Map<DiscoverListener, ListenerHandler> listeners = new IdentityHashMap<>();
 
     public NodeManager() {
         // TODO all below take from config ?
@@ -65,7 +72,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         this.key = key;
     }
 
-    void init(List<Node> bootNodes) {
+    synchronized void init(List<Node> bootNodes) {
         for (Node node : bootNodes) {
             getNodeHandler(node);
         }
@@ -73,6 +80,17 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         for (Node node : SystemProperties.CONFIG.peerActive()) {
             getNodeHandler(node).getNodeStatistics().setPredefined(true);
         }
+
+        // this task is done asynchronously with some fixed rate
+        // to avoid any overhead in the NodeStatistics classes keeping them lightweight
+        // (which might be critical since they might be invoked from time critical sections)
+        Timer timer = new Timer("NodeManagerListenerTask");
+        timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                processListeners();
+            }
+        }, 0, 1000);
     }
 
     public void setMessageSender(Functional.Consumer<DiscoveryEvent> messageSender) {
@@ -158,7 +176,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     }
 
     public void stateChanged(NodeHandler nodeHandler, NodeHandler.State oldState, NodeHandler.State newState) {
-        peerConnectionManager.nodeStatusChanged(new DiscoverNodeEvent(nodeHandler));
+        peerConnectionManager.nodeStatusChanged(nodeHandler);
     }
 
     public synchronized List<NodeHandler> getNodes(int minReputation) {
@@ -169,6 +187,28 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }
         return ret;
+    }
+
+    private synchronized void processListeners() {
+        for (ListenerHandler handler : listeners.values()) {
+            try {
+                handler.checkAll();
+            } catch (Exception e) {
+                logger.error("Exception processing listener: " + handler, e);
+            }
+        }
+    }
+
+    /**
+     * Add a listener which is notified when the node statistics starts or stops meeting
+     * the criteria specified by [filter] param.
+     */
+    public synchronized void addDiscoverListener(DiscoverListener listener, Functional.Predicate<NodeStatistics> filter) {
+        listeners.put(listener, new ListenerHandler(listener, filter));
+    }
+
+    public synchronized void removeDiscoverListener(DiscoverListener listener) {
+        listeners.remove(listener);
     }
 
     public synchronized String dumpAllStatistics() {
@@ -190,5 +230,30 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         }
         sb.append("0 reputation: " + zeroReputCount + " nodes.\n");
         return sb.toString();
+    }
+
+    private class ListenerHandler {
+        Map<NodeHandler, Object> discoveredNodes = new IdentityHashMap<>();
+        DiscoverListener listener;
+        Functional.Predicate<NodeStatistics> filter;
+
+        ListenerHandler(DiscoverListener listener, Functional.Predicate<NodeStatistics> filter) {
+            this.listener = listener;
+            this.filter = filter;
+        }
+
+        void checkAll() {
+            for (NodeHandler handler : nodeHandlerMap.values()) {
+                boolean has = discoveredNodes.containsKey(handler);
+                boolean test = filter.test(handler.getNodeStatistics());
+                if (!has && test) {
+                    listener.nodeAppeared(handler);
+                    discoveredNodes.put(handler, null);
+                } else if (has && !test) {
+                    listener.nodeDisappeared(handler);
+                    discoveredNodes.remove(handler);
+                }
+            }
+        }
     }
 }
