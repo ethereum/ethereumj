@@ -138,7 +138,6 @@ public class SyncManager {
             masterPeer.changeState(SyncState.HASH_RETRIEVING);
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
-            blockchain.getQueue().adjustHashes();
             for(EthHandler peer : peers) {
                 peer.changeState(SyncState.BLOCK_RETRIEVING);
             }
