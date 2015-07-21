@@ -14,6 +14,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * The instance of this class responsible for discovery messages exchange with the specified Node
+ * It also manages itself regarding inclusion/eviction from Kademlia table
+ *
  * Created by Anton Nashatyrev on 14.07.2015.
  */
 public class NodeHandler {
@@ -107,6 +110,7 @@ public class NodeHandler {
         changeState(State.EvictCandidate);
     }
 
+    // Manages state transfers
     private void changeState(State newState) {
         State oldState = state;
         if (newState == State.Discovered) {

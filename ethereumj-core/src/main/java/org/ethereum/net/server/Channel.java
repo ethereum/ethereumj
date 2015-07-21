@@ -7,6 +7,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
@@ -26,7 +27,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
+//import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 
 /**
  * @author Roman Mandeleil
@@ -77,25 +78,25 @@ public class Channel {
     public Channel() {
     }
 
-    public void init(String remoteId) {
-        this.remoteId = remoteId;
+    public void init(String remoteId, boolean discoveryMode) {
 
         messageCodec.setRemoteId(remoteId, this);
+        if (discoveryMode) {
+            // temporary key/nodeId to not accidentally smear our reputation with
+            // unexpected disconnect
+            messageCodec.generateTempKey();
+        }
         //messageCodec.setMsgQueue(msgQueue);
 
         p2pHandler.setMsgQueue(msgQueue);
         ethHandler.setMsgQueue(msgQueue);
+        ethHandler.setPeerDiscoveryMode(discoveryMode);
         shhHandler.setMsgQueue(msgQueue);
         bzzHandler.setMsgQueue(msgQueue);
 
         ethHandler.setChannel(this);
 
         startupTS = System.currentTimeMillis();
-    }
-
-    public void setDiscoveryMode(boolean discoveryMode) {
-        ethHandler.setPeerDiscoveryMode(discoveryMode);
-        // other handlers to add
     }
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec, HelloMessage helloRemote, byte[] nodeId) throws IOException, InterruptedException {
@@ -112,15 +113,15 @@ public class Channel {
 
     public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId) throws IOException, InterruptedException {
 
-        HELLO_MESSAGE.setPeerId(nodeId);
-        byte[] payload = HELLO_MESSAGE.getEncoded();
+        HelloMessage helloMessage = StaticMessages.createHelloMessage(nodeId);
+        byte[] payload = helloMessage.getEncoded();
 
         ByteBuf byteBufMsg = ctx.alloc().buffer();
-        frameCodec.writeFrame(new FrameCodec.Frame(HELLO_MESSAGE.getCode(), payload), byteBufMsg);
+        frameCodec.writeFrame(new FrameCodec.Frame(helloMessage.getCode(), payload), byteBufMsg);
         ctx.writeAndFlush(byteBufMsg).sync();
 
         if (logger.isInfoEnabled())
-            logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), HELLO_MESSAGE);
+            logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
         getNodeStatistics().rlpxOutHello.add();
     }
 

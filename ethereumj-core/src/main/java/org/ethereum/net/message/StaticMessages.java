@@ -18,25 +18,23 @@ import java.util.List;
  */
 public class StaticMessages {
 
-    public static final String PEER_ID = Hex.toHexString(HashUtil.randomPeerId());
-
     public final static PingMessage PING_MESSAGE = new PingMessage();
     public final static PongMessage PONG_MESSAGE = new PongMessage();
-    public final static HelloMessage HELLO_MESSAGE = generateHelloMessage();
     public final static GetPeersMessage GET_PEERS_MESSAGE = new GetPeersMessage();
     public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
     public final static DisconnectMessage DISCONNECT_MESSAGE = new DisconnectMessage(ReasonCode.REQUESTED);
 
     public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
 
-    private static HelloMessage generateHelloMessage() {
+    public static HelloMessage createHelloMessage(String peerId) {
+
         String helloAnnouncement = buildHelloAnnouncement();
         byte p2pVersion = P2pHandler.VERSION;
         List<Capability> capabilities = Capability.getConfigCapabilities();
         int listenPort = SystemProperties.CONFIG.listenPort();
 
         return new HelloMessage(p2pVersion, helloAnnouncement,
-                capabilities, listenPort, PEER_ID);
+                capabilities, listenPort, peerId);
     }
 
     private static String buildHelloAnnouncement() {
