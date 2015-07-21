@@ -43,6 +43,8 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
     String remoteId;
 
+    private boolean peerDiscoveryMode = false;
+
 
     public EthereumChannelInitializer(String remoteId) {
         this.remoteId = remoteId;
@@ -55,6 +57,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
             Channel channel = ctx.getBean(Channel.class);
             channel.init(remoteId);
+            channel.setDiscoveryMode(peerDiscoveryMode);
 
             channelManager.addChannel(channel);
 
@@ -77,4 +80,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         }
     }
 
+    public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
+        this.peerDiscoveryMode = peerDiscoveryMode;
+    }
 }

@@ -1,9 +1,11 @@
 package org.ethereum.net.rlpx.discover;
 
+import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Statter;
+import org.ethereum.util.ByteUtil;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -50,8 +52,14 @@ public class NodeStatistics {
     public final StatHandler rlpxOutMessages = new StatHandler();
     public final StatHandler rlpxInMessages = new StatHandler();
 
-    private ReasonCode rlpxLastDisconnectReason = null;
-    private boolean rlpxLastDisconnectRemote;
+    private ReasonCode rlpxLastRemoteDisconnectReason = null;
+    private ReasonCode rlpxLastLocalDisconnectReason = null;
+
+    // Eth stat
+    public final StatHandler ethHandshake = new StatHandler();
+    public final StatHandler ethInbound = new StatHandler();
+    public final StatHandler ethOutbound = new StatHandler();
+    private StatusMessage ethLastInboundStatusMsg = null;
 
     public NodeStatistics(Node node) {
         this.node = node;
@@ -74,13 +82,16 @@ public class NodeStatistics {
     }
 
     public void nodeDisconnectedRemote(DisconnectMessage msg) {
-        rlpxLastDisconnectReason = msg.getReason();
-        rlpxLastDisconnectRemote = true;
+        rlpxLastRemoteDisconnectReason = msg.getReason();
     }
 
     public void nodeDisconnectedLocal(DisconnectMessage msg) {
-        rlpxLastDisconnectReason = msg.getReason();
-        rlpxLastDisconnectRemote = false;
+        rlpxLastLocalDisconnectReason = msg.getReason();
+    }
+
+    public void ethHandshake(StatusMessage ethInboundStatus) {
+        this.ethLastInboundStatusMsg = ethInboundStatus;
+        ethHandshake.add();
     }
 
     public void setPredefined(boolean isPredefined) {
@@ -101,6 +112,9 @@ public class NodeStatistics {
                 ((int)discoverMessageLatency.getAvrg()) + "ms" +
                 ", rlpx: " + rlpxHandshake + "/" + rlpxAuthMessagesSent + "/" + rlpxConnectionAttempts + " " +
                 rlpxInMessages + "/" + rlpxOutMessages +
-                (rlpxLastDisconnectReason != null ? " " + ((rlpxLastDisconnectRemote ? "=>" : "<=") + rlpxLastDisconnectReason) : "");
+                ", eth: " + ethHandshake + "/" + ethInbound + "/" + ethOutbound + " " +
+                (ethLastInboundStatusMsg != null ? ByteUtil.toHexString(ethLastInboundStatusMsg.getTotalDifficulty()) : "-") + " " +
+                (rlpxLastLocalDisconnectReason != null ? ("<=" + rlpxLastLocalDisconnectReason) : " ") +
+                (rlpxLastRemoteDisconnectReason != null ? ("=>" + rlpxLastRemoteDisconnectReason) : " ");
     }
 }

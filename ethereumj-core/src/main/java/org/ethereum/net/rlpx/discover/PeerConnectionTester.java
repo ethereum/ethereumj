@@ -33,7 +33,8 @@ public class PeerConnectionTester implements DiscoverListener {
                 nodeHandler.getNodeStatistics().rlpxConnectionAttempts.add();
                 logger.debug("Trying node connection: " + nodeHandler);
                 Node node = nodeHandler.getNode();
-                worldManager.getActivePeer().connect(node.getHost(), node.getPort(), Hex.encodeHexString(node.getId()));
+                worldManager.getActivePeer().connect(node.getHost(), node.getPort(),
+                        Hex.encodeHexString(node.getId()), true);
                 connectionTerminated(nodeHandler);
                 logger.debug("Terminated node connection: " + nodeHandler);
             }
