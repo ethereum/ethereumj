@@ -72,8 +72,8 @@ public class PeerClient {
             channelManager.notifyDisconnect(ethereumChannelInitializer.getChannel());
             logger.debug("Connection is closed");
         } catch (Exception e) {
-            logger.error("Exception: {} ({})", e.getMessage(), e.getClass().getName());
-            logger.trace("Exception details:", e);
+            logger.error("Exception: {}", e.toString());
+//            logger.trace("Exception details:", e);
         } finally {
             workerGroup.shutdownGracefully();
         }

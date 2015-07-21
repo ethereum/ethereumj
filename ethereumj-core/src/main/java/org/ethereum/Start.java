@@ -22,11 +22,13 @@ public class Start {
         Ethereum ethereum = EthereumFactory.createEthereum();
 
         if (CONFIG.blocksLoader().equals("")) {
-            Node node = CONFIG.peerActive().get(0);
-            ethereum.connect(
-                    node.getHost(),
-                    node.getPort(),
-                    Hex.toHexString(node.getId()));
+            if (CONFIG.peerActive().size() > 0) {
+                Node node = CONFIG.peerActive().get(0);
+                ethereum.connect(
+                        node.getHost(),
+                        node.getPort(),
+                        Hex.toHexString(node.getId()));
+            }
         } else {
             ethereum.getBlockLoader().loadBlocks();
         }
