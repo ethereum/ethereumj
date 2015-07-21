@@ -120,7 +120,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 break;
             case DISCONNECT:
                 msgQueue.receivedMessage(msg);
-                channel.getNodeStatistics().nodeDisconnectedRemote((DisconnectMessage) msg);
+                channel.getNodeStatistics().nodeDisconnectedRemote(((DisconnectMessage) msg).getReason());
                 break;
             case PING:
                 msgQueue.receivedMessage(msg);

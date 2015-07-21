@@ -12,6 +12,7 @@ import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
+import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -82,6 +83,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     @Autowired
     private WorldManager worldManager;
 
+    private Channel channel;
+
     private List<ByteArrayWrapper> sentHashes;
     private Block lastBlock = Genesis.getInstance();
 
@@ -111,6 +114,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             loggerNet.info("EthHandler invoke: [{}]", msg.getCommand());
 
         worldManager.getListener().trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
+
+        channel.getNodeStatistics().ethInbound.add();
 
         switch (msg.getCommand()) {
             case STATUS:
@@ -181,6 +186,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         this.killTimers();
     }
 
+    private void disconnect(ReasonCode reason) {
+        msgQueue.disconnect(reason);
+        channel.getNodeStatistics().nodeDisconnectedLocal(reason);
+    }
+
     /**
      * Processing:
      * <ul>
@@ -195,23 +205,25 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
         this.handshakeStatusMessage = msg;
-        if (peerDiscoveryMode) {
-            msgQueue.sendMessage(new DisconnectMessage(ReasonCode.REQUESTED));
-            killTimers();
-            ctx.close().sync();
-            ctx.disconnect().sync();
-            return;
-        }
+
+        channel.getNodeStatistics().ethHandshake(msg);
 
         if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
                 || msg.getProtocolVersion() != VERSION) {
             loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
-//          msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_NETWORK));
+            disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
+            ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
             peerState = EthState.STATUS_FAILED;
             ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
         } else if (msg.getNetworkId() != CONFIG.networkId()) {
             peerState = EthState.STATUS_FAILED;
-            msgQueue.disconnect(ReasonCode.NULL_IDENTITY);
+            disconnect(ReasonCode.NULL_IDENTITY);
+        } else if (peerDiscoveryMode) {
+            loggerNet.debug("Peer discovery mode: STATUS received, disconnecting...");
+            disconnect(ReasonCode.REQUESTED);
+            killTimers();
+            ctx.close().sync();
+            ctx.disconnect().sync();
         } else {
             peerState = EthState.STATUS_SUCCEEDED;
         }
@@ -331,7 +343,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         byte[] bestHash = blockchain.getBestBlockHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
-        msgQueue.sendMessage(msg);
+        sendMessage(msg);
     }
 
     /*
@@ -341,22 +353,22 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void sendTransaction(Transaction transaction) {
         Set<Transaction> txs = new HashSet<>(Arrays.asList(transaction));
         TransactionsMessage msg = new TransactionsMessage(txs);
-        msgQueue.sendMessage(msg);
+        sendMessage(msg);
     }
 
     public void sendNewBlock(Block block) {
         NewBlockMessage msg = new NewBlockMessage(block, block.getDifficulty());
-        msgQueue.sendMessage(msg);
+        sendMessage(msg);
     }
 
     private void sendGetTransactions() {
-        msgQueue.sendMessage(GET_TRANSACTIONS_MESSAGE);
+        sendMessage(GET_TRANSACTIONS_MESSAGE);
     }
 
     private void sendGetBlockHashes() {
         byte[] bestHash = blockchain.getQueue().getBestHash();
         GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, CONFIG.maxHashesAsk());
-        msgQueue.sendMessage(msg);
+        sendMessage(msg);
     }
 
     // Parallel download blocks based on hashQueue
@@ -381,7 +393,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         if (loggerNet.isDebugEnabled())
             loggerNet.debug(msg.getDetailedString());
 
-        msgQueue.sendMessage(msg);
+        sendMessage(msg);
     }
 
     private void sendPendingTransactions() {
@@ -389,14 +401,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 worldManager.getBlockchain()
                         .getPendingTransactions();
         TransactionsMessage msg = new TransactionsMessage(pendingTxs);
-        msgQueue.sendMessage(msg);
+        sendMessage(msg);
     }
 
     private void processGetBlockHashes(GetBlockHashesMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFrom(msg.getBestHash(), msg.getMaxBlocks());
 
         BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
-        msgQueue.sendMessage(msgHashes);
+        sendMessage(msgHashes);
     }
 
     private void processGetBlocks(GetBlocksMessage msg) {
@@ -410,7 +422,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
 
         BlocksMessage bm = new BlocksMessage(blocks);
-        msgQueue.sendMessage(bm);
+        sendMessage(bm);
+    }
+
+    private void sendMessage(EthMessage message) {
+        msgQueue.sendMessage(message);
+        channel.getNodeStatistics().ethOutbound.add();
     }
 
 
@@ -451,6 +468,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
         this.peerDiscoveryMode = peerDiscoveryMode;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
     }
 
     public BigInteger getTotalDifficulty() {

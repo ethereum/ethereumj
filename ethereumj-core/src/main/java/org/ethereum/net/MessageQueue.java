@@ -74,12 +74,14 @@ public class MessageQueue {
     }
 
     public void disconnect() {
-        ctx.writeAndFlush(DISCONNECT_MESSAGE);
-        ctx.close();
+        disconnect(DISCONNECT_MESSAGE);
     }
 
     public void disconnect(ReasonCode reason) {
-        DisconnectMessage msg = new DisconnectMessage(reason);
+        disconnect(new DisconnectMessage(reason));
+    }
+
+    private void disconnect(DisconnectMessage msg) {
         ctx.writeAndFlush(msg);
         ctx.close();
     }

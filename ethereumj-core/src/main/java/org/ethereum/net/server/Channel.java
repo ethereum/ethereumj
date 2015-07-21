@@ -88,7 +88,14 @@ public class Channel {
         shhHandler.setMsgQueue(msgQueue);
         bzzHandler.setMsgQueue(msgQueue);
 
+        ethHandler.setChannel(this);
+
         startupTS = System.currentTimeMillis();
+    }
+
+    public void setDiscoveryMode(boolean discoveryMode) {
+        ethHandler.setPeerDiscoveryMode(discoveryMode);
+        // other handlers to add
     }
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec, HelloMessage helloRemote, byte[] nodeId) throws IOException, InterruptedException {

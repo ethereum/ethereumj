@@ -33,7 +33,7 @@ public class PeerClient {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    private boolean peerDiscoveryMode = false;
+//    private boolean peerDiscoveryMode = false;
 
     @Autowired
     private ApplicationContext ctx;
@@ -44,12 +44,17 @@ public class PeerClient {
     @Autowired
     public ChannelManager channelManager;
 
-    public void connect(String host, int port, String remoteId) {
 
+    public void connect(String host, int port, String remoteId) {
+        connect(host, port, remoteId, false);
+    }
+
+    public void connect(String host, int port, String remoteId, boolean discoveryMode) {
         EventLoopGroup workerGroup = new NioEventLoopGroup();
         worldManager.getListener().trace("Connecting to: " + host + ":" + port);
 
         EthereumChannelInitializer ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, remoteId);
+        ethereumChannelInitializer.setPeerDiscoveryMode(discoveryMode);
 
         try {
             Bootstrap b = new Bootstrap();
