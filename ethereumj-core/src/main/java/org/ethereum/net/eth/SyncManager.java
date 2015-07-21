@@ -77,7 +77,9 @@ public class SyncManager {
     }
 
     private void logStats() {
-        //TODO log peer statistics
+        for(EthHandler peer : peers) {
+            peer.logSyncStats();
+        }
     }
 
     public void removePeer(EthHandler peer) {
