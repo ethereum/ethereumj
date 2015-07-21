@@ -137,9 +137,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
         loggerNet.info("RLPX protocol activated");
 
-        myKey = new ECKey().decompress();
         channel.getShhHandler().setPrivKey(myKey);
-//        channel.getBzzHandler().setPrivKey(myKey);
         byte[] nodeIdWithFormat = myKey.getPubKey();
         nodeId = new byte[nodeIdWithFormat.length - 1];
         System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
@@ -180,6 +178,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 loggerNet.info("auth exchange done");
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
             } else {
+                loggerNet.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
                 Frame frame = frameCodec.readFrame(buffer);
                 if (frame == null)
                     return;
