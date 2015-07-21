@@ -199,7 +199,8 @@ public class BlockQueue {
             for(byte[] hash : hashes)
                 logAddHash(hash);
 
-        hashStore.addFirstBatch(hashes);
+        Collection<byte[]> filtered = blockQueue.filterExisting(hashes);
+        hashStore.addFirstBatch(filtered);
     }
 
     private void logAddHash(byte[] hash) {

@@ -34,6 +34,7 @@ public class BlockQueueTest {
 
     private BlockQueue blockQueue;
     private List<Block> blocks = new ArrayList<>();
+    private List<byte[]> hashes = new ArrayList<>();
     private String testDb;
 
     @Before
@@ -58,6 +59,7 @@ public class BlockQueueTest {
                         block.getNumber());
 
             blocks.add(block);
+            hashes.add(block.getHash());
         }
 
         logger.info("total blocks loaded: {}", blocks.size());
@@ -99,6 +101,10 @@ public class BlockQueueTest {
         blockQueue.open();
 
         assertEquals(blocks.size(), blockQueue.size());
+
+        // checking: hashset
+        List<byte[]> filtered = blockQueue.filterExisting(hashes);
+        assertTrue(filtered.isEmpty());
 
         // testing: poll()
         long prevNumber = -1;

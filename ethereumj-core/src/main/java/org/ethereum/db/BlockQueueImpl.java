@@ -3,6 +3,7 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
+import org.ethereum.util.CollectionUtils;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +20,12 @@ import java.util.*;
 public class BlockQueueImpl implements BlockQueue {
 
     private final static String STORE_NAME = "blockqueue";
+    private final static String HASH_SET_NAME = "hashset";
     private MapDBFactory mapDBFactory;
 
     private DB db;
     private Map<Long, Block> blocks;
+    private Set<byte[]> hashes;
     private List<Long> index;
 
     @Override
@@ -31,6 +34,9 @@ public class BlockQueueImpl implements BlockQueue {
         blocks = db.hashMapCreate(STORE_NAME)
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(Serializers.BLOCK)
+                .makeOrGet();
+        hashes = db.hashSetCreate(HASH_SET_NAME)
+                .serializer(Serializer.BYTE_ARRAY)
                 .makeOrGet();
         index = new ArrayList<>(blocks.keySet());
         sortIndex();
@@ -49,12 +55,15 @@ public class BlockQueueImpl implements BlockQueue {
     public synchronized void addAll(Collection<Block> blockList) {
         synchronized (this) {
             List<Long> numbers = new ArrayList<>(blockList.size());
+            Set<byte[]> newHashes = new HashSet<>();
             for (Block b : blockList) {
                 if(!index.contains(b.getNumber())) {
                     blocks.put(b.getNumber(), b);
                     numbers.add(b.getNumber());
+                    newHashes.add(b.getHash());
                 }
             }
+            hashes.addAll(newHashes);
             index.addAll(numbers);
             sortIndex();
         }
@@ -69,6 +78,7 @@ public class BlockQueueImpl implements BlockQueue {
             }
             blocks.put(block.getNumber(), block);
             index.add(block.getNumber());
+            hashes.add(block.getHash());
             sortIndex();
         }
         db.commit();
@@ -85,6 +95,7 @@ public class BlockQueueImpl implements BlockQueue {
             Long idx = index.get(0);
             block = blocks.get(idx);
             blocks.remove(idx);
+            hashes.remove(block.getHash());
             index.remove(0);
         }
         db.commit();
@@ -117,9 +128,20 @@ public class BlockQueueImpl implements BlockQueue {
     public void clear() {
         synchronized(this) {
             blocks.clear();
+            hashes.clear();
             index.clear();
         }
         db.commit();
+    }
+
+    @Override
+    public List<byte[]> filterExisting(final Collection<byte[]> hashList) {
+        return CollectionUtils.selectList(hashList, new CollectionUtils.Predicate<byte[]>() {
+            @Override
+            public boolean evaluate(byte[] hash) {
+                return !hashes.contains(hash);
+            }
+        });
     }
 
     private void sortIndex() {

@@ -3,6 +3,7 @@ package org.ethereum.db;
 import org.ethereum.core.Block;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * @author Mikhail Kalinin
@@ -23,4 +24,6 @@ public interface BlockQueue extends DiskStore {
     boolean isEmpty();
 
     void clear();
+
+    List<byte[]> filterExisting(Collection<byte[]> hashes);
 }
