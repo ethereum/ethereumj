@@ -1,6 +1,9 @@
 package org.ethereum.db;
 
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.Predicate;
 import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.util.FastByteComparisons;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
@@ -137,6 +140,27 @@ public class HashStoreImpl implements HashStore {
         synchronized (this) {
             index.clear();
             hashes.clear();
+        }
+        db.commit();
+    }
+
+    @Override
+    public void removeAll(Collection<byte[]> removing) {
+        Set<Long> removed = new HashSet<>();
+        for(final Map.Entry<Long, byte[]> e : hashes.entrySet()) {
+            byte[] hash = CollectionUtils.find(removing, new Predicate<byte[]>() {
+                @Override
+                public boolean evaluate(byte[] hash) {
+                    return FastByteComparisons.compareTo(hash, 0, 32, e.getValue(), 0, 32) == 0;
+                }
+            });
+            if(hash != null) {
+                removed.add(e.getKey());
+            }
+        }
+        index.removeAll(removed);
+        for(Long idx : removed) {
+            hashes.remove(idx);
         }
         db.commit();
     }

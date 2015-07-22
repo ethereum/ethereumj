@@ -199,8 +199,7 @@ public class BlockQueue {
             for(byte[] hash : hashes)
                 logAddHash(hash);
 
-        Collection<byte[]> filtered = blockQueue.filterExisting(hashes);
-        hashStore.addFirstBatch(filtered);
+        hashStore.addFirstBatch(hashes);
     }
 
     private void logAddHash(byte[] hash) {
@@ -282,5 +281,10 @@ public class BlockQueue {
 
     public HashStore getHashStore() {
         return hashStore;
+    }
+
+    public void adjustHashes() {
+        Set<byte[]> exist = blockQueue.getHashes();
+        hashStore.removeAll(exist);
     }
 }

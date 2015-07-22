@@ -29,4 +29,6 @@ public interface HashStore extends DiskStore {
     int size();
 
     void clear();
+
+    void removeAll(Collection<byte[]> removing);
 }

@@ -144,6 +144,11 @@ public class BlockQueueImpl implements BlockQueue {
         });
     }
 
+    @Override
+    public Set<byte[]> getHashes() {
+        return hashes;
+    }
+
     private void sortIndex() {
         Collections.sort(index);
     }
