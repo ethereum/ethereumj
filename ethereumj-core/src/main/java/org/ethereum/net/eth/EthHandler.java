@@ -182,9 +182,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     private void disconnect(ReasonCode reason) {
-        DisconnectMessage message = new DisconnectMessage(reason);
-        msgQueue.sendMessage(message);
-        channel.getNodeStatistics().nodeDisconnectedLocal(message);
+        msgQueue.sendMessage(new DisconnectMessage(reason));
+        channel.getNodeStatistics().nodeDisconnectedLocal(reason);
     }
 
     /**
