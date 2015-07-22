@@ -7,6 +7,7 @@ import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,9 +49,16 @@ public class SyncManager {
                 checkMaster();
                 checkPeers();
                 askNewPeers();
-                if(logger.isInfoEnabled()) logStats();
             }
         }, 0, 1, TimeUnit.SECONDS);
+        if(logger.isInfoEnabled()) {
+            Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
+                @Override
+                public void run() {
+                    logStats();
+                }
+            }, 0, 30, TimeUnit.SECONDS);
+        }
     }
 
     private void checkMaster() {
@@ -111,6 +119,11 @@ public class SyncManager {
                     Utils.getNodeIdShort(peer.getPeerId()),
                     peerTotalDifficulty.toString(),
                     highestKnownTotalDifficulty == null ? "0" : highestKnownTotalDifficulty.toString()
+            );
+            logger.debug(
+                    "Peer {}: best hash [{}]",
+                    Utils.getNodeIdShort(peer.getPeerId()),
+                    Hex.toHexString(msg.getBestHash())
             );
 
             bestHash = msg.getBestHash();
