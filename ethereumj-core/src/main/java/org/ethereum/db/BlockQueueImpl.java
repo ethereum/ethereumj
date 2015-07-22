@@ -65,84 +65,64 @@ public class BlockQueueImpl implements BlockQueue {
 
     @Override
     public void close() {
-        initLock.lock();
-        try {
-            awaitInit();
-            db.close();
-            initDone = false;
-        } finally {
-            initLock.unlock();
-        }
+        awaitInit();
+        db.close();
+        initDone = false;
     }
 
     @Override
     public void addAll(Collection<Block> blockList) {
-        initLock.lock();
+        awaitInit();
+        takeLock.lock();
         try {
-            awaitInit();
-            takeLock.lock();
-            try {
-                synchronized (this) {
-                    List<Long> numbers = new ArrayList<>(blockList.size());
-                    Set<byte[]> newHashes = new HashSet<>();
-                    for (Block b : blockList) {
-                        if(!index.contains(b.getNumber())) {
-                            blocks.put(b.getNumber(), b);
-                            numbers.add(b.getNumber());
-                            newHashes.add(b.getHash());
-                        }
+            synchronized (this) {
+                List<Long> numbers = new ArrayList<>(blockList.size());
+                Set<byte[]> newHashes = new HashSet<>();
+                for (Block b : blockList) {
+                    if(!index.contains(b.getNumber())) {
+                        blocks.put(b.getNumber(), b);
+                        numbers.add(b.getNumber());
+                        newHashes.add(b.getHash());
                     }
-                    hashes.addAll(newHashes);
-                    index.addAll(numbers);
-                    sortIndex();
                 }
-                db.commit();
-                notEmpty.signalAll();
-            } finally {
-                takeLock.unlock();
+                hashes.addAll(newHashes);
+                index.addAll(numbers);
+                sortIndex();
             }
+            db.commit();
+            notEmpty.signalAll();
         } finally {
-            initLock.unlock();
+            takeLock.unlock();
         }
     }
 
     @Override
     public void add(Block block) {
-        initLock.lock();
+        awaitInit();
+        takeLock.lock();
         try {
-            awaitInit();
-            takeLock.lock();
-            try {
-                synchronized (this) {
-                    if(index.contains(block.getNumber())) {
-                        return;
-                    }
-                    blocks.put(block.getNumber(), block);
-                    index.add(block.getNumber());
-                    hashes.add(block.getHash());
-                    sortIndex();
+            synchronized (this) {
+                if(index.contains(block.getNumber())) {
+                    return;
                 }
-                db.commit();
-                notEmpty.signalAll();
-            } finally {
-                takeLock.unlock();
+                blocks.put(block.getNumber(), block);
+                index.add(block.getNumber());
+                hashes.add(block.getHash());
+                sortIndex();
             }
+            db.commit();
+            notEmpty.signalAll();
         } finally {
-            initLock.unlock();
+            takeLock.unlock();
         }
     }
 
     @Override
     public Block poll() {
-        initLock.lock();
-        try {
-            awaitInit();
-            Block block = pollInner();
-            db.commit();
-            return block;
-        } finally {
-            initLock.unlock();
-        }
+        awaitInit();
+        Block block = pollInner();
+        db.commit();
+        return block;
     }
 
     private Block pollInner() {
@@ -162,110 +142,81 @@ public class BlockQueueImpl implements BlockQueue {
 
     @Override
     public Block peek() {
-        initLock.lock();
-        try {
-            awaitInit();
-            synchronized (this) {
-                if(index.isEmpty()) {
-                    return null;
-                }
-
-                Long idx = index.get(0);
-                return blocks.get(idx);
+        awaitInit();
+        synchronized (this) {
+            if(index.isEmpty()) {
+                return null;
             }
-        } finally {
-            initLock.unlock();
+
+            Long idx = index.get(0);
+            return blocks.get(idx);
         }
     }
 
     @Override
     public Block take() {
-        initLock.lock();
+        awaitInit();
+        takeLock.lock();
         try {
-            takeLock.lock();
-            try {
-                Block block;
-                while (null == (block = pollInner())) {
-                    notEmpty.awaitUninterruptibly();
-                }
-                db.commit();
-                return block;
-            } finally {
-                takeLock.unlock();
+            Block block;
+            while (null == (block = pollInner())) {
+                notEmpty.awaitUninterruptibly();
             }
+            db.commit();
+            return block;
         } finally {
-            initLock.unlock();
+            takeLock.unlock();
         }
     }
 
     @Override
     public int size() {
-        initLock.lock();
-        try {
-            awaitInit();
-            return index.size();
-        } finally {
-            initLock.unlock();
-        }
+        awaitInit();
+        return index.size();
     }
 
     @Override
     public boolean isEmpty() {
-        initLock.lock();
-        try {
-            awaitInit();
-            return index.isEmpty();
-        } finally {
-            initLock.unlock();
-        }
+        awaitInit();
+        return index.isEmpty();
     }
 
     @Override
     public void clear() {
-        initLock.lock();
-        try {
-            awaitInit();
-            synchronized(this) {
-                blocks.clear();
-                hashes.clear();
-                index.clear();
-            }
-            db.commit();
-        } finally {
-            initLock.unlock();
+        awaitInit();
+        synchronized(this) {
+            blocks.clear();
+            hashes.clear();
+            index.clear();
         }
+        db.commit();
     }
 
     @Override
     public List<byte[]> filterExisting(final Collection<byte[]> hashList) {
-        initLock.lock();
-        try {
-            awaitInit();
-            return CollectionUtils.selectList(hashList, new CollectionUtils.Predicate<byte[]>() {
-                @Override
-                public boolean evaluate(byte[] hash) {
-                    return !hashes.contains(hash);
-                }
-            });
-        } finally {
-            initLock.unlock();
-        }
+        awaitInit();
+        return CollectionUtils.selectList(hashList, new CollectionUtils.Predicate<byte[]>() {
+            @Override
+            public boolean evaluate(byte[] hash) {
+                return !hashes.contains(hash);
+            }
+        });
     }
 
     @Override
     public Set<byte[]> getHashes() {
-        initLock.lock();
-        try {
-            awaitInit();
-            return hashes;
-        } finally {
-            initLock.unlock();
-        }
+        awaitInit();
+        return hashes;
     }
 
     private void awaitInit() {
-        if(!initDone) {
-            init.awaitUninterruptibly();
+        initLock.lock();
+        try {
+            if(!initDone) {
+                init.awaitUninterruptibly();
+            }
+        } finally {
+            initLock.unlock();
         }
     }
 
