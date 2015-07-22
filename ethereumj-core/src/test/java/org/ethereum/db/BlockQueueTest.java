@@ -92,7 +92,7 @@ public class BlockQueueTest {
         // testing: validity of loaded block
         assertArrayEquals(blocks.get(0).getEncoded(), block.getEncoded());
 
-        blockQueue.poll();
+        blockQueue.take();
 
         // testing: addAll(), close(), open()
         blockQueue.addAll(blocks);
