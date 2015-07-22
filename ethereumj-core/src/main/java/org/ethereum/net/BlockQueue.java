@@ -284,7 +284,9 @@ public class BlockQueue {
     }
 
     public void adjustHashes() {
+        int sizeBefore = hashStore.size();
         Set<byte[]> exist = blockQueue.getHashes();
         hashStore.removeAll(exist);
+        logger.info("Hashes adjusted: size {} vs {}", hashStore.size(), sizeBefore);
     }
 }
