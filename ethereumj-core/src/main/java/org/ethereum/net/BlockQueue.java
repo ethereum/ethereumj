@@ -57,6 +57,8 @@ public class BlockQueue {
      */
     private Block lastBlock;
 
+    private byte[] bestHash;
+
     private Timer timer = new Timer("BlockQueueTimer");
 
     @Autowired
@@ -176,6 +178,7 @@ public class BlockQueue {
     public void setBestHash(byte[] hash) {
         hashStore.clear();
         hashStore.addFirst(hash);
+        this.bestHash = hash;
     }
 
     /**
@@ -185,21 +188,30 @@ public class BlockQueue {
      * @return The best hash on the network known to the client
      */
     public byte[] getBestHash() {
-        return hashStore.peek();
+        return bestHash;
     }
 
     public void addHash(byte[] hash) {
         hashStore.addFirst(hash);
+        this.bestHash = hash;
         if (logger.isTraceEnabled())
             logAddHash(hash);
     }
 
-    public void addHashes(Collection<byte[]> hashes) {
+    public void addHashes(List<byte[]> hashes) {
+        if(hashes.isEmpty()) {
+            return;
+        }
         if (logger.isTraceEnabled())
             for(byte[] hash : hashes)
                 logAddHash(hash);
 
-        hashStore.addFirstBatch(hashes);
+        this.bestHash = hashes.listIterator(hashes.size()).previous();
+        List<byte[]> filtered = blockQueue.filterExisting(hashes);
+        hashStore.addFirstBatch(filtered);
+
+        if(logger.isDebugEnabled())
+            logger.debug("{} hashes filtered out, {} added", hashes.size() - filtered.size(), filtered.size());
     }
 
     private void logAddHash(byte[] hash) {
@@ -281,12 +293,5 @@ public class BlockQueue {
 
     public HashStore getHashStore() {
         return hashStore;
-    }
-
-    public void adjustHashes() {
-        int sizeBefore = hashStore.size();
-        Set<byte[]> exist = blockQueue.getHashes();
-        hashStore.removeAll(exist);
-        logger.info("Hashes adjusted: size {} vs {}", hashStore.size(), sizeBefore);
     }
 }
