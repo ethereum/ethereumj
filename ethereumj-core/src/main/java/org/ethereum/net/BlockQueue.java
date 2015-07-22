@@ -280,5 +280,7 @@ public class BlockQueue {
         timer.purge();
     }
 
-
+    public HashStore getHashStore() {
+        return hashStore;
+    }
 }

@@ -254,7 +254,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
 
         if(syncState == SyncState.DONE_HASH_RETRIEVING) {
-            loggerSync.info("Block hashes sync completed: {} hashes in queue", chainQueue.getHashes().size());
+            loggerSync.info("Block hashes sync completed: {} hashes in queue", chainQueue.getHashStore().size());
             chainQueue.addHash(blockchain.getBestBlockHash());
         } else {
             // no known hash has been reached
