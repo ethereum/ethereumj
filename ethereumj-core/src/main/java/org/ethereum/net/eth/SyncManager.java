@@ -143,6 +143,9 @@ public class SyncManager {
     }
 
     public void changeState(SyncState newState) {
+        if(state == SyncState.DONE_SYNC) {
+            return;
+        }
         if(newState == SyncState.HASH_RETRIEVING) {
             for(EthHandler peer : peers) {
                 peer.changeState(SyncState.IDLE);
