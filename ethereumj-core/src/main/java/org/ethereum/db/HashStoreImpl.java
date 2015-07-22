@@ -31,8 +31,9 @@ public class HashStoreImpl implements HashStore {
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(Serializer.BYTE_ARRAY)
                 .makeOrGet();
-        index = new ArrayList<>(hashes.keySet());
-        sortIndex();
+        hashes.clear();
+        db.commit();
+        index = new ArrayList<>();
     }
 
     private String dbName() {
