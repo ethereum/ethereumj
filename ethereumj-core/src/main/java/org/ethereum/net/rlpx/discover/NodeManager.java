@@ -2,9 +2,12 @@ package org.ethereum.net.rlpx.discover;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.Functional;
+import org.mapdb.DB;
+import org.mapdb.HTreeMap;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -29,16 +32,24 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     // to avoid checking for null
     private static NodeStatistics DUMMY_STAT = new NodeStatistics(new Node(new byte[0], "dummy.node", 0));
+    private static final boolean PERSIST = SystemProperties.CONFIG.peerDiscoveryPersist();
+
+    private static final long LISTENER_REFRESH_RATE = 1000;
+    private static final long DB_COMMIT_RATE = 10000;
 
     @Autowired
     PeerConnectionTester peerConnectionManager;
 
+    @Autowired
+    MapDBFactory mapDBFactory;
+
     Functional.Consumer<DiscoveryEvent> messageSender;
 
     NodeTable table;
-    private Map<String, NodeHandler> nodeHandlerMap = new HashMap<String, NodeHandler>();
+    private Map<String, NodeHandler> nodeHandlerMap = new HashMap<>();
     ECKey key;
     Node homeNode;
+    private List<Node> bootNodes;
 
     // option to handle inbounds only from known peers (i.e. which were discovered by ourselves)
     boolean inboundOnlyFromKnownNodes = true;
@@ -46,6 +57,10 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private boolean discoveryEnabled = SystemProperties.CONFIG.peerDiscovery();
 
     private Map<DiscoverListener, ListenerHandler> listeners = new IdentityHashMap<>();
+
+    private DB db;
+    private HTreeMap<Node, NodeStatistics.Persistent> nodeStatsDB;
+    private boolean inited = false;
 
     public NodeManager() {
         // TODO all below take from config ?
@@ -72,25 +87,80 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         this.key = key;
     }
 
-    synchronized void init(List<Node> bootNodes) {
-        for (Node node : bootNodes) {
-            getNodeHandler(node);
-        }
+    void setBootNodes(List<Node> bootNodes) {
+        this.bootNodes = bootNodes;
+    }
 
-        for (Node node : SystemProperties.CONFIG.peerActive()) {
-            getNodeHandler(node).getNodeStatistics().setPredefined(true);
-        }
+    void channelActivated() {
+        // channel activated now can send messages
+        if (!inited) {
+            // no another init on a new channel activation
+            inited = true;
 
-        // this task is done asynchronously with some fixed rate
-        // to avoid any overhead in the NodeStatistics classes keeping them lightweight
-        // (which might be critical since they might be invoked from time critical sections)
-        Timer timer = new Timer("NodeManagerListenerTask");
-        timer.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                processListeners();
+            Timer timer = new Timer("NodeManagerTasks");
+
+            // this task is done asynchronously with some fixed rate
+            // to avoid any overhead in the NodeStatistics classes keeping them lightweight
+            // (which might be critical since they might be invoked from time critical sections)
+            timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    processListeners();
+                }
+            }, LISTENER_REFRESH_RATE, LISTENER_REFRESH_RATE);
+
+            if (PERSIST) {
+                dbRead();
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        dbWrite();
+                    }
+                }, DB_COMMIT_RATE, DB_COMMIT_RATE);
             }
-        }, 0, 1000);
+
+            for (Node node : bootNodes) {
+                getNodeHandler(node);
+            }
+
+            for (Node node : SystemProperties.CONFIG.peerActive()) {
+                getNodeHandler(node).getNodeStatistics().setPredefined(true);
+            }
+        }
+    }
+
+    private void dbRead() {
+        try {
+            db = mapDBFactory.createDB("discovery", true);
+            if (SystemProperties.CONFIG.databaseReset()) {
+                logger.info("Resetting DB Node statistics...");
+                db.delete("nodeStats");
+            }
+            nodeStatsDB = db.hashMap("nodeStats");
+
+
+            logger.info("Read Node statistics from DB: " + nodeStatsDB.size() + " nodes.");
+
+            for (Map.Entry<Node, NodeStatistics.Persistent> entry : nodeStatsDB.entrySet()) {
+                getNodeHandler(entry.getKey()).getNodeStatistics().setPersistedData(entry.getValue());
+            }
+        } catch (Exception e) {
+            try {
+                logger.error("Error reading db. Recreating from scratch:", e);
+                db.delete("nodeStats");
+                nodeStatsDB = db.hashMap("nodeStats");
+            } catch (Exception e1) {
+                logger.error("DB recreation has been failed. Node statistics persistence disabled. The problem needs to be fixed manually.", e1);
+            }
+        }
+    }
+
+    private synchronized void dbWrite() {
+        for (NodeHandler handler : nodeHandlerMap.values()) {
+            nodeStatsDB.put(handler.getNode(), handler.getNodeStatistics().getPersistent());
+        }
+        db.commit();
+        logger.info("Write Node statistics to DB: " + nodeStatsDB.size() + " nodes.");
     }
 
     public void setMessageSender(Functional.Consumer<DiscoveryEvent> messageSender) {

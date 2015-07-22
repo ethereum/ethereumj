@@ -32,7 +32,12 @@ public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
     }
 
     @Override
-    public synchronized void channelRead0(ChannelHandlerContext ctx, DiscoveryEvent event) throws Exception {
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        nodeManager.channelActivated();
+    }
+
+    @Override
+    public void channelRead0(ChannelHandlerContext ctx, DiscoveryEvent event) throws Exception {
         nodeManager.handleInbound(event);
     }
 
@@ -42,7 +47,7 @@ public class MessageHandler extends SimpleChannelInboundHandler<DiscoveryEvent>
         sendPacket(discoveryEvent.getMessage().getPacket(), address);
     }
 
-    synchronized void sendPacket(byte[] wire, InetSocketAddress address) {
+    void sendPacket(byte[] wire, InetSocketAddress address) {
         DatagramPacket packet = new DatagramPacket(Unpooled.copiedBuffer(wire), address);
         channel.write(packet);
         channel.flush();
