@@ -182,12 +182,17 @@ public class BlockQueueImpl implements BlockQueue {
     public Block take() {
         initLock.lock();
         try {
-            Block block;
-            while (null == (block = pollInner())) {
-                notEmpty.awaitUninterruptibly();
+            takeLock.lock();
+            try {
+                Block block;
+                while (null == (block = pollInner())) {
+                    notEmpty.awaitUninterruptibly();
+                }
+                db.commit();
+                return block;
+            } finally {
+                takeLock.unlock();
             }
-            db.commit();
-            return block;
         } finally {
             initLock.unlock();
         }
