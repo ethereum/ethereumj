@@ -16,5 +16,5 @@ public interface MapDBFactory {
 
     void destroy(Object resource);
 
-    DB createDB(String name);
+    DB createDB(String name, boolean transactionsEnabled);
 }

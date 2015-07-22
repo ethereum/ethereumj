@@ -29,7 +29,7 @@ public class MapDBFactoryImpl implements MapDBFactory {
 
     @Override
     public Map<Long, byte[]> createHashStoreMap() {
-        DB db = createDB(HASH_STORE_NAME);
+        DB db = createDB(HASH_STORE_NAME, false);
         Map<Long, byte[]> map = db.hashMapCreate(HASH_STORE_NAME)
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(Serializer.BYTE_ARRAY)
@@ -40,7 +40,7 @@ public class MapDBFactoryImpl implements MapDBFactory {
 
     @Override
     public Map<Long, Block> createBlockQueueMap() {
-        DB db = createDB(BLOCK_QUEUE_NAME);
+        DB db = createDB(BLOCK_QUEUE_NAME, false);
         Map<Long, Block> map = db.hashMapCreate(BLOCK_QUEUE_NAME)
                 .keySerializer(Serializer.LONG)
                 .valueSerializer(Serializers.BLOCK)
@@ -60,13 +60,15 @@ public class MapDBFactoryImpl implements MapDBFactory {
     }
 
     @Override
-    public DB createDB(String name) {
+    public DB createDB(String name, boolean transactionsEnabled) {
         File dbFile = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/" + name);
         if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
-        return DBMaker.fileDB(dbFile)
-                .transactionDisable()
-                .closeOnJvmShutdown()
-                .make();
+        DBMaker.Maker maker = DBMaker.fileDB(dbFile)
+                .closeOnJvmShutdown();
+        if (!transactionsEnabled) {
+            maker = maker.transactionDisable();
+        }
+        return maker.make();
     }
 
     private void allocate(Object resource, DB db) {
