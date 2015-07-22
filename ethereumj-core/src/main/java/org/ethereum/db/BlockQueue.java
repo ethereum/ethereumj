@@ -20,6 +20,8 @@ public interface BlockQueue extends DiskStore {
 
     Block peek();
 
+    Block take();
+
     int size();
 
     boolean isEmpty();

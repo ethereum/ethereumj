@@ -95,7 +95,7 @@ public class BlockQueue {
         while (1==1){
 
             try {
-                Block block = blockQueue.poll();
+                Block block = blockQueue.take();
                 logger.info("BlockQueue size: {}", blockQueue.size());
                 ImportResult importResult = blockchain.tryToConnect(block);
 
