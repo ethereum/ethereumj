@@ -10,17 +10,13 @@ import java.util.List;
  */
 public class CollectionUtils {
 
-    public static <T> List<T> selectList(Collection<T> items, Predicate<T> predicate) {
+    public static <T> List<T> selectList(Collection<T> items, Functional.Predicate<T> predicate) {
         List<T> selected = new ArrayList<>();
         for(T item : items) {
-            if(predicate.evaluate(item)) {
+            if(predicate.test(item)) {
                 selected.add(item);
             }
         }
         return selected;
-    }
-
-    public interface Predicate<T> {
-        boolean evaluate(T item);
     }
 }

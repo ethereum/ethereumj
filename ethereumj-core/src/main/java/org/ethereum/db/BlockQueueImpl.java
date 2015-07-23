@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
 import org.ethereum.util.CollectionUtils;
+import org.ethereum.util.Functional;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 
@@ -195,9 +196,9 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public List<byte[]> filterExisting(final Collection<byte[]> hashList) {
         awaitInit();
-        return CollectionUtils.selectList(hashList, new CollectionUtils.Predicate<byte[]>() {
+        return CollectionUtils.selectList(hashList, new Functional.Predicate<byte[]>() {
             @Override
-            public boolean evaluate(byte[] hash) {
+            public boolean test(byte[] hash) {
                 return !hashes.contains(hash);
             }
         });
