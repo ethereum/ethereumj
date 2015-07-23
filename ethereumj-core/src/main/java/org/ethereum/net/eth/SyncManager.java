@@ -66,8 +66,15 @@ public class SyncManager {
                 new Functional.Predicate<NodeStatistics>() {
                     @Override
                     public boolean test(NodeStatistics nodeStatistics) {
+                        if(nodeStatistics.getEthLastInboundStatusMsg() == null) {
+                            return false;
+                        }
+                        BigInteger oursDifficulty = blockchain.getQueue().getHighestTotalDifficulty();
+                        if(oursDifficulty == null) {
+                            return true;
+                        }
                         BigInteger thatDifficulty = nodeStatistics.getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                        return thatDifficulty.compareTo(blockchain.getQueue().getHighestTotalDifficulty()) > 0;
+                        return thatDifficulty.compareTo(oursDifficulty) > 0;
                     }
                 }
         );
