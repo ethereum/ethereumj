@@ -3,8 +3,10 @@ package org.ethereum.net.eth;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.net.BlockQueue;
+import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
@@ -46,9 +48,29 @@ public class SyncManager {
     private NodeManager nodeManager;
 
     private byte[] bestHash;
+    private BigInteger lowerUsefulDifficulty;
 
     @PostConstruct
     public void init() {
+        lowerUsefulDifficulty = blockchain.getTotalDifficulty();
+        nodeManager.addDiscoverListener(
+                new DiscoverListener() {
+                    @Override
+                    public void nodeAppeared(NodeHandler handler) {
+                        ethereum.connect(handler.getNode());
+                    }
+                    @Override
+                    public void nodeDisappeared(NodeHandler handler) {
+                    }
+                },
+                new Functional.Predicate<NodeStatistics>() {
+                    @Override
+                    public boolean test(NodeStatistics nodeStatistics) {
+                        BigInteger thatDifficulty = nodeStatistics.getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                        return thatDifficulty.compareTo(blockchain.getQueue().getHighestTotalDifficulty()) > 0;
+                    }
+                }
+        );
         worker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -79,7 +101,14 @@ public class SyncManager {
             if(peer.hasNoMoreBlocks()) {
                 removed.add(peer);
                 peer.changeState(SyncState.IDLE);
+                BigInteger td = peer.getHandshakeStatusMessage().getTotalDifficultyAsBigInt();
+                if(td.compareTo(lowerUsefulDifficulty) > 0) {
+                    lowerUsefulDifficulty = td;
+                }
             }
+        }
+        if(blockchain.getTotalDifficulty().compareTo(lowerUsefulDifficulty) > 0) {
+            lowerUsefulDifficulty = blockchain.getTotalDifficulty();
         }
         peers.removeAll(removed);
     }
@@ -107,7 +136,7 @@ public class SyncManager {
                                     .getNodeStatistics()
                                     .getEthLastInboundStatusMsg()
                                     .getTotalDifficultyAsBigInt();
-                            return thatDifficulty.compareTo(blockchain.getTotalDifficulty()) > 0;
+                            return thatDifficulty.compareTo(lowerUsefulDifficulty) > 0;
                         }
                     },
                     new Comparator<NodeHandler>() {
