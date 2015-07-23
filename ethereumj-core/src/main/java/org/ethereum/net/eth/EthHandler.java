@@ -292,7 +292,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             }
 
             if (blockchain.getQueue().isHashesEmpty()) {
-                loggerSync.info("Peer {}: block retrieving process fully complete", Utils.getNodeIdShort(peerId));
+                loggerSync.info("Peer {}: no more hashes in queue, idle", Utils.getNodeIdShort(peerId));
                 changeState(SyncState.IDLE);
             }
         } else {
@@ -532,6 +532,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 blocksLoadedCnt,
                 lastBlock.getNumber()
         );
+    }
+
+    public boolean isIdle() {
+        return syncState == SyncState.IDLE;
     }
 
     enum EthState {

@@ -79,6 +79,7 @@ public class SyncManager {
         List<EthHandler> removed = new ArrayList<>();
         for(EthHandler peer : peers) {
             if(peer.hasNoMoreBlocks()) {
+                logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
                 removed.add(peer);
                 peer.changeState(SyncState.IDLE);
                 BigInteger td = peer.getHandshakeStatusMessage().getTotalDifficultyAsBigInt();
@@ -91,6 +92,16 @@ public class SyncManager {
             lowerUsefulDifficulty = blockchain.getTotalDifficulty();
         }
         peers.removeAll(removed);
+
+        // forcing peers to continue blocks downloading if there are more hashes to process
+        // peers becoming idle if meet empty hashstore but it's not the end
+        if(state == SyncState.BLOCK_RETRIEVING && !blockchain.getQueue().getHashStore().isEmpty()) {
+            for(EthHandler peer : peers) {
+                if(peer.isIdle()) {
+                    peer.changeState(SyncState.BLOCK_RETRIEVING);
+                }
+            }
+        }
     }
 
     private void askNewPeers() {
