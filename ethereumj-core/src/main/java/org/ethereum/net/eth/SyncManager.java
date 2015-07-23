@@ -327,9 +327,13 @@ public class SyncManager {
     }
 
     private void initiateConnection(Node node) {
-        ethereum.connect(node);
         synchronized (connectTimestamps) {
-            connectTimestamps.put(Hex.toHexString(node.getId()), System.currentTimeMillis());
+            String nodeId = Hex.toHexString(node.getId());
+            if(connectTimestamps.containsKey(nodeId)) {
+                return;
+            }
+            ethereum.connect(node);
+            connectTimestamps.put(nodeId, System.currentTimeMillis());
         }
     }
 
