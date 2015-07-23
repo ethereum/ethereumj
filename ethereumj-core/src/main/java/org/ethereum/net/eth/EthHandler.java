@@ -11,7 +11,6 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
 
@@ -283,23 +282,23 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
         returnHashes();
 
-        for (Block block : blockList) {
-            totalDifficulty.add(block.getCumulativeDifficulty());
-        }
+        if(!blockList.isEmpty()) {
+            for (Block block : blockList) {
+                totalDifficulty.add(block.getCumulativeDifficulty());
+            }
 
-        blockchain.getQueue().addBlocks(blockList);
-        blockchain.getQueue().logHashQueueSize();
-        if(loggerSync.isInfoEnabled()) {
-            blocksLoadedCnt += blockList.size();
-        }
+            blockchain.getQueue().addBlocks(blockList);
+            blockchain.getQueue().logHashQueueSize();
+            if (loggerSync.isInfoEnabled()) {
+                blocksLoadedCnt += blockList.size();
+            }
 
-        if(blockchain.getQueue().isHashesEmpty()) {
-            loggerSync.info("Block retrieving process fully complete");
-            changeState(SyncState.IDLE);
-            return;
-        }
-
-        if(blockList.isEmpty()) {
+            if (blockchain.getQueue().isHashesEmpty()) {
+                loggerSync.info("Block retrieving process fully complete");
+                changeState(SyncState.IDLE);
+                return;
+            }
+        } else {
             changeState(SyncState.NO_MORE_BLOCKS);
         }
 
