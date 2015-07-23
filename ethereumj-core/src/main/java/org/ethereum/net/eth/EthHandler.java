@@ -522,6 +522,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         return peerState == EthState.STATUS_FAILED;
     }
 
+    public void onDisconnect() {
+        returnHashes();
+    }
+
     void logSyncStats() {
         loggerSync.info(
                 "Peer {}: [state {}, blocks count {}, last block {}]",

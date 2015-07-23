@@ -196,4 +196,8 @@ public class Channel {
     public boolean isUseful() {
         return ethHandler.hasStatusSucceeded();
     }
+
+    public void onDisconnect() {
+        ethHandler.onDisconnect();
+    }
 }

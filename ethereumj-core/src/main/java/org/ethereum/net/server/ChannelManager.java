@@ -106,6 +106,7 @@ public class ChannelManager {
     }
 
     public void notifyDisconnect(Channel channel) {
+        channel.onDisconnect();
         syncManager.removePeer(channel.ethHandler);
         activePeers.remove(channel);
         if(reconnectedIds.contains(channel.remoteId)) {
