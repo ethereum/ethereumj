@@ -69,8 +69,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private StatusMessage handshakeStatusMessage = null;
 
-    private BigInteger totalDifficulty = Genesis.getInstance().getCumulativeDifficulty();
-
     private boolean peerDiscoveryMode = false;
 
     private Timer getBlocksTimer = new Timer("GetBlocksTimer");
@@ -283,10 +281,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         returnHashes();
 
         if(!blockList.isEmpty()) {
-            for (Block block : blockList) {
-                totalDifficulty.add(block.getCumulativeDifficulty());
-            }
-
             blockchain.getQueue().addBlocks(blockList);
             blockchain.getQueue().logHashQueueSize();
             if (loggerSync.isInfoEnabled()) {
@@ -294,9 +288,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             }
 
             if (blockchain.getQueue().isHashesEmpty()) {
-                loggerSync.info("Block retrieving process fully complete");
+                loggerSync.info("Peer {}: block retrieving process fully complete", Utils.getNodeIdShort(peerId));
                 changeState(SyncState.IDLE);
-                return;
             }
         } else {
             changeState(SyncState.NO_MORE_BLOCKS);
@@ -333,7 +326,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         // connect it to the chain
         blockchain.getQueue().addBlock(newBlockMessage.getBlock());
         blockchain.getQueue().logHashQueueSize();
-        totalDifficulty = new BigInteger(1, newBlockMessage.getDifficulty());
     }
 
     private void sendStatus() {
@@ -471,10 +463,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public void setChannel(Channel channel) {
         this.channel = channel;
-    }
-
-    public BigInteger getTotalDifficulty() {
-        return totalDifficulty;
     }
 
     void changeState(SyncState newState) {
