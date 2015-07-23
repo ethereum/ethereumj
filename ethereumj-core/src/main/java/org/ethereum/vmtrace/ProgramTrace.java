@@ -1,20 +1,23 @@
 package org.ethereum.vmtrace;
 
 import org.ethereum.db.ContractDetails;
-import org.ethereum.db.ContractDetailsCacheImpl;
+import org.ethereum.db.RepositoryTrack;
+import org.ethereum.facade.Repository;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
+import org.ethereum.vm.ProgramInvoke;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vmtrace.Serializers.serializeFieldsOnly;
 
 public class ProgramTrace {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger("vm");
 
     private List<Op> ops = new ArrayList<>();
     private String result;
@@ -53,18 +56,27 @@ public class ProgramTrace {
         this.initStorage = initStorage;
     }
 
-    public ProgramTrace initStorage(ContractDetails details) {
-        initStorage = new HashMap<>();
-        for (Map.Entry<DataWord, DataWord> entry : getStorage(details).entrySet()) {
+    public ProgramTrace initStorage(ProgramInvoke programInvoke) {
+        for (Map.Entry<DataWord, DataWord> entry : getStorage(programInvoke).entrySet()) {
             initStorage.put(entry.getKey().toString(), entry.getValue().toString());
         }
+        if (!initStorage.isEmpty()) {
+            LOGGER.info("{} entries loaded to transaction's initStorage", initStorage.size());
+        }
+
         return this;
     }
 
-    private static Map<DataWord, DataWord> getStorage(ContractDetails details) {
-        return (details instanceof ContractDetailsCacheImpl)
-                ? ((ContractDetailsCacheImpl) details).getOriginStorage()
-                : details.getStorage();
+    private static Map<DataWord, DataWord> getStorage(ProgramInvoke programInvoke) {
+        Repository repository = programInvoke.getRepository();
+        if (repository instanceof RepositoryTrack) {
+            repository = ((RepositoryTrack) repository).getOriginRepository();
+        }
+
+        byte[] address = programInvoke.getOwnerAddress().getLast20Bytes();
+        ContractDetails details = repository.getContractDetails(address);
+
+        return (details == null) ? Collections.EMPTY_MAP : details.getStorage();
     }
 
     public ProgramTrace result(byte[] result) {

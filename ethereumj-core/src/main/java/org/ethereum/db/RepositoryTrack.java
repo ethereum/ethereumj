@@ -317,4 +317,9 @@ public class RepositoryTrack implements Repository {
         throw new UnsupportedOperationException();
     }
 
+    public Repository getOriginRepository() {
+        return (repository instanceof RepositoryTrack)
+                ? ((RepositoryTrack) repository).getOriginRepository()
+                : repository;
+    }
 }
