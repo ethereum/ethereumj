@@ -1,5 +1,6 @@
 package org.ethereum.vmtrace;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.facade.Repository;
@@ -57,11 +58,13 @@ public class ProgramTrace {
     }
 
     public ProgramTrace initStorage(ProgramInvoke programInvoke) {
-        for (Map.Entry<DataWord, DataWord> entry : getStorage(programInvoke).entrySet()) {
-            initStorage.put(entry.getKey().toString(), entry.getValue().toString());
-        }
-        if (!initStorage.isEmpty()) {
-            LOGGER.info("{} entries loaded to transaction's initStorage", initStorage.size());
+        if (SystemProperties.CONFIG.vmTrace()) {
+            for (Map.Entry<DataWord, DataWord> entry : getStorage(programInvoke).entrySet()) {
+                initStorage.put(entry.getKey().toString(), entry.getValue().toString());
+            }
+            if (!initStorage.isEmpty()) {
+                LOGGER.info("{} entries loaded to transaction's initStorage", initStorage.size());
+            }
         }
 
         return this;
