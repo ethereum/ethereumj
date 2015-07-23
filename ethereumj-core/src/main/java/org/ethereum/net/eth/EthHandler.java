@@ -482,7 +482,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
         if(newState == SyncState.NO_MORE_BLOCKS) {
             if(++noMoreBlocksHits < NO_MORE_BLOCKS_THRESHOLD) {
-                newState = SyncState.BLOCK_RETRIEVING;
+                return;
             }
         }
         this.syncState = newState;
