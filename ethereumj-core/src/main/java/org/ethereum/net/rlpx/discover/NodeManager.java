@@ -36,6 +36,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     private static final long LISTENER_REFRESH_RATE = 1000;
     private static final long DB_COMMIT_RATE = 10000;
+    private static final int DB_MAX_LOAD_NODES = 100;
 
     @Autowired
     PeerConnectionTester peerConnectionManager;
@@ -137,12 +138,19 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 db.delete("nodeStats");
             }
             nodeStatsDB = db.hashMap("nodeStats");
+            TreeSet<Map.Entry<Node, NodeStatistics.Persistent>> sorted = new TreeSet<>(new Comparator<Map.Entry<Node, NodeStatistics.Persistent>>() {
+                public int compare(Map.Entry<Node, NodeStatistics.Persistent> o1, Map.Entry<Node, NodeStatistics.Persistent> o2) {
+                    return o1.getValue().reputation - o2.getValue().reputation;
+                }
+            });
+            sorted.addAll(nodeStatsDB.entrySet());
 
+            logger.info("Reading Node statistics from DB: " + DB_MAX_LOAD_NODES  + " of " + nodeStatsDB.size() + " nodes.");
 
-            logger.info("Read Node statistics from DB: " + nodeStatsDB.size() + " nodes.");
-
-            for (Map.Entry<Node, NodeStatistics.Persistent> entry : nodeStatsDB.entrySet()) {
+            int cnt = DB_MAX_LOAD_NODES;
+            for (Map.Entry<Node, NodeStatistics.Persistent> entry : sorted) {
                 getNodeHandler(entry.getKey()).getNodeStatistics().setPersistedData(entry.getValue());
+                if (--cnt == 0) break;
             }
         } catch (Exception e) {
             try {
