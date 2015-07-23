@@ -140,6 +140,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean peerDiscoveryPersist() {
+        return config.getBoolean("peer.discovery.persist");
+    }
+
+    @ValidateMe
     public int peerDiscoveryWorkers() {
         return config.getInt("peer.discovery.workers");
     }

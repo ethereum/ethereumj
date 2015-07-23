@@ -31,9 +31,9 @@ public class MapDBFactoryImpl implements MapDBFactory {
     private DB createDB(String name, boolean transactional) {
         File dbFile = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/" + name);
         if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
-        DBMaker.Maker dbMaker =  DBMaker.fileDB(dbFile)
+        DBMaker.Maker dbMaker = DBMaker.fileDB(dbFile)
                 .closeOnJvmShutdown();
-        if(!transactional) {
+        if (!transactional) {
             dbMaker.transactionDisable();
         }
         return dbMaker.make();

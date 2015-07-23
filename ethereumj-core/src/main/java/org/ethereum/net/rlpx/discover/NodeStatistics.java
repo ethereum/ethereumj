@@ -7,6 +7,7 @@ import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Statter;
 import org.ethereum.util.ByteUtil;
 
+import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
@@ -32,9 +33,16 @@ public class NodeStatistics {
         public String toString() {return count.toString();}
     }
 
+    static class Persistent  implements Serializable {
+        private static final long serialVersionUID = -1246930309060559921L;
+        int reputation;
+    }
+
     private final Node node;
 
     private boolean isPredefined = false;
+
+    private int savedReputation = 0;
 
     // discovery stat
     public final StatHandler discoverOutPing = new StatHandler();
@@ -56,8 +64,11 @@ public class NodeStatistics {
     public final StatHandler rlpxOutMessages = new StatHandler();
     public final StatHandler rlpxInMessages = new StatHandler();
 
+    private String clientId = "";
+
     private ReasonCode rlpxLastRemoteDisconnectReason = null;
     private ReasonCode rlpxLastLocalDisconnectReason = null;
+    private boolean disconnected = false;
 
     // Eth stat
     public final StatHandler ethHandshake = new StatHandler();
@@ -70,7 +81,7 @@ public class NodeStatistics {
         discoverMessageLatency = (Statter.SimpleStatter) Statter.create(getStatName() + ".discoverMessageLatency");
     }
 
-    public int getReputation() {
+    int getSessionReputation() {
         int discoverReput = isPredefined ? REPUTATION_PREDEFINED : 0;
 
         discoverReput += min(discoverInPong.get(), 10) * (discoverOutPing.get() == discoverInPong.get() ? 2 : 1);
@@ -82,7 +93,18 @@ public class NodeStatistics {
         rlpxReput += rlpxHandshake.get() > 0 ? 20 : 0;
         rlpxReput += min(rlpxInMessages.get(), 10) * 3;
 
+        if (disconnected || rlpxLastRemoteDisconnectReason != null || rlpxLastLocalDisconnectReason != null) {
+            if (rlpxLastLocalDisconnectReason != ReasonCode.REQUESTED) {
+                // something finally went wrong decrease RLPx reputation
+                rlpxReput /= 2;
+            }
+        }
+
         return discoverReput + 100 * rlpxReput;
+    }
+
+    public int getReputation() {
+        return savedReputation / 2 + getSessionReputation();
     }
 
     public void nodeDisconnectedRemote(ReasonCode reason) {
@@ -93,9 +115,18 @@ public class NodeStatistics {
         rlpxLastLocalDisconnectReason = reason;
     }
 
+    public void disconnected() {
+        disconnected = true;
+    }
+
+
     public void ethHandshake(StatusMessage ethInboundStatus) {
         this.ethLastInboundStatusMsg = ethInboundStatus;
         ethHandshake.add();
+    }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
     }
 
     public void setPredefined(boolean isPredefined) {
@@ -110,9 +141,19 @@ public class NodeStatistics {
         return "ethj.discover.nodes." + node.getHost() + ":" + node.getPort();
     }
 
+    Persistent getPersistent() {
+        Persistent persistent = new Persistent();
+        persistent.reputation = (getSessionReputation() + savedReputation) / 2;
+        return persistent;
+    }
+
+    void setPersistedData(Persistent persistedData) {
+        savedReputation = persistedData.reputation;
+    }
+
     @Override
     public String toString() {
-        return "NodeStat[reput: " + getReputation() +  ", discover: " +
+        return "NodeStat[reput: " + getReputation() + "(" + savedReputation + "), discover: " +
                 discoverInPong + "/" + discoverOutPing + " " +
                 discoverOutPong + "/" + discoverInPing + " " +
                 discoverInNeighbours + "/" + discoverOutFind + " " +
@@ -122,7 +163,11 @@ public class NodeStatistics {
                 rlpxInMessages + "/" + rlpxOutMessages +
                 ", eth: " + ethHandshake + "/" + ethInbound + "/" + ethOutbound + " " +
                 (ethLastInboundStatusMsg != null ? ByteUtil.toHexString(ethLastInboundStatusMsg.getTotalDifficulty()) : "-") + " " +
+                (disconnected ? "X " : "") +
                 (rlpxLastLocalDisconnectReason != null ? ("<=" + rlpxLastLocalDisconnectReason) : " ") +
-                (rlpxLastRemoteDisconnectReason != null ? ("=>" + rlpxLastRemoteDisconnectReason) : " ");
+                (rlpxLastRemoteDisconnectReason != null ? ("=>" + rlpxLastRemoteDisconnectReason) : " ")  +
+                "[" + clientId + "]";
     }
+
+
 }

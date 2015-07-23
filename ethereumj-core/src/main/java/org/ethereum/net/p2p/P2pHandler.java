@@ -139,7 +139,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
                 if (peerDiscoveryMode &&
                         !handshakeHelloMessage.getCapabilities().contains(Capability.ETH)) {
-                    msgQueue.sendMessage(new DisconnectMessage(ReasonCode.REQUESTED));
+                    disconnect(ReasonCode.REQUESTED);
                     killTimers();
                     ctx.close().sync();
                     ctx.disconnect().sync();
@@ -149,6 +149,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 ctx.fireChannelRead(msg);
                 break;
         }
+    }
+
+    private void disconnect(ReasonCode reasonCode) {
+        msgQueue.sendMessage(new DisconnectMessage(reasonCode));
+        channel.getNodeStatistics().nodeDisconnectedLocal(reasonCode);
     }
 
     @Override
@@ -196,9 +201,11 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public void setHandshake(HelloMessage msg, ChannelHandlerContext ctx) {
 
+        channel.getNodeStatistics().setClientId(msg.getClientId());
+
         this.handshakeHelloMessage = msg;
         if (msg.getP2PVersion() != VERSION) {
-            msgQueue.sendMessage(new DisconnectMessage(ReasonCode.INCOMPATIBLE_PROTOCOL));
+            disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
         }
         else {
             List<Capability> capInCommon = HandshakeHelper.getSupportedCapabilities(msg);
