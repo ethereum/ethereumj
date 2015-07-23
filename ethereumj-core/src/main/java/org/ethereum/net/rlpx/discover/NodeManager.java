@@ -271,8 +271,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         synchronized (this) {
             nodes = new ArrayList<>(nodeHandlerMap.values());
         }
-        Collections.sort(nodes, comparator);
         List<NodeHandler> filtered = CollectionUtils.selectList(nodes, predicate);
+        Collections.sort(filtered, comparator);
         return CollectionUtils.truncate(filtered, limit);
     }
 

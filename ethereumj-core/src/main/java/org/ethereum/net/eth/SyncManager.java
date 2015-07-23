@@ -3,10 +3,8 @@ package org.ethereum.net.eth;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.net.BlockQueue;
-import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
@@ -34,7 +32,7 @@ public class SyncManager {
 
     private SyncState state = SyncState.INIT;
     private EthHandler masterPeer;
-    private List<EthHandler> peers = Collections.synchronizedList(new ArrayList<EthHandler>());
+    private List<EthHandler> peers = new CopyOnWriteArrayList<>();
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
 
@@ -53,31 +51,6 @@ public class SyncManager {
     @PostConstruct
     public void init() {
         lowerUsefulDifficulty = blockchain.getTotalDifficulty();
-        nodeManager.addDiscoverListener(
-                new DiscoverListener() {
-                    @Override
-                    public void nodeAppeared(NodeHandler handler) {
-                        ethereum.connect(handler.getNode());
-                    }
-                    @Override
-                    public void nodeDisappeared(NodeHandler handler) {
-                    }
-                },
-                new Functional.Predicate<NodeStatistics>() {
-                    @Override
-                    public boolean test(NodeStatistics nodeStatistics) {
-                        if(nodeStatistics.getEthLastInboundStatusMsg() == null) {
-                            return false;
-                        }
-                        BigInteger oursDifficulty = blockchain.getQueue().getHighestTotalDifficulty();
-                        if(oursDifficulty == null) {
-                            return true;
-                        }
-                        BigInteger thatDifficulty = nodeStatistics.getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                        return thatDifficulty.compareTo(oursDifficulty) > 0;
-                    }
-                }
-        );
         worker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -133,10 +106,10 @@ public class SyncManager {
                     new Functional.Predicate<NodeHandler>() {
                         @Override
                         public boolean test(NodeHandler nodeHandler) {
-                            if(nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                            if (nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
                                 return false;
                             }
-                            if(nodesInUse.contains(nodeHandler.getNode().getId())) {
+                            if (nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
                                 return false;
                             }
                             BigInteger thatDifficulty = nodeHandler
@@ -149,9 +122,23 @@ public class SyncManager {
                     new Comparator<NodeHandler>() {
                         @Override
                         public int compare(NodeHandler n1, NodeHandler n2) {
-                            BigInteger td1 = n1.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                            BigInteger td2 = n2.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                            return td2.compareTo(td1);
+                            BigInteger td1 = null;
+                            BigInteger td2 = null;
+                            if (n1.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                                td1 = n1.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                            }
+                            if (n2.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                                td2 = n2.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                            }
+                            if (td1 != null && td2 != null) {
+                                return td2.compareTo(td1);
+                            } else if (td1 == null && td2 == null) {
+                                return 0;
+                            } else if (td1 != null) {
+                                return -1;
+                            } else {
+                                return 1;
+                            }
                         }
                     },
                     peersLackSize
