@@ -61,6 +61,5 @@ public class BlockLoader {
         }
 
         System.out.println(" * Done * ");
-        System.exit(0);
     }
 }
