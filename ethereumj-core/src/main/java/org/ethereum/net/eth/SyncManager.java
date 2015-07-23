@@ -230,6 +230,10 @@ public class SyncManager {
     }
 
     public void removePeer(EthHandler peer) {
+        if(state == SyncState.DONE_SYNC) {
+            return;
+        }
+
         synchronized (connectTimestamps) {
             connectTimestamps.remove(peer.getPeerId());
         }
