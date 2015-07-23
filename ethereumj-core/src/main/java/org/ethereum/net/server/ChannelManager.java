@@ -111,6 +111,9 @@ public class ChannelManager {
     }
 
     public void notifyDisconnect(Channel channel) {
+        if(!activePeers.contains(channel)) {
+            return;
+        }
         channel.onDisconnect();
         syncManager.removePeer(channel.ethHandler);
         activePeers.remove(channel);

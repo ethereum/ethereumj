@@ -58,7 +58,9 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             channel = ctx.getBean(Channel.class);
             channel.init(remoteId, peerDiscoveryMode);
 
-            channelManager.addChannel(channel);
+            if(!peerDiscoveryMode) {
+                channelManager.addChannel(channel);
+            }
 
             ch.pipeline().addLast("readTimeoutHandler",
                     new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
