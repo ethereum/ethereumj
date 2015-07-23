@@ -12,6 +12,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.eth.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
+import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.rlpx.*;
@@ -77,6 +78,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
+        loggerWire.debug("Received packet bytes: " + in.readableBytes());
         if (!isHandshakeDone)
             decodeHandshake(ctx, in);
         else
@@ -171,7 +173,10 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                     return;
                 buffer.readBytes(responsePacket);
 
-                this.handshake.handleAuthResponse(myKey, initiatePacket, responsePacket);
+                AuthResponseMessage response = this.handshake.handleAuthResponse(myKey, initiatePacket, responsePacket);
+                if (loggerNet.isInfoEnabled())
+                    loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), response);
+
                 EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();
                 this.frameCodec = new FrameCodec(secrets);
 
@@ -183,11 +188,18 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 if (frame == null)
                     return;
                 byte[] payload = ByteStreams.toByteArray(frame.getStream());
-                HelloMessage helloMessage = new HelloMessage(payload);
-                if (loggerNet.isInfoEnabled())
-                    loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
-                isHandshakeDone = true;
-                this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+                if (frame.getType() == P2pMessageCodes.HELLO.asByte()) {
+                    HelloMessage helloMessage = new HelloMessage(payload);
+                    if (loggerNet.isInfoEnabled())
+                        loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
+                    isHandshakeDone = true;
+                    this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+                } else {
+                    DisconnectMessage message = new DisconnectMessage(payload);
+                    if (loggerNet.isInfoEnabled())
+                        loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), message);
+                    channel.getNodeStatistics().nodeDisconnectedRemote(message.getReason());
+                }
             }
         } else {
             if (frameCodec == null) {
