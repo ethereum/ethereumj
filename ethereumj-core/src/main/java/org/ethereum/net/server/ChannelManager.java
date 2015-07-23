@@ -5,6 +5,7 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 
 import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -32,8 +33,8 @@ public class ChannelManager {
 
     private List<Channel> newPeers = new CopyOnWriteArrayList<>();
     private List<Channel> activePeers = new CopyOnWriteArrayList<>();
-    private Set<String> disconnectedIds = Collections.synchronizedSet(new HashSet<String>());
-    private Set<String> reconnectedIds = Collections.synchronizedSet(new HashSet<String>());
+    private final Set<String> disconnectedIds = new HashSet<>();
+    private final Set<String> reconnectedIds = new HashSet<>();
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService reconnectWorker = Executors.newSingleThreadScheduledExecutor();
@@ -68,10 +69,14 @@ public class ChannelManager {
     }
 
     private void processReconnects() {
-        Iterator<String> iterator = disconnectedIds.iterator();
-        while(iterator.hasNext()) {
-            String nodeId = iterator.next();
-            //TODO get node by id and initiate connection
+        synchronized (disconnectedIds) {
+            for(String nodeId : disconnectedIds) {
+                NodeHandler nodeHandler = nodeManager.findById(nodeId);
+                logger.info("Peer {}: reconnecting", Utils.getNodeIdShort(nodeId));
+                ethereum.connect(nodeHandler.getNode());
+            }
+            reconnectedIds.addAll(disconnectedIds);
+            disconnectedIds.clear();
         }
     }
 
@@ -109,18 +114,20 @@ public class ChannelManager {
         channel.onDisconnect();
         syncManager.removePeer(channel.ethHandler);
         activePeers.remove(channel);
-        if(reconnectedIds.contains(channel.remoteId)) {
-            logger.info(
-                    "Peer {}: hit too much disconnects, dropping",
-                    Utils.getNodeIdShort(channel.remoteId)
-            );
-            reconnectedIds.remove(channel.remoteId);
-        } else {
-            logger.info(
-                    "Peer {}: disconnected",
-                    Utils.getNodeIdShort(channel.remoteId)
-            );
-            disconnectedIds.add(channel.remoteId);
+        synchronized (disconnectedIds) {
+            if (reconnectedIds.contains(channel.remoteId)) {
+                logger.info(
+                        "Peer {}: hit too much disconnects, dropping",
+                        Utils.getNodeIdShort(channel.remoteId)
+                );
+                reconnectedIds.remove(channel.remoteId);
+            } else {
+                logger.info(
+                        "Peer {}: disconnected",
+                        Utils.getNodeIdShort(channel.remoteId)
+                );
+                disconnectedIds.add(channel.remoteId);
+            }
         }
     }
 }

@@ -1,5 +1,6 @@
 package org.ethereum.net.rlpx.discover;
 
+import org.apache.commons.collections4.Predicate;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -10,6 +11,7 @@ import org.ethereum.util.Functional;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -272,6 +274,15 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         Collections.sort(nodes, comparator);
         List<NodeHandler> filtered = CollectionUtils.selectList(nodes, predicate);
         return CollectionUtils.truncate(filtered, limit);
+    }
+
+    public NodeHandler findById(final String nodeId) {
+        return org.apache.commons.collections4.CollectionUtils.find(nodeHandlerMap.values(), new Predicate<NodeHandler>() {
+            @Override
+            public boolean evaluate(NodeHandler handler) {
+                return nodeId.equals(Hex.toHexString(handler.getNode().getId()));
+            }
+        });
     }
 
     private synchronized void processListeners() {
