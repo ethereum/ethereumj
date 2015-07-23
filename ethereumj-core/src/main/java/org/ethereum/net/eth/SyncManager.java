@@ -3,8 +3,11 @@ package org.ethereum.net.eth;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.net.BlockQueue;
+import org.ethereum.net.rlpx.Node;
+import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
@@ -29,6 +32,7 @@ public class SyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private static final int PEERS_COUNT = 5;
+    private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
 
     private SyncState state = SyncState.INIT;
     private EthHandler masterPeer;
@@ -48,6 +52,8 @@ public class SyncManager {
     private byte[] bestHash;
     private BigInteger lowerUsefulDifficulty;
 
+    private final Map<String, Long> connectTimestamps = new HashMap<>();
+
     @PostConstruct
     public void init() {
         lowerUsefulDifficulty = blockchain.getTotalDifficulty();
@@ -56,6 +62,7 @@ public class SyncManager {
             public void run() {
                 checkMaster();
                 checkPeers();
+                removeOutdatedConnections();
                 askNewPeers();
             }
         }, 0, 3, TimeUnit.SECONDS);
@@ -66,6 +73,46 @@ public class SyncManager {
                     logStats();
                 }
             }, 0, 30, TimeUnit.SECONDS);
+        }
+        nodeManager.addDiscoverListener(
+                new DiscoverListener() {
+                    @Override
+                    public void nodeAppeared(NodeHandler handler) {
+                        initiateConnection(handler.getNode());
+                    }
+
+                    @Override
+                    public void nodeDisappeared(NodeHandler handler) {
+                    }
+                },
+                new Functional.Predicate<NodeStatistics>() {
+                    @Override
+                    public boolean test(NodeStatistics nodeStatistics) {
+                        if (nodeStatistics.getEthLastInboundStatusMsg() == null) {
+                            return false;
+                        }
+                        BigInteger knownDifficulty = blockchain.getQueue().getHighestTotalDifficulty();
+                        if(knownDifficulty == null) {
+                            return true;
+                        }
+                        BigInteger thatDifficulty = nodeStatistics.getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                        return thatDifficulty.compareTo(knownDifficulty) > 0;
+                    }
+                }
+        );
+    }
+
+    private void removeOutdatedConnections() {
+        synchronized (connectTimestamps) {
+            Set<String> outdated = new HashSet<>();
+            for(Map.Entry<String, Long> e : connectTimestamps.entrySet()) {
+                if(System.currentTimeMillis() - e.getValue() > CONNECTION_TIMEOUT) {
+                    outdated.add(e.getKey());
+                }
+            }
+            for(String nodeId : outdated) {
+                connectTimestamps.remove(nodeId);
+            }
         }
     }
 
@@ -113,6 +160,9 @@ public class SyncManager {
                     return handler.getPeerId();
                 }
             });
+            synchronized (connectTimestamps) {
+                nodesInUse.addAll(connectTimestamps.keySet());
+            }
             List<NodeHandler> newNodes = nodeManager.getNodes(
                     new Functional.Predicate<NodeHandler>() {
                         @Override
@@ -155,7 +205,7 @@ public class SyncManager {
                     peersLackSize
             );
             for(NodeHandler n : newNodes) {
-                ethereum.connect(n.getNode());
+                initiateConnection(n.getNode());
             }
         }
     }
@@ -167,11 +217,18 @@ public class SyncManager {
     }
 
     public void removePeer(EthHandler peer) {
+        synchronized (connectTimestamps) {
+            connectTimestamps.remove(peer.getPeerId());
+        }
         peer.changeState(SyncState.IDLE);
         peers.remove(peer);
     }
 
     public void addPeer(EthHandler peer) {
+        synchronized (connectTimestamps) {
+            connectTimestamps.remove(peer.getPeerId());
+        }
+
         StatusMessage msg = peer.getHandshakeStatusMessage();
 
         BigInteger peerTotalDifficulty = msg.getTotalDifficultyAsBigInt();
@@ -238,6 +295,13 @@ public class SyncManager {
             //TODO handle sync DONE
         }
         this.state = newState;
+    }
+
+    private void initiateConnection(Node node) {
+        ethereum.connect(node);
+        synchronized (connectTimestamps) {
+            connectTimestamps.put(Hex.toHexString(node.getId()), System.currentTimeMillis());
+        }
     }
 
     private boolean isHashRetrieving() {
