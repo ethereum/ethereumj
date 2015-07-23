@@ -5,6 +5,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
+import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
@@ -257,6 +258,20 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }
         return ret;
+    }
+
+    public List<NodeHandler> getNodes(
+            Functional.Predicate<NodeHandler> predicate,
+            Comparator<NodeHandler> comparator,
+            int limit
+    ) {
+        List<NodeHandler> nodes;
+        synchronized (this) {
+            nodes = new ArrayList<>(nodeHandlerMap.values());
+        }
+        Collections.sort(nodes, comparator);
+        List<NodeHandler> filtered = CollectionUtils.selectList(nodes, predicate);
+        return CollectionUtils.truncate(filtered, limit);
     }
 
     private synchronized void processListeners() {

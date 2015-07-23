@@ -1,14 +1,34 @@
 package org.ethereum.util;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author Mikhail Kalinin
  * @since 14.07.2015
  */
 public class CollectionUtils {
+
+    public static <K, V> Set<V> collectSet(Collection<K> items, Functional.Function<K, V> collector) {
+        Set<V> collected = new HashSet<>();
+        for(K item : items) {
+            collected.add(collector.apply(item));
+        }
+        return collected;
+    }
+
+    public static <T> List<T> truncate(List<T> items, int limit) {
+        if(limit > items.size()) {
+            return new ArrayList<>(items);
+        }
+        List<T> truncated = new ArrayList<>(limit);
+        for(T item : items) {
+            truncated.add(item);
+            if(truncated.size() == limit) {
+                break;
+            }
+        }
+        return truncated;
+    }
 
     public static <T> List<T> selectList(Collection<T> items, Functional.Predicate<T> predicate) {
         List<T> selected = new ArrayList<>();

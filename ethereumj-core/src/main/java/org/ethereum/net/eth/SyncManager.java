@@ -4,6 +4,9 @@ import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.rlpx.discover.NodeHandler;
+import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.util.CollectionUtils;
+import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +42,9 @@ public class SyncManager {
     @Autowired
     private Ethereum ethereum;
 
+    @Autowired
+    private NodeManager nodeManager;
+
     private byte[] bestHash;
 
     @PostConstruct
@@ -50,7 +56,7 @@ public class SyncManager {
                 checkPeers();
                 askNewPeers();
             }
-        }, 0, 1, TimeUnit.SECONDS);
+        }, 0, 3, TimeUnit.SECONDS);
         if(logger.isInfoEnabled()) {
             Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
                 @Override
@@ -79,8 +85,44 @@ public class SyncManager {
     }
 
     private void askNewPeers() {
-        if(peers.size() < PEERS_COUNT) {
-            //TODO ask PeerDiscovery
+        int peersLackSize = PEERS_COUNT - peers.size();
+        if(peersLackSize > 0) {
+            final Set<String> nodesInUse = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
+                @Override
+                public String apply(EthHandler handler) {
+                    return handler.getPeerId();
+                }
+            });
+            List<NodeHandler> newNodes = nodeManager.getNodes(
+                    new Functional.Predicate<NodeHandler>() {
+                        @Override
+                        public boolean test(NodeHandler nodeHandler) {
+                            if(nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                                return false;
+                            }
+                            if(nodesInUse.contains(nodeHandler.getNode().getId())) {
+                                return false;
+                            }
+                            BigInteger thatDifficulty = nodeHandler
+                                    .getNodeStatistics()
+                                    .getEthLastInboundStatusMsg()
+                                    .getTotalDifficultyAsBigInt();
+                            return thatDifficulty.compareTo(blockchain.getTotalDifficulty()) > 0;
+                        }
+                    },
+                    new Comparator<NodeHandler>() {
+                        @Override
+                        public int compare(NodeHandler n1, NodeHandler n2) {
+                            BigInteger td1 = n1.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                            BigInteger td2 = n2.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                            return td2.compareTo(td1);
+                        }
+                    },
+                    peersLackSize
+            );
+            for(NodeHandler n : newNodes) {
+                ethereum.connect(n.getNode());
+            }
         }
     }
 
@@ -162,14 +204,6 @@ public class SyncManager {
             //TODO handle sync DONE
         }
         this.state = newState;
-    }
-
-    public void notifyNewNode(NodeHandler nodeHandler) {
-        if(state == SyncState.DONE_SYNC) {
-            return;
-        }
-        //TODO implement decision maker
-        ethereum.connect(nodeHandler.getNode());
     }
 
     private boolean isHashRetrieving() {
