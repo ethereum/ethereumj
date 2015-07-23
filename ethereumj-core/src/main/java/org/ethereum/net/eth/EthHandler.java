@@ -4,6 +4,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
+import org.ethereum.core.ImportResult;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Blockchain;
@@ -31,6 +32,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.core.ImportResult.NO_PARENT;
 import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
 import static org.ethereum.util.ByteUtil.wrap;
 
@@ -328,11 +330,17 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         loggerNet.info("New block received: block.index [{}]", newBlock.getNumber());
 
-        // adding block to the queue
-        // there will be decided how to
-        // connect it to the chain
-        blockchain.getQueue().addBlock(newBlockMessage.getBlock());
-        blockchain.getQueue().logHashQueueSize();
+        ImportResult result = blockchain.tryToConnect(newBlock);
+        if(result == ImportResult.NO_PARENT) {
+            // adding block to the queue
+            // there will be decided how to
+            // connect it to the chain
+            blockchain.getQueue().addBlock(newBlockMessage.getBlock());
+            blockchain.getQueue().logHashQueueSize();
+        } else {
+            changeState(SyncState.DONE_SYNC);
+            loggerSync.info("Peer {}: new block successfully imported", Utils.getNodeIdShort(peerId));
+        }
     }
 
     private void sendStatus() {
@@ -476,7 +484,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         this.channel = channel;
     }
 
-    void changeState(SyncState newState) {
+    synchronized void changeState(SyncState newState) {
         if(newState == SyncState.HASH_RETRIEVING) {
             sendGetBlockHashes();
         }
@@ -536,6 +544,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public boolean isIdle() {
         return syncState == SyncState.IDLE;
+    }
+
+    public boolean isSyncDone() {
+        return syncState == SyncState.DONE_SYNC;
     }
 
     enum EthState {

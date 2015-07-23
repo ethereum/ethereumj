@@ -2,6 +2,7 @@ package org.ethereum.net.eth;
 
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.Ethereum;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
@@ -39,6 +40,7 @@ public class SyncManager {
     private List<EthHandler> peers = new CopyOnWriteArrayList<>();
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     private Blockchain blockchain;
@@ -49,10 +51,15 @@ public class SyncManager {
     @Autowired
     private NodeManager nodeManager;
 
+    @Autowired
+    private EthereumListener ethereumListener;
+
     private byte[] bestHash;
     private BigInteger lowerUsefulDifficulty;
 
     private final Map<String, Long> connectTimestamps = new HashMap<>();
+
+    private DiscoverListener discoverListener;
 
     @PostConstruct
     public void init() {
@@ -67,24 +74,25 @@ public class SyncManager {
             }
         }, 0, 3, TimeUnit.SECONDS);
         if(logger.isInfoEnabled()) {
-            Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
+            logWorker.scheduleWithFixedDelay(new Runnable() {
                 @Override
                 public void run() {
                     logStats();
                 }
             }, 0, 30, TimeUnit.SECONDS);
         }
-        nodeManager.addDiscoverListener(
-                new DiscoverListener() {
-                    @Override
-                    public void nodeAppeared(NodeHandler handler) {
-                        initiateConnection(handler.getNode());
-                    }
+        discoverListener = new DiscoverListener() {
+            @Override
+            public void nodeAppeared(NodeHandler handler) {
+                initiateConnection(handler.getNode());
+            }
 
-                    @Override
-                    public void nodeDisappeared(NodeHandler handler) {
-                    }
-                },
+            @Override
+            public void nodeDisappeared(NodeHandler handler) {
+            }
+        };
+        nodeManager.addDiscoverListener(
+                discoverListener,
                 new Functional.Predicate<NodeStatistics>() {
                     @Override
                     public boolean test(NodeStatistics nodeStatistics) {
@@ -125,6 +133,11 @@ public class SyncManager {
     private void checkPeers() {
         List<EthHandler> removed = new ArrayList<>();
         for(EthHandler peer : peers) {
+            if(peer.isSyncDone()) {
+                changeState(SyncState.DONE_SYNC);
+                return;
+            }
+
             if(peer.hasNoMoreBlocks()) {
                 logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
                 removed.add(peer);
@@ -225,6 +238,10 @@ public class SyncManager {
     }
 
     public void addPeer(EthHandler peer) {
+        if(state == SyncState.DONE_SYNC) {
+            return;
+        }
+
         synchronized (connectTimestamps) {
             connectTimestamps.remove(peer.getPeerId());
         }
@@ -275,26 +292,34 @@ public class SyncManager {
         peers.add(peer);
     }
 
-    public void changeState(SyncState newState) {
+    public synchronized void changeState(SyncState newState) {
         if(state == SyncState.DONE_SYNC) {
             return;
         }
         if(newState == SyncState.HASH_RETRIEVING) {
-            for(EthHandler peer : peers) {
-                peer.changeState(SyncState.IDLE);
-            }
+            changePeersState(SyncState.IDLE);
             blockchain.getQueue().setBestHash(bestHash);
             masterPeer.changeState(SyncState.HASH_RETRIEVING);
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
-            for(EthHandler peer : peers) {
-                peer.changeState(SyncState.BLOCK_RETRIEVING);
-            }
+            changePeersState(SyncState.BLOCK_RETRIEVING);
         }
         if(newState == SyncState.DONE_SYNC) {
-            //TODO handle sync DONE
+            changePeersState(SyncState.IDLE);
+            peers.clear();
+            connectTimestamps.clear();
+            nodeManager.removeDiscoverListener(discoverListener);
+            worker.shutdown();
+            logWorker.shutdown();
+            ethereumListener.onSyncDone();
         }
         this.state = newState;
+    }
+
+    private void changePeersState(SyncState newState) {
+        for (EthHandler peer : peers) {
+            peer.changeState(newState);
+        }
     }
 
     private void initiateConnection(Node node) {
