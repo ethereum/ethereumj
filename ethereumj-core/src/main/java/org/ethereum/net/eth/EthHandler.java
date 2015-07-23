@@ -227,6 +227,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
+        if(syncState != SyncState.HASH_RETRIEVING) {
+            return;
+        }
+
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
         BlockQueue chainQueue = blockchain.getQueue();
 
