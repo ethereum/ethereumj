@@ -302,6 +302,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private void returnHashes() {
         if(sentHashes != null) {
+            if(loggerSync.isDebugEnabled()) {
+                loggerSync.debug("Peer {}: [{}] hashes returned", Utils.getNodeIdShort(peerId), sentHashes.size());
+            }
             blockchain.getQueue().returnHashes(sentHashes);
         }
     }
@@ -373,6 +376,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         this.sentHashes = new ArrayList<>();
         for (byte[] hash : hashes)
             this.sentHashes.add(wrap(hash));
+
+        if(loggerSync.isDebugEnabled()) {
+            loggerSync.debug("Peer {}: [{}] hashes sent", Utils.getNodeIdShort(peerId), sentHashes.size());
+        }
 
         if (hashes.isEmpty()) {
             return;
