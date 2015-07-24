@@ -42,7 +42,9 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
 
     String remoteId;
+    Channel channel;
 
+    private boolean peerDiscoveryMode = false;
 
     public EthereumChannelInitializer(String remoteId) {
         this.remoteId = remoteId;
@@ -50,28 +52,40 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
 
     @Override
     public void initChannel(NioSocketChannel ch) throws Exception {
+        try {
+            logger.info("Open connection, channel: {}", ch.toString());
 
-        logger.info("Open connection, channel: {}", ch.toString());
+            channel = ctx.getBean(Channel.class);
+            channel.init(remoteId, peerDiscoveryMode);
 
-        Channel channel = ctx.getBean(Channel.class);
-        channel.init(remoteId);
+            if(!peerDiscoveryMode) {
+                channelManager.addChannel(channel);
+            }
 
-        channelManager.addChannel(channel);
+            ch.pipeline().addLast("readTimeoutHandler",
+                    new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
+            //        ch.pipeline().addLast("in  encoder", channel.getMessageDecoder());
+            //        ch.pipeline().addLast("out encoder", channel.getMessageEncoder());
+            //        ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());
+            //        ch.pipeline().addLast(Capability.ETH, channel.getEthHandler());
+            //        ch.pipeline().addLast(Capability.SHH, channel.getShhHandler());
+            ch.pipeline().addLast("initiator", channel.getMessageCodec().getInitiator());
+            ch.pipeline().addLast("messageCodec", channel.getMessageCodec());
 
-        ch.pipeline().addLast("readTimeoutHandler",
-                new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-//        ch.pipeline().addLast("in  encoder", channel.getMessageDecoder());
-//        ch.pipeline().addLast("out encoder", channel.getMessageEncoder());
-//        ch.pipeline().addLast(Capability.P2P, channel.getP2pHandler());
-//        ch.pipeline().addLast(Capability.ETH, channel.getEthHandler());
-//        ch.pipeline().addLast(Capability.SHH, channel.getShhHandler());
-        ch.pipeline().addLast("initiator", channel.getMessageCodec().getInitiator());
-        ch.pipeline().addLast("messageCodec", channel.getMessageCodec());
-
-        // limit the size of receiving buffer to 1024
-        ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(16_777_216));
-        ch.config().setOption(ChannelOption.SO_RCVBUF, 16_777_216);
-        ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
+            // limit the size of receiving buffer to 1024
+            ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(16_777_216));
+            ch.config().setOption(ChannelOption.SO_RCVBUF, 16_777_216);
+            ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
+        } catch (Exception e) {
+            logger.error("Unexpected error: ", e);
+        }
     }
 
+    public Channel getChannel() {
+        return channel;
+    }
+
+    public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
+        this.peerDiscoveryMode = peerDiscoveryMode;
+    }
 }

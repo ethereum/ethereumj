@@ -1,5 +1,7 @@
 package org.ethereum.db;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -12,11 +14,21 @@ public interface HashStore extends DiskStore {
 
     void addFirst(byte[] hash);
 
+    void addFirstBatch(Collection<byte[]> hashes);
+
     byte[] peek();
 
     byte[] poll();
 
+    List<byte[]> pollBatch(int qty);
+
     boolean isEmpty();
 
     Set<Long> getKeys();
+
+    int size();
+
+    void clear();
+
+    void removeAll(Collection<byte[]> removing);
 }

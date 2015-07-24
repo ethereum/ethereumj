@@ -6,6 +6,8 @@ import org.ethereum.util.RLPList;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
+
 import static org.ethereum.net.eth.EthMessageCodes.STATUS;
 
 /**
@@ -94,6 +96,10 @@ public class StatusMessage extends EthMessage {
     public byte[] getTotalDifficulty() {
         if (!parsed) parse();
         return totalDifficulty;
+    }
+
+    public BigInteger getTotalDifficultyAsBigInt() {
+        return new BigInteger(1, getTotalDifficulty());
     }
 
     public byte[] getBestHash() {

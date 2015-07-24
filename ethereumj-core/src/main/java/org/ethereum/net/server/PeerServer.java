@@ -1,5 +1,6 @@
 package org.ethereum.net.server;
 
+import org.ethereum.crypto.ECKey;
 import org.ethereum.manager.WorldManager;
 
 import io.netty.bootstrap.ServerBootstrap;
@@ -14,7 +15,9 @@ import io.netty.handler.logging.LoggingHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -26,10 +29,13 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @author Roman Mandeleil
  * @since 01.11.2014
  */
-//@Component
+@Component
 public class PeerServer {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
+
+    @Autowired
+    private ApplicationContext ctx;
 
     @Autowired
     public ChannelManager channelManager;
@@ -49,6 +55,8 @@ public class PeerServer {
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
 
+        ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, "");
+
         worldManger.getListener().trace("Listening on port " + port);
 
 
@@ -67,6 +75,13 @@ public class PeerServer {
 
             // Start the client.
             logger.info("Listening for incoming connections, port: [{}] ", port);
+
+            ECKey myKey = ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress();
+            byte[] nodeIdWithFormat = myKey.getPubKey();
+            byte[] nodeId = new byte[nodeIdWithFormat.length - 1];
+            System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+            logger.info("NodeId: [{}] ", Hex.toHexString(nodeId));
+
             ChannelFuture f = b.bind(port).sync();
 
             // Wait until the connection is closed.

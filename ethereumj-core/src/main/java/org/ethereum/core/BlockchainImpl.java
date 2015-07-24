@@ -337,9 +337,8 @@ public class BlockchainImpl implements Blockchain {
         listener.onBlock(block, receipts);
 
         if (blockQueue != null &&
-                blockQueue.size() == 0 &&
-                !syncDoneCalled &&
-                channelManager.isAllSync()) {
+            blockQueue.size() == 0 &&
+            !syncDoneCalled) {
 
             logger.info("Sync done");
             syncDoneCalled = true;

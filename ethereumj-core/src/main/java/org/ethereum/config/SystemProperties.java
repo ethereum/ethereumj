@@ -4,6 +4,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
 import java.util.*;
+
+import static org.ethereum.crypto.SHA3Helper.sha3;
 
 /**
  * Utility class to retrieve property values from the ethereumj.conf files
@@ -80,6 +83,10 @@ public class SystemProperties {
         }
     }
 
+    public Config getConfig() {
+        return config;
+    }
+
     /**
      * Puts a new config atop of existing stack making the options
      * in the supplied config overriding existing options
@@ -138,6 +145,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean peerDiscoveryPersist() {
+        return config.getBoolean("peer.discovery.persist");
+    }
+
+    @ValidateMe
     public int peerDiscoveryWorkers() {
         return config.getInt("peer.discovery.workers");
     }
@@ -191,7 +203,9 @@ public class SystemProperties {
                     if (configObject.toConfig().hasPath("nodeName")) {
                         String nodeName = configObject.toConfig().getString("nodeName").trim();
                         // FIXME should be sha3-512 here
-                        nodeId = SHA3Helper.sha3(nodeName.getBytes());
+                        byte[] ecPublic = ECKey.fromPrivate(sha3(nodeName.getBytes())).getPubKeyPoint().getEncoded(false);
+                        nodeId = new byte[ecPublic.length - 1];
+                        System.arraycopy(ecPublic, 1, nodeId, 0, nodeId.length);
                     } else {
                         throw new RuntimeException("Either nodeId or nodeName should be specified: " + configObject);
                     }
@@ -348,6 +362,10 @@ public class SystemProperties {
         return config.getString("peer.privateKey");
     }
 
+    @ValidateMe
+    public int networkId() {
+        return config.getInt("peer.networkId");
+    }
 
     @ValidateMe
     public int listenPort() {

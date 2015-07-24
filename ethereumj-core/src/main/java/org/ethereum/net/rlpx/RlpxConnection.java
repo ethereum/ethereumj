@@ -1,6 +1,8 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.net.p2p.P2pMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
@@ -9,6 +11,8 @@ import java.io.*;
  * Created by devrandom on 2015-04-12.
  */
 public class RlpxConnection {
+    private static final Logger logger = LoggerFactory.getLogger("discover");
+
     private final EncryptionHandshake.Secrets secrets;
     private final FrameCodec codec;
     private final DataInputStream inp;
@@ -23,6 +27,7 @@ public class RlpxConnection {
     }
 
     public void sendProtocolHandshake(HandshakeMessage message) throws IOException {
+        logger.info("<=== " + message);
         byte[] payload = message.encode();
         codec.writeFrame(new FrameCodec.Frame(HandshakeMessage.HANDSHAKE_MESSAGE_TYPE, payload), out);
     }
@@ -37,6 +42,7 @@ public class RlpxConnection {
             frame.payload.read(wire);
             System.out.println("packet " + Hex.toHexString(wire));
             handshakeMessage = HandshakeMessage.parse(wire);
+            logger.info(" ===> " + handshakeMessage);
         } else {
             System.out.println("packet type " + frame.type);
             byte[] wire = new byte[frame.size];

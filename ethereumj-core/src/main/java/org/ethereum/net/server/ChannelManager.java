@@ -1,24 +1,24 @@
 package org.ethereum.net.server;
 
-import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
-import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 
+import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.rlpx.discover.NodeHandler;
+import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
@@ -31,114 +31,106 @@ public class ChannelManager {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-    Timer inactivesCollector = new Timer("inactivesCollector");
-    List<Channel> channels = Collections.synchronizedList(new ArrayList<Channel>());
+    private List<Channel> newPeers = new CopyOnWriteArrayList<>();
+    private List<Channel> activePeers = new CopyOnWriteArrayList<>();
+    private final Set<String> disconnectedIds = new HashSet<>();
+    private final Set<String> reconnectedIds = new HashSet<>();
 
-    Map<ByteArrayWrapper, Block> blockCache = new HashMap<>();
+    private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
+    private ScheduledExecutorService reconnectWorker = Executors.newSingleThreadScheduledExecutor();
 
     @Autowired
     WorldManager worldManager;
 
-    public ChannelManager() {
-    }
+    @Autowired
+    SyncManager syncManager;
 
+    @Autowired
+    NodeManager nodeManager;
+
+    @Autowired
+    Ethereum ethereum;
 
     @PostConstruct
     public void init() {
-        scheduleChannelCollector();
+        mainWorker.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                processNewPeers();
+            }
+        }, 0, 1, TimeUnit.SECONDS);
+
+        reconnectWorker.scheduleWithFixedDelay(new Runnable() {
+            @Override
+            public void run() {
+                processReconnects();
+            }
+        }, 0, 5, TimeUnit.SECONDS);
     }
 
+    private void processReconnects() {
+        synchronized (disconnectedIds) {
+            for(String nodeId : disconnectedIds) {
+                NodeHandler nodeHandler = nodeManager.findById(nodeId);
+                logger.info("Peer {}: reconnecting", Utils.getNodeIdShort(nodeId));
+                ethereum.connect(nodeHandler.getNode());
+            }
+            reconnectedIds.addAll(disconnectedIds);
+            disconnectedIds.clear();
+        }
+    }
 
-    public Channel getChannel(String peerId) {
-
-        for (Channel channel : channels) {
-            String tablePeerId = channel.getP2pHandler().getHandshakeHelloMessage().getPeerId();
-            if (tablePeerId != null &&
-                    peerId.equals(tablePeerId)) {
-                return channel;
+    private void processNewPeers() {
+        List<Channel> processed = new ArrayList<>();
+        for(Channel peer : newPeers) {
+            if(peer.hasInitPassed()) {
+                if(peer.isUseful()) {
+                    processUseful(peer);
+                }
+                processed.add(peer);
             }
         }
-        return null;
+        newPeers.removeAll(processed);
     }
 
-    public void recvTransaction() {
-        // ???
-    }
-
-
-    public void recvBlock() { // todo:
-        // 1. Check in the cache if the hash exist
-        // 2. Exist: go and send it to the queue
+    private void processUseful(Channel peer) {
+        if(peer.ethHandler.hasStatusSucceeded()) {
+            syncManager.addPeer(peer.ethHandler);
+            activePeers.add(peer);
+        }
     }
 
     public void sendTransaction(Transaction tx) {
-        for (Channel channel : channels) {
+        for (Channel channel : activePeers) {
             channel.sendTransaction(tx);
         }
     }
 
-
-    public void sendNewBlock(Block block) {
-        // 1. Go over all channels and send the block
-        for (Channel channel : channels) {
-            channel.sendNewBlock(block);
-        }
-    }
-
     public void addChannel(Channel channel) {
-        synchronized (channels) {
-            channels.add(channel);
+        newPeers.add(channel);
+    }
+
+    public void notifyDisconnect(Channel channel) {
+        if(!activePeers.contains(channel)) {
+            return;
         }
-    }
-
-    public boolean isAllSync() {
-
-        boolean result = true;
-        for (Channel channel : channels) {
-            result &= channel.isSync();
-        }
-
-        return result;
-    }
-
-    public void scheduleChannelCollector() {
-        inactivesCollector.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                Iterator<Channel> iter = channels.iterator();
-                while (iter.hasNext()) {
-                    Channel channel = iter.next();
-
-                    // todo: identify how to remove channels
-//                        iter.remove();
-//                        logger.info("Channel removed: {}", channel.p2pHandler.getHandshakeHelloMessage());
-                }
-
-                if (channels.size() == 0) {
-                    worldManager.getListener().onNoConnections();
-                }
-            }
-        }, 2000, 5000);
-    }
-
-    public void reconnect() {
-        for (Channel channel : channels)
-            channel.p2pHandler.sendDisconnect();
-    }
-
-    public void ethSync() {
-
-        Channel bestChannel = channels.get(0);
-        for (Channel channel : channels) {
-
-            if (bestChannel.getTotalDifficulty().
-                    compareTo(channel.getTotalDifficulty()) < 0) {
-                bestChannel = channel;
+        channel.onDisconnect();
+        syncManager.removePeer(channel.ethHandler);
+        activePeers.remove(channel);
+        synchronized (disconnectedIds) {
+            if (reconnectedIds.contains(channel.remoteId)) {
+                logger.info(
+                        "Peer {}: hit too much disconnects, dropping",
+                        Utils.getNodeIdShort(channel.remoteId)
+                );
+                reconnectedIds.remove(channel.remoteId);
+            } else {
+                logger.info(
+                        "Peer {}: disconnected",
+                        Utils.getNodeIdShort(channel.remoteId)
+                );
+                disconnectedIds.add(channel.remoteId);
             }
         }
-        bestChannel.ethSync();
-    }
-
-    public List<Channel> getChannels() {
-        return channels;
     }
 }

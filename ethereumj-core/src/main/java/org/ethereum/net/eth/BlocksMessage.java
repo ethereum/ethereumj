@@ -83,6 +83,6 @@ public class BlocksMessage extends EthMessage {
         for (Block blockData : this.getBlocks()) {
             sb.append("\n   ").append(blockData.toFlatString());
         }
-        return "[" + getCommand().name() + sb.toString() + "]";
+        return "[" + getCommand().name() + " count( " + blocks.size() + " )]";
     }
 }

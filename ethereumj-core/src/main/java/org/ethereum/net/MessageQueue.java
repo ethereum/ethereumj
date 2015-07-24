@@ -3,6 +3,8 @@ package org.ethereum.net;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.Message;
+import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
 
 import io.netty.channel.ChannelHandlerContext;
@@ -72,7 +74,15 @@ public class MessageQueue {
     }
 
     public void disconnect() {
-        ctx.writeAndFlush(DISCONNECT_MESSAGE);
+        disconnect(DISCONNECT_MESSAGE);
+    }
+
+    public void disconnect(ReasonCode reason) {
+        disconnect(new DisconnectMessage(reason));
+    }
+
+    private void disconnect(DisconnectMessage msg) {
+        ctx.writeAndFlush(msg);
         ctx.close();
     }
 

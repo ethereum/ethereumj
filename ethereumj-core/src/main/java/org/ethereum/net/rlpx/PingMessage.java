@@ -20,7 +20,7 @@ public class PingMessage extends Message {
 
     public static PingMessage create(String host, int port, ECKey privKey) {
 
-        long expiration = 3 + System.currentTimeMillis() / 1000;
+        long expiration = 60 + System.currentTimeMillis() / 1000;
 
         /* RLP Encode data */
         byte[] rlpIp = RLP.encodeElement(host.getBytes());
