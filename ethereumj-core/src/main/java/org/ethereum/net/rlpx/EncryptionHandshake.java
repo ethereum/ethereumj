@@ -109,11 +109,12 @@ public class EncryptionHandshake {
         }
     }
 
-    public void handleAuthResponse(ECKey myKey, byte[] initiatePacket, byte[] responsePacket) {
+    public AuthResponseMessage handleAuthResponse(ECKey myKey, byte[] initiatePacket, byte[] responsePacket) {
         AuthResponseMessage response = decryptAuthResponse(responsePacket, myKey);
         remoteEphemeralKey = response.ephemeralPublicKey;
         responderNonce = response.nonce;
         agreeSecret(initiatePacket, responsePacket);
+        return response;
     }
 
     private void agreeSecret(byte[] initiatePacket, byte[] responsePacket) {
