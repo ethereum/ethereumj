@@ -20,6 +20,8 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.*;
 
+import static java.lang.Math.min;
+
 /**
  * The central class for Peer Discovery machinery.
  *
@@ -141,14 +143,15 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 db.delete("nodeStats");
             }
             nodeStatsDB = db.hashMap("nodeStats");
-            TreeSet<Map.Entry<Node, NodeStatistics.Persistent>> sorted = new TreeSet<>(new Comparator<Map.Entry<Node, NodeStatistics.Persistent>>() {
+
+            List<Map.Entry<Node, NodeStatistics.Persistent>> sorted = new ArrayList<>(nodeStatsDB.entrySet());
+            Collections.sort(sorted, new Comparator<Map.Entry<Node, NodeStatistics.Persistent>>() {
                 public int compare(Map.Entry<Node, NodeStatistics.Persistent> o1, Map.Entry<Node, NodeStatistics.Persistent> o2) {
-                    return o1.getValue().reputation - o2.getValue().reputation;
+                    return o2.getValue().reputation - o1.getValue().reputation;
                 }
             });
-            sorted.addAll(nodeStatsDB.entrySet());
 
-            logger.info("Reading Node statistics from DB: " + DB_MAX_LOAD_NODES  + " of " + nodeStatsDB.size() + " nodes.");
+            logger.info("Reading Node statistics from DB: " + min(DB_MAX_LOAD_NODES, nodeStatsDB.size())  + " of " + nodeStatsDB.size() + " nodes.");
 
             int cnt = DB_MAX_LOAD_NODES;
             for (Map.Entry<Node, NodeStatistics.Persistent> entry : sorted) {
