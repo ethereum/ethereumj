@@ -23,7 +23,7 @@ import static org.ethereum.db.IndexedBlockStore.BLOCK_INFO_SERIALIZER;
 
 /**
  *
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 27/01/2015 01:05
  */
 @Configuration

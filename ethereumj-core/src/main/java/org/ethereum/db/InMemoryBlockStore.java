@@ -16,7 +16,7 @@ import static java.math.BigInteger.ZERO;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
- * @author: Roman Mandeleil
+ * @author Roman Mandeleil
  * Created on: 29/01/2015 20:43
  */
 
