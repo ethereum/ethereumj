@@ -32,6 +32,10 @@ public class HashUtil {
         }
     }
 
+    /**
+     * @param input - data for hashing
+     * @return - sha256 hash of the data
+     */
     public static byte[] sha256(byte[] input) {
         return sha256digest.digest(input);
     }
@@ -42,16 +46,27 @@ public class HashUtil {
         return digest.digest();
     }
 
+    /**
+     * hashing chunk of the data
+     * @param input - data for hash
+     * @param start - start of hashing chunk
+     * @param length - length of hashing chunk
+     * @return - sha3 hash of the chunk
+     */
     public static byte[] sha3(byte[] input, int start, int length) {
         return SHA3Helper.sha3(input, start, length);
     }
 
 
-    public static byte[] ripemd160(byte[] message) {
+    /**
+     * @param data - message to hash
+     * @return - reipmd160 hash of the message
+     */
+    public static byte[] ripemd160(byte[] data) {
         Digest digest = new RIPEMD160Digest();
-        if (message != null) {
+        if (data != null) {
             byte[] resBuf = new byte[digest.getDigestSize()];
-            digest.update(message, 0, message.length);
+            digest.update(data, 0, data.length);
             digest.doFinal(resBuf, 0);
             return resBuf;
         }
@@ -61,6 +76,9 @@ public class HashUtil {
 
     /**
      * Calculates RIGTMOST160(SHA3(input)). This is used in address calculations.
+     * *
+     * @param input - data
+     * @return - 20 right bytes of the hash sha3 of the data
      */
     public static byte[] sha3omit12(byte[] input) {
         byte[] hash = sha3(input);
@@ -84,6 +102,9 @@ public class HashUtil {
 
     /**
      * @see #doubleDigest(byte[], int, int)
+     *
+     * @param input -
+     * @return -
      */
     public static byte[] doubleDigest(byte[] input) {
         return doubleDigest(input, 0, input.length);
@@ -92,6 +113,11 @@ public class HashUtil {
     /**
      * Calculates the SHA-256 hash of the given byte range, and then hashes the resulting hash again. This is
      * standard procedure in Bitcoin. The resulting hash is in big endian form.
+     *
+     * @param input -
+     * @param offset -
+     * @param length -
+     * @return -
      */
     public static byte[] doubleDigest(byte[] input, int offset, int length) {
         synchronized (sha256digest) {
@@ -118,6 +144,9 @@ public class HashUtil {
         return Hex.decode(peerId);
     }
 
+    /**
+     * @return - generate random 32 byte hash
+     */
     public static byte[] randomHash(){
 
         byte[] randomHash = new byte[32];

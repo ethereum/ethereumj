@@ -84,6 +84,8 @@ public class SystemProperties {
      * Puts a new config atop of existing stack making the options
      * in the supplied config overriding existing options
      * Once put this config can't be removed
+     *
+     * @param overrideOptions - atop config
      */
     public void overrideParams(Config overrideOptions) {
         config = overrideOptions.withFallback(config);
@@ -94,6 +96,7 @@ public class SystemProperties {
      * Puts a new config atop of existing stack making the options
      * in the supplied config overriding existing options
      * Once put this config can't be removed
+     *
      * @param keyValuePairs [name] [value] [name] [value] ...
      */
     public void overrideParams(String ... keyValuePairs) {
@@ -109,6 +112,8 @@ public class SystemProperties {
      * Puts a new config atop of existing stack making the options
      * in the supplied config overriding existing options
      * Once put this config can't be removed
+     *
+     * @param cliOptions -  command line options to take presidency
      */
     public void overrideParams(Map<String, String> cliOptions) {
         Config cliConf = ConfigFactory.parseMap(cliOptions);
