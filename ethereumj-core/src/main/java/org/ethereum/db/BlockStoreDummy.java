@@ -75,4 +75,15 @@ public class BlockStoreDummy implements BlockStore {
     public long getMaxNumber() {
         return 0;
     }
+
+
+    @Override
+    public void reBranch(Block forkBlock) {
+
+    }
+
+    @Override
+    public BigInteger getTotalDifficultyForHash(byte[] hash) {
+        return null;
+    }
 }

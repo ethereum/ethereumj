@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.math.BigInteger;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,7 +27,7 @@ public class UDPListener {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
     private final int port;
-    private final String address;
+    private String address;
     private final ECKey key;
     private NodeTable table;
     private String[] bootPeers;
@@ -38,7 +40,8 @@ public class UDPListener {
 
     public UDPListener() {
         System.out.println("====== UDPListener() ======");
-        address = SystemProperties.CONFIG.getConfig().getString("peer.bind.ip");
+
+        this.address = punchBindAddress(SystemProperties.CONFIG.getConfig().getString("peer.bind.ip"));
         port = SystemProperties.CONFIG.listenPort();
         key = ECKey.fromPrivate(BigInteger.TEN).decompress();
         if (SystemProperties.CONFIG.peerDiscovery()) {
@@ -47,7 +50,7 @@ public class UDPListener {
     }
 
     public UDPListener(String address, int port) {
-        this.address = address;
+        this.address = punchBindAddress(address);
         this.port = port;
         key = ECKey.fromPrivate(BigInteger.TEN).decompress();
     }
@@ -139,5 +142,24 @@ public class UDPListener {
             port = Integer.parseInt(args[1]);
         }
         new UDPListener(address, port).start(Arrays.copyOfRange(args, 2, args.length));
+    }
+
+
+    private String punchBindAddress(String address){
+        if (address.isEmpty()) {
+
+            logger.info("Bind address wasn't set");
+            logger.info("Punching to identify it");
+
+            try {
+                Socket s = new Socket("www.google.com", 80);
+                address =  s.getLocalAddress().getHostAddress();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        logger.info("UDP local bound to: {}", address);
+        return address;
     }
 }

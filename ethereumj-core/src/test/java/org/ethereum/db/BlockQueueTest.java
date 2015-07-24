@@ -40,7 +40,7 @@ public class BlockQueueTest {
     @Before
     public void setup() throws InstantiationException, IllegalAccessException, URISyntaxException, IOException {
         URL scenario1 = ClassLoader
-                .getSystemResource("blockstore/load.dmp");
+                .getSystemResource("blockstore/light-load.dmp");
 
         File file = new File(scenario1.toURI());
         List<String> strData = Files.readAllLines(file.toPath(), StandardCharsets.UTF_8);
@@ -53,7 +53,7 @@ public class BlockQueueTest {
                     Hex.decode(blockRLP)
             );
 
-            if (block.getNumber() % 1000 == 0)
+            if (block.getNumber() % 10 == 0)
                 logger.info("adding block.hash: [{}] block.number: [{}]",
                         block.getShortHash(),
                         block.getNumber());

@@ -24,9 +24,10 @@ import java.nio.file.Files;
 import java.util.*;
 
 import static java.math.BigInteger.ZERO;
-import static org.ethereum.TestUtils.createIndexMap;
-import static org.ethereum.TestUtils.createMapDB;
+import static org.ethereum.TestUtils.*;
+import static org.ethereum.util.ByteUtil.wrap;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 public class IndexedBlockStoreTest {
@@ -675,6 +676,7 @@ public class IndexedBlockStoreTest {
             indexedBlockStore.flush();
             blocksDB.close();
             indexDB.close();
+
             // testing after: REOPEN
 
             indexDB = createMapDB(testDir);
@@ -685,7 +687,6 @@ public class IndexedBlockStoreTest {
 
             indexedBlockStore = new IndexedBlockStore();
             indexedBlockStore.init(indexMap, blocksDB, null, indexDB);
-
 
             //  testing: getListHashesStartWith(long, long)
 
@@ -705,8 +706,296 @@ public class IndexedBlockStoreTest {
 
     }
 
+    @Test // cache + leveldb + mapdb, multi branch, total difficulty test
+    public void test6() throws IOException {
+
+        BigInteger bi = new BigInteger(32, new Random());
+        String testDir = "test_db_" + bi;
+        SystemProperties.CONFIG.setDataBaseDir(testDir);
+
+        DB indexDB = createMapDB(testDir);
+        Map<Long, List<IndexedBlockStore.BlockInfo>> indexMap = createIndexMap(indexDB);
+
+        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        blocksDB.init();
+
+        try {
+
+            IndexedBlockStore cache = new IndexedBlockStore();
+            cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+
+            IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
+            indexedBlockStore.init(indexMap, blocksDB, cache, indexDB);
+
+            List<Block> bestLine = getRandomChain(Genesis.getInstance().getHash(), 1, 100);
+
+            indexedBlockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+
+            for (int i = 0; i < bestLine.size(); ++i){
+
+                BigInteger td = indexedBlockStore.getTotalDifficulty();
+                Block newBlock = bestLine.get(i);
+                td = td.add(newBlock.getCumulativeDifficulty());
+
+                indexedBlockStore.saveBlock(newBlock, td, true);
+            }
+
+            byte[] forkParentHash = bestLine.get(60).getHash();
+            long forkParentNumber = bestLine.get(60).getNumber();
+            List<Block> forkLine = getRandomChain(forkParentHash, forkParentNumber + 1, 50);
+
+
+            for (int i = 0; i < forkLine.size(); ++i){
+
+                Block newBlock = forkLine.get(i);
+                Block parentBlock = indexedBlockStore.getBlockByHash(newBlock.getParentHash());
+                BigInteger td = indexedBlockStore.getTotalDifficultyForHash(parentBlock.getHash());
+
+                td = td.add(newBlock.getCumulativeDifficulty());
+                indexedBlockStore.saveBlock(newBlock, td, false);
+            }
+
+
+            // calc all TDs
+            Map<ByteArrayWrapper, BigInteger> tDiffs = new HashMap<>();
+            BigInteger td = Genesis.getInstance().getCumulativeDifficulty();
+            for (Block block : bestLine){
+                td = td.add(block.getCumulativeDifficulty());
+                tDiffs.put(wrap(block.getHash()), td);
+            }
+
+            Map<ByteArrayWrapper, BigInteger> tForkDiffs = new HashMap<>();
+            Block block = forkLine.get(0);
+            td = tDiffs.get(wrap(block.getParentHash()));
+            for (Block currBlock : forkLine){
+                td = td.add(currBlock.getCumulativeDifficulty());
+                tForkDiffs.put(wrap(currBlock.getHash()), td);
+            }
+
+
+            // Assert tds on bestLine
+            for ( ByteArrayWrapper hash :  tDiffs.keySet()){
+                BigInteger currTD = tDiffs.get(hash);
+                BigInteger checkTd =  indexedBlockStore.getTotalDifficultyForHash(hash.getData());
+                assertEquals(checkTd, currTD);
+            }
+
+            // Assert tds on forkLine
+            for ( ByteArrayWrapper hash :  tForkDiffs.keySet()){
+                BigInteger currTD = tForkDiffs.get(hash);
+                BigInteger checkTd =  indexedBlockStore.getTotalDifficultyForHash(hash.getData());
+                assertEquals(checkTd, currTD);
+            }
+
+            indexedBlockStore.flush();
+
+            // Assert tds on bestLine
+            for ( ByteArrayWrapper hash :  tDiffs.keySet()){
+                BigInteger currTD = tDiffs.get(hash);
+                BigInteger checkTd =  indexedBlockStore.getTotalDifficultyForHash(hash.getData());
+                assertEquals(checkTd, currTD);
+            }
+
+            // check total difficulty
+            BigInteger totalDifficulty  = indexedBlockStore.getTotalDifficulty();
+            Block bestBlock = bestLine.get(bestLine.size() - 1);
+            BigInteger totalDifficulty_ = tDiffs.get(wrap(bestBlock.getHash()));
+
+            assertEquals(totalDifficulty_, totalDifficulty);
+
+            // Assert tds on forkLine
+            for ( ByteArrayWrapper hash :  tForkDiffs.keySet()){
+                BigInteger currTD = tForkDiffs.get(hash);
+                BigInteger checkTd =  indexedBlockStore.getTotalDifficultyForHash(hash.getData());
+                assertEquals(checkTd, currTD);
+            }
+
+
+        } finally {
+            blocksDB.close();
+            indexDB.close();
+            FileUtil.recursiveDelete(testDir);
+        }
+    }
+
+    @Test // cache + leveldb + mapdb, multi branch, total re-branch test
+    public void test7() throws IOException {
+
+        BigInteger bi = new BigInteger(32, new Random());
+        String testDir = "test_db_" + bi;
+        SystemProperties.CONFIG.setDataBaseDir(testDir);
+
+        DB indexDB = createMapDB(testDir);
+        Map<Long, List<IndexedBlockStore.BlockInfo>> indexMap = createIndexMap(indexDB);
+
+        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        blocksDB.init();
+
+        try {
+
+            IndexedBlockStore cache = new IndexedBlockStore();
+            cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+
+            IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
+            indexedBlockStore.init(indexMap, blocksDB, cache, indexDB);
+
+            List<Block> bestLine = getRandomChain(Genesis.getInstance().getHash(), 1, 100);
+
+            indexedBlockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+
+            for (int i = 0; i < bestLine.size(); ++i){
+
+                BigInteger td = indexedBlockStore.getTotalDifficulty();
+                Block newBlock = bestLine.get(i);
+                td = td.add(newBlock.getCumulativeDifficulty());
+
+                indexedBlockStore.saveBlock(newBlock, td, true);
+            }
+
+            byte[] forkParentHash = bestLine.get(60).getHash();
+            long forkParentNumber = bestLine.get(60).getNumber();
+            List<Block> forkLine = getRandomChain(forkParentHash, forkParentNumber + 1, 50);
+
+
+            for (int i = 0; i < forkLine.size(); ++i){
+
+                Block newBlock = forkLine.get(i);
+                Block parentBlock = indexedBlockStore.getBlockByHash(newBlock.getParentHash());
+                BigInteger td = indexedBlockStore.getTotalDifficultyForHash(parentBlock.getHash());
+
+                td = td.add(newBlock.getCumulativeDifficulty());
+                indexedBlockStore.saveBlock(newBlock, td, false);
+            }
+
+
+            Block bestBlock = bestLine.get(bestLine.size() - 1);
+            Block forkBlock = forkLine.get(forkLine.size() - 1);
+
+            // check total difficulty
+            BigInteger totalDifficulty  = indexedBlockStore.getTotalDifficulty();
+            BigInteger totalDifficulty_ = indexedBlockStore.getTotalDifficultyForHash( bestBlock.getHash() );
+            assertEquals(totalDifficulty_, totalDifficulty);
+
+
+            indexedBlockStore.reBranch(forkBlock);
+
+            // check total difficulty
+            totalDifficulty  = indexedBlockStore.getTotalDifficulty();
+            totalDifficulty_ = indexedBlockStore.getTotalDifficultyForHash( forkBlock.getHash() );
+            assertEquals(totalDifficulty_, totalDifficulty);
+
+
+        } finally {
+            blocksDB.close();
+            indexDB.close();
+            FileUtil.recursiveDelete(testDir);
+        }
+    }
+
+    @Test // cache + leveldb + mapdb, multi branch, total re-branch test
+    public void test8() throws IOException {
+
+        BigInteger bi = new BigInteger(32, new Random());
+        String testDir = "test_db_" + bi;
+        SystemProperties.CONFIG.setDataBaseDir(testDir);
+
+        DB indexDB = createMapDB(testDir);
+        Map<Long, List<IndexedBlockStore.BlockInfo>> indexMap = createIndexMap(indexDB);
+
+        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        blocksDB.init();
+
+        try {
+
+            IndexedBlockStore cache = new IndexedBlockStore();
+            cache.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+
+            IndexedBlockStore indexedBlockStore = new IndexedBlockStore();
+            indexedBlockStore.init(indexMap, blocksDB, cache, indexDB);
+
+            List<Block> bestLine = getRandomChain(Genesis.getInstance().getHash(), 1, 100);
+
+            indexedBlockStore.saveBlock(Genesis.getInstance(), Genesis.getInstance().getCumulativeDifficulty(), true);
+
+            for (int i = 0; i < bestLine.size(); ++i){
+
+                BigInteger td = indexedBlockStore.getTotalDifficulty();
+                Block newBlock = bestLine.get(i);
+                td = td.add(newBlock.getCumulativeDifficulty());
+
+                indexedBlockStore.saveBlock(newBlock, td, true);
+            }
+
+            byte[] forkParentHash = bestLine.get(60).getHash();
+            long forkParentNumber = bestLine.get(60).getNumber();
+            List<Block> forkLine = getRandomChain(forkParentHash, forkParentNumber + 1, 10);
+
+
+            for (int i = 0; i < forkLine.size(); ++i){
+
+                Block newBlock = forkLine.get(i);
+                Block parentBlock = indexedBlockStore.getBlockByHash(newBlock.getParentHash());
+                BigInteger td = indexedBlockStore.getTotalDifficultyForHash(parentBlock.getHash());
+
+                td = td.add(newBlock.getCumulativeDifficulty());
+                indexedBlockStore.saveBlock(newBlock, td, false);
+            }
+
+
+            Block bestBlock = bestLine.get(bestLine.size() - 1);
+            Block forkBlock = forkLine.get(forkLine.size() - 1);
+
+            assertTrue( indexedBlockStore.getBestBlock().getNumber() == 100);
+
+            // check total difficulty
+            BigInteger totalDifficulty  = indexedBlockStore.getTotalDifficulty();
+            BigInteger totalDifficulty_ = indexedBlockStore.getTotalDifficultyForHash( bestBlock.getHash() );
+            assertEquals(totalDifficulty_, totalDifficulty);
+
+
+            indexedBlockStore.reBranch(forkBlock);
+
+            assertTrue( indexedBlockStore.getBestBlock().getNumber() == 71);
+
+            // check total difficulty
+            totalDifficulty  = indexedBlockStore.getTotalDifficulty();
+            totalDifficulty_ = indexedBlockStore.getTotalDifficultyForHash( forkBlock.getHash() );
+            assertEquals(totalDifficulty_, totalDifficulty);
+
+
+            // Assert that all fork moved to the main line
+            for (Block currBlock : forkLine){
+
+                Long number = currBlock.getNumber();
+                Block chainBlock = indexedBlockStore.getChainBlockByNumber(number);
+                assertEquals(currBlock.getShortHash(), chainBlock.getShortHash());
+            }
+
+
+            // Assert that all fork moved to the main line
+            // re-branch back to previous line and assert that
+            // all the block really moved
+            bestBlock = bestLine.get(bestLine.size() - 1);
+            indexedBlockStore.reBranch(bestBlock);
+            for (Block currBlock : bestLine){
+
+                Long number = currBlock.getNumber();
+                Block chainBlock = indexedBlockStore.getChainBlockByNumber(number);
+                assertEquals(currBlock.getShortHash(), chainBlock.getShortHash());
+            }
+
+
+        } finally {
+            blocksDB.close();
+            indexDB.close();
+            FileUtil.recursiveDelete(testDir);
+        }
+    }
+
+
+
 // todo: test this
-//    public Block getBestBlock()
+
 //    public byte[] getBlockHashByNumber(long blockNumber)
 
 }

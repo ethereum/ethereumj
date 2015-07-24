@@ -200,4 +200,7 @@ public interface Repository {
     void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                      HashMap<ByteArrayWrapper, ContractDetails> cacheDetails);
 
+
+    public Repository getSnapshotTo(byte[] root);
+
 }

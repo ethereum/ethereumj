@@ -33,6 +33,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.wrap;
 
@@ -61,9 +62,10 @@ public class RepositoryImpl implements Repository {
     private final ReentrantLock lock = new ReentrantLock();
     private final AtomicInteger accessCounter = new AtomicInteger();
 
+    private boolean isSnapshot = false;
 
     public RepositoryImpl() {
-        this(DETAILS_DB, STATE_DB);
+
     }
 
     public RepositoryImpl(boolean createDb) {
@@ -111,16 +113,19 @@ public class RepositoryImpl implements Repository {
             }
         });
     }
-    
+
     @Override
     public void close() {
         doWithLockedAccess(new Functional.InvokeWrapper() {
             @Override
             public void invoke() {
+
                 if (detailsDB != null) {
                     detailsDB.close();
                     detailsDB = null;
                 }
+
+
                 if (stateDB != null) {
                     stateDB.close();
                     stateDB = null;
@@ -492,6 +497,25 @@ public class RepositoryImpl implements Repository {
         return doWithAccessCounting(new Functional.InvokeWrapperWithResult<ContractDetails>() {
             @Override
             public ContractDetails invoke() {
+
+                // That part is important cause if we are
+                // in repository snapshot we have to sync
+                // each details object storage to the
+                //  snapshot state.
+                if (isSnapshot){
+
+                    AccountState accountState = getAccountState(addr);
+                    byte[] storageRoot = EMPTY_TRIE_HASH;
+                    if (accountState != null)
+                        storageRoot = getAccountState(addr).getStateRoot();
+                    ContractDetails details =  dds.get(addr);
+
+                    if (details != null)
+                        details = details.getSnapshotTo(storageRoot);
+
+                    return  details;
+                }
+
                 return dds.get(addr);
             }
         });
@@ -597,5 +621,28 @@ public class RepositoryImpl implements Repository {
                 return null;
             }
         });
+    }
+
+
+    @Override
+    public Repository getSnapshotTo(byte[] root){
+
+        TrieImpl trie = new SecureTrie(stateDS);
+        trie.setRoot(root);
+        trie.setCache(((TrieImpl)(worldState)).getCache());
+
+        RepositoryImpl repo = new RepositoryImpl();
+        repo.worldState = trie;
+        repo.stateDB = this.stateDB;
+        repo.stateDS = this.stateDS;
+
+        repo.detailsDB = this.detailsDB;
+        repo.detailsDS = this.detailsDS;
+
+        repo.dds = this.dds;
+
+        repo.isSnapshot = true;
+
+        return repo;
     }
 }

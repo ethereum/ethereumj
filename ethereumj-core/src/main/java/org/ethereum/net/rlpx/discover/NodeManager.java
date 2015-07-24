@@ -135,7 +135,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     private void dbRead() {
         try {
-            db = mapDBFactory.createTransactionalDB("discovery");
+            db = mapDBFactory.createTransactionalDB("network/discovery");
             if (SystemProperties.CONFIG.databaseReset()) {
                 logger.info("Resetting DB Node statistics...");
                 db.delete("nodeStats");

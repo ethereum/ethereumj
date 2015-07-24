@@ -164,7 +164,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         int fromIndex = max(offset, 0);
         int toIndex = min(keys.size(), offset + limit);
         if (fromIndex >= toIndex) return Collections.EMPTY_MAP;
-        
+
         List<DataWord> sortedKeys = new ArrayList<>(keys);
         Collections.sort(sortedKeys);
 
@@ -173,7 +173,7 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         for (DataWord key : keys) {
             result.put(key, storage.get(key));
         }
-        
+
         return result;
     }
 
@@ -258,5 +258,10 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         origContract.setDirty(this.dirty || origContract.isDirty());
     }
 
+
+    @Override
+    public ContractDetails getSnapshotTo(byte[] hash) {
+        throw new UnsupportedOperationException("No snapshot option during cache state");
+    }
 }
 

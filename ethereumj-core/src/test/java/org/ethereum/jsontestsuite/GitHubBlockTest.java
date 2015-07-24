@@ -14,17 +14,16 @@ import java.util.HashSet;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "57a5bc6cee88cb09577475fbd8f15c87e6e86fd1";
+    public String shacommit = "bd07ab22cdc811bd553ef199a8585a0eb1862b28";
 
-    @Ignore
     @Test
     public void runSingleTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcUncleTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "oneUncleGeneration7");
+        String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcTotalDifficultyTest.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "lotsOfLeafs");
     }
 
 
-//    @Ignore
+
     @Test
     public void runBCInvalidHeaderTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -32,7 +31,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json,excluded);
     }
 
-//    @Ignore
+
     @Test
     public void runBCInvalidRLPTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -49,12 +48,11 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
+
     @Test
     public void runBCUncleHeaderValidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcUncleHeaderValiditiy.json", shacommit);
-        //TODO need to make sure these are not passing on accident
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
@@ -74,12 +72,12 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
     @Test
     public void runBCBlockGasLimitTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcBlockGasLimitTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-//        excluded.add("GasUsedHigherThanBlockGasLimitButNotWithRefundsSuicideLast");
+        excluded.add("SuicideTransaction");
+        excluded.add("GasUsedHigherThanBlockGasLimitButNotWithRefundsSuicideFirst");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
@@ -99,7 +97,6 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
     @Test
     public void runBCGasPricerTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcGasPricerTest.json", shacommit);
@@ -107,19 +104,13 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-//    @Ignore
     @Test
     public void runBCTotalDifficultyTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcTotalDifficultyTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-        excluded.add("lotsOfBranchesOverrideAtTheEnd");
-        excluded.add("sideChainWithNewMaxDifficultyStartingFromBlock3AfterBlock4");
-        excluded.add("uncleBlockAtBlock3afterBlock4");
-        excluded.add("lotsOfBranches");
-        excluded.add("lotsOfLeafs");
-        excluded.add("lotsOfBranchesOverrideAtTheMiddle");
-        excluded.add("sideChainWithMoreTransactions");
         excluded.add("uncleBlockAtBlock3AfterBlock3");
+        excluded.add("lotsOfLeafs");
+        excluded.add("sideChainWithMoreTransactions");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 

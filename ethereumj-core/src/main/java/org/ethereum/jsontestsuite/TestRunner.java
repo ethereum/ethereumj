@@ -2,13 +2,17 @@ package org.ethereum.jsontestsuite;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
+import org.ethereum.core.ImportResult;
 import org.ethereum.core.Wallet;
+
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.*;
 import org.ethereum.facade.Repository;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
 import org.ethereum.jsontestsuite.validators.BlockHeaderValidator;
+import org.ethereum.jsontestsuite.validators.RepositoryValidator;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -22,6 +26,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.ethereum.jsontestsuite.Utils.parseData;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.vm.VMUtils.saveProgramTraceFile;
@@ -62,9 +67,9 @@ public class TestRunner {
         Block genesis = BlockBuilder.build(testCase.getGenesisBlockHeader(), null, null);
         Repository repository = RepositoryBuilder.build(testCase.getPre());
 
-        BlockStore blockStore = new InMemoryBlockStore();
-        blockStore.saveBlock(genesis, BigInteger.ZERO, true);
-        blockStore.setSessionFactory(SessionFactoryProvider.sessionFactory());
+        IndexedBlockStore blockStore = new IndexedBlockStore();
+        blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+        blockStore.saveBlock(genesis, genesis.getCumulativeDifficulty(), true);
 
         Wallet wallet = new Wallet();
         AdminInfo adminInfo = new AdminInfo();
@@ -72,17 +77,13 @@ public class TestRunner {
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
+        blockchain.byTest = true;
 
         blockchain.setBestBlock(genesis);
-        blockchain.setTotalDifficulty(BigInteger.ZERO);
+        blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);
 
-
-        // todo: validate root of the genesis   *!!!*
-
-
-        bestStateRoot = Hex.toHexString(genesis.getStateRoot());
         /* 2 */ // Create block traffic list
         List<Block> blockTraffic = new ArrayList<>();
         for (BlockTck blockTck : testCase.getBlocks()) {
@@ -94,7 +95,6 @@ public class TestRunner {
                 && (blockTck.getUncleHeaders() == null)
                 && (blockTck.getBlockHeader() == null));
 
-            //DEBUG System.out.println(" --> " + setNewStateRoot);
             Block tBlock = null;
             try {
                 byte[] rlp = parseData(blockTck.getRlp());
@@ -106,12 +106,7 @@ public class TestRunner {
                 if (!outputSummary.isEmpty()){
                     for (String output : outputSummary)
                         logger.error("%s", output);
-
-//                    System.exit(-1);
                 }
-
-                if(setNewStateRoot)
-                  bestStateRoot = Hex.toHexString(tBlock.getStateRoot());
 
                 blockTraffic.add(tBlock);
             } catch (Exception e) {
@@ -121,23 +116,28 @@ public class TestRunner {
 
         /* 3 */ // Inject blocks to the blockchain execution
         for (Block block : blockTraffic) {
-            //DEBUG System.out.println(" Examine block: "); System.out.println(block.toString());
-            blockchain.tryToConnect(block);
+
+            ImportResult importResult = blockchain.tryToConnect(block);
+            logger.debug("{} ~ {} difficulty: {} ::: {}", block.getShortHash(), shortHash(block.getParentHash()),
+                    block.getCumulativeDifficulty(), importResult.toString());
         }
 
         //Check state root matches last valid block
         List<String> results = new ArrayList<>();
         String currRoot = Hex.toHexString(repository.getRoot());
-        if (!bestStateRoot.equals(currRoot)){
+
+        byte[] bestHash = Hex.decode(testCase.getLastblockhash());
+        String finalRoot = Hex.toHexString(blockStore.getBlockByHash(bestHash).getStateRoot());
+
+        if (!finalRoot.equals(currRoot)){
             String formattedString = String.format("Root hash doesn't match best: expected: %s current: %s",
-                    bestStateRoot, currRoot);
+                    finalRoot, currRoot);
             results.add(formattedString);
         }
 
         Repository postRepository = RepositoryBuilder.build(testCase.getPostState());
-
-        //Uncomment this if you want POST debugging checks enabled
-        //results.addAll(RepositoryValidator.rootValid(repository, postRepository));
+        List<String> repoResults = RepositoryValidator.valid(repository, postRepository);
+        results.addAll(repoResults);
 
         return results;
     }

@@ -242,5 +242,14 @@ public class InMemoryBlockStore implements BlockStore{
         this.sessionFactory = sessionFactory;
     }
 
+    @Override
+    public void reBranch(Block forkBlock) {
+
+    }
+
+    @Override
+    public BigInteger getTotalDifficultyForHash(byte[] hash) {
+        return null;
+    }
 }
 
