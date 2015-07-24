@@ -13,10 +13,10 @@ import java.math.BigInteger;
  */
 public interface ProgramInvokeFactory {
 
-    public ProgramInvoke createProgramInvoke(Transaction tx, Block block,
-                                             Repository repository, BlockStore blockStore);
+    ProgramInvoke createProgramInvoke(Transaction tx, Block block,
+                                      Repository repository, BlockStore blockStore);
 
-    public ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
+    ProgramInvoke createProgramInvoke(Program program, DataWord toAddress,
                                              DataWord inValue, DataWord inGas,
                                              BigInteger balanceInt, byte[] dataIn,
                                              Repository repository, BlockStore blockStore, boolean byTestingSuite);

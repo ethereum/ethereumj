@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
@@ -196,7 +198,6 @@ public class TransactionExecutor {
 
                 this.vm = new VM();
                 this.program = new Program(code, programInvoke);
-
             } else {
 
                 m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
@@ -218,8 +219,6 @@ public class TransactionExecutor {
             this.vm = new VM();
             this.program = new Program(tx.getData(), programInvoke);
         } else {
-
-
             m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
             cacheTrack.createAccount(tx.getContractAddress());
         }
@@ -228,7 +227,6 @@ public class TransactionExecutor {
         transfer(cacheTrack, tx.getSender(), newContractAddress, endowment);
 
     }
-
 
     public void go() {
         if (!readyToExecute) return;
