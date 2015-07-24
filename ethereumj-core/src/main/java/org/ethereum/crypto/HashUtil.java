@@ -10,6 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Random;
 
 import static java.util.Arrays.copyOfRange;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -115,5 +116,17 @@ public class HashUtil {
             peerId = Hex.toHexString(peerIdBytes);
 
         return Hex.decode(peerId);
+    }
+
+    public static byte[] randomHash(){
+
+        byte[] randomHash = new byte[32];
+        Random random = new Random();
+        random.nextBytes(randomHash);
+        return randomHash;
+    }
+
+    public static String shortHash(byte[] hash){
+        return Hex.toHexString(hash).substring(0, 6);
     }
 }

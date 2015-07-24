@@ -25,9 +25,9 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
 
-    private String name;
-    private DB db;
-    private boolean alive;
+    String name;
+    DB db;
+    boolean alive;
 
     public LevelDbDataSource() {
     }

@@ -12,13 +12,13 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
-import static org.ethereum.core.ImportResult.SUCCESS;
+import static org.ethereum.core.ImportResult.IMPORTED_BEST;
 
 /**
  * The processing queue for blocks to be validated and added to the blockchain.
@@ -94,8 +94,11 @@ public class BlockQueue {
                 }
 
 
-                if (importResult == SUCCESS)
-                    logger.info("Success importing: block number: {}", block.getNumber());
+                if (importResult == IMPORTED_BEST)
+                    logger.info("Success importing BEST: block number: {}", block.getNumber());
+
+                if (importResult == IMPORTED_NOT_BEST)
+                    logger.info("Success importing NOT_BEST: block number: {}", block.getNumber());
 
             } catch (Throwable e) {
                 logger.error("Error: {} ", e);
