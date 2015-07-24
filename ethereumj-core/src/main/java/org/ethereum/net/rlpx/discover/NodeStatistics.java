@@ -82,7 +82,10 @@ public class NodeStatistics {
     }
 
     int getSessionReputation() {
-        int discoverReput = isPredefined ? REPUTATION_PREDEFINED : 0;
+        return getSessionFairReputation() + (isPredefined ? REPUTATION_PREDEFINED : 0);
+    }
+    int getSessionFairReputation() {
+        int discoverReput = 0;
 
         discoverReput += min(discoverInPong.get(), 10) * (discoverOutPing.get() == discoverInPong.get() ? 2 : 1);
         discoverReput += min(discoverInNeighbours.get(), 10) * 2;
@@ -93,10 +96,19 @@ public class NodeStatistics {
         rlpxReput += rlpxHandshake.get() > 0 ? 20 : 0;
         rlpxReput += min(rlpxInMessages.get(), 10) * 3;
 
-        if (disconnected || rlpxLastRemoteDisconnectReason != null || rlpxLastLocalDisconnectReason != null) {
-            if (rlpxLastLocalDisconnectReason != ReasonCode.REQUESTED) {
-                // something finally went wrong decrease RLPx reputation
-                rlpxReput /= 2;
+        if (disconnected) {
+            if (rlpxLastLocalDisconnectReason == null && rlpxLastRemoteDisconnectReason == null) {
+                // means connection was dropped without reporting any reason - bad
+                rlpxReput *= 0.3;
+            } else if (rlpxLastLocalDisconnectReason != ReasonCode.REQUESTED) {
+                // the disconnect was not initiated by discover mode
+                if (rlpxLastRemoteDisconnectReason == ReasonCode.TOO_MANY_PEERS) {
+                    // The peer is popular, but we were unlucky
+                    rlpxReput *= 0.8;
+                } else {
+                    // other disconnect reasons
+                    rlpxReput *= 0.5;
+                }
             }
         }
 
@@ -143,7 +155,7 @@ public class NodeStatistics {
 
     Persistent getPersistent() {
         Persistent persistent = new Persistent();
-        persistent.reputation = (getSessionReputation() + savedReputation) / 2;
+        persistent.reputation = (getSessionFairReputation() + savedReputation) / 2;
         return persistent;
     }
 
