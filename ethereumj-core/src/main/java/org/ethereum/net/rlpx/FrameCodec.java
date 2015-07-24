@@ -82,6 +82,9 @@ public class FrameCodec {
         headBuffer[0] = (byte)(totalSize >> 16);
         headBuffer[1] = (byte)(totalSize >> 8);
         headBuffer[2] = (byte)(totalSize);
+        byte[] headerData = RLP.encodeList(RLP.encodeInt(0));
+        System.arraycopy(headerData, 0, headBuffer, 3, headerData.length);
+
         enc.processBytes(headBuffer, 0, 16, headBuffer, 0);
 
         // Header MAC
