@@ -12,6 +12,8 @@ import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 /**
  * @author Mikhail Kalinin
  * @since 09.07.2015
@@ -49,6 +51,13 @@ public class BlockQueueImpl implements BlockQueue {
                     hashes = db.hashSetCreate(HASH_SET_NAME)
                             .serializer(Serializer.BYTE_ARRAY)
                             .makeOrGet();
+
+                    if(CONFIG.databaseReset()) {
+                        blocks.clear();
+                        hashes.clear();
+                        db.commit();
+                    }
+
                     index = new ArrayList<>(blocks.keySet());
                     sortIndex();
                     initDone = true;
