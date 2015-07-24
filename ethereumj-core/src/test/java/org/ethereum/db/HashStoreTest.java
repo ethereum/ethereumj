@@ -63,12 +63,15 @@ public class HashStoreTest {
             hashStore.add(hash);
         }
 
-        // testing: closing and opening again
+        // testing: closing and opening again (HashStore should be clean)
         hashStore.close();
         hashStore.open();
+        assertNull(hashStore.poll());
 
         // testing: peek() and poll()
-        assertArrayEquals(hashes.get(0), hashStore.peek());
+        for(byte[] hash : hashes) {
+            hashStore.add(hash);
+        }
         for(byte[] hash : hashes) {
             assertArrayEquals(hash, hashStore.poll());
         }
