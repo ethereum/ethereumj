@@ -83,6 +83,8 @@ public class WorldManager {
         String secret = CONFIG.coinbaseSecret();
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());
         wallet.importKey(cbAddr);
+
+        loadBlockchain();
     }
 
     public void addListener(EthereumListener listener) {
