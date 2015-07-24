@@ -40,7 +40,7 @@ public class ProgramTraceListener {
     }
 
     public void onStorageClear() {
-        actions.addStorageClear();
+        if (enabled) actions.addStorageClear();
     }
 
     public OpActions resetActions() {

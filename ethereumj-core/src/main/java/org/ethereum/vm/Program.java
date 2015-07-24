@@ -74,9 +74,9 @@ public class Program {
             this.invokeData = invokeData;
             this.invokeHash = invokeData.hashCode();
 
-            Repository repository = invokeData.getRepository();
-            this.result.setRepository(setupTraceListener(new Storage(this.programAddress, repository)));
-            this.programTrace.initStorage(repository.getContractDetails(this.programAddress.getLast20Bytes()));
+            Storage storage = new Storage(this.programAddress, invokeData.getRepository());
+            this.result.setRepository(setupTraceListener(storage));
+            this.programTrace.initStorage(invokeData);
 
             precompile();
         }

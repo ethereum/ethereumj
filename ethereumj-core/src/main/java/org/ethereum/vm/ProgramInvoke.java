@@ -9,46 +9,46 @@ import org.ethereum.facade.Repository;
  */
 public interface ProgramInvoke {
 
-    public DataWord getOwnerAddress();
+    DataWord getOwnerAddress();
 
-    public DataWord getBalance();
+    DataWord getBalance();
 
-    public DataWord getOriginAddress();
+    DataWord getOriginAddress();
 
-    public DataWord getCallerAddress();
+    DataWord getCallerAddress();
 
-    public DataWord getMinGasPrice();
+    DataWord getMinGasPrice();
 
-    public DataWord getGas();
+    DataWord getGas();
 
-    public DataWord getCallValue();
+    DataWord getCallValue();
 
-    public DataWord getDataSize();
+    DataWord getDataSize();
 
-    public DataWord getDataValue(DataWord indexData);
+    DataWord getDataValue(DataWord indexData);
 
-    public byte[] getDataCopy(DataWord offsetData, DataWord lengthData);
+    byte[] getDataCopy(DataWord offsetData, DataWord lengthData);
 
-    public DataWord getPrevHash();
+    DataWord getPrevHash();
 
-    public DataWord getCoinbase();
+    DataWord getCoinbase();
 
-    public DataWord getTimestamp();
+    DataWord getTimestamp();
 
-    public DataWord getNumber();
+    DataWord getNumber();
 
-    public DataWord getDifficulty();
+    DataWord getDifficulty();
 
-    public DataWord getGaslimit();
+    DataWord getGaslimit();
 
-    public boolean byTransaction();
+    boolean byTransaction();
 
     boolean byTestingSuite();
 
-    public int getCallDeep();
+    int getCallDeep();
 
-    public Repository getRepository();
+    Repository getRepository();
 
-    public BlockStore getBlockStore();
+    BlockStore getBlockStore();
 
 }
