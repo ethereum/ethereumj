@@ -40,21 +40,6 @@ public class BlockWrapper {
         return importFailedAt;
     }
 
-    public void setImportFailedAt(long importFailedAt) {
-        this.importFailedAt = importFailedAt;
-    }
-
-    public byte[] getBytes() {
-        byte[] blockBytes = block.getEncoded();
-        byte[] importFailedBytes = BigInteger.valueOf(importFailedAt).toByteArray();
-        byte[] bytes = new byte[blockBytes.length + importFailedBytes.length + 2];
-        bytes[0] = (byte) (newBlock ? 1 : 0);
-        bytes[1] = (byte) importFailedBytes.length;
-        System.arraycopy(importFailedBytes, 0, bytes, 2, importFailedBytes.length);
-        System.arraycopy(blockBytes, 0, bytes, importFailedBytes.length + 2, blockBytes.length);
-        return bytes;
-    }
-
     public byte[] getHash() {
         return block.getHash();
     }
@@ -73,6 +58,31 @@ public class BlockWrapper {
 
     public byte[] getParentHash() {
         return block.getParentHash();
+    }
+
+    public void importFailed() {
+        if (importFailedAt == 0) {
+            importFailedAt = System.currentTimeMillis();
+        }
+    }
+
+    public long timeSinceFail() {
+        if(importFailedAt == 0) {
+            return 0;
+        } else {
+            return System.currentTimeMillis() - importFailedAt;
+        }
+    }
+
+    public byte[] getBytes() {
+        byte[] blockBytes = block.getEncoded();
+        byte[] importFailedBytes = BigInteger.valueOf(importFailedAt).toByteArray();
+        byte[] bytes = new byte[blockBytes.length + importFailedBytes.length + 2];
+        bytes[0] = (byte) (newBlock ? 1 : 0);
+        bytes[1] = (byte) importFailedBytes.length;
+        System.arraycopy(importFailedBytes, 0, bytes, 2, importFailedBytes.length);
+        System.arraycopy(blockBytes, 0, bytes, importFailedBytes.length + 2, blockBytes.length);
+        return bytes;
     }
 
     private void parse(byte[] bytes) {

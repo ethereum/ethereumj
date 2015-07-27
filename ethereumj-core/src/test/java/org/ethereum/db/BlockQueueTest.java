@@ -71,6 +71,7 @@ public class BlockQueueTest {
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
         CONFIG.setDataBaseDir(testDb);
+        CONFIG.setDatabaseReset(false);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         blockQueue = new BlockQueueImpl();

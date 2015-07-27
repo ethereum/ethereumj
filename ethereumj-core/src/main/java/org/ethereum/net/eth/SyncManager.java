@@ -1,5 +1,7 @@
 package org.ethereum.net.eth;
 
+import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
@@ -34,13 +36,21 @@ public class SyncManager {
 
     private static final int PEERS_COUNT = 5;
     private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
+    private static final long BLOCKS_GAP_THRESHOLD = 20;
 
     private SyncState state = SyncState.INIT;
     private EthHandler masterPeer;
-    private List<EthHandler> peers = new CopyOnWriteArrayList<>();
+    private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
+    private boolean shouldNotifyDone = true;
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
+
+    private BigInteger lowerUsefulDifficulty;
+
+    private final Map<String, Long> connectTimestamps = new HashMap<>();
+
+    private DiscoverListener discoverListener;
 
     @Autowired
     private Blockchain blockchain;
@@ -53,13 +63,6 @@ public class SyncManager {
 
     @Autowired
     private EthereumListener ethereumListener;
-
-    private byte[] bestHash;
-    private BigInteger lowerUsefulDifficulty;
-
-    private final Map<String, Long> connectTimestamps = new HashMap<>();
-
-    private DiscoverListener discoverListener;
 
     @PostConstruct
     public void init() {
@@ -250,9 +253,7 @@ public class SyncManager {
             connectTimestamps.remove(peer.getPeerId());
         }
 
-        StatusMessage msg = peer.getHandshakeStatusMessage();
-
-        BigInteger peerTotalDifficulty = msg.getTotalDifficultyAsBigInt();
+        BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
         if(blockchain.getTotalDifficulty().compareTo(peerTotalDifficulty) > 0) {
             if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
@@ -263,6 +264,9 @@ public class SyncManager {
             // TODO report about lower total difficulty
             return;
         }
+
+        peers.add(peer);
+        logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
 
         BlockQueue chainQueue = blockchain.getQueue();
         BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
@@ -277,23 +281,36 @@ public class SyncManager {
             logger.debug(
                     "Peer {}: best hash [{}]",
                     Utils.getNodeIdShort(peer.getPeerId()),
-                    Hex.toHexString(msg.getBestHash())
+                    Hex.toHexString(peer.getBestHash())
             );
-
-            bestHash = msg.getBestHash();
-            masterPeer = peer;
-            chainQueue.setHighestTotalDifficulty(peerTotalDifficulty);
-
             changeState(SyncState.HASH_RETRIEVING);
-        }
-
-        if(state == SyncState.BLOCK_RETRIEVING) {
+        } else if(state == SyncState.BLOCK_RETRIEVING) {
             peer.changeState(SyncState.BLOCK_RETRIEVING);
         }
+    }
 
-        logger.info("Peer {}: adding to pool", Utils.getNodeIdShort(peer.getPeerId()));
-
-        peers.add(peer);
+    public void recoverGap(BlockWrapper wrapper) {
+        Block bestBlock = blockchain.getBestBlock();
+        long gap = wrapper.getNumber() - bestBlock.getNumber();
+        if(logger.isInfoEnabled()) {
+            logger.info(
+                    "Try to recover gap for {} block.number [{}] vs best.number [{}]",
+                    wrapper.isNewBlock() ? "NEW" : "",
+                    wrapper.getNumber(),
+                    bestBlock.getNumber()
+            );
+        }
+        if(wrapper.isNewBlock() && gap > BLOCKS_GAP_THRESHOLD) {
+            if(blockchain.getQueue().isHashesEmpty() &&
+                    (state == SyncState.BLOCK_RETRIEVING || state == SyncState.DONE_SYNC)) {
+                changeState(SyncState.HASH_RETRIEVING);
+            } else if(logger.isInfoEnabled()) {
+                logger.info("Main sync is incomplete, postpone NEW blocks gap recovery", wrapper.getNumber());
+            }
+        } else {
+            logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
+            blockchain.getQueue().getHashStore().addFirst(wrapper.getParentHash());
+        }
     }
 
     public synchronized void changeState(SyncState newState) {
@@ -301,21 +318,33 @@ public class SyncManager {
             return;
         }
         if(newState == SyncState.HASH_RETRIEVING) {
+            if(peers.isEmpty()) {
+                return;
+            }
+            masterPeer = Collections.max(peers, new Comparator<EthHandler>() {
+                @Override
+                public int compare(EthHandler p1, EthHandler p2) {
+                    return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
+                }
+            });
             changePeersState(SyncState.IDLE);
-            blockchain.getQueue().setBestHash(bestHash);
+            BlockQueue queue = blockchain.getQueue();
+            queue.setHighestTotalDifficulty(masterPeer.getTotalDifficulty());
+            queue.setBestHash(masterPeer.getBestHash());
             masterPeer.changeState(SyncState.HASH_RETRIEVING);
+            logger.info("Hashes retrieving initiated");
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
             changePeersState(SyncState.BLOCK_RETRIEVING);
+            logger.info("Blocks retrieving initiated");
         }
         if(newState == SyncState.DONE_SYNC) {
             changePeersState(SyncState.IDLE);
-            peers.clear();
-            connectTimestamps.clear();
-            nodeManager.removeDiscoverListener(discoverListener);
-            worker.shutdown();
-            logWorker.shutdown();
-            ethereumListener.onSyncDone();
+            if(shouldNotifyDone) {
+                shouldNotifyDone = false;
+                ethereumListener.onSyncDone();
+            }
+            logger.info("Synchronization is finished");
         }
         this.state = newState;
     }

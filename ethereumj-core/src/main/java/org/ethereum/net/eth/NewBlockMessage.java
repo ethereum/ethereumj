@@ -6,6 +6,8 @@ import org.ethereum.util.RLPList;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
+
 /**
  * Wrapper around an Ethereum Blocks message on the network
  *
@@ -52,6 +54,10 @@ public class NewBlockMessage extends EthMessage {
     public byte[] getDifficulty() {
         if (!parsed) parse();
         return difficulty;
+    }
+
+    public BigInteger getDifficultyAsBigInt() {
+        return new BigInteger(difficulty);
     }
 
     @Override

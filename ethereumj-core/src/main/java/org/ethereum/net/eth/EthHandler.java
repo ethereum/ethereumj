@@ -12,6 +12,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
 
@@ -53,13 +54,13 @@ import static org.ethereum.util.ByteUtil.wrap;
 @Scope("prototype")
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    public final static byte VERSION = 61;
+    private final static Logger loggerSync = LoggerFactory.getLogger("sync");
+    private final static Logger loggerNet = LoggerFactory.getLogger("net");
+
+    public final static byte VERSION = 60;
 
     private static final int NO_MORE_BLOCKS_THRESHOLD = 5;
     private int noMoreBlocksHits = 0;
-
-    private final static Logger loggerSync = LoggerFactory.getLogger("sync");
-    private final static Logger loggerNet = LoggerFactory.getLogger("net");
 
     private MessageQueue msgQueue = null;
 
@@ -68,12 +69,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private EthState peerState = EthState.INIT;
     private long blocksLoadedCnt = 0;
 
-    private StatusMessage handshakeStatusMessage = null;
-
     private boolean peerDiscoveryMode = false;
-
-    private Timer getBlocksTimer = new Timer("GetBlocksTimer");
-    private Timer getTxTimer = new Timer("GetTransactionsTimer");
 
     @Autowired
     private Blockchain blockchain;
@@ -85,6 +81,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private List<ByteArrayWrapper> sentHashes;
     private Block lastBlock = Genesis.getInstance();
+    private byte[] bestHash;
 
     public EthHandler() {
         this.peerDiscoveryMode = false;
@@ -181,7 +178,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         loggerNet.debug("handlerRemoved: kill timers in EthHandler");
         returnHashes();
-        this.killTimers();
     }
 
     private void disconnect(ReasonCode reason) {
@@ -202,9 +198,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      */
     public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
-        this.handshakeStatusMessage = msg;
-
         channel.getNodeStatistics().ethHandshake(msg);
+        this.bestHash = msg.getBestHash();
 
         if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
                 || msg.getProtocolVersion() != VERSION) {
@@ -219,7 +214,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         } else if (peerDiscoveryMode) {
             loggerNet.debug("Peer discovery mode: STATUS received, disconnecting...");
             disconnect(ReasonCode.REQUESTED);
-            killTimers();
             ctx.close().sync();
             ctx.disconnect().sync();
         } else {
@@ -329,12 +323,15 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
         loggerNet.info("New block received: block.index [{}]", newBlock.getNumber());
 
+        channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
+        bestHash = newBlock.getHash();
+
         ImportResult result = blockchain.tryToConnect(newBlock);
         if(result == ImportResult.NO_PARENT) {
             // adding block to the queue
             // there will be decided how to
             // connect it to the chain
-            blockchain.getQueue().addNewBlock(newBlockMessage.getBlock());
+            blockchain.getQueue().addNewBlock(newBlock);
             blockchain.getQueue().logHashQueueSize();
         } else {
             changeState(SyncState.DONE_SYNC);
@@ -439,36 +436,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         channel.getNodeStatistics().ethOutbound.add();
     }
 
-
-    private void startTxTimer() {
-        getTxTimer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                sendGetTransactions();
-            }
-        }, 2000, 10000);
-    }
-
-    private void stopGetBlocksTimer() {
-        getBlocksTimer.cancel();
-        getBlocksTimer.purge();
-    }
-
-    private void stopGetTxTimer() {
-        getTxTimer.cancel();
-        getTxTimer.purge();
-    }
-
-    public void killTimers() {
-        stopGetBlocksTimer();
-        stopGetTxTimer();
-    }
-
     public void setPeerId(String peerId) {
         this.peerId = peerId;
     }
 
     public StatusMessage getHandshakeStatusMessage() {
-        return handshakeStatusMessage;
+        return channel.getNodeStatistics().getEthLastInboundStatusMsg();
     }
 
     public void setMsgQueue(MessageQueue msgQueue) {
@@ -547,6 +520,18 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public boolean isSyncDone() {
         return syncState == SyncState.DONE_SYNC;
+    }
+
+    public NodeStatistics getNodeStatistics() {
+        return channel.getNodeStatistics();
+    }
+
+    public byte[] getBestHash() {
+        return bestHash;
+    }
+
+    public BigInteger getTotalDifficulty() {
+        return channel.getNodeStatistics().getEthTotalDifficulty();
     }
 
     enum EthState {

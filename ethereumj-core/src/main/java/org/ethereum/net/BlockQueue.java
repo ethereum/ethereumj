@@ -10,6 +10,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
 import org.ethereum.core.Blockchain;
+import org.ethereum.net.eth.SyncManager;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
@@ -70,6 +71,9 @@ public class BlockQueue {
     @Autowired
     Blockchain blockchain;
 
+    @Autowired
+    SyncManager syncManager;
+
     public BlockQueue() {
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
@@ -109,19 +113,13 @@ public class BlockQueue {
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
-                    if(!wrapper.isNewBlock()) {
-                        if (wrapper.getImportFailedAt() == 0) {
-                            wrapper.setImportFailedAt(System.currentTimeMillis());
-                        }
-                        if (System.currentTimeMillis() - wrapper.getImportFailedAt() > IMPORT_FAIL_THRESHOLD) {
-                            logger.info("Force parent downloading for block.number: [{}]", wrapper.getNumber());
-                            hashStore.addFirst(wrapper.getParentHash());
-                        }
+                    wrapper.importFailed();
+                    if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
+                        syncManager.recoverGap(wrapper);
                     }
                     blockQueue.add(wrapper);
                     sleep(2000);
                 }
-
 
                 if (importResult == IMPORTED_BEST)
                     logger.info("Success importing BEST: block number: {}", wrapper.getNumber());
