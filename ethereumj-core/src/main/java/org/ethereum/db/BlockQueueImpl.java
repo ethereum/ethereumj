@@ -1,6 +1,6 @@
 package org.ethereum.db;
 
-import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
 import org.ethereum.util.CollectionUtils;
@@ -25,7 +25,7 @@ public class BlockQueueImpl implements BlockQueue {
     private MapDBFactory mapDBFactory;
 
     private DB db;
-    private Map<Long, Block> blocks;
+    private Map<Long, BlockWrapper> blocks;
     private Set<byte[]> hashes;
     private List<Long> index;
 
@@ -46,7 +46,7 @@ public class BlockQueueImpl implements BlockQueue {
                     db = mapDBFactory.createTransactionalDB(dbName());
                     blocks = db.hashMapCreate(STORE_NAME)
                             .keySerializer(Serializer.LONG)
-                            .valueSerializer(Serializers.BLOCK)
+                            .valueSerializer(Serializers.BLOCK_WRAPPER)
                             .makeOrGet();
                     hashes = db.hashSetCreate(HASH_SET_NAME)
                             .serializer(Serializer.BYTE_ARRAY)
@@ -81,14 +81,14 @@ public class BlockQueueImpl implements BlockQueue {
     }
 
     @Override
-    public void addAll(Collection<Block> blockList) {
+    public void addAll(Collection<BlockWrapper> blockList) {
         awaitInit();
         takeLock.lock();
         try {
             synchronized (this) {
                 List<Long> numbers = new ArrayList<>(blockList.size());
                 Set<byte[]> newHashes = new HashSet<>();
-                for (Block b : blockList) {
+                for (BlockWrapper b : blockList) {
                     if(!index.contains(b.getNumber()) &&
                        !numbers.contains(b.getNumber())) {
                        
@@ -109,7 +109,7 @@ public class BlockQueueImpl implements BlockQueue {
     }
 
     @Override
-    public void add(Block block) {
+    public void add(BlockWrapper block) {
         awaitInit();
         takeLock.lock();
         try {
@@ -130,21 +130,21 @@ public class BlockQueueImpl implements BlockQueue {
     }
 
     @Override
-    public Block poll() {
+    public BlockWrapper poll() {
         awaitInit();
-        Block block = pollInner();
+        BlockWrapper block = pollInner();
         db.commit();
         return block;
     }
 
-    private Block pollInner() {
+    private BlockWrapper pollInner() {
         synchronized (this) {
             if (index.isEmpty()) {
                 return null;
             }
 
             Long idx = index.get(0);
-            Block block = blocks.get(idx);
+            BlockWrapper block = blocks.get(idx);
             blocks.remove(idx);
             hashes.remove(block.getHash());
             index.remove(0);
@@ -153,7 +153,7 @@ public class BlockQueueImpl implements BlockQueue {
     }
 
     @Override
-    public Block peek() {
+    public BlockWrapper peek() {
         awaitInit();
         synchronized (this) {
             if(index.isEmpty()) {
@@ -166,11 +166,11 @@ public class BlockQueueImpl implements BlockQueue {
     }
 
     @Override
-    public Block take() {
+    public BlockWrapper take() {
         awaitInit();
         takeLock.lock();
         try {
-            Block block;
+            BlockWrapper block;
             while (null == (block = pollInner())) {
                 notEmpty.awaitUninterruptibly();
             }

@@ -2,10 +2,13 @@ package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Genesis;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
+import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.FileUtil;
+import org.ethereum.util.Functional;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -82,10 +85,10 @@ public class BlockQueueTest {
 
     @Test // basic checks
     public void test1() {
-        blockQueue.add(blocks.get(0));
+        blockQueue.add(new BlockWrapper(blocks.get(0)));
 
         // testing: peek()
-        Block block = blockQueue.peek();
+        BlockWrapper block = blockQueue.peek();
 
         assertNotNull(block);
 
@@ -95,7 +98,12 @@ public class BlockQueueTest {
         blockQueue.take();
 
         // testing: addAll(), close(), open()
-        blockQueue.addAll(blocks);
+        blockQueue.addAll(CollectionUtils.collectList(blocks, new Functional.Function<Block, BlockWrapper>() {
+            @Override
+            public BlockWrapper apply(Block block) {
+                return new BlockWrapper(block);
+            }
+        }));
 
         blockQueue.close();
         blockQueue.open();
@@ -120,7 +128,7 @@ public class BlockQueueTest {
 
         // testing: add()
         for(Block b : blocks) {
-            blockQueue.add(b);
+            blockQueue.add(new BlockWrapper(b));
         }
 
         prevNumber = -1;
@@ -153,7 +161,7 @@ public class BlockQueueTest {
             try {
                 int nullsCount = 0;
                 while (nullsCount < 10) {
-                    Block b = blockQueue.poll();
+                    BlockWrapper b = blockQueue.poll();
                     logger.info("reader {}: {}", index, b == null ? null : b.getShortHash());
                     if(b == null) {
                         nullsCount++;
@@ -181,7 +189,7 @@ public class BlockQueueTest {
             try {
                 for(int i = 0; i < 50; i++) {
                     Block b = blocks.get(i);
-                    blockQueue.add(b);
+                    blockQueue.add(new BlockWrapper(b));
                     logger.info("writer {}: {}", index, b.getShortHash());
                     Thread.sleep(50);
                 }

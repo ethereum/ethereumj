@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.datasource.mapdb.Serializers;
@@ -121,7 +122,7 @@ public class BlockStressTest {
         int counter = 0;
         for(byte[] hash : hashes) {
             Block block = blockSource.get(hash);
-            blockQueue.add(block);
+            blockQueue.add(new BlockWrapper(block));
             if(++counter % 10000 == 0) {
                 logger.info("writing: {} done from {}", counter, hashes.size());
             }
@@ -194,7 +195,7 @@ public class BlockStressTest {
             // testing: order and import completeness
             Set<byte[]> importedHashes = new HashSet<>();
             long prevNumber = -1;
-            Block block;
+            BlockWrapper block;
             while (null != (block = blockQueue.poll())) {
                 assertTrue(block.getNumber() > prevNumber);
                 prevNumber = block.getNumber();
@@ -239,7 +240,7 @@ public class BlockStressTest {
             int counter = 0;
             for(byte[] hash : hashes) {
                 Block block = blockSource.get(hash);
-                blockQueue.add(block);
+                blockQueue.add(new BlockWrapper(block));
                 if(++counter % 10000 == 0) {
                     logger.info("writer {}: {} done from {}", threadNumber, counter, hashes.size());
                 }

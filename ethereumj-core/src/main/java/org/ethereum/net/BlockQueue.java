@@ -1,6 +1,7 @@
 package org.ethereum.net;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.ImportResult;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
@@ -9,6 +10,8 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
 import org.ethereum.facade.Blockchain;
+import org.ethereum.util.CollectionUtils;
+import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -96,24 +99,24 @@ public class BlockQueue {
         while (1==1){
 
             try {
-                Block block = blockQueue.take();
+                BlockWrapper wrapper = blockQueue.take();
                 logger.info("BlockQueue size: {}", blockQueue.size());
-                ImportResult importResult = blockchain.tryToConnect(block);
+                ImportResult importResult = blockchain.tryToConnect(wrapper.getBlock());
 
                 // In case we don't have a parent on the chain
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT){
-                    logger.info("No parent on the chain for block.number: [{}]", block.getNumber());
-                    blockQueue.add(block);
+                    logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
+                    blockQueue.add(wrapper);
                     sleep(2000);
                 }
 
 
                 if (importResult == IMPORTED_BEST)
-                    logger.info("Success importing BEST: block number: {}", block.getNumber());
+                    logger.info("Success importing BEST: block number: {}", wrapper.getNumber());
 
                 if (importResult == IMPORTED_NOT_BEST)
-                    logger.info("Success importing NOT_BEST: block number: {}", block.getNumber());
+                    logger.info("Success importing NOT_BEST: block number: {}", wrapper.getNumber());
 
             } catch (Throwable e) {
                 logger.error("Error: {} ", e);
@@ -134,7 +137,13 @@ public class BlockQueue {
      */
     public void addBlocks(List<Block> blockList) {
 
-        blockQueue.addAll(blockList);
+        List<BlockWrapper> wrappers = CollectionUtils.collectList(blockList, new Functional.Function<Block, BlockWrapper>() {
+            @Override
+            public BlockWrapper apply(Block block) {
+                return new BlockWrapper(block);
+            }
+        });
+        blockQueue.addAll(wrappers);
 
         lastBlock = blockList.get(blockList.size() - 1);
 
@@ -151,7 +160,7 @@ public class BlockQueue {
      */
     public void addBlock(Block block) {
 
-        blockQueue.add(block);
+        blockQueue.add(new BlockWrapper(block));
         lastBlock = block;
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",

@@ -54,7 +54,7 @@ import static org.ethereum.util.ByteUtil.wrap;
 @Scope("prototype")
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    public final static byte VERSION = 60;
+    public final static byte VERSION = 61;
 
     private static final int NO_MORE_BLOCKS_THRESHOLD = 5;
     private int noMoreBlocksHits = 0;
