@@ -166,18 +166,13 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public Blockchain getBlockchain() {
-        return worldManager.getBlockchain();
+    public org.ethereum.facade.Blockchain getBlockchain() {
+        return (org.ethereum.facade.Blockchain)worldManager.getBlockchain();
     }
 
     @Override
     public void addListener(EthereumListener listener) {
         worldManager.addListener(listener);
-    }
-
-    @Override
-    public boolean isBlockchainLoading() {
-        return worldManager.isBlockchainLoading();
     }
 
     @Override
@@ -235,7 +230,7 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Repository getRepository() {
+    public org.ethereum.facade.Repository getRepository() {
         return worldManager.getRepository();
     }
 

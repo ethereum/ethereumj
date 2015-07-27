@@ -91,7 +91,7 @@ public class BlockQueueImpl implements BlockQueue {
                 for (BlockWrapper b : blockList) {
                     if(!index.contains(b.getNumber()) &&
                        !numbers.contains(b.getNumber())) {
-                       
+
                         blocks.put(b.getNumber(), b);
                         numbers.add(b.getNumber());
                         newHashes.add(b.getHash());

@@ -2,7 +2,7 @@ package org.ethereum.vm;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 
 import org.junit.FixMethodOrder;
 import org.junit.Ignore;

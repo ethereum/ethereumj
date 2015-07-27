@@ -2,7 +2,7 @@ package org.ethereum.jsontestsuite.validators;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;

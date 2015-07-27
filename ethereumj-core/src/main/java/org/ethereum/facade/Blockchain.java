@@ -1,57 +1,38 @@
 package org.ethereum.facade;
 
-import org.ethereum.core.*;
-import org.ethereum.net.BlockQueue;
+import org.ethereum.core.Block;
+import org.ethereum.core.Transaction;
 
 import java.math.BigInteger;
-import java.util.List;
 import java.util.Set;
 
 public interface Blockchain {
 
-    public static final byte[] GENESIS_HASH = Genesis.getInstance().getHash();
+    /**
+     * Get block by number from the best chain
+     * @param number - number of the block
+     * @return block by that number
+     */
+    Block getBlockByNumber(long number);
 
-    public long getSize();
+    /**
+     * Get block by hash
+     * @param hash - hash of the block
+     * @return - bloc by that hash
+     */
+    Block getBlockByHash(byte[] hash);
 
-    public void add(Block block);
+    /**
+     * Get total difficulty from the start
+     * and until the head of the chain
+     *
+     * @return - total difficulty
+     */
+    BigInteger getTotalDifficulty();
 
-    public ImportResult tryToConnect(Block block);
-
-    public void storeBlock(Block block, List<TransactionReceipt> receipts);
-
-    public Block getBlockByNumber(long blockNr);
-
-    public void setBestBlock(Block block);
-
-    public Block getBestBlock();
-
-    public BlockQueue getQueue();
-
-    public boolean hasParentOnTheChain(Block block);
-
-    void close();
-
-    public void updateTotalDifficulty(Block block);
-
-    public BigInteger getTotalDifficulty();
-
-    public void setTotalDifficulty(BigInteger totalDifficulty);
-
-    public byte[] getBestBlockHash();
-
-    public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty);
-
-    TransactionReceipt getTransactionReceiptByHash(byte[] hash);
-
-    public Block getBlockByHash(byte[] hash);
-
-    public List<Chain> getAltChains();
-
-    public List<Block> getGarbage();
-
+    /**
+     * @return - all currently pending transactions
+     */
     public Set<Transaction> getPendingTransactions();
-    public void addPendingTransactions(Set<Transaction> transactions);
-    public void clearPendingTransactions(List<Transaction> receivedTransactions);
 
-    public void setExitOn(long exitOn);
 }

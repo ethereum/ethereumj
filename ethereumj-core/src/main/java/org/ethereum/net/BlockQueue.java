@@ -9,7 +9,7 @@ import org.ethereum.db.BlockQueueImpl;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
-import org.ethereum.facade.Blockchain;
+import org.ethereum.core.Blockchain;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;

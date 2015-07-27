@@ -1,6 +1,6 @@
 package org.ethereum.net.eth;
 
-import org.ethereum.facade.Blockchain;
+import org.ethereum.core.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;

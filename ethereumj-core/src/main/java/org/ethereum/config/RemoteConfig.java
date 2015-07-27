@@ -1,4 +1,4 @@
-package org.ethereum.facade;
+package org.ethereum.config;
 
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.InMemoryBlockStore;

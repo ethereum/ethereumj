@@ -3,11 +3,10 @@ package org.ethereum.vm;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.db.RepositoryImpl;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 
 import org.spongycastle.util.encoders.Hex;
 

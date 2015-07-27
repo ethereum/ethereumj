@@ -3,7 +3,7 @@ package org.ethereum.jsontestsuite.builder;
 import org.ethereum.core.AccountState;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.*;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.ethereum.jsontestsuite.model.AccountTck;
 
 import java.util.HashMap;

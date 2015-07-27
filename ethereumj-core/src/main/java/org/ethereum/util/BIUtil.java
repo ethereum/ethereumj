@@ -1,6 +1,6 @@
 package org.ethereum.util;
 
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 
 import java.math.BigInteger;
 

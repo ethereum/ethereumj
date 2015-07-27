@@ -3,8 +3,8 @@ package org.ethereum.vm;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.BlockStore;
-import org.ethereum.facade.Blockchain;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.Repository;
 import org.ethereum.util.ByteUtil;
 
 import org.slf4j.Logger;

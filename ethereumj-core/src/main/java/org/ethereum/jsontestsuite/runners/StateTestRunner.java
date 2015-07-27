@@ -5,7 +5,7 @@ import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionExecutor;
 import org.ethereum.db.BlockStoreDummy;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.ethereum.jsontestsuite.Env;
 import org.ethereum.jsontestsuite.StateTestCase;
 import org.ethereum.jsontestsuite.TestProgramInvokeFactory;

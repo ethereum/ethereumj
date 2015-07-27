@@ -4,10 +4,6 @@ import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.RepositoryImpl;
-import org.ethereum.facade.Blockchain;
-import org.ethereum.facade.CommonConfig;
-import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.net.BlockQueue;
@@ -71,7 +67,7 @@ import static org.ethereum.util.BIUtil.isMoreThan;
  * @since 20.05.2014
  */
 @Component
-public class BlockchainImpl implements Blockchain {
+public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchain {
 
 
     private static final Logger logger = LoggerFactory.getLogger("blockchain");

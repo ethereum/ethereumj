@@ -88,9 +88,10 @@ public class ImportTest {
             root = block.getStateRoot();
         }
 
+        Repository repository = (Repository)worldManager.getRepository();
         logger.info("asserting root state is: {}", Hex.toHexString(root));
         assertEquals(Hex.toHexString(root),
-                Hex.toHexString(worldManager.getRepository().getRoot()));
+                Hex.toHexString(repository.getRoot()));
     }
 
 }

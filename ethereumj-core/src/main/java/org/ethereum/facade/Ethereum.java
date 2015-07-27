@@ -75,8 +75,6 @@ public interface Ethereum {
 
     public Blockchain getBlockchain();
 
-    public boolean isBlockchainLoading();
-
     public void addListener(EthereumListener listener);
 
     public PeerClient getDefaultPeer();

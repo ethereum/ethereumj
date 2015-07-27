@@ -86,13 +86,6 @@ public class Wallet {
         return rows.values();
     }
 
-    public AccountState getAccountState(byte[] address) {
-        AccountState accountState =
-                worldManager.getRepository().getAccountState(address);
-
-        return accountState;
-    }
-
     public BigInteger totalBalance() {
         BigInteger sum = BigInteger.ZERO;
         for (Account account : rows.values()) {
