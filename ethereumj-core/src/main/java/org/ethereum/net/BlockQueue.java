@@ -40,6 +40,8 @@ public class BlockQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
+    private static final int IMPORT_FAIL_THRESHOLD = 10 * 1000; // 10 seconds
+
     /**
      * Store holding a list of hashes of the heaviest chain on the network,
      * for which this client doesn't have the blocks yet
@@ -105,8 +107,17 @@ public class BlockQueue {
 
                 // In case we don't have a parent on the chain
                 // return the try and wait for more blocks to come.
-                if (importResult == NO_PARENT){
+                if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
+                    if(!wrapper.isNewBlock()) {
+                        if (wrapper.getImportFailedAt() == 0) {
+                            wrapper.setImportFailedAt(System.currentTimeMillis());
+                        }
+                        if (System.currentTimeMillis() - wrapper.getImportFailedAt() > IMPORT_FAIL_THRESHOLD) {
+                            logger.info("Force parent downloading for block.number: [{}]", wrapper.getNumber());
+                            hashStore.addFirst(wrapper.getParentHash());
+                        }
+                    }
                     blockQueue.add(wrapper);
                     sleep(2000);
                 }
@@ -153,15 +164,33 @@ public class BlockQueue {
     }
 
     /**
+     * adding single block to the queue
+     *
+     * @param block block
+     */
+    public void addBlock(Block block) {
+        addBlock(new BlockWrapper(block));
+    }
+
+    /**
+     * adding new block to the queue
+     *
+     * @param block new block
+     */
+    public void addNewBlock(Block block) {
+        addBlock(new BlockWrapper(block, true));
+    }
+
+    /**
      * adding single block to the queue usually
      * a result of a NEW_BLOCK message announce.
      *
-     * @param block - new block
+     * @param wrapper block wrapper
      */
-    public void addBlock(Block block) {
+    public void addBlock(BlockWrapper wrapper) {
 
-        blockQueue.add(new BlockWrapper(block));
-        lastBlock = block;
+        blockQueue.add(wrapper);
+        lastBlock = wrapper.getBlock();
 
         logger.debug("Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),

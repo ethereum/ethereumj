@@ -335,7 +335,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             // adding block to the queue
             // there will be decided how to
             // connect it to the chain
-            blockchain.getQueue().addBlock(newBlockMessage.getBlock());
+            blockchain.getQueue().addNewBlock(newBlockMessage.getBlock());
             blockchain.getQueue().logHashQueueSize();
         } else {
             changeState(SyncState.DONE_SYNC);

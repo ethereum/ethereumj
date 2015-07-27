@@ -71,6 +71,10 @@ public class BlockWrapper {
         return block.getShortHash();
     }
 
+    public byte[] getParentHash() {
+        return block.getParentHash();
+    }
+
     private void parse(byte[] bytes) {
         byte[] importFailedAtBytes = new byte[bytes[1]];
         System.arraycopy(bytes, 2, importFailedAtBytes, 0, importFailedAtBytes.length);
