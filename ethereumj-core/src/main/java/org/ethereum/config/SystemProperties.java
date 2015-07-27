@@ -350,8 +350,8 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public double cacheFlushBlocks() {
-        return config.getDouble("cache.flush.blocks");
+    public int cacheFlushBlocks() {
+        return config.getInt("cache.flush.blocks");
     }
 
     @ValidateMe
