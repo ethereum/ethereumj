@@ -89,7 +89,9 @@ public class BlockQueueImpl implements BlockQueue {
                 List<Long> numbers = new ArrayList<>(blockList.size());
                 Set<byte[]> newHashes = new HashSet<>();
                 for (Block b : blockList) {
-                    if(!index.contains(b.getNumber())) {
+                    if(!index.contains(b.getNumber()) &&
+                       !numbers.contains(b.getNumber())) {
+                       
                         blocks.put(b.getNumber(), b);
                         numbers.add(b.getNumber());
                         newHashes.add(b.getHash());

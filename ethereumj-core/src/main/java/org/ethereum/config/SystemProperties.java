@@ -68,12 +68,14 @@ public class SystemProperties {
     private SystemProperties() {
         try {
             Config referenceConfig = ConfigFactory.load("ethereumj.conf");
+            Config userConfig = ConfigFactory.parseResources("user.conf");
             Config userDirConfig = ConfigFactory.parseFile(
                     new File(System.getProperty("user.dir"), "/config/ethereumj.conf"));
             String file = System.getProperty("ethereumj.conf.file");
             Config sysPropConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
                     ConfigFactory.empty();
             config = sysPropConfig
+                    .withFallback(userConfig)
                     .withFallback(userDirConfig)
                     .withFallback(referenceConfig);
             validateConfig();
