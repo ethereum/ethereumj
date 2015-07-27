@@ -1,6 +1,5 @@
 package org.ethereum.vmtrace;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryTrack;
 import org.ethereum.facade.Repository;
@@ -12,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static java.lang.String.format;
 import static org.ethereum.util.ByteUtil.toHexString;
 import static org.ethereum.vmtrace.Serializers.serializeFieldsOnly;
@@ -24,6 +24,8 @@ public class ProgramTrace {
     private String result;
     private String error;
     private Map<String, String> initStorage = new HashMap<>();
+    private boolean fullStorage;
+    private int storageSize;
 
     public List<Op> getOps() {
         return ops;
@@ -49,6 +51,22 @@ public class ProgramTrace {
         this.error = error;
     }
 
+    public boolean isFullStorage() {
+        return fullStorage;
+    }
+
+    public void setFullStorage(boolean fullStorage) {
+        this.fullStorage = fullStorage;
+    }
+
+    public int getStorageSize() {
+        return storageSize;
+    }
+
+    public void setStorageSize(int storageSize) {
+        this.storageSize = storageSize;
+    }
+
     public Map<String, String> getInitStorage() {
         return initStorage;
     }
@@ -58,28 +76,37 @@ public class ProgramTrace {
     }
 
     public ProgramTrace initStorage(ProgramInvoke programInvoke) {
-        if (SystemProperties.CONFIG.vmTrace()) {
-            for (Map.Entry<DataWord, DataWord> entry : getStorage(programInvoke).entrySet()) {
-                initStorage.put(entry.getKey().toString(), entry.getValue().toString());
-            }
-            if (!initStorage.isEmpty()) {
-                LOGGER.info("{} entries loaded to transaction's initStorage", initStorage.size());
+        if (!CONFIG.vmTrace()) return this;
+
+        ContractDetails contractDetails = getContractDetails(programInvoke);
+        if (contractDetails == null) {
+            storageSize = 0;
+            fullStorage = true;
+        } else {
+            storageSize = contractDetails.getStorageSize();
+            if (storageSize <= CONFIG.vmTraceInitStorageLimit()) {
+                fullStorage = true;
+                for (Map.Entry<DataWord, DataWord> entry : contractDetails.getStorage().entrySet()) {
+                    initStorage.put(entry.getKey().toString(), entry.getValue().toString());
+                }
+
+                if (!initStorage.isEmpty()) {
+                    LOGGER.info("{} entries loaded to transaction's initStorage", initStorage.size());
+                }
             }
         }
 
         return this;
     }
 
-    private static Map<DataWord, DataWord> getStorage(ProgramInvoke programInvoke) {
+    private static ContractDetails getContractDetails(ProgramInvoke programInvoke) {
         Repository repository = programInvoke.getRepository();
         if (repository instanceof RepositoryTrack) {
             repository = ((RepositoryTrack) repository).getOriginRepository();
         }
 
         byte[] address = programInvoke.getOwnerAddress().getLast20Bytes();
-        ContractDetails details = repository.getContractDetails(address);
-
-        return (details == null) ? Collections.EMPTY_MAP : details.getStorage();
+        return repository.getContractDetails(address);
     }
 
     public ProgramTrace result(byte[] result) {

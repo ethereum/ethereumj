@@ -49,8 +49,5 @@ public interface ContractDetails {
 
     void syncStorage();
 
-    int getAllocatedMemorySize();
-
     ContractDetails getSnapshotTo(byte[] hash);
-
 }

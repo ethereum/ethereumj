@@ -6,6 +6,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
+import org.ethereum.facade.CommonConfig;
 import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -33,6 +34,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
 
+import static java.lang.Runtime.getRuntime;
 import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
@@ -347,17 +349,17 @@ public class BlockchainImpl implements Blockchain {
     }
 
     private boolean needFlush(Block block) {
-
-        boolean possibleFlush = CONFIG.flushBlocksIgnoreConsensus() || adminInfo.isConsensus();
-        if (!possibleFlush) return false;
-
-        if (CONFIG.flushBlocksRepoSize() > 0 && repository.getClass().isAssignableFrom(RepositoryImpl.class)) {
-            return ((RepositoryImpl) repository).getAllocatedMemorySize() > CONFIG.flushBlocksRepoSize();
+        if (CONFIG.cacheFlushMemory() > 0) {
+            return needFlushByMemory(CONFIG.cacheFlushMemory());
+        } else if (CONFIG.cacheFlushBlocks() > 0) {
+            return block.getNumber() % CONFIG.cacheFlushBlocks() == 0;
         } else {
-            boolean isBatchReached = block.getNumber() % CONFIG.flushBlocksBatchSize() == 0;
-
-            return isBatchReached;
+            return needFlushByMemory(.7);
         }
+    }
+
+    private boolean needFlushByMemory(double maxMemoryPercents) {
+        return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
     }
 
     private byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {

@@ -335,23 +335,23 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public int vmTraceInitStorageLimit() {
+        return config.getInt("vm.structured.initStorageLimit");
+    }
+
+    @ValidateMe
     public int detailsInMemoryStorageLimit() {
         return config.getInt("details.inmemory.storage.limit");
     }
 
     @ValidateMe
-    public int flushBlocksBatchSize() {
-        return config.getInt("flush.blocks.batch.size");
+    public double cacheFlushMemory() {
+        return config.getDouble("cache.flush.memory");
     }
 
     @ValidateMe
-    public int flushBlocksRepoSize() {
-        return config.getInt("flush.blocks.repo.size");
-    }
-
-    @ValidateMe
-    public boolean flushBlocksIgnoreConsensus() {
-        return config.getBoolean("flush.blocks.ignore.consensus");
+    public int cacheFlushBlocks() {
+        return config.getInt("cache.flush.blocks");
     }
 
     @ValidateMe

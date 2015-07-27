@@ -37,7 +37,6 @@ public class ContractDetailsImpl implements ContractDetails {
     private boolean deleted = false;
     private boolean externalStorage;
     private KeyValueDataSource externalStorageDataSource;
-    private int keysSize;
 
     public ContractDetailsImpl() {
     }
@@ -54,13 +53,10 @@ public class ContractDetailsImpl implements ContractDetails {
 
     private void addKey(byte[] key) {
         keys.add(wrap(key));
-        keysSize += key.length;
     }
 
     private void removeKey(byte[] key) {
-        if (keys.remove(wrap(key))) {
-            keysSize -= key.length;
-        }
+        keys.remove(wrap(key));
     }
 
     @Override
@@ -277,16 +273,6 @@ public class ContractDetailsImpl implements ContractDetails {
     }
 
     @Override
-    public int getAllocatedMemorySize() {
-        int result = rlpEncoded == null ? 0 : rlpEncoded.length;
-        result += address.length;
-        result += code.length;
-        result += storageTrie.getCache().getAllocatedMemorySize();
-        result += keysSize;
-
-        return result;
-    }
-
     public ContractDetails getSnapshotTo(byte[] hash){
 
         KeyValueDataSource keyValueDataSource = ((TrieImpl) this.storageTrie).getCache().getDb();

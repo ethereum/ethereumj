@@ -28,8 +28,6 @@ public class Cache {
     private Map<ByteArrayWrapper, Node> nodes = new ConcurrentHashMap<>();
     private boolean isDirty;
     
-    private int allocatedMemorySize;
-
     public Cache(KeyValueDataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -48,8 +46,6 @@ public class Cache {
             this.nodes.put(wrap(sha), new Node(value, true));
             this.isDirty = true;
 
-            allocatedMemorySize += length(sha, enc);
-            
             return sha;
         }
         return value;
@@ -64,8 +60,6 @@ public class Cache {
             node = new Node(fromRlpEncoded(data), false);
 
             this.nodes.put(wrappedKey, node);
-            
-            allocatedMemorySize += length(key, data);
         }
 
         return node.getValue();
@@ -73,11 +67,6 @@ public class Cache {
 
     public void delete(byte[] key) {
         ByteArrayWrapper wrappedKey = wrap(key);
-
-        Node node = this.nodes.get(wrappedKey);
-        if (node != null) {
-            this.allocatedMemorySize -= length(key, node.getValue().encode());
-        }
         this.nodes.remove(wrappedKey);
 
         if (dataSource != null) {
@@ -91,15 +80,19 @@ public class Cache {
 
         long start = System.nanoTime();
 
+        int batchMemorySize = 0;
         Map<byte[], byte[]> batch = new HashMap<>();
-        for (ByteArrayWrapper key : this.nodes.keySet()) {
-            Node node = this.nodes.get(key);
+        for (ByteArrayWrapper nodeKey : this.nodes.keySet()) {
+            Node node = this.nodes.get(nodeKey);
 
             if (node.isDirty()) {
                 node.setDirty(false);
 
                 byte[] value = node.getValue().encode();
-                batch.put(key.getData(), value);
+                byte[] key = nodeKey.getData();
+
+                batch.put(key, value);
+                batchMemorySize += length(key, value);
             }
         }
 
@@ -109,11 +102,9 @@ public class Cache {
 
         long finish = System.nanoTime();
 
-        float flushSize = (float) this.allocatedMemorySize / 1048576;
+        float flushSize = (float) batchMemorySize / 1048576;
         float flushTime = (float) (finish - start) / 1_000_000;
         logger.info(format("Flush '%s' in: %02.2f ms, %d nodes, %02.2fMB", dataSource.getName(), flushTime, batch.size(), flushSize));
-        
-        this.allocatedMemorySize = 0;
     }
 
     public void undo() {
@@ -174,10 +165,4 @@ public class Cache {
         dataSource.updateBatch(rows);
         this.dataSource = dataSource;
     }
-    
-    public int getAllocatedMemorySize() {
-        return allocatedMemorySize;
-    }
-
-    
 }
