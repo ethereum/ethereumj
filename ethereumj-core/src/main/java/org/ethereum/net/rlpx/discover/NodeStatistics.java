@@ -8,6 +8,7 @@ import org.ethereum.net.swarm.Statter;
 import org.ethereum.util.ByteUtil;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.Math.max;
@@ -75,6 +76,7 @@ public class NodeStatistics {
     public final StatHandler ethInbound = new StatHandler();
     public final StatHandler ethOutbound = new StatHandler();
     private StatusMessage ethLastInboundStatusMsg = null;
+    private BigInteger ethTotalDifficulty = BigInteger.ZERO;
 
     public NodeStatistics(Node node) {
         this.node = node;
@@ -134,7 +136,16 @@ public class NodeStatistics {
 
     public void ethHandshake(StatusMessage ethInboundStatus) {
         this.ethLastInboundStatusMsg = ethInboundStatus;
+        this.ethTotalDifficulty = ethInboundStatus.getTotalDifficultyAsBigInt();
         ethHandshake.add();
+    }
+
+    public BigInteger getEthTotalDifficulty() {
+        return ethTotalDifficulty;
+    }
+
+    public void setEthTotalDifficulty(BigInteger ethTotalDifficulty) {
+        this.ethTotalDifficulty = ethTotalDifficulty;
     }
 
     public void setClientId(String clientId) {

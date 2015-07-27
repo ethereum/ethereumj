@@ -71,6 +71,7 @@ public class BlockQueueTest {
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
         CONFIG.setDataBaseDir(testDb);
+        CONFIG.setDatabaseReset(false);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         blockQueue = new BlockQueueImpl();
@@ -86,9 +87,6 @@ public class BlockQueueTest {
 
     @Test // basic checks
     public void test1() {
-
-        CONFIG.setDatabaseReset(false);
-
         blockQueue.add(new BlockWrapper(blocks.get(0)));
 
         // testing: peek()
