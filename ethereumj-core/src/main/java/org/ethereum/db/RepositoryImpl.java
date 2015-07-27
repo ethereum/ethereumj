@@ -227,15 +227,6 @@ public class RepositoryImpl implements Repository {
         });
     }
 
-    public int getAllocatedMemorySize() {
-        return doWithAccessCounting(new Functional.InvokeWrapperWithResult<Integer>() {
-            @Override
-            public Integer invoke() {
-                return dds.getAllocatedMemorySize() + ((TrieImpl) worldState).getCache().getAllocatedMemorySize();
-            }
-        });
-    }
-
     @Override
     public void rollback() {
         throw new UnsupportedOperationException();

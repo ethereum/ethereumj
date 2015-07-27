@@ -48,6 +48,4 @@ public interface ContractDetails {
     String toString();
 
     void syncStorage();
-
-    int getAllocatedMemorySize();
 }
