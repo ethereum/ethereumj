@@ -13,6 +13,9 @@ import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
+import org.ethereum.net.rlpx.discover.NodeManager;
+import org.ethereum.net.rlpx.discover.PeerConnectionTester;
+import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,6 +69,12 @@ public class WorldManager {
     @Autowired
     private EthereumListener listener;
 
+    @Autowired
+    private NodeManager nodeManager;
+
+    @Autowired
+    private UDPListener udpListener;
+
     @PostConstruct
     public void init() {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -74,6 +83,8 @@ public class WorldManager {
         String secret = CONFIG.coinbaseSecret();
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());
         wallet.importKey(cbAddr);
+
+        loadBlockchain();
     }
 
     public void addListener(EthereumListener listener) {

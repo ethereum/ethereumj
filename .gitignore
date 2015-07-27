@@ -31,3 +31,7 @@ test_db
 
 # Mac
 .DS_Store
+
+
+# Local configuration
+ethereumj-core/src/main/resources/user.conf

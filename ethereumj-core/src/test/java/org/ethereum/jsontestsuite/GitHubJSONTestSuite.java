@@ -113,17 +113,51 @@ public class GitHubJSONTestSuite {
         Assume.assumeFalse("Online test is not available", json.equals(""));
 
         BlockTestSuite testSuite = new BlockTestSuite(json);
-        Set<String> testCollection = testSuite.getTestCases().keySet();
+        Set<String> testCases = testSuite.getTestCases().keySet();
+        Map<String, Boolean> summary = new HashMap<>();
 
-        for (String testName : testCollection) {
+        for (String testCase : testCases)
+            if ( excluded.contains(testCase))
+                logger.info(" [X] " + testCase);
+            else
+                logger.info("     " + testCase);
+
+
+        for (String testName : testCases) {
 
             if ( excluded.contains(testName)) {
                 logger.info(" Not running: " + testName);
                 continue;
             }
 
-            runSingleBlockTest(testSuite, testName);
+            List<String> result = runSingleBlockTest(testSuite, testName);
+
+            if (!result.isEmpty())
+                summary.put(testName, false);
+            else
+                summary.put(testName, true);
         }
+
+
+        logger.info("");
+        logger.info("");
+        logger.info("Summary: ");
+        logger.info("=========");
+
+        int fails = 0; int pass = 0;
+        for (String key : summary.keySet()){
+
+            if (summary.get(key)) ++pass; else ++fails;
+            String sumTest = String.format("%-60s:^%s", key, (summary.get(key) ? "PASS" : "FAIL")).
+                    replace(' ', '.').
+                    replace("^", " ");
+            logger.info(sumTest);
+        }
+
+        logger.info(" - Total: Pass: {}, Failed: {} - ", pass, fails);
+
+        Assert.assertTrue(fails == 0);
+
     }
 
     protected static void runGitHubJsonBlockTest(String json) throws ParseException, IOException {
@@ -131,7 +165,7 @@ public class GitHubJSONTestSuite {
         runGitHubJsonBlockTest(json, excluded);
     }
 
-    private static void runSingleBlockTest(BlockTestSuite testSuite, String testName){
+    private static List<String> runSingleBlockTest(BlockTestSuite testSuite, String testName){
 
         BlockTestCase blockTestCase =  testSuite.getTestCases().get(testName);
         TestRunner runner = new TestRunner();
@@ -139,13 +173,13 @@ public class GitHubJSONTestSuite {
         logger.info("\n\n ***************** Running test: {} ***************************** \n\n", testName);
         List<String> result = runner.runTestCase(blockTestCase);
 
+        logger.info("--------- POST Validation---------");
         if (!result.isEmpty())
             for (String single : result)
                 logger.info(single);
 
-        Assert.assertTrue(result.isEmpty());
-        logger.info(" \n\n *********************** Passed: " + testName + " ************************** \n\n");
 
+        return result;
     }
 
 
@@ -232,6 +266,5 @@ public class GitHubJSONTestSuite {
 
         Assert.assertTrue(fails == 0);
     }
-
 
 }

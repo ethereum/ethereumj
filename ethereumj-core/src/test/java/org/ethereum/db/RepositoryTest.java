@@ -7,6 +7,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.facade.Repository;
+import org.ethereum.util.FileUtil;
 import org.ethereum.vm.DataWord;
 
 import org.junit.Assert;
@@ -17,7 +18,9 @@ import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.nio.file.Files;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.junit.Assert.*;
 
 /**
@@ -843,6 +846,69 @@ public class RepositoryTest {
         assertEquals(cowVal0, cowValOrin);
         assertEquals(horseVal0, horseValOrin);
     }
+
+
+    @Test // testing for snapshot
+    public void test20() {
+
+        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        byte[] root = repository.getRoot();
+
+        byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
+
+        DataWord cowKey1 = new DataWord("c1");
+        DataWord cowKey2 = new DataWord("c2");
+        DataWord cowVal1 = new DataWord("c0a1");
+        DataWord cowVal0 = new DataWord("c0a0");
+
+        DataWord horseKey1 = new DataWord("e1");
+        DataWord horseKey2 = new DataWord("e2");
+        DataWord horseVal1 = new DataWord("c0a1");
+        DataWord horseVal0 = new DataWord("c0a0");
+
+        Repository track2 = repository.startTracking(); //track
+        track2.addStorageRow(cow, cowKey1, cowVal1);
+        track2.addStorageRow(horse, horseKey1, horseVal1);
+        track2.commit();
+
+        byte[] root2 = repository.getRoot();
+
+        track2 = repository.startTracking(); //track
+        track2.addStorageRow(cow, cowKey2, cowVal0);
+        track2.addStorageRow(horse, horseKey2, horseVal0);
+        track2.commit();
+
+        byte[] root3 = repository.getRoot();
+
+        Repository snapshot = repository.getSnapshotTo(root);
+        ContractDetails cowDetails = snapshot.getContractDetails(cow);
+        ContractDetails horseDetails = snapshot.getContractDetails(horse);
+        assertEquals(null, cowDetails.get(cowKey1) );
+        assertEquals(null, cowDetails.get(cowKey2) );
+        assertEquals(null, horseDetails.get(horseKey1) );
+        assertEquals(null, horseDetails.get(horseKey2) );
+
+
+        snapshot = repository.getSnapshotTo(root2);
+        cowDetails = snapshot.getContractDetails(cow);
+        horseDetails = snapshot.getContractDetails(horse);
+        assertEquals(cowVal1, cowDetails.get(cowKey1));
+        assertEquals(null, cowDetails.get(cowKey2));
+        assertEquals(horseVal1, horseDetails.get(horseKey1) );
+        assertEquals(null, horseDetails.get(horseKey2) );
+
+        snapshot = repository.getSnapshotTo(root3);
+        cowDetails = snapshot.getContractDetails(cow);
+        horseDetails = snapshot.getContractDetails(horse);
+        assertEquals(cowVal1, cowDetails.get(cowKey1));
+        assertEquals(cowVal0, cowDetails.get(cowKey2));
+        assertEquals(horseVal1, horseDetails.get(horseKey1) );
+        assertEquals(horseVal0, horseDetails.get(horseKey2) );
+    }
+
+
+
 
 
 }

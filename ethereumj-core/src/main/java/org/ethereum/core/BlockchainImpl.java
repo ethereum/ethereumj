@@ -4,6 +4,7 @@ import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
+import org.ethereum.db.RepositoryImpl;
 import org.ethereum.facade.Blockchain;
 import org.ethereum.facade.CommonConfig;
 import org.ethereum.facade.Repository;
@@ -38,16 +39,17 @@ import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
+import static org.ethereum.util.BIUtil.isMoreThan;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
  * although it does have some differences.
- *
+ * <p>
  * The main difference between Ethereum and Bitcoin with regard to the blockchain architecture
  * is that, unlike Bitcoin, Ethereum blocks contain a copy of both the transaction list
  * and the most recent state. Aside from that, two other values, the block number and
  * the difficulty, are also stored in the block.
- *
+ * </p>
  * The block validation algorithm in Ethereum is as follows:
  * <ol>
  * <li>Check if the previous block referenced exists and is valid.</li>
@@ -102,9 +104,6 @@ public class BlockchainImpl implements Blockchain {
     private BlockQueue blockQueue;
 
     @Autowired
-    private CommonConfig config;
-
-    @Autowired
     private ChannelManager channelManager;
 
     private boolean syncDoneCalled = false;
@@ -119,6 +118,8 @@ public class BlockchainImpl implements Blockchain {
     private List<Block> garbage = new ArrayList<>();
 
     long exitOn = Long.MAX_VALUE;
+
+    public boolean byTest = false;
 
     public BlockchainImpl() {
     }
@@ -165,7 +166,7 @@ public class BlockchainImpl implements Blockchain {
         return blockStore.getListHashesEndWith(hash, qty);
     }
 
-    private byte[] calcTxTrie(List<Transaction> transactions){
+    private byte[] calcTxTrie(List<Transaction> transactions) {
 
         Trie txsState = new TrieImpl(null);
 
@@ -177,6 +178,57 @@ public class BlockchainImpl implements Blockchain {
         }
         return txsState.getRootHash();
     }
+
+    public ImportResult tryConnectAndFork(Block block) {
+
+        Repository savedRepo = this.repository;
+        Block savedBest = this.bestBlock;
+        BigInteger savedTD = this.totalDifficulty;
+
+        this.bestBlock = blockStore.getBlockByHash(block.getParentHash());
+        totalDifficulty = blockStore.getTotalDifficultyForHash(block.getParentHash());
+        this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
+
+        try {
+
+            // FIXME: adding block with no option for flush
+            add(block);
+        } catch (Throwable th) {
+            th.printStackTrace(); /* todo */
+        }
+
+        if (isMoreThan(this.totalDifficulty, savedTD)) {
+
+            logger.info("Rebranching: {} ~> {}", savedBest.getShortHash(), block.getShortHash());
+
+            // main branch become this branch
+            // cause we proved that total difficulty
+            // is greateer
+            blockStore.reBranch(block);
+
+            // The main repository rebranch
+            this.repository = savedRepo;
+            this.repository.syncToRoot(block.getStateRoot());
+
+            // flushing
+            if (!byTest){
+                repository.flush();
+                blockStore.flush();
+                System.gc();
+            }
+
+            return IMPORTED_BEST;
+        } else {
+
+            // Stay on previous branch
+            this.repository = savedRepo;
+            this.bestBlock = savedBest;
+            this.totalDifficulty = savedTD;
+
+            return IMPORTED_NOT_BEST;
+        }
+    }
+
 
     public ImportResult tryToConnect(Block block) {
 
@@ -202,26 +254,31 @@ public class BlockchainImpl implements Blockchain {
         if (bestBlock.isParentOf(block)) {
             add(block);
             recordBlock(block);
-            return SUCCESS;
+            return IMPORTED_BEST;
         } else {
-            if (1 == 1) // FIXME: WORKARROUND
-                return NO_PARENT;
+
+            if (blockStore.isBlockExist(block.getParentHash())) {
+                ImportResult result = tryConnectAndFork(block);
+                if (result == IMPORTED_BEST || result == IMPORTED_NOT_BEST) recordBlock(block);
+                return result;
+            }
+
         }
 
-        return SUCCESS;
+        return NO_PARENT;
     }
 
 
     @Override
     public void add(Block block) {
 
-        if (exitOn < block.getNumber()){
+        if (exitOn < block.getNumber()) {
             System.out.print("Exiting after block.number: " + getBestBlock().getNumber());
             System.exit(-1);
         }
 
 
-        if(!isValid(block)){
+        if (!isValid(block)) {
             logger.warn("Invalid block with number: {}", block.getNumber());
             return;
         }
@@ -241,21 +298,21 @@ public class BlockchainImpl implements Blockchain {
         List<TransactionReceipt> receipts = processBlock(block);
 
         // Sanity checks
-        String receiptHash = Hex.toHexString( block.getReceiptsRoot() );
+        String receiptHash = Hex.toHexString(block.getReceiptsRoot());
         String receiptListHash = Hex.toHexString(calcReceiptsTrie(receipts));
 
-        if( !receiptHash.equals(receiptListHash) ) {
-          logger.error("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
-          //return false;
+        if (!receiptHash.equals(receiptListHash)) {
+            logger.error("Block's given Receipt Hash doesn't match: {} != {}", receiptHash, receiptListHash);
+            //return false;
         }
 
-        String logBloomHash = Hex.toHexString( block.getLogBloom() );
+        String logBloomHash = Hex.toHexString(block.getLogBloom());
         String logBloomListHash = Hex.toHexString(calcLogBloom(receipts));
 
-        if( !logBloomHash.equals(logBloomListHash) ) {
-          logger.error("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
-          //track.rollback();
-          //return;
+        if (!logBloomHash.equals(logBloomListHash)) {
+            logger.error("Block's given logBloom Hash doesn't match: {} != {}", logBloomHash, logBloomListHash);
+            //track.rollback();
+            //return;
         }
 
         //DEBUG
@@ -265,9 +322,6 @@ public class BlockchainImpl implements Blockchain {
         track.commit();
         storeBlock(block, receipts);
 
-//        if (block.getNumber() == 708_461){
-//            System.exit(-1);
-//        }
 
         if (needFlush(block)) {
             repository.flush();
@@ -286,8 +340,7 @@ public class BlockchainImpl implements Blockchain {
 
         if (blockQueue != null &&
             blockQueue.size() == 0 &&
-            !syncDoneCalled &&
-                channelManager.isAllSync()) {
+            !syncDoneCalled) {
 
             logger.info("Sync done");
             syncDoneCalled = true;
@@ -309,7 +362,7 @@ public class BlockchainImpl implements Blockchain {
         return getRuntime().freeMemory() < (getRuntime().totalMemory() * (1 - maxMemoryPercents));
     }
 
-    private byte[] calcReceiptsTrie(List<TransactionReceipt> receipts){
+    private byte[] calcReceiptsTrie(List<TransactionReceipt> receipts) {
         //TODO Fix Trie hash for receipts - doesnt match cpp
         Trie receiptsTrie = new TrieImpl(null);
 
@@ -322,7 +375,7 @@ public class BlockchainImpl implements Blockchain {
         return receiptsTrie.getRootHash();
     }
 
-    private byte[] calcLogBloom( List<TransactionReceipt> receipts ) {
+    private byte[] calcLogBloom(List<TransactionReceipt> receipts) {
 
         Bloom retBloomFilter = new Bloom();
 
@@ -356,7 +409,7 @@ public class BlockchainImpl implements Blockchain {
 
         BigInteger difficulty = new BigInteger(1, header.getDifficulty());
 
-        if (header.getNumber() != (parentBlock.getNumber() + 1) ) {
+        if (header.getNumber() != (parentBlock.getNumber() + 1)) {
             logger.error("Block invalid: block number is not parentBlock number + 1, ");
             return false;
         }
@@ -376,14 +429,14 @@ public class BlockchainImpl implements Blockchain {
             return false;
         }
 
-        if (header.getExtraData() != null &&  header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
+        if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
             logger.error("Block invalid: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE");
             return false;
         }
 
         if (header.getGasLimit() < Constants.MIN_GAS_LIMIT ||
                 header.getGasLimit() < parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
-                header.getGasLimit() > parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR){
+                header.getGasLimit() > parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
 
             logger.error("Block invalid: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR");
             return false;
@@ -407,29 +460,32 @@ public class BlockchainImpl implements Blockchain {
             isValid = isValid(block.getHeader());
 
             // Sanity checks
-            String trieHash = Hex.toHexString( block.getTxTrieRoot() );
+            String trieHash = Hex.toHexString(block.getTxTrieRoot());
             String trieListHash = Hex.toHexString(calcTxTrie(block.getTransactionsList()));
 
-/* FIXME: temporary comment out tx.trie validation
+
             if( !trieHash.equals(trieListHash) ) {
               logger.error("Block's given Trie Hash doesn't match: {} != {}", trieHash, trieListHash);
-              return false;
+
+              //   FIXME: temporary comment out tx.trie validation
+//              return false;
             }
-*/
+
 
             String unclesHash = Hex.toHexString(block.getHeader().getUnclesHash());
-            String unclesListHash = Hex.toHexString( HashUtil.sha3(block.getHeader().getUnclesEncoded( block.getUncleList() ) ) );
+            String unclesListHash = Hex.toHexString(HashUtil.sha3(block.getHeader().getUnclesEncoded(block.getUncleList())));
 
-            if( !unclesHash.equals(unclesListHash) ) {
-              logger.error("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
-              return false;
+            if (!unclesHash.equals(unclesListHash)) {
+                logger.error("Block's given Uncle Hash doesn't match: {} != {}", unclesHash, unclesListHash);
+                return false;
             }
 
 
             if (block.getUncleList().size() > UNCLE_LIST_LIMIT) {
                 logger.error("Uncle list to big: block.getUncleList().size() > UNCLE_LIST_LIMIT");
                 return false;
-            };
+            }
+
 
             for (BlockHeader uncle : block.getUncleList()) {
 
@@ -437,8 +493,8 @@ public class BlockchainImpl implements Blockchain {
                 if (!isValid(uncle)) return false;
 
                 //if uncle's parent's number is not less than currentBlock - UNCLE_GEN_LIMIT, mark invalid
-                isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT) );
-                if (!isValid){
+                isValid = !(getParent(uncle).getNumber() < (block.getNumber() - UNCLE_GENERATION_LIMIT));
+                if (!isValid) {
                     logger.error("Uncle too old: generationGap must be under UNCLE_GENERATION_LIMIT");
                     return false;
                 }
@@ -542,7 +598,7 @@ public class BlockchainImpl implements Blockchain {
         if (block.getUncleList().size() > 0) {
             for (BlockHeader uncle : block.getUncleList()) {
                 track.addBalance(uncle.getCoinbase(),
-                  new BigDecimal(block.BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
+                        new BigDecimal(block.BLOCK_REWARD).multiply(BigDecimal.valueOf(8 + uncle.getNumber() - block.getNumber()).divide(new BigDecimal(8))).toBigInteger());
 
                 totalBlockReward = totalBlockReward.add(Block.INCLUSION_REWARD);
             }
@@ -559,18 +615,19 @@ public class BlockchainImpl implements Blockchain {
         String blockStateRootHash = Hex.toHexString(block.getStateRoot());
         String worldStateRootHash = Hex.toHexString(repository.getRoot());
 
-        if(!SystemProperties.CONFIG.blockChainOnly())
+        if (!SystemProperties.CONFIG.blockChainOnly())
             if (!blockStateRootHash.equals(worldStateRootHash)) {
 
                 stateLogger.error("BLOCK: STATE CONFLICT! block: {} worldstate {} mismatch", block.getNumber(), worldStateRootHash);
+//                stateLogger.error("DO ROLLBACK !!!");
                 adminInfo.lostConsensus();
 
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
 //                System.exit(1);
                 // in case of rollback hard move the root
-                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
-                repository.syncToRoot(parentBlock.getStateRoot());
-                // todo: after the rollback happens other block should be requested
+//                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
+//                repository.syncToRoot(parentBlock.getStateRoot());
+//                return false;
             }
 
         blockStore.saveBlock(block, totalDifficulty, true);
@@ -580,6 +637,7 @@ public class BlockchainImpl implements Blockchain {
             logger.debug("block added to the blockChain: index: [{}]", block.getNumber());
         if (block.getNumber() % 100 == 0)
             logger.info("*** Last block added [ #{} ]", block.getNumber());
+
     }
 
 

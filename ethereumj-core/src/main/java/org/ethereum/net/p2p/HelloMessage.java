@@ -9,6 +9,7 @@ import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -32,7 +33,7 @@ public class HelloMessage extends P2pMessage {
      * A peer-network capability code, readable ASCII and 3 letters.
      * Currently only "eth", "shh" and "bzz" are known.
      */
-    private List<Capability> capabilities;
+    private List<Capability> capabilities = Collections.emptyList();
     /**
      * The port on which the peer is listening for an incoming connection
      */

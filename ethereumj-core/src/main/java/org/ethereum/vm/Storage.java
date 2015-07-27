@@ -181,4 +181,10 @@ public class Storage implements Repository, ProgramTraceListenerAware {
     public void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts, HashMap<ByteArrayWrapper, ContractDetails> cacheDetails) {
         repository.loadAccount(addr, cacheAccounts, cacheDetails);
     }
+
+    @Override
+    public Repository getSnapshotTo(byte[] root) {
+        throw new UnsupportedOperationException();
+    }
+
 }

@@ -9,27 +9,27 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 public class DiscoveryExecutor {
-    Channel channel;
-    NodeTable table;
-    ECKey key;
+//    Channel channel;
+//    NodeTable table;
+//    ECKey key;
 
     ScheduledExecutorService discoverer = Executors.newSingleThreadScheduledExecutor();
     ScheduledExecutorService refresher = Executors.newSingleThreadScheduledExecutor();
 
-    DiscoveryExecutor(Channel channel, NodeTable table, ECKey key) {
-        this.channel = channel;
-        this.table = table;
-        this.key = key;
+    NodeManager nodeManager;
+
+    public DiscoveryExecutor(NodeManager nodeManager) {
+        this.nodeManager = nodeManager;
     }
 
     public void discover() {
 
         discoverer.scheduleWithFixedDelay(
-                new DiscoverTask(table.getNode().getId(), channel, key, table),
+                new DiscoverTask(nodeManager),
                 0, KademliaOptions.DISCOVER_CYCLE, TimeUnit.SECONDS);
 
         refresher.scheduleWithFixedDelay(
-                new RefreshTask(channel, key, table),
+                new RefreshTask(nodeManager),
                 0, KademliaOptions.BUCKET_REFRESH, TimeUnit.MILLISECONDS);
 
     }

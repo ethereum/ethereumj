@@ -317,6 +317,11 @@ public class RepositoryTrack implements Repository {
         throw new UnsupportedOperationException();
     }
 
+    @Override
+    public Repository getSnapshotTo(byte[] root) {
+        throw new UnsupportedOperationException();
+    }
+
     public Repository getOriginRepository() {
         return (repository instanceof RepositoryTrack)
                 ? ((RepositoryTrack) repository).getOriginRepository()

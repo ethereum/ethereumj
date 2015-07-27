@@ -23,6 +23,8 @@ public interface BlockStore {
 
     void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain);
 
+    BigInteger getTotalDifficultyForHash(byte[] hash);
+
     BigInteger getTotalDifficulty();
 
     Block getBestBlock();
@@ -31,6 +33,9 @@ public interface BlockStore {
 
 
     void flush();
+
+    void reBranch(Block forkBlock);
+
     void load();
     void setSessionFactory(SessionFactory sessionFactory);
 

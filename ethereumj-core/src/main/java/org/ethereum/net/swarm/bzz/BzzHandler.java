@@ -64,8 +64,7 @@ public class BzzHandler extends SimpleChannelInboundHandler<BzzMessage>
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        cause.printStackTrace();
-        logger.error(cause.getCause().toString());
+        logger.error("Bzz handling failed", cause);
         super.exceptionCaught(ctx, cause);
         ctx.close();
     }

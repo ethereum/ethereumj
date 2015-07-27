@@ -1,19 +1,19 @@
 package org.ethereum.net.rlpx;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.Serializable;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.ethereum.util.ByteUtil.byteArrayToInt;
-import static org.ethereum.util.ByteUtil.intToBytes;
 
-public class Node {
+public class Node implements Serializable {
+    private static final long serialVersionUID = -4267600517925770636L;
 
     byte[] id;
     String host;
@@ -99,11 +99,12 @@ public class Node {
 
     public byte[] getRLP() {
 
-        byte[] rlphost = RLP.encodeElement(host.getBytes(Charset.forName("UTF-8")));
-        byte[] rlpPort = RLP.encodeElement(intToBytes(port));
+        byte[] rlphost = RLP.encodeElement(host.getBytes(StandardCharsets.UTF_8));
+        byte[] rlpTCPPort = RLP.encodeInt(port);
+        byte[] rlpUDPPort = RLP.encodeInt(port);
         byte[] rlpId = RLP.encodeElement(id);
 
-        byte[] data = RLP.encodeList(rlphost, rlpPort, rlpId);
+        byte[] data = RLP.encodeList(rlphost, rlpUDPPort, rlpTCPPort, rlpId);
         return data;
     }
 

@@ -4,6 +4,7 @@ import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.trie.SecureTrie;
+import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPItem;
@@ -269,6 +270,20 @@ public class ContractDetailsImpl implements ContractDetails {
         ret += "  Storage: " + getStorage().toString();
 
         return ret;
+    }
+
+    @Override
+    public ContractDetails getSnapshotTo(byte[] hash){
+
+        KeyValueDataSource keyValueDataSource = ((TrieImpl) this.storageTrie).getCache().getDb();
+
+        SecureTrie snapStorage = new SecureTrie(keyValueDataSource, hash);
+        snapStorage.setCache(this.storageTrie.getCache());
+
+        ContractDetailsImpl details = new ContractDetailsImpl(this.address, snapStorage, this.code);
+        details.keys = this.keys;
+
+        return details;
     }
 }
 
