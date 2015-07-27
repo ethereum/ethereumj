@@ -318,11 +318,6 @@ public class RepositoryTrack implements Repository {
     }
 
     @Override
-    public org.ethereum.facade.Repository getSnapshotFor(byte[] root) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public Repository getSnapshotTo(byte[] root) {
         throw new UnsupportedOperationException();
     }

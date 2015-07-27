@@ -198,8 +198,6 @@ public interface Repository {
     void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                      HashMap<ByteArrayWrapper, ContractDetails> cacheDetails);
 
-    public org.ethereum.facade.Repository getSnapshotFor(byte[] root);
-
     public Repository getSnapshotTo(byte[] root);
 
 

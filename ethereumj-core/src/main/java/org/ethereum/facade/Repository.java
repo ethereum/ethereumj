@@ -1,10 +1,8 @@
 package org.ethereum.facade;
 
-import org.ethereum.core.Transaction;
 import org.ethereum.vm.DataWord;
 
 import java.math.BigInteger;
-import java.util.Set;
 
 public interface Repository {
 
@@ -53,4 +51,5 @@ public interface Repository {
     DataWord getStorageValue(byte[] addr, DataWord key);
 
 
+    
 }

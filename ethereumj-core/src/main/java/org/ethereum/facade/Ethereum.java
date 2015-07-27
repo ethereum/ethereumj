@@ -27,7 +27,7 @@ public interface Ethereum {
      * @param excludePeer - peer to exclude
      * @return online peer if available otherwise null
      */
-    public PeerInfo findOnlinePeer(PeerInfo excludePeer);
+    PeerInfo findOnlinePeer(PeerInfo excludePeer);
 
     /**
      * Find an online peer but not from excluded list
@@ -35,12 +35,12 @@ public interface Ethereum {
      * @param excludePeerSet - peers to exclude
      * @return online peer if available otherwise null
      */
-    public PeerInfo findOnlinePeer(Set<PeerInfo> excludePeerSet);
+    PeerInfo findOnlinePeer(Set<PeerInfo> excludePeerSet);
 
     /**
      * @return online peer if available
      */
-    public PeerInfo findOnlinePeer();
+    PeerInfo findOnlinePeer();
 
 
     /**
@@ -48,7 +48,7 @@ public interface Ethereum {
      *
      * @return online peer.
      */
-    public PeerInfo waitForOnlinePeer();
+    PeerInfo waitForOnlinePeer();
 
     /*
      *
@@ -61,27 +61,27 @@ public interface Ethereum {
      *    }
      *
      */
-    public Set<PeerInfo> getPeers();
+    Set<PeerInfo> getPeers();
 
-    public void startPeerDiscovery();
+    void startPeerDiscovery();
 
-    public void stopPeerDiscovery();
+    void stopPeerDiscovery();
 
-    public void connect(InetAddress addr, int port, String remoteId);
+    void connect(InetAddress addr, int port, String remoteId);
 
-    public void connect(String ip, int port, String remoteId);
+    void connect(String ip, int port, String remoteId);
 
-    public void connect(Node node);
+    void connect(Node node);
 
-    public Blockchain getBlockchain();
+    Blockchain getBlockchain();
 
-    public void addListener(EthereumListener listener);
+    void addListener(EthereumListener listener);
 
-    public PeerClient getDefaultPeer();
+    PeerClient getDefaultPeer();
 
-    public boolean isConnected();
+    boolean isConnected();
 
-    public void close();
+    void close();
 
     /**
      * Factory for general transaction
@@ -99,43 +99,45 @@ public interface Ethereum {
      *               transactions this one is empty.
      * @return newly created transaction
      */
-    public Transaction createTransaction(BigInteger nonce,
-                                         BigInteger gasPrice,
-                                         BigInteger gas,
-                                         byte[] receiveAddress,
-                                         BigInteger value, byte[] data);
+    Transaction createTransaction(BigInteger nonce,
+                                 BigInteger gasPrice,
+                                 BigInteger gas,
+                                 byte[] receiveAddress,
+                                 BigInteger value, byte[] data);
 
 
     /**
      * @param transaction submit transaction to the net, return option to wait for net
      *                    return this transaction as approved
      */
-    public Future<Transaction> submitTransaction(Transaction transaction);
+    Future<Transaction> submitTransaction(Transaction transaction);
 
 
     /**
      * @return wallet object which is the manager
      *         of internal accounts
      */
-    public Wallet getWallet();
+    Wallet getWallet();
 
 
     /**
      * @return - repository for all state data.
      */
-    public Repository getRepository();
+    Repository getRepository();
 
 
     public void init();
 //  2.   // is blockchain still loading - if buffer is not empty
 
-    public AdminInfo getAdminInfo();
+    Repository getSnapshootTo(byte[] root);
 
-    public ChannelManager getChannelManager();
+    AdminInfo getAdminInfo();
 
-    public Set<Transaction> getPendingTransactions();
+    ChannelManager getChannelManager();
 
-    public BlockLoader getBlockLoader();
+    Set<Transaction> getPendingTransactions();
 
-    public void exitOn(long number);
+    BlockLoader getBlockLoader();
+
+    void exitOn(long number);
 }

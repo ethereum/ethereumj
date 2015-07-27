@@ -187,8 +187,4 @@ public class Storage implements Repository, ProgramTraceListenerAware {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public org.ethereum.facade.Repository getSnapshotFor(byte[] root) {
-        throw new UnsupportedOperationException();
-    }
 }

@@ -616,12 +616,6 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
 
     @Override
-    public org.ethereum.facade.Repository getSnapshotFor(byte[] root){
-        return (org.ethereum.facade.Repository)getSnapshotTo(root);
-    }
-
-
-    @Override
     public Repository getSnapshotTo(byte[] root){
 
         TrieImpl trie = new SecureTrie(stateDS);
