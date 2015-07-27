@@ -132,7 +132,7 @@ dependencies {
 javadoc {
     options.author = true
     options.header = project.name
-    options.addStringOption('Xdoclint:all,-missing', '-quiet')
+    options.addStringOption('-quiet')
     options.encoding = "UTF-8"
     options.links(
             "http://docs.oracle.com/javase/7/docs/api/",
