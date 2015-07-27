@@ -5,7 +5,6 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,6 +63,8 @@ public class SystemProperties {
     // mutable options for tests
     private String databaseDir = null;
     private Boolean databaseReset = null;
+
+    private String genesisInfo = null;
 
     private SystemProperties() {
         try {
@@ -382,6 +383,19 @@ public class SystemProperties {
     @ValidateMe
     public boolean isRedisEnabled() {
         return config.getBoolean("redis.enabled");
+    }
+
+    @ValidateMe
+    public String genesisInfo() {
+
+        if (genesisInfo == null)
+            return config.getString("genesis");
+        else
+            return genesisInfo;
+    }
+
+    public void setGenesisInfo(String genesisInfo){
+        this.genesisInfo = genesisInfo;
     }
 
     public String dump() {

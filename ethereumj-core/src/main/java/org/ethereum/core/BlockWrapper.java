@@ -3,7 +3,7 @@ package org.ethereum.core;
 import java.math.BigInteger;
 
 /**
- * Wraps {@link Block} </p>
+ * <p> Wraps {@link Block} </p>
  * Adds some additional data required by core during blocks processing
  *
  * @author Mikhail Kalinin

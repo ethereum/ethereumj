@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.*;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.junit.Assert.*;
 
 /**
@@ -69,7 +70,7 @@ public class BlockQueueTest {
 
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
-        SystemProperties.CONFIG.setDataBaseDir(testDb);
+        CONFIG.setDataBaseDir(testDb);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         blockQueue = new BlockQueueImpl();
@@ -85,6 +86,9 @@ public class BlockQueueTest {
 
     @Test // basic checks
     public void test1() {
+
+        CONFIG.setDatabaseReset(false);
+
         blockQueue.add(new BlockWrapper(blocks.get(0)));
 
         // testing: peek()

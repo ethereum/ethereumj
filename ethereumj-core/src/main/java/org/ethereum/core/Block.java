@@ -51,6 +51,7 @@ public class Block {
 
     private Trie txsState;
 
+
     /* Constructors */
 
     public Block(byte[] rawData) {
