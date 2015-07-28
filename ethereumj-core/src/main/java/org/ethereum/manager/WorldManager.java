@@ -71,9 +71,6 @@ public class WorldManager {
     @Autowired
     private NodeManager nodeManager;
 
-    @Autowired
-    private UDPListener udpListener;
-
     @PostConstruct
     public void init() {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());

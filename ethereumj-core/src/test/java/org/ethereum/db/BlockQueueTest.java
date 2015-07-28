@@ -87,9 +87,6 @@ public class BlockQueueTest {
 
     @Test // basic checks
     public void test1() {
-
-        CONFIG.setDatabaseReset(false);
-
         blockQueue.add(new BlockWrapper(blocks.get(0)));
 
         // testing: peek()

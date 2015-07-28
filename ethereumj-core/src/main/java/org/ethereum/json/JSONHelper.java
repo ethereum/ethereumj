@@ -62,10 +62,10 @@ public class JSONHelper {
 //        account.put("codeHash", details.getCodeHash() == null ? "0x" : "0x" + Hex.toHexString(details.getCodeHash()));
         account.put("code", details.getCode() == null ? "0x" : "0x" + Hex.toHexString(details.getCode()));
         account.put("nonce", state.getNonce() == null ? "0" : state.getNonce().toString());
-        account.put("storage", storage);
+        account.set("storage", storage);
         account.put("storage_root", state.getStateRoot() == null ? "" : Hex.toHexString(state.getStateRoot()));
 
-        statesNode.put(address, account);
+        statesNode.set(address, account);
     }
 
     public static void dumpBlock(ObjectNode blockNode, Block block,
@@ -87,13 +87,13 @@ public class JSONHelper {
             ContractDetails details = repository.getContractDetails(keyBytes);
             dumpState(statesNode, Hex.toHexString(keyBytes), accountState, details);
         }
-        blockNode.put("state", statesNode);
+        blockNode.set("state", statesNode);
 
         blockNode.put("state_root", Hex.toHexString(state));
         blockNode.put("timestamp", String.valueOf(block.getTimestamp()));
 
         ArrayNode transactionsNode = blockNode.arrayNode();
-        blockNode.put("transactions", transactionsNode);
+        blockNode.set("transactions", transactionsNode);
 
         blockNode.put("tx_list_root", ByteUtil.toHexString(block.getTxTrieRoot()));
         blockNode.put("uncles_hash", "0x" + Hex.toHexString(block.getUnclesHash()));
