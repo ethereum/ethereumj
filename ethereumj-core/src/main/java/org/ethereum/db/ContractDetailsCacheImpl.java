@@ -10,8 +10,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.util.*;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.util.Collections.unmodifiableMap;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 /**
@@ -153,28 +152,18 @@ public class ContractDetailsCacheImpl implements ContractDetails {
 
     @Override
     public Map<DataWord, DataWord> getStorage() {
-        return Collections.unmodifiableMap(storage);
+        return unmodifiableMap(storage);
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage(int offset, int limit) {
-        if (origContract != null) return origContract.getStorage(offset, limit);
+    public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
+        if (keys == null) return getStorage();
 
-        Collection<DataWord> keys = storage.keySet();
-        int fromIndex = max(offset, 0);
-        int toIndex = min(keys.size(), offset + limit);
-        if (fromIndex >= toIndex) return Collections.EMPTY_MAP;
-
-        List<DataWord> sortedKeys = new ArrayList<>(keys);
-        Collections.sort(sortedKeys);
-
-        keys = sortedKeys.subList(fromIndex, toIndex);
-        Map<DataWord, DataWord> result = new HashMap<>(keys.size());
+        Map<DataWord, DataWord> result = new HashMap<>();
         for (DataWord key : keys) {
             result.put(key, storage.get(key));
         }
-
-        return result;
+        return unmodifiableMap(result);
     }
 
     @Override
@@ -182,6 +171,13 @@ public class ContractDetailsCacheImpl implements ContractDetails {
         return (origContract == null)
                 ? storage.size()
                 : origContract.getStorageSize();
+    }
+
+    @Override
+    public Set<DataWord> getStorageKeys() {
+        return (origContract == null)
+                ? storage.keySet()
+                : origContract.getStorageKeys();
     }
 
     @Override
