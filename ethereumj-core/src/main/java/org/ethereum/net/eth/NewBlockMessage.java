@@ -78,7 +78,8 @@ public class NewBlockMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
 
-        String blockString = this.getBlock().toString();
-        return "NEW_BLOCK [ " + blockString + "\n difficulty: " + Hex.toHexString(difficulty) + " ]";
+        String hash = this.getBlock().getShortHash();
+        long number = this.getBlock().getNumber();
+        return "NEW_BLOCK [ number: " + number + " hash:" + hash + " difficulty: " + Hex.toHexString(difficulty) + " ]";
     }
 }
