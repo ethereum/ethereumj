@@ -336,4 +336,10 @@ public class BlockQueue {
     public HashStore getHashStore() {
         return hashStore;
     }
+
+    //TODO we need more robust solution for this check
+    public boolean syncWasInterrupted() {
+        BlockWrapper wrapper = blockQueue.peek();
+        return wrapper != null && !wrapper.isNewBlock();
+    }
 }

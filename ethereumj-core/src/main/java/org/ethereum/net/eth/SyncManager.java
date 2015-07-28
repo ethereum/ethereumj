@@ -330,9 +330,6 @@ public class SyncManager {
     }
 
     public synchronized void changeState(SyncState newState) {
-        if(state == SyncState.DONE_SYNC) {
-            return;
-        }
         if(newState == SyncState.HASH_RETRIEVING) {
             if(peers.isEmpty()) {
                 return;
@@ -343,13 +340,20 @@ public class SyncManager {
                     return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
                 }
             });
-            changePeersState(SyncState.IDLE);
             BlockQueue queue = blockchain.getQueue();
             queue.setHighestTotalDifficulty(masterPeer.getTotalDifficulty());
+
+            if(state == SyncState.INIT && blockchain.getQueue().syncWasInterrupted()) {
+                logger.info("It seems that BLOCK_RETRIEVING was interrupted, run it again");
+                changeState(SyncState.BLOCK_RETRIEVING);
+                return;
+            }
+
             if(bestHash == null) {
                 bestHash = masterPeer.getBestHash();
             }
             queue.setBestHash(bestHash);
+            changePeersState(SyncState.IDLE);
             masterPeer.setMaxHashesAsk(maxHashesAsk);
             masterPeer.changeState(SyncState.HASH_RETRIEVING);
             logger.info("Hashes retrieving initiated, best known hash [{}], askLimit [{}]", Hex.toHexString(bestHash), maxHashesAsk);
