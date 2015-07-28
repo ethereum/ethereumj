@@ -35,5 +35,5 @@ test_db
 
 
 # Local configuration
-ethereumj-core/src/main/resources/user.conf
-ethereumj-core/out.log
+**/user.conf
+**/out.log
