@@ -25,6 +25,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 
 /**
@@ -44,6 +45,8 @@ public class SyncManager {
     private EthHandler masterPeer;
     private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
     private boolean shouldNotifyDone = true;
+    private int maxHashesAsk;
+    private byte[] bestHash;
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
@@ -287,7 +290,7 @@ public class SyncManager {
                     Utils.getNodeIdShort(peer.getPeerId()),
                     Hex.toHexString(peer.getBestHash())
             );
-            changeState(SyncState.HASH_RETRIEVING);
+            runHashRetrieving(CONFIG.maxHashesAsk(), null);
         } else if(state == SyncState.BLOCK_RETRIEVING) {
             peer.changeState(SyncState.BLOCK_RETRIEVING);
         }
@@ -307,14 +310,22 @@ public class SyncManager {
         if(wrapper.isNewBlock() && gap > BLOCKS_GAP_THRESHOLD) {
             if(blockchain.getQueue().isHashesEmpty() &&
                     (state == SyncState.BLOCK_RETRIEVING || state == SyncState.DONE_SYNC)) {
-                changeState(SyncState.HASH_RETRIEVING);
+                maxHashesAsk = gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : (int) gap;
+                logger.debug("Recover NEW blocks gap, block.number [{}], block.hash [{}]", wrapper.getNumber(), wrapper.getShortHash());
+                runHashRetrieving(maxHashesAsk, wrapper.getHash());
             } else if(logger.isInfoEnabled()) {
-                logger.info("Main sync is incomplete, postpone NEW blocks gap recovery", wrapper.getNumber());
+                logger.info("We are in {} state, postpone NEW blocks gap recovery", state, wrapper.getNumber());
             }
         } else {
             logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
             blockchain.getQueue().getHashStore().addFirst(wrapper.getParentHash());
         }
+    }
+
+    public void runHashRetrieving(int maxHashesAsk, byte[] bestHash) {
+        this.maxHashesAsk = maxHashesAsk;
+        this.bestHash = bestHash;
+        changeState(SyncState.HASH_RETRIEVING);
     }
 
     public synchronized void changeState(SyncState newState) {
@@ -334,9 +345,14 @@ public class SyncManager {
             changePeersState(SyncState.IDLE);
             BlockQueue queue = blockchain.getQueue();
             queue.setHighestTotalDifficulty(masterPeer.getTotalDifficulty());
-            queue.setBestHash(masterPeer.getBestHash());
+            if(bestHash == null) {
+                bestHash = masterPeer.getBestHash();
+            }
+            queue.setBestHash(bestHash);
+            masterPeer.setMaxHashesAsk(maxHashesAsk);
             masterPeer.changeState(SyncState.HASH_RETRIEVING);
-            logger.info("Hashes retrieving initiated");
+            logger.info("Hashes retrieving initiated, best known hash [{}], askLimit [{}]", Hex.toHexString(bestHash), maxHashesAsk);
+            logger.debug("Our best block hash [{}]", Hex.toHexString(blockchain.getBestBlockHash()));
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
             changePeersState(SyncState.BLOCK_RETRIEVING);
@@ -348,7 +364,7 @@ public class SyncManager {
                 shouldNotifyDone = false;
                 ethereumListener.onSyncDone();
             }
-            logger.info("Synchronization is finished");
+            logger.info("Main synchronization is finished");
         }
         this.state = newState;
     }

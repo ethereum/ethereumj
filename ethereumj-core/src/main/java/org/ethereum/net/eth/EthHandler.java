@@ -82,6 +82,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private List<ByteArrayWrapper> sentHashes;
     private Block lastBlock = Genesis.getInstance();
     private byte[] bestHash;
+    private int maxHashesAsk;
 
     public EthHandler() {
         this.peerDiscoveryMode = false;
@@ -369,7 +370,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private void sendGetBlockHashes() {
         byte[] bestHash = blockchain.getQueue().getBestHash();
-        GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, CONFIG.maxHashesAsk());
+        GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, maxHashesAsk);
         sendMessage(msg);
     }
 
@@ -532,6 +533,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public BigInteger getTotalDifficulty() {
         return channel.getNodeStatistics().getEthTotalDifficulty();
+    }
+
+    void setMaxHashesAsk(int maxHashesAsk) {
+        this.maxHashesAsk = maxHashesAsk;
     }
 
     enum EthState {
