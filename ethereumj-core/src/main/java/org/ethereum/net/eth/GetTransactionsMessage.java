@@ -12,7 +12,7 @@ public class GetTransactionsMessage extends EthMessage {
     /**
      * GetTransactions message is always a the same single command payload
      */
-    private final static byte[] FIXED_PAYLOAD = Hex.decode("C116");
+    private final static byte[] FIXED_PAYLOAD = Hex.decode("C0");
 
     public byte[] getEncoded() {
         return FIXED_PAYLOAD;
