@@ -83,6 +83,10 @@ public class BlockWrapper {
         }
     }
 
+    public long timeSinceReceiving() {
+        return System.currentTimeMillis() - receivedAt;
+    }
+
     public byte[] getBytes() {
         byte[] blockBytes = block.getEncoded();
         byte[] importFailedBytes = BigInteger.valueOf(importFailedAt).toByteArray();
@@ -110,7 +114,7 @@ public class BlockWrapper {
         System.arraycopy(bytes, importFailedAtBytes.length + 3, receivedAtBytes, 0, receivedAtBytes.length);
 
         byte[] blockBytes = new byte[bytes.length - importFailedAtBytes.length - receivedAtBytes.length - 3];
-        System.arraycopy(bytes, importFailedAtBytes.length + importFailedAtBytes.length + 3, blockBytes, 0, blockBytes.length);
+        System.arraycopy(bytes, importFailedAtBytes.length + receivedAtBytes.length + 3, blockBytes, 0, blockBytes.length);
 
         this.newBlock = bytes[0] == 1;
         this.importFailedAt = new BigInteger(importFailedAtBytes).longValue();

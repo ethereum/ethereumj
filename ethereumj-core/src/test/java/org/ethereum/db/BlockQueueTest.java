@@ -103,7 +103,9 @@ public class BlockQueueTest {
         blockQueue.addAll(CollectionUtils.collectList(blocks, new Functional.Function<Block, BlockWrapper>() {
             @Override
             public BlockWrapper apply(Block block) {
-                return new BlockWrapper(block);
+                BlockWrapper wrapper = new BlockWrapper(block);
+                wrapper.setReceivedAt(System.currentTimeMillis());
+                return wrapper;
             }
         }));
 
