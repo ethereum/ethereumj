@@ -115,12 +115,11 @@ public class BlockQueue {
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
-                    if (syncManager.isGapRecovery()) {
-                        wrapper.resetImportFail();
-                    } else {
+                    if (!syncManager.isGapRecovery()) {
                         wrapper.importFailed();
                         if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
                             syncManager.recoverGap(wrapper);
+                            wrapper.resetImportFail();
                         }
                     }
                     blockQueue.add(wrapper);
