@@ -2,7 +2,11 @@ package org.ethereum.facade;
 
 import org.ethereum.vm.DataWord;
 
+import javax.annotation.Nullable;
 import java.math.BigInteger;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Set;
 
 public interface Repository {
 
@@ -50,6 +54,28 @@ public interface Repository {
      */
     DataWord getStorageValue(byte[] addr, DataWord key);
 
+    /**
+     * Retrieve storage size for a given account
+     *
+     * @param addr of the account
+     * @return storage entries count
+     */
+    int getStorageSize(byte[] addr);
 
-    
+    /**
+     * Retrieve all storage keys for a given account
+     *
+     * @param addr of the account
+     * @return set of storage keys or empty set if account with specified address not exists
+     */
+    Set<DataWord> getStorageKeys(byte[] addr);
+
+    /**
+     * Retrieve storage entries from an account for given keys
+     *
+     * @param addr of the account
+     * @param keys
+     * @return storage entries for specified keys, or full storage if keys parameter is <code>null</code>
+     */
+    Map<DataWord, DataWord> getStorage(byte[] addr, @Nullable Collection<DataWord> keys);
 }

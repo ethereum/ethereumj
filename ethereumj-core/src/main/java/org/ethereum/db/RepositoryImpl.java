@@ -24,10 +24,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -397,6 +394,24 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
     public DataWord getStorageValue(byte[] addr, DataWord key) {
         ContractDetails details = getContractDetails(addr);
         return (details == null) ? null : details.get(key);
+    }
+
+    @Override
+    public int getStorageSize(byte[] addr) {
+        ContractDetails details = getContractDetails(addr);
+        return (details == null) ? 0 : details.getStorageSize();
+    }
+
+    @Override
+    public Set<DataWord> getStorageKeys(byte[] addr) {
+        ContractDetails details = getContractDetails(addr);
+        return (details == null) ? Collections.EMPTY_SET : details.getStorageKeys();
+    }
+
+    @Override
+    public Map<DataWord, DataWord> getStorage(byte[] addr, Collection<DataWord> keys) {
+        ContractDetails details = getContractDetails(addr);
+        return (details == null) ? Collections.EMPTY_MAP : details.getStorage(keys);
     }
 
     @Override

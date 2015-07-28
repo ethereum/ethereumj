@@ -171,19 +171,28 @@ public class ContractDetailsImpl implements ContractDetails {
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage() {
-        return getStorageInternal(keys);
+    public Map<DataWord, DataWord> getStorage(Collection<DataWord> keys) {
+        Map<DataWord, DataWord> storage = new HashMap<>();
+        if (keys == null) {
+            for (ByteArrayWrapper keyBytes : this.keys) {
+                DataWord key = new DataWord(keyBytes);
+                DataWord value = get(key);
+
+                storage.put(key, value);
+            }
+        } else {
+            for (DataWord key : keys) {
+                DataWord value = get(key);
+                storage.put(key, value);
+            }
+        }
+
+        return storage;
     }
 
     @Override
-    public Map<DataWord, DataWord> getStorage(int offset, int limit) {
-        int fromIndex = max(offset, 0);
-        int toIndex = min(keys.size(), offset + limit);
-        if (fromIndex >= toIndex) return Collections.EMPTY_MAP;
-
-        List<ByteArrayWrapper> sortedKeys = new ArrayList<>(keys);
-        Collections.sort(sortedKeys);
-        return getStorageInternal(sortedKeys.subList(fromIndex, toIndex));
+    public Map<DataWord, DataWord> getStorage() {
+        return getStorage(null);
     }
 
     @Override
@@ -191,17 +200,13 @@ public class ContractDetailsImpl implements ContractDetails {
         return keys.size();
     }
 
-    private Map<DataWord, DataWord> getStorageInternal(Collection<ByteArrayWrapper> keys) {
-        Map<DataWord, DataWord> storage = new HashMap<>();
-
-        for (ByteArrayWrapper keyBytes : keys) {
-
-            DataWord key = new DataWord(keyBytes);
-            DataWord value = get(key);
-            storage.put(key, value);
+    @Override
+    public Set<DataWord> getStorageKeys() {
+        Set<DataWord> result = new HashSet<>();
+        for (ByteArrayWrapper key : keys) {
+            result.add(new DataWord(key));
         }
-
-        return storage;
+        return result;
     }
 
     @Override
