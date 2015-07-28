@@ -41,6 +41,10 @@ public class BlockWrapper {
         return importFailedAt;
     }
 
+    public void setImportFailedAt(long importFailedAt) {
+        this.importFailedAt = importFailedAt;
+    }
+
     public byte[] getHash() {
         return block.getHash();
     }
@@ -118,6 +122,7 @@ public class BlockWrapper {
 
         this.newBlock = bytes[0] == 1;
         this.importFailedAt = new BigInteger(importFailedAtBytes).longValue();
+        this.receivedAt = new BigInteger(receivedAtBytes).longValue();
         this.block = new Block(blockBytes);
     }
 }

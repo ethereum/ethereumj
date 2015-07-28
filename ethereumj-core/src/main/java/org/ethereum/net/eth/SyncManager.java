@@ -39,12 +39,12 @@ public class SyncManager {
 
     private static final int PEERS_COUNT = 5;
     private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
-    private static final long BLOCKS_GAP_THRESHOLD = 20;
+    private static final long LARGE_GAP_THRESHOLD = 5;
+    private static final long TIME_TO_IMPORT_THRESHOLD = 10 * 60 * 1000; // 10 minutes
 
     private SyncState state = SyncState.INIT;
     private EthHandler masterPeer;
     private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
-    private boolean shouldNotifyDone = true;
     private int maxHashesAsk;
     private byte[] bestHash;
 
@@ -141,11 +141,6 @@ public class SyncManager {
     private void checkPeers() {
         List<EthHandler> removed = new ArrayList<>();
         for(EthHandler peer : peers) {
-            if(peer.isSyncDone()) {
-                changeState(SyncState.DONE_SYNC);
-                return;
-            }
-
             if(peer.hasNoMoreBlocks()) {
                 logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
                 removed.add(peer);
@@ -316,7 +311,7 @@ public class SyncManager {
                     bestBlock.getNumber()
             );
         }
-        if(wrapper.isNewBlock() && gap > BLOCKS_GAP_THRESHOLD) {
+        if(wrapper.isNewBlock() && gap > LARGE_GAP_THRESHOLD) {
             if(blockchain.getQueue().isHashesEmpty() &&
                     (state == SyncState.BLOCK_RETRIEVING || state == SyncState.DONE_SYNC)) {
                 maxHashesAsk = gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : (int) gap;
@@ -335,6 +330,22 @@ public class SyncManager {
         this.maxHashesAsk = maxHashesAsk;
         this.bestHash = bestHash;
         changeState(SyncState.HASH_RETRIEVING);
+    }
+
+    public void notifyNewBlockImported(BlockWrapper wrapper) {
+        if(state == SyncState.DONE_SYNC) {
+            return;
+        }
+        if(wrapper.timeSinceReceiving() <= TIME_TO_IMPORT_THRESHOLD) {
+            logger.info("NEW block.number [{}] imported", wrapper.getNumber());
+            changeState(SyncState.DONE_SYNC);
+        } else if(logger.isInfoEnabled()) {
+            logger.info(
+                    "NEW block.number [{}] block.minsSinceReceiving [{}] exceeds import time limit, continue sync",
+                    wrapper.getNumber(),
+                    wrapper.timeSinceReceiving() / 1000 / 60
+            );
+        }
     }
 
     public synchronized void changeState(SyncState newState) {
@@ -372,14 +383,16 @@ public class SyncManager {
             logger.info("Blocks retrieving initiated");
         }
         if(newState == SyncState.DONE_SYNC) {
-            changePeersState(SyncState.DONE_SYNC);
-            if(shouldNotifyDone) {
-                shouldNotifyDone = false;
-                ethereumListener.onSyncDone();
+            if(state == SyncState.DONE_SYNC) {
+                return;
             }
+            changePeersState(SyncState.DONE_SYNC);
+            ethereumListener.onSyncDone();
             logger.info("Main synchronization is finished");
         }
-        this.state = newState;
+        if(state != SyncState.DONE_SYNC) {
+            this.state = newState;
+        }
     }
 
     private void changePeersState(SyncState newState) {

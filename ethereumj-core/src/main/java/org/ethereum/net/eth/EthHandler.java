@@ -336,17 +336,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
         bestHash = newBlock.getHash();
 
-        ImportResult result = blockchain.tryToConnect(newBlock);
-        if(result == ImportResult.NO_PARENT) {
-            // adding block to the queue
-            // there will be decided how to
-            // connect it to the chain
-            blockchain.getQueue().addNewBlock(newBlock);
-            blockchain.getQueue().logHashQueueSize();
-        } else {
-            changeState(SyncState.DONE_SYNC);
-            loggerSync.info("Peer {}: new block successfully imported", Utils.getNodeIdShort(peerId));
-        }
+        // adding block to the queue
+        // there will be decided how to
+        // connect it to the chain
+        blockchain.getQueue().addNewBlock(newBlock);
+        blockchain.getQueue().logHashQueueSize();
     }
 
     private void sendStatus() {
@@ -481,6 +475,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
         if(newState == SyncState.DONE_SYNC) {
             processTransactions = true;
+            newState = SyncState.IDLE;
         }
         this.syncState = newState;
     }

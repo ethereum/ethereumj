@@ -123,6 +123,10 @@ public class BlockQueue {
                     sleep(2000);
                 }
 
+                if(wrapper.isNewBlock() && importResult.isSuccessful()) {
+                    syncManager.notifyNewBlockImported(wrapper);
+                }
+
                 if (importResult == IMPORTED_BEST)
                     logger.info("Success importing BEST: block number: {}", wrapper.getNumber());
 
@@ -178,7 +182,9 @@ public class BlockQueue {
      * @param block new block
      */
     public void addNewBlock(Block block) {
-        addBlock(new BlockWrapper(block, true));
+        BlockWrapper wrapper = new BlockWrapper(block, true);
+        wrapper.setReceivedAt(System.currentTimeMillis());
+        addBlock(wrapper);
     }
 
     /**

@@ -87,12 +87,20 @@ public class BlockQueueTest {
 
     @Test // basic checks
     public void test1() {
+        long receivedAt = System.currentTimeMillis();
+        long importFailedAt = receivedAt + receivedAt / 2;
+        BlockWrapper wrapper = new BlockWrapper(blocks.get(0), true);
+        wrapper.setReceivedAt(receivedAt);
+        wrapper.setImportFailedAt(importFailedAt);
         blockQueue.add(new BlockWrapper(blocks.get(0)));
 
         // testing: peek()
         BlockWrapper block = blockQueue.peek();
 
         assertNotNull(block);
+        assertTrue(wrapper.isNewBlock());
+        assertEquals(receivedAt, wrapper.getReceivedAt());
+        assertEquals(importFailedAt, wrapper.getImportFailedAt());
 
         // testing: validity of loaded block
         assertArrayEquals(blocks.get(0).getEncoded(), block.getEncoded());
