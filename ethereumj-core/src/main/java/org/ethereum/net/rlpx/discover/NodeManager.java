@@ -82,7 +82,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         timer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                System.err.println("Statistics:\n" + dumpAllStatistics());
+                logger.trace("Statistics:\n {}", dumpAllStatistics());
             }
         }, 1 * 1000, 10 * 1000);
     }

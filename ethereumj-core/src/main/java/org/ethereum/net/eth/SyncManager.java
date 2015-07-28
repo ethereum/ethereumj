@@ -230,8 +230,16 @@ public class SyncManager {
     }
 
     private void logStats() {
-        for(EthHandler peer : peers) {
-            peer.logSyncStats();
+
+        if (peers.size() > 0){
+
+            logger.info("\n");
+            logger.info("Active peers");
+            logger.info("============");
+            for(EthHandler peer : peers) {
+                peer.logSyncStats();
+            }
+            logger.info("\n");
         }
     }
 

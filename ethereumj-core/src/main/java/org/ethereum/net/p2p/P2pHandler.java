@@ -108,7 +108,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     public void channelRead0(final ChannelHandlerContext ctx, P2pMessage msg) throws InterruptedException {
 
         if (P2pMessageCodes.inRange(msg.getCommand().asByte()))
-            logger.info("P2PHandler invoke: [{}]", msg.getCommand());
+            logger.trace("P2PHandler invoke: [{}]", msg.getCommand());
 
         worldManager.getListener().trace(String.format("P2PHandler invoke: [%s]", msg.getCommand()));
 

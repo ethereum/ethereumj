@@ -106,7 +106,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
         if (EthMessageCodes.inRange(msg.getCommand().asByte()))
-            loggerNet.info("EthHandler invoke: [{}]", msg.getCommand());
+            loggerNet.trace("EthHandler invoke: [{}]", msg.getCommand());
 
         worldManager.getListener().trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
 
@@ -201,23 +201,28 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         channel.getNodeStatistics().ethHandshake(msg);
         this.bestHash = msg.getBestHash();
 
-        if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
-                || msg.getProtocolVersion() != VERSION) {
-            loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
-            disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
-            ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
-            peerState = EthState.STATUS_FAILED;
-            ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
-        } else if (msg.getNetworkId() != CONFIG.networkId()) {
-            peerState = EthState.STATUS_FAILED;
-            disconnect(ReasonCode.NULL_IDENTITY);
-        } else if (peerDiscoveryMode) {
-            loggerNet.debug("Peer discovery mode: STATUS received, disconnecting...");
-            disconnect(ReasonCode.REQUESTED);
-            ctx.close().sync();
-            ctx.disconnect().sync();
-        } else {
-            peerState = EthState.STATUS_SUCCEEDED;
+        try {
+            if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
+                    || msg.getProtocolVersion() != VERSION) {
+                loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
+                disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
+
+                ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
+                peerState = EthState.STATUS_FAILED;
+                ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
+            } else if (msg.getNetworkId() != CONFIG.networkId()) {
+                peerState = EthState.STATUS_FAILED;
+                disconnect(ReasonCode.NULL_IDENTITY);
+            } else if (peerDiscoveryMode) {
+                loggerNet.debug("Peer discovery mode: STATUS received, disconnecting...");
+                disconnect(ReasonCode.REQUESTED);
+                ctx.close().sync();
+                ctx.disconnect().sync();
+            } else {
+                peerState = EthState.STATUS_SUCCEEDED;
+            }
+        } catch (NoSuchElementException e) {
+            loggerNet.debug("EthHandler already removed");
         }
     }
 
@@ -396,7 +401,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         Collections.shuffle(hashes);
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
 
-        if (loggerNet.isDebugEnabled())
+        if (loggerNet.isTraceEnabled())
             loggerNet.debug(msg.getDetailedString());
 
         sendMessage(msg);
