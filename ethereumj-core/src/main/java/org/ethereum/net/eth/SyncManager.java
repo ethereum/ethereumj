@@ -11,6 +11,7 @@ import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
+import org.ethereum.util.BIUtil;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
@@ -24,6 +25,8 @@ import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
+
+import static org.ethereum.util.BIUtil.isIn20PercentRange;
 
 /**
  * @author Mikhail Kalinin
@@ -271,7 +274,9 @@ public class SyncManager {
         BlockQueue chainQueue = blockchain.getQueue();
         BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
 
-        if ((highestKnownTotalDifficulty == null || peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0)) {
+        if ((highestKnownTotalDifficulty == null ||
+            !isIn20PercentRange(highestKnownTotalDifficulty, peerTotalDifficulty))) {
+
             if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: its chain is better than previously known: {} vs {}",
                     Utils.getNodeIdShort(peer.getPeerId()),
