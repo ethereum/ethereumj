@@ -68,6 +68,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private SyncState syncState = SyncState.IDLE;
     private EthState peerState = EthState.INIT;
     private long blocksLoadedCnt = 0;
+    private boolean processTransactions = false;
 
     private boolean peerDiscoveryMode = false;
 
@@ -157,6 +158,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     private void processTransactions(TransactionsMessage msg) {
+        if(!processTransactions) {
+            return;
+        }
 
         Set<Transaction> txSet = msg.getTransactions();
         worldManager.getBlockchain().
@@ -469,6 +473,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             if(++noMoreBlocksHits < NO_MORE_BLOCKS_THRESHOLD) {
                 return;
             }
+        }
+        if(newState == SyncState.DONE_SYNC) {
+            processTransactions = true;
         }
         this.syncState = newState;
     }
