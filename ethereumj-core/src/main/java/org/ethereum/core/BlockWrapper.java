@@ -79,6 +79,10 @@ public class BlockWrapper {
         }
     }
 
+    public void resetImportFail() {
+        importFailedAt = 0;
+    }
+
     public long timeSinceFail() {
         if(importFailedAt == 0) {
             return 0;

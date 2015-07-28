@@ -115,9 +115,13 @@ public class BlockQueue {
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
-                    wrapper.importFailed();
-                    if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
-                        syncManager.recoverGap(wrapper);
+                    if (syncManager.isGapRecovery()) {
+                        wrapper.resetImportFail();
+                    } else {
+                        wrapper.importFailed();
+                        if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
+                            syncManager.recoverGap(wrapper);
+                        }
                     }
                     blockQueue.add(wrapper);
                     sleep(2000);
@@ -224,7 +228,6 @@ public class BlockQueue {
      * @param hash - the best hash
      */
     public void setBestHash(byte[] hash) {
-        hashStore.clear();
         hashStore.addFirst(hash);
         this.bestHash = hash;
     }

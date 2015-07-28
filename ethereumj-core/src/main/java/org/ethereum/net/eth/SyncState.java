@@ -9,6 +9,8 @@ public enum SyncState {
     // Sync manager
     INIT,
     DONE_SYNC,
+    GAP_RECOVERY,
+    DONE_GAP_RECOVERY,
 
     // Common
     HASH_RETRIEVING,
