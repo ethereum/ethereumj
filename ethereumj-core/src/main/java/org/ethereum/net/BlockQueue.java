@@ -11,6 +11,7 @@ import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
 import org.ethereum.core.Blockchain;
 import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.eth.SyncState;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -74,8 +76,8 @@ public class BlockQueue {
     @Autowired
     SyncManager syncManager;
 
-    public BlockQueue() {
-
+    @PostConstruct
+    public void init() {
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         hashStore = new HashStoreImpl();
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
