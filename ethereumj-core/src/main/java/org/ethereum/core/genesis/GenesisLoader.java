@@ -1,10 +1,9 @@
 package org.ethereum.core.genesis;
 
+import com.google.common.io.ByteStreams;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.JavaType;
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
 import org.ethereum.core.Genesis;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.jsontestsuite.Utils;
@@ -13,9 +12,8 @@ import org.ethereum.trie.Trie;
 import org.ethereum.util.ByteUtil;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.File;
+import java.io.InputStream;
 import java.math.BigInteger;
-import java.nio.file.Files;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,11 +30,10 @@ public class GenesisLoader {
 
         try {
 
-            ClassLoader classLoader = GenesisLoader.class.getClassLoader();
             String genesisFile = CONFIG.genesisInfo();
 
-            File file = new File(classLoader.getResource("genesis/" + genesisFile).getFile());
-            String json = new String(Files.readAllBytes(file.toPath()));
+            InputStream is = ClassLoader.getSystemResourceAsStream("genesis/" + genesisFile);
+            String json = new String(ByteStreams.toByteArray(is));
 
             ObjectMapper mapper = new ObjectMapper();
             JavaType type = mapper.getTypeFactory().constructType(GenesisJson.class);

@@ -16,7 +16,8 @@ import java.util.Collection;
 import java.util.Set;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 
 public class BlockTest {
@@ -110,12 +111,14 @@ public class BlockTest {
         assertEquals(GENESIS_STATE_ROOT, Hex.toHexString(state.getRootHash()));
     }
 
+
     @Test
-    public void testFrintierGenesis(){
+    public void testFrontierGenesis(){
         CONFIG.setGenesisInfo("frontier.json");
         Genesis block = GenesisLoader.loadGenesis();
         String root = Hex.toHexString(block.getStateRoot());
         assertEquals("3d895e91869c8056ec6f3526ad457d1d3be2230d762103b085fda40849ccbdbd", root);
+        CONFIG.setGenesisInfo("olympic.json");
     }
 
 
