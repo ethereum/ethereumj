@@ -163,7 +163,8 @@ public class SyncManager {
 
         // forcing peers to continue blocks downloading if there are more hashes to process
         // peers becoming idle if meet empty hashstore but it's not the end
-        if(state == SyncState.BLOCK_RETRIEVING && !blockchain.getQueue().getHashStore().isEmpty()) {
+        if((state == SyncState.BLOCK_RETRIEVING || state == SyncState.DONE_SYNC)
+                && !blockchain.getQueue().getHashStore().isEmpty()) {
             for(EthHandler peer : peers) {
                 if(peer.isIdle()) {
                     peer.changeState(SyncState.BLOCK_RETRIEVING);
@@ -359,7 +360,7 @@ public class SyncManager {
             logger.info("Blocks retrieving initiated");
         }
         if(newState == SyncState.DONE_SYNC) {
-            changePeersState(SyncState.IDLE);
+            changePeersState(SyncState.DONE_SYNC);
             if(shouldNotifyDone) {
                 shouldNotifyDone = false;
                 ethereumListener.onSyncDone();
