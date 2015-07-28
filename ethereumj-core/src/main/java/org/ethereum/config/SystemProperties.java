@@ -11,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -63,6 +65,7 @@ public class SystemProperties {
     // mutable options for tests
     private String databaseDir = null;
     private Boolean databaseReset = null;
+    private String projectVersion = null;
 
     private String genesisInfo = null;
 
@@ -80,6 +83,15 @@ public class SystemProperties {
                     .withFallback(userDirConfig)
                     .withFallback(referenceConfig);
             validateConfig();
+
+            try {
+                Properties props = new Properties();
+                props.load(new FileInputStream("gradle.properties"));
+                this.projectVersion = props.getProperty("project.version");
+            } catch (IOException e) {System.err.println("Can't load gradle.properties file");}
+
+            if (this.projectVersion == null) this.projectVersion = "-.-.-";
+
         } catch (Exception e) {
             logger.error("Can't read config.", e);
             throw new RuntimeException(e);
@@ -307,7 +319,7 @@ public class SystemProperties {
 
     @ValidateMe
     public String projectVersion() {
-        return config.getString("project.version");
+        return projectVersion;
     }
 
     @ValidateMe
