@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.datasource.KeyValueDataSource;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.SecureTrie;
@@ -41,7 +41,7 @@ import static org.ethereum.util.ByteUtil.wrap;
  * @author Roman Mandeleil
  * @since 17.11.2014
  */
-public class RepositoryImpl implements Repository {
+public class RepositoryImpl implements Repository , org.ethereum.facade.Repository{
 
     public final static String DETAILS_DB = "details";
     public final static String STATE_DB = "state";

@@ -2,7 +2,7 @@ package org.ethereum.db;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.ethereum.vm.DataWord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

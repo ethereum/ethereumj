@@ -1,6 +1,5 @@
-package org.ethereum.facade;
+package org.ethereum.config;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;

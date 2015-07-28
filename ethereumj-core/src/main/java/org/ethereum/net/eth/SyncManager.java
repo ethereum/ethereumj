@@ -2,7 +2,7 @@ package org.ethereum.net.eth;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
-import org.ethereum.facade.Blockchain;
+import org.ethereum.core.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
@@ -24,6 +24,8 @@ import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
+
+import static org.ethereum.util.BIUtil.isIn20PercentRange;
 
 /**
  * @author Mikhail Kalinin
@@ -271,7 +273,9 @@ public class SyncManager {
         BlockQueue chainQueue = blockchain.getQueue();
         BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
 
-        if ((highestKnownTotalDifficulty == null || peerTotalDifficulty.compareTo(highestKnownTotalDifficulty) > 0)) {
+        if ((highestKnownTotalDifficulty == null ||
+            !isIn20PercentRange(highestKnownTotalDifficulty, peerTotalDifficulty))) {
+
             if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: its chain is better than previously known: {} vs {}",
                     Utils.getNodeIdShort(peer.getPeerId()),

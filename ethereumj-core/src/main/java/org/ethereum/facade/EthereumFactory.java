@@ -1,5 +1,6 @@
 package org.ethereum.facade;
 
+import org.ethereum.config.DefaultConfig;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.shh.ShhHandler;
 

@@ -1,9 +1,6 @@
 package org.ethereum.vm;
 
-import org.ethereum.facade.Repository;
-import org.ethereum.util.ByteUtil;
-
-import java.nio.ByteBuffer;
+import org.ethereum.core.Repository;
 
 import java.util.ArrayList;
 import java.util.List;

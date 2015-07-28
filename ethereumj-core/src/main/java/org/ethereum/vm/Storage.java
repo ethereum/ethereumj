@@ -4,7 +4,7 @@ import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.ethereum.vmtrace.ProgramTraceListener;
 
 import java.math.BigInteger;

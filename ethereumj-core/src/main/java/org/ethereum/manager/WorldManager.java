@@ -7,14 +7,13 @@ import org.ethereum.core.Wallet;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.facade.Blockchain;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Blockchain;
+import org.ethereum.core.Repository;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.rlpx.discover.PeerConnectionTester;
 import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
@@ -72,9 +71,6 @@ public class WorldManager {
     @Autowired
     private NodeManager nodeManager;
 
-    @Autowired
-    private UDPListener udpListener;
-
     @PostConstruct
     public void init() {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -118,8 +114,8 @@ public class WorldManager {
         this.wallet = wallet;
     }
 
-    public Repository getRepository() {
-        return repository;
+    public org.ethereum.facade.Repository getRepository() {
+        return (org.ethereum.facade.Repository)repository;
     }
 
     public Blockchain getBlockchain() {
@@ -136,11 +132,6 @@ public class WorldManager {
 
     public PeerClient getActivePeer() {
         return activePeer;
-    }
-
-
-    public boolean isBlockchainLoading() {
-        return blockchain.getQueue().size() > 2;
     }
 
     public void loadBlockchain() {

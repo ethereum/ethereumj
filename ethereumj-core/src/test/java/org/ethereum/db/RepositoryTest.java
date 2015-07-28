@@ -1,13 +1,10 @@
 package org.ethereum.db;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Genesis;
 import org.ethereum.crypto.HashUtil;
 
 import org.ethereum.datasource.HashMapDB;
-import org.ethereum.datasource.LevelDbDataSource;
-import org.ethereum.facade.Repository;
-import org.ethereum.util.FileUtil;
+import org.ethereum.core.Repository;
 import org.ethereum.vm.DataWord;
 
 import org.junit.Assert;
@@ -18,9 +15,7 @@ import org.junit.runners.MethodSorters;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.nio.file.Files;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.junit.Assert.*;
 
 /**

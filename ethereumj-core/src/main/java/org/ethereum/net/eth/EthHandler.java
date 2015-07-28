@@ -7,7 +7,7 @@ import org.ethereum.core.Genesis;
 import org.ethereum.core.ImportResult;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.facade.Blockchain;
+import org.ethereum.core.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;

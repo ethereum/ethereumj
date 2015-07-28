@@ -1,23 +1,18 @@
 package org.ethereum.net.shh;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.facade.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
-import org.ethereum.net.eth.*;
-import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
-
-import java.math.BigInteger;
 
 /**
  * Process the messages between peers with 'shh' capability on the network.

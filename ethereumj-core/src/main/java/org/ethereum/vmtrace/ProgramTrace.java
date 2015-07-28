@@ -2,7 +2,7 @@ package org.ethereum.vmtrace;
 
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryTrack;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
 import org.ethereum.vm.ProgramInvoke;

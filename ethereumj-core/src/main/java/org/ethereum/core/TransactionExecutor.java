@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.db.BlockStore;
-import org.ethereum.facade.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.*;
@@ -10,9 +9,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;

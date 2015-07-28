@@ -7,7 +7,7 @@ import org.ethereum.core.Wallet;
 
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.*;
-import org.ethereum.facade.Repository;
+import org.ethereum.core.Repository;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;

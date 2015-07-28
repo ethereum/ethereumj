@@ -2,6 +2,7 @@ package org.ethereum.facade;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
+import org.ethereum.core.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
@@ -166,18 +167,13 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
-    public Blockchain getBlockchain() {
-        return worldManager.getBlockchain();
+    public org.ethereum.facade.Blockchain getBlockchain() {
+        return (org.ethereum.facade.Blockchain)worldManager.getBlockchain();
     }
 
     @Override
     public void addListener(EthereumListener listener) {
         worldManager.addListener(listener);
-    }
-
-    @Override
-    public boolean isBlockchainLoading() {
-        return worldManager.isBlockchainLoading();
     }
 
     @Override
@@ -235,8 +231,17 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Repository getRepository() {
+    public org.ethereum.facade.Repository getRepository() {
         return worldManager.getRepository();
+    }
+
+    @Override
+    public org.ethereum.facade.Repository getSnapshootTo(byte[] root){
+
+        Repository repository = (Repository) worldManager.getRepository();
+        org.ethereum.facade.Repository snapshot = (org.ethereum.facade.Repository) repository.getSnapshotTo(root);
+
+        return snapshot;
     }
 
     @Override

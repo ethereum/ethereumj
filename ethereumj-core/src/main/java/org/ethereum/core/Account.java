@@ -45,21 +45,13 @@ public class Account {
     }
 
     public BigInteger getNonce() {
-        AccountState accountState =
-                worldManager.getRepository().getAccountState(getAddress());
-
-        return accountState.getNonce();
+        return worldManager.getRepository().getNonce(getAddress());
     }
 
     public BigInteger getBalance() {
 
-        AccountState accountState =
-                worldManager.getRepository().getAccountState(this.getAddress());
-
-        BigInteger balance = BigInteger.ZERO;
-
-        if (accountState != null)
-            balance = accountState.getBalance();
+        BigInteger balance =
+                worldManager.getRepository().getBalance(this.getAddress());
 
         synchronized (getPendingTransactions()) {
             if (!getPendingTransactions().isEmpty()) {

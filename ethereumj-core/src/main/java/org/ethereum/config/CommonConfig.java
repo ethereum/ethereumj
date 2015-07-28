@@ -1,6 +1,7 @@
-package org.ethereum.facade;
+package org.ethereum.config;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
