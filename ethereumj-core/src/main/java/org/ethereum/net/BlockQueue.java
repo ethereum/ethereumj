@@ -11,6 +11,7 @@ import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
 import org.ethereum.core.Blockchain;
 import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.eth.SyncState;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 
@@ -74,8 +76,8 @@ public class BlockQueue {
     @Autowired
     SyncManager syncManager;
 
-    public BlockQueue() {
-
+    @PostConstruct
+    public void init() {
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         hashStore = new HashStoreImpl();
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
@@ -113,12 +115,19 @@ public class BlockQueue {
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
-                    wrapper.importFailed();
-                    if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
-                        syncManager.recoverGap(wrapper);
+                    if (!syncManager.isGapRecovery()) {
+                        wrapper.importFailed();
+                        if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
+                            syncManager.recoverGap(wrapper);
+                            wrapper.resetImportFail();
+                        }
                     }
                     blockQueue.add(wrapper);
                     sleep(2000);
+                }
+
+                if(wrapper.isNewBlock() && importResult.isSuccessful()) {
+                    syncManager.notifyNewBlockImported(wrapper);
                 }
 
                 if (importResult == IMPORTED_BEST)
@@ -176,7 +185,9 @@ public class BlockQueue {
      * @param block new block
      */
     public void addNewBlock(Block block) {
-        addBlock(new BlockWrapper(block, true));
+        BlockWrapper wrapper = new BlockWrapper(block, true);
+        wrapper.setReceivedAt(System.currentTimeMillis());
+        addBlock(wrapper);
     }
 
     /**
@@ -216,7 +227,6 @@ public class BlockQueue {
      * @param hash - the best hash
      */
     public void setBestHash(byte[] hash) {
-        hashStore.clear();
         hashStore.addFirst(hash);
         this.bestHash = hash;
     }
@@ -333,5 +343,11 @@ public class BlockQueue {
 
     public HashStore getHashStore() {
         return hashStore;
+    }
+
+    //TODO we need more robust solution for this check
+    public boolean syncWasInterrupted() {
+        BlockWrapper wrapper = blockQueue.peek();
+        return wrapper != null && !wrapper.isNewBlock();
     }
 }

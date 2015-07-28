@@ -11,7 +11,6 @@ import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
-import org.ethereum.util.BIUtil;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
@@ -26,6 +25,7 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 
 /**
@@ -39,12 +39,15 @@ public class SyncManager {
 
     private static final int PEERS_COUNT = 5;
     private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
-    private static final long BLOCKS_GAP_THRESHOLD = 20;
+    private static final long LARGE_GAP_THRESHOLD = 5;
+    private static final long TIME_TO_IMPORT_THRESHOLD = 10 * 60 * 1000; // 10 minutes
 
     private SyncState state = SyncState.INIT;
+    private SyncState prevState = SyncState.INIT;
     private EthHandler masterPeer;
     private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
-    private boolean shouldNotifyDone = true;
+    private int maxHashesAsk;
+    private byte[] bestHash;
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
@@ -134,16 +137,18 @@ public class SyncManager {
         if(isHashRetrieving() && masterPeer.isHashRetrievingDone()) {
             changeState(SyncState.BLOCK_RETRIEVING);
         }
+        if(isGapRecovery() && masterPeer.isHashRetrievingDone()) {
+            if(prevState == SyncState.BLOCK_RETRIEVING) {
+                changeState(SyncState.BLOCK_RETRIEVING);
+            } else {
+                changeState(SyncState.DONE_GAP_RECOVERY);
+            }
+        }
     }
 
     private void checkPeers() {
         List<EthHandler> removed = new ArrayList<>();
         for(EthHandler peer : peers) {
-            if(peer.isSyncDone()) {
-                changeState(SyncState.DONE_SYNC);
-                return;
-            }
-
             if(peer.hasNoMoreBlocks()) {
                 logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
                 removed.add(peer);
@@ -161,7 +166,7 @@ public class SyncManager {
 
         // forcing peers to continue blocks downloading if there are more hashes to process
         // peers becoming idle if meet empty hashstore but it's not the end
-        if(state == SyncState.BLOCK_RETRIEVING && !blockchain.getQueue().getHashStore().isEmpty()) {
+        if((isBlockRetrieving() || isSyncDone() || isGapRecoveryDone()) && !hashStoreEmpty()) {
             for(EthHandler peer : peers) {
                 if(peer.isIdle()) {
                     peer.changeState(SyncState.BLOCK_RETRIEVING);
@@ -240,6 +245,8 @@ public class SyncManager {
                 peer.logSyncStats();
             }
             logger.info("\n");
+            logger.info("State {}", state);
+            logger.info("\n");
         }
     }
 
@@ -303,6 +310,15 @@ public class SyncManager {
     }
 
     public void recoverGap(BlockWrapper wrapper) {
+        if(isGapRecovery()) {
+            logger.info("Gap recovery is already in progress, postpone");
+            return;
+        }
+        if(wrapper.isNewBlock() && !allowNewBlockGapRecovery()) {
+            logger.info("We are in {} state, postpone NEW blocks gap recovery", state, wrapper.getNumber());
+            return;
+        }
+
         Block bestBlock = blockchain.getBestBlock();
         long gap = wrapper.getNumber() - bestBlock.getNumber();
         if(logger.isInfoEnabled()) {
@@ -313,23 +329,38 @@ public class SyncManager {
                     bestBlock.getNumber()
             );
         }
-        if(wrapper.isNewBlock() && gap > BLOCKS_GAP_THRESHOLD) {
-            if(blockchain.getQueue().isHashesEmpty() &&
-                    (state == SyncState.BLOCK_RETRIEVING || state == SyncState.DONE_SYNC)) {
-                changeState(SyncState.HASH_RETRIEVING);
-            } else if(logger.isInfoEnabled()) {
-                logger.info("Main sync is incomplete, postpone NEW blocks gap recovery", wrapper.getNumber());
-            }
+        if(gap > LARGE_GAP_THRESHOLD) {
+            maxHashesAsk = gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : (int) gap;
+            bestHash = wrapper.getHash();
+            logger.debug("Recover blocks gap, block.number [{}], block.hash [{}]", wrapper.getNumber(), wrapper.getShortHash());
+            changeState(SyncState.GAP_RECOVERY);
         } else {
             logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
             blockchain.getQueue().getHashStore().addFirst(wrapper.getParentHash());
         }
     }
 
-    public synchronized void changeState(SyncState newState) {
-        if(state == SyncState.DONE_SYNC) {
+    private boolean allowNewBlockGapRecovery() {
+        return (isBlockRetrieving() && hashStoreEmpty()) || isSyncDone() || isGapRecoveryDone();
+    }
+
+    public void notifyNewBlockImported(BlockWrapper wrapper) {
+        if(isSyncDone() || isGapRecovery() || isGapRecoveryDone()) {
             return;
         }
+        if(wrapper.timeSinceReceiving() <= TIME_TO_IMPORT_THRESHOLD) {
+            logger.info("NEW block.number [{}] imported", wrapper.getNumber());
+            changeState(SyncState.DONE_SYNC);
+        } else if (logger.isInfoEnabled()) {
+            logger.info(
+                    "NEW block.number [{}] block.minsSinceReceiving [{}] exceeds import time limit, continue sync",
+                    wrapper.getNumber(),
+                    wrapper.timeSinceReceiving() / 1000 / 60
+            );
+        }
+    }
+
+    public synchronized void changeState(SyncState newState) {
         if(newState == SyncState.HASH_RETRIEVING) {
             if(peers.isEmpty()) {
                 return;
@@ -340,26 +371,60 @@ public class SyncManager {
                     return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
                 }
             });
-            changePeersState(SyncState.IDLE);
             BlockQueue queue = blockchain.getQueue();
             queue.setHighestTotalDifficulty(masterPeer.getTotalDifficulty());
-            queue.setBestHash(masterPeer.getBestHash());
-            masterPeer.changeState(SyncState.HASH_RETRIEVING);
-            logger.info("Hashes retrieving initiated");
+
+            if(state == SyncState.INIT && blockchain.getQueue().syncWasInterrupted()) {
+                logger.info("It seems that BLOCK_RETRIEVING was interrupted, run it again");
+                changeState(SyncState.BLOCK_RETRIEVING);
+                return;
+            }
+
+            bestHash = masterPeer.getBestHash();
+            queue.getHashStore().clear();
+            changePeersState(SyncState.IDLE);
+            maxHashesAsk = CONFIG.maxHashesAsk();
+            runHashRetrievingOnMaster();
+        }
+        if(newState == SyncState.GAP_RECOVERY) {
+            if(peers.isEmpty()) {
+                return;
+            }
+            masterPeer = Collections.max(peers, new Comparator<EthHandler>() {
+                @Override
+                public int compare(EthHandler p1, EthHandler p2) {
+                    return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
+                }
+            });
+            runHashRetrievingOnMaster();
+            logger.info("Gap recovery initiated");
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
             changePeersState(SyncState.BLOCK_RETRIEVING);
-            logger.info("Blocks retrieving initiated");
+            logger.info("Block retrieving initiated");
+        }
+        if(newState == SyncState.DONE_GAP_RECOVERY) {
+            changePeersState(SyncState.BLOCK_RETRIEVING);
+            logger.info("Done gap recovery");
         }
         if(newState == SyncState.DONE_SYNC) {
-            changePeersState(SyncState.IDLE);
-            if(shouldNotifyDone) {
-                shouldNotifyDone = false;
-                ethereumListener.onSyncDone();
+            if(state == SyncState.DONE_SYNC) {
+                return;
             }
-            logger.info("Synchronization is finished");
+            changePeersState(SyncState.DONE_SYNC);
+            ethereumListener.onSyncDone();
+            logger.info("Main synchronization is finished");
         }
+        this.prevState = this.state;
         this.state = newState;
+    }
+
+    private void runHashRetrievingOnMaster() {
+        blockchain.getQueue().setBestHash(bestHash);
+        masterPeer.setMaxHashesAsk(maxHashesAsk);
+        masterPeer.changeState(SyncState.HASH_RETRIEVING);
+        logger.info("Master peer hashes retrieving initiated, best known hash [{}], askLimit [{}]", Hex.toHexString(bestHash), maxHashesAsk);
+        logger.debug("Our best block hash [{}]", Hex.toHexString(blockchain.getBestBlockHash()));
     }
 
     private void changePeersState(SyncState newState) {
@@ -379,7 +444,27 @@ public class SyncManager {
         }
     }
 
-    private boolean isHashRetrieving() {
+    public boolean isHashRetrieving() {
         return state == SyncState.HASH_RETRIEVING;
+    }
+
+    public boolean isGapRecovery() {
+        return state == SyncState.GAP_RECOVERY;
+    }
+
+    public boolean isGapRecoveryDone() {
+        return state == SyncState.DONE_GAP_RECOVERY;
+    }
+
+    public boolean isBlockRetrieving() {
+        return state == SyncState.BLOCK_RETRIEVING;
+    }
+
+    public boolean isSyncDone() {
+        return state == SyncState.DONE_SYNC;
+    }
+
+    public boolean hashStoreEmpty() {
+        return blockchain.getQueue().isHashesEmpty();
     }
 }

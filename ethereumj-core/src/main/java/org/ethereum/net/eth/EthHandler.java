@@ -68,6 +68,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private SyncState syncState = SyncState.IDLE;
     private EthState peerState = EthState.INIT;
     private long blocksLoadedCnt = 0;
+    private boolean processTransactions = false;
 
     private boolean peerDiscoveryMode = false;
 
@@ -82,6 +83,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private List<ByteArrayWrapper> sentHashes;
     private Block lastBlock = Genesis.getInstance();
     private byte[] bestHash;
+    private int maxHashesAsk;
 
     public EthHandler() {
         this.peerDiscoveryMode = false;
@@ -156,6 +158,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     private void processTransactions(TransactionsMessage msg) {
+        if(!processTransactions) {
+            return;
+        }
 
         Set<Transaction> txSet = msg.getTransactions();
         worldManager.getBlockchain().
@@ -331,17 +336,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
         bestHash = newBlock.getHash();
 
-        ImportResult result = blockchain.tryToConnect(newBlock);
-        if(result == ImportResult.NO_PARENT) {
-            // adding block to the queue
-            // there will be decided how to
-            // connect it to the chain
-            blockchain.getQueue().addNewBlock(newBlock);
-            blockchain.getQueue().logHashQueueSize();
-        } else {
-            changeState(SyncState.DONE_SYNC);
-            loggerSync.info("Peer {}: new block successfully imported", Utils.getNodeIdShort(peerId));
-        }
+        // adding block to the queue
+        // there will be decided how to
+        // connect it to the chain
+        blockchain.getQueue().addNewBlock(newBlock);
+        blockchain.getQueue().logHashQueueSize();
     }
 
     private void sendStatus() {
@@ -374,7 +373,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private void sendGetBlockHashes() {
         byte[] bestHash = blockchain.getQueue().getBestHash();
-        GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, CONFIG.maxHashesAsk());
+        GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, maxHashesAsk);
         sendMessage(msg);
     }
 
@@ -474,6 +473,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 return;
             }
         }
+        if(newState == SyncState.DONE_SYNC) {
+            processTransactions = true;
+            newState = SyncState.IDLE;
+        }
         this.syncState = newState;
     }
 
@@ -537,6 +540,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public BigInteger getTotalDifficulty() {
         return channel.getNodeStatistics().getEthTotalDifficulty();
+    }
+
+    void setMaxHashesAsk(int maxHashesAsk) {
+        this.maxHashesAsk = maxHashesAsk;
     }
 
     enum EthState {

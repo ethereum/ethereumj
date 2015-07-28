@@ -8,6 +8,8 @@ import org.mapdb.DB;
 import org.mapdb.Serializer;
 
 import java.util.*;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
@@ -24,16 +26,37 @@ public class HashStoreImpl implements HashStore {
     private Map<Long, byte[]> hashes;
     private List<Long> index;
 
+    private boolean initDone = false;
+    private final ReentrantLock initLock = new ReentrantLock();
+    private final Condition init = initLock.newCondition();
+
     @Override
     public void open() {
-        db = mapDBFactory.createTransactionalDB(dbName());
-        hashes = db.hashMapCreate(STORE_NAME)
-                .keySerializer(Serializer.LONG)
-                .valueSerializer(Serializer.BYTE_ARRAY)
-                .makeOrGet();
-        hashes.clear();
-        db.commit();
-        index = new ArrayList<>();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initLock.lock();
+                try {
+                    db = mapDBFactory.createTransactionalDB(dbName());
+                    hashes = db.hashMapCreate(STORE_NAME)
+                            .keySerializer(Serializer.LONG)
+                            .valueSerializer(Serializer.BYTE_ARRAY)
+                            .makeOrGet();
+                    index = new ArrayList<>(hashes.keySet());
+                    sortIndex();
+
+                    if(CONFIG.databaseReset()) {
+                        hashes.clear();
+                        db.commit();
+                    }
+
+                    initDone = true;
+                    init.signalAll();
+                } finally {
+                    initLock.unlock();
+                }
+            }
+        }).start();
     }
 
     private String dbName() {
@@ -42,23 +65,28 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public void close() {
+        awaitInit();
         db.close();
+        initDone = false;
     }
 
     @Override
     public void add(byte[] hash) {
+        awaitInit();
         addInner(false, hash);
         db.commit();
     }
 
     @Override
     public void addFirst(byte[] hash) {
+        awaitInit();
         addInner(true, hash);
         db.commit();
     }
 
     @Override
     public void addFirstBatch(Collection<byte[]> hashes) {
+        awaitInit();
         for (byte[] hash : hashes) {
             addInner(true, hash);
         }
@@ -72,6 +100,7 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public byte[] peek() {
+        awaitInit();
         synchronized (this) {
             if(index.isEmpty()) {
                 return null;
@@ -84,6 +113,7 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public byte[] poll() {
+        awaitInit();
         byte[] hash = pollInner();
         db.commit();
         return hash;
@@ -91,6 +121,7 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public List<byte[]> pollBatch(int qty) {
+        awaitInit();
         if(index.isEmpty()) {
             return Collections.emptyList();
         }
@@ -123,21 +154,25 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public boolean isEmpty() {
+        awaitInit();
         return index.isEmpty();
     }
 
     @Override
     public Set<Long> getKeys() {
+        awaitInit();
         return hashes.keySet();
     }
 
     @Override
     public int size() {
+        awaitInit();
         return index.size();
     }
 
     @Override
     public void clear() {
+        awaitInit();
         synchronized (this) {
             index.clear();
             hashes.clear();
@@ -147,6 +182,7 @@ public class HashStoreImpl implements HashStore {
 
     @Override
     public void removeAll(Collection<byte[]> removing) {
+        awaitInit();
         Set<Long> removed = new HashSet<>();
         for(final Map.Entry<Long, byte[]> e : hashes.entrySet()) {
             byte[] hash = CollectionUtils.find(removing, new Predicate<byte[]>() {
@@ -187,5 +223,17 @@ public class HashStoreImpl implements HashStore {
 
     public void setMapDBFactory(MapDBFactory mapDBFactory) {
         this.mapDBFactory = mapDBFactory;
+    }
+
+
+    private void awaitInit() {
+        initLock.lock();
+        try {
+            if(!initDone) {
+                init.awaitUninterruptibly();
+            }
+        } finally {
+            initLock.unlock();
+        }
     }
 }
