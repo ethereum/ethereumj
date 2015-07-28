@@ -87,7 +87,7 @@ public class SystemProperties {
             try {
                 Properties props = new Properties();
                 props.load(new FileInputStream("gradle.properties"));
-                this.projectVersion = props.getProperty("project.version");
+                this.projectVersion = props.getProperty("runningVersion");
             } catch (IOException e) {System.err.println("Can't load gradle.properties file");}
 
             if (this.projectVersion == null) this.projectVersion = "-.-.-";
