@@ -43,6 +43,7 @@ public class HashStoreTest {
         BigInteger bi = new BigInteger(32, new Random());
         testDb = "test_db_" + bi;
         SystemProperties.CONFIG.setDataBaseDir(testDb);
+        SystemProperties.CONFIG.setDatabaseReset(false);
 //        SystemProperties.CONFIG.overrideParams(SystemProperties.PROPERTY_DB_DIR, testDb);
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
@@ -63,15 +64,11 @@ public class HashStoreTest {
             hashStore.add(hash);
         }
 
-        // testing: closing and opening again (HashStore should be clean)
+        // testing: closing and opening again
         hashStore.close();
         hashStore.open();
-        assertNull(hashStore.poll());
 
         // testing: peek() and poll()
-        for(byte[] hash : hashes) {
-            hashStore.add(hash);
-        }
         for(byte[] hash : hashes) {
             assertArrayEquals(hash, hashStore.poll());
         }
