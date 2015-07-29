@@ -501,6 +501,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         return syncState == SyncState.DONE_HASH_RETRIEVING;
     }
 
+    public boolean isHashRetrieving() {
+        return syncState == SyncState.HASH_RETRIEVING;
+    }
+
     public boolean hasNoMoreBlocks() {
         return syncState == SyncState.NO_MORE_BLOCKS;
     }

@@ -1,5 +1,6 @@
 package org.ethereum.net.eth;
 
+import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
@@ -129,6 +130,7 @@ public class SyncManager {
             for(Map.Entry<String, Long> e : bannedNodes.entrySet()) {
                 if(System.currentTimeMillis() - e.getValue() > BAN_TIMEOUT) {
                     outdated.add(e.getKey());
+                    logger.info("Peer {}: releasing ban", Utils.getNodeIdShort(e.getKey()));
                 }
             }
             for(String nodeId : outdated) {
@@ -181,6 +183,24 @@ public class SyncManager {
             lowerUsefulDifficulty = blockchain.getTotalDifficulty();
         }
         peers.removeAll(removed);
+
+        // checking if master peer is still presented
+        if(isHashRetrieving() || isGapRecovery()) {
+            EthHandler master = org.apache.commons.collections4.CollectionUtils.find(peers, new Predicate<EthHandler>() {
+                @Override
+                public boolean evaluate(EthHandler peer) {
+                    return peer.isHashRetrieving();
+                }
+            });
+            if(master == null) {
+                logger.info("Master peer has been lost, find a new one");
+                if(isHashRetrieving()) {
+                    changeState(SyncState.HASH_RETRIEVING);
+                } else if(isGapRecovery()) {
+                    changeState(SyncState.GAP_RECOVERY);
+                }
+            }
+        }
 
         // forcing peers to continue blocks downloading if there are more hashes to process
         // peers becoming idle if meet empty hashstore but it's not the end
@@ -286,6 +306,7 @@ public class SyncManager {
             }
             if(hits > DISCONNECT_HITS_THRESHOLD) {
                 bannedNodes.put(peer.getPeerId(), System.currentTimeMillis());
+                logger.info("Peer {}: banned due to disconnects exceeding", Utils.getNodeIdShort(peer.getPeerId()));
                 disconnectHits.remove(peer.getPeerId());
             } else {
                 disconnectHits.put(peer.getPeerId(), hits + 1);
@@ -436,8 +457,10 @@ public class SyncManager {
             ethereumListener.onSyncDone();
             logger.info("Main synchronization is finished");
         }
-        this.prevState = this.state;
-        this.state = newState;
+        if(newState != state) {
+            this.prevState = this.state;
+            this.state = newState;
+        }
     }
 
     private void runHashRetrievingOnMaster() {
