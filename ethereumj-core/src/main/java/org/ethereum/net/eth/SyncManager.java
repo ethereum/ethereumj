@@ -37,7 +37,11 @@ public class SyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private static final int PEERS_COUNT = 5;
+
     private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
+    private static final int BAN_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+    private static final int DISCONNECT_HITS_THRESHOLD = 5;
+
     private static final long LARGE_GAP_THRESHOLD = 5;
     private static final long TIME_TO_IMPORT_THRESHOLD = 10 * 60 * 1000; // 10 minutes
 
@@ -54,7 +58,10 @@ public class SyncManager {
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
 
-    private final Map<String, Long> connectTimestamps = new HashMap<>();
+    private final Object connectionsMutex = new Object();
+    private Map<String, Long> connectTimestamps = new HashMap<>();
+    private Map<String, Integer> disconnectHits = new HashMap<>();
+    private Map<String, Long> bannedNodes = new HashMap<>();
 
     private DiscoverListener discoverListener;
 
@@ -80,6 +87,7 @@ public class SyncManager {
                 checkPeers();
                 removeOutdatedConnections();
                 askNewPeers();
+                releaseBans();
             }
         }, 0, 3, TimeUnit.SECONDS);
         if(logger.isInfoEnabled()) {
@@ -105,22 +113,32 @@ public class SyncManager {
                 new Functional.Predicate<NodeStatistics>() {
                     @Override
                     public boolean test(NodeStatistics nodeStatistics) {
-                        if (nodeStatistics.getEthLastInboundStatusMsg() == null) {
+                        if(nodeStatistics.getEthLastInboundStatusMsg() == null) {
                             return false;
                         }
-                        BigInteger knownDifficulty = highestKnownDifficulty;
-                        if(knownDifficulty == null) {
-                            return true;
-                        }
                         BigInteger thatDifficulty = nodeStatistics.getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                        return thatDifficulty.compareTo(knownDifficulty) > 0;
+                        return thatDifficulty.compareTo(highestKnownDifficulty) > 0;
                     }
                 }
         );
     }
 
+    private void releaseBans() {
+        synchronized (connectionsMutex) {
+            Set<String> outdated = new HashSet<>();
+            for(Map.Entry<String, Long> e : bannedNodes.entrySet()) {
+                if(System.currentTimeMillis() - e.getValue() > BAN_TIMEOUT) {
+                    outdated.add(e.getKey());
+                }
+            }
+            for(String nodeId : outdated) {
+                bannedNodes.remove(nodeId);
+            }
+        }
+    }
+
     private void removeOutdatedConnections() {
-        synchronized (connectTimestamps) {
+        synchronized (connectionsMutex) {
             Set<String> outdated = new HashSet<>();
             for(Map.Entry<String, Long> e : connectTimestamps.entrySet()) {
                 if(System.currentTimeMillis() - e.getValue() > CONNECTION_TIMEOUT) {
@@ -177,60 +195,66 @@ public class SyncManager {
 
     private void askNewPeers() {
         int peersLackSize = PEERS_COUNT - peers.size();
-        if(peersLackSize > 0) {
-            final Set<String> nodesInUse = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
+        if(peersLackSize <= 0) {
+            return;
+        }
+
+        final Set<String> nodesInUse;
+        synchronized (connectionsMutex) {
+            nodesInUse = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
                 @Override
                 public String apply(EthHandler handler) {
                     return handler.getPeerId();
                 }
             });
-            synchronized (connectTimestamps) {
-                nodesInUse.addAll(connectTimestamps.keySet());
-            }
-            List<NodeHandler> newNodes = nodeManager.getNodes(
-                    new Functional.Predicate<NodeHandler>() {
-                        @Override
-                        public boolean test(NodeHandler nodeHandler) {
-                            if (nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
-                                return false;
-                            }
-                            if (nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
-                                return false;
-                            }
-                            BigInteger thatDifficulty = nodeHandler
-                                    .getNodeStatistics()
-                                    .getEthLastInboundStatusMsg()
-                                    .getTotalDifficultyAsBigInt();
-                            return thatDifficulty.compareTo(lowerUsefulDifficulty) > 0;
+            nodesInUse.addAll(connectTimestamps.keySet());
+            nodesInUse.addAll(bannedNodes.keySet());
+        }
+
+        List<NodeHandler> newNodes = nodeManager.getNodes(
+                new Functional.Predicate<NodeHandler>() {
+                    @Override
+                    public boolean test(NodeHandler nodeHandler) {
+                        if (nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                            return false;
                         }
-                    },
-                    new Comparator<NodeHandler>() {
-                        @Override
-                        public int compare(NodeHandler n1, NodeHandler n2) {
-                            BigInteger td1 = null;
-                            BigInteger td2 = null;
-                            if (n1.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
-                                td1 = n1.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                            }
-                            if (n2.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
-                                td2 = n2.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                            }
-                            if (td1 != null && td2 != null) {
-                                return td2.compareTo(td1);
-                            } else if (td1 == null && td2 == null) {
-                                return 0;
-                            } else if (td1 != null) {
-                                return -1;
-                            } else {
-                                return 1;
-                            }
+                        if (nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
+                            return false;
                         }
-                    },
-                    peersLackSize
-            );
-            for(NodeHandler n : newNodes) {
-                initiateConnection(n.getNode());
-            }
+                        BigInteger thatDifficulty = nodeHandler
+                                .getNodeStatistics()
+                                .getEthLastInboundStatusMsg()
+                                .getTotalDifficultyAsBigInt();
+                        return thatDifficulty.compareTo(lowerUsefulDifficulty) > 0;
+                    }
+                },
+                new Comparator<NodeHandler>() {
+                    @Override
+                    public int compare(NodeHandler n1, NodeHandler n2) {
+                        BigInteger td1 = null;
+                        BigInteger td2 = null;
+                        if (n1.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                            td1 = n1.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                        }
+                        if (n2.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                            td2 = n2.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
+                        }
+                        if (td1 != null && td2 != null) {
+                            return td2.compareTo(td1);
+                        } else if (td1 == null && td2 == null) {
+                            return 0;
+                        } else if (td1 != null) {
+                            return -1;
+                        } else {
+                            return 1;
+                        }
+                    }
+                },
+                peersLackSize
+        );
+
+        for(NodeHandler n : newNodes) {
+            initiateConnection(n.getNode());
         }
     }
 
@@ -250,43 +274,43 @@ public class SyncManager {
         }
     }
 
-    public void removePeer(EthHandler peer) {
-        if(state == SyncState.DONE_SYNC) {
-            return;
-        }
-
-        synchronized (connectTimestamps) {
-            connectTimestamps.remove(peer.getPeerId());
-        }
-        peer.changeState(SyncState.IDLE);
+    public void onDisconnect(EthHandler peer) {
+        peer.onDisconnect();
         peers.remove(peer);
+
+        synchronized (connectionsMutex) {
+            connectTimestamps.remove(peer.getPeerId());
+            Integer hits = disconnectHits.get(peer.getPeerId());
+            if(hits == null) {
+                hits = 0;
+            }
+            if(hits > DISCONNECT_HITS_THRESHOLD) {
+                bannedNodes.put(peer.getPeerId(), System.currentTimeMillis());
+                disconnectHits.remove(peer.getPeerId());
+            } else {
+                disconnectHits.put(peer.getPeerId(), hits + 1);
+            }
+        }
     }
 
     public void addPeer(EthHandler peer) {
-        if(state == SyncState.DONE_SYNC) {
-            return;
-        }
-
-        synchronized (connectTimestamps) {
-            connectTimestamps.remove(peer.getPeerId());
-        }
-
         BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
-        if(blockchain.getTotalDifficulty().compareTo(peerTotalDifficulty) > 0) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peerTotalDifficulty.toString(),
-                    blockchain.getTotalDifficulty().toString()
-            );
-            // TODO report about lower total difficulty
-            return;
+
+        synchronized (connectionsMutex) {
+            connectTimestamps.remove(peer.getPeerId());
+            if(blockchain.getTotalDifficulty().compareTo(peerTotalDifficulty) > 0) {
+                if(logger.isInfoEnabled()) logger.info(
+                        "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
+                        Utils.getNodeIdShort(peer.getPeerId()),
+                        peerTotalDifficulty.toString(),
+                        blockchain.getTotalDifficulty().toString()
+                );
+                // TODO report about lower total difficulty
+                return;
+            }
+            peers.add(peer);
         }
-
-        peers.add(peer);
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
-
-        BlockQueue chainQueue = blockchain.getQueue();
 
         if (!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
             if(logger.isInfoEnabled()) logger.info(
@@ -431,9 +455,18 @@ public class SyncManager {
     }
 
     private void initiateConnection(Node node) {
-        synchronized (connectTimestamps) {
+        synchronized (connectionsMutex) {
             String nodeId = Hex.toHexString(node.getId());
             if(connectTimestamps.containsKey(nodeId)) {
+                return;
+            }
+            Set<String> usedNodes = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
+                @Override
+                public String apply(EthHandler peer) {
+                    return peer.getPeerId();
+                }
+            });
+            if(usedNodes.contains(nodeId)) {
                 return;
             }
             ethereum.connect(node);

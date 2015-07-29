@@ -24,6 +24,7 @@ import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -68,6 +69,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private SyncState syncState = SyncState.IDLE;
     private EthState peerState = EthState.INIT;
     private long blocksLoadedCnt = 0;
+    private long hashesLoadedCnt = 0;
     private boolean processTransactions = false;
 
     private boolean peerDiscoveryMode = false;
@@ -82,6 +84,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private List<ByteArrayWrapper> sentHashes;
     private Block lastBlock = Genesis.getInstance();
+    private byte[] lastHash = lastBlock.getHash();
     private byte[] bestHash;
     private int maxHashesAsk;
 
@@ -244,6 +247,11 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         if (receivedHashes.isEmpty()) {
             changeState(SyncState.DONE_HASH_RETRIEVING);
         } else {
+            if(loggerSync.isInfoEnabled()) {
+                hashesLoadedCnt += receivedHashes.size();
+                lastHash = receivedHashes.get(0);
+            }
+
             chainQueue.addHashes(receivedHashes);
             // store unknown hashes in queue until known hash is found
             final byte[] latestHash = blockchain.getBestBlockHash();
@@ -462,6 +470,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     synchronized void changeState(SyncState newState) {
         if(newState == SyncState.HASH_RETRIEVING) {
+            hashesLoadedCnt = 0;
             sendGetBlockHashes();
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
@@ -513,13 +522,32 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     void logSyncStats() {
-        loggerSync.info(
-                "Peer {}: [state {}, blocks count {}, last block {}]",
-                Utils.getNodeIdShort(peerId),
-                syncState,
-                blocksLoadedCnt,
-                lastBlock.getNumber()
-        );
+        if(!loggerSync.isInfoEnabled()) {
+            return;
+        }
+        switch (syncState) {
+            case BLOCK_RETRIEVING: loggerSync.info(
+                        "Peer {}: [state {}, blocks count {}, last block {}]",
+                        Utils.getNodeIdShort(peerId),
+                        syncState,
+                        blocksLoadedCnt,
+                        lastBlock.getNumber()
+                );
+                break;
+            case HASH_RETRIEVING: loggerSync.info(
+                    "Peer {}: [state {}, hashes count {}, last hash {}]",
+                    Utils.getNodeIdShort(peerId),
+                    syncState,
+                    hashesLoadedCnt,
+                    Hex.toHexString(lastHash)
+                );
+                break;
+            default: loggerSync.info(
+                    "Peer {}: [state {}]",
+                    Utils.getNodeIdShort(peerId),
+                    syncState
+            );
+        }
     }
 
     public boolean isIdle() {
