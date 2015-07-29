@@ -43,7 +43,7 @@ public class IndexedBlockStore implements BlockStore{
 
         Long maxLevel = getMaxNumber();
         if (maxLevel < 0) return null;
-        
+
         Block bestBlock = getChainBlockByNumber(maxLevel);
         if (bestBlock != null) return  bestBlock;
 
@@ -184,7 +184,7 @@ public class IndexedBlockStore implements BlockStore{
 
         if (cache != null) {
             Block cachedBlock = cache.getBlockByHash(hash);
-            return cachedBlock != null;
+            if (cachedBlock != null) return true;
         }
 
         byte[] blockRlp = blocks.get(hash);

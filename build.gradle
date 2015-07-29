@@ -7,8 +7,10 @@ allprojects {
 subprojects {
     apply plugin: 'java'
 
+    def config = new ConfigSlurper().parse(new File("ethereumj-core/src/main/resources/version.properties").toURI().toURL())
+
     group = 'org.ethereum'
-    version = project.version + '-SNAPSHOT'
+    version = config.versionNumber + '-SNAPSHOT'
 
     compileJava.options.encoding = 'UTF-8'
     compileJava.options.compilerArgs << '-XDignore.symbol.file'

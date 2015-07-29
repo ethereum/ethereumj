@@ -43,7 +43,6 @@ public class BlocksMessage extends EthMessage {
     private void encode() {
 
         List<byte[]> encodedElements = new Vector<>();
-        encodedElements.add(RLP.encodeByte(BLOCKS.asByte()));
 
         for (Block block : blocks)
             encodedElements.add(block.getEncoded());

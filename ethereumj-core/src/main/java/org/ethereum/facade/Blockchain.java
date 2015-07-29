@@ -33,6 +33,10 @@ public interface Blockchain {
     /**
      * @return - all currently pending transactions
      */
-    public Set<Transaction> getPendingTransactions();
+    Set<Transaction> getPendingTransactions();
 
+    /**
+     * @return - last added block from blockchain
+     */
+    Block getBestBlock();
 }

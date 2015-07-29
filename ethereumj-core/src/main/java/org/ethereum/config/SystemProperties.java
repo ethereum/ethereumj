@@ -13,6 +13,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -84,11 +85,11 @@ public class SystemProperties {
                     .withFallback(referenceConfig);
             validateConfig();
 
-            try {
-                Properties props = new Properties();
-                props.load(new FileInputStream("gradle.properties"));
-                this.projectVersion = props.getProperty("project.version");
-            } catch (IOException e) {System.err.println("Can't load gradle.properties file");}
+            Properties props = new Properties();
+            InputStream is = ClassLoader.getSystemResourceAsStream("version.properties");
+            props.load(is);
+            this.projectVersion = props.getProperty("versionNumber");
+            this.projectVersion = this.projectVersion.replaceAll("'", "");
 
             if (this.projectVersion == null) this.projectVersion = "-.-.-";
 

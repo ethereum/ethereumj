@@ -174,7 +174,7 @@ public class TransactionsMessageTest {
     public void test_3() throws Exception {
 
         String expected =
-                "f87302f870808b00d3c21bcecceda10000009479b08ad8787060333663d19704909ee7b1903e588609184e72a000824255801ca00f410a70e42b2c9854a8421d32c87c370a2b9fff0a27f9f031bb4443681d73b5a018a7dc4c4f9dee9f3dc35cb96ca15859aa27e219a8e4a8547be6bd3206979858";
+                "f872f870808b00d3c21bcecceda10000009479b08ad8787060333663d19704909ee7b1903e588609184e72a000824255801ca00f410a70e42b2c9854a8421d32c87c370a2b9fff0a27f9f031bb4443681d73b5a018a7dc4c4f9dee9f3dc35cb96ca15859aa27e219a8e4a8547be6bd3206979858";
 
         BigInteger value = new BigInteger("1000000000000000000000000");
 
@@ -193,7 +193,6 @@ public class TransactionsMessageTest {
         Set<Transaction> txs = new HashSet<>(Arrays.asList(tx));
         TransactionsMessage transactionsMessage = new TransactionsMessage(txs);
 
-        assertEquals(EthMessageCodes.TRANSACTIONS, transactionsMessage.getCommand());
         assertEquals(expected, Hex.toHexString(transactionsMessage.getEncoded()));
     }
 }
