@@ -20,7 +20,6 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
@@ -49,10 +48,11 @@ public class SyncManager {
     private int maxHashesAsk;
     private byte[] bestHash;
 
+    private BigInteger lowerUsefulDifficulty;
+    private BigInteger highestKnownDifficulty;
+
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
-
-    private BigInteger lowerUsefulDifficulty;
 
     private final Map<String, Long> connectTimestamps = new HashMap<>();
 
@@ -70,9 +70,9 @@ public class SyncManager {
     @Autowired
     private EthereumListener ethereumListener;
 
-    @PostConstruct
     public void init() {
-        lowerUsefulDifficulty = blockchain.getTotalDifficulty();
+        highestKnownDifficulty = blockchain.getTotalDifficulty();
+        lowerUsefulDifficulty = highestKnownDifficulty;
         worker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
@@ -108,7 +108,7 @@ public class SyncManager {
                         if (nodeStatistics.getEthLastInboundStatusMsg() == null) {
                             return false;
                         }
-                        BigInteger knownDifficulty = blockchain.getQueue().getHighestTotalDifficulty();
+                        BigInteger knownDifficulty = highestKnownDifficulty;
                         if(knownDifficulty == null) {
                             return true;
                         }
@@ -287,16 +287,13 @@ public class SyncManager {
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
 
         BlockQueue chainQueue = blockchain.getQueue();
-        BigInteger highestKnownTotalDifficulty = chainQueue.getHighestTotalDifficulty();
 
-        if ((highestKnownTotalDifficulty == null ||
-            !isIn20PercentRange(highestKnownTotalDifficulty, peerTotalDifficulty))) {
-
+        if (!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
             if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: its chain is better than previously known: {} vs {}",
                     Utils.getNodeIdShort(peer.getPeerId()),
                     peerTotalDifficulty.toString(),
-                    highestKnownTotalDifficulty == null ? "0" : highestKnownTotalDifficulty.toString()
+                    highestKnownDifficulty.toString()
             );
             logger.debug(
                     "Peer {}: best hash [{}]",
@@ -336,7 +333,7 @@ public class SyncManager {
             changeState(SyncState.GAP_RECOVERY);
         } else {
             logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
-            blockchain.getQueue().getHashStore().addFirst(wrapper.getParentHash());
+            blockchain.getQueue().addHash(wrapper.getParentHash());
         }
     }
 
@@ -372,7 +369,7 @@ public class SyncManager {
                 }
             });
             BlockQueue queue = blockchain.getQueue();
-            queue.setHighestTotalDifficulty(masterPeer.getTotalDifficulty());
+            highestKnownDifficulty = masterPeer.getTotalDifficulty();
 
             if(state == SyncState.INIT && blockchain.getQueue().syncWasInterrupted()) {
                 logger.info("It seems that BLOCK_RETRIEVING was interrupted, run it again");

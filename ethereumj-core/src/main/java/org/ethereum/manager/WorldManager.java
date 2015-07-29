@@ -12,6 +12,7 @@ import org.ethereum.core.Repository;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
+import org.ethereum.net.eth.SyncManager;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.UDPListener;
@@ -71,6 +72,9 @@ public class WorldManager {
     @Autowired
     private NodeManager nodeManager;
 
+    @Autowired
+    private SyncManager syncManager;
+
     @PostConstruct
     public void init() {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -81,6 +85,7 @@ public class WorldManager {
         wallet.importKey(cbAddr);
 
         loadBlockchain();
+        syncManager.init();
     }
 
     public void addListener(EthereumListener listener) {
