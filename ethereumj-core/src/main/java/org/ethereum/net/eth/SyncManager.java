@@ -284,8 +284,7 @@ public class SyncManager {
 
     private void logStats() {
 
-        if (peers.size() > 0){
-
+        if (peers.size() > 0) {
             logger.info("\n");
             logger.info("Active peers");
             logger.info("============");
@@ -293,9 +292,24 @@ public class SyncManager {
                 peer.logSyncStats();
             }
             logger.info("\n");
-            logger.info("State {}", state);
+        }
+
+        if (bannedNodes.size() > 0) {
+            logger.info("\n");
+            logger.info("Banned peers");
+            logger.info("============");
+            for(Map.Entry<String, Long> e : bannedNodes.entrySet()) {
+                logger.info(
+                        "Peer {} | {} minutes ago",
+                        Utils.getNodeIdShort(e.getKey()),
+                        (System.currentTimeMillis() - e.getValue()) / 60 / 1000
+                );
+            }
             logger.info("\n");
         }
+
+        logger.info("State {}", state);
+        logger.info("\n");
     }
 
     public void onDisconnect(EthHandler peer) {
