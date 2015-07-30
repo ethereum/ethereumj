@@ -378,7 +378,8 @@ public class SyncManager {
             changeState(SyncState.GAP_RECOVERY);
         } else {
             logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
-            blockchain.getQueue().addHash(wrapper.getParentHash());
+            blockchain.getQueue().getHashStore().addFirst(wrapper.getParentHash());
+            blockchain.getQueue().logHashQueueSize();
         }
     }
 
