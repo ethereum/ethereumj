@@ -11,6 +11,8 @@ import java.math.BigInteger;
  */
 public class BlockWrapper {
 
+    private static final long SOLID_BLOCK_DURATION_THRESHOLD = 1 * 60 * 1000; // 1 minute
+
     private Block block;
     private long importFailedAt = 0;
     private long receivedAt = 0;
@@ -35,6 +37,10 @@ public class BlockWrapper {
 
     public boolean isNewBlock() {
         return newBlock;
+    }
+
+    public boolean isSolidBlock() {
+        return newBlock && timeSinceReceiving() < SOLID_BLOCK_DURATION_THRESHOLD;
     }
 
     public long getImportFailedAt() {

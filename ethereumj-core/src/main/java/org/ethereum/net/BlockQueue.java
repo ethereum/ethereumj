@@ -333,8 +333,8 @@ public class BlockQueue {
     }
 
     //TODO we need more robust solution for this check
-    public boolean hasStatusBlocks() {
+    public boolean hasSolidBlocks() {
         BlockWrapper wrapper = blockQueue.peek();
-        return wrapper != null && !wrapper.isNewBlock();
+        return wrapper != null && wrapper.isSolidBlock();
     }
 }
