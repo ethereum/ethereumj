@@ -57,11 +57,6 @@ public class BlockQueue {
     private org.ethereum.db.BlockQueue blockQueue;
 
     /**
-     * Highest known total difficulty, representing the heaviest chain on the network
-     */
-    private BigInteger highestTotalDifficulty;
-
-    /**
      * Last block in the queue to be processed
      */
     private Block lastBlock;
@@ -117,7 +112,7 @@ public class BlockQueue {
                     logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
                     if (!syncManager.isGapRecovery()) {
                         wrapper.importFailed();
-                        if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
+                        if (hashStore.isEmpty() || wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
                             syncManager.recoverGap(wrapper);
                             wrapper.resetImportFail();
                         }
@@ -304,14 +299,6 @@ public class BlockQueue {
     // good result
     public void logHashQueueSize() {
         logger.info("Block hashes list size: [{}]", hashStore.size());
-    }
-
-    public BigInteger getHighestTotalDifficulty() {
-        return highestTotalDifficulty;
-    }
-
-    public void setHighestTotalDifficulty(BigInteger highestTotalDifficulty) {
-        this.highestTotalDifficulty = highestTotalDifficulty;
     }
 
     /**
