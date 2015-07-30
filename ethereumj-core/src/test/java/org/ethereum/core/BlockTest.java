@@ -114,10 +114,17 @@ public class BlockTest {
 
     @Test
     public void testFrontierGenesis(){
+
         CONFIG.setGenesisInfo("frontier.json");
-        Genesis block = GenesisLoader.loadGenesis();
-        String root = Hex.toHexString(block.getStateRoot());
-        assertEquals("3d895e91869c8056ec6f3526ad457d1d3be2230d762103b085fda40849ccbdbd", root);
+
+        Block genesis = GenesisLoader.loadGenesis();
+
+        String hash = Hex.toHexString(genesis.getHash());
+        String root = Hex.toHexString(genesis.getStateRoot());
+
+        assertEquals("d7f8974fb5ac78d9ac099b9ad5018bedc2ce0a72dad1827a1709da30580f0544", root);
+        assertEquals("d4e56740f876aef8c010b86a40d5f56745a118d0906a34e69aec8c0db1cb8fa3", hash);
+
         CONFIG.setGenesisInfo("olympic.json");
     }
 
