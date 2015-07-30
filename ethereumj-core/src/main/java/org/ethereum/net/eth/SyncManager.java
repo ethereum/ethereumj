@@ -44,7 +44,6 @@ public class SyncManager {
     private static final int DISCONNECT_HITS_THRESHOLD = 5;
 
     private static final long LARGE_GAP_THRESHOLD = 5;
-    private static final long TIME_TO_IMPORT_THRESHOLD = 10 * 60 * 1000; // 10 minutes
 
     private SyncState state = SyncState.INIT;
     private SyncState prevState = SyncState.INIT;
@@ -86,6 +85,7 @@ public class SyncManager {
             public void run() {
                 try {
                     checkMaster();
+                    checkGapRecovery();
                     checkPeers();
                     removeOutdatedConnections();
                     askNewPeers();
@@ -162,6 +162,12 @@ public class SyncManager {
             changeState(SyncState.BLOCK_RETRIEVING);
         }
         if(isGapRecovery() && masterPeer.isHashRetrievingDone()) {
+            masterPeer.changeState(SyncState.BLOCK_RETRIEVING);
+        }
+    }
+
+    private void checkGapRecovery() {
+        if(isGapRecovery() && !masterPeer.isHashRetrieving() && hashStoreEmpty()) {
             if(prevState == SyncState.BLOCK_RETRIEVING) {
                 changeState(SyncState.BLOCK_RETRIEVING);
             } else {
@@ -351,13 +357,11 @@ public class SyncManager {
         }
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
 
-        if(blockchain.getQueue().hasStatusBlocks()) {
-            if(isInit()) {
+        if(isInit()) {
+            if(blockchain.getQueue().hasSolidBlocks()) {
                 logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
                 changeState(SyncState.BLOCK_RETRIEVING);
-            }
-        } else {
-            if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+            } else if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
                 if(logger.isInfoEnabled()) logger.info(
                         "Peer {}: its chain is better than previously known: {} vs {}",
                         Utils.getNodeIdShort(peer.getPeerId()),
@@ -370,9 +374,10 @@ public class SyncManager {
                         Hex.toHexString(peer.getBestHash())
                 );
                 changeState(SyncState.HASH_RETRIEVING);
-
             }
         }
+
+        highestKnownDifficulty = peerTotalDifficulty;
     }
 
     public void recoverGap(BlockWrapper wrapper) {
@@ -427,7 +432,7 @@ public class SyncManager {
         if(isSyncDone() || isGapRecovery() || isGapRecoveryDone()) {
             return;
         }
-        if(wrapper.timeSinceReceiving() <= TIME_TO_IMPORT_THRESHOLD) {
+        if(!wrapper.isSolidBlock()) {
             logger.info("NEW block.number [{}] imported", wrapper.getNumber());
             changeState(SyncState.DONE_SYNC);
         } else if (logger.isInfoEnabled()) {
