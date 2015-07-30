@@ -351,26 +351,27 @@ public class SyncManager {
         }
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
 
-        if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: its chain is better than previously known: {} vs {}",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peerTotalDifficulty.toString(),
-                    highestKnownDifficulty.toString()
-            );
-            logger.debug(
-                    "Peer {}: best hash [{}]",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    Hex.toHexString(peer.getBestHash())
-            );
-            changeState(SyncState.HASH_RETRIEVING);
+        if(blockchain.getQueue().hasStatusBlocks()) {
+            if(isInit()) {
+                logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
+                changeState(SyncState.BLOCK_RETRIEVING);
+            }
+        } else {
+            if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+                if(logger.isInfoEnabled()) logger.info(
+                        "Peer {}: its chain is better than previously known: {} vs {}",
+                        Utils.getNodeIdShort(peer.getPeerId()),
+                        peerTotalDifficulty.toString(),
+                        highestKnownDifficulty.toString()
+                );
+                logger.debug(
+                        "Peer {}: best hash [{}]",
+                        Utils.getNodeIdShort(peer.getPeerId()),
+                        Hex.toHexString(peer.getBestHash())
+                );
+                changeState(SyncState.HASH_RETRIEVING);
 
-        } else if(isInit() && blockchain.getQueue().syncWasInterrupted()) {
-            logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
-            changeState(SyncState.BLOCK_RETRIEVING);
-
-        } else if(isBlockRetrieving()) {
-            peer.changeState(SyncState.BLOCK_RETRIEVING);
+            }
         }
     }
 

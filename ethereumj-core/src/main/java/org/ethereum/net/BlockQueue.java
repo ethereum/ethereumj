@@ -333,7 +333,7 @@ public class BlockQueue {
     }
 
     //TODO we need more robust solution for this check
-    public boolean syncWasInterrupted() {
+    public boolean hasStatusBlocks() {
         BlockWrapper wrapper = blockQueue.peek();
         return wrapper != null && !wrapper.isNewBlock();
     }
