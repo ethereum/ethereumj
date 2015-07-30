@@ -40,7 +40,7 @@ public class BlockWrapper {
     }
 
     public boolean isSolidBlock() {
-        return newBlock && timeSinceReceiving() < SOLID_BLOCK_DURATION_THRESHOLD;
+        return !newBlock || timeSinceReceiving() > SOLID_BLOCK_DURATION_THRESHOLD;
     }
 
     public long getImportFailedAt() {
