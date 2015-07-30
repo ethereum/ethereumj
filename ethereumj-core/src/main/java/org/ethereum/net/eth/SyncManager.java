@@ -85,6 +85,7 @@ public class SyncManager {
             public void run() {
                 try {
                     checkMaster();
+                    checkGapRecovery();
                     checkPeers();
                     removeOutdatedConnections();
                     askNewPeers();
@@ -161,6 +162,12 @@ public class SyncManager {
             changeState(SyncState.BLOCK_RETRIEVING);
         }
         if(isGapRecovery() && masterPeer.isHashRetrievingDone()) {
+            masterPeer.changeState(SyncState.BLOCK_RETRIEVING);
+        }
+    }
+
+    private void checkGapRecovery() {
+        if(isGapRecovery() && !masterPeer.isHashRetrieving() && hashStoreEmpty()) {
             if(prevState == SyncState.BLOCK_RETRIEVING) {
                 changeState(SyncState.BLOCK_RETRIEVING);
             } else {
@@ -350,25 +357,27 @@ public class SyncManager {
         }
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
 
-        if(isInit() && blockchain.getQueue().hasSolidBlocks()) {
-            logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
-            changeState(SyncState.BLOCK_RETRIEVING);
-        } else if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
-            if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: its chain is better than previously known: {} vs {}",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    peerTotalDifficulty.toString(),
-                    highestKnownDifficulty.toString()
-            );
-            logger.debug(
-                    "Peer {}: best hash [{}]",
-                    Utils.getNodeIdShort(peer.getPeerId()),
-                    Hex.toHexString(peer.getBestHash())
-            );
-            changeState(SyncState.HASH_RETRIEVING);
-        } else if(isInit()) {
-            changeState(SyncState.BLOCK_RETRIEVING);
+        if(isInit()) {
+            if(blockchain.getQueue().hasSolidBlocks()) {
+                logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
+                changeState(SyncState.BLOCK_RETRIEVING);
+            } else if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+                if(logger.isInfoEnabled()) logger.info(
+                        "Peer {}: its chain is better than previously known: {} vs {}",
+                        Utils.getNodeIdShort(peer.getPeerId()),
+                        peerTotalDifficulty.toString(),
+                        highestKnownDifficulty.toString()
+                );
+                logger.debug(
+                        "Peer {}: best hash [{}]",
+                        Utils.getNodeIdShort(peer.getPeerId()),
+                        Hex.toHexString(peer.getBestHash())
+                );
+                changeState(SyncState.HASH_RETRIEVING);
+            }
         }
+
+        highestKnownDifficulty = peerTotalDifficulty;
     }
 
     public void recoverGap(BlockWrapper wrapper) {
