@@ -10,8 +10,12 @@ subprojects {
     def config = new ConfigSlurper().parse(new File("ethereumj-core/src/main/resources/version.properties").toURI().toURL())
 
     group = 'org.ethereum'
-//    version = config.versionNumber + '-SNAPSHOT'
-    version = config.versionNumber
+
+    if (config.modifier?.trim())
+        version = config.versionNumber + "-" + config.modifier
+    else
+        version = config.versionNumber
+
 
     compileJava.options.encoding = 'UTF-8'
     compileJava.options.compilerArgs << '-XDignore.symbol.file'
