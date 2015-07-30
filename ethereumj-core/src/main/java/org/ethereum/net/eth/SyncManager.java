@@ -84,11 +84,15 @@ public class SyncManager {
         worker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                checkMaster();
-                checkPeers();
-                removeOutdatedConnections();
-                askNewPeers();
-                releaseBans();
+                try {
+                    checkMaster();
+                    checkPeers();
+                    removeOutdatedConnections();
+                    askNewPeers();
+                    releaseBans();
+                } catch (Exception e) {
+                    logger.error("Exception in main sync worker", e);
+                }
             }
         }, 0, 3, TimeUnit.SECONDS);
         if(logger.isInfoEnabled()) {
