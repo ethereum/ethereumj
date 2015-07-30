@@ -20,6 +20,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class BlockQueueImpl implements BlockQueue {
 
+    private static final int READ_HITS_COMMIT_THRESHOLD = 1000;
+    private int readHits;
+
     private final static String STORE_NAME = "blockqueue";
     private final static String HASH_SET_NAME = "hashset";
     private MapDBFactory mapDBFactory;
@@ -27,7 +30,7 @@ public class BlockQueueImpl implements BlockQueue {
     private DB db;
     private Map<Long, BlockWrapper> blocks;
     private Set<byte[]> hashes;
-    private List<Long> index;
+    private Index index;
 
     private boolean initDone = false;
     private final ReentrantLock initLock = new ReentrantLock();
@@ -35,6 +38,9 @@ public class BlockQueueImpl implements BlockQueue {
 
     private final ReentrantLock takeLock = new ReentrantLock();
     private final Condition notEmpty = takeLock.newCondition();
+
+    private final Object writeMutex = new Object();
+    private final Object readMutex = new Object();
 
     @Override
     public void open() {
@@ -58,9 +64,9 @@ public class BlockQueueImpl implements BlockQueue {
                         db.commit();
                     }
 
-                    index = new ArrayList<>(blocks.keySet());
-                    sortIndex();
+                    index = new ArrayListIndex(blocks.keySet());
                     initDone = true;
+                    readHits = 0;
                     init.signalAll();
                 } finally {
                     initLock.unlock();
@@ -83,71 +89,71 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public void addAll(Collection<BlockWrapper> blockList) {
         awaitInit();
-        takeLock.lock();
-        try {
-            synchronized (this) {
-                List<Long> numbers = new ArrayList<>(blockList.size());
-                Set<byte[]> newHashes = new HashSet<>();
-                for (BlockWrapper b : blockList) {
-                    if(!index.contains(b.getNumber()) &&
-                       !numbers.contains(b.getNumber())) {
+        synchronized (writeMutex) {
+            List<Long> numbers = new ArrayList<>(blockList.size());
+            Set<byte[]> newHashes = new HashSet<>();
+            for (BlockWrapper b : blockList) {
+                if(!index.contains(b.getNumber()) &&
+                   !numbers.contains(b.getNumber())) {
 
-                        blocks.put(b.getNumber(), b);
-                        numbers.add(b.getNumber());
-                        newHashes.add(b.getHash());
-                    }
+                    blocks.put(b.getNumber(), b);
+                    numbers.add(b.getNumber());
+                    newHashes.add(b.getHash());
                 }
-                hashes.addAll(newHashes);
-                index.addAll(numbers);
-                sortIndex();
             }
-            db.commit();
-            notEmpty.signalAll();
-        } finally {
-            takeLock.unlock();
+            hashes.addAll(newHashes);
+
+            takeLock.lock();
+            try {
+                index.addAll(numbers);
+                notEmpty.signalAll();
+            } finally {
+                takeLock.unlock();
+            }
         }
+        db.commit();
     }
 
     @Override
     public void add(BlockWrapper block) {
         awaitInit();
-        takeLock.lock();
-        try {
-            synchronized (this) {
-                if(index.contains(block.getNumber())) {
-                    return;
-                }
-                blocks.put(block.getNumber(), block);
-                index.add(block.getNumber());
-                hashes.add(block.getHash());
-                sortIndex();
+        synchronized (writeMutex) {
+            if (index.contains(block.getNumber())) {
+                return;
             }
-            db.commit();
-            notEmpty.signalAll();
-        } finally {
-            takeLock.unlock();
+            blocks.put(block.getNumber(), block);
+            hashes.add(block.getHash());
+
+            takeLock.lock();
+            try {
+                index.add(block.getNumber());
+                notEmpty.signalAll();
+            } finally {
+                takeLock.unlock();
+            }
         }
+        db.commit();
     }
 
     @Override
     public BlockWrapper poll() {
         awaitInit();
         BlockWrapper block = pollInner();
-        db.commit();
+        commitReading();
         return block;
     }
 
     private BlockWrapper pollInner() {
-        synchronized (this) {
+        synchronized (readMutex) {
             if (index.isEmpty()) {
                 return null;
             }
 
-            Long idx = index.get(0);
+            Long idx = index.poll();
             BlockWrapper block = blocks.get(idx);
             blocks.remove(idx);
             hashes.remove(block.getHash());
-            index.remove(0);
+
             return block;
         }
     }
@@ -155,12 +161,12 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public BlockWrapper peek() {
         awaitInit();
-        synchronized (this) {
+        synchronized (readMutex) {
             if(index.isEmpty()) {
                 return null;
             }
 
-            Long idx = index.get(0);
+            Long idx = index.peek();
             return blocks.get(idx);
         }
     }
@@ -174,7 +180,7 @@ public class BlockQueueImpl implements BlockQueue {
             while (null == (block = pollInner())) {
                 notEmpty.awaitUninterruptibly();
             }
-            db.commit();
+            commitReading();
             return block;
         } finally {
             takeLock.unlock();
@@ -232,11 +238,91 @@ public class BlockQueueImpl implements BlockQueue {
         }
     }
 
-    private void sortIndex() {
-        Collections.sort(index);
+    private void commitReading() {
+        if(++readHits >= READ_HITS_COMMIT_THRESHOLD) {
+            db.commit();
+            readHits = 0;
+        }
     }
 
     public void setMapDBFactory(MapDBFactory mapDBFactory) {
         this.mapDBFactory = mapDBFactory;
+    }
+
+    private interface Index {
+
+        void addAll(Collection<Long> nums);
+
+        void add(Long num);
+
+        Long peek();
+
+        Long poll();
+
+        boolean contains(Long num);
+
+        boolean isEmpty();
+
+        int size();
+
+        void clear();
+    }
+
+    private class ArrayListIndex implements Index {
+
+        private List<Long> index;
+
+        public ArrayListIndex(Collection<Long> numbers) {
+            index = new ArrayList<>(numbers);
+            sort();
+        }
+
+        @Override
+        public synchronized void addAll(Collection<Long> nums) {
+            index.addAll(nums);
+            sort();
+        }
+
+        @Override
+        public synchronized void add(Long num) {
+            index.add(num);
+            sort();
+        }
+
+        @Override
+        public synchronized Long peek() {
+            return index.get(0);
+        }
+
+        @Override
+        public synchronized Long poll() {
+            Long num = index.get(0);
+            index.remove(0);
+            return num;
+        }
+
+        @Override
+        public synchronized boolean contains(Long num) {
+            return Collections.binarySearch(index, num) >= 0;
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return index.isEmpty();
+        }
+
+        @Override
+        public int size() {
+            return index.size();
+        }
+
+        @Override
+        public synchronized void clear() {
+            index.clear();
+        }
+
+        private void sort() {
+            Collections.sort(index);
+        }
     }
 }

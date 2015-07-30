@@ -74,7 +74,9 @@ public class PeerClient {
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
 
-            channelManager.notifyDisconnect(ethereumChannelInitializer.getChannel());
+            if(!discoveryMode) {
+                channelManager.notifyDisconnect(ethereumChannelInitializer.getChannel());
+            }
             logger.debug("Connection is closed");
         } catch (Exception e) {
             logger.error("Exception: {}", e.toString());
