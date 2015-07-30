@@ -374,9 +374,17 @@ public class SyncManager {
             logger.info("Gap recovery is already in progress, postpone");
             return;
         }
-        if(wrapper.isNewBlock() && !allowNewBlockGapRecovery()) {
-            logger.info("We are in {} state, postpone NEW blocks gap recovery", state, wrapper.getNumber());
-            return;
+        
+        if(wrapper.isNewBlock()) {
+            if(!allowNewBlockGapRecovery()) {
+                logger.info("We are in {} state, postpone NEW blocks gap recovery", state, wrapper.getNumber());
+                return;
+            }
+        } else {
+            if(!allowStatusBlockGapRecovery()) {
+                logger.info("We are in {} state, postpone STATUS blocks gap recovery", state, wrapper.getNumber());
+                return;
+            }
         }
 
         Block bestBlock = blockchain.getBestBlock();
@@ -399,6 +407,10 @@ public class SyncManager {
             blockchain.getQueue().getHashStore().addFirst(wrapper.getParentHash());
             blockchain.getQueue().logHashQueueSize();
         }
+    }
+
+    private boolean allowStatusBlockGapRecovery() {
+        return !(isInit() || isHashRetrieving());
     }
 
     private boolean allowNewBlockGapRecovery() {
@@ -539,4 +551,9 @@ public class SyncManager {
     public boolean hashStoreEmpty() {
         return blockchain.getQueue().isHashesEmpty();
     }
+
+    public boolean isInit() {
+        return state == SyncState.INIT;
+    }
+
 }

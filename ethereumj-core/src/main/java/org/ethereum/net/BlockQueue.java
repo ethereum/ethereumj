@@ -112,7 +112,7 @@ public class BlockQueue {
                     logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
                     if (!syncManager.isGapRecovery()) {
                         wrapper.importFailed();
-                        if (wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
+                        if (hashStore.isEmpty() || wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
                             syncManager.recoverGap(wrapper);
                             wrapper.resetImportFail();
                         }
