@@ -420,23 +420,25 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return false;
         }
 
-        if (header.getGasLimit() < MIN_GAS_LIMIT) {
-            logger.error("Block invalid: header.getGasLimit() < MIN_GAS_LIMIT");
-            return false;
-        }
+        if (!CONFIG.genesisInfo().contains("frontier"))
+            if (header.getGasLimit() < MIN_GAS_LIMIT) {
+                logger.error("Block invalid: header.getGasLimit() < MIN_GAS_LIMIT");
+                return false;
+            }
 
         if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
             logger.error("Block invalid: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE");
             return false;
         }
 
-        if (header.getGasLimit() < Constants.MIN_GAS_LIMIT ||
-                header.getGasLimit() < parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
-                header.getGasLimit() > parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
+        if (!CONFIG.genesisInfo().contains("frontier"))
+            if (header.getGasLimit() < Constants.MIN_GAS_LIMIT ||
+                    header.getGasLimit() < parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
+                    header.getGasLimit() > parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
 
-            logger.error("Block invalid: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR");
-            return false;
-        }
+                logger.error("Block invalid: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR");
+                return false;
+            }
 
         return true;
     }
