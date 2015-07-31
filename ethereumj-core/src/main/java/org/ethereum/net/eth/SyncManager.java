@@ -37,8 +37,6 @@ public class SyncManager {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final int PEERS_COUNT = 10;
-
     private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
     private static final int BAN_TIMEOUT = 30 * 60 * 1000; // 30 minutes
     private static final int DISCONNECT_HITS_THRESHOLD = 5;
@@ -230,7 +228,7 @@ public class SyncManager {
     }
 
     private void askNewPeers() {
-        int peersLackSize = PEERS_COUNT - peers.size();
+        int peersLackSize = CONFIG.syncPeerCount() - peers.size();
         if(peersLackSize <= 0) {
             return;
         }
