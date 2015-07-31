@@ -352,6 +352,11 @@ public class SyncManager {
     }
 
     public void onDisconnect(EthHandler peer) {
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: disconnected",
+                peer.getPeerIdShort()
+        );
+
         peer.onDisconnect();
         peers.remove(peer);
 
@@ -372,6 +377,11 @@ public class SyncManager {
     }
 
     public synchronized void addPeer(EthHandler peer) {
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: adding",
+                peer.getPeerIdShort()
+        );
+
         BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
 
         synchronized (connectionsMutex) {
@@ -402,6 +412,13 @@ public class SyncManager {
                         highestKnownDifficulty.toString()
                 );
                 changeState(SyncState.HASH_RETRIEVING);
+            } else if(logger.isTraceEnabled()) {
+                logger.trace(
+                        "Peer {}: its chain is worse than than previously known: {} vs {}",
+                        Utils.getNodeIdShort(peer.getPeerId()),
+                        peerTotalDifficulty.toString(),
+                        highestKnownDifficulty.toString()
+                );
             }
         }
 
@@ -558,6 +575,10 @@ public class SyncManager {
     }
 
     private void initiateConnection(Node node) {
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: initiate connection",
+                Utils.getNodeIdShort(Hex.toHexString(node.getId()))
+        );
         synchronized (connectionsMutex) {
             String nodeId = Hex.toHexString(node.getId());
             if(connectTimestamps.containsKey(nodeId)) {
