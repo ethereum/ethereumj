@@ -188,7 +188,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         returnHashes();
     }
 
-    private void disconnect(ReasonCode reason) {
+    void disconnect(ReasonCode reason) {
         msgQueue.disconnect(reason);
         channel.getNodeStatistics().nodeDisconnectedLocal(reason);
     }
@@ -469,6 +469,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     synchronized void changeState(SyncState newState) {
+        if(syncState == newState) {
+            return;
+        }
         if(newState == SyncState.HASH_RETRIEVING) {
             hashesLoadedCnt = 0;
             sendGetBlockHashes();
@@ -576,6 +579,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     void setMaxHashesAsk(int maxHashesAsk) {
         this.maxHashesAsk = maxHashesAsk;
+    }
+
+    long getHashesLoadedCnt() {
+        return hashesLoadedCnt;
     }
 
     enum EthState {
