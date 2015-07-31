@@ -158,6 +158,9 @@ public class SyncManager {
     }
 
     private void checkMaster() {
+        if(masterPeer == null) {
+            return;
+        }
         if(isHashRetrieving() && masterPeer.isHashRetrievingDone()) {
             changeState(SyncState.BLOCK_RETRIEVING);
         }
@@ -167,6 +170,9 @@ public class SyncManager {
     }
 
     private void checkGapRecovery() {
+        if(masterPeer == null) {
+            return;
+        }
         if(isGapRecovery() && !masterPeer.isHashRetrieving() && hashStoreEmpty()) {
             if(prevState == SyncState.BLOCK_RETRIEVING) {
                 changeState(SyncState.BLOCK_RETRIEVING);
@@ -455,6 +461,9 @@ public class SyncManager {
                     return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
                 }
             });
+            if(masterPeer == null) {
+                return;
+            }
             BlockQueue queue = blockchain.getQueue();
             highestKnownDifficulty = masterPeer.getTotalDifficulty();
 
@@ -474,6 +483,9 @@ public class SyncManager {
                     return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
                 }
             });
+            if(masterPeer == null) {
+                return;
+            }
             runHashRetrievingOnMaster();
             logger.info("Gap recovery initiated");
         }
