@@ -367,23 +367,26 @@ public class SyncManager {
             if(blockchain.getQueue().hasSolidBlocks()) {
                 logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
                 changeState(SyncState.BLOCK_RETRIEVING);
-            } else if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+            } else {
                 if(logger.isInfoEnabled()) logger.info(
-                        "Peer {}: its chain is better than previously known: {} vs {}",
+                        "Peer {}: its chain is better than previously known: {} vs {}, initiating HASH_RETRIEVING",
                         Utils.getNodeIdShort(peer.getPeerId()),
                         peerTotalDifficulty.toString(),
                         highestKnownDifficulty.toString()
-                );
-                logger.debug(
-                        "Peer {}: best hash [{}]",
-                        Utils.getNodeIdShort(peer.getPeerId()),
-                        Hex.toHexString(peer.getBestHash())
                 );
                 changeState(SyncState.HASH_RETRIEVING);
             }
         }
 
-        highestKnownDifficulty = peerTotalDifficulty;
+        if(isHashRetrieving() && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+            if(logger.isInfoEnabled()) logger.info(
+                    "Peer {}: its chain is better than previously known: {} vs {}, switching HASH_RETRIEVING",
+                    Utils.getNodeIdShort(peer.getPeerId()),
+                    peerTotalDifficulty.toString(),
+                    highestKnownDifficulty.toString()
+            );
+            changeState(SyncState.HASH_RETRIEVING);
+        }
     }
 
     public void recoverGap(BlockWrapper wrapper) {
