@@ -469,6 +469,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     synchronized void changeState(SyncState newState) {
+        if(syncState == newState) {
+            return;
+        }
         if(newState == SyncState.HASH_RETRIEVING) {
             hashesLoadedCnt = 0;
             sendGetBlockHashes();

@@ -37,7 +37,7 @@ public class SyncManager {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final int PEERS_COUNT = 5;
+    private static final int PEERS_COUNT = 10;
 
     private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
     private static final int BAN_TIMEOUT = 30 * 60 * 1000; // 30 minutes
@@ -367,7 +367,7 @@ public class SyncManager {
             if(blockchain.getQueue().hasSolidBlocks()) {
                 logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
                 changeState(SyncState.BLOCK_RETRIEVING);
-            } else {
+            } else if (peerTotalDifficulty.compareTo(highestKnownDifficulty) > 0) {
                 if(logger.isInfoEnabled()) logger.info(
                         "Peer {}: its chain is better than previously known: {} vs {}, initiating HASH_RETRIEVING",
                         Utils.getNodeIdShort(peer.getPeerId()),
