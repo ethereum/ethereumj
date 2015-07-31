@@ -5,6 +5,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
+import org.ethereum.net.rlpx.Node;
 
 import java.util.List;
 import java.util.Set;
@@ -57,6 +58,11 @@ public class EthereumListenerAdapter implements EthereumListener {
 
     @Override
     public void onVMTraceCreated(String transactionHash, String trace) {
+
+    }
+
+    @Override
+    public void onNodeDiscovered(Node node) {
 
     }
 }
