@@ -7,6 +7,7 @@ import org.ethereum.core.Blockchain;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -37,17 +38,18 @@ public class SyncManager {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final int PEERS_COUNT = 5;
-
     private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
     private static final int BAN_TIMEOUT = 30 * 60 * 1000; // 30 minutes
     private static final int DISCONNECT_HITS_THRESHOLD = 5;
+    private static final int MASTER_STUCK_TIME_THRESHOLD = 60 * 1000; // 60 seconds
 
     private static final long LARGE_GAP_THRESHOLD = 5;
 
     private SyncState state = SyncState.INIT;
     private SyncState prevState = SyncState.INIT;
     private EthHandler masterPeer;
+    private long lastHashesLoadedCnt = 0;
+    private long masterStuckAt = 0;
     private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
     private int maxHashesAsk;
     private byte[] bestHash;
@@ -84,8 +86,8 @@ public class SyncManager {
             @Override
             public void run() {
                 try {
-                    checkMaster();
                     checkGapRecovery();
+                    checkMaster();
                     checkPeers();
                     removeOutdatedConnections();
                     askNewPeers();
@@ -158,15 +160,46 @@ public class SyncManager {
     }
 
     private void checkMaster() {
+        if(masterPeer == null) {
+            return;
+        }
         if(isHashRetrieving() && masterPeer.isHashRetrievingDone()) {
             changeState(SyncState.BLOCK_RETRIEVING);
         }
         if(isGapRecovery() && masterPeer.isHashRetrievingDone()) {
             masterPeer.changeState(SyncState.BLOCK_RETRIEVING);
         }
+
+        if((isHashRetrieving() || isGapRecovery())) {
+            long hashesLoadedCnt = masterPeer.getHashesLoadedCnt();
+            if(hashesLoadedCnt > lastHashesLoadedCnt) {
+                masterStuckAt = 0;
+            } else {
+                if(masterStuckAt == 0) {
+                    masterStuckAt = System.currentTimeMillis();
+                } else {
+                    if(timeSinceMasterStuck() > MASTER_STUCK_TIME_THRESHOLD) {
+                        masterStuckAt = 0;
+                        masterPeer.disconnect(ReasonCode.USELESS_PEER);
+                        logger.info(
+                                "Master peer {}: banned due to stuck timeout exceeding",
+                                Utils.getNodeIdShort(masterPeer.getPeerId())
+                        );
+                        setBan(masterPeer);
+                    }
+                }
+            }
+        }
+    }
+
+    private long timeSinceMasterStuck() {
+        return System.currentTimeMillis() - masterStuckAt;
     }
 
     private void checkGapRecovery() {
+        if(masterPeer == null) {
+            return;
+        }
         if(isGapRecovery() && !masterPeer.isHashRetrieving() && hashStoreEmpty()) {
             if(prevState == SyncState.BLOCK_RETRIEVING) {
                 changeState(SyncState.BLOCK_RETRIEVING);
@@ -224,7 +257,7 @@ public class SyncManager {
     }
 
     private void askNewPeers() {
-        int peersLackSize = PEERS_COUNT - peers.size();
+        int peersLackSize = CONFIG.syncPeerCount() - peers.size();
         if(peersLackSize <= 0) {
             return;
         }
@@ -329,7 +362,7 @@ public class SyncManager {
                 hits = 0;
             }
             if(hits > DISCONNECT_HITS_THRESHOLD) {
-                bannedNodes.put(peer.getPeerId(), System.currentTimeMillis());
+                setBan(peer);
                 logger.info("Peer {}: banned due to disconnects exceeding", Utils.getNodeIdShort(peer.getPeerId()));
                 disconnectHits.remove(peer.getPeerId());
             } else {
@@ -338,7 +371,7 @@ public class SyncManager {
         }
     }
 
-    public void addPeer(EthHandler peer) {
+    public synchronized void addPeer(EthHandler peer) {
         BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
 
         synchronized (connectionsMutex) {
@@ -361,23 +394,26 @@ public class SyncManager {
             if(blockchain.getQueue().hasSolidBlocks()) {
                 logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
                 changeState(SyncState.BLOCK_RETRIEVING);
-            } else if(!isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+            } else if (peerTotalDifficulty.compareTo(highestKnownDifficulty) > 0) {
                 if(logger.isInfoEnabled()) logger.info(
-                        "Peer {}: its chain is better than previously known: {} vs {}",
+                        "Peer {}: its chain is better than previously known: {} vs {}, initiating HASH_RETRIEVING",
                         Utils.getNodeIdShort(peer.getPeerId()),
                         peerTotalDifficulty.toString(),
                         highestKnownDifficulty.toString()
-                );
-                logger.debug(
-                        "Peer {}: best hash [{}]",
-                        Utils.getNodeIdShort(peer.getPeerId()),
-                        Hex.toHexString(peer.getBestHash())
                 );
                 changeState(SyncState.HASH_RETRIEVING);
             }
         }
 
-        highestKnownDifficulty = peerTotalDifficulty;
+        if(isHashRetrieving() && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+            if(logger.isInfoEnabled()) logger.info(
+                    "Peer {}: its chain is better than previously known: {} vs {}, switching HASH_RETRIEVING",
+                    Utils.getNodeIdShort(peer.getPeerId()),
+                    peerTotalDifficulty.toString(),
+                    highestKnownDifficulty.toString()
+            );
+            changeState(SyncState.HASH_RETRIEVING);
+        }
     }
 
     public void recoverGap(BlockWrapper wrapper) {
@@ -455,6 +491,9 @@ public class SyncManager {
                     return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
                 }
             });
+            if(masterPeer == null) {
+                return;
+            }
             BlockQueue queue = blockchain.getQueue();
             highestKnownDifficulty = masterPeer.getTotalDifficulty();
 
@@ -474,6 +513,9 @@ public class SyncManager {
                     return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
                 }
             });
+            if(masterPeer == null) {
+                return;
+            }
             runHashRetrievingOnMaster();
             logger.info("Gap recovery initiated");
         }
@@ -500,6 +542,8 @@ public class SyncManager {
     }
 
     private void runHashRetrievingOnMaster() {
+        lastHashesLoadedCnt = 0;
+        masterStuckAt = 0;
         blockchain.getQueue().setBestHash(bestHash);
         masterPeer.setMaxHashesAsk(maxHashesAsk);
         masterPeer.changeState(SyncState.HASH_RETRIEVING);
@@ -530,6 +574,12 @@ public class SyncManager {
             }
             ethereum.connect(node);
             connectTimestamps.put(nodeId, System.currentTimeMillis());
+        }
+    }
+
+    private void setBan(EthHandler peer) {
+        synchronized (connectionsMutex) {
+            bannedNodes.put(peer.getPeerId(), System.currentTimeMillis());
         }
     }
 

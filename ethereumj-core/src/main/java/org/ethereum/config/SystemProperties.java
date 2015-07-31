@@ -305,17 +305,17 @@ public class SystemProperties {
 
     @ValidateMe
     public int maxHashesAsk() {
-        return config.getInt("max.hashes.ask");
+        return config.getInt("sync.max.hashes.ask");
     }
 
     @ValidateMe
     public int maxBlocksAsk() {
-        return config.getInt("max.blocks.ask");
+        return config.getInt("sync.max.blocks.ask");
     }
 
     @ValidateMe
-    public int maxBlocksQueued() {
-        return config.getInt("max.blocks.queued");
+    public int syncPeerCount() {
+        return config.getInt("sync.peer.count");
     }
 
     @ValidateMe
