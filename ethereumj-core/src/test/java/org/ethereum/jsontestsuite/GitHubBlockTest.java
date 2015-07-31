@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.HashSet;
 
+@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 

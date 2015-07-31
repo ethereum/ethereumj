@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
@@ -14,6 +15,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The block in Ethereum is the collection of relevant pieces of information
@@ -30,7 +33,10 @@ public class Block {
 
     private static final Logger logger = LoggerFactory.getLogger("block");
 
-    public static final BigInteger BLOCK_REWARD = BigInteger.valueOf(1500000000000000000L);
+    public static final BigInteger BLOCK_REWARD = CONFIG.genesisInfo().contains("frontier") ?
+            new BigInteger("5000000000000000000") :
+            new BigInteger("1500000000000000000");
+
     public static final BigInteger UNCLE_REWARD = BLOCK_REWARD.multiply(
             BigInteger.valueOf(15)).divide(BigInteger.valueOf(16));
     public static final BigInteger INCLUSION_REWARD = BLOCK_REWARD

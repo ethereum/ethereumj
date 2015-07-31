@@ -6,7 +6,10 @@ import org.ethereum.trie.Trie;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
+import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -20,6 +23,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
+@Ignore
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BlockTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
@@ -67,7 +72,8 @@ public class BlockTest {
 
     @Test
     public void testGenesisFromNew() {
-        Block genesis = Genesis.getInstance();
+
+        Block genesis = GenesisLoader.loadGenesis();
         logger.info(genesis.toString());
 
         logger.info("genesis hash: [{}]", Hex.toHexString(genesis.getHash()));

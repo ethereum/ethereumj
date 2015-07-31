@@ -1,9 +1,10 @@
 package org.ethereum.core;
 
 
-import org.ethereum.config.SystemProperties;
+import org.ethereum.TestContext;
+import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
-import org.ethereum.db.InMemoryBlockStore;
+import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.manager.WorldManager;
 import org.hibernate.SessionFactory;
 import org.junit.After;
@@ -19,9 +20,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.ethereum.TestContext;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +27,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.HashMap;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -42,17 +41,13 @@ public class ImportTest {
     @Configuration
     @ComponentScan(basePackages = "org.ethereum")
     static class ContextConfiguration extends TestContext {
-        static {
-            SystemProperties.CONFIG.setDataBaseDir("test_db/" + ImportTest.class);
-            SystemProperties.CONFIG.setDatabaseReset(true);
-        }
 
         @Bean
-        @Transactional(propagation = Propagation.SUPPORTS)
         public BlockStore blockStore(SessionFactory sessionFactory){
 
-            InMemoryBlockStore blockStore = new InMemoryBlockStore();
-            blockStore.setSessionFactory(sessionFactory);
+            IndexedBlockStore blockStore = new IndexedBlockStore();
+            blockStore.init(new HashMap<Long, List<IndexedBlockStore.BlockInfo>>(), new HashMapDB(), null, null);
+
             return blockStore;
         }
     }
@@ -68,8 +63,6 @@ public class ImportTest {
 
     @Test
     public void testScenario1() throws URISyntaxException, IOException {
-
-        logger.error("Started");
 
         BlockchainImpl blockchain = (BlockchainImpl) worldManager.getBlockchain();
 
