@@ -269,7 +269,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             });
             if (foundHash != null) {
                 changeState(SyncState.DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
-                loggerSync.trace("Peer {}: get our best hash {[]}", Utils.getNodeIdShort(peerId), foundHash);
+                loggerSync.trace("Peer {}: get our best hash [{}]", Utils.getNodeIdShort(peerId), foundHash);
             }
         }
 
@@ -332,7 +332,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private void returnHashes() {
         if(sentHashes != null) {
             if(loggerSync.isDebugEnabled()) {
-                loggerSync.debug("Peer {}: [{}] hashes returned", Utils.getNodeIdShort(peerId), sentHashes.size());
+                loggerSync.debug("Peer {}: return [{}] hashes back to store", Utils.getNodeIdShort(peerId), sentHashes.size());
             }
             blockchain.getQueue().returnHashes(sentHashes);
         }
@@ -422,6 +422,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         );
 
         if (hashes.isEmpty()) {
+            if(loggerSync.isTraceEnabled()) loggerSync.trace(
+                    "Peer {}: hashes are empty, abort sending",
+                    Utils.getNodeIdShort(peerId)
+            );
             return;
         }
 
