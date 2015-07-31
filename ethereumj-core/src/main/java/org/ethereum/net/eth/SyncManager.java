@@ -342,7 +342,7 @@ public class SyncManager {
         }
     }
 
-    public void addPeer(EthHandler peer) {
+    public synchronized void addPeer(EthHandler peer) {
         BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
 
         synchronized (connectionsMutex) {
