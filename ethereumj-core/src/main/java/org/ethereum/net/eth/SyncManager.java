@@ -95,6 +95,7 @@ public class SyncManager {
                     askNewPeers();
                     releaseBans();
                 } catch (Exception e) {
+                    e.printStackTrace();
                     logger.error("Exception in main sync worker", e);
                 }
             }
@@ -467,7 +468,7 @@ public class SyncManager {
             logger.info("Gap recovery is already in progress, postpone");
             return;
         }
-        
+
         if(wrapper.isSolidBlock()) {
             if(!allowSolidBlockGapRecovery()) {
                 logger.info("We are in {} state, postpone SOLID blocks gap recovery", state, wrapper.getNumber());

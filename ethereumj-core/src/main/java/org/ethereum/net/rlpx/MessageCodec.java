@@ -283,7 +283,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        loggerNet.error("MessageCodec handling failed", cause);
+        loggerNet.error("MessageCodec handling failed {}", cause.getMessage());
         super.exceptionCaught(ctx, cause);
         ctx.close();
     }

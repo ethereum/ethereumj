@@ -7,6 +7,8 @@ import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
@@ -19,6 +21,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @since 09.07.2015
  */
 public class BlockQueueImpl implements BlockQueue {
+
+    private final static Logger logger = LoggerFactory.getLogger("blockqueue");
+
 
     private static final int READ_HITS_COMMIT_THRESHOLD = 1000;
     private int readHits;
@@ -152,6 +157,10 @@ public class BlockQueueImpl implements BlockQueue {
             Long idx = index.poll();
             BlockWrapper block = blocks.get(idx);
             blocks.remove(idx);
+
+            if (block == null)
+                logger.error("Block for index {} is null", idx);
+
             hashes.remove(block.getHash());
 
             return block;
