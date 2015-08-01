@@ -280,4 +280,11 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public byte[] getRemoteId() {
         return remoteId;
     }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        loggerNet.error("MessageCodec handling failed", cause);
+        super.exceptionCaught(ctx, cause);
+        ctx.close();
+    }
 }
