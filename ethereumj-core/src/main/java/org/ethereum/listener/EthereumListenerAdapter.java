@@ -3,6 +3,7 @@ package org.ethereum.listener;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.rlpx.Node;
@@ -46,7 +47,7 @@ public class EthereumListenerAdapter implements EthereumListener {
     }
 
     @Override
-    public void onHandShakePeer(HelloMessage helloMessage) {
+    public void onHandShakePeer(Node node, HelloMessage helloMessage) {
 
     }
 
@@ -63,6 +64,12 @@ public class EthereumListenerAdapter implements EthereumListener {
 
     @Override
     public void onNodeDiscovered(Node node) {
+
+    }
+
+
+    @Override
+    public void onEthStatusUpdated(Node node, StatusMessage statusMessage) {
 
     }
 }

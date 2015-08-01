@@ -39,8 +39,6 @@ public class UDPListener {
     WorldManager worldManager;
 
     public UDPListener() {
-        System.out.println("====== UDPListener() ======");
-
         this.address = punchBindAddress(SystemProperties.CONFIG.getConfig().getString("peer.bind.ip"));
         port = SystemProperties.CONFIG.listenPort();
         key = ECKey.fromPrivate(BigInteger.TEN).decompress();
@@ -82,8 +80,8 @@ public class UDPListener {
     }
 
     public void start(String[] args) throws Exception {
-        System.out.println("====== UDPListener:start ======");
 
+        logger.info("Discovery UDPListener started");
         NioEventLoopGroup group = new NioEventLoopGroup(1);
         byte[] nodeID = new byte[64];
         System.arraycopy(key.getPubKey(), 1, nodeID, 0, 64);

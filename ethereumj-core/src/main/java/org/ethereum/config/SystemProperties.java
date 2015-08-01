@@ -72,6 +72,8 @@ public class SystemProperties {
 
     private SystemProperties() {
         try {
+            Config testConfig = ConfigFactory.load("test-ethereumj.conf");
+
             Config referenceConfig = ConfigFactory.load("ethereumj.conf");
             Config userConfig = ConfigFactory.parseResources("user.conf");
             Config userDirConfig = ConfigFactory.parseFile(
@@ -80,6 +82,7 @@ public class SystemProperties {
             Config sysPropConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
                     ConfigFactory.empty();
             config = sysPropConfig
+                    .withFallback(testConfig)
                     .withFallback(userConfig)
                     .withFallback(userDirConfig)
                     .withFallback(referenceConfig);

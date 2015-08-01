@@ -64,7 +64,7 @@ public class Channel {
     NodeManager nodeManager;
 
     MessageCodesResolver messageCodesResolver = new MessageCodesResolver();
-    
+
     InetSocketAddress inetSocketAddress;
 
     Node node;
@@ -182,6 +182,10 @@ public class Channel {
             nodeStatistics = nodeManager.getNodeStatistics(node);
         }
         return nodeStatistics;
+    }
+
+    public Node getNode() {
+        return node;
     }
 
     public MessageCodesResolver getMessageCodesResolver() {

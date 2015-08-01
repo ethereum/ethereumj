@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 
-@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class BlockTest {
 

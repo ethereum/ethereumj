@@ -1,13 +1,14 @@
 package org.ethereum.net.eth;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.ImportResult;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.core.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
@@ -15,22 +16,16 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -207,6 +202,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
         channel.getNodeStatistics().ethHandshake(msg);
+        worldManager.getListener().onEthStatusUpdated(channel.getNode(), msg);
+
         this.bestHash = msg.getBestHash();
 
         try {

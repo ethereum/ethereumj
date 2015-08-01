@@ -201,8 +201,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         if (ret == null) {
             ret = new NodeHandler(n ,this);
             nodeHandlerMap.put(key, ret);
-//            logger.debug("New node: " + ret);
-            System.out.println("++++  New node: " + ret);
+            logger.debug(" +++ New node: " + ret);
             worldManager.getListener().onNodeDiscovered(ret.getNode());
         }
         return ret;
