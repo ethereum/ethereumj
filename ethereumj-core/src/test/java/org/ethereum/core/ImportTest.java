@@ -41,7 +41,6 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
-@DirtiesContext(classMode = ClassMode.AFTER_CLASS)
 public class ImportTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
