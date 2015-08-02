@@ -80,6 +80,13 @@ public class SyncManager {
     private EthereumListener ethereumListener;
 
     public void init() {
+
+        if (!CONFIG.isSyncEnabled()) {
+            logger.info("Sync Manager: OFF");
+            return;
+        }
+
+        logger.info("Sync Manager: ON");
         updateLowerUsefulDifficulty();
         updateHighestKnownDifficulty();
         worker.scheduleWithFixedDelay(new Runnable() {

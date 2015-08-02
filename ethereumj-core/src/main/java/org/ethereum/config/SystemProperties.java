@@ -402,6 +402,9 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public boolean isSyncEnabled() { return config.getBoolean("sync.enabled");}
+
+    @ValidateMe
     public String genesisInfo() {
 
         if (genesisInfo == null)
