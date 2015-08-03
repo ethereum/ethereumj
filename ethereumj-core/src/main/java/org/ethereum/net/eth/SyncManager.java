@@ -248,18 +248,12 @@ public class SyncManager {
         peers.removeAll(removed);
 
         // checking if master peer is still presented
-        if(isHashRetrieving() || isGapRecovery()) {
-            EthHandler master = org.apache.commons.collections4.CollectionUtils.find(peers, new Predicate<EthHandler>() {
-                @Override
-                public boolean evaluate(EthHandler peer) {
-                    return peer.isHashRetrieving();
-                }
-            });
-            if(master == null) {
+        synchronized (connectionsMutex) {
+            if ((isHashRetrieving() || isGapRecovery()) && !peers.contains(masterPeer)) {
                 logger.info("Master peer has been lost, find a new one");
-                if(isHashRetrieving()) {
+                if (isHashRetrieving()) {
                     changeState(SyncState.HASH_RETRIEVING);
-                } else if(isGapRecovery()) {
+                } else if (isGapRecovery()) {
                     changeState(SyncState.GAP_RECOVERY);
                 }
             }
@@ -298,10 +292,10 @@ public class SyncManager {
                 new Functional.Predicate<NodeHandler>() {
                     @Override
                     public boolean test(NodeHandler nodeHandler) {
-                        if (nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                        if(nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
                             return false;
                         }
-                        if (nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
+                        if(nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
                             return false;
                         }
                         BigInteger thatDifficulty = nodeHandler
@@ -316,10 +310,10 @@ public class SyncManager {
                     public int compare(NodeHandler n1, NodeHandler n2) {
                         BigInteger td1 = null;
                         BigInteger td2 = null;
-                        if (n1.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                        if(n1.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
                             td1 = n1.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
                         }
-                        if (n2.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                        if(n2.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
                             td2 = n2.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
                         }
                         if (td1 != null && td2 != null) {
@@ -335,6 +329,31 @@ public class SyncManager {
                 },
                 peersLackSize
         );
+
+        if(peers.isEmpty() && newNodes.isEmpty()) {
+            newNodes = nodeManager.getNodes(
+                    new Functional.Predicate<NodeHandler>() {
+                        @Override
+                        public boolean test(NodeHandler nodeHandler) {
+                            if(nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                                return false;
+                            }
+                            if(nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
+                                return false;
+                            }
+                            return true;
+                        }
+                    },
+                    new Comparator<NodeHandler>() {
+                        @Override
+                        public int compare(NodeHandler n1, NodeHandler n2) {
+                            return Integer.valueOf(n2.getNodeStatistics().getReputation())
+                                    .compareTo(n1.getNodeStatistics().getReputation());
+                        }
+                    },
+                    peersLackSize
+            );
+        }
 
         if(logger.isTraceEnabled()) {
             StringBuilder sb = new StringBuilder();
@@ -421,14 +440,17 @@ public class SyncManager {
 
         synchronized (connectionsMutex) {
             connectTimestamps.remove(peer.getPeerId());
-            if(blockchain.getTotalDifficulty().compareTo(peerTotalDifficulty) > 0) {
+            if(lowerUsefulDifficulty.compareTo(peerTotalDifficulty) > 0) {
                 if(logger.isInfoEnabled()) logger.info(
                         "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
                         Utils.getNodeIdShort(peer.getPeerId()),
                         peerTotalDifficulty.toString(),
-                        blockchain.getTotalDifficulty().toString()
+                        lowerUsefulDifficulty.toString()
                 );
-                setBan(peer);
+                if(!isIn20PercentRange(peerTotalDifficulty, lowerUsefulDifficulty)) {
+                    logger.trace("Peer {}: difficulty diff is more than 20%, adding to ban list", Utils.getNodeIdShort(peer.getPeerId()));
+                    setBan(peer);
+                }
                 peer.disconnect(ReasonCode.USELESS_PEER);
                 // TODO report about lower total difficulty
                 return;
@@ -451,7 +473,7 @@ public class SyncManager {
                 changeState(SyncState.HASH_RETRIEVING);
             } else if(logger.isTraceEnabled()) {
                 logger.trace(
-                        "Peer {}: its chain is worse than than previously known: {} vs {}",
+                        "Peer {}: its chain is worse than previously known: {} vs {}",
                         Utils.getNodeIdShort(peer.getPeerId()),
                         peerTotalDifficulty.toString(),
                         highestKnownDifficulty.toString()
@@ -624,7 +646,7 @@ public class SyncManager {
                     return peer.getPeerId();
                 }
             });
-            if(usedNodes.contains(nodeId) && connectTimestamps.containsKey(nodeId)) {
+            if(usedNodes.contains(nodeId) || connectTimestamps.containsKey(nodeId)) {
                 if(logger.isTraceEnabled()) logger.trace(
                         "Peer {}: connection already initiated",
                         Utils.getNodeIdShort(Hex.toHexString(node.getId()))
