@@ -74,12 +74,13 @@ public class Channel {
 
     String remoteId;
 
+    private boolean discoveryMode;
 
     public Channel() {
     }
 
     public void init(String remoteId, boolean discoveryMode) {
-
+        this.discoveryMode = discoveryMode;
         messageCodec.setRemoteId(remoteId, this);
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
@@ -203,5 +204,9 @@ public class Channel {
 
     public void onDisconnect() {
         ethHandler.onDisconnect();
+    }
+
+    public boolean isDiscoveryMode() {
+        return discoveryMode;
     }
 }

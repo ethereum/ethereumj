@@ -173,7 +173,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         loggerNet.error("Eth handling failed", cause);
         returnHashes();
-        super.exceptionCaught(ctx, cause);
         ctx.close();
     }
 

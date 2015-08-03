@@ -33,8 +33,6 @@ public class PeerClient {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-//    private boolean peerDiscoveryMode = false;
-
     @Autowired
     private ApplicationContext ctx;
 
@@ -79,8 +77,11 @@ public class PeerClient {
             }
             logger.debug("Connection is closed");
         } catch (Exception e) {
-            logger.error("Exception: {}", e.toString());
-//            logger.trace("Exception details:", e);
+            if (discoveryMode) {
+                logger.debug("Exception:", e);
+            } else {
+                logger.error("Exception:", e);
+            }
         } finally {
             workerGroup.shutdownGracefully();
         }

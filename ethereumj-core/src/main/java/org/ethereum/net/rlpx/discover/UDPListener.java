@@ -103,8 +103,6 @@ public class UDPListener {
             while(true) {
                 Bootstrap b = new Bootstrap();
                 b.group(group)
-                        //            .option(ChannelOption.SO_TIMEOUT, 0)
-                        .option(ChannelOption.SO_KEEPALIVE, true)
                         .channel(NioDatagramChannel.class)
                         .handler(new ChannelInitializer<NioDatagramChannel>() {
                             @Override
