@@ -244,15 +244,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
         BlockQueue chainQueue = blockchain.getQueue();
 
-        // result is empty, peer has no more hashes
-        // or peer doesn't have the best hash anymore
-        if (receivedHashes.isEmpty()) {
-            changeState(SyncState.DONE_HASH_RETRIEVING);
-        } else {
-            if(loggerSync.isInfoEnabled()) {
-                hashesLoadedCnt += receivedHashes.size();
-                lastHash = receivedHashes.get(0);
-            }
+        if (!receivedHashes.isEmpty()) {
+            hashesLoadedCnt += receivedHashes.size();
+            lastHash = receivedHashes.get(0);
 
             chainQueue.addHashes(receivedHashes);
             // store unknown hashes in queue until known hash is found
@@ -265,7 +259,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             });
             if (foundHash != null) {
                 changeState(SyncState.DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
-                loggerSync.trace("Peer {}: get our best hash [{}]", Utils.getNodeIdShort(peerId), foundHash);
+                loggerSync.trace("Peer {}: got our best hash [{}]", Utils.getNodeIdShort(peerId), Hex.toHexString(foundHash));
             }
         }
 
@@ -308,19 +302,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         if(!blockList.isEmpty()) {
             blockchain.getQueue().addBlocks(blockList);
             blockchain.getQueue().logHashQueueSize();
-            if (loggerSync.isInfoEnabled()) {
-                blocksLoadedCnt += blockList.size();
-            }
-
-            if (blockchain.getQueue().isHashesEmpty()) {
-                loggerSync.info("Peer {}: no more hashes in queue, idle", Utils.getNodeIdShort(peerId));
-                changeState(SyncState.IDLE);
-            }
+            blocksLoadedCnt += blockList.size();
         } else {
             changeState(SyncState.NO_MORE_BLOCKS);
         }
 
-        if (syncState == SyncState.BLOCK_RETRIEVING) {
+        if(syncState == SyncState.BLOCK_RETRIEVING) {
             sendGetBlocks();
         }
     }
@@ -331,6 +318,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 loggerSync.debug("Peer {}: return [{}] hashes back to store", Utils.getNodeIdShort(peerId), sentHashes.size());
             }
             blockchain.getQueue().returnHashes(sentHashes);
+            sentHashes.clear();
         }
     }
 
@@ -400,13 +388,22 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     // Parallel download blocks based on hashQueue
-    public void sendGetBlocks() {
+    public boolean sendGetBlocks() {
         BlockQueue queue = blockchain.getQueue();
 
         // retrieve list of block hashes from queue
         // save them locally in case the remote peer
         // will return less blocks than requested.
         List<byte[]> hashes = queue.getHashes();
+        if (hashes.isEmpty()) {
+            if(loggerSync.isInfoEnabled()) loggerSync.info(
+                    "Peer {}: no more hashes in queue, idle",
+                    Utils.getNodeIdShort(peerId)
+            );
+            changeState(SyncState.IDLE);
+            return false;
+        }
+
         this.sentHashes = new ArrayList<>();
         for (byte[] hash : hashes)
             this.sentHashes.add(wrap(hash));
@@ -417,14 +414,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 sentHashes.size()
         );
 
-        if (hashes.isEmpty()) {
-            if(loggerSync.isTraceEnabled()) loggerSync.trace(
-                    "Peer {}: hashes are empty, abort sending",
-                    Utils.getNodeIdShort(peerId)
-            );
-            return;
-        }
-
         Collections.shuffle(hashes);
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
 
@@ -432,6 +421,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             loggerNet.debug(msg.getDetailedString());
 
         sendMessage(msg);
+
+        return true;
     }
 
     private void sendPendingTransactions() {
@@ -489,6 +480,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     synchronized void changeState(SyncState newState) {
+        loggerSync.info(
+                "Peer {}: changing state from {} to {}",
+                getPeerIdShort(),
+                syncState,
+                newState
+        );
         if(syncState == newState) {
             return;
         }
@@ -498,7 +495,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
             blocksLoadedCnt = 0;
-            sendGetBlocks();
+            boolean sent = sendGetBlocks();
+            if(!sent) {
+                return;
+            }
         }
         if(newState == SyncState.NO_MORE_BLOCKS) {
             if(++noMoreBlocksHits < NO_MORE_BLOCKS_THRESHOLD) {
