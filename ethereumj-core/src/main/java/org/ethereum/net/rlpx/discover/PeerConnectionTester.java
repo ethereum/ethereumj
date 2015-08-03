@@ -93,7 +93,13 @@ public class PeerConnectionTester {
 
         @Override
         public T take() throws InterruptedException {
-            return poll();
+            if (isEmpty()) {
+                return super.take();
+            } else {
+                T ret = Collections.min(this, (Comparator<? super T>) comparator);
+                remove(ret);
+                return ret;
+            }
         }
 
         @Override
