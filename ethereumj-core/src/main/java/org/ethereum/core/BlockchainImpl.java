@@ -681,7 +681,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public void updateTotalDifficulty(Block block) {
-        totalDifficulty = totalDifficulty.add(block.getCumulativeDifficulty());
+        totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
     }
 
     @Override
