@@ -23,6 +23,7 @@ public class PeerConnectionTester {
 
     private static final int ConnectThreads = SystemProperties.CONFIG.peerDiscoveryWorkers();
     private static final long ReconnectPeriod = SystemProperties.CONFIG.peerDiscoveryTouchPeriod() * 1000;
+    private static final long ReconnectMaxPeers = 100;
 
     @Autowired
     private WorldManager worldManager;
@@ -42,6 +43,7 @@ public class PeerConnectionTester {
             }));
 
     private Timer reconnectTimer = new Timer("DiscoveryReconnectTimer");
+    private int reconnectPeersCount = 0;
 
 
     private class ConnectTask implements Runnable {
@@ -63,13 +65,15 @@ public class PeerConnectionTester {
                     logger.debug("Terminated node connection: " + nodeHandler);
                     nodeHandler.getNodeStatistics().disconnected();
                     if (!nodeHandler.getNodeStatistics().getEthTotalDifficulty().equals(BigInteger.ZERO) &&
-                            ReconnectPeriod > 0) {
+                            ReconnectPeriod > 0 && reconnectPeersCount < ReconnectMaxPeers) {
                         // trying to keep good peers information up-to-date
+                        reconnectPeersCount++;
                         reconnectTimer.schedule(new TimerTask() {
                             @Override
                             public void run() {
                                 logger.debug("Trying the node again: " + nodeHandler);
                                 peerConnectionPool.execute(new ConnectTask(nodeHandler));
+                                reconnectPeersCount--;
                             }
                         }, ReconnectPeriod);
                     }
