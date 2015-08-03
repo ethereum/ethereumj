@@ -53,4 +53,15 @@ public class RLPTest {
 
         }
     }
+
+    @Test
+    public void frameHaderTest() {
+        byte[] bytes = Hex.decode("c28080");
+        RLPList list = RLP.decode2(bytes);
+        System.out.println(list.size());
+        System.out.println(list.get(0));
+
+        byte[] bytes1 = RLP.encodeList(RLP.encodeInt(0));
+        System.out.println(Arrays.toString(bytes1));
+    }
 }

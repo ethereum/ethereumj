@@ -23,7 +23,7 @@ public class PeerConnectionTester {
 
     private static final int ConnectThreads = SystemProperties.CONFIG.peerDiscoveryWorkers();
     private static final long ReconnectPeriod = SystemProperties.CONFIG.peerDiscoveryTouchPeriod() * 1000;
-    private static final long ReconnectMaxPeers = 100;
+    private static final long ReconnectMaxPeers = SystemProperties.CONFIG.peerDiscoveryTouchMaxNodes();
 
     @Autowired
     private WorldManager worldManager;
