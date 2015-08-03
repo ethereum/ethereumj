@@ -65,7 +65,7 @@ public class PeerConnectionTester {
                     logger.debug("Terminated node connection: " + nodeHandler);
                     nodeHandler.getNodeStatistics().disconnected();
                     if (!nodeHandler.getNodeStatistics().getEthTotalDifficulty().equals(BigInteger.ZERO) &&
-                            ReconnectPeriod > 0 && reconnectPeersCount < ReconnectMaxPeers) {
+                            ReconnectPeriod > 0 && (reconnectPeersCount < ReconnectMaxPeers || ReconnectMaxPeers == -1)) {
                         // trying to keep good peers information up-to-date
                         reconnectPeersCount++;
                         reconnectTimer.schedule(new TimerTask() {
