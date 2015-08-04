@@ -174,6 +174,16 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public int peerDiscoveryTouchPeriod() {
+        return config.getInt("peer.discovery.touchPeriod");
+    }
+
+    @ValidateMe
+    public int peerDiscoveryTouchMaxNodes() {
+        return config.getInt("peer.discovery.touchMaxNodes");
+    }
+
+    @ValidateMe
     public int peerConnectionTimeout() {
         return config.getInt("peer.connection.timeout") * 1000;
     }
