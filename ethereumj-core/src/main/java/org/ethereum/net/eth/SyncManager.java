@@ -1,6 +1,5 @@
 package org.ethereum.net.eth;
 
-import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
@@ -53,6 +52,7 @@ public class SyncManager {
     private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
     private int maxHashesAsk;
     private byte[] bestHash;
+    private boolean onSyncDoneTriggered = false;
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
     private BigInteger highestKnownDifficulty = BigInteger.ZERO;
@@ -604,9 +604,10 @@ public class SyncManager {
             logger.info("Done gap recovery");
         }
         if(newState == SyncState.DONE_SYNC) {
-            if(isSyncDone()) {
+            if(onSyncDoneTriggered) {
                 return;
             }
+            onSyncDoneTriggered = true;
             changePeersState(SyncState.DONE_SYNC);
             ethereumListener.onSyncDone();
             logger.info("Main synchronization is finished");
