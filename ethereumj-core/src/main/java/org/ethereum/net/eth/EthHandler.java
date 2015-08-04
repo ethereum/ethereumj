@@ -245,27 +245,39 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         BlockQueue chainQueue = blockchain.getQueue();
 
         if (!receivedHashes.isEmpty()) {
-            hashesLoadedCnt += receivedHashes.size();
-            lastHash = receivedHashes.get(0);
-
-            chainQueue.addHashes(receivedHashes);
-            // store unknown hashes in queue until known hash is found
-            final byte[] latestHash = blockchain.getBestBlockHash();
-            byte[] foundHash = CollectionUtils.find(receivedHashes, new Predicate<byte[]>() {
-                @Override
-                public boolean evaluate(byte[] hash) {
-                    return FastByteComparisons.compareTo(hash, 0, 32, latestHash, 0, 32) == 0;
+            byte[] foundHash = null;
+            boolean foundExisting = false;
+            List<byte[]> newHashes = null;
+            for(int i = 0; i < receivedHashes.size(); i++) {
+                byte[] hash = receivedHashes.get(i);
+                if(blockchain.isBlockExist(hash)) {
+                    foundExisting = true;
+                    newHashes = org.ethereum.util.CollectionUtils.truncate(receivedHashes, i);
+                    foundHash = hash;
+                    break;
                 }
-            });
-            if (foundHash != null) {
+            }
+            if(newHashes == null) {
+                newHashes = receivedHashes;
+            }
+
+            chainQueue.addHashes(newHashes);
+
+            hashesLoadedCnt += newHashes.size();
+            lastHash = newHashes.get(newHashes.size() - 1);
+
+            if (foundExisting) {
                 changeState(SyncState.DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
-                loggerSync.trace("Peer {}: got our best hash [{}]", Utils.getNodeIdShort(peerId), Hex.toHexString(foundHash));
+                loggerSync.trace(
+                        "Peer {}: got existing hash [{}]",
+                        Utils.getNodeIdShort(peerId),
+                        Hex.toHexString(foundHash)
+                );
             }
         }
 
         if(syncState == SyncState.DONE_HASH_RETRIEVING) {
             loggerSync.info("Block hashes sync completed: {} hashes in queue", chainQueue.getHashStore().size());
-            chainQueue.addHash(blockchain.getBestBlockHash());
         } else {
             // no known hash has been reached
             chainQueue.logHashQueueSize();
@@ -480,7 +492,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     synchronized void changeState(SyncState newState) {
-        loggerSync.info(
+        loggerSync.trace(
                 "Peer {}: changing state from {} to {}",
                 getPeerIdShort(),
                 syncState,

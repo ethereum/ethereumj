@@ -772,4 +772,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     public void setExitOn(long exitOn) {
         this.exitOn = exitOn;
     }
+
+    public boolean isBlockExist(byte[] hash) {
+        return blockStore.isBlockExist(hash);
+    }
 }
