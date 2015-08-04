@@ -1,25 +1,21 @@
 package org.ethereum.net;
 
+import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.PingMessage;
-
-import io.netty.channel.ChannelHandlerContext;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.ethereum.net.message.StaticMessages.DISCONNECT_MESSAGE;
 
@@ -44,24 +40,31 @@ public class MessageQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
+    private static final ScheduledExecutorService timer = Executors.newScheduledThreadPool(4, new ThreadFactory() {
+        private AtomicInteger cnt = new AtomicInteger(0);
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "MessageQueueTimer-" + cnt.getAndIncrement());
+        }
+    });
+
     private Queue<MessageRoundtrip> messageQueue = new ConcurrentLinkedQueue<>();
     private ChannelHandlerContext ctx = null;
-    private final Timer timer = new Timer("MessageQueue");
 
     @Autowired
     WorldManager worldManager;
     boolean hasPing = false;
+    private ScheduledFuture<?> timerTask;
 
     public MessageQueue() {
     }
 
     public void activate(ChannelHandlerContext ctx) {
         this.ctx = ctx;
-        timer.scheduleAtFixedRate(new TimerTask() {
+        timerTask = timer.scheduleAtFixedRate(new Runnable() {
             public void run() {
                 nudgeQueue();
             }
-        }, 10, 10);
+        }, 10, 10, TimeUnit.MILLISECONDS);
     }
 
     public void sendMessage(Message msg) {
@@ -139,7 +142,8 @@ public class MessageQueue {
     }
 
     public void close() {
-        timer.cancel();
-        timer.purge();
+        if (timerTask != null) {
+            timerTask.cancel(false);
+        }
     }
 }
