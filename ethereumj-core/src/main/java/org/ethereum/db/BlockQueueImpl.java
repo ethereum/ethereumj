@@ -158,10 +158,11 @@ public class BlockQueueImpl implements BlockQueue {
             BlockWrapper block = blocks.get(idx);
             blocks.remove(idx);
 
-            if (block == null)
+            if (block != null) {
+                hashes.remove(block.getHash());
+            } else {
                 logger.error("Block for index {} is null", idx);
-
-            hashes.remove(block.getHash());
+            }
 
             return block;
         }
