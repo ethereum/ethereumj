@@ -447,11 +447,6 @@ public class SyncManager {
                         peerTotalDifficulty.toString(),
                         lowerUsefulDifficulty.toString()
                 );
-                if(!isIn20PercentRange(peerTotalDifficulty, lowerUsefulDifficulty)) {
-                    logger.trace("Peer {}: difficulty diff is more than 20%, adding to ban list", Utils.getNodeIdShort(peer.getPeerId()));
-                    setBan(peer);
-                }
-                peer.disconnect(ReasonCode.USELESS_PEER);
                 // TODO report about lower total difficulty
                 return;
             }
