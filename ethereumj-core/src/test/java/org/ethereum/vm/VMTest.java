@@ -1028,18 +1028,6 @@ public class VMTest {
         assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
     }
 
-    @Test  // NOT OP
-    public void testNOT_3() {
-
-        VM vm = new VM();
-        program = new Program(Hex.decode("61000019"), invoke);
-        String expected = "0000000000000000000000000000000000000000000000000000000000000000";
-
-        vm.step(program);
-        vm.step(program);
-
-        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
-    }
 
     @Test(expected = StackTooSmallException.class)  // BNOT OP
     public void testBNOT_4() {
@@ -1053,6 +1041,20 @@ public class VMTest {
             assertTrue(program.isStopped());
         }
     }
+
+    @Test  // NOT OP test from real failure
+    public void testNOT_5() {
+
+        VM vm = new VM();
+        program = new Program(Hex.decode("600019"), invoke);
+        String expected = "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+
+        vm.step(program);
+        vm.step(program);
+
+        assertEquals(expected, Hex.toHexString(program.getStack().peek().getData()).toUpperCase());
+    }
+
 
     @Test // POP OP
     public void testPOP_1() {
