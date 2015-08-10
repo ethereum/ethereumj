@@ -87,6 +87,11 @@ public class ProgramTrace {
             if (storageSize <= CONFIG.vmTraceInitStorageLimit()) {
                 fullStorage = true;
                 for (Map.Entry<DataWord, DataWord> entry : contractDetails.getStorage().entrySet()) {
+
+                    // TODO: solve NULL key/value storage problem
+                    String address = toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
+                    if (isNull(entry.getKey(), "key", address) || isNull(entry.getValue(), "value", address)) continue;
+
                     initStorage.put(entry.getKey().toString(), entry.getValue().toString());
                 }
 
@@ -97,6 +102,11 @@ public class ProgramTrace {
         }
 
         return this;
+    }
+
+    private static boolean isNull(DataWord dataWord, Object... args) {
+        LOGGER.info(format("Null storage entry %s: address[%s]", args));
+        return dataWord == null;
     }
 
     private static ContractDetails getContractDetails(ProgramInvoke programInvoke) {
