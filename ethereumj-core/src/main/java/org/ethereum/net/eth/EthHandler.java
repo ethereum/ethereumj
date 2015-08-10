@@ -65,7 +65,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private EthState peerState = EthState.INIT;
     private long blocksLoadedCnt = 0;
     private long hashesLoadedCnt = 0;
-    private boolean processTransactions = false;
+    private boolean processTransactions = true;
 
     private boolean peerDiscoveryMode = false;
 
@@ -619,6 +619,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     String getPeerIdShort() {
         return Utils.getNodeIdShort(peerId);
+    }
+
+    void prohibitTransactions() {
+        this.processTransactions = false;
     }
 
     enum EthState {

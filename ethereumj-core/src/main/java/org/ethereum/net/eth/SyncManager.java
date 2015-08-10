@@ -451,6 +451,9 @@ public class SyncManager {
                 return;
             }
             peers.add(peer);
+            if(!onSyncDoneTriggered) {
+                peer.prohibitTransactions();
+            }
         }
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
 
