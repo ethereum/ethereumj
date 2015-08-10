@@ -1,13 +1,14 @@
 package org.ethereum.net.eth;
 
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
+import org.ethereum.core.Blockchain;
 import org.ethereum.core.Genesis;
-import org.ethereum.core.ImportResult;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.core.Blockchain;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
@@ -15,22 +16,16 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
-
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
-
 import org.ethereum.util.FastByteComparisons;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
-
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -70,7 +65,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private EthState peerState = EthState.INIT;
     private long blocksLoadedCnt = 0;
     private long hashesLoadedCnt = 0;
-    private boolean processTransactions = false;
+    private boolean processTransactions = true;
 
     private boolean peerDiscoveryMode = false;
 
@@ -178,7 +173,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         loggerNet.error("Eth handling failed", cause);
         returnHashes();
-        super.exceptionCaught(ctx, cause);
         ctx.close();
     }
 
@@ -207,6 +201,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
         channel.getNodeStatistics().ethHandshake(msg);
+        worldManager.getListener().onEthStatusUpdated(channel.getNode(), msg);
+
         this.bestHash = msg.getBestHash();
 
         try {
@@ -235,6 +231,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     private void processBlockHashes(BlockHashesMessage blockHashesMessage) {
+        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+                "Peer {}: processing block hashes, size [{}]",
+                Utils.getNodeIdShort(peerId),
+                blockHashesMessage.getBlockHashes().size()
+        );
+
         if(syncState != SyncState.HASH_RETRIEVING) {
             return;
         }
@@ -242,34 +244,40 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
         BlockQueue chainQueue = blockchain.getQueue();
 
-        // result is empty, peer has no more hashes
-        // or peer doesn't have the best hash anymore
-        if (receivedHashes.isEmpty()) {
-            changeState(SyncState.DONE_HASH_RETRIEVING);
-        } else {
-            if(loggerSync.isInfoEnabled()) {
-                hashesLoadedCnt += receivedHashes.size();
-                lastHash = receivedHashes.get(0);
+        if (!receivedHashes.isEmpty()) {
+            byte[] foundHash = null;
+            boolean foundExisting = false;
+            List<byte[]> newHashes = null;
+            for(int i = 0; i < receivedHashes.size(); i++) {
+                byte[] hash = receivedHashes.get(i);
+                if(blockchain.isBlockExist(hash)) {
+                    foundExisting = true;
+                    newHashes = org.ethereum.util.CollectionUtils.truncate(receivedHashes, i);
+                    foundHash = hash;
+                    break;
+                }
+            }
+            if(newHashes == null) {
+                newHashes = receivedHashes;
             }
 
-            chainQueue.addHashes(receivedHashes);
-            // store unknown hashes in queue until known hash is found
-            final byte[] latestHash = blockchain.getBestBlockHash();
-            byte[] foundHash = CollectionUtils.find(receivedHashes, new Predicate<byte[]>() {
-                @Override
-                public boolean evaluate(byte[] hash) {
-                    return FastByteComparisons.compareTo(hash, 0, 32, latestHash, 0, 32) == 0;
-                }
-            });
-            if (foundHash != null) {
+            chainQueue.addHashes(newHashes);
+
+            hashesLoadedCnt += newHashes.size();
+            lastHash = newHashes.get(newHashes.size() - 1);
+
+            if (foundExisting) {
                 changeState(SyncState.DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
-                loggerSync.trace("Catch up with the hashes until: {[]}", foundHash);
+                loggerSync.trace(
+                        "Peer {}: got existing hash [{}]",
+                        Utils.getNodeIdShort(peerId),
+                        Hex.toHexString(foundHash)
+                );
             }
         }
 
         if(syncState == SyncState.DONE_HASH_RETRIEVING) {
             loggerSync.info("Block hashes sync completed: {} hashes in queue", chainQueue.getHashStore().size());
-            chainQueue.addHash(blockchain.getBestBlockHash());
         } else {
             // no known hash has been reached
             chainQueue.logHashQueueSize();
@@ -280,6 +288,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     private void processBlocks(BlocksMessage blocksMessage) {
+        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+                "Peer {}: process blocks, size [{}]",
+                Utils.getNodeIdShort(peerId),
+                blocksMessage.getBlocks().size()
+        );
+
         List<Block> blockList = blocksMessage.getBlocks();
 
         if (!blockList.isEmpty()) {
@@ -300,19 +314,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         if(!blockList.isEmpty()) {
             blockchain.getQueue().addBlocks(blockList);
             blockchain.getQueue().logHashQueueSize();
-            if (loggerSync.isInfoEnabled()) {
-                blocksLoadedCnt += blockList.size();
-            }
-
-            if (blockchain.getQueue().isHashesEmpty()) {
-                loggerSync.info("Peer {}: no more hashes in queue, idle", Utils.getNodeIdShort(peerId));
-                changeState(SyncState.IDLE);
-            }
+            blocksLoadedCnt += blockList.size();
         } else {
             changeState(SyncState.NO_MORE_BLOCKS);
         }
 
-        if (syncState == SyncState.BLOCK_RETRIEVING) {
+        if(syncState == SyncState.BLOCK_RETRIEVING) {
             sendGetBlocks();
         }
     }
@@ -320,9 +327,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private void returnHashes() {
         if(sentHashes != null) {
             if(loggerSync.isDebugEnabled()) {
-                loggerSync.debug("Peer {}: [{}] hashes returned", Utils.getNodeIdShort(peerId), sentHashes.size());
+                loggerSync.debug("Peer {}: return [{}] hashes back to store", Utils.getNodeIdShort(peerId), sentHashes.size());
             }
             blockchain.getQueue().returnHashes(sentHashes);
+            sentHashes.clear();
         }
     }
 
@@ -381,29 +389,42 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     private void sendGetBlockHashes() {
         byte[] bestHash = blockchain.getQueue().getBestHash();
+        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+                "Peer {}: send get block hashes, bestHash [{}], maxHashesAsk [{}]",
+                Utils.getNodeIdShort(peerId),
+                Hex.toHexString(bestHash),
+                maxHashesAsk
+        );
         GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, maxHashesAsk);
         sendMessage(msg);
     }
 
     // Parallel download blocks based on hashQueue
-    public void sendGetBlocks() {
+    public boolean sendGetBlocks() {
         BlockQueue queue = blockchain.getQueue();
 
         // retrieve list of block hashes from queue
         // save them locally in case the remote peer
         // will return less blocks than requested.
         List<byte[]> hashes = queue.getHashes();
+        if (hashes.isEmpty()) {
+            if(loggerSync.isInfoEnabled()) loggerSync.info(
+                    "Peer {}: no more hashes in queue, idle",
+                    Utils.getNodeIdShort(peerId)
+            );
+            changeState(SyncState.IDLE);
+            return false;
+        }
+
         this.sentHashes = new ArrayList<>();
         for (byte[] hash : hashes)
             this.sentHashes.add(wrap(hash));
 
-        if(loggerSync.isDebugEnabled()) {
-            loggerSync.debug("Peer {}: [{}] hashes sent", Utils.getNodeIdShort(peerId), sentHashes.size());
-        }
-
-        if (hashes.isEmpty()) {
-            return;
-        }
+        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+                "Peer {}: send get blocks hashes.count [{}]",
+                Utils.getNodeIdShort(peerId),
+                sentHashes.size()
+        );
 
         Collections.shuffle(hashes);
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
@@ -412,6 +433,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             loggerNet.debug(msg.getDetailedString());
 
         sendMessage(msg);
+
+        return true;
     }
 
     private void sendPendingTransactions() {
@@ -469,6 +492,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     synchronized void changeState(SyncState newState) {
+        loggerSync.trace(
+                "Peer {}: changing state from {} to {}",
+                getPeerIdShort(),
+                syncState,
+                newState
+        );
         if(syncState == newState) {
             return;
         }
@@ -478,7 +507,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
             blocksLoadedCnt = 0;
-            sendGetBlocks();
+            boolean sent = sendGetBlocks();
+            if(!sent) {
+                return;
+            }
         }
         if(newState == SyncState.NO_MORE_BLOCKS) {
             if(++noMoreBlocksHits < NO_MORE_BLOCKS_THRESHOLD) {
@@ -583,6 +615,14 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     long getHashesLoadedCnt() {
         return hashesLoadedCnt;
+    }
+
+    String getPeerIdShort() {
+        return Utils.getNodeIdShort(peerId);
+    }
+
+    void prohibitTransactions() {
+        this.processTransactions = false;
     }
 
     enum EthState {

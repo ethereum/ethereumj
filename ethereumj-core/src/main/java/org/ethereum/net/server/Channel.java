@@ -64,7 +64,7 @@ public class Channel {
     NodeManager nodeManager;
 
     MessageCodesResolver messageCodesResolver = new MessageCodesResolver();
-    
+
     InetSocketAddress inetSocketAddress;
 
     Node node;
@@ -74,12 +74,13 @@ public class Channel {
 
     String remoteId;
 
+    private boolean discoveryMode;
 
     public Channel() {
     }
 
     public void init(String remoteId, boolean discoveryMode) {
-
+        this.discoveryMode = discoveryMode;
         messageCodec.setRemoteId(remoteId, this);
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
@@ -184,6 +185,10 @@ public class Channel {
         return nodeStatistics;
     }
 
+    public Node getNode() {
+        return node;
+    }
+
     public MessageCodesResolver getMessageCodesResolver() {
         return messageCodesResolver;
     }
@@ -199,5 +204,9 @@ public class Channel {
 
     public void onDisconnect() {
         ethHandler.onDisconnect();
+    }
+
+    public boolean isDiscoveryMode() {
+        return discoveryMode;
     }
 }

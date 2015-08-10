@@ -1,21 +1,15 @@
 package org.ethereum.manager;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.Genesis;
-import org.ethereum.core.TransactionReceipt;
-import org.ethereum.core.Wallet;
+import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.Repository;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.eth.SyncManager;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.net.rlpx.discover.UDPListener;
 import org.ethereum.net.server.ChannelManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,4 +199,5 @@ public class WorldManager {
         repository.close();
         blockchain.close();
     }
+
 }

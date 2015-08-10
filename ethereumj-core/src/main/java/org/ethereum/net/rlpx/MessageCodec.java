@@ -183,7 +183,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 loggerNet.info("auth exchange done");
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
             } else {
-                loggerNet.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
+                loggerWire.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
                 Frame frame = frameCodec.readFrame(buffer);
                 if (frame == null)
                     return;
@@ -279,5 +279,15 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
     public byte[] getRemoteId() {
         return remoteId;
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        if (channel.isDiscoveryMode()) {
+            loggerNet.debug("MessageCodec handling failed", cause);
+        } else {
+            loggerNet.error("MessageCodec handling failed", cause);
+        }
+        ctx.close();
     }
 }

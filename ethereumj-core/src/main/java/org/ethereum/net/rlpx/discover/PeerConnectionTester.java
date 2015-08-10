@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -18,18 +19,20 @@ import java.util.concurrent.*;
  */
 @Component
 public class PeerConnectionTester {
-    static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger("discover");
 
     private static final int ConnectThreads = SystemProperties.CONFIG.peerDiscoveryWorkers();
+    private static final long ReconnectPeriod = SystemProperties.CONFIG.peerDiscoveryTouchPeriod() * 1000;
+    private static final long ReconnectMaxPeers = SystemProperties.CONFIG.peerDiscoveryTouchMaxNodes();
 
     @Autowired
-    WorldManager worldManager;
+    private WorldManager worldManager;
 
     // NodeHandler instance should be unique per Node instance
-    Map<NodeHandler, ?> connectedCandidates = new IdentityHashMap<>();
+    private Map<NodeHandler, ?> connectedCandidates = new IdentityHashMap<>();
 
     // executor with Queue which picks up the Node with the best reputation
-    ExecutorService peerConnectionPool = new ThreadPoolExecutor(ConnectThreads,
+    private ExecutorService peerConnectionPool = new ThreadPoolExecutor(ConnectThreads,
             ConnectThreads, 0L, TimeUnit.SECONDS,
             new MutablePriorityQueue<Runnable, ConnectTask>(new Comparator<ConnectTask>() {
                 @Override
@@ -39,6 +42,8 @@ public class PeerConnectionTester {
                 }
             }));
 
+    private Timer reconnectTimer = new Timer("DiscoveryReconnectTimer");
+    private int reconnectPeersCount = 0;
 
 
     private class ConnectTask implements Runnable {
@@ -59,6 +64,19 @@ public class PeerConnectionTester {
                             Hex.encodeHexString(node.getId()), true);
                     logger.debug("Terminated node connection: " + nodeHandler);
                     nodeHandler.getNodeStatistics().disconnected();
+                    if (!nodeHandler.getNodeStatistics().getEthTotalDifficulty().equals(BigInteger.ZERO) &&
+                            ReconnectPeriod > 0 && (reconnectPeersCount < ReconnectMaxPeers || ReconnectMaxPeers == -1)) {
+                        // trying to keep good peers information up-to-date
+                        reconnectPeersCount++;
+                        reconnectTimer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                logger.debug("Trying the node again: " + nodeHandler);
+                                peerConnectionPool.execute(new ConnectTask(nodeHandler));
+                                reconnectPeersCount--;
+                            }
+                        }, ReconnectPeriod);
+                    }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -93,7 +111,13 @@ public class PeerConnectionTester {
 
         @Override
         public T take() throws InterruptedException {
-            return poll();
+            if (isEmpty()) {
+                return super.take();
+            } else {
+                T ret = Collections.min(this, (Comparator<? super T>) comparator);
+                remove(ret);
+                return ret;
+            }
         }
 
         @Override

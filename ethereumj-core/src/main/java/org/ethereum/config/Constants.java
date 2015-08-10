@@ -3,7 +3,7 @@ package org.ethereum.config;
 public class Constants {
 
     public static int GENESIS_DIFFICULTY = 131072;
-    public static int MAXIMUM_EXTRA_DATA_SIZE = 1024;
+    public static int MAXIMUM_EXTRA_DATA_SIZE = 32;
     public static int EPOCH_DURATION = 30_000;
     public static int GENESIS_GAS_LIMIT = 3_141_592;
     public static int MIN_GAS_LIMIT = 125000;

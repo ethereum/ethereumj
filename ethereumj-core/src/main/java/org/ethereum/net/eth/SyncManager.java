@@ -1,6 +1,5 @@
 package org.ethereum.net.eth;
 
-import org.apache.commons.collections4.Predicate;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
@@ -53,9 +52,10 @@ public class SyncManager {
     private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
     private int maxHashesAsk;
     private byte[] bestHash;
+    private boolean onSyncDoneTriggered = false;
 
-    private BigInteger lowerUsefulDifficulty;
-    private BigInteger highestKnownDifficulty;
+    private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
+    private BigInteger highestKnownDifficulty = BigInteger.ZERO;
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
@@ -80,12 +80,21 @@ public class SyncManager {
     private EthereumListener ethereumListener;
 
     public void init() {
-        highestKnownDifficulty = blockchain.getTotalDifficulty();
-        lowerUsefulDifficulty = highestKnownDifficulty;
+
+        if (!CONFIG.isSyncEnabled()) {
+            logger.info("Sync Manager: OFF");
+            return;
+        }
+
+        logger.info("Sync Manager: ON");
+        updateLowerUsefulDifficulty();
+        updateHighestKnownDifficulty();
         worker.scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
                 try {
+                    updateLowerUsefulDifficulty();
+                    updateHighestKnownDifficulty();
                     checkGapRecovery();
                     checkMaster();
                     checkPeers();
@@ -93,6 +102,7 @@ public class SyncManager {
                     askNewPeers();
                     releaseBans();
                 } catch (Exception e) {
+                    e.printStackTrace();
                     logger.error("Exception in main sync worker", e);
                 }
             }
@@ -108,6 +118,21 @@ public class SyncManager {
         discoverListener = new DiscoverListener() {
             @Override
             public void nodeAppeared(NodeHandler handler) {
+                String nodeId = Hex.toHexString(handler.getNode().getId());
+                synchronized (connectionsMutex) {
+                    if(bannedNodes.containsKey(nodeId)) {
+                        return;
+                    }
+                    if(connectTimestamps.containsKey(nodeId)) {
+                        return;
+                    }
+                }
+                if(logger.isTraceEnabled()) logger.trace(
+                        "Peer {}: new best chain peer discovered: {} vs {}",
+                        Utils.getNodeIdShort(Hex.toHexString(handler.getNode().getId())),
+                        handler.getNodeStatistics().getEthTotalDifficulty(),
+                        highestKnownDifficulty
+                );
                 initiateConnection(handler.getNode());
             }
 
@@ -124,7 +149,7 @@ public class SyncManager {
                             return false;
                         }
                         BigInteger thatDifficulty = nodeStatistics.getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
-                        return thatDifficulty.compareTo(highestKnownDifficulty) > 0;
+                        return !isIn20PercentRange(highestKnownDifficulty, thatDifficulty);
                     }
                 }
         );
@@ -217,29 +242,18 @@ public class SyncManager {
                 removed.add(peer);
                 peer.changeState(SyncState.IDLE);
                 BigInteger td = peer.getHandshakeStatusMessage().getTotalDifficultyAsBigInt();
-                if(td.compareTo(lowerUsefulDifficulty) > 0) {
-                    lowerUsefulDifficulty = td;
-                }
+                updateLowerUsefulDifficulty(td);
             }
-        }
-        if(blockchain.getTotalDifficulty().compareTo(lowerUsefulDifficulty) > 0) {
-            lowerUsefulDifficulty = blockchain.getTotalDifficulty();
         }
         peers.removeAll(removed);
 
         // checking if master peer is still presented
-        if(isHashRetrieving() || isGapRecovery()) {
-            EthHandler master = org.apache.commons.collections4.CollectionUtils.find(peers, new Predicate<EthHandler>() {
-                @Override
-                public boolean evaluate(EthHandler peer) {
-                    return peer.isHashRetrieving();
-                }
-            });
-            if(master == null) {
+        synchronized (connectionsMutex) {
+            if ((isHashRetrieving() || isGapRecovery()) && !peers.contains(masterPeer)) {
                 logger.info("Master peer has been lost, find a new one");
-                if(isHashRetrieving()) {
+                if (isHashRetrieving()) {
                     changeState(SyncState.HASH_RETRIEVING);
-                } else if(isGapRecovery()) {
+                } else if (isGapRecovery()) {
                     changeState(SyncState.GAP_RECOVERY);
                 }
             }
@@ -278,10 +292,10 @@ public class SyncManager {
                 new Functional.Predicate<NodeHandler>() {
                     @Override
                     public boolean test(NodeHandler nodeHandler) {
-                        if (nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                        if(nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
                             return false;
                         }
-                        if (nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
+                        if(nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
                             return false;
                         }
                         BigInteger thatDifficulty = nodeHandler
@@ -296,10 +310,10 @@ public class SyncManager {
                     public int compare(NodeHandler n1, NodeHandler n2) {
                         BigInteger td1 = null;
                         BigInteger td2 = null;
-                        if (n1.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                        if(n1.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
                             td1 = n1.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
                         }
-                        if (n2.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
+                        if(n2.getNodeStatistics().getEthLastInboundStatusMsg() != null) {
                             td2 = n2.getNodeStatistics().getEthLastInboundStatusMsg().getTotalDifficultyAsBigInt();
                         }
                         if (td1 != null && td2 != null) {
@@ -315,6 +329,46 @@ public class SyncManager {
                 },
                 peersLackSize
         );
+
+        if(peers.isEmpty() && newNodes.isEmpty()) {
+            newNodes = nodeManager.getNodes(
+                    new Functional.Predicate<NodeHandler>() {
+                        @Override
+                        public boolean test(NodeHandler nodeHandler) {
+                            if(nodeHandler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                                return false;
+                            }
+                            if(nodesInUse.contains(Hex.toHexString(nodeHandler.getNode().getId()))) {
+                                return false;
+                            }
+                            return true;
+                        }
+                    },
+                    new Comparator<NodeHandler>() {
+                        @Override
+                        public int compare(NodeHandler n1, NodeHandler n2) {
+                            return Integer.valueOf(n2.getNodeStatistics().getReputation())
+                                    .compareTo(n1.getNodeStatistics().getReputation());
+                        }
+                    },
+                    peersLackSize
+            );
+        }
+
+        if(logger.isTraceEnabled()) {
+            StringBuilder sb = new StringBuilder();
+            for(NodeHandler n : newNodes) {
+                sb.append(Utils.getNodeIdShort(Hex.toHexString(n.getNode().getId())));
+                sb.append(", ");
+            }
+            if(sb.length() > 0) {
+                sb.delete(sb.length() - 2, sb.length());
+            }
+            logger.trace(
+                    "Node list obtained from discovery: {}",
+                    newNodes.size() > 0 ? sb.toString() : "empty"
+            );
+        }
 
         for(NodeHandler n : newNodes) {
             initiateConnection(n.getNode());
@@ -352,6 +406,11 @@ public class SyncManager {
     }
 
     public void onDisconnect(EthHandler peer) {
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: disconnected",
+                peer.getPeerIdShort()
+        );
+
         peer.onDisconnect();
         peers.remove(peer);
 
@@ -372,21 +431,29 @@ public class SyncManager {
     }
 
     public synchronized void addPeer(EthHandler peer) {
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: adding",
+                peer.getPeerIdShort()
+        );
+
         BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
 
         synchronized (connectionsMutex) {
             connectTimestamps.remove(peer.getPeerId());
-            if(blockchain.getTotalDifficulty().compareTo(peerTotalDifficulty) > 0) {
+            if(lowerUsefulDifficulty.compareTo(peerTotalDifficulty) > 0) {
                 if(logger.isInfoEnabled()) logger.info(
                         "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
                         Utils.getNodeIdShort(peer.getPeerId()),
                         peerTotalDifficulty.toString(),
-                        blockchain.getTotalDifficulty().toString()
+                        lowerUsefulDifficulty.toString()
                 );
                 // TODO report about lower total difficulty
                 return;
             }
             peers.add(peer);
+            if(!onSyncDoneTriggered) {
+                peer.prohibitTransactions();
+            }
         }
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
 
@@ -402,6 +469,13 @@ public class SyncManager {
                         highestKnownDifficulty.toString()
                 );
                 changeState(SyncState.HASH_RETRIEVING);
+            } else if(logger.isTraceEnabled()) {
+                logger.trace(
+                        "Peer {}: its chain is worse than previously known: {} vs {}",
+                        Utils.getNodeIdShort(peer.getPeerId()),
+                        peerTotalDifficulty.toString(),
+                        highestKnownDifficulty.toString()
+                );
             }
         }
 
@@ -421,15 +495,15 @@ public class SyncManager {
             logger.info("Gap recovery is already in progress, postpone");
             return;
         }
-        
-        if(wrapper.isNewBlock()) {
-            if(!allowNewBlockGapRecovery()) {
-                logger.info("We are in {} state, postpone NEW blocks gap recovery", state, wrapper.getNumber());
+
+        if(wrapper.isSolidBlock()) {
+            if(!allowSolidBlockGapRecovery()) {
+                logger.info("We are in {} state, postpone SOLID blocks gap recovery", state, wrapper.getNumber());
                 return;
             }
         } else {
-            if(!allowStatusBlockGapRecovery()) {
-                logger.info("We are in {} state, postpone STATUS blocks gap recovery", state, wrapper.getNumber());
+            if(!allowNewBlockGapRecovery()) {
+                logger.info("We are in {} state, postpone NEW blocks gap recovery", state, wrapper.getNumber());
                 return;
             }
         }
@@ -456,7 +530,7 @@ public class SyncManager {
         }
     }
 
-    private boolean allowStatusBlockGapRecovery() {
+    private boolean allowSolidBlockGapRecovery() {
         return !(isInit() || isHashRetrieving());
     }
 
@@ -495,7 +569,7 @@ public class SyncManager {
                 return;
             }
             BlockQueue queue = blockchain.getQueue();
-            highestKnownDifficulty = masterPeer.getTotalDifficulty();
+            updateHighestKnownDifficulty(masterPeer.getTotalDifficulty());
 
             bestHash = masterPeer.getBestHash();
             queue.getHashStore().clear();
@@ -528,9 +602,10 @@ public class SyncManager {
             logger.info("Done gap recovery");
         }
         if(newState == SyncState.DONE_SYNC) {
-            if(isSyncDone()) {
+            if(onSyncDoneTriggered) {
                 return;
             }
+            onSyncDoneTriggered = true;
             changePeersState(SyncState.DONE_SYNC);
             ethereumListener.onSyncDone();
             logger.info("Main synchronization is finished");
@@ -558,18 +633,23 @@ public class SyncManager {
     }
 
     private void initiateConnection(Node node) {
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: initiate connection",
+                Utils.getNodeIdShort(Hex.toHexString(node.getId()))
+        );
         synchronized (connectionsMutex) {
-            String nodeId = Hex.toHexString(node.getId());
-            if(connectTimestamps.containsKey(nodeId)) {
-                return;
-            }
+            final String nodeId = Hex.toHexString(node.getId());
             Set<String> usedNodes = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
                 @Override
                 public String apply(EthHandler peer) {
                     return peer.getPeerId();
                 }
             });
-            if(usedNodes.contains(nodeId)) {
+            if(usedNodes.contains(nodeId) || connectTimestamps.containsKey(nodeId)) {
+                if(logger.isTraceEnabled()) logger.trace(
+                        "Peer {}: connection already initiated",
+                        Utils.getNodeIdShort(Hex.toHexString(node.getId()))
+                );
                 return;
             }
             ethereum.connect(node);
@@ -581,6 +661,26 @@ public class SyncManager {
         synchronized (connectionsMutex) {
             bannedNodes.put(peer.getPeerId(), System.currentTimeMillis());
         }
+    }
+
+    private void updateLowerUsefulDifficulty(BigInteger difficulty) {
+        if(difficulty.compareTo(lowerUsefulDifficulty) > 0) {
+            lowerUsefulDifficulty = difficulty;
+        }
+    }
+
+    private void updateLowerUsefulDifficulty() {
+        updateLowerUsefulDifficulty(blockchain.getTotalDifficulty());
+    }
+
+    private void updateHighestKnownDifficulty(BigInteger difficulty) {
+        if(difficulty.compareTo(highestKnownDifficulty) > 0) {
+            highestKnownDifficulty = difficulty;
+        }
+    }
+
+    private void updateHighestKnownDifficulty() {
+        updateHighestKnownDifficulty(blockchain.getTotalDifficulty());
     }
 
     public boolean isHashRetrieving() {

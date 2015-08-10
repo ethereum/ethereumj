@@ -4,6 +4,7 @@ import org.apache.commons.collections4.Predicate;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.rlpx.*;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
 import org.ethereum.util.CollectionUtils;
@@ -48,6 +49,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     @Autowired
     MapDBFactory mapDBFactory;
+
+    @Autowired
+    WorldManager worldManager;
 
     Functional.Consumer<DiscoveryEvent> messageSender;
 
@@ -197,8 +201,8 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         if (ret == null) {
             ret = new NodeHandler(n ,this);
             nodeHandlerMap.put(key, ret);
-//            logger.debug("New node: " + ret);
-            System.out.println("++++  New node: " + ret);
+            logger.debug(" +++ New node: " + ret);
+            worldManager.getListener().onNodeDiscovered(ret.getNode());
         }
         return ret;
     }

@@ -109,7 +109,7 @@ public class BlockQueue {
                 // In case we don't have a parent on the chain
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
-                    logger.info("No parent on the chain for block.number: [{}]", wrapper.getNumber());
+                    logger.info("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
                     if (!syncManager.isGapRecovery()) {
                         wrapper.importFailed();
                         if (hashStore.isEmpty() || wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
@@ -126,10 +126,10 @@ public class BlockQueue {
                 }
 
                 if (importResult == IMPORTED_BEST)
-                    logger.info("Success importing BEST: block number: {}", wrapper.getNumber());
+                    logger.info("Success importing BEST: block.number: {}, block.hash {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
 
                 if (importResult == IMPORTED_NOT_BEST)
-                    logger.info("Success importing NOT_BEST: block number: {}", wrapper.getNumber());
+                    logger.info("Success importing NOT_BEST: block.number: {} block.hash {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
 
             } catch (Throwable e) {
                 logger.error("Error: {} ", e);

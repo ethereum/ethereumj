@@ -20,6 +20,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
@@ -33,8 +36,6 @@ public class PeerClient {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
 
-//    private boolean peerDiscoveryMode = false;
-
     @Autowired
     private ApplicationContext ctx;
 
@@ -44,13 +45,20 @@ public class PeerClient {
     @Autowired
     public ChannelManager channelManager;
 
+    private static EventLoopGroup workerGroup = new NioEventLoopGroup(0, new ThreadFactory() {
+        AtomicInteger cnt = new AtomicInteger(0);
+        @Override
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "EthJClientWorker-" + cnt.getAndIncrement());
+        }
+    });
+
 
     public void connect(String host, int port, String remoteId) {
         connect(host, port, remoteId, false);
     }
 
     public void connect(String host, int port, String remoteId, boolean discoveryMode) {
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
         worldManager.getListener().trace("Connecting to: " + host + ":" + port);
 
         EthereumChannelInitializer ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, remoteId);
@@ -79,10 +87,11 @@ public class PeerClient {
             }
             logger.debug("Connection is closed");
         } catch (Exception e) {
-            logger.error("Exception: {}", e.toString());
-//            logger.trace("Exception details:", e);
-        } finally {
-            workerGroup.shutdownGracefully();
+            if (discoveryMode) {
+                logger.debug("Exception:", e);
+            } else {
+                logger.error("Exception:", e);
+            }
         }
     }
 }

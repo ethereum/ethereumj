@@ -36,8 +36,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.concurrent.*;
 
 import static org.ethereum.net.message.StaticMessages.*;
 
@@ -62,10 +61,14 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private final static Logger logger = LoggerFactory.getLogger("net");
 
-    private final Timer timer = new Timer("MessageTimer");
+    private static ScheduledExecutorService pingTimer =
+            Executors.newSingleThreadScheduledExecutor(new ThreadFactory() {
+        public Thread newThread(Runnable r) {
+            return new Thread(r, "P2pPingTimer");
+        }
+    });
 
     private MessageQueue msgQueue;
-    private boolean tearDown = false;
 
     private boolean peerDiscoveryMode = false;
 
@@ -75,6 +78,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     @Autowired
     WorldManager worldManager;
     private Channel channel;
+    private ScheduledFuture<?> pingTask;
 
     public P2pHandler() {
 
@@ -137,7 +141,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                 msgQueue.receivedMessage(msg);
                 processPeers(ctx, (PeersMessage) msg);
 
-                if (peerDiscoveryMode &&
+                if (peerDiscoveryMode ||
                         !handshakeHelloMessage.getCapabilities().contains(Capability.ETH)) {
                     disconnect(ReasonCode.REQUESTED);
                     killTimers();
@@ -165,7 +169,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         logger.error("P2p handling failed", cause);
-        super.exceptionCaught(ctx, cause);
         ctx.close();
         killTimers();
     }
@@ -246,7 +249,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
             //todo calculate the Offsets
             worldManager.getPeerDiscovery().getPeers().add(confirmedPeer);
-            worldManager.getListener().onHandShakePeer(msg);
+            worldManager.getListener().onHandShakePeer(channel.getNode(), msg);
+
         }
     }
 
@@ -302,28 +306,17 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private void startTimers() {
         // sample for pinging in background
-
-        timer.scheduleAtFixedRate(new TimerTask() {
+        pingTask = pingTimer.scheduleAtFixedRate(new Runnable() {
+            @Override
             public void run() {
-                if (tearDown) cancel();
                 msgQueue.sendMessage(PING_MESSAGE);
             }
-        }, 2000, 5000);
-
-/*
-        timer.scheduleAtFixedRate(new TimerTask() {
-            public void run() {
-                msgQueue.sendMessage(GET_PEERS_MESSAGE);
-            }
-        }, 500, 25000);
-*/
+        }, 2, 5, TimeUnit.SECONDS);
     }
 
     public void killTimers() {
-        timer.cancel();
-        timer.purge();
+        pingTask.cancel(false);
         msgQueue.close();
-
     }
 
 

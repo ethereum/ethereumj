@@ -54,7 +54,8 @@ public class StatusMessage extends EthMessage {
         byte[] networkIdBytes = paramsList.get(1).getRLPData();
         this.networkId = networkIdBytes == null ? 0 : ByteUtil.byteArrayToInt(networkIdBytes);
 
-        this.totalDifficulty = paramsList.get(2).getRLPData();
+        byte[] diff = paramsList.get(2).getRLPData();
+        this.totalDifficulty = (diff == null) ? ByteUtil.ZERO_BYTE_ARRAY : diff;
         this.bestHash = paramsList.get(3).getRLPData();
         this.genesisHash = paramsList.get(4).getRLPData();
 

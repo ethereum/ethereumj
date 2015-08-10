@@ -27,6 +27,8 @@ public class EthereumFactory {
 
     public static Ethereum createEthereum() {
 
+        logger.info("Running {}", CONFIG.genesisInfo());
+
         if (CONFIG.databaseReset()){
             FileUtil.recursiveDelete(CONFIG.databaseDir());
             logger.info("Database reset done");

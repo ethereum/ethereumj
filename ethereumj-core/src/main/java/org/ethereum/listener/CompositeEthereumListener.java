@@ -3,9 +3,11 @@ package org.ethereum.listener;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.TransactionReceipt;
+import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.p2p.HelloMessage;
 
+import org.ethereum.net.rlpx.Node;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -72,15 +74,29 @@ public class CompositeEthereumListener implements EthereumListener {
     }
 
     @Override
-    public void onHandShakePeer(HelloMessage helloMessage) {
+    public void onHandShakePeer(Node node, HelloMessage helloMessage) {
         for (EthereumListener listener : listeners)
-            listener.onHandShakePeer(helloMessage);
+            listener.onHandShakePeer(node, helloMessage);
     }
 
     @Override
     public void onVMTraceCreated(String transactionHash, String trace) {
         for (EthereumListener listener : listeners) {
             listener.onVMTraceCreated(transactionHash, trace);
+        }
+    }
+
+    @Override
+    public void onNodeDiscovered(Node node) {
+        for (EthereumListener listener : listeners) {
+            listener.onNodeDiscovered(node);
+        }
+    }
+
+    @Override
+    public void onEthStatusUpdated(Node node, StatusMessage status) {
+        for (EthereumListener listener : listeners) {
+            listener.onEthStatusUpdated(node, status);
         }
     }
 

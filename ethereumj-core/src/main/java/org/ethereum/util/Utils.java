@@ -139,6 +139,6 @@ public class Utils {
     }
 
     public static String getNodeIdShort(String nodeId) {
-        return nodeId.substring(0, 8);
+        return nodeId == null ? "<null>" : nodeId.substring(0, 8);
     }
 }

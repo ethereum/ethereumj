@@ -72,6 +72,8 @@ public class SystemProperties {
 
     private SystemProperties() {
         try {
+            Config testConfig = ConfigFactory.load("test-ethereumj.conf");
+
             Config referenceConfig = ConfigFactory.load("ethereumj.conf");
             Config userConfig = ConfigFactory.parseResources("user.conf");
             Config userDirConfig = ConfigFactory.parseFile(
@@ -80,6 +82,7 @@ public class SystemProperties {
             Config sysPropConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
                     ConfigFactory.empty();
             config = sysPropConfig
+                    .withFallback(testConfig)
                     .withFallback(userConfig)
                     .withFallback(userDirConfig)
                     .withFallback(referenceConfig);
@@ -168,6 +171,16 @@ public class SystemProperties {
     @ValidateMe
     public int peerDiscoveryWorkers() {
         return config.getInt("peer.discovery.workers");
+    }
+
+    @ValidateMe
+    public int peerDiscoveryTouchPeriod() {
+        return config.getInt("peer.discovery.touchPeriod");
+    }
+
+    @ValidateMe
+    public int peerDiscoveryTouchMaxNodes() {
+        return config.getInt("peer.discovery.touchMaxNodes");
     }
 
     @ValidateMe
@@ -397,6 +410,9 @@ public class SystemProperties {
     public boolean isRedisEnabled() {
         return config.getBoolean("redis.enabled");
     }
+
+    @ValidateMe
+    public boolean isSyncEnabled() { return config.getBoolean("sync.enabled");}
 
     @ValidateMe
     public String genesisInfo() {

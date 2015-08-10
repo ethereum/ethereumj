@@ -178,7 +178,7 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public void close() {
-        worldManager.close();
+//        worldManager.close();
     }
 
     @Override
