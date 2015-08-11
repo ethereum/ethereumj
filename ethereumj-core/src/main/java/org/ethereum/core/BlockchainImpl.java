@@ -11,8 +11,6 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
-import org.ethereum.util.CollectionUtils;
-import org.ethereum.util.Functional;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -350,21 +348,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     private void clearOutdatedTransactions(final long blockNumber) {
-        List<PendingTransaction> outdated = CollectionUtils.selectList(pendingTransactions, new Functional.Predicate<PendingTransaction>() {
-            @Override
-            public boolean test(PendingTransaction pending) {
-                return (blockNumber - pending.getBlockNumber()) > CONFIG.txOutdatedThreshold();
+        List<PendingTransaction> outdated = new ArrayList<>();
+        List<Transaction> transactions = new ArrayList<>();
+        for (PendingTransaction tx : pendingTransactions) {
+            if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold()) {
+                outdated.add(tx);
+                transactions.add(tx.getTransaction());
             }
-        });
+        }
         if (outdated.isEmpty())
             return;
-
-        List<Transaction> transactions = CollectionUtils.collectList(outdated, new Functional.Function<PendingTransaction, Transaction>() {
-            @Override
-            public Transaction apply(PendingTransaction pending) {
-                return pending.getTransaction();
-            }
-        });
 
         if (logger.isInfoEnabled())
             for (PendingTransaction tx : outdated)
@@ -775,14 +768,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (transactions.isEmpty())
             return;
 
-        final long number = bestBlock.getNumber();
-        Set<PendingTransaction> pending = CollectionUtils.collectSet(transactions, new Functional.Function<Transaction, PendingTransaction>() {
-            @Override
-            public PendingTransaction apply(Transaction transaction) {
-                return new PendingTransaction(transaction, number);
-            }
-        });
-        pendingTransactions.addAll(pending);
+        long number = bestBlock.getNumber();
+        for (Transaction tx : transactions) {
+            pendingTransactions.add(new PendingTransaction(tx, number));
+        }
     }
 
     public void clearPendingTransactions(List<Transaction> receivedTransactions) {
@@ -794,12 +783,11 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     public Set<Transaction> getPendingTransactions() {
-        return CollectionUtils.collectSet(pendingTransactions, new Functional.Function<PendingTransaction, Transaction>() {
-            @Override
-            public Transaction apply(PendingTransaction pending) {
-                return pending.getTransaction();
-            }
-        });
+        Set<Transaction> transactions = new HashSet<>();
+        for (PendingTransaction tx : pendingTransactions) {
+            transactions.add(tx.getTransaction());
+        }
+        return transactions;
     }
 
 
