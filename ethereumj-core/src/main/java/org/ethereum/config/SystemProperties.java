@@ -423,6 +423,11 @@ public class SystemProperties {
             return genesisInfo;
     }
 
+    @ValidateMe
+    public int txOutdatedThreshold() {
+        return config.getInt("transaction.outdated.threshold");
+    }
+
     public void setGenesisInfo(String genesisInfo){
         this.genesisInfo = genesisInfo;
     }
