@@ -78,9 +78,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
-    // max distance between last imported block number and block number stored within pending tx
-    private static final long PENDING_TX_MAX_DISTANCE = 10;
-
     @Resource
     @Qualifier("pendingTransactions")
     private Set<PendingTransaction> pendingTransactions = new HashSet<>();
@@ -356,7 +353,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         List<PendingTransaction> outdated = CollectionUtils.selectList(pendingTransactions, new Functional.Predicate<PendingTransaction>() {
             @Override
             public boolean test(PendingTransaction pending) {
-                return (blockNumber - pending.getBlockNumber()) > PENDING_TX_MAX_DISTANCE;
+                return (blockNumber - pending.getBlockNumber()) > CONFIG.txOutdatedThreshold();
             }
         });
         if (outdated.isEmpty())
