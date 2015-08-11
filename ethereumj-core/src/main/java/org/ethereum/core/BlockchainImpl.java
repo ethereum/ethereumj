@@ -11,6 +11,8 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
+import org.ethereum.util.CollectionUtils;
+import org.ethereum.util.Functional;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -78,7 +80,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Resource
     @Qualifier("pendingTransactions")
-    private Set<Transaction> pendingTransactions = new HashSet<>();
+    private Set<PendingTransaction> pendingTransactions = new HashSet<>();
 
     @Autowired
     private Repository repository;
@@ -737,19 +739,31 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (listener != null)
             listener.onPendingTransactionsReceived(transactions);
-        pendingTransactions.addAll(transactions);
+        final long number = bestBlock.getNumber();
+        Set<PendingTransaction> pending = CollectionUtils.collectSet(transactions, new Functional.Function<Transaction, PendingTransaction>() {
+            @Override
+            public PendingTransaction apply(Transaction transaction) {
+                return new PendingTransaction(transaction, number);
+            }
+        });
+        pendingTransactions.addAll(pending);
     }
 
     public void clearPendingTransactions(List<Transaction> receivedTransactions) {
 
         for (Transaction tx : receivedTransactions) {
             logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
-            pendingTransactions.remove(tx);
+            pendingTransactions.remove(new PendingTransaction(tx));
         }
     }
 
     public Set<Transaction> getPendingTransactions() {
-        return pendingTransactions;
+        return CollectionUtils.collectSet(pendingTransactions, new Functional.Function<PendingTransaction, Transaction>() {
+            @Override
+            public Transaction apply(PendingTransaction pending) {
+                return pending.getTransaction();
+            }
+        });
     }
 
 

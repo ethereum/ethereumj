@@ -1,6 +1,7 @@
 package org.ethereum.config;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.core.PendingTransaction;
 import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
@@ -62,15 +63,15 @@ public class CommonConfig {
     }
 
     @Bean
-    public Set<Transaction> pendingTransactions() {
+    public Set<PendingTransaction> pendingTransactions() {
         String storage = "Redis";
         try {
             if (redisConnection.isAvailable()) {
-                return redisConnection.createTransactionSet("pendingTransactions");
+                return redisConnection.createPendingTransactionSet("pendingTransactions");
             }
 
             storage = "In memory";
-            return Collections.synchronizedSet(new HashSet<Transaction>());
+            return Collections.synchronizedSet(new HashSet<PendingTransaction>());
         } finally {
             logger.info(storage + " 'pendingTransactions' storage created.");
         }

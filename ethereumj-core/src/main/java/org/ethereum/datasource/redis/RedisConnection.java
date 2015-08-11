@@ -1,5 +1,6 @@
 package org.ethereum.datasource.redis;
 
+import org.ethereum.core.PendingTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
 
@@ -17,6 +18,8 @@ public interface RedisConnection {
     <K,V> Map<K, V> createMapFor(Class<K> keyClass, Class<V> valueClass, String name);
 
     Set<Transaction> createTransactionSet(String name);
+
+    Set<PendingTransaction> createPendingTransactionSet(String name);
 
     KeyValueDataSource createDataSource(String name);
 }
