@@ -19,7 +19,7 @@ public class PendingTransaction {
     /**
      * number of block that was best at the moment when transaction's been added
      */
-    private long bestBlockNumber;
+    private long blockNumber;
 
     public PendingTransaction(byte[] bytes) {
         parse(bytes);
@@ -29,21 +29,21 @@ public class PendingTransaction {
         this(transaction, 0);
     }
 
-    public PendingTransaction(Transaction transaction, long bestBlockNumber) {
+    public PendingTransaction(Transaction transaction, long blockNumber) {
         this.transaction = transaction;
-        this.bestBlockNumber = bestBlockNumber;
+        this.blockNumber = blockNumber;
     }
 
     public Transaction getTransaction() {
         return transaction;
     }
 
-    public long getBestBlockNumber() {
-        return bestBlockNumber;
+    public long getBlockNumber() {
+        return blockNumber;
     }
 
     public byte[] getBytes() {
-        byte[] numberBytes = BigInteger.valueOf(bestBlockNumber).toByteArray();
+        byte[] numberBytes = BigInteger.valueOf(blockNumber).toByteArray();
         byte[] txBytes = transaction.getEncoded();
         byte[] bytes = new byte[1 + numberBytes.length + txBytes.length];
 
@@ -63,7 +63,7 @@ public class PendingTransaction {
 
         System.arraycopy(bytes, 1 + numberBytes.length, txBytes, 0, txBytes.length);
 
-        this.bestBlockNumber = new BigInteger(numberBytes).longValue();
+        this.blockNumber = new BigInteger(numberBytes).longValue();
         this.transaction = new Transaction(txBytes);
     }
 
@@ -71,7 +71,7 @@ public class PendingTransaction {
     public String toString() {
         return "PendingTransaction [" +
                 "  transaction=" + transaction +
-                ", bestBlockNumber=" + bestBlockNumber +
+                ", blockNumber=" + blockNumber +
                 ']';
     }
 

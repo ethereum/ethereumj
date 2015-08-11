@@ -78,6 +78,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
+    // max distance between last imported block number and block number stored within pending tx
+    private static final long PENDING_TX_MAX_DISTANCE = 10;
+
     @Resource
     @Qualifier("pendingTransactions")
     private Set<PendingTransaction> pendingTransactions = new HashSet<>();
@@ -333,6 +336,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // Clear pending transaction from the mem
         clearPendingTransactions(block.getTransactionsList());
 
+        // Clear outdated pending transactions
+        clearOutdatedTransactions(block.getNumber());
+
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
 
@@ -344,6 +350,32 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             syncDoneCalled = true;
             listener.onSyncDone();
         }
+    }
+
+    private void clearOutdatedTransactions(final long blockNumber) {
+        List<PendingTransaction> outdated = CollectionUtils.selectList(pendingTransactions, new Functional.Predicate<PendingTransaction>() {
+            @Override
+            public boolean test(PendingTransaction pending) {
+                return (blockNumber - pending.getBlockNumber()) > PENDING_TX_MAX_DISTANCE;
+            }
+        });
+        if (outdated.isEmpty()) {
+            return;
+        }
+
+        List<Transaction> transactions = CollectionUtils.collectList(outdated, new Functional.Function<PendingTransaction, Transaction>() {
+            @Override
+            public Transaction apply(PendingTransaction pending) {
+                return pending.getTransaction();
+            }
+        });
+
+        if (logger.isInfoEnabled())
+            for (Transaction tx : transactions)
+                logger.info("Clear outdated pending transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+
+        pendingTransactions.removeAll(outdated);
+        wallet.removeTransactions(transactions);
     }
 
     private boolean needFlush(Block block) {
