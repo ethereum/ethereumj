@@ -11,6 +11,8 @@ import org.ethereum.net.server.ChannelManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
+import org.ethereum.util.CollectionUtils;
+import org.ethereum.util.Functional;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
@@ -76,9 +78,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
+    // max distance between last imported block number and block number stored within pending tx
+    private static final long PENDING_TX_MAX_DISTANCE = 10;
+
     @Resource
     @Qualifier("pendingTransactions")
-    private Set<Transaction> pendingTransactions = new HashSet<>();
+    private Set<PendingTransaction> pendingTransactions = new HashSet<>();
 
     @Autowired
     private Repository repository;
@@ -331,6 +336,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // Clear pending transaction from the mem
         clearPendingTransactions(block.getTransactionsList());
 
+        // Clear outdated pending transactions
+        clearOutdatedTransactions(block.getNumber());
+
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
 
@@ -342,6 +350,35 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             syncDoneCalled = true;
             listener.onSyncDone();
         }
+    }
+
+    private void clearOutdatedTransactions(final long blockNumber) {
+        List<PendingTransaction> outdated = CollectionUtils.selectList(pendingTransactions, new Functional.Predicate<PendingTransaction>() {
+            @Override
+            public boolean test(PendingTransaction pending) {
+                return (blockNumber - pending.getBlockNumber()) > PENDING_TX_MAX_DISTANCE;
+            }
+        });
+        if (outdated.isEmpty())
+            return;
+
+        List<Transaction> transactions = CollectionUtils.collectList(outdated, new Functional.Function<PendingTransaction, Transaction>() {
+            @Override
+            public Transaction apply(PendingTransaction pending) {
+                return pending.getTransaction();
+            }
+        });
+
+        if (logger.isInfoEnabled())
+            for (PendingTransaction tx : outdated)
+                logger.info(
+                        "Clear outdated pending transaction, block.number: [{}] hash: [{}]",
+                        tx.getBlockNumber(),
+                        Hex.toHexString(tx.getHash())
+                );
+
+        pendingTransactions.removeAll(outdated);
+        wallet.removeTransactions(transactions);
     }
 
     private boolean needFlush(Block block) {
@@ -737,19 +774,35 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (listener != null)
             listener.onPendingTransactionsReceived(transactions);
-        pendingTransactions.addAll(transactions);
+
+        if (transactions.isEmpty())
+            return;
+
+        final long number = bestBlock.getNumber();
+        Set<PendingTransaction> pending = CollectionUtils.collectSet(transactions, new Functional.Function<Transaction, PendingTransaction>() {
+            @Override
+            public PendingTransaction apply(Transaction transaction) {
+                return new PendingTransaction(transaction, number);
+            }
+        });
+        pendingTransactions.addAll(pending);
     }
 
     public void clearPendingTransactions(List<Transaction> receivedTransactions) {
 
         for (Transaction tx : receivedTransactions) {
             logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
-            pendingTransactions.remove(tx);
+            pendingTransactions.remove(new PendingTransaction(tx));
         }
     }
 
     public Set<Transaction> getPendingTransactions() {
-        return pendingTransactions;
+        return CollectionUtils.collectSet(pendingTransactions, new Functional.Function<PendingTransaction, Transaction>() {
+            @Override
+            public Transaction apply(PendingTransaction pending) {
+                return pending.getTransaction();
+            }
+        });
     }
 
 

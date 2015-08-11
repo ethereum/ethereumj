@@ -3,10 +3,7 @@ package org.ethereum.datasource.redis;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
-import org.ethereum.core.AccountState;
-import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
-import org.ethereum.core.TransactionReceipt;
+import org.ethereum.core.*;
 import org.ethereum.db.ContractDetailsImpl;
 
 import java.util.HashSet;
@@ -98,6 +95,24 @@ public final class Serializers {
         }
     }
 
+    private static class PendingTransactionSerializer extends BaseRedisSerializer<PendingTransaction> {
+
+        @Override
+        public boolean supports(Class<?> aClass) {
+            return PendingTransaction.class.isAssignableFrom(aClass);
+        }
+
+        @Override
+        public byte[] serialize(PendingTransaction transaction) {
+            return (transaction == null) ? EMPTY_ARRAY : transaction.getBytes();
+        }
+
+        @Override
+        public PendingTransaction deserialize(byte[] bytes) {
+            return isEmpty(bytes) ? null : new PendingTransaction(bytes);
+        }
+    }
+
     private static class AccountStateSerializer extends BaseRedisSerializer<AccountState> {
 
         @Override
@@ -156,6 +171,7 @@ public final class Serializers {
     private static final byte[] EMPTY_ARRAY = new byte[0];
     private static final Set<? extends BaseRedisSerializer> SERIALIZERS = new HashSet<BaseRedisSerializer>() {{
         add(new TransactionSerializer());
+        add(new PendingTransactionSerializer());
         add(new TransactionReceiptSerializer());
         add(new AccountStateSerializer());
         add(new BlockSerializer());
