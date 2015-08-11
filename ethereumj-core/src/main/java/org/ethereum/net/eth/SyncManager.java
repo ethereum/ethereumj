@@ -3,16 +3,12 @@ package org.ethereum.net.eth;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
-import org.ethereum.facade.Ethereum;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
-import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
-import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -37,9 +33,6 @@ public class SyncManager {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final int CONNECTION_TIMEOUT = 60 * 1000; // 60 seconds
-    private static final int BAN_TIMEOUT = 30 * 60 * 1000; // 30 minutes
-    private static final int DISCONNECT_HITS_THRESHOLD = 5;
     private static final int MASTER_STUCK_TIME_THRESHOLD = 60 * 1000; // 60 seconds
 
     private static final long LARGE_GAP_THRESHOLD = 5;
@@ -49,7 +42,6 @@ public class SyncManager {
     private EthHandler masterPeer;
     private long lastHashesLoadedCnt = 0;
     private long masterStuckAt = 0;
-    private final List<EthHandler> peers = new CopyOnWriteArrayList<>();
     private int maxHashesAsk;
     private byte[] bestHash;
     private boolean onSyncDoneTriggered = false;
@@ -60,24 +52,19 @@ public class SyncManager {
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
     private ScheduledExecutorService logWorker = Executors.newSingleThreadScheduledExecutor();
 
-    private final Object connectionsMutex = new Object();
-    private Map<String, Long> connectTimestamps = new HashMap<>();
-    private Map<String, Integer> disconnectHits = new HashMap<>();
-    private Map<String, Long> bannedNodes = new HashMap<>();
-
     private DiscoverListener discoverListener;
 
     @Autowired
     private Blockchain blockchain;
 
     @Autowired
-    private Ethereum ethereum;
-
-    @Autowired
     private NodeManager nodeManager;
 
     @Autowired
     private EthereumListener ethereumListener;
+
+    @Autowired
+    private PeersPool pool;
 
     public void init() {
 
@@ -98,9 +85,7 @@ public class SyncManager {
                     checkGapRecovery();
                     checkMaster();
                     checkPeers();
-                    removeOutdatedConnections();
                     askNewPeers();
-                    releaseBans();
                 } catch (Exception e) {
                     e.printStackTrace();
                     logger.error("Exception in main sync worker", e);
@@ -119,13 +104,8 @@ public class SyncManager {
             @Override
             public void nodeAppeared(NodeHandler handler) {
                 String nodeId = Hex.toHexString(handler.getNode().getId());
-                synchronized (connectionsMutex) {
-                    if(bannedNodes.containsKey(nodeId)) {
-                        return;
-                    }
-                    if(connectTimestamps.containsKey(nodeId)) {
-                        return;
-                    }
+                if(pool.isInUse(nodeId)) {
+                    return;
                 }
                 if(logger.isTraceEnabled()) logger.trace(
                         "Peer {}: new best chain peer discovered: {} vs {}",
@@ -133,7 +113,7 @@ public class SyncManager {
                         handler.getNodeStatistics().getEthTotalDifficulty(),
                         highestKnownDifficulty
                 );
-                initiateConnection(handler.getNode());
+                pool.connect(handler.getNode());
             }
 
             @Override
@@ -153,35 +133,6 @@ public class SyncManager {
                     }
                 }
         );
-    }
-
-    private void releaseBans() {
-        synchronized (connectionsMutex) {
-            Set<String> outdated = new HashSet<>();
-            for(Map.Entry<String, Long> e : bannedNodes.entrySet()) {
-                if(System.currentTimeMillis() - e.getValue() > BAN_TIMEOUT) {
-                    outdated.add(e.getKey());
-                    logger.info("Peer {}: releasing ban", Utils.getNodeIdShort(e.getKey()));
-                }
-            }
-            for(String nodeId : outdated) {
-                bannedNodes.remove(nodeId);
-            }
-        }
-    }
-
-    private void removeOutdatedConnections() {
-        synchronized (connectionsMutex) {
-            Set<String> outdated = new HashSet<>();
-            for(Map.Entry<String, Long> e : connectTimestamps.entrySet()) {
-                if(System.currentTimeMillis() - e.getValue() > CONNECTION_TIMEOUT) {
-                    outdated.add(e.getKey());
-                }
-            }
-            for(String nodeId : outdated) {
-                connectTimestamps.remove(nodeId);
-            }
-        }
     }
 
     private void checkMaster() {
@@ -205,12 +156,11 @@ public class SyncManager {
                 } else {
                     if(timeSinceMasterStuck() > MASTER_STUCK_TIME_THRESHOLD) {
                         masterStuckAt = 0;
-                        masterPeer.disconnect(ReasonCode.USELESS_PEER);
                         logger.info(
                                 "Master peer {}: banned due to stuck timeout exceeding",
                                 Utils.getNodeIdShort(masterPeer.getPeerId())
                         );
-                        setBan(masterPeer);
+                        pool.ban(masterPeer);
                     }
                 }
             }
@@ -235,21 +185,28 @@ public class SyncManager {
     }
 
     private void checkPeers() {
-        List<EthHandler> removed = new ArrayList<>();
-        for(EthHandler peer : peers) {
-            if(peer.hasNoMoreBlocks()) {
-                logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
-                removed.add(peer);
-                peer.changeState(SyncState.IDLE);
-                BigInteger td = peer.getHandshakeStatusMessage().getTotalDifficultyAsBigInt();
-                updateLowerUsefulDifficulty(td);
+        pool.remove(new Functional.Predicate<EthHandler>() {
+            @Override
+            public boolean test(EthHandler peer) {
+                if (peer.hasNoMoreBlocks()) {
+                    logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
+                    updateLowerUsefulDifficulty(peer.getTotalDifficulty());
+                    return true;
+                } else {
+                    return false;
+                }
             }
-        }
-        peers.removeAll(removed);
+        });
 
         // checking if master peer is still presented
-        synchronized (connectionsMutex) {
-            if ((isHashRetrieving() || isGapRecovery()) && !peers.contains(masterPeer)) {
+        if ((isHashRetrieving() || isGapRecovery())) {
+            EthHandler master = pool.findOne(new Functional.Predicate<EthHandler>() {
+                @Override
+                public boolean test(EthHandler peer) {
+                    return peer.isHashRetrieving() || peer.isHashRetrievingDone();
+                }
+            });
+            if(master == null) {
                 logger.info("Master peer has been lost, find a new one");
                 if (isHashRetrieving()) {
                     changeState(SyncState.HASH_RETRIEVING);
@@ -262,31 +219,22 @@ public class SyncManager {
         // forcing peers to continue blocks downloading if there are more hashes to process
         // peers becoming idle if meet empty hashstore but it's not the end
         if((isBlockRetrieving() || isSyncDone() || isGapRecoveryDone()) && !hashStoreEmpty()) {
-            for(EthHandler peer : peers) {
-                if(peer.isIdle()) {
-                    peer.changeState(SyncState.BLOCK_RETRIEVING);
+            pool.changeState(SyncState.BLOCK_RETRIEVING, new Functional.Predicate<EthHandler>() {
+                @Override
+                public boolean test(EthHandler peer) {
+                    return peer.isIdle();
                 }
-            }
+            });
         }
     }
 
     private void askNewPeers() {
-        int peersLackSize = CONFIG.syncPeerCount() - peers.size();
-        if(peersLackSize <= 0) {
+        int lackSize = CONFIG.syncPeerCount() - pool.activeCount();
+        if(lackSize <= 0) {
             return;
         }
 
-        final Set<String> nodesInUse;
-        synchronized (connectionsMutex) {
-            nodesInUse = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
-                @Override
-                public String apply(EthHandler handler) {
-                    return handler.getPeerId();
-                }
-            });
-            nodesInUse.addAll(connectTimestamps.keySet());
-            nodesInUse.addAll(bannedNodes.keySet());
-        }
+        final Set<String> nodesInUse = pool.nodesInUse();
 
         List<NodeHandler> newNodes = nodeManager.getNodes(
                 new Functional.Predicate<NodeHandler>() {
@@ -327,10 +275,10 @@ public class SyncManager {
                         }
                     }
                 },
-                peersLackSize
+                lackSize
         );
 
-        if(peers.isEmpty() && newNodes.isEmpty()) {
+        if(pool.isEmpty() && newNodes.isEmpty()) {
             newNodes = nodeManager.getNodes(
                     new Functional.Predicate<NodeHandler>() {
                         @Override
@@ -351,7 +299,7 @@ public class SyncManager {
                                     .compareTo(n1.getNodeStatistics().getReputation());
                         }
                     },
-                    peersLackSize
+                    lackSize
             );
         }
 
@@ -371,63 +319,19 @@ public class SyncManager {
         }
 
         for(NodeHandler n : newNodes) {
-            initiateConnection(n.getNode());
+            pool.connect(n.getNode());
         }
     }
 
     private void logStats() {
-
-        if (peers.size() > 0) {
-            logger.info("\n");
-            logger.info("Active peers");
-            logger.info("============");
-            for(EthHandler peer : peers) {
-                peer.logSyncStats();
-            }
-            logger.info("\n");
-        }
-
-        if (bannedNodes.size() > 0) {
-            logger.info("\n");
-            logger.info("Banned peers");
-            logger.info("============");
-            for(Map.Entry<String, Long> e : bannedNodes.entrySet()) {
-                logger.info(
-                        "Peer {} | {} minutes ago",
-                        Utils.getNodeIdShort(e.getKey()),
-                        (System.currentTimeMillis() - e.getValue()) / 60 / 1000
-                );
-            }
-            logger.info("\n");
-        }
-
+        pool.logActive();
+        pool.logBans();
         logger.info("State {}", state);
         logger.info("\n");
     }
 
     public void onDisconnect(EthHandler peer) {
-        if(logger.isTraceEnabled()) logger.trace(
-                "Peer {}: disconnected",
-                peer.getPeerIdShort()
-        );
-
-        peer.onDisconnect();
-        peers.remove(peer);
-
-        synchronized (connectionsMutex) {
-            connectTimestamps.remove(peer.getPeerId());
-            Integer hits = disconnectHits.get(peer.getPeerId());
-            if(hits == null) {
-                hits = 0;
-            }
-            if(hits > DISCONNECT_HITS_THRESHOLD) {
-                setBan(peer);
-                logger.info("Peer {}: banned due to disconnects exceeding", Utils.getNodeIdShort(peer.getPeerId()));
-                disconnectHits.remove(peer.getPeerId());
-            } else {
-                disconnectHits.put(peer.getPeerId(), hits + 1);
-            }
-        }
+        pool.onDisconnect(peer);
     }
 
     public synchronized void addPeer(EthHandler peer) {
@@ -438,24 +342,23 @@ public class SyncManager {
 
         BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
 
-        synchronized (connectionsMutex) {
-            connectTimestamps.remove(peer.getPeerId());
-            if(lowerUsefulDifficulty.compareTo(peerTotalDifficulty) > 0) {
-                if(logger.isInfoEnabled()) logger.info(
-                        "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
-                        Utils.getNodeIdShort(peer.getPeerId()),
-                        peerTotalDifficulty.toString(),
-                        lowerUsefulDifficulty.toString()
-                );
-                // TODO report about lower total difficulty
-                return;
-            }
-            peers.add(peer);
-            if(!onSyncDoneTriggered) {
-                peer.prohibitTransactions();
-            }
+        if(lowerUsefulDifficulty.compareTo(peerTotalDifficulty) > 0) {
+            if(logger.isInfoEnabled()) logger.info(
+                    "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
+                    Utils.getNodeIdShort(peer.getPeerId()),
+                    peerTotalDifficulty.toString(),
+                    lowerUsefulDifficulty.toString()
+            );
+            // TODO report about lower total difficulty
+            return;
         }
-        logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
+
+        // prohibit transactions processing until main sync is done
+        if(!onSyncDoneTriggered) {
+            peer.prohibitTransactions();
+        }
+
+        pool.add(peer);
 
         if(isInit()) {
             if(blockchain.getQueue().hasSolidBlocks()) {
@@ -556,15 +459,7 @@ public class SyncManager {
 
     public synchronized void changeState(SyncState newState) {
         if(newState == SyncState.HASH_RETRIEVING) {
-            if(peers.isEmpty()) {
-                return;
-            }
-            masterPeer = Collections.max(peers, new Comparator<EthHandler>() {
-                @Override
-                public int compare(EthHandler p1, EthHandler p2) {
-                    return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
-                }
-            });
+            masterPeer = pool.findBest();
             if(masterPeer == null) {
                 return;
             }
@@ -573,20 +468,12 @@ public class SyncManager {
 
             bestHash = masterPeer.getBestHash();
             queue.getHashStore().clear();
-            changePeersState(SyncState.IDLE);
+            pool.changeState(SyncState.IDLE);
             maxHashesAsk = CONFIG.maxHashesAsk();
             runHashRetrievingOnMaster();
         }
         if(newState == SyncState.GAP_RECOVERY) {
-            if(peers.isEmpty()) {
-                return;
-            }
-            masterPeer = Collections.max(peers, new Comparator<EthHandler>() {
-                @Override
-                public int compare(EthHandler p1, EthHandler p2) {
-                    return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
-                }
-            });
+            masterPeer = pool.findBest();
             if(masterPeer == null) {
                 return;
             }
@@ -594,11 +481,11 @@ public class SyncManager {
             logger.info("Gap recovery initiated");
         }
         if(newState == SyncState.BLOCK_RETRIEVING) {
-            changePeersState(SyncState.BLOCK_RETRIEVING);
+            pool.changeState(SyncState.BLOCK_RETRIEVING);
             logger.info("Block retrieving initiated");
         }
         if(newState == SyncState.DONE_GAP_RECOVERY) {
-            changePeersState(SyncState.BLOCK_RETRIEVING);
+            pool.changeState(SyncState.BLOCK_RETRIEVING);
             logger.info("Done gap recovery");
         }
         if(newState == SyncState.DONE_SYNC) {
@@ -606,7 +493,7 @@ public class SyncManager {
                 return;
             }
             onSyncDoneTriggered = true;
-            changePeersState(SyncState.DONE_SYNC);
+            pool.changeState(SyncState.DONE_SYNC);
             ethereumListener.onSyncDone();
             logger.info("Main synchronization is finished");
         }
@@ -624,43 +511,6 @@ public class SyncManager {
         masterPeer.changeState(SyncState.HASH_RETRIEVING);
         logger.info("Master peer hashes retrieving initiated, best known hash [{}], askLimit [{}]", Hex.toHexString(bestHash), maxHashesAsk);
         logger.debug("Our best block hash [{}]", Hex.toHexString(blockchain.getBestBlockHash()));
-    }
-
-    private void changePeersState(SyncState newState) {
-        for (EthHandler peer : peers) {
-            peer.changeState(newState);
-        }
-    }
-
-    private void initiateConnection(Node node) {
-        if(logger.isTraceEnabled()) logger.trace(
-                "Peer {}: initiate connection",
-                Utils.getNodeIdShort(Hex.toHexString(node.getId()))
-        );
-        synchronized (connectionsMutex) {
-            final String nodeId = Hex.toHexString(node.getId());
-            Set<String> usedNodes = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
-                @Override
-                public String apply(EthHandler peer) {
-                    return peer.getPeerId();
-                }
-            });
-            if(usedNodes.contains(nodeId) || connectTimestamps.containsKey(nodeId)) {
-                if(logger.isTraceEnabled()) logger.trace(
-                        "Peer {}: connection already initiated",
-                        Utils.getNodeIdShort(Hex.toHexString(node.getId()))
-                );
-                return;
-            }
-            ethereum.connect(node);
-            connectTimestamps.put(nodeId, System.currentTimeMillis());
-        }
-    }
-
-    private void setBan(EthHandler peer) {
-        synchronized (connectionsMutex) {
-            bannedNodes.put(peer.getPeerId(), System.currentTimeMillis());
-        }
     }
 
     private void updateLowerUsefulDifficulty(BigInteger difficulty) {
