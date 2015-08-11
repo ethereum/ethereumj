@@ -42,6 +42,10 @@ public class PendingTransaction {
         return blockNumber;
     }
 
+    public byte[] getHash() {
+        return transaction.getHash();
+    }
+
     public byte[] getBytes() {
         byte[] numberBytes = BigInteger.valueOf(blockNumber).toByteArray();
         byte[] txBytes = transaction.getEncoded();

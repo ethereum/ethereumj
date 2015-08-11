@@ -359,9 +359,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 return (blockNumber - pending.getBlockNumber()) > PENDING_TX_MAX_DISTANCE;
             }
         });
-        if (outdated.isEmpty()) {
+        if (outdated.isEmpty())
             return;
-        }
 
         List<Transaction> transactions = CollectionUtils.collectList(outdated, new Functional.Function<PendingTransaction, Transaction>() {
             @Override
@@ -371,8 +370,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         });
 
         if (logger.isInfoEnabled())
-            for (Transaction tx : transactions)
-                logger.info("Clear outdated pending transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+            for (PendingTransaction tx : outdated)
+                logger.info(
+                        "Clear outdated pending transaction, block.number: [{}] hash: [{}]",
+                        tx.getBlockNumber(),
+                        Hex.toHexString(tx.getHash())
+                );
 
         pendingTransactions.removeAll(outdated);
         wallet.removeTransactions(transactions);
@@ -771,6 +774,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (listener != null)
             listener.onPendingTransactionsReceived(transactions);
+
+        if (transactions.isEmpty())
+            return;
+
         final long number = bestBlock.getNumber();
         Set<PendingTransaction> pending = CollectionUtils.collectSet(transactions, new Functional.Function<Transaction, PendingTransaction>() {
             @Override
