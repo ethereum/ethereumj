@@ -69,7 +69,6 @@ public class BlockQueue {
     @Autowired
     SyncManager syncManager;
 
-    @PostConstruct
     public void init() {
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         hashStore = new HashStoreImpl();
