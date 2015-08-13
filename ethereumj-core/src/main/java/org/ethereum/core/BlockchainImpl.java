@@ -7,7 +7,6 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.net.BlockQueue;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
@@ -98,11 +97,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     private BlockQueue blockQueue;
-
-    @Autowired
-    private ChannelManager channelManager;
-
-    private boolean syncDoneCalled = false;
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
@@ -336,15 +330,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
-
-        if (blockQueue != null &&
-            blockQueue.size() == 0 &&
-            !syncDoneCalled) {
-
-            logger.info("Sync done");
-            syncDoneCalled = true;
-            listener.onSyncDone();
-        }
     }
 
     private void clearOutdatedTransactions(final long blockNumber) {
