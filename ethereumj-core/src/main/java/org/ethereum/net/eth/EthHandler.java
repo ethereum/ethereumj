@@ -11,7 +11,7 @@ import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.message.*;
-import org.ethereum.net.eth.sync.SyncState;
+import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
@@ -28,6 +28,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.net.eth.sync.SyncStateName.*;
 import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
 import static org.ethereum.util.ByteUtil.wrap;
 
@@ -60,7 +61,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private MessageQueue msgQueue = null;
 
     private String peerId;
-    private SyncState syncState = SyncState.IDLE;
+    private SyncStateName syncState = IDLE;
     private EthState peerState = EthState.INIT;
     private boolean processTransactions = true;
 
@@ -239,7 +240,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 blockHashesMessage.getBlockHashes().size()
         );
 
-        if (syncState != SyncState.HASH_RETRIEVING) {
+        if (syncState != HASH_RETRIEVING) {
             return;
         }
 
@@ -269,7 +270,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             lastHash = newHashes.get(newHashes.size() - 1);
 
             if (foundExisting) {
-                changeState(SyncState.DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
+                changeState(DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
                 loggerSync.trace(
                         "Peer {}: got existing hash [{}]",
                         Utils.getNodeIdShort(peerId),
@@ -278,7 +279,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             }
         }
 
-        if (syncState == SyncState.DONE_HASH_RETRIEVING) {
+        if (syncState == DONE_HASH_RETRIEVING) {
             loggerSync.info(
                     "Peer {}: hashes sync completed, [{}] hashes in queue",
                     getPeerIdShort(),
@@ -287,7 +288,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         } else {
             // no known hash has been reached
             queue.logHashQueueSize();
-            if(syncState == SyncState.HASH_RETRIEVING) {
+            if(syncState == HASH_RETRIEVING) {
                 sendGetBlockHashes(); // another getBlockHashes with last received hash.
             }
         }
@@ -323,10 +324,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             queue.addBlocks(blockList);
             queue.logHashQueueSize();
         } else {
-            changeState(SyncState.BLOCKS_LACK);
+            changeState(BLOCKS_LACK);
         }
 
-        if (syncState == SyncState.BLOCK_RETRIEVING) {
+        if (syncState == BLOCK_RETRIEVING) {
             sendGetBlocks();
         }
     }
@@ -417,7 +418,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                     "Peer {}: no more hashes in queue, idle",
                     Utils.getNodeIdShort(peerId)
             );
-            changeState(SyncState.IDLE);
+            changeState(IDLE);
             return false;
         }
 
@@ -496,7 +497,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         this.channel = channel;
     }
 
-    public synchronized void changeState(SyncState newState) {
+    public synchronized void changeState(SyncStateName newState) {
         if (syncState == newState) {
             return;
         }
@@ -508,18 +509,18 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 newState
         );
 
-        if (newState == SyncState.HASH_RETRIEVING) {
+        if (newState == HASH_RETRIEVING) {
             stats.reset();
             sendGetBlockHashes();
         }
-        if (newState == SyncState.BLOCK_RETRIEVING) {
+        if (newState == BLOCK_RETRIEVING) {
             stats.reset();
             boolean sent = sendGetBlocks();
             if (!sent) {
-                newState = SyncState.IDLE;
+                newState = IDLE;
             }
         }
-        if (newState == SyncState.BLOCKS_LACK) {
+        if (newState == BLOCKS_LACK) {
             if(++blocksLackHits < BLOCKS_LACK_MAX_HITS) {
                 return;
             }
@@ -540,15 +541,15 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     public boolean isHashRetrievingDone() {
-        return syncState == SyncState.DONE_HASH_RETRIEVING;
+        return syncState == DONE_HASH_RETRIEVING;
     }
 
     public boolean isHashRetrieving() {
-        return syncState == SyncState.HASH_RETRIEVING;
+        return syncState == HASH_RETRIEVING;
     }
 
     public boolean hasBlocksLack() {
-        return syncState == SyncState.BLOCKS_LACK;
+        return syncState == BLOCKS_LACK;
     }
 
     public boolean hasInitPassed() {
@@ -575,7 +576,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             case BLOCK_RETRIEVING: loggerSync.info(
                         "Peer {}: [state {}, blocks count {}, last block {}]",
                         getPeerIdShort(),
-                        syncState,
+                    syncState,
                         stats.getBlocksCount(),
                         lastBlock.getNumber()
                 );
@@ -597,7 +598,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     public boolean isIdle() {
-        return syncState == SyncState.IDLE;
+        return syncState == IDLE;
     }
 
     public NodeStatistics getNodeStatistics() {

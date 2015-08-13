@@ -176,7 +176,7 @@ public class PeersPool implements Iterable<EthHandler> {
         return nodesInUse().contains(nodeId);
     }
 
-    public void changeState(SyncState newState) {
+    public void changeState(SyncStateName newState) {
         synchronized (peers) {
             for (EthHandler peer : peers) {
                 peer.changeState(newState);
@@ -184,7 +184,7 @@ public class PeersPool implements Iterable<EthHandler> {
         }
     }
 
-    public void changeState(SyncState newState, Functional.Predicate<EthHandler> filter) {
+    public void changeState(SyncStateName newState, Functional.Predicate<EthHandler> filter) {
         synchronized (peers) {
             for (EthHandler peer : peers) {
                 if (filter.test(peer)) {

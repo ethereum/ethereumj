@@ -17,13 +17,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.net.eth.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.TimeUtils.secondsToMillis;
 
@@ -42,7 +45,11 @@ public class SyncManager {
 
     private static final long LARGE_GAP_SIZE = 5;
 
-    private SyncState state = SyncState.IDLE;
+    @Resource
+    @Qualifier("syncStates")
+    private Map<SyncStateName, SyncState> syncStates;
+    private SyncState currentState;
+    private final Object stateMutex = new Object();
 
     /**
      * block which gap recovery is running for
@@ -86,6 +93,9 @@ public class SyncManager {
 
         logger.info("Sync Manager: ON");
 
+        // set IDLE state at the beginning
+        currentState = syncStates.get(IDLE);
+
         updateDifficulties();
 
         changeState(initialState());
@@ -99,7 +109,7 @@ public class SyncManager {
                     updateDifficulties();
                     removeUselessPeers();
                     fillUpPeersPool();
-                    processStates();
+                    maintainState();
                 } catch (Throwable t) {
                     t.printStackTrace();
                     logger.error("Exception in main sync worker", t);
@@ -135,7 +145,7 @@ public class SyncManager {
             return;
         }
 
-        if (isHashRetrieving() && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+        if (currentState.is(HASH_RETRIEVING) && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
             if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: its chain is better than previously known: {} vs {}, rotate master peer",
                     Utils.getNodeIdShort(peer.getPeerId()),
@@ -143,9 +153,9 @@ public class SyncManager {
                     highestKnownDifficulty.toString()
             );
 
-            // should be synchronized with processHashRetrieving
+            // should be synchronized with HASH_RETRIEVING state maintenance
             // to avoid double master peer initializing
-            synchronized (this) {
+            synchronized (stateMutex) {
                 startMaster(peer);
             }
         }
@@ -174,7 +184,7 @@ public class SyncManager {
         int gap = gapSize(wrapper);
 
         if (gap >= LARGE_GAP_SIZE) {
-            changeState(SyncState.HASH_RETRIEVING);
+            changeState(HASH_RETRIEVING);
         } else {
             logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
             queue.addHash(wrapper.getParentHash());
@@ -200,14 +210,6 @@ public class SyncManager {
         }
     }
 
-    public boolean isHashRetrieving() {
-        return state == SyncState.HASH_RETRIEVING;
-    }
-
-    public boolean isIdle() {
-        return state == SyncState.IDLE;
-    }
-
     public boolean isSyncDone() {
         return syncDone;
     }
@@ -225,12 +227,12 @@ public class SyncManager {
 
     private boolean isGapRecoveryAllowed(BlockWrapper block) {
         // hashes are not downloaded yet, recovery doesn't make sense at all
-        if (isHashRetrieving()) {
+        if (currentState.is(HASH_RETRIEVING)) {
             return false;
         }
 
         // gap for this block is being recovered
-        if (block.equals(gapBlock) && !isIdle()) {
+        if (block.equals(gapBlock) && !currentState.is(IDLE)) {
             logger.trace("Gap recovery is already in progress for block.number [{}]", gapBlock.getNumber());
             return false;
         }
@@ -247,26 +249,54 @@ public class SyncManager {
         if (!block.isNewBlock()) {
             return block.timeSinceFail() > GAP_RECOVERY_TIMEOUT;
         } else {
-            return isIdle();
+            return currentState.is(IDLE);
         }
     }
 
-    private void changeState(SyncState newState) {
-        if (state == newState) {
+    void changeState(SyncStateName newStateName) {
+        SyncState newState = syncStates.get(newStateName);
+
+        if (currentState == newState) {
             return;
         }
 
-        logger.info("Changing state from {} to {}", state, newState);
+        logger.info("Changing state from {} to {}", currentState, newState);
 
-        if (newState == SyncState.BLOCK_RETRIEVING) {
-            pool.changeState(SyncState.BLOCK_RETRIEVING);
+        synchronized (stateMutex) {
+            newState.doOnTransition();
+            currentState = newState;
+        }
+    }
+
+    boolean isPeerStuck(EthHandler peer) {
+        EthHandler.EthStats stats = peer.getStats();
+
+        return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
+                || stats.getEmptyResponsesCount() > 0;
+    }
+
+    void startMaster(EthHandler master) {
+        pool.changeState(IDLE);
+
+        if (gapBlock != null) {
+            int gap = gapSize(gapBlock);
+            master.setMaxHashesAsk(gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : gap);
+            queue.setBestHash(gapBlock.getHash());
+        } else {
+            master.setMaxHashesAsk(CONFIG.maxHashesAsk());
+            queue.clearHashes();
+            queue.setBestHash(master.getBestHash());
         }
 
-        if (newState == SyncState.IDLE) {
-            pool.changeState(SyncState.IDLE);
-        }
+        master.changeState(HASH_RETRIEVING);
 
-        state = newState;
+        if (logger.isInfoEnabled()) logger.info(
+                "Peer {}: {} initiated, best known hash [{}], askLimit [{}]",
+                master.getPeerIdShort(),
+                currentState,
+                Hex.toHexString(queue.getBestHash()),
+                master.getMaxHashesAsk()
+        );
     }
 
     private void updateDifficulties() {
@@ -286,36 +316,12 @@ public class SyncManager {
         }
     }
 
-    private void startMaster(EthHandler master) {
-        pool.changeState(SyncState.IDLE);
-
-        if (gapBlock != null) {
-            int gap = gapSize(gapBlock);
-            master.setMaxHashesAsk(gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : gap);
-            queue.setBestHash(gapBlock.getHash());
-        } else {
-            master.setMaxHashesAsk(CONFIG.maxHashesAsk());
-            queue.clearHashes();
-            queue.setBestHash(master.getBestHash());
-        }
-
-        master.changeState(SyncState.HASH_RETRIEVING);
-
-        if (logger.isInfoEnabled()) logger.info(
-                "Peer {}: {} initiated, best known hash [{}], askLimit [{}]",
-                master.getPeerIdShort(),
-                state,
-                Hex.toHexString(queue.getBestHash()),
-                master.getMaxHashesAsk()
-        );
-    }
-
-    private SyncState initialState() {
+    private SyncStateName initialState() {
         if (queue.hasSolidBlocks()) {
             logger.info("It seems that BLOCK_RETRIEVING was interrupted, starting from this state now");
-            return SyncState.BLOCK_RETRIEVING;
+            return BLOCK_RETRIEVING;
         } else {
-            return SyncState.HASH_RETRIEVING;
+            return HASH_RETRIEVING;
         }
     }
 
@@ -357,7 +363,7 @@ public class SyncManager {
             public void run() {
                 pool.logActivePeers();
                 pool.logBannedPeers();
-                logger.info("\nState {}\n", state);
+                logger.info("\nState {}\n", currentState);
             }
         }, 0, 30, TimeUnit.SECONDS);
     }
@@ -411,79 +417,9 @@ public class SyncManager {
         );
     }
 
-    private void processStates() {
-        switch (state) {
-            case HASH_RETRIEVING:
-                processHashRetrieving();
-                return;
-            case BLOCK_RETRIEVING:
-                processBlockRetrieving();
-                return;
-            case IDLE:
-                processIdle();
-        }
-    }
-
-    private synchronized void processHashRetrieving() {
-        EthHandler master = null;
-        for (EthHandler peer : pool) {
-            // if hash retrieving is done all we need is just change state and quit
-            if (peer.isHashRetrievingDone()) {
-                changeState(SyncState.BLOCK_RETRIEVING);
-                return;
-            }
-
-            // master is found
-            if (peer.isHashRetrieving()) {
-                master = peer;
-                break;
-            }
-        }
-
-        if (master != null) {
-            // if master is stuck ban it and try to start a new one
-            if(isPeerStuck(master)) {
-                pool.ban(master);
-                pool.remove(master);
-                logger.info("Master peer {}: banned due to stuck timeout exceeding", master.getPeerIdShort());
-                master = null;
-            }
-        }
-
-        if (master == null) {
-            logger.trace("{} is in progress, starting master peer", state);
-            master = pool.getBest();
-            if (master == null) {
-                return;
-            }
-            startMaster(master);
-        }
-    }
-
-    private boolean isPeerStuck(EthHandler peer) {
-        EthHandler.EthStats stats = peer.getStats();
-
-        return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
-                || stats.getEmptyResponsesCount() > 0;
-    }
-
-    private void processBlockRetrieving() {
-        if (queue.isHashesEmpty()) {
-            changeState(SyncState.IDLE);
-            return;
-        }
-
-        pool.changeState(SyncState.BLOCK_RETRIEVING, new Functional.Predicate<EthHandler>() {
-            @Override
-            public boolean test(EthHandler peer) {
-                return peer.isIdle();
-            }
-        });
-    }
-
-    private void processIdle() {
-        if (!queue.isHashesEmpty()) {
-            changeState(SyncState.BLOCK_RETRIEVING);
+    private void maintainState() {
+        synchronized (stateMutex) {
+            currentState.doMaintain();
         }
     }
 }
