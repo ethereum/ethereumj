@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -8,12 +8,10 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import static org.ethereum.net.eth.EthMessageCodes.STATUS;
-
 /**
  * Wrapper around an Ethereum Status message on the network
  *
- * @see org.ethereum.net.eth.EthMessageCodes#STATUS
+ * @see EthMessageCodes#STATUS
  */
 public class StatusMessage extends EthMessage {
 
@@ -115,7 +113,7 @@ public class StatusMessage extends EthMessage {
 
     @Override
     public EthMessageCodes getCommand() {
-        return STATUS;
+        return EthMessageCodes.STATUS;
     }
 
 

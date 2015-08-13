@@ -1,16 +1,12 @@
 package org.ethereum.net.swarm;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.swarm.bzz.BzzStatusMessage;
 import org.ethereum.net.swarm.bzz.PeerAddress;
-import org.ethereum.util.RLP;
-import org.ethereum.util.RLPList;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Collections;
 
 /**
  * Created by Admin on 25.06.2015.

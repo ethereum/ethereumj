@@ -1,10 +1,11 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.sync;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
+import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -354,11 +355,9 @@ public class SyncManager {
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                pool.logActive();
-                pool.logBans();
-                logger.info("\n");
-                logger.info("State {}", state);
-                logger.info("\n");
+                pool.logActivePeers();
+                pool.logBannedPeers();
+                logger.info("\nState {}\n", state);
             }
         }, 0, 30, TimeUnit.SECONDS);
     }
@@ -442,9 +441,8 @@ public class SyncManager {
         }
 
         if (master != null) {
-            // if master is stuck ban it
-            if(master.stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
-                    || master.stats.getEmptyResponsesCount() > 0) {
+            // if master is stuck ban it and try to start a new one
+            if(isPeerStuck(master)) {
                 pool.ban(master);
                 pool.remove(master);
                 logger.info("Master peer {}: banned due to stuck timeout exceeding", master.getPeerIdShort());
@@ -460,6 +458,13 @@ public class SyncManager {
             }
             startMaster(master);
         }
+    }
+
+    private boolean isPeerStuck(EthHandler peer) {
+        EthHandler.EthStats stats = peer.getStats();
+
+        return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
+                || stats.getEmptyResponsesCount() > 0;
     }
 
     private void processBlockRetrieving() {

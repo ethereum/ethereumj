@@ -1,7 +1,7 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;

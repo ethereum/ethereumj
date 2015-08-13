@@ -10,7 +10,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
 import org.ethereum.core.Blockchain;
-import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.eth.sync.SyncManager;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
@@ -20,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.*;
 
 import static java.lang.Thread.sleep;

@@ -1,9 +1,8 @@
 package org.ethereum.net.message;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.GetTransactionsMessage;
+import org.ethereum.net.eth.message.GetTransactionsMessage;
 import org.ethereum.net.p2p.*;
 import org.spongycastle.util.encoders.Hex;
 

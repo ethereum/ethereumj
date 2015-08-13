@@ -1,13 +1,13 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.sync;
 
 import org.ethereum.facade.Ethereum;
+import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -209,7 +209,7 @@ public class PeersPool implements Iterable<EthHandler> {
         }
     }
 
-    void logActive() {
+    void logActivePeers() {
         if (peers.size() > 0) {
             logger.info("\n");
             logger.info("Active peers");
@@ -220,7 +220,7 @@ public class PeersPool implements Iterable<EthHandler> {
         }
     }
 
-    void logBans() {
+    void logBannedPeers() {
         synchronized (bans) {
             if (bans.size() > 0) {
                 logger.info("\n");

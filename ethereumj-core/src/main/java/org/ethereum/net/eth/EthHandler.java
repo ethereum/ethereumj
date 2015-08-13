@@ -10,6 +10,8 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.MessageQueue;
+import org.ethereum.net.eth.message.*;
+import org.ethereum.net.eth.sync.SyncState;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
@@ -494,7 +496,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         this.channel = channel;
     }
 
-    synchronized void changeState(SyncState newState) {
+    public synchronized void changeState(SyncState newState) {
         if (syncState == newState) {
             return;
         }
@@ -533,6 +535,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         return peerId;
     }
 
+    public String getPeerIdShort() {
+        return Utils.getNodeIdShort(peerId);
+    }
+
     public boolean isHashRetrievingDone() {
         return syncState == SyncState.DONE_HASH_RETRIEVING;
     }
@@ -561,7 +567,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         returnHashes();
     }
 
-    void logSyncStats() {
+    public void logSyncStats() {
         if(!loggerSync.isInfoEnabled()) {
             return;
         }
@@ -614,12 +620,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         return maxHashesAsk;
     }
 
-    String getPeerIdShort() {
-        return Utils.getNodeIdShort(peerId);
-    }
-
     public void prohibitTransactionProcessing() {
         this.processTransactions = false;
+    }
+
+    public EthStats getStats() {
+        return stats;
     }
 
     enum EthState {
@@ -628,7 +634,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         STATUS_FAILED
     }
 
-    static class EthStats {
+    public static class EthStats {
         private long updatedAt;
         private long blocksCount;
         private long hashesCount;
@@ -662,15 +668,15 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             updatedAt = System.currentTimeMillis();
         }
 
-        long getBlocksCount() {
+        public long getBlocksCount() {
             return blocksCount;
         }
 
-        long getHashesCount() {
+        public long getHashesCount() {
             return hashesCount;
         }
 
-        long millisSinceLastUpdate() {
+        public long millisSinceLastUpdate() {
             return System.currentTimeMillis() - updatedAt;
         }
 

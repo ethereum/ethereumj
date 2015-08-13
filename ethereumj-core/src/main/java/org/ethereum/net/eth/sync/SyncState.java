@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.sync;
 
 /**
  * @author Mikhail Kalinin

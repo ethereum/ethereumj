@@ -3,9 +3,9 @@ package org.ethereum.net;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
-import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.eth.GetTransactionsMessage;
-import org.ethereum.net.eth.TransactionsMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.GetTransactionsMessage;
+import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
 
 import org.junit.Ignore;

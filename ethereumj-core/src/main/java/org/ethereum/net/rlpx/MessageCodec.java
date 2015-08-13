@@ -9,7 +9,7 @@ import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.p2p.DisconnectMessage;

@@ -4,7 +4,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 
-import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.eth.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;

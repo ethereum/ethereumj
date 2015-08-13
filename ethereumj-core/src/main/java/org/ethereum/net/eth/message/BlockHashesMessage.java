@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
@@ -8,12 +8,10 @@ import org.ethereum.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.net.eth.EthMessageCodes.BLOCK_HASHES;
-
 /**
  * Wrapper around an Ethereum BlockHashes message on the network
  *
- * @see org.ethereum.net.eth.EthMessageCodes#BLOCK_HASHES
+ * @see EthMessageCodes#BLOCK_HASHES
  */
 public class BlockHashesMessage extends EthMessage {
 
@@ -44,7 +42,7 @@ public class BlockHashesMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        encodedElements.add(RLP.encodeByte(BLOCK_HASHES.asByte()));
+        encodedElements.add(RLP.encodeByte(EthMessageCodes.BLOCK_HASHES.asByte()));
         for (byte[] blockHash : blockHashes)
             encodedElements.add(RLP.encodeElement(blockHash));
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);

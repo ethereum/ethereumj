@@ -2,15 +2,12 @@ package org.ethereum.net.wire;
 
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
-import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.p2p.P2pHandler;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.rlpx.MessageCodesResolver;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageCodes;
 
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 

@@ -8,7 +8,7 @@ import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.eth.sync.SyncManager;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;

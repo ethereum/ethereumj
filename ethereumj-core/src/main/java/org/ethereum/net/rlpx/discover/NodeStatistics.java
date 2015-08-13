@@ -1,8 +1,7 @@
 package org.ethereum.net.rlpx.discover;
 
-import org.ethereum.net.eth.StatusMessage;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Statter;
 import org.ethereum.util.ByteUtil;

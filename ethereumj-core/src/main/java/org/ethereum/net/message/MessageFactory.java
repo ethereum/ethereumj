@@ -1,6 +1,6 @@
 package org.ethereum.net.message;
 
-import org.ethereum.net.eth.*;
+import org.ethereum.net.eth.message.*;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
