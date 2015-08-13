@@ -44,21 +44,14 @@ public class SyncManager {
     private SyncState state = SyncState.IDLE;
 
     /**
-     * master peer parameters
+     * block which gap recovery is running for
      */
-    private int maxHashesAsk = CONFIG.maxHashesAsk();
-    private byte[] bestHash;
+    private BlockWrapper gapBlock;
 
     /**
      * true if sync done event was triggered
      */
     private boolean syncDone = false;
-
-    /**
-     * indicates if main hash retrieving was done before
-     * required for managing master peer behaviour
-     */
-    private boolean mainHashRetrievingPassed = false;
 
     private BigInteger lowerUsefulDifficulty = BigInteger.ZERO;
     private BigInteger highestKnownDifficulty = BigInteger.ZERO;
@@ -94,11 +87,7 @@ public class SyncManager {
 
         updateDifficulties();
 
-        SyncState initial = initialState();
-        if (initial == SyncState.BLOCK_RETRIEVING) {
-            mainHashRetrievingPassed = true;
-        }
-        changeState(initial);
+        changeState(initialState());
 
         addBestKnownNodeListener();
 
@@ -170,26 +159,20 @@ public class SyncManager {
     }
 
     public void tryGapRecovery(BlockWrapper wrapper) {
-        boolean allowed = isGapRecoveryAllowed(wrapper);
-
-        // in any case we should reset the timeout
-        // to try again only after some time passed
-        wrapper.resetImportFail();
-
-        if (!allowed) return;
-
-        Block bestBlock = blockchain.getBestBlock();
-        long gap = wrapper.getNumber() - bestBlock.getNumber();
+        if (!isGapRecoveryAllowed(wrapper)) {
+            return;
+        }
 
         if (logger.isDebugEnabled()) logger.debug(
                 "Recovering gap: best.number [{}] vs block.number [{}]",
-                bestBlock.getNumber(),
+                blockchain.getBestBlock().getNumber(),
                 wrapper.getNumber()
         );
 
+        gapBlock = wrapper;
+        int gap = gapSize(wrapper);
+
         if (gap >= LARGE_GAP_SIZE) {
-            maxHashesAsk = gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : (int) gap;
-            bestHash = wrapper.getHash();
             changeState(SyncState.HASH_RETRIEVING);
         } else {
             logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
@@ -228,6 +211,11 @@ public class SyncManager {
         return syncDone;
     }
 
+    private int gapSize(BlockWrapper block) {
+        Block bestBlock = blockchain.getBestBlock();
+        return (int) (block.getNumber() - bestBlock.getNumber());
+    }
+
     private void onSyncDone() {
         channelManager.onSyncDone();
         ethereumListener.onSyncDone();
@@ -237,6 +225,12 @@ public class SyncManager {
     private boolean isGapRecoveryAllowed(BlockWrapper block) {
         // hashes are not downloaded yet, recovery doesn't make sense at all
         if (isHashRetrieving()) {
+            return false;
+        }
+
+        // gap for this block is being recovered
+        if (block.equals(gapBlock) && !isIdle()) {
+            logger.trace("Gap recovery is already in progress for block.number [{}]", gapBlock.getNumber());
             return false;
         }
 
@@ -293,20 +287,25 @@ public class SyncManager {
 
     private void startMaster(EthHandler master) {
         pool.changeState(SyncState.IDLE);
-        if (!mainHashRetrievingPassed) {
-            bestHash = master.getBestHash();
+
+        if (gapBlock != null) {
+            int gap = gapSize(gapBlock);
+            master.setMaxHashesAsk(gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : gap);
+            queue.setBestHash(gapBlock.getHash());
+        } else {
+            master.setMaxHashesAsk(CONFIG.maxHashesAsk());
             queue.clearHashes();
+            queue.setBestHash(master.getBestHash());
         }
-        queue.setBestHash(bestHash);
-        master.setMaxHashesAsk(maxHashesAsk);
+
         master.changeState(SyncState.HASH_RETRIEVING);
 
-        logger.info(
+        if (logger.isInfoEnabled()) logger.info(
                 "Peer {}: {} initiated, best known hash [{}], askLimit [{}]",
                 master.getPeerIdShort(),
                 state,
-                Hex.toHexString(bestHash),
-                maxHashesAsk
+                Hex.toHexString(queue.getBestHash()),
+                master.getMaxHashesAsk()
         );
     }
 
@@ -431,7 +430,6 @@ public class SyncManager {
         for (EthHandler peer : pool) {
             // if hash retrieving is done all we need is just change state and quit
             if (peer.isHashRetrievingDone()) {
-                mainHashRetrievingPassed = true;
                 changeState(SyncState.BLOCK_RETRIEVING);
                 return;
             }

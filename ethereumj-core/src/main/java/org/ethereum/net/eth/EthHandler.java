@@ -606,8 +606,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         return channel.getNodeStatistics().getEthTotalDifficulty();
     }
 
-    void setMaxHashesAsk(int maxHashesAsk) {
+    public void setMaxHashesAsk(int maxHashesAsk) {
         this.maxHashesAsk = maxHashesAsk;
+    }
+
+    public int getMaxHashesAsk() {
+        return maxHashesAsk;
     }
 
     String getPeerIdShort() {

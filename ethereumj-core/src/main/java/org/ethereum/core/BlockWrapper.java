@@ -2,6 +2,8 @@ package org.ethereum.core;
 
 import java.math.BigInteger;
 
+import static org.ethereum.util.TimeUtils.secondsToMillis;
+
 /**
  * <p> Wraps {@link Block} </p>
  * Adds some additional data required by core during blocks processing
@@ -11,7 +13,7 @@ import java.math.BigInteger;
  */
 public class BlockWrapper {
 
-    private static final long SOLID_BLOCK_DURATION_THRESHOLD = 1 * 60 * 1000; // 1 minute
+    private static final long SOLID_BLOCK_DURATION_THRESHOLD = secondsToMillis(60);
 
     private Block block;
     private long importFailedAt = 0;
@@ -134,5 +136,15 @@ public class BlockWrapper {
         this.importFailedAt = new BigInteger(importFailedAtBytes).longValue();
         this.receivedAt = new BigInteger(receivedAtBytes).longValue();
         this.block = new Block(blockBytes);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BlockWrapper wrapper = (BlockWrapper) o;
+
+        return block.isEqual(wrapper.block);
     }
 }
