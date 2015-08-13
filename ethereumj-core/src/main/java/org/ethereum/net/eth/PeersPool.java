@@ -217,7 +217,6 @@ public class PeersPool implements Iterable<EthHandler> {
             for(EthHandler peer : this) {
                 peer.logSyncStats();
             }
-            logger.info("\n");
         }
     }
 
@@ -234,7 +233,6 @@ public class PeersPool implements Iterable<EthHandler> {
                             millisToMinutes(System.currentTimeMillis() - (e.getValue() - DEFAULT_BAN_TIMEOUT))
                     );
                 }
-                logger.info("\n");
             }
         }
     }

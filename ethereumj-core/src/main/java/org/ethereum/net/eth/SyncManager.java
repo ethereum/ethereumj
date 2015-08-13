@@ -357,6 +357,7 @@ public class SyncManager {
             public void run() {
                 pool.logActive();
                 pool.logBans();
+                logger.info("\n");
                 logger.info("State {}", state);
                 logger.info("\n");
             }
