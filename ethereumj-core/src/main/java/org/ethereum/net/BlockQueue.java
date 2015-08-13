@@ -61,8 +61,6 @@ public class BlockQueue {
 
     private byte[] bestHash;
 
-    private Timer timer = new Timer("BlockQueueTimer");
-
     @Autowired
     Blockchain blockchain;
 
@@ -305,15 +303,6 @@ public class BlockQueue {
     public void clear() {
         this.hashStore.clear();
         this.blockQueue.clear();
-    }
-
-    /**
-     * Cancel and purge the timer-thread that
-     * processes the blocks in the queue
-     */
-    public void close() {
-        timer.cancel();
-        timer.purge();
     }
 
     public HashStore getHashStore() {

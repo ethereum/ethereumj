@@ -665,12 +665,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return garbage;
     }
 
-
-    @Override
-    public BlockQueue getQueue() {
-        return blockQueue;
-    }
-
     @Override
     public void setBestBlock(Block block) {
         bestBlock = block;
@@ -683,7 +677,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public void close() {
-        blockQueue.close();
     }
 
     @Override

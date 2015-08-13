@@ -25,8 +25,6 @@ public interface Blockchain {
 
     public Block getBestBlock();
 
-    public BlockQueue getQueue();
-
     public boolean hasParentOnTheChain(Block block);
 
     void close();
