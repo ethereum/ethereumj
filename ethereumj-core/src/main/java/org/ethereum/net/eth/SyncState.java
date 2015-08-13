@@ -6,18 +6,12 @@ package org.ethereum.net.eth;
  */
 public enum SyncState {
 
-    // Sync manager
-    INIT,
-    DONE_SYNC,
-    GAP_RECOVERY,
-    DONE_GAP_RECOVERY,
-
     // Common
+    IDLE,
     HASH_RETRIEVING,
     BLOCK_RETRIEVING,
 
     // Peer
-    IDLE,
     DONE_HASH_RETRIEVING,
-    NO_MORE_BLOCKS
+    BLOCKS_LACK
 }

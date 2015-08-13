@@ -73,19 +73,20 @@ public class PeersPool implements Iterable<EthHandler> {
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
     }
 
-    public void remove(Functional.Predicate<EthHandler> filter) {
+    public void remove(EthHandler peer) {
         synchronized (peers) {
-            for (EthHandler peer : peers) {
-                if (filter.test(peer)) {
-                    peer.changeState(SyncState.IDLE);
-                    peers.remove(peer);
-                }
-            }
+            peers.remove(peer);
+        }
+    }
+
+    public void removeAll(Collection<EthHandler> removed) {
+        synchronized (peers) {
+            peers.removeAll(removed);
         }
     }
 
     @Nullable
-    public EthHandler findBest() {
+    public EthHandler getBest() {
         synchronized (peers) {
             if (peers.isEmpty()) {
                 return null;
@@ -97,18 +98,6 @@ public class PeersPool implements Iterable<EthHandler> {
                 }
             });
         }
-    }
-
-    @Nullable
-    public EthHandler findOne(Functional.Predicate<EthHandler> filter) {
-        synchronized (peers) {
-            for (EthHandler peer : peers) {
-                if (filter.test(peer)) {
-                    return peer;
-                }
-            }
-        }
-        return null;
     }
 
     public void onDisconnect(EthHandler peer) {
@@ -141,20 +130,19 @@ public class PeersPool implements Iterable<EthHandler> {
     public void connect(Node node) {
         if (logger.isTraceEnabled()) logger.trace(
                 "Peer {}: initiate connection",
-                Utils.getNodeIdShort(Hex.toHexString(node.getId()))
+                node.getHexIdShort()
         );
-        final String nodeId = Hex.toHexString(node.getId());
-        if (isInUse(nodeId)) {
+        if (isInUse(node.getHexId())) {
             if (logger.isTraceEnabled()) logger.trace(
                     "Peer {}: connection already initiated",
-                    Utils.getNodeIdShort(Hex.toHexString(node.getId()))
+                    node.getHexIdShort()
             );
             return;
         }
 
         synchronized (pendingConnections) {
             ethereum.connect(node);
-            pendingConnections.put(nodeId, timeAfterMillis(CONNECTION_TIMEOUT));
+            pendingConnections.put(node.getHexId(), timeAfterMillis(CONNECTION_TIMEOUT));
         }
     }
 
@@ -169,14 +157,11 @@ public class PeersPool implements Iterable<EthHandler> {
     }
 
     public Set<String> nodesInUse() {
-        Set<String> ids;
+        Set<String> ids = new HashSet<>();
         synchronized (peers) {
-            ids = CollectionUtils.collectSet(peers, new Functional.Function<EthHandler, String>() {
-                @Override
-                public String apply(EthHandler peer) {
-                    return peer.getPeerId();
-                }
-            });
+            for (EthHandler peer : peers) {
+                ids.add(peer.getPeerId());
+            }
         }
         synchronized (bans) {
             ids.addAll(bans.keySet());

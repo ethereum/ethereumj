@@ -72,6 +72,10 @@ public class ChannelManager {
 
     private void processUseful(Channel peer) {
         if(peer.ethHandler.hasStatusSucceeded()) {
+            // prohibit transactions processing until main sync is done
+            if (!syncManager.isSyncDone()) {
+                peer.ethHandler.prohibitTransactionProcessing();
+            }
             syncManager.addPeer(peer.ethHandler);
             activePeers.add(peer);
         }
@@ -92,5 +96,11 @@ public class ChannelManager {
         syncManager.onDisconnect(channel.ethHandler);
         activePeers.remove(channel);
         newPeers.remove(channel);
+    }
+
+    public void onSyncDone() {
+        for (Channel channel : activePeers) {
+            channel.ethHandler.onSyncDone();
+        }
     }
 }

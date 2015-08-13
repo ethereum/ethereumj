@@ -1,7 +1,5 @@
 package org.ethereum.util;
 
-import java.util.concurrent.TimeUnit;
-
 /**
  * @author Mikhail Kalinin
  * @since 10.08.2015
