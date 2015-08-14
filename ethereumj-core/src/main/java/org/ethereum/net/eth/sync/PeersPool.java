@@ -3,7 +3,6 @@ package org.ethereum.net.eth.sync;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.rlpx.Node;
-import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -17,6 +16,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.ethereum.net.eth.sync.SyncStateName.*;
 import static org.ethereum.util.TimeUtils.*;
 
 /**
@@ -41,7 +41,8 @@ public class PeersPool implements Iterable<EthHandler> {
     private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(30);
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
 
-    private final List<EthHandler> peers = new ArrayList<>();
+    private final Set<EthHandler> activePeers = new HashSet<>();
+    private final Set<EthHandler> bannedPeers = new HashSet<>();
     private final Map<String, Integer> disconnectHits = new HashMap<>();
     private final Map<String, Long> bans = new HashMap<>();
     private final Map<String, Long> pendingConnections = new HashMap<>();
@@ -63,8 +64,8 @@ public class PeersPool implements Iterable<EthHandler> {
     }
 
     public void add(EthHandler peer) {
-        synchronized (peers) {
-            peers.add(peer);
+        synchronized (activePeers) {
+            activePeers.add(peer);
         }
         synchronized (pendingConnections) {
             pendingConnections.remove(peer.getPeerId());
@@ -74,24 +75,24 @@ public class PeersPool implements Iterable<EthHandler> {
     }
 
     public void remove(EthHandler peer) {
-        synchronized (peers) {
-            peers.remove(peer);
+        synchronized (activePeers) {
+            activePeers.remove(peer);
         }
     }
 
     public void removeAll(Collection<EthHandler> removed) {
-        synchronized (peers) {
-            peers.removeAll(removed);
+        synchronized (activePeers) {
+            activePeers.removeAll(removed);
         }
     }
 
     @Nullable
     public EthHandler getBest() {
-        synchronized (peers) {
-            if (peers.isEmpty()) {
+        synchronized (activePeers) {
+            if (activePeers.isEmpty()) {
                 return null;
             }
-            return Collections.max(peers, new Comparator<EthHandler>() {
+            return Collections.max(activePeers, new Comparator<EthHandler>() {
                 @Override
                 public int compare(EthHandler p1, EthHandler p2) {
                     return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
@@ -106,10 +107,11 @@ public class PeersPool implements Iterable<EthHandler> {
                 peer.getPeerIdShort()
         );
 
+        peer.changeState(IDLE);
         peer.onDisconnect();
 
-        synchronized (peers) {
-            peers.remove(peer);
+        synchronized (activePeers) {
+            activePeers.remove(peer);
         }
 
         synchronized (disconnectHits) {
@@ -147,19 +149,24 @@ public class PeersPool implements Iterable<EthHandler> {
     }
 
     public void ban(EthHandler peer) {
-        synchronized (bans) {
-            banInner(peer, DEFAULT_BAN_TIMEOUT);
+        synchronized (activePeers) {
+            if (activePeers.contains(peer)) {
+                activePeers.remove(peer);
+                bannedPeers.add(peer);
+            }
         }
-    }
 
-    private void banInner(EthHandler peer, long millis) {
-        bans.put(peer.getPeerId(), timeAfterMillis(millis));
+        synchronized (bans) {
+            bans.put(peer.getPeerId(), timeAfterMillis(DEFAULT_BAN_TIMEOUT));
+        }
+
+        peer.changeState(IDLE);
     }
 
     public Set<String> nodesInUse() {
         Set<String> ids = new HashSet<>();
-        synchronized (peers) {
-            for (EthHandler peer : peers) {
+        synchronized (activePeers) {
+            for (EthHandler peer : activePeers) {
                 ids.add(peer.getPeerId());
             }
         }
@@ -177,16 +184,16 @@ public class PeersPool implements Iterable<EthHandler> {
     }
 
     public void changeState(SyncStateName newState) {
-        synchronized (peers) {
-            for (EthHandler peer : peers) {
+        synchronized (activePeers) {
+            for (EthHandler peer : activePeers) {
                 peer.changeState(newState);
             }
         }
     }
 
     public void changeState(SyncStateName newState, Functional.Predicate<EthHandler> filter) {
-        synchronized (peers) {
-            for (EthHandler peer : peers) {
+        synchronized (activePeers) {
+            for (EthHandler peer : activePeers) {
                 if (filter.test(peer)) {
                     peer.changeState(newState);
                 }
@@ -195,22 +202,22 @@ public class PeersPool implements Iterable<EthHandler> {
     }
 
     public boolean isEmpty() {
-        return peers.isEmpty();
+        return activePeers.isEmpty();
     }
 
     public int activeCount() {
-        return peers.size();
+        return activePeers.size();
     }
 
     @Override
     public Iterator<EthHandler> iterator() {
-        synchronized (peers) {
-            return new ArrayList<>(peers).iterator();
+        synchronized (activePeers) {
+            return new ArrayList<>(activePeers).iterator();
         }
     }
 
     void logActivePeers() {
-        if (peers.size() > 0) {
+        if (activePeers.size() > 0) {
             logger.info("\n");
             logger.info("Active peers");
             logger.info("============");
@@ -239,26 +246,36 @@ public class PeersPool implements Iterable<EthHandler> {
 
     private void releaseBans() {
         synchronized (bans) {
-            removeByTimeout(bans);
+            Set<String> released = getTimeoutExceeded(bans);
+
+            synchronized (activePeers) {
+                for (EthHandler peer : bannedPeers) {
+                    if (released.contains(peer.getPeerId())) {
+                        activePeers.add(peer);
+                    }
+                }
+                bannedPeers.removeAll(activePeers);
+            }
+
+            bans.keySet().removeAll(released);
         }
     }
 
     private void processConnections() {
         synchronized (pendingConnections) {
-            removeByTimeout(pendingConnections);
+            Set<String> exceeded = getTimeoutExceeded(pendingConnections);
+            pendingConnections.keySet().removeAll(exceeded);
         }
     }
 
-    private void removeByTimeout(Map<?, Long> map) {
+    private Set<String> getTimeoutExceeded(Map<String, Long> map) {
+        Set<String> exceeded = new HashSet<>();
         final Long now = System.currentTimeMillis();
-        Set<Long> released = CollectionUtils.selectSet(map.values(), new Functional.Predicate<Long>() {
-            @Override
-            public boolean test(Long timestamp) {
-                return now >= timestamp;
+        for (Map.Entry<String, Long> e : map.entrySet()) {
+            if (now >= e.getValue()) {
+                exceeded.add(e.getKey());
             }
-        });
-        if(!released.isEmpty()) {
-            map.values().removeAll(released);
         }
+        return exceeded;
     }
 }
