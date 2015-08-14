@@ -41,14 +41,14 @@ public class SyncManager {
 
     private static final long WORKER_TIMEOUT = secondsToMillis(3);
     private static final long MASTER_STUCK_TIMEOUT = secondsToMillis(60);
-    private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(10);
+    private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(3);
 
     private static final long LARGE_GAP_SIZE = 5;
 
     @Resource
     @Qualifier("syncStates")
     private Map<SyncStateName, SyncState> syncStates;
-    private SyncState currentState;
+    private SyncState state;
     private final Object stateMutex = new Object();
 
     /**
@@ -94,7 +94,7 @@ public class SyncManager {
         logger.info("Sync Manager: ON");
 
         // set IDLE state at the beginning
-        currentState = syncStates.get(IDLE);
+        state = syncStates.get(IDLE);
 
         updateDifficulties();
 
@@ -145,7 +145,7 @@ public class SyncManager {
             return;
         }
 
-        if (currentState.is(HASH_RETRIEVING) && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
+        if (state.is(HASH_RETRIEVING) && !isIn20PercentRange(highestKnownDifficulty, peerTotalDifficulty)) {
             if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: its chain is better than previously known: {} vs {}, rotate master peer",
                     Utils.getNodeIdShort(peer.getPeerId()),
@@ -227,12 +227,12 @@ public class SyncManager {
 
     private boolean isGapRecoveryAllowed(BlockWrapper block) {
         // hashes are not downloaded yet, recovery doesn't make sense at all
-        if (currentState.is(HASH_RETRIEVING)) {
+        if (state.is(HASH_RETRIEVING)) {
             return false;
         }
 
         // gap for this block is being recovered
-        if (block.equals(gapBlock) && !currentState.is(IDLE)) {
+        if (block.equals(gapBlock) && !state.is(IDLE)) {
             logger.trace("Gap recovery is already in progress for block.number [{}]", gapBlock.getNumber());
             return false;
         }
@@ -249,22 +249,22 @@ public class SyncManager {
         if (!block.isNewBlock()) {
             return block.timeSinceFail() > GAP_RECOVERY_TIMEOUT;
         } else {
-            return currentState.is(IDLE);
+            return state.is(IDLE);
         }
     }
 
     void changeState(SyncStateName newStateName) {
         SyncState newState = syncStates.get(newStateName);
 
-        if (currentState == newState) {
+        if (state == newState) {
             return;
         }
 
-        logger.info("Changing state from {} to {}", currentState, newState);
+        logger.info("Changing state from {} to {}", state, newState);
 
         synchronized (stateMutex) {
             newState.doOnTransition();
-            currentState = newState;
+            state = newState;
         }
     }
 
@@ -293,7 +293,7 @@ public class SyncManager {
         if (logger.isInfoEnabled()) logger.info(
                 "Peer {}: {} initiated, best known hash [{}], askLimit [{}]",
                 master.getPeerIdShort(),
-                currentState,
+                state,
                 Hex.toHexString(queue.getBestHash()),
                 master.getMaxHashesAsk()
         );
@@ -363,7 +363,7 @@ public class SyncManager {
             public void run() {
                 pool.logActivePeers();
                 pool.logBannedPeers();
-                logger.info("\nState {}\n", currentState);
+                logger.info("\nState {}\n", state);
             }
         }, 0, 30, TimeUnit.SECONDS);
     }
@@ -419,7 +419,7 @@ public class SyncManager {
 
     private void maintainState() {
         synchronized (stateMutex) {
-            currentState.doMaintain();
+            state.doMaintain();
         }
     }
 }
