@@ -4,7 +4,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.eth.message.EthMessageCodes;
-import org.ethereum.net.eth.message.GetTransactionsMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.util.ByteUtil;
 
@@ -23,18 +22,6 @@ import java.util.Set;
 import static org.junit.Assert.*;
 
 public class TransactionsMessageTest {
-
-    /* GET_TRANSACTIONS */
-
-    @Test  /* GetTransactions message 1 */
-    public void testGetTransactions() {
-
-        GetTransactionsMessage getTransactionsMessage = new GetTransactionsMessage();
-        System.out.println(getTransactionsMessage);
-
-        assertEquals(EthMessageCodes.GET_TRANSACTIONS, getTransactionsMessage.getCommand());
-        assertEquals(TransactionsMessage.class, getTransactionsMessage.getAnswerMessage());
-    }
 
     /* TRANSACTIONS */
 

@@ -49,7 +49,7 @@ public class AdaptiveMessageIdsTest {
         assertEquals(8, EthMessageCodes.values().length);
 
         assertEquals(0, EthMessageCodes.STATUS.asByte());
-        assertEquals(1, EthMessageCodes.GET_TRANSACTIONS.asByte());
+        assertEquals(1, EthMessageCodes.NEW_BLOCK_HASHES.asByte());
         assertEquals(2, EthMessageCodes.TRANSACTIONS.asByte());
         assertEquals(3, EthMessageCodes.GET_BLOCK_HASHES.asByte());
         assertEquals(4, EthMessageCodes.BLOCK_HASHES.asByte());
@@ -60,7 +60,7 @@ public class AdaptiveMessageIdsTest {
         messageCodesResolver.setEthOffset(0x10);
 
         assertEquals(0x10 + 0, messageCodesResolver.withEthOffset(EthMessageCodes.STATUS.asByte()));
-        assertEquals(0x10 + 1, messageCodesResolver.withEthOffset(EthMessageCodes.GET_TRANSACTIONS.asByte()));
+        assertEquals(0x10 + 1, messageCodesResolver.withEthOffset(EthMessageCodes.NEW_BLOCK_HASHES.asByte()));
         assertEquals(0x10 + 2, messageCodesResolver.withEthOffset(EthMessageCodes.TRANSACTIONS.asByte()));
         assertEquals(0x10 + 3, messageCodesResolver.withEthOffset(EthMessageCodes.GET_BLOCK_HASHES.asByte()));
         assertEquals(0x10 + 4, messageCodesResolver.withEthOffset(EthMessageCodes.BLOCK_HASHES.asByte()));
@@ -99,7 +99,7 @@ public class AdaptiveMessageIdsTest {
         messageCodesResolver.init(capabilities);
 
         assertEquals(0x10 + 0, messageCodesResolver.withEthOffset(EthMessageCodes.STATUS.asByte()));
-        assertEquals(0x10 + 1, messageCodesResolver.withEthOffset(EthMessageCodes.GET_TRANSACTIONS.asByte()));
+        assertEquals(0x10 + 1, messageCodesResolver.withEthOffset(EthMessageCodes.NEW_BLOCK_HASHES.asByte()));
         assertEquals(0x10 + 2, messageCodesResolver.withEthOffset(EthMessageCodes.TRANSACTIONS.asByte()));
         assertEquals(0x10 + 3, messageCodesResolver.withEthOffset(EthMessageCodes.GET_BLOCK_HASHES.asByte()));
         assertEquals(0x10 + 4, messageCodesResolver.withEthOffset(EthMessageCodes.BLOCK_HASHES.asByte()));
@@ -124,7 +124,7 @@ public class AdaptiveMessageIdsTest {
         messageCodesResolver.init(capabilities);
 
         assertEquals(0x10 + 0, messageCodesResolver.withEthOffset(EthMessageCodes.STATUS.asByte()));
-        assertEquals(0x10 + 1, messageCodesResolver.withEthOffset(EthMessageCodes.GET_TRANSACTIONS.asByte()));
+        assertEquals(0x10 + 1, messageCodesResolver.withEthOffset(EthMessageCodes.NEW_BLOCK_HASHES.asByte()));
         assertEquals(0x10 + 2, messageCodesResolver.withEthOffset(EthMessageCodes.TRANSACTIONS.asByte()));
         assertEquals(0x10 + 3, messageCodesResolver.withEthOffset(EthMessageCodes.GET_BLOCK_HASHES.asByte()));
         assertEquals(0x10 + 4, messageCodesResolver.withEthOffset(EthMessageCodes.BLOCK_HASHES.asByte()));

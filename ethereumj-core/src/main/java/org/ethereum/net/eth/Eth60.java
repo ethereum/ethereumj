@@ -1,5 +1,7 @@
 package org.ethereum.net.eth;
 
+import org.ethereum.net.eth.message.GetBlockHashesByNumberMessage;
+import org.ethereum.net.eth.message.NewBlockHashesMessage;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -16,10 +18,17 @@ import static org.ethereum.net.eth.EthVersion.*;
 @Scope("prototype")
 public class Eth60 extends Eth {
 
-    public Eth60(EthHandler handler, NodeStatistics nodeStats) {
+    public Eth60() {
         super(V60);
+    }
 
-        this.handler = handler;
-        this.nodeStats = nodeStats;
+    @Override
+    void processNewBlockHashes(NewBlockHashesMessage newBlockHashesMessage) {
+        // not a part of V60
+    }
+
+    @Override
+    void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage getBlockHashesByNumberMessage) {
+        // not a part of V60
     }
 }

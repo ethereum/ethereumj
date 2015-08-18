@@ -23,10 +23,10 @@ public enum EthMessageCodes {
     STATUS(0x00),
 
     /**
-     * [+0x01] Request the peer to send all transactions
-     * currently in the queue.
+     * [+0x01, [hash_0: B_32, hash_1: B_32, ....]: <br>
+     * Gives a series of hashes of NEW blocks (each the child of the next).
      */
-    GET_TRANSACTIONS(0x01),
+    NEW_BLOCK_HASHES(0x01),
 
     /**
      * [+0x02, [nonce, receiving_address, value, ...], ...] <br>
@@ -74,7 +74,15 @@ public enum EthMessageCodes {
      * in the list (following the message ID) is a block in the format described
      * in the main Ethereum specification.
      */
-    NEW_BLOCK(0x07);
+    NEW_BLOCK(0x07),
+
+    /**
+     * [+0x08, [blockNumber: B_32, maxBlocks: P]: <br>
+     * Requests a BlockHashes message of at most maxBlocks entries,
+     * of block hashes from the blockchain, starting at the block
+     * and moving up in block numbers.
+     */
+    GET_BLOCK_HASHES_BY_NUMBER(0x08);
 
 
     static byte OFFSET = 0;

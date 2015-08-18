@@ -246,6 +246,11 @@ public class BlockQueue {
             logger.debug("{} hashes filtered out, {} added", hashes.size() - filtered.size(), filtered.size());
     }
 
+    public void addNewBlockHashes(List<byte[]> hashes) {
+        List<byte[]> filtered = blockQueue.filterExisting(hashes);
+        hashStore.addBatch(filtered);
+    }
+
     public void returnHashes(List<ByteArrayWrapper> hashes) {
 
         if (hashes.isEmpty()) return;

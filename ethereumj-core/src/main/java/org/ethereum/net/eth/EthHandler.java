@@ -11,7 +11,6 @@ import org.ethereum.net.eth.message.*;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +46,7 @@ import static org.ethereum.net.eth.EthVersion.*;
 @Scope("prototype")
 public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
-    private final static Logger loggerNet = LoggerFactory.getLogger("net");
+    private final static Logger logger = LoggerFactory.getLogger("net");
 
     public final static byte VERSION = V60.getCode();
 
@@ -61,9 +60,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     private boolean peerDiscoveryMode = false;
 
     @Autowired
-    private Blockchain blockchain;
-
-    @Autowired
     private WorldManager worldManager;
 
     @Autowired
@@ -75,7 +71,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
         if (EthMessageCodes.inRange(msg.getCommand().asByte()))
-            loggerNet.trace("EthHandler invoke: [{}]", msg.getCommand());
+            logger.trace("EthHandler invoke: [{}]", msg.getCommand());
 
         worldManager.getListener().trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
 
@@ -86,8 +82,9 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 msgQueue.receivedMessage(msg);
                 processStatus((StatusMessage) msg, ctx);
                 break;
-            case GET_TRANSACTIONS:
-                // todo: eventually get_transaction is going deprecated
+            case NEW_BLOCK_HASHES:
+                msgQueue.receivedMessage(msg);
+                eth.processNewBlockHashes((NewBlockHashesMessage) msg);
                 break;
             case TRANSACTIONS:
                 msgQueue.receivedMessage(msg);
@@ -112,6 +109,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
             case NEW_BLOCK:
                 msgQueue.receivedMessage(msg);
                 eth.processNewBlock((NewBlockMessage) msg);
+                break;
+            case GET_BLOCK_HASHES_BY_NUMBER:
+                msgQueue.receivedMessage(msg);
+                eth.processGetBlockHashesByNumber((GetBlockHashesByNumberMessage) msg);
             default:
                 break;
         }
@@ -119,24 +120,21 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        loggerNet.error("Eth handling failed", cause);
-        if (eth != null) {
-            eth.doOnShutdown();
-        }
+        logger.error("Eth handling failed", cause);
+        eth.doOnShutdown();
         ctx.close();
     }
 
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        loggerNet.debug("handlerRemoved: kill timers in EthHandler");
-        if (eth != null) {
-            eth.doOnShutdown();
-        }
+        logger.debug("handlerRemoved: kill timers in EthHandler");
+        eth.doOnShutdown();
     }
 
     public void activate() {
-        loggerNet.info("ETH protocol activated");
+        logger.info("ETH protocol activated");
         worldManager.getListener().trace("ETH protocol activated");
+        eth = Eth.create(fromCode(VERSION), this, channel.getNodeStatistics(), applicationContext);
         sendStatus();
     }
 
@@ -164,17 +162,15 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         try {
             if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
                     || !isSupported(msg.getProtocolVersion())) {
-                loggerNet.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
-                disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
-
-                ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
+                logger.info("Removing EthHandler for {} due to protocol incompatibility", ctx.channel().remoteAddress());
                 state = EthState.STATUS_FAILED;
+                disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
                 ctx.pipeline().remove(this); // Peer is not compatible for the 'eth' sub-protocol
             } else if (msg.getNetworkId() != CONFIG.networkId()) {
                 state = EthState.STATUS_FAILED;
                 disconnect(ReasonCode.NULL_IDENTITY);
             } else if (peerDiscoveryMode) {
-                loggerNet.debug("Peer discovery mode: STATUS received, disconnecting...");
+                logger.debug("Peer discovery mode: STATUS received, disconnecting...");
                 disconnect(ReasonCode.REQUESTED);
                 ctx.close().sync();
                 ctx.disconnect().sync();
@@ -187,7 +183,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 );
                 eth.setBestHash(msg.getBestHash());
                 state = EthState.STATUS_SUCCEEDED;
-                loggerNet.info(
+                logger.info(
                         "Use Eth {} for {}, peerId {}",
                         eth.getVersion(),
                         ctx.channel().remoteAddress(),
@@ -195,17 +191,12 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 );
             }
         } catch (NoSuchElementException e) {
-            loggerNet.debug("EthHandler already removed");
+            logger.debug("EthHandler already removed");
         }
     }
 
     private void sendStatus() {
-        byte protocolVersion = EthHandler.VERSION, networkId = (byte) CONFIG.networkId();
-        BigInteger totalDifficulty = blockchain.getTotalDifficulty();
-        byte[] bestHash = blockchain.getBestBlockHash();
-        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
-                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
-        sendMessage(msg);
+        eth.sendStatus();
     }
 
     /*
@@ -246,9 +237,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     public void changeState(SyncStateName newState) {
-        if (eth != null) {
-            eth.changeState(newState);
-        }
+        eth.changeState(newState);
     }
 
     public void onSyncDone() {
@@ -288,9 +277,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     public void onDisconnect() {
-        if (eth != null) {
-            eth.doOnShutdown();
-        }
+        eth.doOnShutdown();
     }
 
     public void logSyncStats() {

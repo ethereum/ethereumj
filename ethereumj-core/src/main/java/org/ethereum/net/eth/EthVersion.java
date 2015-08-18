@@ -8,7 +8,8 @@ package org.ethereum.net.eth;
  */
 public enum EthVersion {
 
-    V60((byte) 60);
+    V60((byte) 60),
+    V61((byte) 61);
 
     private byte code;
 

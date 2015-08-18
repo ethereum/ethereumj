@@ -10,6 +10,7 @@ import org.ethereum.net.BlockQueue;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -19,6 +20,7 @@ import org.springframework.context.ApplicationContext;
 import java.math.BigInteger;
 import java.util.*;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.sync.SyncStateName.*;
 import static org.ethereum.net.eth.sync.SyncStateName.BLOCK_RETRIEVING;
 import static org.ethereum.util.ByteUtil.wrap;
@@ -33,33 +35,32 @@ import static org.ethereum.util.ByteUtil.wrap;
  */
 public abstract class Eth {
 
-    private final static Logger loggerSync = LoggerFactory.getLogger("sync");
-    private final static Logger loggerNet = LoggerFactory.getLogger("net");
+    private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private static final int BLOCKS_LACK_MAX_HITS = 5;
     private int blocksLackHits = 0;
 
     protected EthVersion version;
 
-    private SyncStateName state = IDLE;
-    private boolean processTransactions = true;
+    protected SyncStateName state = IDLE;
+    protected boolean processTransactions = true;
 
     protected EthHandler handler;
 
     @Autowired
-    private Blockchain blockchain;
+    protected Blockchain blockchain;
 
     @Autowired
-    private BlockQueue queue;
+    protected BlockQueue queue;
 
     @Autowired
-    private WorldManager worldManager;
+    protected WorldManager worldManager;
 
-    private List<ByteArrayWrapper> sentHashes;
-    private Block lastBlock = Genesis.getInstance();
-    private byte[] lastHash = lastBlock.getHash();
-    private byte[] bestHash;
-    private int maxHashesAsk;
+    protected List<ByteArrayWrapper> sentHashes;
+    protected Block lastBlock = Genesis.getInstance();
+    protected byte[] lastHash = lastBlock.getHash();
+    protected byte[] bestHash;
+    protected int maxHashesAsk;
 
     protected SyncStats syncStats = new SyncStats();
     protected NodeStatistics nodeStats;
@@ -77,7 +78,7 @@ public abstract class Eth {
             return;
         }
 
-        loggerSync.trace(
+        logger.trace(
                 "Peer {}: changing state from {} to {}",
                 handler.getPeerIdShort(),
                 state,
@@ -104,11 +105,11 @@ public abstract class Eth {
     }
 
     public void logSyncStats() {
-        if(!loggerSync.isInfoEnabled()) {
+        if(!logger.isInfoEnabled()) {
             return;
         }
         switch (state) {
-            case BLOCK_RETRIEVING: loggerSync.info(
+            case BLOCK_RETRIEVING: logger.info(
                     "Peer {}: [state {}, blocks count {}, last block {}]",
                     handler.getPeerIdShort(),
                     state,
@@ -116,7 +117,7 @@ public abstract class Eth {
                     lastBlock.getNumber()
             );
                 break;
-            case HASH_RETRIEVING: loggerSync.info(
+            case HASH_RETRIEVING: logger.info(
                     "Peer {}: [state {}, hashes count {}, last hash {}]",
                     handler.getPeerIdShort(),
                     state,
@@ -124,7 +125,7 @@ public abstract class Eth {
                     Hex.toHexString(lastHash)
             );
                 break;
-            default: loggerSync.info(
+            default: logger.info(
                     "Peer {}: [state {}]",
                     handler.getPeerIdShort(),
                     state
@@ -141,7 +142,7 @@ public abstract class Eth {
     }
 
     void processBlockHashes(BlockHashesMessage blockHashesMessage) {
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing block hashes, size [{}]",
                 handler.getPeerIdShort(),
                 blockHashesMessage.getBlockHashes().size()
@@ -178,7 +179,7 @@ public abstract class Eth {
 
             if (foundExisting) {
                 changeState(DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
-                loggerSync.trace(
+                logger.trace(
                         "Peer {}: got existing hash [{}]",
                         handler.getPeerIdShort(),
                         Hex.toHexString(foundHash)
@@ -187,7 +188,7 @@ public abstract class Eth {
         }
 
         if (state == DONE_HASH_RETRIEVING) {
-            loggerSync.info(
+            logger.info(
                     "Peer {}: hashes sync completed, [{}] hashes in queue",
                     handler.getPeerIdShort(),
                     queue.getHashStore().size()
@@ -202,7 +203,7 @@ public abstract class Eth {
     }
 
     void processBlocks(BlocksMessage blocksMessage) {
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: process blocks, size [{}]",
                 handler.getPeerIdShort(),
                 blocksMessage.getBlocks().size()
@@ -267,7 +268,7 @@ public abstract class Eth {
         if (newBlock.getNumber() > this.lastBlock.getNumber())
             this.lastBlock = newBlock;
 
-        loggerNet.info("New block received: block.index [{}]", newBlock.getNumber());
+        logger.info("New block received: block.index [{}]", newBlock.getNumber());
 
         nodeStats.setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
         bestHash = newBlock.getHash();
@@ -292,6 +293,19 @@ public abstract class Eth {
         }
     }
 
+    abstract void processNewBlockHashes(NewBlockHashesMessage newBlockHashesMessage);
+
+    abstract void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage getBlockHashesByNumberMessage);
+
+    void sendStatus() {
+        byte protocolVersion = version.getCode(), networkId = (byte) CONFIG.networkId();
+        BigInteger totalDifficulty = blockchain.getTotalDifficulty();
+        byte[] bestHash = blockchain.getBestBlockHash();
+        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
+        handler.sendMessage(msg);
+    }
+
     void sendTransaction(Transaction transaction) {
         Set<Transaction> txs = Collections.singleton(transaction);
         TransactionsMessage msg = new TransactionsMessage(txs);
@@ -305,7 +319,7 @@ public abstract class Eth {
 
     void sendGetBlockHashes() {
         byte[] bestHash = queue.getBestHash();
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get block hashes, bestHash [{}], maxHashesAsk [{}]",
                 handler.getPeerIdShort(),
                 Hex.toHexString(bestHash),
@@ -322,7 +336,7 @@ public abstract class Eth {
         // will return less blocks than requested.
         List<byte[]> hashes = queue.getHashes();
         if (hashes.isEmpty()) {
-            if(loggerSync.isInfoEnabled()) loggerSync.info(
+            if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: no more hashes in queue, idle",
                     handler.getPeerIdShort()
             );
@@ -334,7 +348,7 @@ public abstract class Eth {
         for (byte[] hash : hashes)
             this.sentHashes.add(wrap(hash));
 
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get blocks, hashes.count [{}]",
                 handler.getPeerIdShort(),
                 sentHashes.size()
@@ -342,9 +356,6 @@ public abstract class Eth {
 
         Collections.shuffle(hashes);
         GetBlocksMessage msg = new GetBlocksMessage(hashes);
-
-        if (loggerNet.isTraceEnabled())
-            loggerNet.debug(msg.getDetailedString());
 
         handler.sendMessage(msg);
 
@@ -354,7 +365,7 @@ public abstract class Eth {
     protected void returnHashes() {
         if(sentHashes != null) {
 
-            if(loggerSync.isDebugEnabled()) loggerSync.debug(
+            if(logger.isDebugEnabled()) logger.debug(
                     "Peer {}: return [{}] hashes back to store",
                     handler.getPeerIdShort(),
                     sentHashes.size()
@@ -365,10 +376,18 @@ public abstract class Eth {
         }
     }
 
-    public static Eth create(EthVersion v, EthHandler handler, NodeStatistics statistics, ApplicationContext ctx) {
+    public static Eth create(EthVersion v, EthHandler handler, NodeStatistics nodeStats, ApplicationContext ctx) {
+        Eth eth;
+
         switch (v) {
-            default:    return ctx.getBean(Eth60.class, handler, statistics);
+            case V61:   eth = ctx.getBean(Eth61.class); break;
+            default:    eth = ctx.getBean(Eth60.class);
         }
+
+        eth.setHandler(handler);
+        eth.setNodeStats(nodeStats);
+
+        return eth;
     }
 
     boolean isHashRetrievingDone() {
@@ -389,6 +408,10 @@ public abstract class Eth {
 
     public void setHandler(EthHandler handler) {
         this.handler = handler;
+    }
+
+    public void setNodeStats(NodeStatistics nodeStats) {
+        this.nodeStats = nodeStats;
     }
 
     public BigInteger getTotalDifficulty() {

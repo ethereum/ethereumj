@@ -156,6 +156,25 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return blockStore.getListHashesEndWith(hash, qty);
     }
 
+    @Override
+    public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
+        long bestNumber = bestBlock.getNumber();
+
+        if (blockNumber > bestNumber) {
+            return Collections.emptyList();
+        }
+
+        if (blockNumber + qty - 1 > bestNumber) {
+            qty = (int) (bestNumber - blockNumber + 1);
+        }
+
+        long endNumber = blockNumber + qty - 1;
+
+        Block block = getBlockByNumber(endNumber);
+
+        return blockStore.getListHashesEndWith(block.getHash(), qty);
+    }
+
     private byte[] calcTxTrie(List<Transaction> transactions) {
 
         Trie txsState = new TrieImpl(null);

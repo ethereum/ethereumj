@@ -39,6 +39,8 @@ public interface Blockchain {
 
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty);
 
+    public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty);
+
     TransactionReceipt getTransactionReceiptByHash(byte[] hash);
 
     public Block getBlockByHash(byte[] hash);
