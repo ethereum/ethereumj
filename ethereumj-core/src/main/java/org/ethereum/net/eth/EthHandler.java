@@ -29,7 +29,6 @@ import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.sync.SyncStateName.*;
-import static org.ethereum.net.message.StaticMessages.GET_TRANSACTIONS_MESSAGE;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -86,25 +85,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     final EthStats stats = new EthStats();
 
-    public EthHandler() {
-        this.peerDiscoveryMode = false;
-    }
-
-    public EthHandler(MessageQueue msgQueue, boolean peerDiscoveryMode) {
-        this.peerDiscoveryMode = peerDiscoveryMode;
-        this.msgQueue = msgQueue;
-    }
-
-    public void activate() {
-        loggerNet.info("ETH protocol activated");
-        worldManager.getListener().trace("ETH protocol activated");
-        sendStatus();
-    }
-
-    public void setBlockchain(Blockchain blockchain) {
-        this.blockchain = blockchain;
-    }
-
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
@@ -122,17 +102,10 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
                 break;
             case GET_TRANSACTIONS:
                 // todo: eventually get_transaction is going deprecated
-//                msgQueue.receivedMessage(msg);
-//                sendPendingTransactions();
                 break;
             case TRANSACTIONS:
                 msgQueue.receivedMessage(msg);
                 processTransactions((TransactionsMessage) msg);
-                // List<Transaction> txList = transactionsMessage.getTransactions();
-                // for(Transaction tx : txList)
-                // WorldManager.getInstance().getBlockchain().applyTransaction(null,
-                // tx);
-                // WorldManager.getInstance().getWallet().addTransaction(tx);
                 break;
             case GET_BLOCK_HASHES:
                 msgQueue.receivedMessage(msg);
@@ -158,6 +131,25 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
     }
 
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        loggerNet.error("Eth handling failed", cause);
+        returnHashes();
+        ctx.close();
+    }
+
+    @Override
+    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
+        loggerNet.debug("handlerRemoved: kill timers in EthHandler");
+        returnHashes();
+    }
+
+    public void activate() {
+        loggerNet.info("ETH protocol activated");
+        worldManager.getListener().trace("ETH protocol activated");
+        sendStatus();
+    }
+
     private void processTransactions(TransactionsMessage msg) {
         if(!processTransactions) {
             return;
@@ -172,20 +164,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         }
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        loggerNet.error("Eth handling failed", cause);
-        returnHashes();
-        ctx.close();
-    }
-
-    @Override
-    public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
-        loggerNet.debug("handlerRemoved: kill timers in EthHandler");
-        returnHashes();
-    }
-
-    void disconnect(ReasonCode reason) {
+    private void disconnect(ReasonCode reason) {
         msgQueue.disconnect(reason);
         channel.getNodeStatistics().nodeDisconnectedLocal(reason);
     }
@@ -201,7 +180,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      * @param msg is the StatusMessage
      * @param ctx the ChannelHandlerContext
      */
-    public void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
+    private void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
 
         channel.getNodeStatistics().ethHandshake(msg);
         worldManager.getListener().onEthStatusUpdated(channel.getNode(), msg);
@@ -348,7 +327,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
      *
      * @param newBlockMessage - new block message
      */
-    public void processNewBlock(NewBlockMessage newBlockMessage) {
+    private void processNewBlock(NewBlockMessage newBlockMessage) {
 
         Block newBlock = newBlockMessage.getBlock();
 
@@ -391,10 +370,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         sendMessage(msg);
     }
 
-    private void sendGetTransactions() {
-        sendMessage(GET_TRANSACTIONS_MESSAGE);
-    }
-
     private void sendGetBlockHashes() {
         byte[] bestHash = queue.getBestHash();
         if(loggerSync.isTraceEnabled()) loggerSync.trace(
@@ -408,7 +383,7 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
     }
 
     // Parallel download blocks based on hashQueue
-    public boolean sendGetBlocks() {
+    private boolean sendGetBlocks() {
         // retrieve list of block hashes from queue
         // save them locally in case the remote peer
         // will return less blocks than requested.
@@ -441,14 +416,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         sendMessage(msg);
 
         return true;
-    }
-
-    private void sendPendingTransactions() {
-        Set<Transaction> pendingTxs =
-                worldManager.getBlockchain()
-                        .getPendingTransactions();
-        TransactionsMessage msg = new TransactionsMessage(pendingTxs);
-        sendMessage(msg);
     }
 
     private void processGetBlockHashes(GetBlockHashesMessage msg) {
