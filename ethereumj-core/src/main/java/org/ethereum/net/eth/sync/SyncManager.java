@@ -10,6 +10,7 @@ import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
+import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
@@ -122,7 +123,7 @@ public class SyncManager {
         }
     }
 
-    public void addPeer(EthHandler peer) {
+    public void addPeer(Channel peer) {
         if (!CONFIG.isSyncEnabled()) {
             return;
         }
@@ -165,7 +166,7 @@ public class SyncManager {
         pool.add(peer);
     }
 
-    public void onDisconnect(EthHandler peer) {
+    public void onDisconnect(Channel peer) {
         pool.onDisconnect(peer);
     }
 
@@ -268,14 +269,14 @@ public class SyncManager {
         }
     }
 
-    boolean isPeerStuck(EthHandler peer) {
-        EthHandler.EthStats stats = peer.getStats();
+    boolean isPeerStuck(Channel peer) {
+        EthHandler.EthStats stats = peer.getSyncStats();
 
         return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
                 || stats.getEmptyResponsesCount() > 0;
     }
 
-    void startMaster(EthHandler master) {
+    void startMaster(Channel master) {
         pool.changeState(IDLE);
 
         if (gapBlock != null) {
@@ -288,7 +289,7 @@ public class SyncManager {
             queue.setBestHash(master.getBestHash());
         }
 
-        master.changeState(HASH_RETRIEVING);
+        master.changeSyncState(HASH_RETRIEVING);
 
         if (logger.isInfoEnabled()) logger.info(
                 "Peer {}: {} initiated, best known hash [{}], askLimit [{}]",
@@ -369,8 +370,8 @@ public class SyncManager {
     }
 
     private void removeUselessPeers() {
-        List<EthHandler> removed = new ArrayList<>();
-        for (EthHandler peer : pool) {
+        List<Channel> removed = new ArrayList<>();
+        for (Channel peer : pool) {
             if (peer.hasBlocksLack()) {
                 logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
                 removed.add(peer);

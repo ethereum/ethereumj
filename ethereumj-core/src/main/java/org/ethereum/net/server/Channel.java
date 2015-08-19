@@ -9,6 +9,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
@@ -26,6 +27,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -175,7 +177,59 @@ public class Channel {
         return discoveryMode;
     }
 
+    public String getPeerId() {
+        return node.getHexId();
+    }
+
+    public String getPeerIdShort() {
+        return node.getHexIdShort();
+    }
+
     // ETH sub protocol
+
+    public void logSyncStats() {
+        ethHandler.logSyncStats();
+    }
+
+    public BigInteger getTotalDifficulty() {
+        return nodeStatistics.getEthTotalDifficulty();
+    }
+
+    public void changeSyncState(SyncStateName newState) {
+        ethHandler.changeState(newState);
+    }
+
+    public boolean hasBlocksLack() {
+        return ethHandler.hasBlocksLack();
+    }
+
+    public void setMaxHashesAsk(int maxHashesAsk) {
+        ethHandler.setMaxHashesAsk(maxHashesAsk);
+    }
+
+    public int getMaxHashesAsk() {
+        return ethHandler.getMaxHashesAsk();
+    }
+
+    public byte[] getBestHash() {
+        return ethHandler.getBestHash();
+    }
+
+    public EthHandler.EthStats getSyncStats() {
+        return ethHandler.getStats();
+    }
+
+    public boolean isHashRetrievingDone() {
+        return ethHandler.isHashRetrievingDone();
+    }
+
+    public boolean isHashRetrieving() {
+        return ethHandler.isHashRetrieving();
+    }
+
+    public boolean isIdle() {
+        return ethHandler.isIdle();
+    }
 
     public void sendTransaction(Transaction tx) {
         ethHandler.sendTransaction(tx);

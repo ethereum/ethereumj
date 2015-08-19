@@ -1,8 +1,10 @@
 package org.ethereum.net.eth.sync;
 
-import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.server.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.ethereum.net.eth.sync.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
@@ -13,16 +15,16 @@ public class HashRetrievingState extends AbstractSyncState {
     private static final Logger logger = LoggerFactory.getLogger("sync");
 
     public HashRetrievingState() {
-        super(SyncStateName.HASH_RETRIEVING);
+        super(HASH_RETRIEVING);
     }
 
     @Override
     public void doMaintain() {
-        EthHandler master = null;
-        for (EthHandler peer : syncManager.pool) {
+        Channel master = null;
+        for (Channel peer : syncManager.pool) {
             // if hash retrieving is done all we need to do is just change state and quit
             if (peer.isHashRetrievingDone()) {
-                syncManager.changeState(SyncStateName.BLOCK_RETRIEVING);
+                syncManager.changeState(BLOCK_RETRIEVING);
                 return;
             }
 

@@ -13,7 +13,6 @@ import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Utils;
@@ -601,16 +600,8 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
         return syncState == IDLE;
     }
 
-    public NodeStatistics getNodeStatistics() {
-        return channel.getNodeStatistics();
-    }
-
     public byte[] getBestHash() {
         return bestHash;
-    }
-
-    public BigInteger getTotalDifficulty() {
-        return channel.getNodeStatistics().getEthTotalDifficulty();
     }
 
     public void setMaxHashesAsk(int maxHashesAsk) {
