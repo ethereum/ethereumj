@@ -40,9 +40,9 @@ public class SyncManager {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final long WORKER_TIMEOUT = secondsToMillis(3);
+    private static final long WORKER_TIMEOUT = secondsToMillis(1);
     private static final long MASTER_STUCK_TIMEOUT = secondsToMillis(60);
-    private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(3);
+    private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
 
     private static final long LARGE_GAP_SIZE = 5;
 
