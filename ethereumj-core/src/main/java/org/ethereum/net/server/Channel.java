@@ -2,8 +2,10 @@ package org.ethereum.net.server;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import org.ethereum.core.Block;
+import io.netty.channel.ChannelPipeline;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.core.Transaction;
+import org.ethereum.crypto.ECKey;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.EthHandler;
@@ -11,7 +13,6 @@ import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.rlpx.FrameCodec;
-import org.ethereum.net.rlpx.MessageCodesResolver;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
@@ -27,8 +28,9 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
-//import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Roman Mandeleil
@@ -39,9 +41,6 @@ import java.util.List;
 public class Channel {
 
     private final static Logger logger = LoggerFactory.getLogger("net");
-
-    @Autowired
-    ChannelManager channelManager;
 
     @Autowired
     MessageQueue msgQueue;
@@ -69,29 +68,35 @@ public class Channel {
     private Node node;
     private NodeStatistics nodeStatistics;
 
-    private long startupTS;
-
     private boolean discoveryMode;
 
-    public void init(String remoteId, boolean discoveryMode) {
+    public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
+
+        pipeline.addLast("readTimeoutHandler",
+                new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
+        pipeline.addLast("initiator", messageCodec.getInitiator());
+        pipeline.addLast("messageCodec", messageCodec);
+
         this.discoveryMode = discoveryMode;
-        messageCodec.setRemoteId(remoteId, this);
+
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
             // unexpected disconnect
             messageCodec.generateTempKey();
         }
-        //messageCodec.setMsgQueue(msgQueue);
+
+        messageCodec.setRemoteId(remoteId, this);
 
         p2pHandler.setMsgQueue(msgQueue);
+
         ethHandler.setMsgQueue(msgQueue);
-        ethHandler.setPeerDiscoveryMode(discoveryMode);
-        shhHandler.setMsgQueue(msgQueue);
-        bzzHandler.setMsgQueue(msgQueue);
-
         ethHandler.setChannel(this);
+        ethHandler.setPeerDiscoveryMode(discoveryMode);
 
-        startupTS = System.currentTimeMillis();
+        shhHandler.setMsgQueue(msgQueue);
+        shhHandler.setPrivKey(ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress());
+
+        bzzHandler.setMsgQueue(msgQueue);
     }
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, HelloMessage helloRemote) throws IOException, InterruptedException {
@@ -117,61 +122,33 @@ public class Channel {
         getNodeStatistics().rlpxOutHello.add();
     }
 
-    public P2pHandler getP2pHandler() {
-        return p2pHandler;
+    public void activateEth(ChannelHandlerContext ctx) {
+        ethHandler.setPeerId(node.getHexId());
+        ctx.pipeline().addLast(Capability.ETH, ethHandler);
+        ethHandler.activate();
     }
 
-    public EthHandler getEthHandler() {
-        return ethHandler;
+    public void activateShh(ChannelHandlerContext ctx) {
+        ctx.pipeline().addLast(Capability.SHH, shhHandler);
+        shhHandler.activate();
     }
 
-    public ShhHandler getShhHandler() {
-        return shhHandler;
-    }
-
-    public BzzHandler getBzzHandler() {
-        return bzzHandler;
-    }
-
-    public MessageCodec getMessageCodec() {
-        return messageCodec;
-    }
-
-    public void sendTransaction(Transaction tx) {
-        ethHandler.sendTransaction(tx);
-    }
-
-    public void sendNewBlock(Block block) {
-
-        // 1. check by best block send or not to send
-        ethHandler.sendNewBlock(block);
-
-    }
-
-    public HelloMessage getHandshakeHelloMessage() {
-        return getP2pHandler().getHandshakeHelloMessage();
-    }
-
-    public long getStartupTS() {
-        return startupTS;
-    }
-
-    public InetSocketAddress getInetSocketAddress() {
-        return inetSocketAddress;
+    public void activateBzz(ChannelHandlerContext ctx) {
+        ctx.pipeline().addLast(Capability.BZZ, bzzHandler);
+        bzzHandler.activate();
     }
 
     public void setInetSocketAddress(InetSocketAddress inetSocketAddress) {
         this.inetSocketAddress = inetSocketAddress;
-        node = new Node(messageCodec.getRemoteId(),
-                inetSocketAddress.getHostName(), inetSocketAddress.getPort());
-
     }
 
     public NodeStatistics getNodeStatistics() {
-        if (nodeStatistics == null) {
-            nodeStatistics = nodeManager.getNodeStatistics(node);
-        }
         return nodeStatistics;
+    }
+
+    public void setNode(byte[] nodeId) {
+        node = new Node(nodeId, inetSocketAddress.getHostName(), inetSocketAddress.getPort());
+        nodeStatistics = nodeManager.getNodeStatistics(node);
     }
 
     public Node getNode() {
@@ -182,7 +159,7 @@ public class Channel {
         messageCodec.initMessageCodes(caps);
     }
 
-    public boolean hasInitPassed() {
+    public boolean isProtocolsInitiated() {
         return ethHandler.hasInitPassed();
     }
 
@@ -196,5 +173,11 @@ public class Channel {
 
     public boolean isDiscoveryMode() {
         return discoveryMode;
+    }
+
+    // ETH sub protocol
+
+    public void sendTransaction(Transaction tx) {
+        ethHandler.sendTransaction(tx);
     }
 }

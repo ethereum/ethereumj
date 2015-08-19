@@ -218,26 +218,19 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
                     capability.getVersion() == EthHandler.VERSION) {
 
                     // Activate EthHandler for this peer
-                    EthHandler ethHandler = channel.getEthHandler();
-                    ethHandler.setPeerId(msg.getPeerId());
-                    ctx.pipeline().addLast(Capability.ETH, ethHandler);
-                    ethHandler.activate();
+                    channel.activateEth(ctx);
                 } else if
                    (capability.getName().equals(Capability.SHH) &&
                     capability.getVersion() == ShhHandler.VERSION) {
 
                     // Activate ShhHandler for this peer
-                    ShhHandler shhHandler = channel.getShhHandler();
-                    ctx.pipeline().addLast(Capability.SHH, shhHandler);
-                    shhHandler.activate();
+                    channel.activateShh(ctx);
                 } else if
                    (capability.getName().equals(Capability.BZZ) &&
                     capability.getVersion() == BzzHandler.VERSION) {
 
                     // Activate ShhHandler for this peer
-                    BzzHandler bzzHandler = channel.getBzzHandler();
-                    ctx.pipeline().addLast(Capability.BZZ, bzzHandler);
-                    bzzHandler.activate();
+                    channel.activateBzz(ctx);
                 }
             }
 

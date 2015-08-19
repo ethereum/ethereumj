@@ -64,6 +64,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
             channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
             if (remoteId.length == 64) {
+                channel.setNode(remoteId);
                 initiate(ctx);
             } else {
                 handshake = new EncryptionHandshake();
@@ -140,7 +141,6 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
         loggerNet.info("RLPX protocol activated");
 
-        channel.getShhHandler().setPrivKey(myKey);
         byte[] nodeIdWithFormat = myKey.getPubKey();
         nodeId = new byte[nodeIdWithFormat.length - 1];
         System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
@@ -216,7 +216,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
                 ECPoint remotePubKey = this.handshake.getRemotePublicKey();
                 this.remoteId = remotePubKey.getEncoded();
-                this.channel.init(Hex.toHexString(this.remoteId), false);
+                channel.setNode(remoteId);
 
                 final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);
                 byteBufMsg.writeBytes(responsePacket);
