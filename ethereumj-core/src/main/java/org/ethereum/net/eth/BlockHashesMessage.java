@@ -35,7 +35,7 @@ public class BlockHashesMessage extends EthMessage {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blockHashes = new ArrayList<>();
-        for (int i = 1; i < paramsList.size(); ++i) {
+        for (int i = 0; i < paramsList.size(); ++i) {
             RLPItem rlpData = ((RLPItem) paramsList.get(i));
             blockHashes.add(rlpData.getRLPData());
         }

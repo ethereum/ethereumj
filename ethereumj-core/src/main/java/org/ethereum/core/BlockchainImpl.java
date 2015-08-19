@@ -248,12 +248,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // The simple case got the block
         // to connect to the main chain
         if (bestBlock.isParentOf(block)) {
-            add(block);
             recordBlock(block);
+            add(block);
             return IMPORTED_BEST;
         } else {
 
             if (blockStore.isBlockExist(block.getParentHash())) {
+                recordBlock(block);
                 ImportResult result = tryConnectAndFork(block);
                 if (result == IMPORTED_BEST || result == IMPORTED_NOT_BEST) recordBlock(block);
                 return result;
@@ -720,13 +721,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         if (!CONFIG.recordBlocks()) return;
 
-        if (block.getNumber() == 1) {
-            FileSystemUtils.deleteRecursively(new File(CONFIG.dumpDir()));
-        }
+        String dumpDir = CONFIG.databaseDir() + "/" + CONFIG.dumpDir();
 
-        String dir = CONFIG.dumpDir() + "/";
-
-        File dumpFile = new File(System.getProperty("user.dir") + "/" + dir + "_blocks_rec.txt");
+        File dumpFile = new File(dumpDir + "/blocks-rec.dmp");
         FileWriter fw = null;
         BufferedWriter bw = null;
 
