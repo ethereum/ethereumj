@@ -23,8 +23,15 @@ public enum EthMessageCodes {
     STATUS(0x00),
 
     /**
-     * [+0x01, [hash_0: B_32, hash_1: B_32, ....]: <br>
-     * Gives a series of hashes of NEW blocks (each the child of the next).
+     * [+0x01, [hash1: B_32, hash2: B_32, ...]: <br>
+     * Specify one or more new blocks which have appeared on the network.
+     * To be maximally helpful, nodes should inform peers of all blocks that they may not be aware of.
+     * Including hashes that the sending peer could reasonably be considered to know
+     * (due to the fact they were previously informed of because
+     * that node has itself advertised knowledge of the hashes through NewBlockHashes)
+     * is considered Bad Form, and may reduce the reputation of the sending node.
+     * Including hashes that the sending node later refuses to honour with a proceeding
+     * GetBlocks message is considered Bad Form, and may reduce the reputation of the sending node.
      */
     NEW_BLOCK_HASHES(0x01),
 
@@ -77,10 +84,12 @@ public enum EthMessageCodes {
     NEW_BLOCK(0x07),
 
     /**
-     * [+0x08, [blockNumber: B_32, maxBlocks: P]: <br>
-     * Requests a BlockHashes message of at most maxBlocks entries,
-     * of block hashes from the blockchain, starting at the block
-     * and moving up in block numbers.
+     * [+0x08, [number: P, maxBlocks: P]: <br>
+     * Requires peer to reply with a BlockHashes message.
+     * Message should contain block with that of number number on the canonical chain.
+     * Should also be followed by subsequent blocks, on the same chain,
+     * detailing a number of the first block hash and a total of hashes to be sent.
+     * Returned hash list must be ordered by block number in ascending order.
      */
     GET_BLOCK_HASHES_BY_NUMBER(0x08);
 

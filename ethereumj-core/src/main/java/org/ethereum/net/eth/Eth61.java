@@ -25,25 +25,6 @@ public class Eth61 extends Eth {
     }
 
     @Override
-    void processNewBlockHashes(NewBlockHashesMessage newBlockHashesMessage) {
-        if(logger.isTraceEnabled()) logger.trace(
-                "Peer {}: processing NEW block hashes, size [{}]",
-                handler.getPeerIdShort(),
-                newBlockHashesMessage.getBlockHashes().size()
-        );
-
-        List<byte[]> hashes = newBlockHashesMessage.getBlockHashes();
-        if (hashes.isEmpty()) {
-            return;
-        }
-
-        this.bestHash = hashes.get(hashes.size() - 1);
-
-        queue.addNewBlockHashes(hashes);
-        queue.logHashQueueSize();
-    }
-
-    @Override
     void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFromBlock(msg.getBlockNumber(), msg.getMaxBlocks());
 

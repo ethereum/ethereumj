@@ -293,9 +293,25 @@ public abstract class Eth {
         }
     }
 
-    abstract void processNewBlockHashes(NewBlockHashesMessage newBlockHashesMessage);
+    void processNewBlockHashes(NewBlockHashesMessage msg) {
+        if(logger.isTraceEnabled()) logger.trace(
+                "Peer {}: processing NEW block hashes, size [{}]",
+                handler.getPeerIdShort(),
+                msg.getBlockHashes().size()
+        );
 
-    abstract void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage getBlockHashesByNumberMessage);
+        List<byte[]> hashes = msg.getBlockHashes();
+        if (hashes.isEmpty()) {
+            return;
+        }
+
+        this.bestHash = hashes.get(hashes.size() - 1);
+
+        queue.addNewBlockHashes(hashes);
+        queue.logHashQueueSize();
+    }
+
+    abstract void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg);
 
     void sendStatus() {
         byte protocolVersion = version.getCode(), networkId = (byte) CONFIG.networkId();

@@ -23,12 +23,7 @@ public class Eth60 extends Eth {
     }
 
     @Override
-    void processNewBlockHashes(NewBlockHashesMessage newBlockHashesMessage) {
-        // not a part of V60
-    }
-
-    @Override
-    void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage getBlockHashesByNumberMessage) {
+    void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         // not a part of V60
     }
 }
