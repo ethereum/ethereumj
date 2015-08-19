@@ -9,6 +9,7 @@ import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
+import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
@@ -193,7 +194,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                     if (loggerNet.isInfoEnabled())
                         loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
                     isHandshakeDone = true;
-                    this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+                    this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
                 } else {
                     DisconnectMessage message = new DisconnectMessage(payload);
                     if (loggerNet.isInfoEnabled())
@@ -232,7 +233,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 // Secret authentication finish here
                 isHandshakeDone = true;
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
-                this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+                this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
             }
         }
         channel.getNodeStatistics().rlpxInHello.add();
@@ -266,7 +267,6 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
-        this.messageCodesResolver = channel.getMessageCodesResolver();
     }
 
     /**
@@ -289,5 +289,9 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
             loggerNet.error("MessageCodec handling failed", cause);
         }
         ctx.close();
+    }
+
+    public void initMessageCodes(List<Capability> caps) {
+        this.messageCodesResolver = new MessageCodesResolver(caps);
     }
 }

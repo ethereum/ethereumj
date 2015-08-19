@@ -212,7 +212,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
         else {
             List<Capability> capInCommon = HandshakeHelper.getSupportedCapabilities(msg);
-            channel.getMessageCodesResolver().init(capInCommon);
+            channel.initMessageCodes(capInCommon);
             for (Capability capability : capInCommon) {
                 if (capability.getName().equals(Capability.ETH) &&
                     capability.getVersion() == EthHandler.VERSION) {

@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.List;
 
 //import static org.ethereum.net.message.StaticMessages.HELLO_MESSAGE;
 
@@ -63,21 +64,14 @@ public class Channel {
     @Autowired
     NodeManager nodeManager;
 
-    MessageCodesResolver messageCodesResolver = new MessageCodesResolver();
+    private InetSocketAddress inetSocketAddress;
 
-    InetSocketAddress inetSocketAddress;
-
-    Node node;
-    NodeStatistics nodeStatistics;
+    private Node node;
+    private NodeStatistics nodeStatistics;
 
     private long startupTS;
 
-    String remoteId;
-
     private boolean discoveryMode;
-
-    public Channel() {
-    }
 
     public void init(String remoteId, boolean discoveryMode) {
         this.discoveryMode = discoveryMode;
@@ -100,17 +94,14 @@ public class Channel {
         startupTS = System.currentTimeMillis();
     }
 
-    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec, HelloMessage helloRemote, byte[] nodeId) throws IOException, InterruptedException {
+    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, HelloMessage helloRemote) throws IOException, InterruptedException {
         ctx.pipeline().addLast(Capability.P2P, p2pHandler);
 
         p2pHandler.setChannel(this);
         p2pHandler.setHandshake(helloRemote, ctx);
 
-//        ctx.pipeline().addLast(Capability.ETH, getEthHandler());
-//        ctx.pipeline().addLast(Capability.SHH, getShhHandler());
         getNodeStatistics().rlpxHandshake.add();
     }
-
 
     public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId) throws IOException, InterruptedException {
 
@@ -125,8 +116,6 @@ public class Channel {
             logger.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), helloMessage);
         getNodeStatistics().rlpxOutHello.add();
     }
-
-
 
     public P2pHandler getP2pHandler() {
         return p2pHandler;
@@ -189,10 +178,9 @@ public class Channel {
         return node;
     }
 
-    public MessageCodesResolver getMessageCodesResolver() {
-        return messageCodesResolver;
+    public void initMessageCodes(List<Capability> caps) {
+        messageCodec.initMessageCodes(caps);
     }
-
 
     public boolean hasInitPassed() {
         return ethHandler.hasInitPassed();
