@@ -77,7 +77,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Resource
     @Qualifier("pendingTransactions")
-    private Set<PendingTransaction> pendingTransactions = new HashSet<>();
+    private final Set<PendingTransaction> pendingTransactions = new HashSet<>();
 
     @Autowired
     private Repository repository;
@@ -354,12 +354,16 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private void clearOutdatedTransactions(final long blockNumber) {
         List<PendingTransaction> outdated = new ArrayList<>();
         List<Transaction> transactions = new ArrayList<>();
-        for (PendingTransaction tx : pendingTransactions) {
-            if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold()) {
-                outdated.add(tx);
-                transactions.add(tx.getTransaction());
+
+        synchronized (pendingTransactions) {
+            for (PendingTransaction tx : pendingTransactions) {
+                if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold()) {
+                    outdated.add(tx);
+                    transactions.add(tx.getTransaction());
+                }
             }
         }
+
         if (outdated.isEmpty())
             return;
 

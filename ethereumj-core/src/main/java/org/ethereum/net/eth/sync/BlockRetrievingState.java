@@ -1,7 +1,9 @@
 package org.ethereum.net.eth.sync;
 
-import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.server.Channel;
 import org.ethereum.util.Functional;
+
+import static org.ethereum.net.eth.sync.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
@@ -10,24 +12,24 @@ import org.ethereum.util.Functional;
 public class BlockRetrievingState extends AbstractSyncState {
 
     public BlockRetrievingState() {
-        super(SyncStateName.BLOCK_RETRIEVING);
+        super(BLOCK_RETRIEVING);
     }
 
     @Override
     public void doOnTransition() {
-        syncManager.pool.changeState(SyncStateName.BLOCK_RETRIEVING);
+        syncManager.pool.changeState(BLOCK_RETRIEVING);
     }
 
     @Override
     public void doMaintain() {
         if (syncManager.queue.isHashesEmpty()) {
-            syncManager.changeState(SyncStateName.IDLE);
+            syncManager.changeState(IDLE);
             return;
         }
 
-        syncManager.pool.changeState(SyncStateName.BLOCK_RETRIEVING, new Functional.Predicate<EthHandler>() {
+        syncManager.pool.changeState(BLOCK_RETRIEVING, new Functional.Predicate<Channel>() {
             @Override
-            public boolean test(EthHandler peer) {
+            public boolean test(Channel peer) {
                 return peer.isIdle();
             }
         });

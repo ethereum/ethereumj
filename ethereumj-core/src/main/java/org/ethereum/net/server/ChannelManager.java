@@ -60,7 +60,7 @@ public class ChannelManager {
     private void processNewPeers() {
         List<Channel> processed = new ArrayList<>();
         for(Channel peer : newPeers) {
-            if(peer.hasInitPassed()) {
+            if(peer.isProtocolsInitiated()) {
                 if(peer.isUseful()) {
                     processUseful(peer);
                 }
@@ -76,7 +76,7 @@ public class ChannelManager {
             if (!syncManager.isSyncDone()) {
                 peer.ethHandler.prohibitTransactionProcessing();
             }
-            syncManager.addPeer(peer.ethHandler);
+            syncManager.addPeer(peer);
             activePeers.add(peer);
         }
     }
@@ -87,13 +87,14 @@ public class ChannelManager {
         }
     }
 
-    public void addChannel(Channel channel) {
+    public void add(Channel channel) {
         newPeers.add(channel);
     }
 
     public void notifyDisconnect(Channel channel) {
         logger.info("Peer {}: notifies about disconnect", Utils.getNodeIdShort(channel.ethHandler.getPeerId()));
-        syncManager.onDisconnect(channel.ethHandler);
+        channel.onDisconnect();
+        syncManager.onDisconnect(channel);
         activePeers.remove(channel);
         newPeers.remove(channel);
     }

@@ -19,7 +19,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -290,10 +289,6 @@ public class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
 
     public byte[] getBestHash() {
         return eth.getBestHash();
-    }
-
-    public BigInteger getTotalDifficulty() {
-        return channel.getNodeStatistics().getEthTotalDifficulty();
     }
 
     public void setMaxHashesAsk(int maxHashesAsk) {

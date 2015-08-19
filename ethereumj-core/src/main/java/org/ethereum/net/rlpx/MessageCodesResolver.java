@@ -19,6 +19,13 @@ public class MessageCodesResolver {
 
     private Map<String, Integer> offsets = new HashMap<>();
 
+    public MessageCodesResolver() {
+    }
+
+    public MessageCodesResolver(List<Capability> caps) {
+        init(caps);
+    }
+
     public void init(List<Capability> caps) {
         Collections.sort(caps);
         int offset = P2pMessageCodes.USER.asByte() + 1;

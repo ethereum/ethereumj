@@ -1,5 +1,7 @@
 package org.ethereum.net.eth.sync;
 
+import static org.ethereum.net.eth.sync.SyncStateName.*;
+
 /**
  * @author Mikhail Kalinin
  * @since 13.08.2015
@@ -12,13 +14,13 @@ public class IdleState extends AbstractSyncState {
 
     @Override
     public void doOnTransition() {
-        syncManager.pool.changeState(SyncStateName.IDLE);
+        syncManager.pool.changeState(IDLE);
     }
 
     @Override
     public void doMaintain() {
         if (!syncManager.queue.isHashesEmpty()) {
-            syncManager.changeState(SyncStateName.BLOCK_RETRIEVING);
+            syncManager.changeState(BLOCK_RETRIEVING);
         }
     }
 }
