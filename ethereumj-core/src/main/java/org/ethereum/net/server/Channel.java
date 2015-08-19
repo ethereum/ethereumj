@@ -8,6 +8,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.Eth;
 import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.message.StaticMessages;
@@ -215,7 +216,7 @@ public class Channel {
         return ethHandler.getBestHash();
     }
 
-    public EthHandler.EthStats getSyncStats() {
+    public Eth.SyncStats getSyncStats() {
         return ethHandler.getStats();
     }
 

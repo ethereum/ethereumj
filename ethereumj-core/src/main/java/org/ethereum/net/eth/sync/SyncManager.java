@@ -270,8 +270,8 @@ public class SyncManager {
         }
     }
 
-    boolean isPeerStuck(EthHandler peer) {
-        Eth.SyncStats stats = peer.getStats();
+    boolean isPeerStuck(Channel peer) {
+        Eth.SyncStats stats = peer.getSyncStats();
 
         return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
                 || stats.getEmptyResponsesCount() > 0;
