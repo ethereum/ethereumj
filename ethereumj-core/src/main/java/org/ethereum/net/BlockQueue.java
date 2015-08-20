@@ -247,8 +247,16 @@ public class BlockQueue {
     }
 
     public void addNewBlockHashes(List<byte[]> hashes) {
-        List<byte[]> filtered = blockQueue.filterExisting(hashes);
-        hashStore.addBatch(filtered);
+        List<byte[]> notInQueue = blockQueue.filterExisting(hashes);
+
+        List<byte[]> notInChain = new ArrayList<>();
+        for (byte[] hash : notInQueue) {
+            if (blockchain.isBlockExist(hash)) {
+                notInChain.add(hash);
+            }
+        }
+
+        hashStore.addBatch(notInChain);
     }
 
     public void returnHashes(List<ByteArrayWrapper> hashes) {
