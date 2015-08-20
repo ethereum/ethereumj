@@ -13,18 +13,23 @@ import org.ethereum.net.eth.handler.EthAdapter;
 import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.eth.message.Eth60MessageFactory;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.eth.sync.SyncStatistics;
+import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
+import org.ethereum.net.p2p.P2pMessageFactory;
 import org.ethereum.net.rlpx.FrameCodec;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.shh.ShhHandler;
+import org.ethereum.net.shh.ShhMessageFactory;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.rlpx.MessageCodec;
+import org.ethereum.net.swarm.bzz.BzzMessageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,11 +102,14 @@ public class Channel {
         messageCodec.setRemoteId(remoteId, this);
 
         p2pHandler.setMsgQueue(msgQueue);
+        messageCodec.setP2pMessageFactory(new P2pMessageFactory());
 
         shhHandler.setMsgQueue(msgQueue);
         shhHandler.setPrivKey(ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress());
+        messageCodec.setShhMessageFactory(new ShhMessageFactory());
 
         bzzHandler.setMsgQueue(msgQueue);
+        messageCodec.setBzzMessageFactory(new BzzMessageFactory());
     }
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, HelloMessage helloRemote) throws IOException, InterruptedException {
@@ -129,6 +137,8 @@ public class Channel {
 
     public void activateEth(ChannelHandlerContext ctx, EthVersion version) {
         EthHandler handler = ethHandlerFactory.create(version);
+        MessageFactory messageFactory = createEthMessageFactory(version);
+        messageCodec.setEthMessageFactory(messageFactory);
 
         logger.info("Peer [{} | {}]: Use Eth {}", inetSocketAddress, getPeerIdShort(), handler.getVersion());
 
@@ -141,6 +151,13 @@ public class Channel {
         handler.activate();
 
         eth = handler;
+    }
+
+    private MessageFactory createEthMessageFactory(EthVersion version) {
+        switch (version) {
+            case V60:   return new Eth60MessageFactory();
+            default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
+        }
     }
 
     public void activateShh(ChannelHandlerContext ctx) {

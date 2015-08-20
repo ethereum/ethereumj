@@ -55,6 +55,11 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     private boolean isHandshakeDone;
     private final InitiateHandler initiator = new InitiateHandler();
 
+    private MessageFactory p2pMessageFactory;
+    private MessageFactory ethMessageFactory;
+    private MessageFactory shhMessageFactory;
+    private MessageFactory bzzMessageFactory;
+
     public InitiateHandler getInitiator() {
         return initiator;
     }
@@ -102,7 +107,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Recv: Encoded: {} [{}]", frame.getType(), Hex.toHexString(payload));
 
-        Message msg = MessageFactory.createMessage((byte) frame.getType(), payload, messageCodesResolver);
+        Message msg = createMessage((byte) frame.getType(), payload);
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
@@ -264,6 +269,31 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         return code;
     }
 
+    private Message createMessage(byte code, byte[] payload) {
+
+        byte resolved = messageCodesResolver.resolveP2p(code);
+        if (p2pMessageFactory != null && P2pMessageCodes.inRange(resolved)) {
+            return p2pMessageFactory.create(resolved, payload);
+        }
+
+        resolved = messageCodesResolver.resolveEth(code);
+        if (ethMessageFactory != null && EthMessageCodes.inRange(resolved)) {
+            return ethMessageFactory.create(resolved, payload);
+        }
+
+        resolved = messageCodesResolver.resolveShh(code);
+        if (shhMessageFactory != null && ShhMessageCodes.inRange(resolved)) {
+            return shhMessageFactory.create(resolved, payload);
+        }
+
+        resolved = messageCodesResolver.resolveBzz(code);
+        if (bzzMessageFactory != null && BzzMessageCodes.inRange(resolved)) {
+            return bzzMessageFactory.create(resolved, payload);
+        }
+
+        throw new IllegalArgumentException("No such message");
+    }
+
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
@@ -293,5 +323,21 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
     public void initMessageCodes(List<Capability> caps) {
         this.messageCodesResolver = new MessageCodesResolver(caps);
+    }
+
+    public void setP2pMessageFactory(MessageFactory p2pMessageFactory) {
+        this.p2pMessageFactory = p2pMessageFactory;
+    }
+
+    public void setEthMessageFactory(MessageFactory ethMessageFactory) {
+        this.ethMessageFactory = ethMessageFactory;
+    }
+
+    public void setShhMessageFactory(MessageFactory shhMessageFactory) {
+        this.shhMessageFactory = shhMessageFactory;
+    }
+
+    public void setBzzMessageFactory(MessageFactory bzzMessageFactory) {
+        this.bzzMessageFactory = bzzMessageFactory;
     }
 }

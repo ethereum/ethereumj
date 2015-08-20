@@ -9,33 +9,34 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 /**
- * Wrapper around an Ethereum Status message on the network
+ * Ethereum Status message parent class<br>
+ * Holds stuff which is common to all supported protocols
  *
  * @see EthMessageCodes#STATUS
  */
-public class StatusMessage extends EthMessage {
+public abstract class StatusMessage extends EthMessage {
 
-    private byte protocolVersion;
-    private int networkId;
+    protected byte protocolVersion;
+    protected int networkId;
 
     /**
      * Total difficulty of the best chain as found in block header.
      */
-    private byte[] totalDifficulty;
+    protected byte[] totalDifficulty;
     /**
      * The hash of the best (i.e. highest TD) known block.
      */
-    private byte[] bestHash;
+    protected byte[] bestHash;
     /**
      * The hash of the Genesis block
      */
-    private byte[] genesisHash;
+    protected byte[] genesisHash;
 
-    public StatusMessage(byte[] encoded) {
+    protected StatusMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public StatusMessage(byte protocolVersion, int networkId,
+    protected StatusMessage(byte protocolVersion, int networkId,
                          byte[] totalDifficulty, byte[] bestHash, byte[] genesisHash) {
         this.protocolVersion = protocolVersion;
         this.networkId = networkId;
@@ -45,31 +46,9 @@ public class StatusMessage extends EthMessage {
         this.parsed = true;
     }
 
-    private void parse() {
-        RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
+    abstract protected void parse();
 
-        this.protocolVersion = paramsList.get(0).getRLPData()[0];
-        byte[] networkIdBytes = paramsList.get(1).getRLPData();
-        this.networkId = networkIdBytes == null ? 0 : ByteUtil.byteArrayToInt(networkIdBytes);
-
-        byte[] diff = paramsList.get(2).getRLPData();
-        this.totalDifficulty = (diff == null) ? ByteUtil.ZERO_BYTE_ARRAY : diff;
-        this.bestHash = paramsList.get(3).getRLPData();
-        this.genesisHash = paramsList.get(4).getRLPData();
-
-        parsed = true;
-    }
-
-    private void encode() {
-        byte[] protocolVersion = RLP.encodeByte(this.protocolVersion);
-        byte[] networkId = RLP.encodeInt(this.networkId);
-        byte[] totalDifficulty = RLP.encodeElement(this.totalDifficulty);
-        byte[] bestHash = RLP.encodeElement(this.bestHash);
-        byte[] genesisHash = RLP.encodeElement(this.genesisHash);
-
-        this.encoded = RLP.encodeList( protocolVersion, networkId,
-                totalDifficulty, bestHash, genesisHash);
-    }
+    abstract protected void encode();
 
     @Override
     public byte[] getEncoded() {

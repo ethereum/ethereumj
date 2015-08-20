@@ -2,6 +2,7 @@ package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Blockchain;
 import org.ethereum.net.eth.message.StatusMessage;
+import org.ethereum.net.eth.message.StatusMessage60;
 import org.ethereum.util.ByteUtil;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,7 @@ public class Eth60 extends EthHandler {
         byte protocolVersion = version.getCode(), networkId = (byte) CONFIG.networkId();
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
         byte[] bestHash = blockchain.getBestBlockHash();
-        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
+        StatusMessage msg = new StatusMessage60(protocolVersion, networkId,
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
         sendMessage(msg);
     }
