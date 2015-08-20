@@ -60,7 +60,7 @@ public class ChannelManager {
     private void processNewPeers() {
         List<Channel> processed = new ArrayList<>();
         for(Channel peer : newPeers) {
-            if(peer.isProtocolsInitiated()) {
+            if(peer.isProtocolsInitialized()) {
                 if(peer.isUseful()) {
                     processUseful(peer);
                 }

@@ -46,7 +46,7 @@ import static org.ethereum.util.ByteUtil.wrap;
  * </ul>
  * </p>
  */
-public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage> {
+public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage> implements Eth {
 
     private final static Logger loggerNet = LoggerFactory.getLogger("net");
     private final static Logger loggerSync = LoggerFactory.getLogger("sync");
@@ -224,6 +224,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * The wire gets data for signed transactions and
      * sends it to the net.
      */
+    @Override
     public void sendTransaction(Transaction transaction) {
         Set<Transaction> txs = Collections.singleton(transaction);
         TransactionsMessage msg = new TransactionsMessage(txs);
@@ -437,6 +438,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         channel.getNodeStatistics().ethOutbound.add();
     }
 
+    @Override
     public void changeState(SyncStateName newState) {
         if (syncState == newState) {
             return;
@@ -468,69 +470,38 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         syncState = newState;
     }
 
-    public StatusMessage getHandshakeStatusMessage() {
-        return channel.getNodeStatistics().getEthLastInboundStatusMsg();
-    }
-
-    public void setMsgQueue(MessageQueue msgQueue) {
-        this.msgQueue = msgQueue;
-    }
-
-    public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
-        this.peerDiscoveryMode = peerDiscoveryMode;
-    }
-
-    public void setChannel(Channel channel) {
-        this.channel = channel;
-    }
-
-    public void onSyncDone() {
-        processTransactions = true;
-    }
-
+    @Override
     public boolean isHashRetrievingDone() {
         return syncState == DONE_HASH_RETRIEVING;
     }
 
+    @Override
     public boolean isHashRetrieving() {
         return syncState == HASH_RETRIEVING;
     }
 
+    @Override
     public boolean hasBlocksLack() {
         return syncState == BLOCKS_LACK;
     }
 
-    public boolean hasInitPassed() {
+    @Override
+    public boolean hasStatusPassed() {
         return ethState != EthState.INIT;
     }
 
+    @Override
     public boolean hasStatusSucceeded() {
         return ethState == EthState.STATUS_SUCCEEDED;
     }
 
-    public boolean hasStatusFailed() {
-        return ethState == EthState.STATUS_FAILED;
-    }
-
+    @Override
     public void onShutdown() {
         changeState(IDLE);
         returnHashes();
     }
 
-    protected void returnHashes() {
-        if(sentHashes != null) {
-
-            if(loggerSync.isDebugEnabled()) loggerSync.debug(
-                    "Peer {}: return [{}] hashes back to store",
-                    channel.getPeerIdShort(),
-                    sentHashes.size()
-            );
-
-            queue.returnHashes(sentHashes);
-            sentHashes.clear();
-        }
-    }
-
+    @Override
     public void logSyncStats() {
         if(!loggerSync.isInfoEnabled()) {
             return;
@@ -560,28 +531,69 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
     }
 
+    @Override
     public boolean isIdle() {
         return syncState == IDLE;
     }
 
+    @Override
     public byte[] getBestHash() {
         return bestHash;
     }
 
+    @Override
     public void setMaxHashesAsk(int maxHashesAsk) {
         this.maxHashesAsk = maxHashesAsk;
     }
 
+    @Override
     public int getMaxHashesAsk() {
         return maxHashesAsk;
     }
 
-    public void prohibitTransactionProcessing() {
+    @Override
+    public void enableTransactions() {
+        processTransactions = true;
+    }
+
+    @Override
+    public void disableTransactions() {
         processTransactions = false;
     }
 
+    @Override
     public SyncStatistics getStats() {
         return syncStats;
+    }
+
+    public StatusMessage getHandshakeStatusMessage() {
+        return channel.getNodeStatistics().getEthLastInboundStatusMsg();
+    }
+
+    public void setMsgQueue(MessageQueue msgQueue) {
+        this.msgQueue = msgQueue;
+    }
+
+    public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
+        this.peerDiscoveryMode = peerDiscoveryMode;
+    }
+
+    public void setChannel(Channel channel) {
+        this.channel = channel;
+    }
+
+    protected void returnHashes() {
+        if(sentHashes != null) {
+
+            if(loggerSync.isDebugEnabled()) loggerSync.debug(
+                    "Peer {}: return [{}] hashes back to store",
+                    channel.getPeerIdShort(),
+                    sentHashes.size()
+            );
+
+            queue.returnHashes(sentHashes);
+            sentHashes.clear();
+        }
     }
 
     public EthVersion getVersion() {
