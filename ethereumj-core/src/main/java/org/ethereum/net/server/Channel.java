@@ -14,6 +14,7 @@ import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth60MessageFactory;
+import org.ethereum.net.eth.message.Eth61MessageFactory;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.eth.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
@@ -140,7 +141,7 @@ public class Channel {
         MessageFactory messageFactory = createEthMessageFactory(version);
         messageCodec.setEthMessageFactory(messageFactory);
 
-        logger.info("Peer [{} | {}]: Use Eth {}", inetSocketAddress, getPeerIdShort(), handler.getVersion());
+        logger.info("Eth{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
 
         ctx.pipeline().addLast(Capability.ETH, handler);
 
@@ -156,6 +157,7 @@ public class Channel {
     private MessageFactory createEthMessageFactory(EthVersion version) {
         switch (version) {
             case V60:   return new Eth60MessageFactory();
+            case V61:   return new Eth61MessageFactory();
             default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
     }

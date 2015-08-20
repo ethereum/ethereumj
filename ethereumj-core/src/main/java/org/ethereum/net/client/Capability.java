@@ -5,10 +5,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * The protocols and versions of those protocols that this peer support
@@ -20,15 +17,15 @@ public class Capability implements Comparable<Capability> {
     public final static String SHH = "shh";
     public final static String BZZ = "bzz";
 
-    private static SortedMap<String, Capability> AllCaps = new TreeMap<>();
+    private static SortedSet<Capability> AllCaps = new TreeSet<>();
 
     static {
-        for (EthVersion v : EthVersion.values()) {
-            AllCaps.put(ETH, new Capability(Capability.ETH, v.getCode()));
+        for (EthVersion v : EthVersion.supported()) {
+            AllCaps.add(new Capability(Capability.ETH, v.getCode()));
         }
 
-        AllCaps.put(SHH, new Capability(Capability.SHH, ShhHandler.VERSION));
-        AllCaps.put(BZZ, new Capability(Capability.BZZ, BzzHandler.VERSION));
+        AllCaps.add(new Capability(Capability.SHH, ShhHandler.VERSION));
+        AllCaps.add(new Capability(Capability.BZZ, BzzHandler.VERSION));
     }
 
     /**
@@ -38,7 +35,7 @@ public class Capability implements Comparable<Capability> {
     public static List<Capability> getConfigCapabilities() {
         List<Capability> ret = new ArrayList<>();
         List<String> caps = SystemProperties.CONFIG.peerCapabilities();
-        for (Capability capability : AllCaps.values()) {
+        for (Capability capability : AllCaps) {
             if (caps.contains(capability.getName())) {
                 ret.add(capability);
             }
@@ -80,7 +77,12 @@ public class Capability implements Comparable<Capability> {
 
     @Override
     public int compareTo(Capability o) {
-        return this.name.compareTo(o.name);
+        int cmp = this.name.compareTo(o.name);
+        if (cmp != 0) {
+            return cmp;
+        } else {
+            return Byte.valueOf(this.version).compareTo(o.version);
+        }
     }
 
     public String toString() {

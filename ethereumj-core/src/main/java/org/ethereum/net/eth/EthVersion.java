@@ -1,5 +1,8 @@
 package org.ethereum.net.eth;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Represents supported Eth versions
  *
@@ -8,10 +11,11 @@ package org.ethereum.net.eth;
  */
 public enum EthVersion {
 
-    V60((byte) 60);
+    V60((byte) 60),
+    V61((byte) 61);
 
     public static final byte LOWER = V60.getCode();
-    public static final byte UPPER = V60.getCode();
+    public static final byte UPPER = V61.getCode();
 
     private byte code;
 
@@ -36,4 +40,16 @@ public enum EthVersion {
     public static boolean isSupported(byte code) {
         return code >= LOWER && code <= UPPER;
     }
+
+    public static List<EthVersion> supported() {
+        List<EthVersion> supported = new ArrayList<>();
+        for (EthVersion v : values()) {
+            if (isSupported(v.code)) {
+                supported.add(v);
+            }
+        }
+
+        return supported;
+    }
+
 }

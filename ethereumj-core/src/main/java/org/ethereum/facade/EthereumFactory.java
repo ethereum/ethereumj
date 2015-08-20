@@ -39,7 +39,14 @@ public class EthereumFactory {
 
     public static Ethereum createEthereum(Class clazz) {
 
-        logger.info("capability eth version: [{}]", EthVersion.UPPER);
+        if (logger.isInfoEnabled()) {
+            StringBuilder versions = new StringBuilder();
+            for (EthVersion v : EthVersion.supported()) {
+                versions.append(v.getCode()).append(", ");
+            }
+            versions.delete(versions.length() - 2, versions.length());
+            logger.info("capability eth version: [{}]", versions);
+        }
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 

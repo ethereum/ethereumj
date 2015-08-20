@@ -8,7 +8,7 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 
 /**
- * Wrapper around an Ethereum GetBlockHashesByNumber message on the network
+ * Wrapper around an Ethereum GetBlockHashesByNumber message on the network. <br>
  *
  * @see EthMessageCodes#GET_BLOCK_HASHES_BY_NUMBER
  *

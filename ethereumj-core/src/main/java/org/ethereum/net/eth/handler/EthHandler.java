@@ -130,6 +130,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
                 msgQueue.receivedMessage(msg);
                 processNewBlock((NewBlockMessage) msg);
                 break;
+            case GET_BLOCK_HASHES_BY_NUMBER:
+                msgQueue.receivedMessage(msg);
+                processGetBlockHashesByNumber((GetBlockHashesByNumberMessage) msg);
+                break;
             default:
                 break;
         }
@@ -433,6 +437,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         queue.logHashQueueSize();
     }
 
+    abstract public void sendGetBlockHashesByNumber(long blockNumber, int maxHashesAsk);
+
+    abstract protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg);
+
     protected void sendMessage(EthMessage message) {
         msgQueue.sendMessage(message);
         channel.getNodeStatistics().ethOutbound.add();
@@ -453,7 +461,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         if (newState == HASH_RETRIEVING) {
             syncStats.reset();
-            sendGetBlockHashes();
+            sendGetBlockHashesByNumber(blockchain.getBestBlock().getNumber(), maxHashesAsk);
         }
         if (newState == BLOCK_RETRIEVING) {
             syncStats.reset();
@@ -508,7 +516,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
         switch (syncState) {
             case BLOCK_RETRIEVING: loggerSync.info(
-                    "Peer {}: [state {}, blocks count {}, last block {}]",
+                    "Peer {}: [ {}, state {}, blocks count {}, last block {} ]",
+                    version,
                     channel.getPeerIdShort(),
                     syncState,
                     syncStats.getBlocksCount(),
@@ -516,7 +525,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             );
                 break;
             case HASH_RETRIEVING: loggerSync.info(
-                    "Peer {}: [state {}, hashes count {}, last hash {}]",
+                    "Peer {}: [ {}, state {}, hashes count {}, last hash {} ]",
+                    version,
                     channel.getPeerIdShort(),
                     syncState,
                     syncStats.getHashesCount(),
@@ -524,7 +534,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             );
                 break;
             default: loggerSync.info(
-                    "Peer {}: [state {}]",
+                    "Peer {}: [ {}, state {} ]",
+                    version,
                     channel.getPeerIdShort(),
                     syncState
             );
