@@ -257,7 +257,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             if (blockStore.isBlockExist(block.getParentHash())) {
                 recordBlock(block);
                 ImportResult result = tryConnectAndFork(block);
-                if (result == IMPORTED_BEST || result == IMPORTED_NOT_BEST) recordBlock(block);
                 return result;
             }
 
@@ -650,7 +649,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                 adminInfo.lostConsensus();
 
                 System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
-//                System.exit(1);
+                System.exit(1);
                 // in case of rollback hard move the root
 //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
 //                repository.syncToRoot(parentBlock.getStateRoot());
