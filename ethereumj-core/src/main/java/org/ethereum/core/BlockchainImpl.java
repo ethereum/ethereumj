@@ -769,7 +769,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         long number = bestBlock.getNumber();
         for (Transaction tx : transactions) {
 
-            BigInteger currNonce = repository.getNonce(tx.getSender());
+            BigInteger currNonce = repository.getAccountState(tx.getSender()).getNonce();
             BigInteger txNonce = toBI(tx.getNonce());
 
             if (currNonce.equals(txNonce))
