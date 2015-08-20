@@ -36,6 +36,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.util.BIUtil.isMoreThan;
+import static org.ethereum.util.BIUtil.toBI;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
@@ -767,7 +768,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         long number = bestBlock.getNumber();
         for (Transaction tx : transactions) {
-            pendingTransactions.add(new PendingTransaction(tx, number));
+
+            BigInteger currNonce = repository.getNonce(tx.getSender());
+            BigInteger txNonce = toBI(tx.getNonce());
+
+            if (currNonce.equals(txNonce))
+                pendingTransactions.add(new PendingTransaction(tx, number));
         }
     }
 
