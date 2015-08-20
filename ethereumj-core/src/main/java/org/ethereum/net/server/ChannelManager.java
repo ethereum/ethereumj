@@ -71,10 +71,10 @@ public class ChannelManager {
     }
 
     private void processUseful(Channel peer) {
-        if(peer.ethHandler.hasStatusSucceeded()) {
+        if(peer.hasEthStatusSucceeded()) {
             // prohibit transactions processing until main sync is done
             if (!syncManager.isSyncDone()) {
-                peer.ethHandler.prohibitTransactionProcessing();
+                peer.prohibitTransactionProcessing();
             }
             syncManager.addPeer(peer);
             activePeers.add(peer);
@@ -92,7 +92,7 @@ public class ChannelManager {
     }
 
     public void notifyDisconnect(Channel channel) {
-        logger.info("Peer {}: notifies about disconnect", Utils.getNodeIdShort(channel.ethHandler.getPeerId()));
+        logger.debug("Peer {}: notifies about disconnect", Utils.getNodeIdShort(channel.getPeerIdShort()));
         channel.onDisconnect();
         syncManager.onDisconnect(channel);
         activePeers.remove(channel);
@@ -101,7 +101,7 @@ public class ChannelManager {
 
     public void onSyncDone() {
         for (Channel channel : activePeers) {
-            channel.ethHandler.onSyncDone();
+            channel.onSyncDone();
         }
     }
 }

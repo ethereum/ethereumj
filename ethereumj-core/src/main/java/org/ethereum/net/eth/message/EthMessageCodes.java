@@ -16,7 +16,7 @@ public enum EthMessageCodes {
     /* Ethereum protocol */
 
     /**
-     * [0x00, [PROTOCOL_VERSION, NETWORK_ID, TD, BEST_HASH, GENESIS_HASH] <br>
+     * [0x00, [PROTOCOL_VERSION, NETWORK_ID, TD, BEST_HASH, GENESIS_HASH, { PV61: BEST_NUMBER }] <br>
      * Inform a peer of it's current ethereum state. This message should be
      * send after the initial handshake and prior to any ethereum related messages.
      */

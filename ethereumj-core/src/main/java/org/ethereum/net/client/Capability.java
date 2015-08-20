@@ -1,7 +1,7 @@
 package org.ethereum.net.client;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.swarm.bzz.BzzHandler;
 
@@ -23,7 +23,10 @@ public class Capability implements Comparable<Capability> {
     private static SortedMap<String, Capability> AllCaps = new TreeMap<>();
 
     static {
-        AllCaps.put(ETH, new Capability(Capability.ETH, EthHandler.VERSION));
+        for (EthVersion v : EthVersion.values()) {
+            AllCaps.put(ETH, new Capability(Capability.ETH, v.getCode()));
+        }
+
         AllCaps.put(SHH, new Capability(Capability.SHH, ShhHandler.VERSION));
         AllCaps.put(BZZ, new Capability(Capability.BZZ, BzzHandler.VERSION));
     }
@@ -57,6 +60,10 @@ public class Capability implements Comparable<Capability> {
 
     public byte getVersion() {
         return version;
+    }
+
+    public boolean isEth() {
+        return ETH.equals(name);
     }
 
     @Override

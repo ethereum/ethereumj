@@ -107,8 +107,6 @@ public class PeersPool implements Iterable<Channel> {
                 peer.getPeerIdShort()
         );
 
-        peer.changeSyncState(IDLE);
-
         synchronized (activePeers) {
             activePeers.remove(peer);
         }
@@ -158,8 +156,6 @@ public class PeersPool implements Iterable<Channel> {
         synchronized (bans) {
             bans.put(peer.getPeerId(), timeAfterMillis(DEFAULT_BAN_TIMEOUT));
         }
-
-        peer.changeSyncState(IDLE);
     }
 
     public Set<String> nodesInUse() {

@@ -96,10 +96,6 @@ public class MessageCodesResolver {
         return offset == null ? 0 : offset.byteValue();
     }
 
-    public void setP2pOffset(int offset) {
-        setOffset(Capability.P2P, offset);
-    }
-
     public void setBzzOffset(int offset) {
         setOffset(Capability.BZZ, offset);
     }

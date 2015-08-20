@@ -5,8 +5,6 @@ import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
-import org.ethereum.net.eth.Eth;
-import org.ethereum.net.eth.EthHandler;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -271,7 +269,7 @@ public class SyncManager {
     }
 
     boolean isPeerStuck(Channel peer) {
-        Eth.SyncStats stats = peer.getSyncStats();
+        SyncStatistics stats = peer.getSyncStats();
 
         return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
                 || stats.getEmptyResponsesCount() > 0;

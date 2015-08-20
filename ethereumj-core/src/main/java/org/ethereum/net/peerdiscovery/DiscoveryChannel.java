@@ -8,7 +8,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.handler.EthHandler;
 import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;

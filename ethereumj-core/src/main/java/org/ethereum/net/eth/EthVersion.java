@@ -8,8 +8,10 @@ package org.ethereum.net.eth;
  */
 public enum EthVersion {
 
-    V60((byte) 60),
-    V61((byte) 61);
+    V60((byte) 60);
+
+    public static final byte LOWER = V60.getCode();
+    public static final byte UPPER = V60.getCode();
 
     private byte code;
 
@@ -32,6 +34,6 @@ public enum EthVersion {
     }
 
     public static boolean isSupported(byte code) {
-        return fromCode(code) != null;
+        return code >= LOWER && code <= UPPER;
     }
 }

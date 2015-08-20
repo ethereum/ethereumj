@@ -8,9 +8,11 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.Eth;
-import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.handler.EthHandler;
+import org.ethereum.net.eth.handler.EthHandlerFactory;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.sync.SyncStateName;
+import org.ethereum.net.eth.sync.SyncStatistics;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
@@ -46,25 +48,27 @@ public class Channel {
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     @Autowired
-    MessageQueue msgQueue;
+    private MessageQueue msgQueue;
 
     @Autowired
-    P2pHandler p2pHandler;
+    private P2pHandler p2pHandler;
 
     @Autowired
-    EthHandler ethHandler;
+    private ShhHandler shhHandler;
 
     @Autowired
-    ShhHandler shhHandler;
+    private BzzHandler bzzHandler;
 
     @Autowired
-    BzzHandler bzzHandler;
+    private MessageCodec messageCodec;
 
     @Autowired
-    MessageCodec messageCodec;
+    private NodeManager nodeManager;
 
     @Autowired
-    NodeManager nodeManager;
+    private EthHandlerFactory ethHandlerFactory;
+
+    private EthHandler ethHandler;
 
     private InetSocketAddress inetSocketAddress;
 
@@ -91,10 +95,6 @@ public class Channel {
         messageCodec.setRemoteId(remoteId, this);
 
         p2pHandler.setMsgQueue(msgQueue);
-
-        ethHandler.setMsgQueue(msgQueue);
-        ethHandler.setChannel(this);
-        ethHandler.setPeerDiscoveryMode(discoveryMode);
 
         shhHandler.setMsgQueue(msgQueue);
         shhHandler.setPrivKey(ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress());
@@ -125,9 +125,17 @@ public class Channel {
         getNodeStatistics().rlpxOutHello.add();
     }
 
-    public void activateEth(ChannelHandlerContext ctx) {
-        ethHandler.setPeerId(node.getHexId());
+    public void activateEth(ChannelHandlerContext ctx, EthVersion version) {
+        ethHandler = ethHandlerFactory.create(version);
+
+        logger.info("Peer [{} | {}]: Use Eth {}", inetSocketAddress, getPeerIdShort(), ethHandler.getVersion());
+
         ctx.pipeline().addLast(Capability.ETH, ethHandler);
+
+        ethHandler.setMsgQueue(msgQueue);
+        ethHandler.setChannel(this);
+        ethHandler.setPeerDiscoveryMode(discoveryMode);
+
         ethHandler.activate();
     }
 
@@ -163,15 +171,23 @@ public class Channel {
     }
 
     public boolean isProtocolsInitiated() {
-        return ethHandler.hasInitPassed();
+        return ethHandler != null && ethHandler.hasInitPassed();
     }
 
     public boolean isUseful() {
-        return ethHandler.hasStatusSucceeded();
+        return ethHandler != null && ethHandler.hasStatusSucceeded();
     }
 
     public void onDisconnect() {
-        ethHandler.onDisconnect();
+        if (ethHandler != null) {
+            ethHandler.onShutdown();
+        }
+    }
+
+    public void onSyncDone() {
+        if (ethHandler != null) {
+            ethHandler.onSyncDone();
+        }
     }
 
     public boolean isDiscoveryMode() {
@@ -188,8 +204,14 @@ public class Channel {
 
     // ETH sub protocol
 
+    public boolean hasEthStatusSucceeded() {
+        return ethHandler != null && ethHandler.hasStatusSucceeded();
+    }
+
     public void logSyncStats() {
-        ethHandler.logSyncStats();
+        if (ethHandler != null) {
+            ethHandler.logSyncStats();
+        }
     }
 
     public BigInteger getTotalDifficulty() {
@@ -197,42 +219,66 @@ public class Channel {
     }
 
     public void changeSyncState(SyncStateName newState) {
-        ethHandler.changeState(newState);
+        if (ethHandler != null) {
+            ethHandler.changeState(newState);
+        }
     }
 
     public boolean hasBlocksLack() {
-        return ethHandler.hasBlocksLack();
+        return ethHandler != null && ethHandler.hasBlocksLack();
     }
 
     public void setMaxHashesAsk(int maxHashesAsk) {
-        ethHandler.setMaxHashesAsk(maxHashesAsk);
+        if (ethHandler != null) {
+            ethHandler.setMaxHashesAsk(maxHashesAsk);
+        }
     }
 
     public int getMaxHashesAsk() {
+        if (ethHandler == null) {
+            return 0;
+        }
+
         return ethHandler.getMaxHashesAsk();
     }
 
     public byte[] getBestHash() {
+        if (ethHandler == null) {
+            return new byte[0];
+        }
+
         return ethHandler.getBestHash();
     }
 
-    public Eth.SyncStats getSyncStats() {
+    public SyncStatistics getSyncStats() {
+        if (ethHandler == null) {
+            return new SyncStatistics();
+        }
+
         return ethHandler.getStats();
     }
 
     public boolean isHashRetrievingDone() {
-        return ethHandler.isHashRetrievingDone();
+        return ethHandler != null && ethHandler.isHashRetrievingDone();
     }
 
     public boolean isHashRetrieving() {
-        return ethHandler.isHashRetrieving();
+        return ethHandler != null && ethHandler.isHashRetrieving();
     }
 
     public boolean isIdle() {
-        return ethHandler.isIdle();
+        return ethHandler == null || ethHandler.isIdle();
+    }
+
+    public void prohibitTransactionProcessing() {
+        if (ethHandler != null) {
+            ethHandler.prohibitTransactionProcessing();
+        }
     }
 
     public void sendTransaction(Transaction tx) {
-        ethHandler.sendTransaction(tx);
+        if (ethHandler != null) {
+            ethHandler.sendTransaction(tx);
+        }
     }
 }
