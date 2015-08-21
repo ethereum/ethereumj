@@ -75,7 +75,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected SyncStateName syncState = IDLE;
     protected boolean processTransactions = true;
 
-    protected List<ByteArrayWrapper> sentHashes;
+    protected final List<ByteArrayWrapper> sentHashes = Collections.synchronizedList(new ArrayList<ByteArrayWrapper>());
     protected Block lastBlock = Genesis.getInstance();
     protected byte[] lastHash = lastBlock.getHash();
     protected byte[] bestHash;
@@ -343,7 +343,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             return false;
         }
 
-        this.sentHashes = new ArrayList<>();
+        sentHashes.clear();
         for (byte[] hash : hashes)
             this.sentHashes.add(wrap(hash));
 
@@ -594,17 +594,17 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     protected void returnHashes() {
-        if(sentHashes != null) {
+        if(loggerSync.isDebugEnabled()) loggerSync.debug(
+                "Peer {}: return [{}] hashes back to store",
+                channel.getPeerIdShort(),
+                sentHashes.size()
+        );
 
-            if(loggerSync.isDebugEnabled()) loggerSync.debug(
-                    "Peer {}: return [{}] hashes back to store",
-                    channel.getPeerIdShort(),
-                    sentHashes.size()
-            );
-
+        synchronized (sentHashes) {
             queue.returnHashes(sentHashes);
-            sentHashes.clear();
         }
+
+        sentHashes.clear();
     }
 
     public EthVersion getVersion() {
