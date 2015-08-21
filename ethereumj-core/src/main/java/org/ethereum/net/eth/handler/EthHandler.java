@@ -461,7 +461,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         if (newState == HASH_RETRIEVING) {
             syncStats.reset();
-            sendGetBlockHashesByNumber(blockchain.getBestBlock().getNumber(), maxHashesAsk);
+            sendGetBlockHashes();
         }
         if (newState == BLOCK_RETRIEVING) {
             syncStats.reset();
