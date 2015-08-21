@@ -1,11 +1,13 @@
 package org.ethereum.net.eth.sync;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.BlockQueue;
 import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
 import org.ethereum.net.rlpx.discover.NodeManager;
@@ -117,6 +119,10 @@ public class SyncManager {
                 }
             }
         }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
+
+        for (Node node : SystemProperties.CONFIG.peerActive()) {
+            pool.connect(node);
+        }
 
         if (logger.isInfoEnabled()) {
             startLogWorker();
