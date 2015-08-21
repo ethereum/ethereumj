@@ -1,5 +1,6 @@
 package org.ethereum.net.eth;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
@@ -79,6 +80,8 @@ public class SyncManager {
     @Autowired
     private EthereumListener ethereumListener;
 
+
+
     public void init() {
 
         if (!CONFIG.isSyncEnabled()) {
@@ -153,6 +156,10 @@ public class SyncManager {
                     }
                 }
         );
+
+        for (Node node : SystemProperties.CONFIG.peerActive()) {
+            initiateConnection(node);
+        }
     }
 
     private void releaseBans() {

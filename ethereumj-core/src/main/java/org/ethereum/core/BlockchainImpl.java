@@ -31,6 +31,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static java.lang.Runtime.getRuntime;
+import static java.math.BigInteger.ZERO;
 import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
@@ -89,7 +90,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private BlockStore blockStore;
 
     private Block bestBlock;
-    private BigInteger totalDifficulty = BigInteger.ZERO;
+    private BigInteger totalDifficulty = ZERO;
 
     @Autowired
     Wallet wallet;
@@ -768,11 +769,17 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         long number = bestBlock.getNumber();
         for (Transaction tx : transactions) {
 
-            BigInteger currNonce = repository.getAccountState(tx.getSender()).getNonce();
             BigInteger txNonce = toBI(tx.getNonce());
+            if (repository.isExist(tx.getSender())){
 
-            if (currNonce.equals(txNonce))
-                pendingTransactions.add(new PendingTransaction(tx, number));
+                BigInteger currNonce = repository.getAccountState(tx.getSender()).getNonce();
+                if (currNonce.equals(txNonce))
+                    pendingTransactions.add(new PendingTransaction(tx, number));
+            } else {
+
+                if (txNonce.equals(ZERO))
+                    pendingTransactions.add(new PendingTransaction(tx, number));
+            }
         }
     }
 
