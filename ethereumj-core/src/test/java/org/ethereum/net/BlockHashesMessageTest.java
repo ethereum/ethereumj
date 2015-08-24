@@ -26,7 +26,7 @@ public class BlockHashesMessageTest {
         System.out.println(blockHashesMessage);
 
         assertEquals(EthMessageCodes.BLOCK_HASHES, blockHashesMessage.getCommand());
-        assertEquals(129, blockHashesMessage.getBlockHashes().size());
+        assertEquals(128, blockHashesMessage.getBlockHashes().size());
         // TODO maybe also assert values for individual hashes
         assertEquals(null, blockHashesMessage.getAnswerMessage());
     }
