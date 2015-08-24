@@ -1,8 +1,5 @@
 package org.ethereum.core;
 
-import org.ethereum.core.*;
-import org.ethereum.net.BlockQueue;
-
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;

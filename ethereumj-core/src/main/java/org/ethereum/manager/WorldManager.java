@@ -6,7 +6,6 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.BlockQueue;
 import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.eth.sync.SyncManager;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
@@ -70,9 +69,6 @@ public class WorldManager {
     @Autowired
     private SyncManager syncManager;
 
-    @Autowired
-    private BlockQueue blockQueue;
-
     @PostConstruct
     public void init() {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -85,7 +81,6 @@ public class WorldManager {
         loadBlockchain();
 
         // must be initialized after blockchain is loaded
-        blockQueue.init();
         syncManager.init();
     }
 

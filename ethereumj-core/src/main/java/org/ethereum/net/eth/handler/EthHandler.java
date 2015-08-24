@@ -8,7 +8,7 @@ import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.BlockQueue;
+import org.ethereum.net.eth.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
@@ -57,7 +57,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected Blockchain blockchain;
 
     @Autowired
-    protected BlockQueue queue;
+    protected SyncQueue queue;
 
     @Autowired
     protected WorldManager worldManager;

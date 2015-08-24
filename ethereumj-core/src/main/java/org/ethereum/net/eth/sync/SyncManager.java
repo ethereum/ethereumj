@@ -1,11 +1,9 @@
 package org.ethereum.net.eth.sync;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.BlockQueue;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -72,7 +70,7 @@ public class SyncManager {
     Blockchain blockchain;
 
     @Autowired
-    BlockQueue queue;
+    SyncQueue queue;
 
     @Autowired
     NodeManager nodeManager;
@@ -87,6 +85,9 @@ public class SyncManager {
     ChannelManager channelManager;
 
     public void init() {
+
+        // sync queue
+        queue.init();
 
         if (!CONFIG.isSyncEnabled()) {
             logger.info("Sync Manager: OFF");

@@ -1,4 +1,4 @@
-package org.ethereum.net;
+package org.ethereum.net.eth.sync;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
@@ -38,7 +38,7 @@ import static org.ethereum.core.ImportResult.IMPORTED_BEST;
  */
 @Component
 @DependsOn("worldManager")
-public class BlockQueue {
+public class SyncQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
 
