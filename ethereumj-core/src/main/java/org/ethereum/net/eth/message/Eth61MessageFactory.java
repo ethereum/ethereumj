@@ -17,7 +17,7 @@ public class Eth61MessageFactory implements MessageFactory {
         EthMessageCodes receivedCommand = EthMessageCodes.fromByte(code);
         switch (receivedCommand) {
             case STATUS:
-                return new StatusMessage61(encoded);
+                return new StatusMessage(encoded);
             case NEW_BLOCK_HASHES:
                 return new NewBlockHashesMessage(encoded);
             case TRANSACTIONS:

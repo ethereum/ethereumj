@@ -16,11 +16,13 @@ import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.eth.sync.SyncStatistics;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
@@ -202,9 +204,18 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         processStatus(msg);
     }
 
-    abstract protected void sendStatus();
+    protected void processStatus(StatusMessage msg) {
+        bestHash = msg.getBestHash();
+    }
 
-    abstract protected void processStatus(StatusMessage msg);
+    protected void sendStatus() {
+        byte protocolVersion = version.getCode(), networkId = (byte) CONFIG.networkId();
+        BigInteger totalDifficulty = blockchain.getTotalDifficulty();
+        byte[] bestHash = blockchain.getBestBlockHash();
+        StatusMessage msg = new StatusMessage(protocolVersion, networkId,
+                ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
+        sendMessage(msg);
+    }
 
     protected void processNewBlockHashes(NewBlockHashesMessage msg) {
         if(loggerSync.isTraceEnabled()) loggerSync.trace(

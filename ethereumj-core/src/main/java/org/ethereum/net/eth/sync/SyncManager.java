@@ -119,7 +119,7 @@ public class SyncManager {
             }
         }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
 
-        for (Node node : SystemProperties.CONFIG.peerActive()) {
+        for (Node node : CONFIG.peerActive()) {
             pool.connect(node);
         }
 
