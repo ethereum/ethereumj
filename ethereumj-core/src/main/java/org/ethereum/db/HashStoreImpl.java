@@ -85,6 +85,15 @@ public class HashStoreImpl implements HashStore {
     }
 
     @Override
+    public void addBatch(Collection<byte[]> hashes) {
+        awaitInit();
+        for (byte[] hash : hashes) {
+            addInner(false, hash);
+        }
+        db.commit();
+    }
+
+    @Override
     public void addFirstBatch(Collection<byte[]> hashes) {
         awaitInit();
         for (byte[] hash : hashes) {

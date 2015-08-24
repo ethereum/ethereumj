@@ -1,4 +1,4 @@
-package org.ethereum.net;
+package org.ethereum.net.eth.sync;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
@@ -10,18 +10,16 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.HashStore;
 import org.ethereum.db.HashStoreImpl;
 import org.ethereum.core.Blockchain;
-import org.ethereum.net.eth.SyncManager;
-import org.ethereum.net.eth.SyncState;
+import org.ethereum.net.eth.sync.SyncManager;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.math.BigInteger;
 import java.util.*;
 
 import static java.lang.Thread.sleep;
@@ -39,11 +37,10 @@ import static org.ethereum.core.ImportResult.IMPORTED_BEST;
  * @since 27.07.2014
  */
 @Component
-public class BlockQueue {
+@DependsOn("worldManager")
+public class SyncQueue {
 
     private static final Logger logger = LoggerFactory.getLogger("blockqueue");
-
-    private static final int IMPORT_FAIL_THRESHOLD = 10 * 1000; // 10 seconds
 
     /**
      * Store holding a list of hashes of the heaviest chain on the network,
@@ -63,15 +60,12 @@ public class BlockQueue {
 
     private byte[] bestHash;
 
-    private Timer timer = new Timer("BlockQueueTimer");
-
     @Autowired
     Blockchain blockchain;
 
     @Autowired
     SyncManager syncManager;
 
-    @PostConstruct
     public void init() {
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         hashStore = new HashStoreImpl();
@@ -110,20 +104,14 @@ public class BlockQueue {
                 // return the try and wait for more blocks to come.
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
-                    if (!syncManager.isGapRecovery()) {
-                        wrapper.importFailed();
-                        if (hashStore.isEmpty() || wrapper.timeSinceFail() > IMPORT_FAIL_THRESHOLD) {
-                            syncManager.recoverGap(wrapper);
-                            wrapper.resetImportFail();
-                        }
-                    }
+                    wrapper.importFailed();
+                    syncManager.tryGapRecovery(wrapper);
                     blockQueue.add(wrapper);
                     sleep(2000);
                 }
 
-                if(wrapper.isNewBlock() && importResult.isSuccessful()) {
+                if (wrapper.isNewBlock() && importResult.isSuccessful())
                     syncManager.notifyNewBlockImported(wrapper);
-                }
 
                 if (importResult == IMPORTED_BEST)
                     logger.info("Success importing BEST: block.number: {}, block.hash {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
@@ -238,18 +226,17 @@ public class BlockQueue {
 
     public void addHash(byte[] hash) {
         hashStore.addFirst(hash);
-        this.bestHash = hash;
-        if (logger.isTraceEnabled())
-            logAddHash(hash);
+        if (logger.isTraceEnabled()) logger.trace(
+                "Adding hash to a hashQueue: [{}], hash queue size: {} ",
+                Hex.toHexString(hash).substring(0, 6),
+                hashStore.size()
+        );
     }
 
     public void addHashes(List<byte[]> hashes) {
         if(hashes.isEmpty()) {
             return;
         }
-        if (logger.isTraceEnabled())
-            for(byte[] hash : hashes)
-                logAddHash(hash);
 
         this.bestHash = hashes.listIterator(hashes.size()).previous();
         List<byte[]> filtered = blockQueue.filterExisting(hashes);
@@ -259,10 +246,17 @@ public class BlockQueue {
             logger.debug("{} hashes filtered out, {} added", hashes.size() - filtered.size(), filtered.size());
     }
 
-    private void logAddHash(byte[] hash) {
-        logger.trace("Adding hash to a hashQueue: [{}], hash queue size: {} ",
-                Hex.toHexString(hash).substring(0, 6),
-                hashStore.size());
+    public void addNewBlockHashes(List<byte[]> hashes) {
+        List<byte[]> notInQueue = blockQueue.filterExisting(hashes);
+
+        List<byte[]> notInChain = new ArrayList<>();
+        for (byte[] hash : notInQueue) {
+            if (blockchain.isBlockExist(hash)) {
+                notInChain.add(hash);
+            }
+        }
+
+        hashStore.addBatch(notInChain);
     }
 
     public void returnHashes(List<ByteArrayWrapper> hashes) {
@@ -314,18 +308,13 @@ public class BlockQueue {
         return hashStore.isEmpty();
     }
 
+    public void clearHashes() {
+        hashStore.clear();
+    }
+
     public void clear() {
         this.hashStore.clear();
         this.blockQueue.clear();
-    }
-
-    /**
-     * Cancel and purge the timer-thread that
-     * processes the blocks in the queue
-     */
-    public void close() {
-        timer.cancel();
-        timer.purge();
     }
 
     public HashStore getHashStore() {

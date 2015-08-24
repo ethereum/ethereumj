@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
@@ -11,7 +11,7 @@ import java.math.BigInteger;
 /**
  * Wrapper around an Ethereum Blocks message on the network
  *
- * @see org.ethereum.net.eth.EthMessageCodes#NEW_BLOCK
+ * @see EthMessageCodes#NEW_BLOCK
  */
 public class NewBlockMessage extends EthMessage {
 

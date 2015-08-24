@@ -1,7 +1,7 @@
 package org.ethereum.net.peerdiscovery;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.StatusMessage;
+import org.ethereum.net.eth.message.StatusMessage;
 import org.ethereum.net.p2p.HelloMessage;
 
 import java.net.InetAddress;

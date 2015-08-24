@@ -1,7 +1,7 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
@@ -18,6 +18,13 @@ import java.util.Map;
 public class MessageCodesResolver {
 
     private Map<String, Integer> offsets = new HashMap<>();
+
+    public MessageCodesResolver() {
+    }
+
+    public MessageCodesResolver(List<Capability> caps) {
+        init(caps);
+    }
 
     public void init(List<Capability> caps) {
         Collections.sort(caps);
@@ -87,10 +94,6 @@ public class MessageCodesResolver {
     private byte getOffset(String cap) {
         Integer offset = offsets.get(cap);
         return offset == null ? 0 : offset.byteValue();
-    }
-
-    public void setP2pOffset(int offset) {
-        setOffset(Capability.P2P, offset);
     }
 
     public void setBzzOffset(int offset) {

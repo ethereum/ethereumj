@@ -5,10 +5,10 @@ import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthHandler;
-import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.eth.NewBlockMessage;
-import org.ethereum.net.eth.TransactionsMessage;
+import org.ethereum.net.eth.EthVersion;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.NewBlockMessage;
+import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerInfo;
@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
+import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.message.StaticMessages.*;
 
 /**
@@ -212,32 +213,25 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         }
         else {
             List<Capability> capInCommon = HandshakeHelper.getSupportedCapabilities(msg);
-            channel.getMessageCodesResolver().init(capInCommon);
+            channel.initMessageCodes(capInCommon);
             for (Capability capability : capInCommon) {
                 if (capability.getName().equals(Capability.ETH) &&
-                    capability.getVersion() == EthHandler.VERSION) {
+                    EthVersion.isSupported(capability.getVersion())) {
 
                     // Activate EthHandler for this peer
-                    EthHandler ethHandler = channel.getEthHandler();
-                    ethHandler.setPeerId(msg.getPeerId());
-                    ctx.pipeline().addLast(Capability.ETH, ethHandler);
-                    ethHandler.activate();
+                    channel.activateEth(ctx, fromCode(capability.getVersion()));
                 } else if
                    (capability.getName().equals(Capability.SHH) &&
                     capability.getVersion() == ShhHandler.VERSION) {
 
                     // Activate ShhHandler for this peer
-                    ShhHandler shhHandler = channel.getShhHandler();
-                    ctx.pipeline().addLast(Capability.SHH, shhHandler);
-                    shhHandler.activate();
+                    channel.activateShh(ctx);
                 } else if
                    (capability.getName().equals(Capability.BZZ) &&
                     capability.getVersion() == BzzHandler.VERSION) {
 
                     // Activate ShhHandler for this peer
-                    BzzHandler bzzHandler = channel.getBzzHandler();
-                    ctx.pipeline().addLast(Capability.BZZ, bzzHandler);
-                    bzzHandler.activate();
+                    channel.activateBzz(ctx);
                 }
             }
 

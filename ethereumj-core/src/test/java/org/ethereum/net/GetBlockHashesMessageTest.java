@@ -1,8 +1,8 @@
 package org.ethereum.net;
 
-import org.ethereum.net.eth.BlockHashesMessage;
-import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.eth.GetBlockHashesMessage;
+import org.ethereum.net.eth.message.BlockHashesMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.GetBlockHashesMessage;
 
 import org.junit.Test;
 

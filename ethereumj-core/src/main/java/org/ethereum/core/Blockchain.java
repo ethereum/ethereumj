@@ -1,8 +1,5 @@
 package org.ethereum.core;
 
-import org.ethereum.core.*;
-import org.ethereum.net.BlockQueue;
-
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Set;
@@ -25,8 +22,6 @@ public interface Blockchain {
 
     public Block getBestBlock();
 
-    public BlockQueue getQueue();
-
     public boolean hasParentOnTheChain(Block block);
 
     void close();
@@ -40,6 +35,8 @@ public interface Blockchain {
     public byte[] getBestBlockHash();
 
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty);
+
+    public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty);
 
     TransactionReceipt getTransactionReceiptByHash(byte[] hash);
 
