@@ -10,15 +10,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.URL;
 import java.util.*;
 
 import static org.ethereum.crypto.SHA3Helper.sha3;
@@ -69,6 +69,9 @@ public class SystemProperties {
     private String projectVersion = null;
 
     private String genesisInfo = null;
+
+    private String bindIp = null;
+    private String externalIp = null;
 
     private SystemProperties() {
         try {
@@ -399,6 +402,61 @@ public class SystemProperties {
     @ValidateMe
     public int listenPort() {
         return config.getInt("peer.listen.port");
+    }
+
+
+    /**
+     * This can be a blocking call with long timeout (thus no ValidateMe)
+     */
+    public String bindIp() {
+        if (!config.hasPath("peer.bind.ip") || config.getString("peer.bind.ip").trim().isEmpty()) {
+            if (bindIp == null) {
+                logger.info("Bind address wasn't set, Punching to identify it...");
+                try {
+                    Socket s = new Socket("www.google.com", 80);
+                    bindIp = s.getLocalAddress().getHostAddress();
+                    logger.info("UDP local bound to: {}", bindIp);
+                } catch (IOException e) {
+                    logger.warn("Can't get bind IP. Fall back to 0.0.0.0: " + e);
+                    bindIp = "0.0.0.0";
+                }
+            }
+            return bindIp;
+        } else {
+            return config.getString("peer.bind.ip").trim();
+        }
+    }
+
+    /**
+     * This can be a blocking call with long timeout (thus no ValidateMe)
+     */
+    public String externalIp() {
+        if (!config.hasPath("peer.discovery.external.ip") || config.getString("peer.discovery.external.ip").trim().isEmpty()) {
+            if (externalIp == null) {
+                logger.info("External IP wasn't set, using checkip.amazonaws.com to identify it...");
+                try {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(
+                            new URL("http://checkip.amazonaws.com").openStream()));
+                    externalIp = in.readLine();
+                    if (externalIp == null || externalIp.trim().isEmpty()) {
+                        throw new IOException("Invalid address: '" + externalIp + "'");
+                    }
+                    try {
+                        InetAddress.getByName(externalIp);
+                    } catch (Exception e) {
+                        throw new IOException("Invalid address: '" + externalIp + "'");
+                    }
+                    logger.info("External address identified: {}", externalIp);
+                } catch (IOException e) {
+                    externalIp = bindIp();
+                    logger.warn("Can't get external IP. Fall back to peer.bind.ip: " + externalIp + " :" + e);
+                }
+            }
+            return externalIp;
+
+        } else {
+            return config.getString("peer.discovery.external.ip").trim();
+        }
     }
 
     @ValidateMe
