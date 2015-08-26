@@ -124,7 +124,11 @@ public class Channel {
 
     public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId) throws IOException, InterruptedException {
 
-        HelloMessage helloMessage = StaticMessages.createHelloMessage(nodeId);
+        // in discovery mode we are supplying fake port along with fake nodeID to not receive
+        // incoming connections with fake public key
+        HelloMessage helloMessage = discoveryMode ? StaticMessages.createHelloMessage(nodeId, 9) :
+                StaticMessages.createHelloMessage(nodeId);
+
         byte[] payload = helloMessage.getEncoded();
 
         ByteBuf byteBufMsg = ctx.alloc().buffer();
