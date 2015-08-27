@@ -1,7 +1,7 @@
 package org.ethereum.net;
 
 import org.ethereum.core.Block;
-import org.ethereum.net.eth.BlocksMessage;
+import org.ethereum.net.eth.message.BlocksMessage;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -10,14 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.spongycastle.util.encoders.Hex;
-
-import java.io.File;
-import java.io.IOException;
-
-import java.net.URISyntaxException;
-import java.net.URL;
-
-import java.nio.file.Files;
 
 import java.util.List;
 

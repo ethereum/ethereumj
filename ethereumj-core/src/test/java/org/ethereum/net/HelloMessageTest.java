@@ -1,7 +1,7 @@
 package org.ethereum.net;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthHandler;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageCodes;
@@ -51,7 +51,7 @@ public class HelloMessageTest {
         byte version = 2;
         String clientStr = "Ethereum(++)/v0.7.9/Release/Linux/g++";
         List<Capability> capabilities = Arrays.asList(
-                new Capability(Capability.ETH, EthHandler.VERSION),
+                new Capability(Capability.ETH, EthVersion.UPPER),
                 new Capability(Capability.SHH, ShhHandler.VERSION),
                 new Capability(Capability.P2P, P2pHandler.VERSION));
         int listenPort = 992;

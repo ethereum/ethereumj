@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
@@ -8,30 +8,28 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
-import static org.ethereum.net.eth.EthMessageCodes.STATUS;
-
 /**
- * Wrapper around an Ethereum Status message on the network
+ * Wrapper for Ethereum STATUS message. <br>
  *
- * @see org.ethereum.net.eth.EthMessageCodes#STATUS
+ * @see EthMessageCodes#STATUS
  */
 public class StatusMessage extends EthMessage {
 
-    private byte protocolVersion;
-    private int networkId;
+    protected byte protocolVersion;
+    protected int networkId;
 
     /**
      * Total difficulty of the best chain as found in block header.
      */
-    private byte[] totalDifficulty;
+    protected byte[] totalDifficulty;
     /**
      * The hash of the best (i.e. highest TD) known block.
      */
-    private byte[] bestHash;
+    protected byte[] bestHash;
     /**
      * The hash of the Genesis block
      */
-    private byte[] genesisHash;
+    protected byte[] genesisHash;
 
     public StatusMessage(byte[] encoded) {
         super(encoded);
@@ -47,7 +45,7 @@ public class StatusMessage extends EthMessage {
         this.parsed = true;
     }
 
-    private void parse() {
+    protected void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         this.protocolVersion = paramsList.get(0).getRLPData()[0];
@@ -62,7 +60,7 @@ public class StatusMessage extends EthMessage {
         parsed = true;
     }
 
-    private void encode() {
+    protected void encode() {
         byte[] protocolVersion = RLP.encodeByte(this.protocolVersion);
         byte[] networkId = RLP.encodeInt(this.networkId);
         byte[] totalDifficulty = RLP.encodeElement(this.totalDifficulty);
@@ -115,7 +113,7 @@ public class StatusMessage extends EthMessage {
 
     @Override
     public EthMessageCodes getCommand() {
-        return STATUS;
+        return EthMessageCodes.STATUS;
     }
 
 

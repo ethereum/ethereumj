@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
@@ -8,12 +8,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import static org.ethereum.net.eth.EthMessageCodes.BLOCKS;
-
 /**
  * Wrapper around an Ethereum Blocks message on the network
  *
- * @see org.ethereum.net.eth.EthMessageCodes#BLOCKS
+ * @see EthMessageCodes#BLOCKS
  */
 public class BlocksMessage extends EthMessage {
 

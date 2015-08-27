@@ -1,17 +1,14 @@
 package org.ethereum.net;
 
-import org.ethereum.net.eth.BlocksMessage;
-import org.ethereum.net.eth.EthMessageCodes;
-import org.ethereum.net.eth.GetBlocksMessage;
+import org.ethereum.net.eth.message.BlocksMessage;
+import org.ethereum.net.eth.message.EthMessageCodes;
+import org.ethereum.net.eth.message.GetBlocksMessage;
 
 import org.junit.Test;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 

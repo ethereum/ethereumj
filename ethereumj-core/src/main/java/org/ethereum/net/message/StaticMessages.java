@@ -1,9 +1,7 @@
 package org.ethereum.net.message;
 
 import org.ethereum.config.SystemProperties;
-import org.ethereum.crypto.HashUtil;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.GetTransactionsMessage;
 import org.ethereum.net.p2p.*;
 import org.spongycastle.util.encoders.Hex;
 
@@ -21,7 +19,6 @@ public class StaticMessages {
     public final static PingMessage PING_MESSAGE = new PingMessage();
     public final static PongMessage PONG_MESSAGE = new PongMessage();
     public final static GetPeersMessage GET_PEERS_MESSAGE = new GetPeersMessage();
-    public final static GetTransactionsMessage GET_TRANSACTIONS_MESSAGE = new GetTransactionsMessage();
     public final static DisconnectMessage DISCONNECT_MESSAGE = new DisconnectMessage(ReasonCode.REQUESTED);
 
     public static final byte[] SYNC_TOKEN = Hex.decode("22400891");

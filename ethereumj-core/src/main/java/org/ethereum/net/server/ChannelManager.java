@@ -4,7 +4,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 
-import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.eth.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -60,7 +60,7 @@ public class ChannelManager {
     private void processNewPeers() {
         List<Channel> processed = new ArrayList<>();
         for(Channel peer : newPeers) {
-            if(peer.hasInitPassed()) {
+            if(peer.isProtocolsInitialized()) {
                 if(peer.isUseful()) {
                     processUseful(peer);
                 }
@@ -71,8 +71,12 @@ public class ChannelManager {
     }
 
     private void processUseful(Channel peer) {
-        if(peer.ethHandler.hasStatusSucceeded()) {
-            syncManager.addPeer(peer.ethHandler);
+        if(peer.hasEthStatusSucceeded()) {
+            // prohibit transactions processing until main sync is done
+            if (!syncManager.isSyncDone()) {
+                peer.prohibitTransactionProcessing();
+            }
+            syncManager.addPeer(peer);
             activePeers.add(peer);
         }
     }
@@ -83,14 +87,21 @@ public class ChannelManager {
         }
     }
 
-    public void addChannel(Channel channel) {
+    public void add(Channel channel) {
         newPeers.add(channel);
     }
 
     public void notifyDisconnect(Channel channel) {
-        logger.info("Peer {}: notifies about disconnect", Utils.getNodeIdShort(channel.ethHandler.getPeerId()));
-        syncManager.onDisconnect(channel.ethHandler);
+        logger.debug("Peer {}: notifies about disconnect", Utils.getNodeIdShort(channel.getPeerIdShort()));
+        channel.onDisconnect();
+        syncManager.onDisconnect(channel);
         activePeers.remove(channel);
         newPeers.remove(channel);
+    }
+
+    public void onSyncDone() {
+        for (Channel channel : activePeers) {
+            channel.onSyncDone();
+        }
     }
 }

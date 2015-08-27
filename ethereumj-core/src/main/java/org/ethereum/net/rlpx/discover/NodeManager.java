@@ -1,6 +1,5 @@
 package org.ethereum.net.rlpx.discover;
 
-import org.apache.commons.collections4.Predicate;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -12,7 +11,6 @@ import org.ethereum.util.Functional;
 import org.mapdb.DB;
 import org.mapdb.HTreeMap;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -277,27 +275,67 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         return ret;
     }
 
-    public List<NodeHandler> getNodes(
+    /**
+     * Returns list of unused Eth nodes with highest total difficulty<br>
+     *     Search criteria:
+     *     <ul>
+     *         <li>not presented in {@code usedIds} collection</li>
+     *         <li>eth status processing succeeded</li>
+     *         <li>difficulty is higher than {@code lowerDifficulty}</li>
+     *     </ul>
+     *
+     *
+     * @param usedIds collections of ids which are excluded from results
+     * @param lowerDifficulty nodes having TD lower than this value are sorted out
+     * @param limit max size of returning list
+     *
+     * @return list of nodes with highest difficulty, ordered by TD in desc order
+     */
+    public List<NodeHandler> getBestEthNodes(
+            final Set<String> usedIds,
+            final BigInteger lowerDifficulty,
+            int limit
+    ) {
+        return getNodes(new Functional.Predicate<NodeHandler>() {
+            @Override
+            public boolean test(NodeHandler handler) {
+                if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                    return false;
+                }
+                if (usedIds.contains(handler.getNode().getHexId())) {
+                    return false;
+                }
+                return handler.getNodeStatistics().getEthTotalDifficulty().compareTo(lowerDifficulty) > 0;
+            }
+        }, BEST_DIFFICULTY_COMPARATOR, limit);
+    }
+
+    /**
+     * Returns limited list of nodes matching {@code predicate} criteria<br>
+     * Sorting is performed before result truncation,
+     * therefore result list contains best nodes according to provided {@code comparator}
+     *
+     * @param predicate only those nodes which are satisfied to its condition are included in results
+     * @param comparator used to sort nodes before truncation
+     * @param limit max size of returning list
+     *
+     * @return list of nodes matching criteria
+     */
+    private List<NodeHandler> getNodes(
             Functional.Predicate<NodeHandler> predicate,
             Comparator<NodeHandler> comparator,
             int limit
     ) {
-        List<NodeHandler> nodes;
+        List<NodeHandler> filtered = new ArrayList<>();
         synchronized (this) {
-            nodes = new ArrayList<>(nodeHandlerMap.values());
+            for (NodeHandler handler : nodeHandlerMap.values()) {
+                if (predicate.test(handler)) {
+                    filtered.add(handler);
+                }
+            }
         }
-        List<NodeHandler> filtered = CollectionUtils.selectList(nodes, predicate);
         Collections.sort(filtered, comparator);
         return CollectionUtils.truncate(filtered, limit);
-    }
-
-    public NodeHandler findById(final String nodeId) {
-        return org.apache.commons.collections4.CollectionUtils.find(nodeHandlerMap.values(), new Predicate<NodeHandler>() {
-            @Override
-            public boolean evaluate(NodeHandler handler) {
-                return nodeId.equals(Hex.toHexString(handler.getNode().getId()));
-            }
-        });
     }
 
     private synchronized void processListeners() {
@@ -367,4 +405,27 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
             }
         }
     }
+
+    private static final Comparator<NodeHandler> BEST_DIFFICULTY_COMPARATOR = new Comparator<NodeHandler>() {
+        @Override
+        public int compare(NodeHandler n1, NodeHandler n2) {
+            BigInteger td1 = null;
+            BigInteger td2 = null;
+            if(n1.getNodeStatistics().getEthTotalDifficulty() != null) {
+                td1 = n1.getNodeStatistics().getEthTotalDifficulty();
+            }
+            if(n2.getNodeStatistics().getEthTotalDifficulty() != null) {
+                td2 = n2.getNodeStatistics().getEthTotalDifficulty();
+            }
+            if (td1 != null && td2 != null) {
+                return td2.compareTo(td1);
+            } else if (td1 == null && td2 == null) {
+                return 0;
+            } else if (td1 != null) {
+                return -1;
+            } else {
+                return 1;
+            }
+        }
+    };
 }

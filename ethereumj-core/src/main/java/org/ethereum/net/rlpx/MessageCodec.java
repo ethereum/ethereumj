@@ -9,7 +9,8 @@ import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.eth.EthMessageCodes;
+import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.p2p.DisconnectMessage;
@@ -54,6 +55,11 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     private boolean isHandshakeDone;
     private final InitiateHandler initiator = new InitiateHandler();
 
+    private MessageFactory p2pMessageFactory;
+    private MessageFactory ethMessageFactory;
+    private MessageFactory shhMessageFactory;
+    private MessageFactory bzzMessageFactory;
+
     public InitiateHandler getInitiator() {
         return initiator;
     }
@@ -63,6 +69,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
             channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
             if (remoteId.length == 64) {
+                channel.setNode(remoteId);
                 initiate(ctx);
             } else {
                 handshake = new EncryptionHandshake();
@@ -100,7 +107,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Recv: Encoded: {} [{}]", frame.getType(), Hex.toHexString(payload));
 
-        Message msg = MessageFactory.createMessage((byte) frame.getType(), payload, messageCodesResolver);
+        Message msg = createMessage((byte) frame.getType(), payload);
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
@@ -139,7 +146,6 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
         loggerNet.info("RLPX protocol activated");
 
-        channel.getShhHandler().setPrivKey(myKey);
         byte[] nodeIdWithFormat = myKey.getPubKey();
         nodeId = new byte[nodeIdWithFormat.length - 1];
         System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
@@ -193,7 +199,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                     if (loggerNet.isInfoEnabled())
                         loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
                     isHandshakeDone = true;
-                    this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+                    this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
                 } else {
                     DisconnectMessage message = new DisconnectMessage(payload);
                     if (loggerNet.isInfoEnabled())
@@ -215,7 +221,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
                 ECPoint remotePubKey = this.handshake.getRemotePublicKey();
                 this.remoteId = remotePubKey.getEncoded();
-                this.channel.init(Hex.toHexString(this.remoteId), false);
+                channel.setNode(remoteId);
 
                 final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);
                 byteBufMsg.writeBytes(responsePacket);
@@ -232,7 +238,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 // Secret authentication finish here
                 isHandshakeDone = true;
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
-                this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage, nodeId);
+                this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
             }
         }
         channel.getNodeStatistics().rlpxInHello.add();
@@ -263,10 +269,34 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         return code;
     }
 
+    private Message createMessage(byte code, byte[] payload) {
+
+        byte resolved = messageCodesResolver.resolveP2p(code);
+        if (p2pMessageFactory != null && P2pMessageCodes.inRange(resolved)) {
+            return p2pMessageFactory.create(resolved, payload);
+        }
+
+        resolved = messageCodesResolver.resolveEth(code);
+        if (ethMessageFactory != null && EthMessageCodes.inRange(resolved)) {
+            return ethMessageFactory.create(resolved, payload);
+        }
+
+        resolved = messageCodesResolver.resolveShh(code);
+        if (shhMessageFactory != null && ShhMessageCodes.inRange(resolved)) {
+            return shhMessageFactory.create(resolved, payload);
+        }
+
+        resolved = messageCodesResolver.resolveBzz(code);
+        if (bzzMessageFactory != null && BzzMessageCodes.inRange(resolved)) {
+            return bzzMessageFactory.create(resolved, payload);
+        }
+
+        throw new IllegalArgumentException("No such message");
+    }
+
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
-        this.messageCodesResolver = channel.getMessageCodesResolver();
     }
 
     /**
@@ -289,5 +319,25 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
             loggerNet.error("MessageCodec handling failed", cause);
         }
         ctx.close();
+    }
+
+    public void initMessageCodes(List<Capability> caps) {
+        this.messageCodesResolver = new MessageCodesResolver(caps);
+    }
+
+    public void setP2pMessageFactory(MessageFactory p2pMessageFactory) {
+        this.p2pMessageFactory = p2pMessageFactory;
+    }
+
+    public void setEthMessageFactory(MessageFactory ethMessageFactory) {
+        this.ethMessageFactory = ethMessageFactory;
+    }
+
+    public void setShhMessageFactory(MessageFactory shhMessageFactory) {
+        this.shhMessageFactory = shhMessageFactory;
+    }
+
+    public void setBzzMessageFactory(MessageFactory bzzMessageFactory) {
+        this.bzzMessageFactory = bzzMessageFactory;
     }
 }

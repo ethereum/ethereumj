@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -16,17 +16,24 @@ public enum EthMessageCodes {
     /* Ethereum protocol */
 
     /**
-     * [0x00, [PROTOCOL_VERSION, NETWORK_ID, TD, BEST_HASH, GENESIS_HASH] <br>
+     * [0x00, [PROTOCOL_VERSION, NETWORK_ID, TD, BEST_HASH, GENESIS_HASH, { PV61: BEST_NUMBER }] <br>
      * Inform a peer of it's current ethereum state. This message should be
      * send after the initial handshake and prior to any ethereum related messages.
      */
     STATUS(0x00),
 
     /**
-     * [+0x01] Request the peer to send all transactions
-     * currently in the queue.
+     * [+0x01, [hash1: B_32, hash2: B_32, ...]: <br>
+     * Specify one or more new blocks which have appeared on the network.
+     * To be maximally helpful, nodes should inform peers of all blocks that they may not be aware of.
+     * Including hashes that the sending peer could reasonably be considered to know
+     * (due to the fact they were previously informed of because
+     * that node has itself advertised knowledge of the hashes through NewBlockHashes)
+     * is considered Bad Form, and may reduce the reputation of the sending node.
+     * Including hashes that the sending node later refuses to honour with a proceeding
+     * GetBlocks message is considered Bad Form, and may reduce the reputation of the sending node.
      */
-    GET_TRANSACTIONS(0x01),
+    NEW_BLOCK_HASHES(0x01),
 
     /**
      * [+0x02, [nonce, receiving_address, value, ...], ...] <br>
@@ -74,7 +81,17 @@ public enum EthMessageCodes {
      * in the list (following the message ID) is a block in the format described
      * in the main Ethereum specification.
      */
-    NEW_BLOCK(0x07);
+    NEW_BLOCK(0x07),
+
+    /**
+     * [+0x08, [number: P, maxBlocks: P]: <br>
+     * Requires peer to reply with a BlockHashes message.
+     * Message should contain block with that of number number on the canonical chain.
+     * Should also be followed by subsequent blocks, on the same chain,
+     * detailing a number of the first block hash and a total of hashes to be sent.
+     * Returned hash list must be ordered by block number in ascending order.
+     */
+    GET_BLOCK_HASHES_BY_NUMBER(0x08);
 
 
     static byte OFFSET = 0;

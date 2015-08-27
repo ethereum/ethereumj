@@ -6,8 +6,6 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
-import org.ethereum.net.BlockQueue;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
@@ -19,7 +17,6 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
-import org.springframework.util.FileSystemUtils;
 
 import javax.annotation.Resource;
 import java.io.BufferedWriter;
@@ -80,7 +77,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Resource
     @Qualifier("pendingTransactions")
-    private Set<PendingTransaction> pendingTransactions = new HashSet<>();
+    private final Set<PendingTransaction> pendingTransactions = new HashSet<>();
 
     @Autowired
     private Repository repository;
@@ -97,14 +94,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     private EthereumListener listener;
-
-    @Autowired
-    private BlockQueue blockQueue;
-
-    @Autowired
-    private ChannelManager channelManager;
-
-    private boolean syncDoneCalled = false;
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
@@ -162,6 +151,25 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public List<byte[]> getListOfHashesStartFrom(byte[] hash, int qty) {
         return blockStore.getListHashesEndWith(hash, qty);
+    }
+
+    @Override
+    public List<byte[]> getListOfHashesStartFromBlock(long blockNumber, int qty) {
+        long bestNumber = bestBlock.getNumber();
+
+        if (blockNumber > bestNumber) {
+            return Collections.emptyList();
+        }
+
+        if (blockNumber + qty - 1 > bestNumber) {
+            qty = (int) (bestNumber - blockNumber + 1);
+        }
+
+        long endNumber = blockNumber + qty - 1;
+
+        Block block = getBlockByNumber(endNumber);
+
+        return blockStore.getListHashesEndWith(block.getHash(), qty);
     }
 
     private byte[] calcTxTrie(List<Transaction> transactions) {
@@ -338,26 +346,21 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
-
-        if (blockQueue != null &&
-            blockQueue.size() == 0 &&
-            !syncDoneCalled) {
-
-            logger.info("Sync done");
-            syncDoneCalled = true;
-            listener.onSyncDone();
-        }
     }
 
     private void clearOutdatedTransactions(final long blockNumber) {
         List<PendingTransaction> outdated = new ArrayList<>();
         List<Transaction> transactions = new ArrayList<>();
-        for (PendingTransaction tx : pendingTransactions) {
-            if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold()) {
-                outdated.add(tx);
-                transactions.add(tx.getTransaction());
+
+        synchronized (pendingTransactions) {
+            for (PendingTransaction tx : pendingTransactions) {
+                if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold()) {
+                    outdated.add(tx);
+                    transactions.add(tx.getTransaction());
+                }
             }
         }
+
         if (outdated.isEmpty())
             return;
 
@@ -682,12 +685,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return garbage;
     }
 
-
-    @Override
-    public BlockQueue getQueue() {
-        return blockQueue;
-    }
-
     @Override
     public void setBestBlock(Block block) {
         bestBlock = block;
@@ -700,7 +697,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public void close() {
-        blockQueue.close();
     }
 
     @Override
