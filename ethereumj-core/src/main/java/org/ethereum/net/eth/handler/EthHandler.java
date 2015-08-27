@@ -315,7 +315,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
                 loggerSync.info(
                         "Peer {}: hashes sync completed, [{}] hashes in queue",
                         channel.getPeerIdShort(),
-                        queue.getHashStore().size()
+                        queue.hashStoreSize()
                 );
             } else {
                 queue.logHashQueueSize();

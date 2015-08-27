@@ -268,24 +268,39 @@ public class SyncQueue {
         return blockQueue.size();
     }
 
+    public void clear() {
+        this.hashStore.clear();
+        this.blockQueue.clear();
+    }
+
     public boolean isHashesEmpty() {
         return hashStore.isEmpty();
+    }
+
+    public boolean isBlocksEmpty() {
+        return blockQueue.isEmpty();
     }
 
     public void clearHashes() {
         hashStore.clear();
     }
 
-    public void clear() {
-        this.hashStore.clear();
-        this.blockQueue.clear();
+    public int hashStoreSize() {
+        return hashStore.size();
     }
 
-    public HashStore getHashStore() {
-        return hashStore;
-    }
-
-    //TODO we need more robust solution for this check
+    /**
+     * Checks whether BlockQueue contains solid blocks or not. <br>
+     * Block is assumed to be solid in two cases:
+     * <ul>
+     *     <li>it was downloading during main sync</li>
+     *     <li>NEW block with exceeded solid timeout</li>
+     * </ul>
+     *
+     * @see BlockWrapper#SOLID_BLOCK_DURATION_THRESHOLD
+     *
+     * @return true if queue contains solid blocks, false otherwise
+     */
     public boolean hasSolidBlocks() {
         BlockWrapper wrapper = blockQueue.peek();
         return wrapper != null && wrapper.isSolidBlock();

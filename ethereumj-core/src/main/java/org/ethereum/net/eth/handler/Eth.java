@@ -1,6 +1,7 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.eth.sync.SyncStatistics;
 
@@ -112,4 +113,9 @@ public interface Eth {
      * @param tx sending transaction
      */
     void sendTransaction(Transaction tx);
+
+    /**
+     * @return protocol version
+     */
+    EthVersion getVersion();
 }

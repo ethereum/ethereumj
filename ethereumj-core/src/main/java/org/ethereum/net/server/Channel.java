@@ -286,4 +286,8 @@ public class Channel {
     public void sendTransaction(Transaction tx) {
         eth.sendTransaction(tx);
     }
+
+    public EthVersion getEthVersion() {
+        return eth.getVersion();
+    }
 }

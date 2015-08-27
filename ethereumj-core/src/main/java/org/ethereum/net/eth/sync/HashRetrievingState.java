@@ -1,9 +1,11 @@
 package org.ethereum.net.eth.sync;
 
 import org.ethereum.net.server.Channel;
+import org.ethereum.util.Functional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.eth.sync.SyncStateName.*;
 
 /**
@@ -52,6 +54,16 @@ public class HashRetrievingState extends AbstractSyncState {
                 return;
             }
             syncManager.startMaster(master);
+        }
+
+        // Since Eth V61 it makes sense to download blocks and hashes simultaneously
+        if (master.getEthVersion().getCode() > V60.getCode()) {
+            syncManager.pool.changeState(BLOCK_RETRIEVING, new Functional.Predicate<Channel>() {
+                @Override
+                public boolean test(Channel peer) {
+                    return peer.isIdle();
+                }
+            });
         }
     }
 }
