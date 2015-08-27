@@ -1,5 +1,6 @@
 package org.ethereum.net.eth.handler;
 
+import org.ethereum.core.Block;
 import org.ethereum.net.eth.message.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,8 +9,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
+import static java.lang.Math.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.eth.sync.SyncStateName.DONE_HASH_RETRIEVING;
@@ -26,10 +30,25 @@ public class Eth61 extends EthHandler {
 
     private static final Logger logger = LoggerFactory.getLogger("sync");
 
+    private static final int FORK_COVER_BATCH_SIZE = 512;
+
     /**
      * Last blockNumber value sent within GET_BLOCK_HASHES_BY_NUMBER msg
      */
     private long lastAskedNumber = 0;
+
+    /**
+     * In Eth 61 we have an ability to check if we're on the fork
+     * before starting hash sync.
+     *
+     * To do this we just download hashes of already known blocks
+     * from remote peer with best chain and comparing those hashes against ours.
+     *
+     * If best peer's hashes differ from ours then we're on the fork
+     * and trying to jump back to canonical chain
+     */
+    // TODO: we need to handle bad peers somehow, cause it may revert us to the very beginning
+    private boolean forkCovered = false;
 
     public Eth61() {
         super(V61);
@@ -38,6 +57,34 @@ public class Eth61 extends EthHandler {
     @Override
     protected void processBlockHashes(List<byte[]> received) {
         if (received.isEmpty()) {
+            return;
+        }
+
+        if (!forkCovered) {
+
+            if (lastAskedNumber <= 1) {
+                forkCovered = true;
+                sendGetBlockHashesByNumber(1, maxHashesAsk);
+                return;
+            }
+
+            // start downloading from blockNumber of the block with known hash
+            ListIterator<byte[]> it = received.listIterator(received.size());
+            while (it.hasPrevious()) {
+                byte[] hash = it.previous();
+                if (blockchain.isBlockExist(hash)) {
+                    forkCovered = true;
+                    Block block = blockchain.getBlockByHash(hash);
+                    sendGetBlockHashesByNumber(block.getNumber() + 1, maxHashesAsk);
+                    return;
+                }
+            }
+
+            logger.trace("Peer {}: fork is not covered yet");
+
+            long blockNumber = max(1, lastAskedNumber - FORK_COVER_BATCH_SIZE);
+            sendGetBlockHashesByNumber(blockNumber, FORK_COVER_BATCH_SIZE);
+
             return;
         }
 
@@ -58,12 +105,12 @@ public class Eth61 extends EthHandler {
                     Hex.toHexString(lastHashToAsk)
             );
         } else {
-            long blockNumber = lastAskedNumber + Math.min(received.size(), maxHashesAsk);
-            sendGetBlockHashesByNumber(blockNumber);
+            long blockNumber = lastAskedNumber + min(received.size(), maxHashesAsk);
+            sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);
         }
     }
 
-    public void sendGetBlockHashesByNumber(long blockNumber) {
+    private void sendGetBlockHashesByNumber(long blockNumber, int maxHashesAsk) {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get block hashes by number, blockNumber [{}], maxHashesAsk [{}]",
                 channel.getPeerIdShort(),
@@ -81,7 +128,7 @@ public class Eth61 extends EthHandler {
     protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFromBlock(
                 msg.getBlockNumber(),
-                Math.min(msg.getMaxBlocks(), CONFIG.maxHashesAsk())
+                min(msg.getMaxBlocks(), CONFIG.maxHashesAsk())
         );
 
         BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
@@ -90,7 +137,25 @@ public class Eth61 extends EthHandler {
 
     @Override
     protected void startHashRetrieving() {
+
         long blockNumber = blockchain.getBestBlock().getNumber() + 1;
-        sendGetBlockHashesByNumber(blockNumber);
+
+        if (blockNumber > 1) {
+
+            logger.trace("Peer {}: check if our chain is on the fork", channel.getPeerIdShort());
+
+            // always assume we're on the fork if best block is not a Genesis one
+            forkCovered = false;
+            blockNumber = max(1, blockNumber - FORK_COVER_BATCH_SIZE);
+            sendGetBlockHashesByNumber(blockNumber, FORK_COVER_BATCH_SIZE);
+
+        } else {
+
+            // if we're at the beginning there can't be any fork
+            forkCovered = true;
+            sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);
+
+        }
+
     }
 }

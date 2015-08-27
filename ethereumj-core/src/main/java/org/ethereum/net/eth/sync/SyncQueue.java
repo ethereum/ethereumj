@@ -178,9 +178,6 @@ public class SyncQueue {
     public void addHashesLast(List<byte[]> hashes) {
         List<byte[]> filtered = blockQueue.filterExisting(hashes);
 
-        // don't forget that hashes are received in reverse order
-        Collections.reverse(hashes);
-
         hashStore.addBatch(filtered);
 
         if(logger.isDebugEnabled())

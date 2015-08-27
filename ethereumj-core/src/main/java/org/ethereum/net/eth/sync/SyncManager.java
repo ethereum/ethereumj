@@ -378,7 +378,8 @@ public class SyncManager {
             public void run() {
                 pool.logActivePeers();
                 pool.logBannedPeers();
-                logger.info("\nState {}\n", state);
+                logger.info("\n");
+                logger.info("State {}\n", state);
             }
         }, 0, 30, TimeUnit.SECONDS);
     }
