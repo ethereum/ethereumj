@@ -86,47 +86,55 @@ public class SyncManager {
 
     public void init() {
 
-        // sync queue
-        queue.init();
-
-        if (!CONFIG.isSyncEnabled()) {
-            logger.info("Sync Manager: OFF");
-            return;
-        }
-
-        logger.info("Sync Manager: ON");
-
-        // set IDLE state at the beginning
-        state = syncStates.get(IDLE);
-
-        updateDifficulties();
-
-        changeState(initialState());
-
-        addBestKnownNodeListener();
-
-        worker.scheduleWithFixedDelay(new Runnable() {
+        // make it asynchronously
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    updateDifficulties();
-                    removeUselessPeers();
-                    fillUpPeersPool();
-                    maintainState();
-                } catch (Throwable t) {
-                    t.printStackTrace();
-                    logger.error("Exception in main sync worker", t);
+
+                // sync queue
+                queue.init();
+
+                if (!CONFIG.isSyncEnabled()) {
+                    logger.info("Sync Manager: OFF");
+                    return;
                 }
+
+                logger.info("Sync Manager: ON");
+
+                // set IDLE state at the beginning
+                state = syncStates.get(IDLE);
+
+                updateDifficulties();
+
+                changeState(initialState());
+
+                addBestKnownNodeListener();
+
+                worker.scheduleWithFixedDelay(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            updateDifficulties();
+                            removeUselessPeers();
+                            fillUpPeersPool();
+                            maintainState();
+                        } catch (Throwable t) {
+                            t.printStackTrace();
+                            logger.error("Exception in main sync worker", t);
+                        }
+                    }
+                }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
+
+                for (Node node : CONFIG.peerActive()) {
+                    pool.connect(node);
+                }
+
+                if (logger.isInfoEnabled()) {
+                    startLogWorker();
+                }
+
             }
-        }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
-
-        for (Node node : CONFIG.peerActive()) {
-            pool.connect(node);
-        }
-
-        if (logger.isInfoEnabled()) {
-            startLogWorker();
-        }
+        }).start();
     }
 
     public void addPeer(Channel peer) {
