@@ -251,8 +251,16 @@ public class Channel {
         return eth.getMaxHashesAsk();
     }
 
-    public byte[] getBestHash() {
-        return eth.getBestHash();
+    public void setLastHashToAsk(byte[] lastHashToAsk) {
+        eth.setLastHashToAsk(lastHashToAsk);
+    }
+
+    public byte[] getLastHashToAsk() {
+        return eth.getLastHashToAsk();
+    }
+
+    public byte[] getBestKnownHash() {
+        return eth.getBestKnownHash();
     }
 
     public SyncStatistics getSyncStats() {

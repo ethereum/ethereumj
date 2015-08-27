@@ -71,7 +71,16 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public byte[] getBestHash() {
+    public void setLastHashToAsk(byte[] lastHashToAsk) {
+    }
+
+    @Override
+    public byte[] getLastHashToAsk() {
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] getBestKnownHash() {
         return new byte[0];
     }
 
