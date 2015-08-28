@@ -389,7 +389,11 @@ public class SystemProperties {
 
     @ValidateMe
     public String privateKey() {
-        return config.getString("peer.privateKey");
+        String key = config.getString("peer.privateKey");
+        if (key.length() != 64) {
+            throw new RuntimeException("The peer.privateKey needs to be Hex encoded and 32 byte length");
+        }
+        return key;
     }
 
     @ValidateMe
