@@ -58,6 +58,9 @@ public class SyncQueue {
      * starts {@link #produceQueue()} thread
      */
     public void init() {
+
+        logger.info("Start loading sync queue");
+
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
         hashStore = new HashStoreImpl();
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
