@@ -28,8 +28,6 @@ public class UDPListener {
 
     private final int port;
     private String address;
-    private final ECKey key;
-    private NodeTable table;
     private String[] bootPeers;
 
     @Autowired
@@ -41,7 +39,6 @@ public class UDPListener {
     public UDPListener() {
         this.address = SystemProperties.CONFIG.bindIp();
         port = SystemProperties.CONFIG.listenPort();
-        key = ECKey.fromPrivate(BigInteger.TEN).decompress();
         if (SystemProperties.CONFIG.peerDiscovery()) {
             bootPeers = SystemProperties.CONFIG.peerDiscoveryIPList().toArray(new String[0]);
         }
@@ -50,7 +47,6 @@ public class UDPListener {
     public UDPListener(String address, int port) {
         this.address = address;
         this.port = port;
-        key = ECKey.fromPrivate(BigInteger.TEN).decompress();
     }
 
     @PostConstruct
@@ -83,10 +79,6 @@ public class UDPListener {
 
         logger.info("Discovery UDPListener started");
         NioEventLoopGroup group = new NioEventLoopGroup(1);
-        byte[] nodeID = new byte[64];
-        System.arraycopy(key.getPubKey(), 1, nodeID, 0, 64);
-        Node homeNode = new Node(nodeID, address, port);
-        table = new NodeTable(homeNode);
 
         final List<Node> bootNodes = new ArrayList<>();
 
