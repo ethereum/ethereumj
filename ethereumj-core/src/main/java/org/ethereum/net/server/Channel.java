@@ -5,7 +5,6 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.core.Transaction;
-import org.ethereum.crypto.ECKey;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth;
@@ -106,7 +105,7 @@ public class Channel {
         messageCodec.setP2pMessageFactory(new P2pMessageFactory());
 
         shhHandler.setMsgQueue(msgQueue);
-        shhHandler.setPrivKey(ECKey.fromPrivate(CONFIG.privateKey().getBytes()).decompress());
+        shhHandler.setPrivKey(CONFIG.getMyKey());
         messageCodec.setShhMessageFactory(new ShhMessageFactory());
 
         bzzHandler.setMsgQueue(msgQueue);

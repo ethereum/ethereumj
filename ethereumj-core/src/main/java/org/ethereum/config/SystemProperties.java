@@ -234,10 +234,8 @@ public class SystemProperties {
                 } else {
                     if (configObject.toConfig().hasPath("nodeName")) {
                         String nodeName = configObject.toConfig().getString("nodeName").trim();
-                        // FIXME should be sha3-512 here
-                        byte[] ecPublic = ECKey.fromPrivate(sha3(nodeName.getBytes())).getPubKeyPoint().getEncoded(false);
-                        nodeId = new byte[ecPublic.length - 1];
-                        System.arraycopy(ecPublic, 1, nodeId, 0, nodeId.length);
+                        // FIXME should be sha3-512 here ?
+                        nodeId = ECKey.fromPrivate(sha3(nodeName.getBytes())).getNodeId();
                     } else {
                         throw new RuntimeException("Either nodeId or nodeName should be specified: " + configObject);
                     }
@@ -392,6 +390,19 @@ public class SystemProperties {
     @ValidateMe
     public String privateKey() {
         return config.getString("peer.privateKey");
+    }
+
+    @ValidateMe
+    public ECKey getMyKey() {
+        return ECKey.fromPrivate(Hex.decode(privateKey())).decompress();
+    }
+
+    /**
+     *  Home NodeID calculated from 'peer.privateKey' property
+     */
+    @ValidateMe
+    public byte[] nodeId() {
+        return getMyKey().getNodeId();
     }
 
     @ValidateMe
