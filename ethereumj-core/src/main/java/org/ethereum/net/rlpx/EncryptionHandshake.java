@@ -117,7 +117,7 @@ public class EncryptionHandshake {
         return response;
     }
 
-    private void agreeSecret(byte[] initiatePacket, byte[] responsePacket) {
+    void agreeSecret(byte[] initiatePacket, byte[] responsePacket) {
         BigInteger secretScalar = remoteEphemeralKey.multiply(ephemeralKey.getPrivKey()).normalize().getXCoord().toBigInteger();
         byte[] agreedSecret = ByteUtil.bigIntegerToBytes(secretScalar, SECRET_SIZE);
         byte[] sharedSecret = sha3(agreedSecret, sha3(responderNonce, initiatorNonce));
@@ -160,6 +160,10 @@ public class EncryptionHandshake {
 
     AuthResponseMessage makeAuthInitiate(byte[] initiatePacket, ECKey key) {
         AuthInitiateMessage initiate = decryptAuthInitiate(initiatePacket, key);
+        return makeAuthInitiate(initiate, key);
+    }
+
+    AuthResponseMessage makeAuthInitiate(AuthInitiateMessage initiate, ECKey key) {
         initiatorNonce = initiate.nonce;
         remotePublicKey = initiate.publicKey;
         BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
