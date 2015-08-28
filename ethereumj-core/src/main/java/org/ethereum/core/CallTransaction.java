@@ -74,7 +74,6 @@ public class CallTransaction {
         /**
          * Encodes the value according to specific type rules
          * @param value
-         * @return
          */
         public abstract byte[] encode(Object value);
 
@@ -96,7 +95,7 @@ public class CallTransaction {
             if (idx1 + 1 == idx2) {
                 return new DynamicArrayType(typeName);
             } else {
-                return new FixedArrayType(typeName);
+                return new StaticArrayType(typeName);
             }
         }
 
@@ -129,10 +128,10 @@ public class CallTransaction {
         public abstract byte[] encodeList(List l);
     }
 
-    public static class FixedArrayType extends ArrayType {
+    public static class StaticArrayType extends ArrayType {
         int size;
 
-        public FixedArrayType(String name) {
+        public StaticArrayType(String name) {
             super(name);
             int idx1 = name.indexOf("[");
             int idx2 = name.indexOf("]", idx1);
