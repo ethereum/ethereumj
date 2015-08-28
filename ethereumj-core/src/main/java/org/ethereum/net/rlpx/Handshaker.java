@@ -37,9 +37,7 @@ public class Handshaker {
 
     public Handshaker() {
         myKey = new ECKey().decompress();
-        byte[] nodeIdWithFormat = myKey.getPubKey();
-        nodeId = new byte[nodeIdWithFormat.length - 1];
-        System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+        nodeId = myKey.getNodeId();
         System.out.println("Node ID " + Hex.toHexString(nodeId));
     }
 

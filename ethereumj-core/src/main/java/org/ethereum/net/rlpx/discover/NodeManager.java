@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.util.*;
 
 import static java.lang.Math.min;
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * The central class for Peer Discovery machinery.
@@ -71,14 +72,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private boolean inited = false;
 
     public NodeManager() {
-        // TODO all below take from config ?
-        key = ECKey.fromPrivate(BigInteger.TEN).decompress();
-        byte[] nodeID = new byte[64];
-        System.arraycopy(key.getPubKey(), 1, nodeID, 0, 64);
-        int port = 30303;
-        String address = "127.0.0.1";
-        homeNode = new Node(nodeID, address, port);
-        table = new NodeTable(homeNode);
+        key = CONFIG.getMyKey();
+        homeNode = new Node(CONFIG.nodeId(), CONFIG.externalIp(), CONFIG.listenPort());
+        table = new NodeTable(homeNode, CONFIG.isPublicHomeNode());
 
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {

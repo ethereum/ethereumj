@@ -108,6 +108,7 @@ public class ECKey implements Serializable {
 
     // Transient because it's calculated on demand.
     transient private byte[] pubKeyHash;
+    transient private byte[] nodeId;
 
     /**
      * Generates an entirely new keypair. Point compression is used so the resulting public key will be 33 bytes
@@ -298,6 +299,18 @@ public class ECKey implements Serializable {
             pubKeyHash = HashUtil.sha3omit12(Arrays.copyOfRange(pubBytes, 1, pubBytes.length));
         }
         return pubKeyHash;
+    }
+
+    /**
+     * Generates the NodeID based on this key, that is the public key without first format byte
+     */
+    public byte[] getNodeId() {
+        if (nodeId == null) {
+            byte[] nodeIdWithFormat = getPubKey();
+            nodeId = new byte[nodeIdWithFormat.length - 1];
+            System.arraycopy(nodeIdWithFormat, 1, nodeId, 0, nodeId.length);
+        }
+        return nodeId;
     }
 
     /**

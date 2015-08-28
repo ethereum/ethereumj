@@ -24,11 +24,13 @@ public class StaticMessages {
     public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
 
     public static HelloMessage createHelloMessage(String peerId) {
+        return createHelloMessage(peerId, SystemProperties.CONFIG.listenPort());
+    }
+    public static HelloMessage createHelloMessage(String peerId, int listenPort) {
 
         String helloAnnouncement = buildHelloAnnouncement();
         byte p2pVersion = P2pHandler.VERSION;
         List<Capability> capabilities = Capability.getConfigCapabilities();
-        int listenPort = SystemProperties.CONFIG.listenPort();
 
         return new HelloMessage(p2pVersion, helloAnnouncement,
                 capabilities, listenPort, peerId);
