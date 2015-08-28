@@ -221,6 +221,10 @@ public class Channel {
         return node.getHexIdShort();
     }
 
+    public byte[] getNodeId() {
+        return node.getId();
+    }
+
     // ETH sub protocol
 
     public boolean hasEthStatusSucceeded() {

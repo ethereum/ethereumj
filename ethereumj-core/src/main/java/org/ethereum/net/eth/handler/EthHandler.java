@@ -391,7 +391,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         returnHashes();
 
         if(!blockList.isEmpty()) {
-            queue.addBlocks(blockList);
+            queue.addBlocks(blockList, channel.getNodeId());
             queue.logHashQueueSize();
         } else {
             changeState(BLOCKS_LACK);
@@ -419,7 +419,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         // adding block to the queue
         // there will be decided how to
         // connect it to the chain
-        queue.addNewBlock(newBlock);
+        queue.addNewBlock(newBlock, channel.getNodeId());
         queue.logHashQueueSize();
     }
 

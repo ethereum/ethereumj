@@ -124,13 +124,14 @@ public class SyncQueue {
      * Add a list of blocks to the processing queue.
      *
      * @param blockList - the blocks received from a peer to be added to the queue
+     * @param nodeId of the remote peer which these blocks are received from
      */
-    public void addBlocks(List<Block> blockList) {
+    public void addBlocks(List<Block> blockList, final byte[] nodeId) {
 
         List<BlockWrapper> wrappers = CollectionUtils.collectList(blockList, new Functional.Function<Block, BlockWrapper>() {
             @Override
             public BlockWrapper apply(Block block) {
-                return new BlockWrapper(block);
+                return new BlockWrapper(block, nodeId);
             }
         });
         blockQueue.addAll(wrappers);
@@ -146,9 +147,10 @@ public class SyncQueue {
      * Addi NEW block to the queue
      *
      * @param block new block
+     * @param nodeId nodeId of the remote peer which this block is received from
      */
-    public void addNewBlock(Block block) {
-        BlockWrapper wrapper = new BlockWrapper(block, true);
+    public void addNewBlock(Block block, byte[] nodeId) {
+        BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
         wrapper.setReceivedAt(System.currentTimeMillis());
 
         blockQueue.add(wrapper);

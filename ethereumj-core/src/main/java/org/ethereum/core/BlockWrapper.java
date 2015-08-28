@@ -24,14 +24,16 @@ public class BlockWrapper {
     private long importFailedAt = 0;
     private long receivedAt = 0;
     private boolean newBlock;
+    private byte[] nodeId;
 
-    public BlockWrapper(Block block) {
-        this(block, false);
+    public BlockWrapper(Block block, byte[] nodeId) {
+        this(block, false, nodeId);
     }
 
-    public BlockWrapper(Block block, boolean newBlock) {
+    public BlockWrapper(Block block, boolean newBlock, byte[] nodeId) {
         this.block = block;
         this.newBlock = newBlock;
+        this.nodeId = nodeId;
     }
 
     public BlockWrapper(byte[] bytes) {
@@ -86,6 +88,10 @@ public class BlockWrapper {
         this.receivedAt = receivedAt;
     }
 
+    public byte[] getNodeId() {
+        return nodeId;
+    }
+
     public void importFailed() {
         if (importFailedAt == 0) {
             importFailedAt = System.currentTimeMillis();
@@ -113,8 +119,9 @@ public class BlockWrapper {
         byte[] importFailedBytes = RLP.encodeBigInteger(BigInteger.valueOf(importFailedAt));
         byte[] receivedAtBytes = RLP.encodeBigInteger(BigInteger.valueOf(receivedAt));
         byte[] newBlockBytes = RLP.encodeByte((byte) (newBlock ? 1 : 0));
+        byte[] nodeIdBytes = RLP.encodeElement(nodeId);
         return RLP.encodeList(blockBytes, importFailedBytes,
-                receivedAtBytes, newBlockBytes);
+                receivedAtBytes, newBlockBytes, nodeIdBytes);
     }
 
     private void parse(byte[] bytes) {
@@ -131,6 +138,7 @@ public class BlockWrapper {
         this.receivedAt = receivedAtBytes == null ? 0 : new BigInteger(1, receivedAtBytes).longValue();
         byte newBlock = newBlockBytes == null ? 0 : new BigInteger(1, newBlockBytes).byteValue();
         this.newBlock = newBlock == 1;
+        this.nodeId = wrapper.get(4).getRLPData();
     }
 
     @Override
