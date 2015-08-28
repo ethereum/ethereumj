@@ -1,6 +1,11 @@
 package org.ethereum.core;
 
+import org.ethereum.util.RLP;
+import org.ethereum.util.RLPElement;
+import org.ethereum.util.RLPList;
+
 import java.math.BigInteger;
+import java.util.List;
 
 import static org.ethereum.util.TimeUtils.secondsToMillis;
 
@@ -105,37 +110,27 @@ public class BlockWrapper {
 
     public byte[] getBytes() {
         byte[] blockBytes = block.getEncoded();
-        byte[] importFailedBytes = BigInteger.valueOf(importFailedAt).toByteArray();
-        byte[] receivedAtBytes = BigInteger.valueOf(receivedAt).toByteArray();
-
-        byte[] bytes = new byte[blockBytes.length + importFailedBytes.length + receivedAtBytes.length + 3];
-
-        bytes[0] = (byte) (newBlock ? 1 : 0);
-
-        bytes[1] = (byte) importFailedBytes.length;
-        System.arraycopy(importFailedBytes, 0, bytes, 2, importFailedBytes.length);
-
-        bytes[importFailedBytes.length + 2] = (byte) receivedAtBytes.length;
-        System.arraycopy(receivedAtBytes, 0, bytes, importFailedBytes.length + 3, receivedAtBytes.length);
-
-        System.arraycopy(blockBytes, 0, bytes, importFailedBytes.length + receivedAtBytes.length + 3, blockBytes.length);
-        return bytes;
+        byte[] importFailedBytes = RLP.encodeBigInteger(BigInteger.valueOf(importFailedAt));
+        byte[] receivedAtBytes = RLP.encodeBigInteger(BigInteger.valueOf(receivedAt));
+        byte[] newBlockBytes = RLP.encodeByte((byte) (newBlock ? 1 : 0));
+        return RLP.encodeList(blockBytes, importFailedBytes,
+                receivedAtBytes, newBlockBytes);
     }
 
     private void parse(byte[] bytes) {
-        byte[] importFailedAtBytes = new byte[bytes[1]];
-        System.arraycopy(bytes, 2, importFailedAtBytes, 0, importFailedAtBytes.length);
+        List<RLPElement> params = RLP.decode2(bytes);
+        List<RLPElement> wrapper = (RLPList) params.get(0);
 
-        byte[] receivedAtBytes = new byte[bytes[importFailedAtBytes.length + 2]];
-        System.arraycopy(bytes, importFailedAtBytes.length + 3, receivedAtBytes, 0, receivedAtBytes.length);
+        byte[] blockBytes = wrapper.get(0).getRLPData();
+        byte[] importFailedBytes = wrapper.get(1).getRLPData();
+        byte[] receivedAtBytes = wrapper.get(2).getRLPData();
+        byte[] newBlockBytes = wrapper.get(3).getRLPData();
 
-        byte[] blockBytes = new byte[bytes.length - importFailedAtBytes.length - receivedAtBytes.length - 3];
-        System.arraycopy(bytes, importFailedAtBytes.length + receivedAtBytes.length + 3, blockBytes, 0, blockBytes.length);
-
-        this.newBlock = bytes[0] == 1;
-        this.importFailedAt = new BigInteger(importFailedAtBytes).longValue();
-        this.receivedAt = new BigInteger(receivedAtBytes).longValue();
         this.block = new Block(blockBytes);
+        this.importFailedAt = importFailedBytes == null ? 0 : new BigInteger(1, importFailedBytes).longValue();
+        this.receivedAt = receivedAtBytes == null ? 0 : new BigInteger(1, receivedAtBytes).longValue();
+        byte newBlock = newBlockBytes == null ? 0 : new BigInteger(1, newBlockBytes).byteValue();
+        this.newBlock = newBlock == 1;
     }
 
     @Override
