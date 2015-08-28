@@ -324,7 +324,7 @@ public class CallTransaction {
         @Override
         public byte[] encode(Object value) {
             if (!(value instanceof Boolean)) throw new RuntimeException("Wrong value for bool type: " + value);
-            return super.encode(value);
+            return super.encode(value == Boolean.TRUE ? 1 : 0);
         }
     }
 
