@@ -55,7 +55,7 @@ public class CallTransaction {
 
         /**
          * The canonical type name (used for the method signature creation)
-         * E.g. 'int' => canonical 'int256'
+         * E.g. 'int' - canonical 'int256'
          */
         public String getCanonicalName() {return getName();}
 

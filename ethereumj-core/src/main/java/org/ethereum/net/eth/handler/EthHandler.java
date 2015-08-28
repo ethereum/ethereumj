@@ -34,7 +34,6 @@ import static org.ethereum.util.ByteUtil.wrap;
  * Contains common logic to all supported versions
  * delegating version specific stuff to its descendants
  *
- * <p>
  * Peers with 'eth' capability can send/receive:
  * <ul>
  * <li>STATUS                           :   Announce their status to the peer</li>
@@ -46,7 +45,6 @@ import static org.ethereum.util.ByteUtil.wrap;
  * <li>BLOCKS                           :   Send a list of blocks</li>
  * <li>GET_BLOCK_HASHES_BY_NUMBER       :   Request list of know block hashes starting from the block</li>
  * </ul>
- * </p>
  */
 public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage> implements Eth {
 
