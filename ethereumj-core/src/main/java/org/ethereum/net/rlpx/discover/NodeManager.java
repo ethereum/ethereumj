@@ -74,7 +74,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     public NodeManager() {
         key = CONFIG.getMyKey();
         homeNode = new Node(CONFIG.nodeId(), CONFIG.externalIp(), CONFIG.listenPort());
-        table = new NodeTable(homeNode);
+        table = new NodeTable(homeNode, CONFIG.isPublicHomeNode());
 
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {

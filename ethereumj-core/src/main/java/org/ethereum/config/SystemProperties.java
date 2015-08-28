@@ -484,6 +484,9 @@ public class SystemProperties {
     public boolean isSyncEnabled() { return config.getBoolean("sync.enabled");}
 
     @ValidateMe
+    public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
+
+    @ValidateMe
     public String genesisInfo() {
 
         if (genesisInfo == null)
