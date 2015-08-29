@@ -290,8 +290,8 @@ def customizePom(pom, gradleProject) {
  }
 
 def buildTime() {
-    def df = new SimpleDateFormat("[GMT]-[yy/MM/dd]-[HH:mm]")
+    def df = new SimpleDateFormat("[yy/MM/dd]-[HH:mm]")
     df.setTimeZone(TimeZone.getTimeZone("GMT"));
-    return df.format(new Date())
+    return '[GMT]-' + df.format(new Date())
 }
 
