@@ -67,6 +67,7 @@ public class SystemProperties {
     private String databaseDir = null;
     private Boolean databaseReset = null;
     private String projectVersion = null;
+    private String projectVersionModifier = null;
 
     private String genesisInfo = null;
 
@@ -98,6 +99,9 @@ public class SystemProperties {
             this.projectVersion = this.projectVersion.replaceAll("'", "");
 
             if (this.projectVersion == null) this.projectVersion = "-.-.-";
+
+            this.projectVersionModifier = props.getProperty("modifier");
+            this.projectVersionModifier = this.projectVersionModifier.replaceAll("\"", "");
 
         } catch (Exception e) {
             logger.error("Can't read config.", e);
@@ -335,6 +339,11 @@ public class SystemProperties {
     @ValidateMe
     public String projectVersion() {
         return projectVersion;
+    }
+
+    @ValidateMe
+    public String projectVersionModifier() {
+        return projectVersionModifier;
     }
 
     @ValidateMe
