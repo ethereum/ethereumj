@@ -48,6 +48,7 @@ public class DetailsDataStore {
             }
         }
 
+
         return details;
     }
 
@@ -84,10 +85,10 @@ public class DetailsDataStore {
         for (Map.Entry<ByteArrayWrapper, ContractDetails> entry : cache.entrySet()) {
             ContractDetails details = entry.getValue();
             details.syncStorage();
-            
+
             byte[] key = entry.getKey().getData();
             byte[] value = details.getEncoded();
-            
+
             batch.put(key, value);
             totalSize += value.length;
         }
