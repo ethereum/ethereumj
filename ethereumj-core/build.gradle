@@ -1,3 +1,5 @@
+import java.text.SimpleDateFormat
+
 buildscript {
     repositories {
         jcenter()
@@ -218,6 +220,13 @@ install {
     }
 }
 
+tasks.processResources.doLast(){
+    println 'This will be printed after the build task even if something else calls the build task'
+
+    File versionfile = file(new File('build/resources/main/build-info.properties'))
+    versionfile.text = 'build.hash=' + gitCommitHash() +  'build.time=' + buildTime()
+}
+
 task publish {
 
     println "publishing if master || develop current branch: " + branchName
@@ -272,5 +281,16 @@ def customizePom(pom, gradleProject) {
             }
         }
     }
-
 }
+
+
+ def gitCommitHash() {
+    def process = "git rev-parse --short HEAD".execute()
+    return process.text
+ }
+
+def buildTime() {
+    def df = new SimpleDateFormat("[zzzz]-[yy/MM/dd]-[HH:mm]")
+    return df.format(new Date())
+}
+
