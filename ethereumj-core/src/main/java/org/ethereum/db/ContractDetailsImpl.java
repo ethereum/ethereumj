@@ -179,12 +179,19 @@ public class ContractDetailsImpl implements ContractDetails {
                 DataWord key = new DataWord(keyBytes);
                 DataWord value = get(key);
 
-                storage.put(key, value);
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null)
+                    storage.put(key, value);
             }
         } else {
             for (DataWord key : keys) {
                 DataWord value = get(key);
-                storage.put(key, value);
+
+                // we check if the value is not null,
+                // cause we keep all historical keys
+                if (value != null)
+                    storage.put(key, value);
             }
         }
 
