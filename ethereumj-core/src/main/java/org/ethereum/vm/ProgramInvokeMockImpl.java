@@ -5,6 +5,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
+import org.ethereum.db.RepositoryDummy;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.core.Repository;
 
@@ -33,7 +34,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
 
 
-        this.repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        this.repository = new RepositoryDummy();
         this.repository.createAccount(ownerAddress);
 
         this.repository.createAccount(contractAddress);
