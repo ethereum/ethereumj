@@ -504,25 +504,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             @Override
             public ContractDetails invoke() {
 
-                // That part is important cause if we are
-                // in repository snapshot we have to sync
-                // each details object storage to the
-                //  snapshot state.
-                if (isSnapshot){
+                // That part is important cause if we have
+                // to sync details storage according the trie root
+                // saved in the account
+                AccountState accountState = getAccountState(addr);
+                byte[] storageRoot = EMPTY_TRIE_HASH;
+                if (accountState != null)
+                    storageRoot = getAccountState(addr).getStateRoot();
+                ContractDetails details =  dds.get(addr);
 
-                    AccountState accountState = getAccountState(addr);
-                    byte[] storageRoot = EMPTY_TRIE_HASH;
-                    if (accountState != null)
-                        storageRoot = getAccountState(addr).getStateRoot();
-                    ContractDetails details =  dds.get(addr);
+                if (details != null)
+                    details = details.getSnapshotTo(storageRoot);
 
-                    if (details != null)
-                        details = details.getSnapshotTo(storageRoot);
-
-                    return  details;
-                }
-
-                return dds.get(addr);
+                return  details;
             }
         });
     }

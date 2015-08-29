@@ -17,6 +17,7 @@ import java.util.*;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.datasource.DataSourcePool.levelDbByName;
 import static org.ethereum.util.ByteUtil.*;
 
@@ -56,7 +57,7 @@ public class ContractDetailsImpl implements ContractDetails {
     }
 
     private void removeKey(byte[] key) {
-        keys.remove(wrap(key));
+//        keys.remove(wrap(key)); // TODO: we can't remove keys , because of fork branching
     }
 
     @Override
@@ -280,9 +281,13 @@ public class ContractDetailsImpl implements ContractDetails {
     @Override
     public ContractDetails getSnapshotTo(byte[] hash){
 
-        KeyValueDataSource keyValueDataSource = ((TrieImpl) this.storageTrie).getCache().getDb();
+        KeyValueDataSource keyValueDataSource = this.storageTrie.getCache().getDb();
 
-        SecureTrie snapStorage = new SecureTrie(keyValueDataSource, hash);
+        SecureTrie snapStorage = wrap(hash).equals(wrap(EMPTY_TRIE_HASH)) ?
+            new SecureTrie(keyValueDataSource, "".getBytes()):
+            new SecureTrie(keyValueDataSource, hash);
+
+
         snapStorage.setCache(this.storageTrie.getCache());
 
         ContractDetailsImpl details = new ContractDetailsImpl(this.address, snapStorage, this.code);
