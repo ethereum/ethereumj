@@ -35,8 +35,9 @@ public class RepositoryBuilder {
         }
 
         RepositoryImpl repositoryDummy = new RepositoryImpl(new HashMapDB(), new HashMapDB());
-        repositoryDummy.updateBatch(stateBatch, detailsBatch);
-        repositoryDummy.flushNoReconnect();
+        Repository track = repositoryDummy.startTracking();
+        track.updateBatch(stateBatch, detailsBatch);
+        track.commit();
 
         return repositoryDummy;
     }

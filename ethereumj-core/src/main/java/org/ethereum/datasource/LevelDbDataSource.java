@@ -132,7 +132,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
             db.write(batch);
         }
     }
-    
+
     @Override
     public void updateBatch(Map<byte[], byte[]> rows) {
         try  {

@@ -67,6 +67,7 @@ public class SystemProperties {
     private String databaseDir = null;
     private Boolean databaseReset = null;
     private String projectVersion = null;
+    private String projectVersionModifier = null;
 
     private String genesisInfo = null;
 
@@ -98,6 +99,9 @@ public class SystemProperties {
             this.projectVersion = this.projectVersion.replaceAll("'", "");
 
             if (this.projectVersion == null) this.projectVersion = "-.-.-";
+
+            this.projectVersionModifier = props.getProperty("modifier");
+            this.projectVersionModifier = this.projectVersionModifier.replaceAll("\"", "");
 
         } catch (Exception e) {
             logger.error("Can't read config.", e);
@@ -338,6 +342,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public String projectVersionModifier() {
+        return projectVersionModifier;
+    }
+
+    @ValidateMe
     public String helloPhrase() {
         return config.getString("hello.phrase");
     }
@@ -389,7 +398,24 @@ public class SystemProperties {
 
     @ValidateMe
     public String privateKey() {
-        return config.getString("peer.privateKey");
+        String key = config.getString("peer.privateKey");
+        if (key.length() != 64) {
+            throw new RuntimeException("The peer.privateKey needs to be Hex encoded and 32 byte length");
+        }
+        return key;
+    }
+
+    @ValidateMe
+    public ECKey getMyKey() {
+        return ECKey.fromPrivate(Hex.decode(privateKey())).decompress();
+    }
+
+    /**
+     *  Home NodeID calculated from 'peer.privateKey' property
+     */
+    @ValidateMe
+    public byte[] nodeId() {
+        return getMyKey().getNodeId();
     }
 
     @ValidateMe

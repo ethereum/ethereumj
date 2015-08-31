@@ -5,6 +5,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.shh.ShhHandler;
 
 import org.ethereum.net.swarm.bzz.BzzHandler;
+import org.ethereum.util.BuildInfo;
 import org.ethereum.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,8 @@ public class EthereumFactory {
 
     public static Ethereum createEthereum() {
 
-        logger.info("Running {}", CONFIG.genesisInfo());
+        logger.info("Running {},  core version: {}-{}", CONFIG.genesisInfo(), CONFIG.projectVersion(), CONFIG.projectVersionModifier());
+        BuildInfo.printInfo();
 
         if (CONFIG.databaseReset()){
             FileUtil.recursiveDelete(CONFIG.databaseDir());

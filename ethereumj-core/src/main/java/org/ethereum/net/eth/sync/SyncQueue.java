@@ -108,10 +108,15 @@ public class SyncQueue {
                     syncManager.notifyNewBlockImported(wrapper);
 
                 if (importResult == IMPORTED_BEST)
-                    logger.info("Success importing BEST: block.number: {}, block.hash {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
+                    logger.info("Success importing BEST: block.number: {}, block.hash: {}, tx.size: {} ",
+                            wrapper.getNumber(), wrapper.getBlock().getShortHash(),
+                            wrapper.getBlock().getTransactionsList().size());
 
                 if (importResult == IMPORTED_NOT_BEST)
-                    logger.info("Success importing NOT_BEST: block.number: {} block.hash {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
+                    logger.info("Success importing NOT_BEST: block.number: {}, block.hash: {}, tx.size: {} ",
+                            wrapper.getNumber(), wrapper.getBlock().getShortHash(),
+                            wrapper.getBlock().getTransactionsList().size());
+
 
             } catch (Throwable e) {
                 logger.error("Error: {} ", e);

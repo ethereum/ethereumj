@@ -42,7 +42,8 @@ public class RepositoryDummy extends RepositoryImpl {
 
     @Override
     public void close() {
-        throw new UnsupportedOperationException();
+        worldState.clear();
+        detailsDB.clear();
     }
 
     @Override
