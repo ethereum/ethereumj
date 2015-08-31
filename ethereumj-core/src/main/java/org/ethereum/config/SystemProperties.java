@@ -419,19 +419,6 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public ECKey getMyKey() {
-        return ECKey.fromPrivate(Hex.decode(privateKey())).decompress();
-    }
-
-    /**
-     *  Home NodeID calculated from 'peer.privateKey' property
-     */
-    @ValidateMe
-    public byte[] nodeId() {
-        return getMyKey().getNodeId();
-    }
-
-    @ValidateMe
     public int networkId() {
         return config.getInt("peer.networkId");
     }
