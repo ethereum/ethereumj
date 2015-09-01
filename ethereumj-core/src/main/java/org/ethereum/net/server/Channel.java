@@ -5,6 +5,7 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import org.ethereum.core.Transaction;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
 import org.ethereum.net.eth.handler.Eth;
@@ -226,6 +227,10 @@ public class Channel {
 
     public byte[] getNodeId() {
         return node.getId();
+    }
+
+    public ByteArrayWrapper getNodeIdWrapper() {
+        return new ByteArrayWrapper(node.getId());
     }
 
     // ETH sub protocol

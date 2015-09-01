@@ -442,24 +442,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             return false;
         }
 
-        if (header.getGasLimit() < header.getGasUsed()) {
-            logger.error("Block invalid: header.getGasLimit() < header.getGasUsed()");
-            return false;
-        }
-
         if (difficulty.compareTo(minDifficulty) == -1) {
             logger.error("Block invalid: difficulty < minDifficulty");
-            return false;
-        }
-
-        if (!CONFIG.genesisInfo().contains("frontier"))
-            if (header.getGasLimit() < MIN_GAS_LIMIT) {
-                logger.error("Block invalid: header.getGasLimit() < MIN_GAS_LIMIT");
-                return false;
-            }
-
-        if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
-            logger.error("Block invalid: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE");
             return false;
         }
 

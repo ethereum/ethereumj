@@ -1,12 +1,9 @@
 package org.ethereum.net.eth.sync;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.ImportResult;
+import org.ethereum.core.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
-import org.ethereum.core.Blockchain;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
 import org.slf4j.Logger;
@@ -18,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 import static java.lang.Thread.sleep;
+import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
@@ -133,6 +131,14 @@ public class SyncQueue {
      */
     public void addBlocks(List<Block> blockList, final byte[] nodeId) {
 
+        // run basic checks
+        for (Block b : blockList) {
+            if (!isValid(b.getHeader())) {
+                syncManager.reportInvalidBlock(nodeId);
+                return;
+            }
+        }
+
         List<BlockWrapper> wrappers = CollectionUtils.collectList(blockList, new Functional.Function<Block, BlockWrapper>() {
             @Override
             public BlockWrapper apply(Block block) {
@@ -155,6 +161,13 @@ public class SyncQueue {
      * @param nodeId nodeId of the remote peer which this block is received from
      */
     public void addNewBlock(Block block, byte[] nodeId) {
+
+        // run basic checks
+        if (!isValid(block.getHeader())) {
+            syncManager.reportInvalidBlock(nodeId);
+            return;
+        }
+
         BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
         wrapper.setReceivedAt(System.currentTimeMillis());
 
@@ -312,4 +325,39 @@ public class SyncQueue {
         BlockWrapper wrapper = blockQueue.peek();
         return wrapper != null && wrapper.isSolidBlock();
     }
+
+    /**
+     * Runs checks against block's header. <br>
+     * All these checks make sense before block is added to queue
+     * in front of checks running by {@link BlockchainImpl#isValid(BlockHeader)}
+     *
+     * @param header block header
+     * @return true if block is valid, false otherwise
+     */
+    private boolean isValid(BlockHeader header) {
+
+        if (header.getGasLimit() < header.getGasUsed()) {
+            logger.error("Block invalid: header.getGasLimit() < header.getGasUsed()");
+            return false;
+        }
+
+        if (!CONFIG.genesisInfo().contains("frontier"))
+            if (header.getGasLimit() < MIN_GAS_LIMIT) {
+                logger.error("Block invalid: header.getGasLimit() < MIN_GAS_LIMIT");
+                return false;
+            }
+
+        if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
+            logger.error("Block invalid: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE");
+            return false;
+        }
+
+        if (!PowHelper.isValid(header)) {
+            logger.error("Block invalid: Proof-of-Work is not passed");
+            return false;
+        }
+
+        return true;
+    }
+
 }
