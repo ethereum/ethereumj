@@ -1,6 +1,5 @@
 package org.ethereum.core;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
@@ -167,17 +166,6 @@ public class Block {
         if (!parsed) parseRLP();
         return this.header.calcDifficulty();
     }
-
-    public boolean validateNonce() {
-        if (!parsed) parseRLP();
-        BigInteger max = BigInteger.valueOf(2).pow(256);
-        byte[] target = BigIntegers.asUnsignedByteArray(32, max.divide(new BigInteger(1, this.getDifficulty())));
-        byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
-        byte[] concat = Arrays.concatenate(hash, this.getNonce());
-        byte[] result = HashUtil.sha3(concat);
-        return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
-    }
-
 
     public byte[] getParentHash() {
         if (!parsed) parseRLP();
@@ -422,5 +410,9 @@ public class Block {
     public String getShortHash() {
         if (!parsed) parseRLP();
         return Hex.toHexString(getHash()).substring(0, 6);
+    }
+
+    public byte[] getPowBoundary() {
+        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 }
