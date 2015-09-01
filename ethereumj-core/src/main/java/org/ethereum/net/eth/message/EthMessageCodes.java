@@ -114,7 +114,8 @@ public enum EthMessageCodes {
     }
 
     public static boolean inRange(byte code) {
-        return code >= STATUS.asByte() && code <= NEW_BLOCK.asByte();
+        EthMessageCodes[] codes = values();
+        return code >= codes[0].asByte() && code <= codes[codes.length - 1].asByte();
     }
 
     public static void setOffset(byte offset) {
