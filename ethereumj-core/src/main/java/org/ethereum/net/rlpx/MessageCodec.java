@@ -310,7 +310,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
             return bzzMessageFactory.create(resolved, payload);
         }
 
-        throw new IllegalArgumentException("No such message");
+        throw new IllegalArgumentException("No such message: " + code + " [" + Hex.encode(payload) + "]");
     }
 
     public void setRemoteId(String remoteId, Channel channel){
