@@ -13,6 +13,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Random;
 
 import static java.util.Arrays.copyOfRange;
+import static org.ethereum.crypto.SHA3Helper.Size.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 
 public class HashUtil {
@@ -44,6 +45,10 @@ public class HashUtil {
         Keccak256 digest =  new Keccak256();
         digest.update(input);
         return digest.digest();
+    }
+
+    public static byte[] sha512(byte[] input) {
+        return SHA3Helper.sha3(input, S512);
     }
 
     /**
