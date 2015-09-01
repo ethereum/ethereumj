@@ -22,18 +22,22 @@ import static org.ethereum.util.ByteUtil.longToBytesNoLeadZeroes;
  */
 public class CallTransaction {
 
+    public static Transaction createRawTransaction(long nonce, long gasPrice, long gasLimit, String toAddress,
+                                                    long value, byte[] data) {
+        Transaction tx = new Transaction(longToBytesNoLeadZeroes(nonce),
+                longToBytesNoLeadZeroes(gasPrice),
+                longToBytesNoLeadZeroes(gasLimit),
+                toAddress == null ? null : Hex.decode(toAddress),
+                longToBytesNoLeadZeroes(value),
+                data);
+        return tx;
+    }
+
     public static Transaction createCallTransaction(long nonce, long gasPrice, long gasLimit, String toAddress,
                         long value, Function callFunc, Object ... funcArgs) {
 
         byte[] callData = callFunc.encode(funcArgs);
-
-        Transaction tx = new Transaction(longToBytesNoLeadZeroes(nonce),
-                longToBytesNoLeadZeroes(gasPrice),
-                longToBytesNoLeadZeroes(gasLimit),
-                Hex.decode(toAddress),
-                longToBytesNoLeadZeroes(value),
-                callData);
-        return tx;
+        return createRawTransaction(nonce, gasPrice, gasLimit, toAddress, value, callData);
     }
 
     /**
@@ -398,6 +402,21 @@ public class CallTransaction {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        public static Function fromSignature(String funcName, String ... paramTypes) {
+            Function ret = new Function();
+            ret.name = funcName;
+            ret.constant = false;
+            ret.type = FunctionType.function;
+            ret.outputs = new Param[0];
+            ret.inputs = new Param[paramTypes.length];
+            for (int i = 0; i < paramTypes.length; i++) {
+                ret.inputs[i] = new Param();
+                ret.inputs[i].name = "param" + i;
+                ret.inputs[i].type = Type.getType(paramTypes[i]);
+            }
+            return ret;
         }
     }
 
