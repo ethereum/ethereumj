@@ -26,7 +26,7 @@ public class RlpxConnectionTest {
     private PipedOutputStream fromOut;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         ECKey remoteKey = new ECKey().decompress();
         ECKey myKey = new ECKey().decompress();
         initiator = new EncryptionHandshake(remoteKey.getPubKeyPoint());
