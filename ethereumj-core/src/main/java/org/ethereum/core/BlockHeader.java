@@ -4,6 +4,7 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.BigIntegers;
 
 import java.math.BigInteger;
 import java.util.List;
@@ -305,6 +306,10 @@ public class BlockHeader {
             ++i;
         }
         return RLP.encodeList(unclesEncoded);
+    }
+
+    public byte[] getPowBoundary() {
+        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 
     public String toString() {
