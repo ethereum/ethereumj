@@ -412,7 +412,4 @@ public class Block {
         return Hex.toHexString(getHash()).substring(0, 6);
     }
 
-    public byte[] getPowBoundary() {
-        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
-    }
 }

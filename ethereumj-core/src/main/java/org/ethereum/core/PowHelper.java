@@ -13,14 +13,14 @@ import org.spongycastle.util.Arrays;
 public class PowHelper {
 
     /**
-     * Compares proof value against its boundary for the block
+     * Compares proof value against its boundary for the block header
      *
-     * @param block block
-     * @return true if proof is less than or equal to the boundary, false otherwise
+     * @param header block header
+     * @return true if proof value is less than or equal to the boundary, false otherwise
      */
-    public static boolean isValid(Block block) {
-        byte[] proof = calculateProof(block.getEncodedWithoutNonce(), block.getNonce(), block.getMixHash());
-        byte[] boundary = block.getPowBoundary();
+    public static boolean isValid(BlockHeader header) {
+        byte[] proof = calculateProof(header.getEncodedWithoutNonce(), header.getNonce(), header.getMixHash());
+        byte[] boundary = header.getPowBoundary();
         return FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) <= 0;
     }
 
