@@ -19,8 +19,19 @@ public class IdleState extends AbstractSyncState {
 
     @Override
     public void doMaintain() {
+
         if (!syncManager.queue.isHashesEmpty()) {
+
+            // there are new hashes in the store
+            // it's time to download blocks
             syncManager.changeState(BLOCK_RETRIEVING);
+
+        } else if (syncManager.queue.isBlocksEmpty() && !syncManager.isSyncDone()) {
+
+            // queue is empty and sync not done yet
+            // try to download hashes again
+            syncManager.changeState(HASH_RETRIEVING);
+
         }
     }
 }

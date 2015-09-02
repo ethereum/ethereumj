@@ -296,20 +296,20 @@ public class SyncManager {
         if (gapBlock != null) {
             int gap = gapSize(gapBlock);
             master.setMaxHashesAsk(gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : gap);
-            queue.setBestHash(gapBlock.getHash());
+            master.setLastHashToAsk(gapBlock.getParentHash());
         } else {
             master.setMaxHashesAsk(CONFIG.maxHashesAsk());
+            master.setLastHashToAsk(master.getBestKnownHash());
             queue.clearHashes();
-            queue.setBestHash(master.getBestHash());
         }
 
         master.changeSyncState(HASH_RETRIEVING);
 
         if (logger.isInfoEnabled()) logger.info(
-                "Peer {}: {} initiated, best known hash [{}], askLimit [{}]",
+                "Peer {}: {} initiated, lastHashToAsk [{}], askLimit [{}]",
                 master.getPeerIdShort(),
                 state,
-                Hex.toHexString(queue.getBestHash()),
+                Hex.toHexString(master.getLastHashToAsk()),
                 master.getMaxHashesAsk()
         );
     }
@@ -378,7 +378,8 @@ public class SyncManager {
             public void run() {
                 pool.logActivePeers();
                 pool.logBannedPeers();
-                logger.info("\nState {}\n", state);
+                logger.info("\n");
+                logger.info("State {}\n", state);
             }
         }, 0, 30, TimeUnit.SECONDS);
     }

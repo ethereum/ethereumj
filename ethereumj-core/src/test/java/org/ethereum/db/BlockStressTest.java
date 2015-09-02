@@ -39,6 +39,7 @@ public class BlockStressTest {
     private Map<byte[], Block> blockSource;
     private DB blockSourceDB;
     private MapDBFactory mapDBFactory;
+    private byte[] nodeId = new byte[64];
 
     @Before
     public void setup() {
@@ -50,6 +51,9 @@ public class BlockStressTest {
                 .keySerializer(Serializer.BYTE_ARRAY)
                 .valueSerializer(Serializers.BLOCK)
                 .makeOrGet();
+
+        Random rnd = new Random(System.currentTimeMillis());
+        rnd.nextBytes(nodeId);
     }
 
     @After
@@ -122,7 +126,7 @@ public class BlockStressTest {
         int counter = 0;
         for(byte[] hash : hashes) {
             Block block = blockSource.get(hash);
-            blockQueue.add(new BlockWrapper(block));
+            blockQueue.add(new BlockWrapper(block, nodeId));
             if(++counter % 10000 == 0) {
                 logger.info("writing: {} done from {}", counter, hashes.size());
             }
@@ -240,7 +244,7 @@ public class BlockStressTest {
             int counter = 0;
             for(byte[] hash : hashes) {
                 Block block = blockSource.get(hash);
-                blockQueue.add(new BlockWrapper(block));
+                blockQueue.add(new BlockWrapper(block, nodeId));
                 if(++counter % 10000 == 0) {
                     logger.info("writer {}: {} done from {}", threadNumber, counter, hashes.size());
                 }

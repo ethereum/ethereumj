@@ -224,6 +224,10 @@ public class Channel {
         return node.getHexIdShort();
     }
 
+    public byte[] getNodeId() {
+        return node.getId();
+    }
+
     // ETH sub protocol
 
     public boolean hasEthStatusSucceeded() {
@@ -254,8 +258,16 @@ public class Channel {
         return eth.getMaxHashesAsk();
     }
 
-    public byte[] getBestHash() {
-        return eth.getBestHash();
+    public void setLastHashToAsk(byte[] lastHashToAsk) {
+        eth.setLastHashToAsk(lastHashToAsk);
+    }
+
+    public byte[] getLastHashToAsk() {
+        return eth.getLastHashToAsk();
+    }
+
+    public byte[] getBestKnownHash() {
+        return eth.getBestKnownHash();
     }
 
     public SyncStatistics getSyncStats() {
@@ -280,5 +292,9 @@ public class Channel {
 
     public void sendTransaction(Transaction tx) {
         eth.sendTransaction(tx);
+    }
+
+    public EthVersion getEthVersion() {
+        return eth.getVersion();
     }
 }
