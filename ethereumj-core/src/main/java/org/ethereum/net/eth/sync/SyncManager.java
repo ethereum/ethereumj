@@ -206,6 +206,10 @@ public class SyncManager {
         }
     }
 
+    void resetGapRecovery() {
+        this.gapBlock = null;
+    }
+
     public void notifyNewBlockImported(BlockWrapper wrapper) {
         if (syncDone) {
             return;

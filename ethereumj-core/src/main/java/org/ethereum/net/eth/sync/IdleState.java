@@ -30,6 +30,7 @@ public class IdleState extends AbstractSyncState {
 
             // queue is empty and sync not done yet
             // try to download hashes again
+            syncManager.resetGapRecovery();
             syncManager.changeState(HASH_RETRIEVING);
 
         }
