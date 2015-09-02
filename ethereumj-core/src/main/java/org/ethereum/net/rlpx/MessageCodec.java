@@ -22,6 +22,7 @@ import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -215,7 +216,15 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
 
                 this.handshake = new EncryptionHandshake();
 
-                AuthInitiateMessage initiateMessage = handshake.decryptAuthInitiate(authInitPacket, myKey);
+                AuthInitiateMessage initiateMessage;
+                try {
+                    initiateMessage = handshake.decryptAuthInitiate(authInitPacket, myKey);
+                } catch (InvalidCipherTextException ce) {
+                    loggerNet.warn("Can't decrypt AuthInitiateMessage from " + ctx.channel().remoteAddress() +
+                            ". Most likely the remote peer used wrong public key (NodeID) to encrypt message.");
+                    return;
+                }
+
                 loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), initiateMessage);
 
                 AuthResponseMessage response = handshake.makeAuthInitiate(initiateMessage, myKey);
@@ -310,7 +319,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
             return bzzMessageFactory.create(resolved, payload);
         }
 
-        throw new IllegalArgumentException("No such message");
+        throw new IllegalArgumentException("No such message: " + code + " [" + Hex.encode(payload) + "]");
     }
 
     public void setRemoteId(String remoteId, Channel channel){

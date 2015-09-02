@@ -100,7 +100,7 @@ public class EncryptionHandshake {
         }
     }
 
-    public AuthInitiateMessage decryptAuthInitiate(byte[] ciphertext, ECKey myKey) {
+    public AuthInitiateMessage decryptAuthInitiate(byte[] ciphertext, ECKey myKey) throws InvalidCipherTextException {
         try {
             byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
             return AuthInitiateMessage.decode(plaintext);
@@ -151,14 +151,14 @@ public class EncryptionHandshake {
         }
     }
 
-    public byte[] handleAuthInitiate(byte[] initiatePacket, ECKey key) {
+    public byte[] handleAuthInitiate(byte[] initiatePacket, ECKey key) throws InvalidCipherTextException {
         AuthResponseMessage response = makeAuthInitiate(initiatePacket, key);
         byte[] responsePacket = encryptAuthReponse(response);
         agreeSecret(initiatePacket, responsePacket);
         return responsePacket;
     }
 
-    AuthResponseMessage makeAuthInitiate(byte[] initiatePacket, ECKey key) {
+    AuthResponseMessage makeAuthInitiate(byte[] initiatePacket, ECKey key) throws InvalidCipherTextException {
         AuthInitiateMessage initiate = decryptAuthInitiate(initiatePacket, key);
         return makeAuthInitiate(initiate, key);
     }
