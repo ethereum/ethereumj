@@ -10,6 +10,7 @@ import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.redis.RedisConnection;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.net.eth.sync.*;
+import org.ethereum.validator.*;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,6 +140,7 @@ public class CommonConfig {
 
     @Bean
     public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager) {
+
         Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
         states.put(SyncStateName.IDLE, new IdleState());
         states.put(SyncStateName.HASH_RETRIEVING, new HashRetrievingState());
@@ -151,4 +153,34 @@ public class CommonConfig {
         return states;
     }
 
+    @Bean
+    public BlockHeaderValidator headerValidator() {
+
+        List<BlockHeaderRule> rules = Arrays.asList(
+                new GasValueRule(),
+                new ExtraDataRule(),
+                new ProofOfWorkRule()
+        );
+
+        if (!CONFIG.genesisInfo().contains("frontier")) {
+            rules.add(new GasLimitRule());
+        }
+
+        return new BlockHeaderValidator(rules);
+    }
+
+    @Bean
+    public ParentBlockHeaderValidator parentHeaderValidator() {
+
+        List<DependentBlockHeaderRule> rules = Arrays.asList(
+                new ParentNumberRule(),
+                new DifficultyRule()
+        );
+
+        if (!CONFIG.genesisInfo().contains("frontier")) {
+            rules.add(new ParentGasLimitRule());
+        }
+
+        return new ParentBlockHeaderValidator(rules);
+    }
 }

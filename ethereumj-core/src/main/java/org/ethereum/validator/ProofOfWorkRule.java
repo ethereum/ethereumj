@@ -1,30 +1,36 @@
-package org.ethereum.core;
+package org.ethereum.validator;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.FastByteComparisons;
 import org.spongycastle.util.Arrays;
 
 /**
- * Keeps Proof-of-Work logic
+ * Checks proof value against its boundary for the block header
  *
  * @author Mikhail Kalinin
- * @since 31.08.2015
+ * @since 02.09.2015
  */
-public class PowHelper {
+public class ProofOfWorkRule extends BlockHeaderRule {
 
-    /**
-     * Compares proof value against its boundary for the block header
-     *
-     * @param header block header
-     * @return true if proof value is less than or equal to the boundary, false otherwise
-     */
-    public static boolean isValid(BlockHeader header) {
+    @Override
+    public boolean validate(BlockHeader header) {
+
+        errors.clear();
+
         byte[] proof = calculateProof(header.getEncodedWithoutNonce(), header.getNonce(), header.getMixHash());
         byte[] boundary = header.getPowBoundary();
-        return FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) <= 0;
+
+        if (FastByteComparisons.compareTo(proof, 0, 32, boundary, 0, 32) > 0) {
+            errors.add("proofValue > header.getPowBoundary()");
+            return false;
+        }
+
+        return true;
     }
 
-    private static byte[] calculateProof(byte[] encodedWithoutNonce, byte[] nonce, byte[] mixHash) {
+    private byte[] calculateProof(byte[] encodedWithoutNonce, byte[] nonce, byte[] mixHash) {
+
         // nonce bytes are expected in Little Endian order, reverting
         byte[] nonceReverted = Arrays.reverse(nonce);
         byte[] hashWithoutNonce = HashUtil.sha3(encodedWithoutNonce);

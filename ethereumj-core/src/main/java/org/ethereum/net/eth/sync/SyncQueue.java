@@ -6,6 +6,7 @@ import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -15,7 +16,6 @@ import org.springframework.stereotype.Component;
 import java.util.*;
 
 import static java.lang.Thread.sleep;
-import static org.ethereum.config.Constants.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.ImportResult.IMPORTED_NOT_BEST;
 import static org.ethereum.core.ImportResult.NO_PARENT;
@@ -50,6 +50,9 @@ public class SyncQueue {
 
     @Autowired
     private SyncManager syncManager;
+
+    @Autowired
+    private BlockHeaderValidator headerValidator;
 
     /**
      * Loads HashStore and BlockQueue from disk,
@@ -134,6 +137,11 @@ public class SyncQueue {
         // run basic checks
         for (Block b : blockList) {
             if (!isValid(b.getHeader())) {
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Invalid block RLP: {}", Hex.toHexString(b.getEncoded()));
+                }
+
                 syncManager.reportInvalidBlock(nodeId);
                 return;
             }
@@ -336,24 +344,11 @@ public class SyncQueue {
      */
     private boolean isValid(BlockHeader header) {
 
-        if (header.getGasLimit() < header.getGasUsed()) {
-            logger.error("Block invalid: header.getGasLimit() < header.getGasUsed()");
-            return false;
-        }
+        if (!headerValidator.validate(header)) {
 
-        if (!CONFIG.genesisInfo().contains("frontier"))
-            if (header.getGasLimit() < MIN_GAS_LIMIT) {
-                logger.error("Block invalid: header.getGasLimit() < MIN_GAS_LIMIT");
-                return false;
-            }
+            if (logger.isErrorEnabled())
+                headerValidator.logErrors(logger);
 
-        if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
-            logger.error("Block invalid: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE");
-            return false;
-        }
-
-        if (!PowHelper.isValid(header)) {
-            logger.error("Block invalid: Proof-of-Work is not passed");
             return false;
         }
 

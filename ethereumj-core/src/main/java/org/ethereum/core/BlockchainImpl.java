@@ -1,6 +1,5 @@
 package org.ethereum.core;
 
-import org.ethereum.config.Constants;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
@@ -10,6 +9,7 @@ import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.RLP;
+import org.ethereum.validator.ParentBlockHeaderValidator;
 import org.ethereum.vm.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -100,6 +100,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Autowired
     private AdminInfo adminInfo;
+
+    @Autowired
+    private ParentBlockHeaderValidator parentHeaderValidator;
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -425,36 +428,15 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public boolean isValid(BlockHeader header) {
 
-
         Block parentBlock = getParent(header);
 
-        BigInteger parentDifficulty = parentBlock.getDifficultyBI();
-        long parentTimestamp = parentBlock.getTimestamp();
+        if (!parentHeaderValidator.validate(header, parentBlock.getHeader())) {
 
-        BigInteger minDifficulty = header.getTimestamp() >= parentTimestamp + DURATION_LIMIT ?
-                parentBlock.getDifficultyBI().subtract(parentDifficulty.divide(BigInteger.valueOf(Constants.DIFFICULTY_BOUND_DIVISOR))) :
-                parentBlock.getDifficultyBI().add(parentDifficulty.divide(BigInteger.valueOf(Constants.DIFFICULTY_BOUND_DIVISOR)));
+            if (logger.isErrorEnabled())
+                parentHeaderValidator.logErrors(logger);
 
-        BigInteger difficulty = new BigInteger(1, header.getDifficulty());
-
-        if (header.getNumber() != (parentBlock.getNumber() + 1)) {
-            logger.error("Block invalid: block number is not parentBlock number + 1, ");
             return false;
         }
-
-        if (difficulty.compareTo(minDifficulty) == -1) {
-            logger.error("Block invalid: difficulty < minDifficulty");
-            return false;
-        }
-
-        if (!CONFIG.genesisInfo().contains("frontier"))
-            if (header.getGasLimit() < Constants.MIN_GAS_LIMIT ||
-                    header.getGasLimit() < parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
-                    header.getGasLimit() > parentBlock.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
-
-                logger.error("Block invalid: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR");
-                return false;
-            }
 
         return true;
     }

@@ -15,4 +15,5 @@ public class Constants {
     public static int UNCLE_GENERATION_LIMIT = 7;
     public static int UNCLE_LIST_LIMIT = 2;
 
+    public static int BEST_NUMBER_DIFF_LIMIT = 1000;
 }
