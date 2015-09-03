@@ -29,7 +29,7 @@ public class ProofOfWorkRule extends BlockHeaderRule {
         return true;
     }
 
-    private byte[] calculateProof(byte[] encodedWithoutNonce, byte[] nonce, byte[] mixHash) {
+    public byte[] calculateProof(byte[] encodedWithoutNonce, byte[] nonce, byte[] mixHash) {
 
         // nonce bytes are expected in Little Endian order, reverting
         byte[] nonceReverted = Arrays.reverse(nonce);
