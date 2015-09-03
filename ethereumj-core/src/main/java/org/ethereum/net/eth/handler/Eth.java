@@ -2,8 +2,8 @@ package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.sync.SyncStateName;
-import org.ethereum.net.eth.sync.SyncStatistics;
+import org.ethereum.sync.SyncStateName;
+import org.ethereum.sync.SyncStatistics;
 
 /**
  * Describes interface required by Eth peer clients

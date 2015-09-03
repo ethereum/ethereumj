@@ -8,12 +8,12 @@ import org.ethereum.core.Genesis;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.eth.sync.SyncQueue;
+import org.ethereum.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
-import org.ethereum.net.eth.sync.SyncStateName;
-import org.ethereum.net.eth.sync.SyncStatistics;
+import org.ethereum.sync.SyncStateName;
+import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
@@ -26,7 +26,7 @@ import java.math.BigInteger;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**

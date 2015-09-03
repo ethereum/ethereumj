@@ -1,4 +1,4 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
 import org.ethereum.core.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;

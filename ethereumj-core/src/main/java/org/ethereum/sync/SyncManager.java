@@ -1,4 +1,4 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
@@ -11,7 +11,6 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -27,7 +26,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.TimeUtils.secondsToMillis;
 

@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.eth.sync.SyncStateName.DONE_HASH_RETRIEVING;
+import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
 
 /**
  * Eth V60

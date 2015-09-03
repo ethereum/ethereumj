@@ -1,4 +1,4 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;

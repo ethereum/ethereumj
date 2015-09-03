@@ -15,7 +15,7 @@ import java.util.ListIterator;
 import static java.lang.Math.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.eth.sync.SyncStateName.DONE_HASH_RETRIEVING;
+import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
 
 /**
  * Eth V61

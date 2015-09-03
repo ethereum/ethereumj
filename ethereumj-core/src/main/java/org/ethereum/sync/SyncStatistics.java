@@ -1,4 +1,4 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
 /**
  * Manages sync measurements

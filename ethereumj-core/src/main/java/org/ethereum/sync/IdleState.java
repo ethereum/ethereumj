@@ -1,6 +1,6 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
-import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.sync.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin

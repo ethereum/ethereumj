@@ -1,9 +1,9 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.Functional;
 
-import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.sync.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
