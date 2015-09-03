@@ -94,7 +94,6 @@ public enum EthMessageCodes {
     GET_BLOCK_HASHES_BY_NUMBER(0x08);
 
 
-    static byte OFFSET = 0;
     private int cmd;
 
     private static final Map<Integer, EthMessageCodes> intToTypeMap = new HashMap<>();
@@ -116,10 +115,6 @@ public enum EthMessageCodes {
     public static boolean inRange(byte code) {
         EthMessageCodes[] codes = values();
         return code >= codes[0].asByte() && code <= codes[codes.length - 1].asByte();
-    }
-
-    public static void setOffset(byte offset) {
-        EthMessageCodes.OFFSET = offset;
     }
 
     public byte asByte() {

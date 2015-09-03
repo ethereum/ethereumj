@@ -269,31 +269,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         msgQueue.disconnect();
     }
 
-    public void adaptMessageIds(List<Capability> capabilities) {
-
-        Collections.sort(capabilities);
-        int offset = P2pMessageCodes.USER.asByte() + 1;
-
-        for (Capability capability : capabilities) {
-
-            if (capability.getName().equals(Capability.ETH)) {
-                EthMessageCodes.setOffset((byte)offset);
-                offset += EthMessageCodes.values().length;
-            }
-
-            if (capability.getName().equals(Capability.SHH)) {
-                ShhMessageCodes.setOffset((byte)offset);
-                offset += ShhMessageCodes.values().length;
-            }
-
-            if (capability.getName().equals(Capability.BZZ)) {
-                BzzMessageCodes.setOffset((byte) offset);
-                offset += BzzMessageCodes.values().length + 4;
-                // FIXME: for some reason Go left 4 codes between BZZ and ETH message codes
-            }
-        }
-    }
-
     public HelloMessage getHandshakeHelloMessage() {
         return handshakeHelloMessage;
     }
