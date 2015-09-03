@@ -1,6 +1,7 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.eth.sync.SyncStatistics;
 
@@ -75,9 +76,21 @@ public interface Eth {
     int getMaxHashesAsk();
 
     /**
-     * @return best hash known by the peer (that we're aware of)
+     * Sets last hash to be asked from the peer
+     *
+     * @param lastHashToAsk terminal hash
      */
-    byte[] getBestHash();
+    void setLastHashToAsk(byte[] lastHashToAsk);
+
+    /**
+     * @return lastHashToAsk value
+     */
+    byte[] getLastHashToAsk();
+
+    /**
+     * @return best hash (that we're aware of) known by the peer
+     */
+    byte[] getBestKnownHash();
 
     /**
      * @return sync statistics
@@ -100,4 +113,9 @@ public interface Eth {
      * @param tx sending transaction
      */
     void sendTransaction(Transaction tx);
+
+    /**
+     * @return protocol version
+     */
+    EthVersion getVersion();
 }

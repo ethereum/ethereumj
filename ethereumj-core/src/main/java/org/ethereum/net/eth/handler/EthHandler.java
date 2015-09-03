@@ -75,11 +75,24 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected SyncStateName syncState = IDLE;
     protected boolean processTransactions = true;
 
-    protected final List<ByteArrayWrapper> sentHashes = Collections.synchronizedList(new ArrayList<ByteArrayWrapper>());
-    protected Block lastBlock = Genesis.getInstance();
-    protected byte[] lastHash = lastBlock.getHash();
     protected byte[] bestHash;
+
+    /**
+     * Last block hash to be asked from the peer,
+     * its usage depends on Eth version
+     *
+     * @see Eth60
+     * @see Eth61
+     */
+    protected byte[] lastHashToAsk;
     protected int maxHashesAsk;
+
+    /**
+     * Hash list sent in GET_BLOCKS message,
+     * useful if returned BLOCKS msg doesn't cover all sent hashes
+     * or in case when peer is disconnected
+     */
+    protected final List<ByteArrayWrapper> sentHashes = Collections.synchronizedList(new ArrayList<ByteArrayWrapper>());
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 
@@ -116,7 +129,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
                 break;
             case BLOCK_HASHES:
                 msgQueue.receivedMessage(msg);
-                processBlockHashes((BlockHashesMessage) msg);
+                onBlockHashes((BlockHashesMessage) msg);
                 break;
             case GET_BLOCKS:
                 msgQueue.receivedMessage(msg);
@@ -230,7 +243,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         this.bestHash = hashes.get(hashes.size() - 1);
 
         queue.addNewBlockHashes(hashes);
-        queue.logHashQueueSize();
     }
 
     /*
@@ -258,25 +270,29 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     protected void sendGetBlockHashes() {
-        byte[] bestHash = queue.getBestHash();
         if(loggerSync.isTraceEnabled()) loggerSync.trace(
-                "Peer {}: send get block hashes, bestHash [{}], maxHashesAsk [{}]",
+                "Peer {}: send get block hashes, hash [{}], maxHashesAsk [{}]",
                 channel.getPeerIdShort(),
-                Hex.toHexString(bestHash),
+                Hex.toHexString(lastHashToAsk),
                 maxHashesAsk
         );
-        GetBlockHashesMessage msg = new GetBlockHashesMessage(bestHash, maxHashesAsk);
+        GetBlockHashesMessage msg = new GetBlockHashesMessage(lastHashToAsk, maxHashesAsk);
         sendMessage(msg);
     }
 
     protected void processGetBlockHashes(GetBlockHashesMessage msg) {
-        List<byte[]> hashes = blockchain.getListOfHashesStartFrom(msg.getBestHash(), msg.getMaxBlocks());
+        List<byte[]> hashes = blockchain.getListOfHashesStartFrom(
+                msg.getBestHash(),
+                Math.max(msg.getMaxBlocks(), CONFIG.maxHashesAsk())
+        );
 
         BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);
         sendMessage(msgHashes);
     }
 
-    protected void processBlockHashes(BlockHashesMessage blockHashesMessage) {
+    abstract protected void processBlockHashes(List<byte[]> received);
+
+    protected void onBlockHashes(BlockHashesMessage blockHashesMessage) {
         if(loggerSync.isTraceEnabled()) loggerSync.trace(
                 "Peer {}: processing block hashes, size [{}]",
                 channel.getPeerIdShort(),
@@ -288,51 +304,19 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
-
         syncStats.addHashes(receivedHashes.size());
 
-        if (!receivedHashes.isEmpty()) {
-            byte[] foundHash = null;
-            boolean foundExisting = false;
-            List<byte[]> newHashes = null;
-            for(int i = 0; i < receivedHashes.size(); i++) {
-                byte[] hash = receivedHashes.get(i);
-                if(blockchain.isBlockExist(hash)) {
-                    foundExisting = true;
-                    newHashes = org.ethereum.util.CollectionUtils.truncate(receivedHashes, i);
-                    foundHash = hash;
-                    break;
-                }
-            }
-            if(newHashes == null) {
-                newHashes = receivedHashes;
-            }
+        processBlockHashes(receivedHashes);
 
-            queue.addHashes(newHashes);
-
-            lastHash = newHashes.get(newHashes.size() - 1);
-
-            if (foundExisting) {
-                changeState(DONE_HASH_RETRIEVING); // store unknown hashes in queue until known hash is found
-                loggerSync.trace(
-                        "Peer {}: got existing hash [{}]",
+        if (loggerSync.isInfoEnabled()) {
+            if (syncState == DONE_HASH_RETRIEVING) {
+                loggerSync.info(
+                        "Peer {}: hashes sync completed, [{}] hashes in queue",
                         channel.getPeerIdShort(),
-                        Hex.toHexString(foundHash)
+                        queue.hashStoreSize()
                 );
-            }
-        }
-
-        if (syncState == DONE_HASH_RETRIEVING) {
-            loggerSync.info(
-                    "Peer {}: hashes sync completed, [{}] hashes in queue",
-                    channel.getPeerIdShort(),
-                    queue.getHashStore().size()
-            );
-        } else {
-            // no known hash has been reached
-            queue.logHashQueueSize();
-            if(syncState == HASH_RETRIEVING) {
-                sendGetBlockHashes(); // another getBlockHashes with last received hash.
+            } else {
+                queue.logHashQueueSize();
             }
         }
     }
@@ -342,7 +326,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         // retrieve list of block hashes from queue
         // save them locally in case the remote peer
         // will return less blocks than requested.
-        List<byte[]> hashes = queue.getHashes();
+        List<byte[]> hashes = queue.pollHashes();
         if (hashes.isEmpty()) {
             if(loggerSync.isInfoEnabled()) loggerSync.info(
                     "Peer {}: no more hashes in queue, idle",
@@ -395,12 +379,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         syncStats.addBlocks(blockList.size());
 
-        if (!blockList.isEmpty()) {
-            Block block = blockList.get(blockList.size() - 1);
-            if (block.getNumber() > lastBlock.getNumber())
-                lastBlock = blockList.get(blockList.size() - 1);
-        }
-
         // check if you got less blocks than you asked,
         // and keep the missing to ask again
         sentHashes.remove(wrap(Genesis.getInstance().getHash()));
@@ -411,7 +389,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         returnHashes();
 
         if(!blockList.isEmpty()) {
-            queue.addBlocks(blockList);
+            queue.addBlocks(blockList, channel.getNodeId());
             queue.logHashQueueSize();
         } else {
             changeState(BLOCKS_LACK);
@@ -431,9 +409,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         Block newBlock = newBlockMessage.getBlock();
 
-        if (newBlock.getNumber() > this.lastBlock.getNumber())
-            this.lastBlock = newBlock;
-
         loggerSync.info("New block received: block.index [{}]", newBlock.getNumber());
 
         channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
@@ -442,11 +417,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         // adding block to the queue
         // there will be decided how to
         // connect it to the chain
-        queue.addNewBlock(newBlock);
+        queue.addNewBlock(newBlock, channel.getNodeId());
         queue.logHashQueueSize();
     }
-
-    abstract public void sendGetBlockHashesByNumber(long blockNumber, int maxHashesAsk);
 
     abstract protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg);
 
@@ -454,6 +427,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         msgQueue.sendMessage(message);
         channel.getNodeStatistics().ethOutbound.add();
     }
+
+    abstract protected void startHashRetrieving();
 
     @Override
     public void changeState(SyncStateName newState) {
@@ -470,7 +445,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         if (newState == HASH_RETRIEVING) {
             syncStats.reset();
-            sendGetBlockHashes();
+            startHashRetrieving();
         }
         if (newState == BLOCK_RETRIEVING) {
             syncStats.reset();
@@ -525,21 +500,19 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
         switch (syncState) {
             case BLOCK_RETRIEVING: loggerSync.info(
-                    "Peer {}: [ {}, state {}, blocks count {}, last block {} ]",
+                    "Peer {}: [ {}, state {}, blocks count {} ]",
                     version,
                     channel.getPeerIdShort(),
                     syncState,
-                    syncStats.getBlocksCount(),
-                    lastBlock.getNumber()
+                    syncStats.getBlocksCount()
             );
                 break;
             case HASH_RETRIEVING: loggerSync.info(
-                    "Peer {}: [ {}, state {}, hashes count {}, last hash {} ]",
+                    "Peer {}: [ {}, state {}, hashes count {} ]",
                     version,
                     channel.getPeerIdShort(),
                     syncState,
-                    syncStats.getHashesCount(),
-                    Hex.toHexString(lastHash)
+                    syncStats.getHashesCount()
             );
                 break;
             default: loggerSync.info(
@@ -557,7 +530,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     @Override
-    public byte[] getBestHash() {
+    public byte[] getBestKnownHash() {
         return bestHash;
     }
 
@@ -569,6 +542,16 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public int getMaxHashesAsk() {
         return maxHashesAsk;
+    }
+
+    @Override
+    public void setLastHashToAsk(byte[] lastHashToAsk) {
+        this.lastHashToAsk = lastHashToAsk;
+    }
+
+    @Override
+    public byte[] getLastHashToAsk() {
+        return lastHashToAsk;
     }
 
     @Override

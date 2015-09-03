@@ -1,8 +1,11 @@
 package org.ethereum.net.eth.handler;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.sync.SyncStateName;
 import org.ethereum.net.eth.sync.SyncStatistics;
+
+import static org.ethereum.net.eth.EthVersion.*;
 
 /**
  * It's quite annoying to always check {@code if (eth != null)} before accessing it. <br>
@@ -71,7 +74,16 @@ public class EthAdapter implements Eth {
     }
 
     @Override
-    public byte[] getBestHash() {
+    public void setLastHashToAsk(byte[] lastHashToAsk) {
+    }
+
+    @Override
+    public byte[] getLastHashToAsk() {
+        return new byte[0];
+    }
+
+    @Override
+    public byte[] getBestKnownHash() {
         return new byte[0];
     }
 
@@ -90,5 +102,10 @@ public class EthAdapter implements Eth {
 
     @Override
     public void sendTransaction(Transaction tx) {
+    }
+
+    @Override
+    public EthVersion getVersion() {
+        return fromCode(UPPER);
     }
 }

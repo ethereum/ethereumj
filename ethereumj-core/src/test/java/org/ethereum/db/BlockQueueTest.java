@@ -1,6 +1,5 @@
 package org.ethereum.db;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Genesis;
@@ -40,6 +39,7 @@ public class BlockQueueTest {
     private List<Block> blocks = new ArrayList<>();
     private List<byte[]> hashes = new ArrayList<>();
     private String testDb;
+    private byte[] nodeId = new byte[64];
 
     @Before
     public void setup() throws InstantiationException, IllegalAccessException, URISyntaxException, IOException {
@@ -77,6 +77,9 @@ public class BlockQueueTest {
         blockQueue = new BlockQueueImpl();
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
+
+        Random rnd = new Random(System.currentTimeMillis());
+        rnd.nextBytes(nodeId);
     }
 
     @After
@@ -89,10 +92,10 @@ public class BlockQueueTest {
     public void test1() {
         long receivedAt = System.currentTimeMillis();
         long importFailedAt = receivedAt + receivedAt / 2;
-        BlockWrapper wrapper = new BlockWrapper(blocks.get(0), true);
+        BlockWrapper wrapper = new BlockWrapper(blocks.get(0), true, nodeId);
         wrapper.setReceivedAt(receivedAt);
         wrapper.setImportFailedAt(importFailedAt);
-        blockQueue.add(new BlockWrapper(blocks.get(0)));
+        blockQueue.add(new BlockWrapper(blocks.get(0), nodeId));
 
         // testing: peek()
         BlockWrapper block = blockQueue.peek();
@@ -101,6 +104,7 @@ public class BlockQueueTest {
         assertTrue(wrapper.isNewBlock());
         assertEquals(receivedAt, wrapper.getReceivedAt());
         assertEquals(importFailedAt, wrapper.getImportFailedAt());
+        assertArrayEquals(nodeId, wrapper.getNodeId());
 
         // testing: validity of loaded block
         assertArrayEquals(blocks.get(0).getEncoded(), block.getEncoded());
@@ -111,7 +115,7 @@ public class BlockQueueTest {
         blockQueue.addAll(CollectionUtils.collectList(blocks, new Functional.Function<Block, BlockWrapper>() {
             @Override
             public BlockWrapper apply(Block block) {
-                BlockWrapper wrapper = new BlockWrapper(block);
+                BlockWrapper wrapper = new BlockWrapper(block, nodeId);
                 wrapper.setReceivedAt(System.currentTimeMillis());
                 return wrapper;
             }
@@ -140,7 +144,7 @@ public class BlockQueueTest {
 
         // testing: add()
         for(Block b : blocks) {
-            blockQueue.add(new BlockWrapper(b));
+            blockQueue.add(new BlockWrapper(b, nodeId));
         }
 
         prevNumber = -1;
@@ -201,7 +205,7 @@ public class BlockQueueTest {
             try {
                 for(int i = 0; i < 50; i++) {
                     Block b = blocks.get(i);
-                    blockQueue.add(new BlockWrapper(b));
+                    blockQueue.add(new BlockWrapper(b, nodeId));
                     logger.info("writer {}: {}", index, b.getShortHash());
                     Thread.sleep(50);
                 }
