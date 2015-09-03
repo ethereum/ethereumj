@@ -162,7 +162,7 @@ public class CommonConfig {
                 new ProofOfWorkRule()
         );
 
-        if (!CONFIG.genesisInfo().contains("frontier")) {
+        if (!CONFIG.isFrontier()) {
             rules.add(new GasLimitRule());
         }
 
@@ -177,7 +177,7 @@ public class CommonConfig {
                 new DifficultyRule()
         );
 
-        if (!CONFIG.genesisInfo().contains("frontier")) {
+        if (!CONFIG.isFrontier()) {
             rules.add(new ParentGasLimitRule());
         }
 
