@@ -16,6 +16,8 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
+import static org.ethereum.net.eth.EthVersion.*;
+
 /**
  * @author Roman Mandeleil
  * @since 15.10.2014
@@ -46,7 +48,9 @@ public class AdaptiveMessageIdsTest {
     @Test
     public void test2() {
 
-        assertEquals(9, EthMessageCodes.values().length);
+        assertEquals(8, EthMessageCodes.values(V60).length);
+        assertEquals(9, EthMessageCodes.values(V61).length);
+        assertEquals(8, EthMessageCodes.values(V62).length);
 
         assertEquals(0, EthMessageCodes.STATUS.asByte());
         assertEquals(1, EthMessageCodes.NEW_BLOCK_HASHES.asByte());

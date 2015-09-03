@@ -1,6 +1,7 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.shh.ShhMessageCodes;
@@ -10,6 +11,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static org.ethereum.net.eth.EthVersion.*;
 
 /**
  * @author Mikhail Kalinin
@@ -33,7 +36,8 @@ public class MessageCodesResolver {
         for (Capability capability : caps) {
             if (capability.getName().equals(Capability.ETH)) {
                 setEthOffset(offset);
-                offset += EthMessageCodes.values().length;
+                EthVersion v = fromCode(capability.getVersion());
+                offset += EthMessageCodes.values(v).length;
             }
 
             if (capability.getName().equals(Capability.SHH)) {

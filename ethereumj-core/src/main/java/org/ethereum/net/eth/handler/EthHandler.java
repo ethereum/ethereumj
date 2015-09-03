@@ -103,7 +103,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
 
-        if (EthMessageCodes.inRange(msg.getCommand().asByte()))
+        if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
             loggerNet.trace("EthHandler invoke: [{}]", msg.getCommand());
 
         worldManager.getListener().trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));

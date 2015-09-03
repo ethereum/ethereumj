@@ -11,7 +11,5 @@ public abstract class EthMessage extends Message {
         super(encoded);
     }
 
-    public EthMessageCodes getCommand() {
-        return EthMessageCodes.fromByte(code);
-    }
+    abstract public EthMessageCodes getCommand();
 }

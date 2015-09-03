@@ -143,6 +143,7 @@ public class Channel {
     public void activateEth(ChannelHandlerContext ctx, EthVersion version) {
         EthHandler handler = ethHandlerFactory.create(version);
         MessageFactory messageFactory = createEthMessageFactory(version);
+        messageCodec.setEthVersion(version);
         messageCodec.setEthMessageFactory(messageFactory);
 
         logger.info("Eth{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
