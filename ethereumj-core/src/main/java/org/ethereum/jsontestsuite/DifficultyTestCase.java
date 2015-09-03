@@ -1,6 +1,6 @@
 package org.ethereum.jsontestsuite;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.ethereum.core.BlockHeader;
 
 import java.math.BigInteger;
