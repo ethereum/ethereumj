@@ -19,7 +19,7 @@ public class DifficultyRule extends DependentBlockHeaderRule {
 
         errors.clear();
 
-        BigInteger minDifficulty = header.calculateMinDifficulty(parent);
+        BigInteger minDifficulty = header.calcDifficulty(parent);
         BigInteger difficulty = header.getDifficultyBI();
 
         if (isLessThan(difficulty, minDifficulty)) {

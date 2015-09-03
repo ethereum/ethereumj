@@ -8,7 +8,6 @@ import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
-import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -32,7 +31,7 @@ public class Block {
 
     private static final Logger logger = LoggerFactory.getLogger("block");
 
-    public static final BigInteger BLOCK_REWARD = CONFIG.genesisInfo().contains("frontier") ?
+    public static final BigInteger BLOCK_REWARD = CONFIG.isFrontier() ?
             new BigInteger("5000000000000000000") :
             new BigInteger("1500000000000000000");
 
@@ -159,12 +158,6 @@ public class Block {
     public byte[] getHash() {
         if (!parsed) parseRLP();
         return HashUtil.sha3(this.header.getEncoded());
-    }
-
-
-    public byte[] calcDifficulty() {
-        if (!parsed) parseRLP();
-        return this.header.calcDifficulty();
     }
 
     public byte[] getParentHash() {

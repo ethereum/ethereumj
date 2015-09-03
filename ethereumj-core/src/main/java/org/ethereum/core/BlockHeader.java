@@ -12,7 +12,10 @@ import java.util.List;
 
 import static org.ethereum.config.Constants.DIFFICULTY_BOUND_DIVISOR;
 import static org.ethereum.config.Constants.DURATION_LIMIT;
+import static org.ethereum.config.Constants.EXP_DIFFICULTY_PERIOD;
+import static org.ethereum.config.Constants.MINIMUM_DIFFICULTY;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.BIUtil.max;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -122,26 +125,6 @@ public class BlockHeader {
         this.nonce = nonce;
         this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
     }
-
-
-    /**
-     * Calculate Difficulty
-     * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
-     *
-     * @return byte array value of the difficulty
-     */
-    public byte[] calcDifficulty() {
-        if (this.isGenesis())
-            return Genesis.DIFFICULTY;
-        else {
-//          Block parent = this.getParent();
-//          long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
-//          long newDifficulty = this.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
-//          return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
-            return this.getDifficulty();
-        }
-    }
-
 
     public boolean isGenesis() {
         return this.getNumber() == Genesis.NUMBER;
@@ -315,7 +298,7 @@ public class BlockHeader {
         return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
     }
 
-    public byte[] calculatePowValue() {
+    public byte[] calcPowValue() {
 
         // nonce bytes are expected in Little Endian order, reverting
         byte[] nonceReverted = Arrays.reverse(nonce);
@@ -328,16 +311,21 @@ public class BlockHeader {
         return HashUtil.sha3(concat);
     }
 
-    public BigInteger calculateMinDifficulty(BlockHeader parent) {
+    public BigInteger calcDifficulty(BlockHeader parent) {
 
-        BigInteger parentDifficulty = parent.getDifficultyBI();
-        BigInteger quotient = parentDifficulty.divide(DIFFICULTY_BOUND_DIVISOR);
+        BigInteger pd = parent.getDifficultyBI();
+        BigInteger quotient = pd.divide(DIFFICULTY_BOUND_DIVISOR);
 
-        if (timestamp >= parent.timestamp + DURATION_LIMIT) {
-            return parentDifficulty.subtract(quotient);
-        } else {
-            return parentDifficulty.add(quotient);
+        BigInteger fromParent = timestamp >= parent.timestamp + DURATION_LIMIT ? pd.subtract(quotient) : pd.add(quotient);
+        BigInteger difficulty = max(MINIMUM_DIFFICULTY, fromParent);
+
+        int periodCount = (int) (number / EXP_DIFFICULTY_PERIOD);
+
+        if (periodCount > 1) {
+            difficulty = max(MINIMUM_DIFFICULTY, difficulty.add(BigInteger.ONE.shiftLeft(periodCount - 2)));
         }
+
+        return difficulty;
     }
 
     public String toString() {

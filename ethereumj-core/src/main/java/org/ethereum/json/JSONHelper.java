@@ -73,7 +73,7 @@ public class JSONHelper {
                                  Repository repository) {
 
         blockNode.put("coinbase", Hex.toHexString(block.getCoinbase()));
-        blockNode.put("difficulty", new BigInteger(1, block.calcDifficulty()).toString());
+        blockNode.put("difficulty", new BigInteger(1, block.getDifficulty()).toString());
         blockNode.put("extra_data", "0x");
         blockNode.put("gas_used", String.valueOf(gasUsed));
         blockNode.put("nonce", "0x" + Hex.toHexString(block.getNonce()));
