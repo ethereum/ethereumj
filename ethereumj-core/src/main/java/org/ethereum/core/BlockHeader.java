@@ -4,11 +4,14 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 
 import java.math.BigInteger;
 import java.util.List;
 
+import static org.ethereum.config.Constants.DIFFICULTY_BOUND_DIVISOR;
+import static org.ethereum.config.Constants.DURATION_LIMIT;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.util.ByteUtil.toHexString;
 
@@ -310,6 +313,31 @@ public class BlockHeader {
 
     public byte[] getPowBoundary() {
         return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
+    }
+
+    public byte[] calculatePowValue() {
+
+        // nonce bytes are expected in Little Endian order, reverting
+        byte[] nonceReverted = Arrays.reverse(nonce);
+        byte[] hashWithoutNonce = HashUtil.sha3(getEncodedWithoutNonce());
+
+        byte[] seed = Arrays.concatenate(hashWithoutNonce, nonceReverted);
+        byte[] seedHash = HashUtil.sha512(seed);
+
+        byte[] concat = Arrays.concatenate(seedHash, mixHash);
+        return HashUtil.sha3(concat);
+    }
+
+    public BigInteger calculateMinDifficulty(BlockHeader parent) {
+
+        BigInteger parentDifficulty = parent.getDifficultyBI();
+        BigInteger quotient = parentDifficulty.divide(DIFFICULTY_BOUND_DIVISOR);
+
+        if (timestamp >= parent.timestamp + DURATION_LIMIT) {
+            return parentDifficulty.subtract(quotient);
+        } else {
+            return parentDifficulty.add(quotient);
+        }
     }
 
     public String toString() {
