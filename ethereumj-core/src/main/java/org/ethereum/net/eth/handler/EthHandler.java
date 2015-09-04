@@ -220,7 +220,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     protected void sendStatus() {
-        byte protocolVersion = version.getCode(), networkId = (byte) CONFIG.networkId();
+        byte protocolVersion = version.getCode();
+        int networkId = CONFIG.networkId();
+
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
         byte[] bestHash = blockchain.getBestBlockHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,
@@ -293,7 +295,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     abstract protected void processBlockHashes(List<byte[]> received);
 
     protected void onBlockHashes(BlockHashesMessage blockHashesMessage) {
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if (loggerSync.isTraceEnabled()) loggerSync.trace(
                 "Peer {}: processing block hashes, size [{}]",
                 channel.getPeerIdShort(),
                 blockHashesMessage.getBlockHashes().size()
