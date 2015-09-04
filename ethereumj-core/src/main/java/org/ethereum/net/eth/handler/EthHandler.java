@@ -191,7 +191,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     protected void sendStatus() {
-        byte protocolVersion = version.getCode(), networkId = (byte) CONFIG.networkId();
+        byte protocolVersion = version.getCode();
+        int networkId = CONFIG.networkId();
+
         BigInteger totalDifficulty = blockchain.getTotalDifficulty();
         byte[] bestHash = blockchain.getBestBlockHash();
         StatusMessage msg = new StatusMessage(protocolVersion, networkId,

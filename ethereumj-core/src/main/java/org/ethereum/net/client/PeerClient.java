@@ -1,7 +1,6 @@
 package org.ethereum.net.client;
 
 import org.ethereum.manager.WorldManager;
-import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.EthereumChannelInitializer;
 
 import io.netty.bootstrap.Bootstrap;
@@ -42,9 +41,6 @@ public class PeerClient {
     @Autowired
     WorldManager worldManager;
 
-    @Autowired
-    public ChannelManager channelManager;
-
     private static EventLoopGroup workerGroup = new NioEventLoopGroup(0, new ThreadFactory() {
         AtomicInteger cnt = new AtomicInteger(0);
         @Override
@@ -81,11 +77,8 @@ public class PeerClient {
 
             // Wait until the connection is closed.
             f.channel().closeFuture().sync();
-
-            if(!discoveryMode) {
-                channelManager.notifyDisconnect(ethereumChannelInitializer.getChannel());
-            }
             logger.debug("Connection is closed");
+
         } catch (Exception e) {
             if (discoveryMode) {
                 logger.debug("Exception:", e);

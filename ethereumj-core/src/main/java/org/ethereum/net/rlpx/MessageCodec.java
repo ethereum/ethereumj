@@ -241,7 +241,11 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 this.frameCodec = new FrameCodec(secrets);
 
                 ECPoint remotePubKey = this.handshake.getRemotePublicKey();
-                this.remoteId = remotePubKey.getEncoded();
+
+                byte[] compressed = remotePubKey.getEncoded();
+
+                this.remoteId = new byte[compressed.length - 1];
+                System.arraycopy(compressed, 1, this.remoteId, 0, this.remoteId.length);
                 channel.setNode(remoteId);
 
                 final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);

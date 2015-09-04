@@ -81,6 +81,8 @@ public class CallTransaction {
          */
         public abstract byte[] encode(Object value);
 
+        public abstract Object decode(byte[] encoded);
+
         /**
          * @return fixed size in bytes or negative value if the type is dynamic
          */
@@ -159,6 +161,11 @@ public class CallTransaction {
         }
 
         @Override
+        public Object decode(byte[] encoded) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public int getFixedSize() {
             // return negative if elementType is dynamic
             return elementType.getFixedSize() * size;
@@ -183,6 +190,11 @@ public class CallTransaction {
                 elems[i + 1] = elementType.encode(l.get(i));
             }
             return ByteUtil.merge(elems);
+        }
+
+        @Override
+        public Object decode(byte[] encoded) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -211,6 +223,11 @@ public class CallTransaction {
         }
 
         @Override
+        public Object decode(byte[] encoded) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public int getFixedSize() {
             return -1;
         }
@@ -225,6 +242,12 @@ public class CallTransaction {
         public byte[] encode(Object value) {
             if (!(value instanceof String)) throw new RuntimeException("String value expected for type 'string'");
             return super.encode(((String)value).getBytes(StandardCharsets.UTF_8));
+        }
+
+        @Override
+        public Object decode(byte[] encoded) {
+            throw new UnsupportedOperationException();
+//            return new String(encoded, StandardCharsets.UTF_8);
         }
     }
 
@@ -246,6 +269,11 @@ public class CallTransaction {
             }
 
             return new byte[0];
+        }
+
+        @Override
+        public Object decode(byte[] encoded) {
+            return encoded;
         }
     }
 
@@ -307,6 +335,11 @@ public class CallTransaction {
             return encodeInt(bigInt);
         }
 
+        @Override
+        public Object decode(byte[] encoded) {
+            return new BigInteger(encoded);
+        }
+
         public static byte[] encodeInt(int i) {
             return encodeInt(new BigInteger("" + i));
         }
@@ -328,6 +361,11 @@ public class CallTransaction {
         public byte[] encode(Object value) {
             if (!(value instanceof Boolean)) throw new RuntimeException("Wrong value for bool type: " + value);
             return super.encode(value == Boolean.TRUE ? 1 : 0);
+        }
+
+        @Override
+        public Object decode(byte[] encoded) {
+            return Boolean.valueOf(((Number) super.decode(encoded)).intValue() != 0);
         }
     }
 
@@ -384,6 +422,17 @@ public class CallTransaction {
                 }
             }
             return ByteUtil.merge(bb);
+        }
+
+        public Object[] decodeResult(byte[] encodedRet) {
+            if (outputs.length > 1) {
+                throw new UnsupportedOperationException("Multiple return values not supported yet");
+            }
+            if (outputs.length == 0) {
+                return new Object[0];
+            }
+            Type retType = outputs[0].type;
+            return new Object[] {retType.decode(encodedRet)};
         }
 
         public byte[] encodeSignature() {

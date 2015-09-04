@@ -225,7 +225,7 @@ public class Channel {
     }
 
     public String getPeerIdShort() {
-        return node.getHexIdShort();
+        return node == null ? "<null>" : node.getHexIdShort();
     }
 
     public byte[] getNodeId() {

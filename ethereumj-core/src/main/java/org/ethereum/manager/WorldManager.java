@@ -135,6 +135,10 @@ public class WorldManager {
         return activePeer;
     }
 
+    public BlockStore getBlockStore() {
+        return blockStore;
+    }
+
     public void loadBlockchain() {
 
         if (!CONFIG.databaseReset())

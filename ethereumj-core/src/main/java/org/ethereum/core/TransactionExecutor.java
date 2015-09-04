@@ -52,6 +52,8 @@ public class TransactionExecutor {
     long basicTxCost = 0;
     List<LogInfo> logs = null;
 
+    boolean localCall = false;
+
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
@@ -80,6 +82,11 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
+
+        if (localCall) {
+            readyToExecute = true;
+            return;
+        }
 
         long txGasLimit = toBI(tx.getGasLimit()).longValue();
 
@@ -142,15 +149,16 @@ public class TransactionExecutor {
 
         if (!readyToExecute) return;
 
-        track.increaseNonce(tx.getSender());
+        if (!localCall) {
+            track.increaseNonce(tx.getSender());
 
-        long txGasLimit = toBI(tx.getGasLimit()).longValue();
-        BigInteger txGasCost = toBI(tx.getGasPrice()).multiply(toBI(txGasLimit));
-        track.addBalance(tx.getSender(), txGasCost.negate());
+            long txGasLimit = toBI(tx.getGasLimit()).longValue();
+            BigInteger txGasCost = toBI(tx.getGasPrice()).multiply(toBI(txGasLimit));
+            track.addBalance(tx.getSender(), txGasCost.negate());
 
-
-        if (logger.isInfoEnabled())
-            logger.info("Paying: txGasCost: [{}], gasPrice: [{}], gasLimit: [{}]", txGasCost, toBI(tx.getGasPrice()), txGasLimit);
+            if (logger.isInfoEnabled())
+                logger.info("Paying: txGasCost: [{}], gasPrice: [{}], gasLimit: [{}]", txGasCost, toBI(tx.getGasPrice()), txGasLimit);
+        }
 
         if (tx.isContractCreation())
             create();
@@ -172,7 +180,7 @@ public class TransactionExecutor {
             long requiredGas = precompiledContract.getGasForData(tx.getData());
             long txGasLimit = toBI(tx.getGasLimit()).longValue();
 
-            if (requiredGas > txGasLimit) {
+            if (!localCall && requiredGas > txGasLimit) {
                 // no refund
                 // no endowment
                 return;
@@ -335,8 +343,12 @@ public class TransactionExecutor {
         }
     }
 
+    public TransactionExecutor setLocalCall(boolean localCall) {
+        this.localCall = localCall;
+        return this;
+    }
 
-/*
+    /*
     @Deprecated
     public void execute() {
 

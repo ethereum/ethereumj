@@ -1,5 +1,6 @@
 package org.ethereum.facade;
 
+import org.ethereum.core.CallTransaction;
 import org.ethereum.core.Transaction;
 import org.ethereum.core.Wallet;
 import org.ethereum.listener.EthereumListener;
@@ -9,6 +10,7 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.vm.ProgramResult;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
@@ -112,6 +114,18 @@ public interface Ethereum {
      */
     Future<Transaction> submitTransaction(Transaction transaction);
 
+
+    /**
+     * Call a contract function locally without sending transaction to the network
+     * and without changing contract storage.
+     * @param receiveAddress hex encoded contract address
+     * @param function  contract function
+     * @param funcArgs  function arguments
+     * @return function result. The return value can be fetched via {@link ProgramResult#getHReturn()}
+     * and decoded with {@link org.ethereum.core.CallTransaction.Function#decodeResult(byte[])}.
+     */
+    ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
+                                       Object... funcArgs);
 
     /**
      * @return wallet object which is the manager

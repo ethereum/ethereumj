@@ -4,10 +4,10 @@ import org.ethereum.core.BlockHeader;
 
 import java.math.BigInteger;
 
-import static org.ethereum.util.BIUtil.isLessThan;
+import static org.ethereum.util.BIUtil.isEqual;
 
 /**
- * Checks block's difficulty against min difficulty value
+ * Checks block's difficulty against calculated difficulty value
  *
  * @author Mikhail Kalinin
  * @since 02.09.2015
@@ -19,12 +19,12 @@ public class DifficultyRule extends DependentBlockHeaderRule {
 
         errors.clear();
 
-        BigInteger minDifficulty = header.calcDifficulty(parent);
+        BigInteger calcDifficulty = header.calcDifficulty(parent);
         BigInteger difficulty = header.getDifficultyBI();
 
-        if (isLessThan(difficulty, minDifficulty)) {
+        if (!isEqual(difficulty, calcDifficulty)) {
 
-            errors.add("difficulty < minDifficulty");
+            errors.add("difficulty != calcDifficulty");
             return false;
         }
 
