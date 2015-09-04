@@ -57,12 +57,12 @@ public class Eth61 extends EthLegacy {
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
+
         super.channelRead0(ctx, msg);
 
         if (msg.getCommand() == GET_BLOCK_HASHES_BY_NUMBER) {
             processGetBlockHashesByNumber((GetBlockHashesByNumberMessage) msg);
         }
-
     }
 
     @Override
@@ -103,7 +103,7 @@ public class Eth61 extends EthLegacy {
         lastAskedNumber = blockNumber;
     }
 
-    protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
+    private void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFromBlock(
                 msg.getBlockNumber(),
                 min(msg.getMaxBlocks(), CONFIG.maxHashesAsk())

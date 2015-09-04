@@ -212,7 +212,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         sendMessage(msg);
     }
 
-    protected void processTransactions(TransactionsMessage msg) {
+    private void processTransactions(TransactionsMessage msg) {
         if(!processTransactions) {
             return;
         }
@@ -230,7 +230,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         sendMessage(msg);
     }
 
-    protected void processNewBlock(NewBlockMessage newBlockMessage) {
+    private void processNewBlock(NewBlockMessage newBlockMessage) {
 
         Block newBlock = newBlockMessage.getBlock();
 

@@ -28,8 +28,7 @@ import static org.ethereum.util.ByteUtil.wrap;
  */
 public abstract class EthLegacy extends EthHandler {
 
-    private final static Logger loggerNet = LoggerFactory.getLogger("net");
-    private final static Logger loggerSync = LoggerFactory.getLogger("sync");
+    private final static Logger logger = LoggerFactory.getLogger("sync");
 
     protected EthLegacy(EthVersion version) {
         super(version);
@@ -37,6 +36,7 @@ public abstract class EthLegacy extends EthHandler {
 
     @Override
     public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
+
         super.channelRead0(ctx, msg);
 
         switch (msg.getCommand()) {
@@ -44,7 +44,7 @@ public abstract class EthLegacy extends EthHandler {
                 processGetBlockHashes((GetBlockHashesMessage) msg);
                 break;
             case BLOCK_HASHES:
-                onBlockHashes((BlockHashesMessage) msg);
+                dispatchBlockHashes((BlockHashesMessage) msg);
                 break;
             case GET_BLOCKS:
                 processGetBlocks((GetBlocksMessage) msg);
@@ -57,9 +57,16 @@ public abstract class EthLegacy extends EthHandler {
         }
     }
 
+    abstract protected void processBlockHashes(List<byte[]> received);
+
+    @Override
+    protected boolean startBlockRetrieving() {
+        return sendGetBlocks();
+    }
+
     @Override
     protected void processNewBlockHashes(NewBlockHashesMessage msg) {
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing NEW block hashes, size [{}]",
                 channel.getPeerIdShort(),
                 msg.getBlockHashes().size()
@@ -75,7 +82,7 @@ public abstract class EthLegacy extends EthHandler {
         queue.addNewBlockHashes(hashes);
     }
 
-    protected void processGetBlockHashes(GetBlockHashesMessage msg) {
+    private void processGetBlockHashes(GetBlockHashesMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFrom(
                 msg.getBestHash(),
                 Math.max(msg.getMaxBlocks(), CONFIG.maxHashesAsk())
@@ -85,10 +92,8 @@ public abstract class EthLegacy extends EthHandler {
         sendMessage(msgHashes);
     }
 
-    abstract protected void processBlockHashes(List<byte[]> received);
-
-    protected void onBlockHashes(BlockHashesMessage blockHashesMessage) {
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+    protected void dispatchBlockHashes(BlockHashesMessage blockHashesMessage) {
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing block hashes, size [{}]",
                 channel.getPeerIdShort(),
                 blockHashesMessage.getBlockHashes().size()
@@ -103,9 +108,9 @@ public abstract class EthLegacy extends EthHandler {
 
         processBlockHashes(receivedHashes);
 
-        if (loggerSync.isInfoEnabled()) {
+        if (logger.isInfoEnabled()) {
             if (syncState == DONE_HASH_RETRIEVING) {
-                loggerSync.info(
+                logger.info(
                         "Peer {}: hashes sync completed, [{}] hashes in queue",
                         channel.getPeerIdShort(),
                         queue.hashStoreSize()
@@ -116,7 +121,7 @@ public abstract class EthLegacy extends EthHandler {
         }
     }
 
-    protected void processGetBlocks(GetBlocksMessage msg) {
+    private void processGetBlocks(GetBlocksMessage msg) {
 
         List<byte[]> hashes = msg.getBlockHashes();
 
@@ -130,19 +135,14 @@ public abstract class EthLegacy extends EthHandler {
         sendMessage(bm);
     }
 
-    @Override
-    protected boolean startBlockRetrieving() {
-        return sendGetBlocks();
-    }
-
     // Parallel download blocks based on hashQueue
-    protected boolean sendGetBlocks() {
+    private boolean sendGetBlocks() {
         // retrieve list of block hashes from queue
         // save them locally in case the remote peer
         // will return less blocks than requested.
         List<byte[]> hashes = queue.pollHashes();
         if (hashes.isEmpty()) {
-            if(loggerSync.isInfoEnabled()) loggerSync.info(
+            if(logger.isInfoEnabled()) logger.info(
                     "Peer {}: no more hashes in queue, idle",
                     channel.getPeerIdShort()
             );
@@ -154,7 +154,7 @@ public abstract class EthLegacy extends EthHandler {
         for (byte[] hash : hashes)
             this.sentHashes.add(wrap(hash));
 
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get blocks, hashes.count [{}]",
                 channel.getPeerIdShort(),
                 sentHashes.size()
@@ -168,8 +168,8 @@ public abstract class EthLegacy extends EthHandler {
         return true;
     }
 
-    protected void processBlocks(BlocksMessage blocksMessage) {
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+    private void processBlocks(BlocksMessage blocksMessage) {
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: process blocks, size [{}]",
                 channel.getPeerIdShort(),
                 blocksMessage.getBlocks().size()
@@ -201,7 +201,7 @@ public abstract class EthLegacy extends EthHandler {
     }
 
     protected void sendGetBlockHashes() {
-        if(loggerSync.isTraceEnabled()) loggerSync.trace(
+        if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get block hashes, hash [{}], maxHashesAsk [{}]",
                 channel.getPeerIdShort(),
                 Hex.toHexString(lastHashToAsk),
