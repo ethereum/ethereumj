@@ -1,5 +1,6 @@
 package org.ethereum.net.eth.handler;
 
+import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.Block;
 import org.ethereum.net.eth.message.*;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import java.util.ListIterator;
 import static java.lang.Math.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
+import static org.ethereum.net.eth.message.EthMessageCodes.GET_BLOCK_HASHES_BY_NUMBER;
 import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
 
 /**
@@ -25,7 +27,7 @@ import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
  */
 @Component
 @Scope("prototype")
-public class Eth61 extends EthHandler {
+public class Eth61 extends EthLegacy {
 
     private static final Logger logger = LoggerFactory.getLogger("sync");
 
@@ -51,6 +53,16 @@ public class Eth61 extends EthHandler {
 
     public Eth61() {
         super(V61);
+    }
+
+    @Override
+    public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
+        super.channelRead0(ctx, msg);
+
+        if (msg.getCommand() == GET_BLOCK_HASHES_BY_NUMBER) {
+            processGetBlockHashesByNumber((GetBlockHashesByNumberMessage) msg);
+        }
+
     }
 
     @Override
@@ -91,7 +103,6 @@ public class Eth61 extends EthHandler {
         lastAskedNumber = blockNumber;
     }
 
-    @Override
     protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFromBlock(
                 msg.getBlockNumber(),

@@ -1,6 +1,5 @@
 package org.ethereum.net.eth.handler;
 
-import org.ethereum.net.eth.message.GetBlockHashesByNumberMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -20,7 +19,7 @@ import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
  */
 @Component
 @Scope("prototype")
-public class Eth60 extends EthHandler {
+public class Eth60 extends EthLegacy {
 
     private static final Logger logger = LoggerFactory.getLogger("sync");
 
@@ -66,11 +65,6 @@ public class Eth60 extends EthHandler {
         } else {
             sendGetBlockHashes(); // another getBlockHashes with last received hash.
         }
-    }
-
-    @Override
-    protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
-        // not a part of V60
     }
 
     @Override
