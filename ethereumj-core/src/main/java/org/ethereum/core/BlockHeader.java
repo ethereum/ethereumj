@@ -4,11 +4,18 @@ import org.ethereum.crypto.HashUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.Arrays;
+import org.spongycastle.util.BigIntegers;
 
 import java.math.BigInteger;
 import java.util.List;
 
+import static org.ethereum.config.Constants.DIFFICULTY_BOUND_DIVISOR;
+import static org.ethereum.config.Constants.DURATION_LIMIT;
+import static org.ethereum.config.Constants.EXP_DIFFICULTY_PERIOD;
+import static org.ethereum.config.Constants.MINIMUM_DIFFICULTY;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.util.BIUtil.max;
 import static org.ethereum.util.ByteUtil.toHexString;
 
 /**
@@ -118,26 +125,6 @@ public class BlockHeader {
         this.nonce = nonce;
         this.stateRoot = HashUtil.EMPTY_TRIE_HASH;
     }
-
-
-    /**
-     * Calculate Difficulty
-     * See Yellow Paper: http://www.gavwood.com/Paper.pdf - page 5, 4.3.4 (24)
-     *
-     * @return byte array value of the difficulty
-     */
-    public byte[] calcDifficulty() {
-        if (this.isGenesis())
-            return Genesis.DIFFICULTY;
-        else {
-//          Block parent = this.getParent();
-//          long parentDifficulty = new BigInteger(1, parent.getDifficulty()).longValue();
-//          long newDifficulty = this.getTimestamp() < parent.getTimestamp() + 5 ? parentDifficulty - (parentDifficulty >> 10) : (parentDifficulty + (parentDifficulty >> 10));
-//          return BigIntegers.asUnsignedByteArray(BigInteger.valueOf(newDifficulty));
-            return this.getDifficulty();
-        }
-    }
-
 
     public boolean isGenesis() {
         return this.getNumber() == Genesis.NUMBER;
@@ -283,8 +270,8 @@ public class BlockHeader {
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
 
         byte[] extraData = RLP.encodeElement(this.extraData);
-        byte[] mixHash = RLP.encodeElement(this.mixHash);
         if (withNonce) {
+            byte[] mixHash = RLP.encodeElement(this.mixHash);
             byte[] nonce = RLP.encodeElement(this.nonce);
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
@@ -292,7 +279,7 @@ public class BlockHeader {
         } else {
             return RLP.encodeList(parentHash, unclesHash, coinbase,
                     stateRoot, txTrieRoot, receiptTrieRoot, logsBloom, difficulty, number,
-                    gasLimit, gasUsed, timestamp, extraData, mixHash);
+                    gasLimit, gasUsed, timestamp, extraData);
         }
     }
 
@@ -305,6 +292,40 @@ public class BlockHeader {
             ++i;
         }
         return RLP.encodeList(unclesEncoded);
+    }
+
+    public byte[] getPowBoundary() {
+        return BigIntegers.asUnsignedByteArray(32, BigInteger.ONE.shiftLeft(256).divide(getDifficultyBI()));
+    }
+
+    public byte[] calcPowValue() {
+
+        // nonce bytes are expected in Little Endian order, reverting
+        byte[] nonceReverted = Arrays.reverse(nonce);
+        byte[] hashWithoutNonce = HashUtil.sha3(getEncodedWithoutNonce());
+
+        byte[] seed = Arrays.concatenate(hashWithoutNonce, nonceReverted);
+        byte[] seedHash = HashUtil.sha512(seed);
+
+        byte[] concat = Arrays.concatenate(seedHash, mixHash);
+        return HashUtil.sha3(concat);
+    }
+
+    public BigInteger calcDifficulty(BlockHeader parent) {
+
+        BigInteger pd = parent.getDifficultyBI();
+        BigInteger quotient = pd.divide(DIFFICULTY_BOUND_DIVISOR);
+
+        BigInteger fromParent = timestamp >= parent.timestamp + DURATION_LIMIT ? pd.subtract(quotient) : pd.add(quotient);
+        BigInteger difficulty = max(MINIMUM_DIFFICULTY, fromParent);
+
+        int periodCount = (int) (number / EXP_DIFFICULTY_PERIOD);
+
+        if (periodCount > 1) {
+            difficulty = max(MINIMUM_DIFFICULTY, difficulty.add(BigInteger.ONE.shiftLeft(periodCount - 2)));
+        }
+
+        return difficulty;
     }
 
     public String toString() {

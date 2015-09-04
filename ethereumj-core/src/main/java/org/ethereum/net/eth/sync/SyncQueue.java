@@ -1,14 +1,12 @@
 package org.ethereum.net.eth.sync;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockWrapper;
-import org.ethereum.core.ImportResult;
+import org.ethereum.core.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
-import org.ethereum.core.Blockchain;
 import org.ethereum.util.CollectionUtils;
 import org.ethereum.util.Functional;
+import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -52,6 +50,9 @@ public class SyncQueue {
 
     @Autowired
     private SyncManager syncManager;
+
+    @Autowired
+    private BlockHeaderValidator headerValidator;
 
     /**
      * Loads HashStore and BlockQueue from disk,
@@ -133,6 +134,19 @@ public class SyncQueue {
      */
     public void addBlocks(List<Block> blockList, final byte[] nodeId) {
 
+        // run basic checks
+        for (Block b : blockList) {
+            if (!isValid(b.getHeader())) {
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Invalid block RLP: {}", Hex.toHexString(b.getEncoded()));
+                }
+
+                syncManager.reportInvalidBlock(nodeId);
+                return;
+            }
+        }
+
         List<BlockWrapper> wrappers = CollectionUtils.collectList(blockList, new Functional.Function<Block, BlockWrapper>() {
             @Override
             public BlockWrapper apply(Block block) {
@@ -155,6 +169,13 @@ public class SyncQueue {
      * @param nodeId nodeId of the remote peer which this block is received from
      */
     public void addNewBlock(Block block, byte[] nodeId) {
+
+        // run basic checks
+        if (!isValid(block.getHeader())) {
+            syncManager.reportInvalidBlock(nodeId);
+            return;
+        }
+
         BlockWrapper wrapper = new BlockWrapper(block, true, nodeId);
         wrapper.setReceivedAt(System.currentTimeMillis());
 
@@ -312,4 +333,26 @@ public class SyncQueue {
         BlockWrapper wrapper = blockQueue.peek();
         return wrapper != null && wrapper.isSolidBlock();
     }
+
+    /**
+     * Runs checks against block's header. <br>
+     * All these checks make sense before block is added to queue
+     * in front of checks running by {@link BlockchainImpl#isValid(BlockHeader)}
+     *
+     * @param header block header
+     * @return true if block is valid, false otherwise
+     */
+    private boolean isValid(BlockHeader header) {
+
+        if (!headerValidator.validate(header)) {
+
+            if (logger.isErrorEnabled())
+                headerValidator.logErrors(logger);
+
+            return false;
+        }
+
+        return true;
+    }
+
 }

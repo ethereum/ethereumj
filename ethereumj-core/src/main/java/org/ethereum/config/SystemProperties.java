@@ -508,6 +508,10 @@ public class SystemProperties {
             return genesisInfo;
     }
 
+    public boolean isFrontier() {
+        return genesisInfo().contains("frontier");
+    }
+
     @ValidateMe
     public int txOutdatedThreshold() {
         return config.getInt("transaction.outdated.threshold");

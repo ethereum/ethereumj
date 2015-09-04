@@ -1,15 +1,14 @@
 package org.ethereum.config;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.core.PendingTransaction;
 import org.ethereum.core.Repository;
-import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.redis.RedisConnection;
 import org.ethereum.db.RepositoryImpl;
 import org.ethereum.net.eth.sync.*;
+import org.ethereum.validator.*;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +19,10 @@ import org.springframework.orm.hibernate4.HibernateTransactionManager;
 import org.springframework.orm.hibernate4.LocalSessionFactoryBuilder;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.annotation.Resource;
 import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static java.util.Arrays.asList;
 
 @Configuration
 @EnableTransactionManagement
@@ -139,6 +138,7 @@ public class CommonConfig {
 
     @Bean
     public Map<SyncStateName, SyncState> syncStates(SyncManager syncManager) {
+
         Map<SyncStateName, SyncState> states = new IdentityHashMap<>();
         states.put(SyncStateName.IDLE, new IdleState());
         states.put(SyncStateName.HASH_RETRIEVING, new HashRetrievingState());
@@ -151,4 +151,34 @@ public class CommonConfig {
         return states;
     }
 
+    @Bean
+    public BlockHeaderValidator headerValidator() {
+
+        List<BlockHeaderRule> rules = new ArrayList<>(asList(
+                new GasValueRule(),
+                new ExtraDataRule(),
+                new ProofOfWorkRule()
+        ));
+
+        if (!CONFIG.isFrontier()) {
+            rules.add(new GasLimitRule());
+        }
+
+        return new BlockHeaderValidator(rules);
+    }
+
+    @Bean
+    public ParentBlockHeaderValidator parentHeaderValidator() {
+
+        List<DependentBlockHeaderRule> rules = new ArrayList<>(asList(
+                new ParentNumberRule(),
+                new DifficultyRule()
+        ));
+
+        if (!CONFIG.isFrontier()) {
+            rules.add(new ParentGasLimitRule());
+        }
+
+        return new ParentBlockHeaderValidator(rules);
+    }
 }

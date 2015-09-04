@@ -118,4 +118,8 @@ public class BIUtil {
 
         return false;
     }
+
+    public static BigInteger max(BigInteger first, BigInteger second) {
+        return first.compareTo(second) < 0 ? second : first;
+    }
 }
