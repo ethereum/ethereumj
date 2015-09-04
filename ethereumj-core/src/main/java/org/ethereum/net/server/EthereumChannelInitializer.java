@@ -1,8 +1,6 @@
 package org.ethereum.net.server;
 
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.FixedRecvByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import org.ethereum.core.Blockchain;
 import org.ethereum.manager.WorldManager;
@@ -27,16 +25,12 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
     private ApplicationContext ctx;
 
     @Autowired
-    Blockchain blockchain;
-
-    @Autowired
     ChannelManager channelManager;
 
     @Autowired
     WorldManager worldManager;
 
-    String remoteId;
-    private Channel channel;
+    private String remoteId;
 
     private boolean peerDiscoveryMode = false;
 
@@ -49,7 +43,7 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
         try {
             logger.info("Open connection, channel: {}", ch.toString());
 
-            channel = ctx.getBean(Channel.class);
+            final Channel channel = ctx.getBean(Channel.class);
             channel.init(ch.pipeline(), remoteId, peerDiscoveryMode);
 
             if(!peerDiscoveryMode) {
@@ -60,13 +54,20 @@ public class EthereumChannelInitializer extends ChannelInitializer<NioSocketChan
             ch.config().setRecvByteBufAllocator(new FixedRecvByteBufAllocator(16_777_216));
             ch.config().setOption(ChannelOption.SO_RCVBUF, 16_777_216);
             ch.config().setOption(ChannelOption.SO_BACKLOG, 1024);
+
+            // be aware of channel closing
+            ch.closeFuture().addListener(new ChannelFutureListener() {
+                @Override
+                public void operationComplete(ChannelFuture future) throws Exception {
+                    if (!peerDiscoveryMode) {
+                        channelManager.notifyDisconnect(channel);
+                    }
+                }
+            });
+
         } catch (Exception e) {
             logger.error("Unexpected error: ", e);
         }
-    }
-
-    public Channel getChannel() {
-        return channel;
     }
 
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
