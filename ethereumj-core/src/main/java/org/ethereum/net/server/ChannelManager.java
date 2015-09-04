@@ -92,7 +92,7 @@ public class ChannelManager {
     }
 
     public void notifyDisconnect(Channel channel) {
-        logger.debug("Peer {}: notifies about disconnect", Utils.getNodeIdShort(channel.getPeerIdShort()));
+        logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
         channel.onDisconnect();
         syncManager.onDisconnect(channel);
         activePeers.remove(channel);
