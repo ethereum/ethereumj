@@ -104,7 +104,7 @@ public class EncryptionHandshake {
         try {
             byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
             return AuthInitiateMessage.decode(plaintext);
-        } catch (IOException | InvalidCipherTextException e) {
+        } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
