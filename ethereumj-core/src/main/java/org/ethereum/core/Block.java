@@ -11,6 +11,7 @@ import org.spongycastle.util.Arrays;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -388,9 +389,12 @@ public class Block {
     public byte[] getEncoded() {
         if (rlpEncoded == null) {
             byte[] header = this.header.getEncoded();
-            byte[] transactions = RLP.encodeList();
-            byte[] uncles = getUnclesEncoded();
-            this.rlpEncoded = RLP.encodeList(header, transactions, uncles);
+
+            List<byte[]> block = getBodyElements();
+            block.add(0, header);
+            byte[][] elements = block.toArray(new byte[block.size()][]);
+
+            this.rlpEncoded = RLP.encodeList(elements);
         }
         return rlpEncoded;
     }
@@ -398,6 +402,23 @@ public class Block {
     public byte[] getEncodedWithoutNonce() {
         if (!parsed) parseRLP();
         return this.header.getEncodedWithoutNonce();
+    }
+
+    public byte[] getEncodedBody() {
+        List<byte[]> body = getBodyElements();
+        byte[][] elements = body.toArray(new byte[body.size()][]);
+        return RLP.encodeList(elements);
+    }
+
+    private List<byte[]> getBodyElements() {
+        byte[] transactions = RLP.encodeList();
+        byte[] uncles = getUnclesEncoded();
+
+        List<byte[]> body = new ArrayList<>();
+        body.add(transactions);
+        body.add(uncles);
+
+        return body;
     }
 
     public String getShortHash() {
