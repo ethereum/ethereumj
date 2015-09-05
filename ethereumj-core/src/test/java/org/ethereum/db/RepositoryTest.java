@@ -5,6 +5,7 @@ import org.ethereum.crypto.HashUtil;
 
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.core.Repository;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 
 import org.junit.Assert;
@@ -16,6 +17,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.*;
 
 /**
@@ -29,16 +31,22 @@ public class RepositoryTest {
     @Test
     public void test1() {
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
-        byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
         repository.increaseNonce(cow);
         repository.increaseNonce(horse);
 
         assertEquals(BigInteger.ONE, repository.getNonce(cow));
-        assertEquals(BigInteger.ONE, repository.getNonce(horse));
+//        assertEquals(BigInteger.ONE, repository.getNonce(horse));
+
+        System.out.println(repository.getTrieDump());
+
+        repository.increaseNonce(cow);
+        System.out.println(repository.getTrieDump());
+
 
         repository.close();
     }
@@ -394,8 +402,8 @@ public class RepositoryTest {
 
         track.rollback();
 
-        assertArrayEquals(null, repository.getCode(cow));
-        assertArrayEquals(null, repository.getCode(horse));
+        assertArrayEquals(EMPTY_BYTE_ARRAY, repository.getCode(cow));
+        assertArrayEquals(EMPTY_BYTE_ARRAY, repository.getCode(horse));
 
         repository.close();
     }

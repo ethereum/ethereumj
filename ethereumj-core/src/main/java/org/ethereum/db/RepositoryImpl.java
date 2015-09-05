@@ -32,6 +32,7 @@ import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
+import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.wrap;
 
@@ -453,8 +454,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         }
 
         details.setCode(code);
+        AccountState accountState = getAccountState(addr);
+        accountState.setCodeHash(sha3(code));
 
         updateContractDetails(addr, details);
+        updateAccountState(addr, accountState);
     }
 
 
