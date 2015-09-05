@@ -265,8 +265,8 @@ public class TransactionExecutor {
             }
 
             if (result.getException() != null){
-                result.getDeleteAccounts().clear();
-                result.getLogInfoList().clear();
+                if (result.getDeleteAccounts() != null) result.getDeleteAccounts().clear();
+                if (result.getLogInfoList() != null) result.getLogInfoList().clear();
                 result.futureRefundGas(0);
                 throw result.getException();
             }
