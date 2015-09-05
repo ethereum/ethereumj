@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.core.Repository;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.SecureTrie;
@@ -30,8 +30,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
-import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -168,8 +169,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
                 byte[] data = hash.getData();
                 updateContractDetails(data, contractDetails);
 
-                accountState.setStateRoot(contractDetails.getStorageHash());
-                accountState.setCodeHash(sha3(contractDetails.getCode()));
+                if ( !Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH) )
+                    accountState.setStateRoot(contractDetails.getStorageHash());
+
                 updateAccountState(hash.getData(), accountState);
 
                 if (logger.isDebugEnabled()) {
@@ -429,6 +431,14 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public byte[] getCode(byte[] addr) {
+
+        if (!isExist(addr))
+            return EMPTY_BYTE_ARRAY;
+
+        byte[] codeHash = getAccountState(addr).getCodeHash();
+        if (Arrays.equals(codeHash, EMPTY_DATA_HASH))
+            return EMPTY_BYTE_ARRAY;
+
         ContractDetails details = getContractDetails(addr);
         return (details == null) ? null : details.getCode();
     }
