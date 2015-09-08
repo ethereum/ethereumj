@@ -368,7 +368,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             public Set<byte[]> invoke() {
                 Set<byte[]> result = new HashSet<>();
                 for (ByteArrayWrapper key : dds.keys()) {
-                    result.add(key.getData());
+
+                    if (isExist(key.getData()))
+                        result.add(key.getData());
                 }
 
                 return result;
@@ -507,7 +509,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             @Override
             public void invoke() {
                 worldState.delete(addr);
-                dds.remove(addr);
+//                dds.remove(addr);
             }
         });
     }
