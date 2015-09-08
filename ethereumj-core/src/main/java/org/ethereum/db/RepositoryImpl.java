@@ -507,7 +507,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             @Override
             public void invoke() {
                 worldState.delete(addr);
-//                dds.remove(addr);
+                dds.remove(addr);
             }
         });
     }
