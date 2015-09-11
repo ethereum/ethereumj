@@ -14,6 +14,8 @@ public interface HashStore extends DiskStore {
 
     void addFirst(byte[] hash);
 
+    void addBatch(Collection<byte[]> hashes);
+
     void addFirstBatch(Collection<byte[]> hashes);
 
     byte[] peek();

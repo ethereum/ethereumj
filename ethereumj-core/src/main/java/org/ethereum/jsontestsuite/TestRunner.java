@@ -109,7 +109,7 @@ public class TestRunner {
 
                 if (!outputSummary.isEmpty()){
                     for (String output : outputSummary)
-                        logger.error("%s", output);
+                        logger.error("{}", output);
                 }
 
                 blockTraffic.add(tBlock);

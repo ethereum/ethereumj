@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
-import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.core.Repository;
+import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.json.EtherObjectMapper;
 import org.ethereum.json.JSONHelper;
 import org.ethereum.trie.SecureTrie;
@@ -30,8 +30,10 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.Thread.sleep;
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -168,8 +170,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
                 byte[] data = hash.getData();
                 updateContractDetails(data, contractDetails);
 
-                accountState.setStateRoot(contractDetails.getStorageHash());
-                accountState.setCodeHash(sha3(contractDetails.getCode()));
+                if ( !Arrays.equals(accountState.getCodeHash(), EMPTY_TRIE_HASH) )
+                    accountState.setStateRoot(contractDetails.getStorageHash());
+
                 updateAccountState(hash.getData(), accountState);
 
                 if (logger.isDebugEnabled()) {
@@ -365,7 +368,9 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             public Set<byte[]> invoke() {
                 Set<byte[]> result = new HashSet<>();
                 for (ByteArrayWrapper key : dds.keys()) {
-                    result.add(key.getData());
+
+                    if (isExist(key.getData()))
+                        result.add(key.getData());
                 }
 
                 return result;
@@ -429,6 +434,14 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     @Override
     public byte[] getCode(byte[] addr) {
+
+        if (!isExist(addr))
+            return EMPTY_BYTE_ARRAY;
+
+        byte[] codeHash = getAccountState(addr).getCodeHash();
+        if (Arrays.equals(codeHash, EMPTY_DATA_HASH))
+            return EMPTY_BYTE_ARRAY;
+
         ContractDetails details = getContractDetails(addr);
         return (details == null) ? null : details.getCode();
     }
@@ -443,8 +456,11 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
         }
 
         details.setCode(code);
+        AccountState accountState = getAccountState(addr);
+        accountState.setCodeHash(sha3(code));
 
         updateContractDetails(addr, details);
+        updateAccountState(addr, accountState);
     }
 
 
@@ -493,7 +509,7 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             @Override
             public void invoke() {
                 worldState.delete(addr);
-                dds.remove(addr);
+//                dds.remove(addr);
             }
         });
     }
@@ -504,25 +520,19 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
             @Override
             public ContractDetails invoke() {
 
-                // That part is important cause if we are
-                // in repository snapshot we have to sync
-                // each details object storage to the
-                //  snapshot state.
-                if (isSnapshot){
+                // That part is important cause if we have
+                // to sync details storage according the trie root
+                // saved in the account
+                AccountState accountState = getAccountState(addr);
+                byte[] storageRoot = EMPTY_TRIE_HASH;
+                if (accountState != null)
+                    storageRoot = getAccountState(addr).getStateRoot();
+                ContractDetails details =  dds.get(addr);
 
-                    AccountState accountState = getAccountState(addr);
-                    byte[] storageRoot = EMPTY_TRIE_HASH;
-                    if (accountState != null)
-                        storageRoot = getAccountState(addr).getStateRoot();
-                    ContractDetails details =  dds.get(addr);
+                if (details != null)
+                    details = details.getSnapshotTo(storageRoot);
 
-                    if (details != null)
-                        details = details.getSnapshotTo(storageRoot);
-
-                    return  details;
-                }
-
-                return dds.get(addr);
+                return  details;
             }
         });
     }

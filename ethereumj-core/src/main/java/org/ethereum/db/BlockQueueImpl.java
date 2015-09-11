@@ -24,7 +24,6 @@ public class BlockQueueImpl implements BlockQueue {
 
     private final static Logger logger = LoggerFactory.getLogger("blockqueue");
 
-
     private static final int READ_HITS_COMMIT_THRESHOLD = 1000;
     private int readHits;
 
@@ -73,6 +72,8 @@ public class BlockQueueImpl implements BlockQueue {
                     initDone = true;
                     readHits = 0;
                     init.signalAll();
+
+                    logger.info("Block queue loaded, size [{}]", size());
                 } finally {
                     initLock.unlock();
                 }

@@ -25,6 +25,10 @@ public class SHA3Helper {
         return sha3(message, new SHA3Digest(DEFAULT_SIZE), true);
     }
 
+    public static byte[] sha3(byte[] message, Size sz) {
+        return sha3(message, new SHA3Digest(sz.bits), true);
+    }
+
     public static byte[] sha3(byte[] m1, byte[] m2) {
         return sha3(m1, m2, new SHA3Digest(DEFAULT_SIZE), true);
     }

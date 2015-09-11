@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -8,12 +8,10 @@ import org.spongycastle.util.encoders.Hex;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.net.eth.EthMessageCodes.GET_BLOCKS;
-
 /**
  * Wrapper around an Ethereum GetBlocks message on the network
  *
- * @see org.ethereum.net.eth.EthMessageCodes#GET_BLOCKS
+ * @see EthMessageCodes#GET_BLOCKS
  */
 public class GetBlocksMessage extends EthMessage {
 

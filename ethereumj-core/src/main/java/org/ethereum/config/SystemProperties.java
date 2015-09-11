@@ -10,15 +10,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.Socket;
+import java.net.URL;
 import java.util.*;
 
 import static org.ethereum.crypto.SHA3Helper.sha3;
@@ -67,8 +67,12 @@ public class SystemProperties {
     private String databaseDir = null;
     private Boolean databaseReset = null;
     private String projectVersion = null;
+    private String projectVersionModifier = null;
 
     private String genesisInfo = null;
+
+    private String bindIp = null;
+    private String externalIp = null;
 
     private SystemProperties() {
         try {
@@ -95,6 +99,9 @@ public class SystemProperties {
             this.projectVersion = this.projectVersion.replaceAll("'", "");
 
             if (this.projectVersion == null) this.projectVersion = "-.-.-";
+
+            this.projectVersionModifier = props.getProperty("modifier");
+            this.projectVersionModifier = this.projectVersionModifier.replaceAll("\"", "");
 
         } catch (Exception e) {
             logger.error("Can't read config.", e);
@@ -231,10 +238,8 @@ public class SystemProperties {
                 } else {
                     if (configObject.toConfig().hasPath("nodeName")) {
                         String nodeName = configObject.toConfig().getString("nodeName").trim();
-                        // FIXME should be sha3-512 here
-                        byte[] ecPublic = ECKey.fromPrivate(sha3(nodeName.getBytes())).getPubKeyPoint().getEncoded(false);
-                        nodeId = new byte[ecPublic.length - 1];
-                        System.arraycopy(ecPublic, 1, nodeId, 0, nodeId.length);
+                        // FIXME should be sha3-512 here ?
+                        nodeId = ECKey.fromPrivate(sha3(nodeName.getBytes())).getNodeId();
                     } else {
                         throw new RuntimeException("Either nodeId or nodeName should be specified: " + configObject);
                     }
@@ -337,6 +342,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public String projectVersionModifier() {
+        return projectVersionModifier;
+    }
+
+    @ValidateMe
     public String helloPhrase() {
         return config.getString("hello.phrase");
     }
@@ -388,7 +398,24 @@ public class SystemProperties {
 
     @ValidateMe
     public String privateKey() {
-        return config.getString("peer.privateKey");
+        String key = config.getString("peer.privateKey");
+        if (key.length() != 64) {
+            throw new RuntimeException("The peer.privateKey needs to be Hex encoded and 32 byte length");
+        }
+        return key;
+    }
+
+    @ValidateMe
+    public ECKey getMyKey() {
+        return ECKey.fromPrivate(Hex.decode(privateKey())).decompress();
+    }
+
+    /**
+     *  Home NodeID calculated from 'peer.privateKey' property
+     */
+    @ValidateMe
+    public byte[] nodeId() {
+        return getMyKey().getNodeId();
     }
 
     @ValidateMe
@@ -399,6 +426,61 @@ public class SystemProperties {
     @ValidateMe
     public int listenPort() {
         return config.getInt("peer.listen.port");
+    }
+
+
+    /**
+     * This can be a blocking call with long timeout (thus no ValidateMe)
+     */
+    public String bindIp() {
+        if (!config.hasPath("peer.bind.ip") || config.getString("peer.bind.ip").trim().isEmpty()) {
+            if (bindIp == null) {
+                logger.info("Bind address wasn't set, Punching to identify it...");
+                try {
+                    Socket s = new Socket("www.google.com", 80);
+                    bindIp = s.getLocalAddress().getHostAddress();
+                    logger.info("UDP local bound to: {}", bindIp);
+                } catch (IOException e) {
+                    logger.warn("Can't get bind IP. Fall back to 0.0.0.0: " + e);
+                    bindIp = "0.0.0.0";
+                }
+            }
+            return bindIp;
+        } else {
+            return config.getString("peer.bind.ip").trim();
+        }
+    }
+
+    /**
+     * This can be a blocking call with long timeout (thus no ValidateMe)
+     */
+    public String externalIp() {
+        if (!config.hasPath("peer.discovery.external.ip") || config.getString("peer.discovery.external.ip").trim().isEmpty()) {
+            if (externalIp == null) {
+                logger.info("External IP wasn't set, using checkip.amazonaws.com to identify it...");
+                try {
+                    BufferedReader in = new BufferedReader(new InputStreamReader(
+                            new URL("http://checkip.amazonaws.com").openStream()));
+                    externalIp = in.readLine();
+                    if (externalIp == null || externalIp.trim().isEmpty()) {
+                        throw new IOException("Invalid address: '" + externalIp + "'");
+                    }
+                    try {
+                        InetAddress.getByName(externalIp);
+                    } catch (Exception e) {
+                        throw new IOException("Invalid address: '" + externalIp + "'");
+                    }
+                    logger.info("External address identified: {}", externalIp);
+                } catch (IOException e) {
+                    externalIp = bindIp();
+                    logger.warn("Can't get external IP. Fall back to peer.bind.ip: " + externalIp + " :" + e);
+                }
+            }
+            return externalIp;
+
+        } else {
+            return config.getString("peer.discovery.external.ip").trim();
+        }
     }
 
     @ValidateMe
@@ -415,12 +497,24 @@ public class SystemProperties {
     public boolean isSyncEnabled() { return config.getBoolean("sync.enabled");}
 
     @ValidateMe
+    public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
+
+    @ValidateMe
     public String genesisInfo() {
 
         if (genesisInfo == null)
             return config.getString("genesis");
         else
             return genesisInfo;
+    }
+
+    public boolean isFrontier() {
+        return genesisInfo().contains("frontier");
+    }
+
+    @ValidateMe
+    public int txOutdatedThreshold() {
+        return config.getInt("transaction.outdated.threshold");
     }
 
     public void setGenesisInfo(String genesisInfo){

@@ -100,11 +100,11 @@ public class EncryptionHandshake {
         }
     }
 
-    public AuthInitiateMessage decryptAuthInitiate(byte[] ciphertext, ECKey myKey) {
+    public AuthInitiateMessage decryptAuthInitiate(byte[] ciphertext, ECKey myKey) throws InvalidCipherTextException {
         try {
             byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
             return AuthInitiateMessage.decode(plaintext);
-        } catch (IOException | InvalidCipherTextException e) {
+        } catch (IOException e) {
             throw Throwables.propagate(e);
         }
     }
@@ -117,7 +117,7 @@ public class EncryptionHandshake {
         return response;
     }
 
-    private void agreeSecret(byte[] initiatePacket, byte[] responsePacket) {
+    void agreeSecret(byte[] initiatePacket, byte[] responsePacket) {
         BigInteger secretScalar = remoteEphemeralKey.multiply(ephemeralKey.getPrivKey()).normalize().getXCoord().toBigInteger();
         byte[] agreedSecret = ByteUtil.bigIntegerToBytes(secretScalar, SECRET_SIZE);
         byte[] sharedSecret = sha3(agreedSecret, sha3(responderNonce, initiatorNonce));
@@ -151,15 +151,19 @@ public class EncryptionHandshake {
         }
     }
 
-    public byte[] handleAuthInitiate(byte[] initiatePacket, ECKey key) {
+    public byte[] handleAuthInitiate(byte[] initiatePacket, ECKey key) throws InvalidCipherTextException {
         AuthResponseMessage response = makeAuthInitiate(initiatePacket, key);
         byte[] responsePacket = encryptAuthReponse(response);
         agreeSecret(initiatePacket, responsePacket);
         return responsePacket;
     }
 
-    AuthResponseMessage makeAuthInitiate(byte[] initiatePacket, ECKey key) {
+    AuthResponseMessage makeAuthInitiate(byte[] initiatePacket, ECKey key) throws InvalidCipherTextException {
         AuthInitiateMessage initiate = decryptAuthInitiate(initiatePacket, key);
+        return makeAuthInitiate(initiate, key);
+    }
+
+    AuthResponseMessage makeAuthInitiate(AuthInitiateMessage initiate, ECKey key) {
         initiatorNonce = initiate.nonce;
         remotePublicKey = initiate.publicKey;
         BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();

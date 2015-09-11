@@ -7,6 +7,7 @@ import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.BlockStoreDummy;
 import org.ethereum.vm.DataWord;
+import org.ethereum.db.RepositoryDummy;
 import org.ethereum.db.RepositoryImpl;
 
 import org.spongycastle.util.encoders.Hex;
@@ -34,7 +35,7 @@ public class ProgramInvokeMockImpl implements ProgramInvoke {
     public ProgramInvokeMockImpl() {
 
 
-        this.repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        this.repository = new RepositoryDummy();
         this.repository.createAccount(ownerAddress);
 
         this.repository.createAccount(contractAddress);

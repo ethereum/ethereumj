@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.HashSet;
 
+import static org.ethereum.config.SystemProperties.CONFIG;
+
 @Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
@@ -19,8 +21,11 @@ public class GitHubBlockTest {
 
     @Test
     public void runSingleTest() throws ParseException, IOException {
-        String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcTotalDifficultyTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "lotsOfLeafs");
+        CONFIG.setGenesisInfo("frontier.json");
+
+        String shacommit = "24ca9b5f195ccfa38d1bbcc7795529e2569ab5e6";
+        String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcValidBlockTest.json", shacommit);
+        GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "RecallSuicidedContractInOneBlock");
     }
 
 
@@ -68,6 +73,10 @@ public class GitHubBlockTest {
     @Ignore
     @Test
     public void runBCValidBlockTest() throws ParseException, IOException {
+
+        CONFIG.setGenesisInfo("frontier.json");
+
+        String shacommit = "24ca9b5f195ccfa38d1bbcc7795529e2569ab5e6";
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcValidBlockTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);

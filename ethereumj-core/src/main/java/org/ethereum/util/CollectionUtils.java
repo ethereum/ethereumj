@@ -47,4 +47,14 @@ public class CollectionUtils {
         }
         return selected;
     }
+
+    public static <T> Set<T> selectSet(Collection<T> items, Functional.Predicate<T> predicate) {
+        Set<T> selected = new HashSet<>();
+        for(T item : items) {
+            if(predicate.test(item)) {
+                selected.add(item);
+            }
+        }
+        return selected;
+    }
 }

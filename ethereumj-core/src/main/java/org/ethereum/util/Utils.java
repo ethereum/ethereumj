@@ -141,4 +141,8 @@ public class Utils {
     public static String getNodeIdShort(String nodeId) {
         return nodeId == null ? "<null>" : nodeId.substring(0, 8);
     }
+
+    public static long toUnixTime(long javaTime) {
+        return javaTime / 1000;
+    }
 }

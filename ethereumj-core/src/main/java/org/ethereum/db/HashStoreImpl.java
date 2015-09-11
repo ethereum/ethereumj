@@ -6,6 +6,8 @@ import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.util.FastByteComparisons;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
@@ -19,7 +21,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  */
 public class HashStoreImpl implements HashStore {
 
-    private final static String STORE_NAME = "hashstore";
+    private static final Logger logger = LoggerFactory.getLogger("blockqueue");
+
+    private static final String STORE_NAME = "hashstore";
     private MapDBFactory mapDBFactory;
 
     private DB db;
@@ -52,6 +56,8 @@ public class HashStoreImpl implements HashStore {
 
                     initDone = true;
                     init.signalAll();
+
+                    logger.info("Hash store loaded, size [{}]", size());
                 } finally {
                     initLock.unlock();
                 }
@@ -81,6 +87,15 @@ public class HashStoreImpl implements HashStore {
     public void addFirst(byte[] hash) {
         awaitInit();
         addInner(true, hash);
+        db.commit();
+    }
+
+    @Override
+    public void addBatch(Collection<byte[]> hashes) {
+        awaitInit();
+        for (byte[] hash : hashes) {
+            addInner(false, hash);
+        }
         db.commit();
     }
 

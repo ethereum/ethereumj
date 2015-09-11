@@ -17,6 +17,7 @@ import java.util.Map;
 import static java.lang.String.format;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.toHexString;
+import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
 
 public class ProgramTrace {
 
@@ -154,7 +155,7 @@ public class ProgramTrace {
     }
 
     public String asJsonString(boolean formatted) {
-        return Serializers.serializeFieldsOnly(this, formatted);
+        return serializeFieldsOnly(this, formatted);
     }
 
     @Override

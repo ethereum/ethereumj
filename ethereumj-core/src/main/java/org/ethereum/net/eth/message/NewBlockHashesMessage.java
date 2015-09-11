@@ -1,4 +1,4 @@
-package org.ethereum.net.eth;
+package org.ethereum.net.eth.message;
 
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
@@ -8,25 +8,26 @@ import org.ethereum.util.Utils;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.ethereum.net.eth.EthMessageCodes.BLOCK_HASHES;
-
 /**
- * Wrapper around an Ethereum BlockHashes message on the network
+ * Wrapper around an Ethereum NewBlockHashes message on the network<br>
  *
- * @see org.ethereum.net.eth.EthMessageCodes#BLOCK_HASHES
+ * @see EthMessageCodes#NEW_BLOCK_HASHES
+ *
+ * @author Mikhail Kalinin
+ * @since 18.08.2015
  */
-public class BlockHashesMessage extends EthMessage {
+public class NewBlockHashesMessage extends EthMessage {
 
     /**
      * List of block hashes from the peer ordered from child to parent
      */
     private List<byte[]> blockHashes;
 
-    public BlockHashesMessage(byte[] payload) {
+    public NewBlockHashesMessage(byte[] payload) {
         super(payload);
     }
 
-    public BlockHashesMessage(List<byte[]> blockHashes) {
+    public NewBlockHashesMessage(List<byte[]> blockHashes) {
         this.blockHashes = blockHashes;
         parsed = true;
     }
@@ -35,7 +36,7 @@ public class BlockHashesMessage extends EthMessage {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
         blockHashes = new ArrayList<>();
-        for (int i = 1; i < paramsList.size(); ++i) {
+        for (int i = 0; i < paramsList.size(); ++i) {
             RLPItem rlpData = ((RLPItem) paramsList.get(i));
             blockHashes.add(rlpData.getRLPData());
         }
@@ -44,7 +45,7 @@ public class BlockHashesMessage extends EthMessage {
 
     private void encode() {
         List<byte[]> encodedElements = new ArrayList<>();
-        encodedElements.add(RLP.encodeByte(BLOCK_HASHES.asByte()));
+        encodedElements.add(RLP.encodeByte(getCommand().asByte()));
         for (byte[] blockHash : blockHashes)
             encodedElements.add(RLP.encodeElement(blockHash));
         byte[][] encodedElementArray = encodedElements.toArray(new byte[encodedElements.size()][]);
@@ -70,7 +71,7 @@ public class BlockHashesMessage extends EthMessage {
 
     @Override
     public EthMessageCodes getCommand() {
-        return EthMessageCodes.BLOCK_HASHES;
+        return EthMessageCodes.NEW_BLOCK_HASHES;
     }
 
     @Override
@@ -80,4 +81,5 @@ public class BlockHashesMessage extends EthMessage {
         final String hashListShort = Utils.getHashListShort(blockHashes);
         return "[" + this.getCommand().name() + hashListShort + "] (" + blockHashes.size() + ")";
     }
+
 }

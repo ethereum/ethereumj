@@ -12,10 +12,14 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Set;
 
+import static org.ethereum.crypto.HashUtil.EMPTY_DATA_HASH;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 import static org.ethereum.crypto.SHA3Helper.sha3;
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -194,6 +198,14 @@ public class RepositoryTrack implements Repository {
 
     @Override
     public byte[] getCode(byte[] addr) {
+
+        if (!isExist(addr))
+            return EMPTY_BYTE_ARRAY;
+
+        byte[] codeHash = getAccountState(addr).getCodeHash();
+        if ( Arrays.equals(codeHash, EMPTY_DATA_HASH) )
+            return EMPTY_BYTE_ARRAY;
+
         return getContractDetails(addr).getCode();
     }
 

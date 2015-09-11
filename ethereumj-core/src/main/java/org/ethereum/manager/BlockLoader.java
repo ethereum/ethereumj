@@ -38,7 +38,7 @@ public class BlockLoader {
                 Block block = new Block(blockRLPBytes);
 
                 long t1 = System.nanoTime();
-                if (block.getNumber() > blockchain.getBestBlock().getNumber()){
+                if (block.getNumber() >= blockchain.getBestBlock().getNumber()){
                     blockchain.tryToConnect(block);
                     long t1_ = System.nanoTime();
 

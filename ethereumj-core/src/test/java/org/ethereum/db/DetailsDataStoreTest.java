@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.datasource.DataSourcePool;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.vm.DataWord;
@@ -11,6 +12,7 @@ import javax.annotation.Nullable;
 import java.util.Map;
 
 import static org.ethereum.TestUtils.*;
+import static org.ethereum.util.ByteUtil.toHexString;
 import static org.junit.Assert.*;
 
 public class DetailsDataStoreTest {
@@ -136,9 +138,9 @@ public class DetailsDataStoreTest {
         ContractDetails contractDetails = dds.get(c_key);
         assertNull(contractDetails);
     }
-    
+
     @Test
-    public void testExternalStorage() {
+    public void testExternalStorage() throws InterruptedException {
         DatabaseImpl db = new DatabaseImpl(new HashMapDB());
         DetailsDataStore dds = new DetailsDataStore();
         dds.setDB(db);
@@ -147,22 +149,29 @@ public class DetailsDataStoreTest {
         byte[] addrWithInternalStorage = randomAddress();
         final int inMemoryStorageLimit = SystemProperties.CONFIG.detailsInMemoryStorageLimit();
 
-        HashMapDB externalStorage = new HashMapDB();
+        HashMapDB externalStorage =
+            (HashMapDB)
+                    DataSourcePool.hashMapDBByName("details-storage/" + toHexString(addrWithExternalStorage));
+
         HashMapDB internalStorage = new HashMapDB();
 
         ContractDetails detailsWithExternalStorage = randomContractDetails(512, inMemoryStorageLimit + 1, externalStorage);
         ContractDetails detailsWithInternalStorage = randomContractDetails(512, inMemoryStorageLimit - 1, internalStorage);
-        
+
+        DataWord key = detailsWithExternalStorage.getStorageKeys().iterator().next();
+
         dds.update(addrWithExternalStorage, detailsWithExternalStorage);
         dds.update(addrWithInternalStorage, detailsWithInternalStorage);
-        
+
         dds.flush();
-        
+
         assertTrue(externalStorage.getAddedItems() > 0);
         assertFalse(internalStorage.getAddedItems() > 0);
 
         detailsWithExternalStorage = dds.get(addrWithExternalStorage);
+
         assertNotNull(detailsWithExternalStorage);
+
         Map<DataWord, DataWord> storage = detailsWithExternalStorage.getStorage();
         assertNotNull(storage);
         assertEquals(inMemoryStorageLimit + 1, storage.size());
@@ -187,18 +196,18 @@ public class DetailsDataStoreTest {
         ((ContractDetailsImpl) detailsWithInternalStorage).setExternalStorageDataSource(externalStorage);
         detailsWithInternalStorage.put(randomDataWord(), randomDataWord());
     }
-    
+
     private static ContractDetails randomContractDetails(int codeSize, int storageSize, @Nullable KeyValueDataSource storageDataSource) {
         ContractDetailsImpl result = new ContractDetailsImpl();
         result.setCode(randomBytes(codeSize));
-        if (storageDataSource != null) {
+
+        if (storageDataSource != null)
             result.setExternalStorageDataSource(storageDataSource);
-        }
 
         for (int i = 0; i < storageSize; i++) {
             result.put(randomDataWord(), randomDataWord());
         }
-        
+
         return result;
     }
 }

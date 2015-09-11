@@ -58,6 +58,8 @@ public class TransactionExecutor {
     long basicTxCost = 0;
     List<LogInfo> logs = null;
 
+    boolean localCall = false;
+
     public TransactionExecutor(Transaction tx, byte[] coinbase, Repository track, BlockStore blockStore,
                                ProgramInvokeFactory programInvokeFactory, Block currentBlock) {
 
@@ -86,6 +88,11 @@ public class TransactionExecutor {
      * set readyToExecute = true
      */
     public void init() {
+
+        if (localCall) {
+            readyToExecute = true;
+            return;
+        }
 
         long txGasLimit = toBI(tx.getGasLimit()).longValue();
 
@@ -142,17 +149,17 @@ public class TransactionExecutor {
 
         if (!readyToExecute) return;
 
-        track.increaseNonce(tx.getSender());
+        if (!localCall) {
+            track.increaseNonce(tx.getSender());
 
-        long txGasLimit = toBI(tx.getGasLimit()).longValue();
-        BigInteger txGasCost = toBI(tx.getGasPrice()).multiply(toBI(txGasLimit));
-        track.addBalance(tx.getSender(), txGasCost.negate());
+            long txGasLimit = toBI(tx.getGasLimit()).longValue();
+            BigInteger txGasCost = toBI(tx.getGasPrice()).multiply(toBI(txGasLimit));
+            track.addBalance(tx.getSender(), txGasCost.negate());
 
+            if (logger.isInfoEnabled())
+                logger.info("Paying: txGasCost: [{}], gasPrice: [{}], gasLimit: [{}]", txGasCost, toBI(tx.getGasPrice()), txGasLimit);
+        }
 
-        if (logger.isInfoEnabled())
-            logger.info("Paying: txGasCost: [{}], gasPrice: [{}], gasLimit: [{}]", txGasCost, toBI(tx.getGasPrice()), txGasLimit);
-
-        if (tx.isContractCreation())
         if (tx.isContractCreation()) {
             create();
         } else {
@@ -171,7 +178,7 @@ public class TransactionExecutor {
             long requiredGas = precompiledContract.getGasForData(tx.getData());
             long txGasLimit = toBI(tx.getGasLimit()).longValue();
 
-            if (requiredGas > txGasLimit) {
+            if (!localCall && requiredGas > txGasLimit) {
                 // no refund
                 // no endowment
                 return;
@@ -325,295 +332,10 @@ public class TransactionExecutor {
         }
     }
 
-
-/*
-    @Deprecated
-    public void execute() {
-
-
-        final String txHash = Hex.toHexString(tx.getHash());
-        logger.info("applyTransaction: [{}]", txHash);
-
-        TransactionReceipt receipt = new TransactionReceipt();
-
-        // VALIDATE THE SENDER
-        byte[] senderAddress = tx.getSender();
-//      AccountState senderAccount = repository.getAccountState(senderAddress);
-        logger.info("tx.sender: [{}]", Hex.toHexString(tx.getSender()));
-
-
-        // GET TOTAL ETHER VALUE AVAILABLE FOR TX FEE
-        BigInteger gasPrice = toBI(tx.getGasPrice());
-        BigInteger gasDebit = toBI(tx.getGasLimit()).multiply(gasPrice);
-        logger.info("Gas price limited to [{} units]", gasDebit.toString());
-
-        // Debit the actual total gas value from the sender
-        // the purchased gas will be available for
-        // the contract in the execution state,
-        // it can be retrieved using GAS op
-        BigInteger txValue = toBI(tx.getValue());
-        if (track.getBalance(senderAddress).compareTo(gasDebit.add(txValue)) == -1) {
-            logger.debug("No gas to start the execution: sender={}",
-                    Hex.toHexString(senderAddress));
-
-            receipt.setCumulativeGas(0);
-            this.receipt = receipt;
-            return;
-        }
-
-        // FIND OUT THE TRANSACTION TYPE
-        final byte[] receiverAddress;
-        final byte[] code;
-        boolean isContractCreation = tx.isContractCreation();
-        if (isContractCreation) {
-            receiverAddress = tx.getContractAddress();
-            code = tx.getData(); // init code
-        } else {
-            receiverAddress = tx.getReceiveAddress();
-            code = track.getCode(receiverAddress);
-
-            if (code != EMPTY_BYTE_ARRAY) {
-                if (stateLogger.isDebugEnabled())
-                    stateLogger.debug("calling for existing contract: address={}",
-                            Hex.toHexString(receiverAddress));
-            }
-        }
-
-        // THE SIMPLE VALUE/BALANCE CHANGE
-        if (!(isContractCreation || code != EMPTY_BYTE_ARRAY)) // if code invoke transfer will be done latter
-            // for rollback purposes
-            if (isCovers(track.getBalance(senderAddress), txValue)) {
-
-                transfer(track, senderAddress, receiverAddress, txValue);
-
-                if (stateLogger.isDebugEnabled())
-                    stateLogger.debug("Update value balance \n "
-                                    + "sender={}, receiver={}, value={}",
-                            Hex.toHexString(senderAddress),
-                            Hex.toHexString(receiverAddress),
-                            new BigInteger(tx.getValue()));
-            }
-
-
-        // UPDATE THE NONCE
-        track.increaseNonce(senderAddress);
-        logger.info("increased nonce to: [{}], addr: [{}]",
-                track.getNonce(senderAddress), Hex.toHexString(senderAddress));
-
-        // CHARGE FOR GAS
-        track.addBalance(senderAddress, gasDebit.negate());
-
-        // The coinbase get the gas cost
-        if (coinbase != null)
-            track.addBalance(coinbase, gasDebit);
-
-        if (stateLogger.isDebugEnabled())
-            stateLogger.debug(
-                    "Before contract execution debit the sender address with gas total cost, "
-                            + "\n sender={} \n gas_debit= {}",
-                    Hex.toHexString(senderAddress), gasDebit);
-
-        //Check: Do not execute if transaction has debit amount of 0 and there is code
-        if (isZero(gasDebit) && tx.getData() != null) {
-            logger.debug("Transaction gas debits are zero! Cannot execute any code: sender={}",
-                    Hex.toHexString(senderAddress));
-
-            receipt.setCumulativeGas(0);
-            this.receipt = receipt;
-            return;
-        }
-
-        // CREATE AND/OR EXECUTE CONTRACT
-        long gasUsed = 0;
-        if (isContractCreation || code != EMPTY_BYTE_ARRAY) {
-
-            // START TRACKING FOR REVERT CHANGES OPTION
-            Program program = null;
-            Repository trackTx = track.startTracking();
-            trackTx.addBalance(receiverAddress, BigInteger.ZERO); // the contract created for anycase but SUICIDE call
-
-            // THE SIMPLE VALUE/BALANCE CHANGE
-            if (isCovers(trackTx.getBalance(senderAddress), txValue)) {
-
-                transfer(trackTx, senderAddress, receiverAddress, txValue);
-
-                if (stateLogger.isDebugEnabled())
-                    stateLogger.debug("Update value balance \n "
-                                    + "sender={}, receiver={}, value={}",
-                            Hex.toHexString(senderAddress),
-                            Hex.toHexString(receiverAddress),
-                            new BigInteger(tx.getValue()));
-            }
-
-            logger.info("Start tracking VM run");
-            try {
-
-                // CREATE NEW CONTRACT ADDRESS AND ADD TX VALUE
-                if (isContractCreation) {
-                    if (stateLogger.isDebugEnabled())
-                        stateLogger.debug("new contract created address={}",
-                                Hex.toHexString(receiverAddress));
-                }
-
-                ProgramInvoke programInvoke =
-                        programInvokeFactory.createProgramInvoke(tx, currentBlock, trackTx, blockStore);
-
-                VM vm = new VM();
-                program = new Program(code, programInvoke);
-
-                if (CONFIG.playVM())
-                    vm.play(program);
-
-                result = program.getResult();
-                gasUsed = applyProgramResult(result, gasDebit, gasPrice, trackTx,
-                        senderAddress, receiverAddress, coinbase, isContractCreation);
-
-                postExecute(gasUsed);
-
-                List<LogInfo> logs = result.getLogInfoList();
-                receipt.setLogInfoList(logs);
-
-            } catch (RuntimeException e) {
-                trackTx.rollback();
-                receipt.setCumulativeGas(tx.getGasLimit());
-                this.receipt = receipt;
-                return;
-            } finally {
-                if (CONFIG.vmTrace()) {
-                    String trace = (program == null) ? "{}" : program.getProgramTrace()
-                            .result(result.getHReturn())
-                            .error(result.getException())
-                            .toString();
-
-
-                    if (CONFIG.vmTraceCompressed()) {
-                        trace = zipAndEncode(trace);
-                    }
-
-                    saveProgramTraceFile(txHash, trace);
-
-                    listener.onVMTraceCreated(txHash, trace);
-                }
-            }
-            trackTx.commit();
-        } else {
-
-            // REFUND GAS_DEBIT EXCEPT FOR FEE (500 + 5*TX_NO_ZERO_DATA)
-            long dataCost = tx.getData() == null ? 0 :
-                    tx.nonZeroDataBytes() * GasCost.TX_NO_ZERO_DATA +
-                            tx.zeroDataBytes() * GasCost.TX_ZERO_DATA;
-            gasUsed = GasCost.TRANSACTION + dataCost;
-
-            BigInteger refund = gasDebit.subtract(toBI(gasUsed).multiply(gasPrice));
-            if (isPositive(refund))
-                transfer(track, coinbase, senderAddress, refund);
-
-        }
-
-        receipt.setCumulativeGas(gasUsed);
-        this.receipt = receipt;
+    public TransactionExecutor setLocalCall(boolean localCall) {
+        this.localCall = localCall;
+        return this;
     }
-
-    private void postExecute(long gasUsed) {
-        BigInteger gasPrice = toBI(tx.getGasPrice());
-        BigInteger feesEarned = toBI(gasUsed).multiply(gasPrice);
-        transfer(track, tx.getSender(), currentBlock.getCoinbase(), feesEarned);
-    }
-
-    */
-/**
-     * After any contract code finish the run the certain result should take place,
-     * according to the given circumstances.
-     *//*
-
-    private long applyProgramResult(ProgramResult result, BigInteger gasDebit,
-                                    BigInteger gasPrice, Repository repository, byte[] senderAddress,
-                                    byte[] contractAddress, byte[] coinbase, boolean initResults) {
-
-        long gasUsed = result.getGasUsed();
-
-        if (result.getException() != null) {
-            stateLogger.debug("contract run halted by Exception: contract: [{}], exception: [{}]",
-                    Hex.toHexString(contractAddress),
-                    result.getException());
-            throw result.getException();
-        }
-
-        BigInteger refund = gasDebit.subtract(toBI(result.getGasUsed()).multiply(gasPrice));
-
-        // accumulate refunds for suicides
-        result.futureRefundGas(
-                GasCost.SUICIDE_REFUND * (result.getDeleteAccounts() == null ? 0 : result.getDeleteAccounts().size()));
-
-        if (isPositive(refund)) {
-            if (stateLogger.isDebugEnabled())
-                stateLogger
-                        .debug("After contract execution the sender address refunded with gas leftover, "
-                                        + "\n sender={} \n contract={}  \n gas_refund= {}",
-                                Hex.toHexString(senderAddress),
-                                Hex.toHexString(contractAddress), refund);
-            // gas refund
-            transfer(repository, coinbase, senderAddress, refund);
-        }
-
-        if (result.getFutureRefund() > 0) {
-
-            //TODO #POC9 add getGasFree() as method to ProgramResult?
-            BigInteger gasFree = gasDebit.subtract(toBI(result.getGasUsed()));
-
-            long futureRefund = Math.min(result.getFutureRefund(), gasDebit.subtract(gasFree).longValue() / 2);
-            BigInteger futureRefundBI = toBI(futureRefund);
-            BigInteger futureRefundVal = futureRefundBI.multiply(gasPrice);
-
-            if (stateLogger.isDebugEnabled())
-                stateLogger
-                        .debug("After contract execution the sender address refunded with storage save refunds, "
-                                        + "\n sender={} \n contract={}  \n gas_refund= {}",
-                                Hex.toHexString(senderAddress),
-                                Hex.toHexString(contractAddress), futureRefundVal);
-
-            transfer(repository, coinbase, senderAddress, futureRefundVal);
-        }
-
-        if (initResults) {
-            // Save the code created by init
-            byte[] bodyCode = null;
-            if (result.getHReturn() != null && result.getHReturn().length > 0) {
-                bodyCode = result.getHReturn();
-            }
-
-            if (bodyCode != null) {
-                if (stateLogger.isDebugEnabled())
-                    stateLogger
-                            .debug("saving code of the contract to the db:\n contract={} code={}",
-                                    Hex.toHexString(contractAddress),
-                                    Hex.toHexString(bodyCode));
-
-                BigInteger returnDataGasValue = BigInteger.valueOf(bodyCode.length * GasCost.CREATE_DATA);
-                gasUsed += returnDataGasValue.longValue();
-
-                BigInteger storageCost = gasPrice.multiply(returnDataGasValue);
-                BigInteger balance = repository.getBalance(senderAddress);
-
-                // check if can be charged for the contract data save
-                if (isCovers(balance, storageCost))
-                    transfer(repository, senderAddress, coinbase, storageCost);
-                else
-                    bodyCode = EMPTY_BYTE_ARRAY;
-
-                repository.saveCode(contractAddress, bodyCode);
-            }
-        }
-
-        // delete the marked to die accounts
-        if (result.getDeleteAccounts() != null)
-            for (DataWord address : result.getDeleteAccounts()) {
-                repository.delete(address.getLast20Bytes());
-            }
-
-        return gasUsed;
-    }
-*/
 
 
     public TransactionReceipt getReceipt() {

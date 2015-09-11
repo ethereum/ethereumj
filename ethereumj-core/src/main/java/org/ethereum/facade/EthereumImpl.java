@@ -1,7 +1,6 @@
 package org.ethereum.facade;
 
-import org.ethereum.core.Transaction;
-import org.ethereum.core.Wallet;
+import org.ethereum.core.*;
 import org.ethereum.core.Repository;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
@@ -15,6 +14,8 @@ import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
+import org.ethereum.vm.program.ProgramResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -58,6 +59,9 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     BlockLoader blockLoader;
+
+    @Autowired
+    ProgramInvokeFactory programInvokeFactory;
 
     public EthereumImpl() {
         System.out.println();
@@ -223,6 +227,28 @@ public class EthereumImpl implements Ethereum {
         return TransactionExecutor.instance.submitTransaction(transactionTask);
     }
 
+
+    @Override
+    public ProgramResult callConstantFunction(String receiveAddress, CallTransaction.Function function,
+                                              Object... funcArgs) {
+        Transaction tx = CallTransaction.createCallTransaction(0, 0, 100000000000000L,
+                receiveAddress, 0, function, funcArgs);
+        tx.sign(new byte[32]);
+
+        Block bestBlock = worldManager.getBlockchain().getBestBlock();
+
+        org.ethereum.core.TransactionExecutor executor = new org.ethereum.core.TransactionExecutor
+                (tx, bestBlock.getCoinbase(),(Repository) worldManager.getRepository(),
+                worldManager.getBlockStore(), programInvokeFactory, bestBlock)
+                .setLocalCall(true);
+
+        executor.init();
+        executor.execute();
+        executor.go();
+        executor.finalization();
+
+        return executor.getResult();
+    }
 
     @Override
     public Wallet getWallet() {

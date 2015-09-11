@@ -7,7 +7,7 @@ import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.client.PeerClient;
-import org.ethereum.net.eth.SyncManager;
+import org.ethereum.net.eth.sync.SyncManager;
 import org.ethereum.net.peerdiscovery.PeerDiscovery;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.server.ChannelManager;
@@ -79,6 +79,8 @@ public class WorldManager {
         wallet.importKey(cbAddr);
 
         loadBlockchain();
+
+        // must be initialized after blockchain is loaded
         syncManager.init();
     }
 
@@ -131,6 +133,10 @@ public class WorldManager {
 
     public PeerClient getActivePeer() {
         return activePeer;
+    }
+
+    public BlockStore getBlockStore() {
+        return blockStore;
     }
 
     public void loadBlockchain() {

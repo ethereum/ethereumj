@@ -5,6 +5,7 @@ import org.ethereum.crypto.HashUtil;
 
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.core.Repository;
+import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
 
 import org.junit.Assert;
@@ -16,6 +17,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
 import static org.junit.Assert.*;
 
 /**
@@ -29,16 +31,22 @@ public class RepositoryTest {
     @Test
     public void test1() {
 
-        Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        RepositoryImpl repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
 
-        byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
+        byte[] cow   = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
 
         repository.increaseNonce(cow);
         repository.increaseNonce(horse);
 
         assertEquals(BigInteger.ONE, repository.getNonce(cow));
-        assertEquals(BigInteger.ONE, repository.getNonce(horse));
+//        assertEquals(BigInteger.ONE, repository.getNonce(horse));
+
+        System.out.println(repository.getTrieDump());
+
+        repository.increaseNonce(cow);
+        System.out.println(repository.getTrieDump());
+
 
         repository.close();
     }
@@ -86,6 +94,7 @@ public class RepositoryTest {
     public void test4() {
 
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -96,8 +105,9 @@ public class RepositoryTest {
         byte[] horseKey = Hex.decode("B1B2B3");
         byte[] horseValue = Hex.decode("B4B5B6");
 
-        repository.addStorageRow(cow, new DataWord(cowKey), new DataWord(cowValue));
-        repository.addStorageRow(horse, new DataWord(horseKey), new DataWord(horseValue));
+        track.addStorageRow(cow, new DataWord(cowKey), new DataWord(cowValue));
+        track.addStorageRow(horse, new DataWord(horseKey), new DataWord(horseValue));
+        track.commit();
 
         assertEquals(new DataWord(cowValue), repository.getStorageValue(cow, new DataWord(cowKey)));
         assertEquals(new DataWord(horseValue), repository.getStorageValue(horse, new DataWord(horseKey)));
@@ -392,8 +402,8 @@ public class RepositoryTest {
 
         track.rollback();
 
-        assertArrayEquals(null, repository.getCode(cow));
-        assertArrayEquals(null, repository.getCode(horse));
+        assertArrayEquals(EMPTY_BYTE_ARRAY, repository.getCode(cow));
+        assertArrayEquals(EMPTY_BYTE_ARRAY, repository.getCode(horse));
 
         repository.close();
     }
@@ -680,7 +690,9 @@ public class RepositoryTest {
         byte[] horseKey2 = "key-h-2".getBytes();
         byte[] horseValue2 = "val-h-2".getBytes();
 
-        repository.addStorageRow(cow, new DataWord(cowKey1), new DataWord(cowValue1));
+        Repository track = repository.startTracking();
+        track.addStorageRow(cow, new DataWord(cowKey1), new DataWord(cowValue1));
+        track.commit();
 
         // changes level_1
         Repository track1 = repository.startTracking();
@@ -803,6 +815,7 @@ public class RepositoryTest {
     public void test19() {
 
         Repository repository = new RepositoryImpl(new HashMapDB(), new HashMapDB());
+        Repository track = repository.startTracking();
 
         byte[] cow = Hex.decode("CD2A3D9F938E13CD947EC05ABC7FE734DF8DD826");
         byte[] horse = Hex.decode("13978AEE95F38490E9769C39B2773ED763D9CD5F");
@@ -815,8 +828,9 @@ public class RepositoryTest {
         DataWord horseVal1 = new DataWord("c0a1");
         DataWord horseVal0 = new DataWord("c0a0");
 
-        repository.addStorageRow(cow, cowKey1, cowVal0);
-        repository.addStorageRow(horse, horseKey1, horseVal0);
+        track.addStorageRow(cow, cowKey1, cowVal0);
+        track.addStorageRow(horse, horseKey1, horseVal0);
+        track.commit();
 
         Repository track2 = repository.startTracking(); //track
 

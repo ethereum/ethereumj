@@ -1,6 +1,5 @@
 package org.ethereum.core;
 
-import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.trie.Trie;
@@ -9,7 +8,6 @@ import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.Arrays;
-import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -33,7 +31,7 @@ public class Block {
 
     private static final Logger logger = LoggerFactory.getLogger("block");
 
-    public static final BigInteger BLOCK_REWARD = CONFIG.genesisInfo().contains("frontier") ?
+    public static final BigInteger BLOCK_REWARD = CONFIG.isFrontier() ?
             new BigInteger("5000000000000000000") :
             new BigInteger("1500000000000000000");
 
@@ -161,23 +159,6 @@ public class Block {
         if (!parsed) parseRLP();
         return HashUtil.sha3(this.header.getEncoded());
     }
-
-
-    public byte[] calcDifficulty() {
-        if (!parsed) parseRLP();
-        return this.header.calcDifficulty();
-    }
-
-    public boolean validateNonce() {
-        if (!parsed) parseRLP();
-        BigInteger max = BigInteger.valueOf(2).pow(256);
-        byte[] target = BigIntegers.asUnsignedByteArray(32, max.divide(new BigInteger(1, this.getDifficulty())));
-        byte[] hash = HashUtil.sha3(this.getEncodedWithoutNonce());
-        byte[] concat = Arrays.concatenate(hash, this.getNonce());
-        byte[] result = HashUtil.sha3(concat);
-        return FastByteComparisons.compareTo(result, 0, 32, target, 0, 32) < 0;
-    }
-
 
     public byte[] getParentHash() {
         if (!parsed) parseRLP();
@@ -423,4 +404,5 @@ public class Block {
         if (!parsed) parseRLP();
         return Hex.toHexString(getHash()).substring(0, 6);
     }
+
 }
