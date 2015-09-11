@@ -2,6 +2,7 @@ package org.ethereum.listener;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
+import org.ethereum.core.TransactionExecutionSummary;
 import org.ethereum.core.TransactionReceipt;
 import org.ethereum.net.eth.StatusMessage;
 import org.ethereum.net.message.Message;
@@ -67,9 +68,13 @@ public class EthereumListenerAdapter implements EthereumListener {
 
     }
 
-
     @Override
     public void onEthStatusUpdated(Node node, StatusMessage statusMessage) {
+
+    }
+
+    @Override
+    public void onTransactionExecuted(TransactionExecutionSummary summary) {
 
     }
 }

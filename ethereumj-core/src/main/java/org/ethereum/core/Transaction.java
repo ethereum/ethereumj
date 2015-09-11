@@ -19,6 +19,7 @@ import java.math.BigInteger;
 import java.security.SignatureException;
 import java.util.Arrays;
 
+import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.ethereum.util.ByteUtil.*;
 
 /**
@@ -67,10 +68,10 @@ public class Transaction {
      * (including public key recovery bits) */
     private ECDSASignature signature;
 
-    private byte[] sendAddress;
+    protected byte[] sendAddress;
 
     /* Tx in encoded form */
-    private byte[] rlpEncoded;
+    protected byte[] rlpEncoded;
     private byte[] rlpRaw;
     /* Indicates if this transaction has been parsed
      * from the RLP-encoded data */
@@ -114,16 +115,9 @@ public class Transaction {
         if (!parsed) rlpParse();
 
         long nonZeroes = nonZeroDataBytes();
-        long zeroVals  = getDataSize() - nonZeroes;
+        long zeroVals  = getLength(data) - nonZeroes;
 
         return GasCost.TRANSACTION + zeroVals * GasCost.TX_ZERO_DATA + nonZeroes * GasCost.TX_NO_ZERO_DATA;
-    }
-
-    private int getDataSize(){
-        if (data == null)
-            return 0;
-        else
-            return  data.length;
     }
 
     public void rlpParse() {

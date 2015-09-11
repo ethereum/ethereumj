@@ -1,30 +1,33 @@
-package org.ethereum.vm;
+package org.ethereum.vm.program;
 
 import org.ethereum.core.AccountState;
 import org.ethereum.core.Block;
+import org.ethereum.core.Repository;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.core.Repository;
-import org.ethereum.vmtrace.ProgramTraceListener;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.program.invoke.ProgramInvoke;
+import org.ethereum.vm.program.listener.ProgramListener;
+import org.ethereum.vm.program.listener.ProgramListenerAware;
 
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Storage implements Repository, ProgramTraceListenerAware {
+public class Storage implements Repository, ProgramListenerAware {
 
     private final Repository repository;
     private final DataWord address;
-    private ProgramTraceListener traceListener;
+    private ProgramListener traceListener;
 
-    public Storage(DataWord address, Repository repository) {
-        this.address = address;
-        this.repository = repository;
+    public Storage(ProgramInvoke programInvoke) {
+        this.address = programInvoke.getOwnerAddress();
+        this.repository = programInvoke.getRepository();
     }
 
     @Override
-    public void setTraceListener(ProgramTraceListener listener) {
+    public void setTraceListener(ProgramListener listener) {
         this.traceListener = listener;
     }
 

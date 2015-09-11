@@ -41,7 +41,7 @@ public class BIUtil {
      * @return true - if the valueA is less than valueB is zero
      */
     public static boolean isLessThan(BigInteger valueA, BigInteger valueB){
-        return valueA.compareTo(valueB) == -1;
+        return valueA.compareTo(valueB) < 0;
     }
 
     /**
@@ -50,7 +50,7 @@ public class BIUtil {
      * @return true - if the valueA is more than valueB is zero
      */
     public static boolean isMoreThan(BigInteger valueA, BigInteger valueB){
-        return valueA.compareTo(valueB) == 1;
+        return valueA.compareTo(valueB) > 0;
     }
 
 

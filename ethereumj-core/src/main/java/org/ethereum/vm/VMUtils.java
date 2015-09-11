@@ -1,6 +1,5 @@
 package org.ethereum.vm;
 
-import org.ethereum.config.SystemProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -95,10 +94,10 @@ public final class VMUtils {
         }
     }
 
-    private static byte[] compress(String content) throws IOException {
+    public static byte[] compress(byte[] bytes) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-        ByteArrayInputStream in = new ByteArrayInputStream(content.getBytes("UTF-8"));
+        ByteArrayInputStream in = new ByteArrayInputStream(bytes);
         DeflaterOutputStream out = new DeflaterOutputStream(baos, new Deflater(), BUF_SIZE);
 
         write(in, out, BUF_SIZE);
@@ -106,7 +105,11 @@ public final class VMUtils {
         return baos.toByteArray();
     }
 
-    private static String decompress(byte[] data) throws IOException {
+    public static byte[] compress(String content) throws IOException {
+        return compress(content.getBytes("UTF-8"));
+    }
+
+    public static String decompress(byte[] data) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(data.length);
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);

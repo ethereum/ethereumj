@@ -18,7 +18,11 @@ import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.*;
-import org.ethereum.vmtrace.ProgramTrace;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.invoke.ProgramInvoke;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactoryImpl;
+import org.ethereum.vm.program.invoke.ProgramInvokeImpl;
+import org.ethereum.vm.trace.ProgramTrace;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -200,7 +204,7 @@ public class TestRunner {
                 vmDidThrowAnEception = true;
                 e = ex;
             }
-            String content = program.getProgramTrace().asJsonString(true);
+            String content = program.getTrace().asJsonString(true);
             saveProgramTraceFile(testCase.getName(), content);
 
             if (testCase.getPost().size() == 0) {
@@ -220,7 +224,7 @@ public class TestRunner {
                     return results;
                 }
 
-                this.trace = program.getProgramTrace();
+                this.trace = program.getTrace();
 
                 logger.info("--------- POST --------");
 
@@ -285,7 +289,7 @@ public class TestRunner {
                         byte[] expectedStValue = storage.get(storageKey).getData();
 
                         ContractDetails contractDetails =
-                                program.getResult().getRepository().getContractDetails(accountState.getAddress());
+                                program.getStorage().getContractDetails(accountState.getAddress());
 
                         if (contractDetails == null) {
 

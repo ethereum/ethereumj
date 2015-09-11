@@ -28,7 +28,7 @@ target/
 # Output
 database
 logs
-test_db
+test_db*
 
 # Mac
 .DS_Store

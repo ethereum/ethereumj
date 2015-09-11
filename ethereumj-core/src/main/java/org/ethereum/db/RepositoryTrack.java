@@ -105,14 +105,13 @@ public class RepositoryTrack implements Repository {
         cacheAccounts.put(wrap(addr), accountState.clone());
         ContractDetails contractDetailsLvl2 = new ContractDetailsCacheImpl(contractDetails);
         cacheDetails.put(wrap(addr), contractDetailsLvl2);
-
     }
 
 
     @Override
     public void delete(byte[] addr) {
-
         logger.trace("delete account: [{}]", Hex.toHexString(addr));
+
         getAccountState(addr).setDeleted(true);
         getContractDetails(addr).setDeleted(true);
     }

@@ -2,9 +2,11 @@ package org.ethereum.vm;
 
 import org.ethereum.core.Repository;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.Program.BadJumpDestinationException;
-import org.ethereum.vm.Program.StackTooSmallException;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.Program.BadJumpDestinationException;
+import org.ethereum.vm.program.Program.StackTooSmallException;
 
+import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.FixMethodOrder;
@@ -1581,7 +1583,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord key = new DataWord(Hex.decode(s_expected_key));
-        DataWord val = program.getResult().getRepository().getStorageValue(invoke.getOwnerAddress()
+        DataWord val = program.getStorage().getStorageValue(invoke.getOwnerAddress()
                 .getNoLeadZeroesData(), key);
 
         assertEquals(s_expected_val, Hex.toHexString(val.getData()).toUpperCase());
@@ -1603,7 +1605,7 @@ public class VMTest {
         vm.step(program);
         vm.step(program);
 
-        Repository repository = program.getResult().getRepository();
+        Repository repository = program.getStorage();
         DataWord key = new DataWord(Hex.decode(s_expected_key));
         DataWord val = repository.getStorageValue(invoke.getOwnerAddress().getNoLeadZeroesData(), key);
 
@@ -1828,7 +1830,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord key = new DataWord(Hex.decode(s_expected_key));
-        DataWord val = program.getResult().getRepository().getStorageValue(invoke.getOwnerAddress()
+        DataWord val = program.getStorage().getStorageValue(invoke.getOwnerAddress()
                 .getNoLeadZeroesData(), key);
 
         assertTrue(program.isStopped());
@@ -1853,7 +1855,7 @@ public class VMTest {
         vm.step(program);
 
         DataWord key = new DataWord(Hex.decode(s_expected_key));
-        DataWord val = program.getResult().getRepository().getStorageValue(invoke.getOwnerAddress()
+        DataWord val = program.getStorage().getStorageValue(invoke.getOwnerAddress()
                 .getNoLeadZeroesData(), key);
 
         assertTrue(program.isStopped());

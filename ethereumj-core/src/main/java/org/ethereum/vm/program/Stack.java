@@ -1,13 +1,15 @@
-package org.ethereum.vm;
+package org.ethereum.vm.program;
 
-import org.ethereum.vmtrace.ProgramTraceListener;
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.program.listener.ProgramListener;
+import org.ethereum.vm.program.listener.ProgramListenerAware;
 
-public class Stack extends java.util.Stack<DataWord> implements ProgramTraceListenerAware {
+public class Stack extends java.util.Stack<DataWord> implements ProgramListenerAware {
 
-    private ProgramTraceListener traceListener;
+    private ProgramListener traceListener;
 
     @Override
-    public void setTraceListener(ProgramTraceListener listener) {
+    public void setTraceListener(ProgramListener listener) {
         this.traceListener = listener;
     }
 

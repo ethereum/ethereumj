@@ -21,7 +21,7 @@ public interface Repository {
      * @param addr of the contract
      * @return newly created account state
      */
-    public AccountState createAccount(byte[] addr);
+    AccountState createAccount(byte[] addr);
 
 
     /**
@@ -29,7 +29,7 @@ public interface Repository {
      * @return - true if account exist,
      *           false otherwise
      */
-    public boolean isExist(byte[] addr);
+    boolean isExist(byte[] addr);
 
     /**
      * Retrieve an account
@@ -37,14 +37,14 @@ public interface Repository {
      * @param addr of the account
      * @return account state as stored in the database
      */
-    public AccountState getAccountState(byte[] addr);
+    AccountState getAccountState(byte[] addr);
 
     /**
      * Deletes the account
      *
      * @param addr of the account
      */
-    public void delete(byte[] addr);
+    void delete(byte[] addr);
 
     /**
      * Increase the account nonce of the given account by one
@@ -52,7 +52,7 @@ public interface Repository {
      * @param addr of the account
      * @return new value of the nonce
      */
-    public BigInteger increaseNonce(byte[] addr);
+    BigInteger increaseNonce(byte[] addr);
 
     /**
      * Get current nonce of a given account
@@ -60,7 +60,7 @@ public interface Repository {
      * @param addr of the account
      * @return value of the nonce
      */
-    public BigInteger getNonce(byte[] addr);
+    BigInteger getNonce(byte[] addr);
 
     /**
      * Retrieve contract details for a given account from the database
@@ -68,7 +68,7 @@ public interface Repository {
      * @param addr of the account
      * @return new contract details
      */
-    public ContractDetails getContractDetails(byte[] addr);
+    ContractDetails getContractDetails(byte[] addr);
 
     /**
      * Store code associated with an account
@@ -76,7 +76,7 @@ public interface Repository {
      * @param addr for the account
      * @param code that will be associated with this account
      */
-    public void saveCode(byte[] addr, byte[] code);
+    void saveCode(byte[] addr, byte[] code);
 
     /**
      * Retrieve the code associated with an account
@@ -84,7 +84,7 @@ public interface Repository {
      * @param addr of the account
      * @return code in byte-array format
      */
-    public byte[] getCode(byte[] addr);
+    byte[] getCode(byte[] addr);
 
     /**
      * Put a value in storage of an account at a given key
@@ -93,7 +93,7 @@ public interface Repository {
      * @param key of the data to store
      * @param value is the data to store
      */
-    public void addStorageRow(byte[] addr, DataWord key, DataWord value);
+    void addStorageRow(byte[] addr, DataWord key, DataWord value);
 
 
     /**
@@ -103,7 +103,7 @@ public interface Repository {
      * @param key associated with this value
      * @return data in the form of a <code>DataWord</code>
      */
-    public DataWord getStorageValue(byte[] addr, DataWord key);
+    DataWord getStorageValue(byte[] addr, DataWord key);
 
 
     /**
@@ -112,7 +112,7 @@ public interface Repository {
      * @param addr of the account
      * @return balance of the account as a <code>BigInteger</code> value
      */
-    public BigInteger getBalance(byte[] addr);
+    BigInteger getBalance(byte[] addr);
 
     /**
      * Add value to the balance of an account
@@ -121,12 +121,12 @@ public interface Repository {
      * @param value to be added
      * @return new balance of the account
      */
-    public BigInteger addBalance(byte[] addr, BigInteger value);
+    BigInteger addBalance(byte[] addr, BigInteger value);
 
     /**
      * @return Returns set of all the account addresses
      */
-    public Set<byte[]> getAccountsKeys();
+    Set<byte[]> getAccountsKeys();
 
 
     /**
@@ -139,30 +139,30 @@ public interface Repository {
      * @param txHash is the hash of the given transaction.
      * If null, the block state post coinbase reward is dumped.
      */
-    public void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash);
+    void dumpState(Block block, long gasUsed, int txNumber, byte[] txHash);
 
     /**
      * Save a snapshot and start tracking future changes
      *
      * @return the tracker repository
      */
-    public Repository startTracking();
+    Repository startTracking();
 
-    public void flush();
-    public void flushNoReconnect();
+    void flush();
+    void flushNoReconnect();
 
 
     /**
      * Store all the temporary changes made
      * to the repository in the actual database
      */
-    public void commit();
+    void commit();
 
     /**
      * Undo all the changes made so far
      * to a snapshot of the repository
      */
-    public void rollback();
+    void rollback();
 
     /**
      * Return to one of the previous snapshots
@@ -170,35 +170,35 @@ public interface Repository {
      *
      * @param root - new root
      */
-    public void syncToRoot(byte[] root);
+    void syncToRoot(byte[] root);
 
     /**
      * Check to see if the current repository has an open connection to the database
      *
      * @return <tt>true</tt> if connection to database is open
      */
-    public boolean isClosed();
+    boolean isClosed();
 
     /**
      * Close the database
      */
-    public void close();
+    void close();
 
     /**
      * Reset
      */
-    public void reset();
+    void reset();
 
-    public void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
+    void updateBatch(HashMap<ByteArrayWrapper, AccountState> accountStates,
                             HashMap<ByteArrayWrapper, ContractDetails> contractDetailes);
 
 
-    public byte[] getRoot();
+    byte[] getRoot();
 
     void loadAccount(byte[] addr, HashMap<ByteArrayWrapper, AccountState> cacheAccounts,
                      HashMap<ByteArrayWrapper, ContractDetails> cacheDetails);
 
-    public Repository getSnapshotTo(byte[] root);
+    Repository getSnapshotTo(byte[] root);
 
 
 

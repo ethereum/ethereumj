@@ -1,8 +1,10 @@
 package org.ethereum.vm;
 
-import org.ethereum.vm.Program.OutOfGasException;
-import org.ethereum.vm.Program.StackTooSmallException;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.Program.OutOfGasException;
+import org.ethereum.vm.program.Program.StackTooSmallException;
 
+import org.ethereum.vm.program.invoke.ProgramInvokeMockImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -280,7 +282,7 @@ public class VMCustomTest {
         vm.step(program);
 
         DataWord item1 = program.stackPop();
-        program.getResult().getRepository().close();
+        program.getStorage().close();
         assertEquals(s_expected_1, Hex.toHexString(item1.getData()).toUpperCase());
     }
 

@@ -12,7 +12,7 @@ import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.RLP;
-import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
