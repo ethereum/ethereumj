@@ -66,6 +66,8 @@ public class VM {
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
 
+    public StorageDictionaryHandler storageDictHandler;
+
     public void step(Program program) {
 
         if (CONFIG.vmTrace()) {
@@ -581,6 +583,8 @@ public class VM {
                     byte[] encoded = sha3(buffer);
                     DataWord word = new DataWord(encoded);
 
+                    storageDictHandler.vmSha3Notify(buffer, word);
+
                     if (logger.isInfoEnabled())
                         hint = word.toString();
 
@@ -917,6 +921,7 @@ public class VM {
                         hint = "[" + program.programAddress.toPrefixString() + "] key: " + addr + " value: " + value;
 
                     program.storageSave(addr, value);
+                    storageDictHandler.vmSStoreNotify(addr, value);
                     program.step();
                 }
                 break;
@@ -1146,12 +1151,18 @@ public class VM {
 
     public void play(Program program) {
         try {
+            storageDictHandler = new StorageDictionaryHandler(program.getOwnerAddress());
+            storageDictHandler.vmStartPlayNotify();
 
             if (program.invokeData.byTestingSuite()) return;
 
             while (!program.isStopped()) {
                 this.step(program);
             }
+
+            ContractDetails details = program.getResult().getRepository()
+                    .getContractDetails(program.getOwnerAddress().getLast20Bytes());
+            storageDictHandler.vmEndPlayNotify(details);
 
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);

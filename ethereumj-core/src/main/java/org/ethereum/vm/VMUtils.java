@@ -95,7 +95,7 @@ public final class VMUtils {
         }
     }
 
-    private static byte[] compress(String content) throws IOException {
+    public static byte[] compress(String content) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
         ByteArrayInputStream in = new ByteArrayInputStream(content.getBytes("UTF-8"));
@@ -106,7 +106,7 @@ public final class VMUtils {
         return baos.toByteArray();
     }
 
-    private static String decompress(byte[] data) throws IOException {
+    public static String decompress(byte[] data) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(data.length);
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
