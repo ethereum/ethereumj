@@ -97,14 +97,19 @@ public class Program {
     private InternalTransaction addInternalTx(byte[] nonce, DataWord gasLimit, byte[] senderAddress, byte[] receiveAddress,
                                               BigInteger value, byte[] data, String note) {
 
-        return (transaction == null)
-                ? null
-                : getResult().addInternalTransaction(transaction.getHash(), getCallDeep(), nonce, getGasPrice(), gasLimit,
-                        senderAddress, receiveAddress, value.toByteArray(), data, note);
+        InternalTransaction result = null;
+        if (transaction != null) {
+            byte[] senderNonce = isEmpty(nonce) ? getStorage().getNonce(senderAddress).toByteArray() : nonce;
+
+            result = getResult().addInternalTransaction(transaction.getHash(), getCallDeep(), senderNonce,
+                    getGasPrice(), gasLimit, senderAddress, receiveAddress, value.toByteArray(), data, note);
+        }
+
+        return result;
     }
 
     public InternalTransaction addCallInternalTx(DataWord gasLimit, byte[] senderAddress, BigInteger value, byte[] data) {
-        return addInternalTx(EMPTY_BYTE_ARRAY, gasLimit, senderAddress, null, value, data, "call");
+        return addInternalTx(null, gasLimit, senderAddress, null, value, data, "call");
     }
 
     public InternalTransaction addCreateInternalTx(byte[] nonce, DataWord gasLimit, byte[] senderAddress, BigInteger value, byte[] data) {
@@ -112,7 +117,7 @@ public class Program {
     }
 
     public InternalTransaction addSuicideInternalTx(byte[] senderAddress, byte[] receiveAddress, BigInteger value) {
-        return addInternalTx(EMPTY_BYTE_ARRAY, null, senderAddress, receiveAddress, value, EMPTY_BYTE_ARRAY, "suicide");
+        return addInternalTx(null, null, senderAddress, receiveAddress, value, EMPTY_BYTE_ARRAY, "suicide");
     }
 
     private void rejectInternalTransactions() {

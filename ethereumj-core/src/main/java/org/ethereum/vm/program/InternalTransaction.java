@@ -6,6 +6,9 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.DataWord;
 
+import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+
 public class InternalTransaction extends Transaction {
 
     private byte[] parentHash;
@@ -64,11 +67,11 @@ public class InternalTransaction extends Transaction {
     public byte[] getEncoded() {
         if (rlpEncoded != null) return rlpEncoded;
 
-        byte[] nonce;
-        if (getNonce() == null || getNonce().length == 1 && getNonce()[0] == 0) {
+        byte[] nonce = getNonce();
+        if (isEmpty(nonce) || getLength(nonce) == 1 && nonce[0] == 0) {
             nonce = RLP.encodeElement(null);
         } else {
-            nonce = RLP.encodeElement(getNonce());
+            nonce = RLP.encodeElement(nonce);
         }
         byte[] senderAddress = RLP.encodeElement(getSender());
         byte[] receiveAddress = RLP.encodeElement(getReceiveAddress());
