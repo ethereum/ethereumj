@@ -109,7 +109,7 @@ public final class VMUtils {
         return compress(content.getBytes("UTF-8"));
     }
 
-    public static String decompress(byte[] data) throws IOException {
+    public static byte[] decompress(byte[] data) throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream(data.length);
 
         ByteArrayInputStream in = new ByteArrayInputStream(data);
@@ -117,7 +117,7 @@ public final class VMUtils {
 
         write(in, out, BUF_SIZE);
 
-        return new String(baos.toByteArray(), "UTF-8");
+        return baos.toByteArray();
     }
 
     public static String zipAndEncode(String content) {
@@ -131,7 +131,8 @@ public final class VMUtils {
 
     public static String unzipAndDecode(String content) {
         try {
-            return decompress(decodeBase64(content));
+            byte[] decoded = decodeBase64(content);
+            return new String(decompress(decoded), "UTF-8");
         } catch (Exception e) {
             LOGGER.error("Cannot unzip or decode: ", e);
             return content;
