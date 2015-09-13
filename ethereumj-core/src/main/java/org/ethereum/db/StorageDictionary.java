@@ -10,6 +10,7 @@ import org.ethereum.vm.StorageDictionaryHandler;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -155,7 +156,7 @@ public class StorageDictionary {
         public int compareTo(PathElement o) {
             if (type != o.type) return type.compareTo(o.type);
             if (type == Type.Offset || type == Type.StorageIndex) {
-                return new Integer(key).compareTo(new Integer(o.key));
+                return new BigInteger(key, 16).compareTo(new BigInteger(o.key, 16));
             }
             return key.compareTo(o.key);
         }
@@ -236,6 +237,14 @@ public class StorageDictionary {
     public static StorageDictionary deserializeFromJson(String json) throws IOException {
         ObjectMapper om = new ObjectMapper();
         StorageDictionary.PathElement root = om.readValue(json, StorageDictionary.PathElement.class);
+        installRoots(root);
         return new StorageDictionary(root);
+    }
+
+    private static void installRoots(PathElement el) {
+        for (PathElement element : el.children.values()) {
+            element.parent = el;
+            installRoots(element);
+        }
     }
 }

@@ -60,9 +60,10 @@ public class StorageDictionaryTest {
         kp.addPath(new DataWord("1114"), createPath("a/b2/c1"));
         System.out.println(kp.dump());
 
-        StorageDictionaryDb db = new StorageDictionaryDb();
-        db.mapDBFactory = new MapDBFactoryImpl();
-        db.init();
+        StorageDictionaryDb db = StorageDictionaryDb.INST;
+//        StorageDictionaryDb db = new StorageDictionaryDb();
+//        db.mapDBFactory = new MapDBFactoryImpl();
+//        db.init();
 
         byte[] contractAddr = Hex.decode("abcdef");
         Assert.assertFalse(kp.isValid());
@@ -83,6 +84,7 @@ public class StorageDictionaryTest {
 
         Assert.assertEquals(kp.root, kp1.root);
         db.close();
+        db.init();
     }
 
     static StorageDictionary.PathElement[] createPath(String s) {

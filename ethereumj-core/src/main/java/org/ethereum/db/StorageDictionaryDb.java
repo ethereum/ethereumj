@@ -29,8 +29,6 @@ import java.util.Map;
 //@Component
 public class StorageDictionaryDb {
     private static final Logger logger = LoggerFactory.getLogger("repository");
-    public static StorageDictionaryDb INST = new StorageDictionaryDb().init();
-
     private static final Serializer<StorageDictionary> SERIALIZER = new Serializer<StorageDictionary>() {
         @Override
         public void serialize(DataOutput out, StorageDictionary value) throws IOException {
@@ -46,14 +44,19 @@ public class StorageDictionaryDb {
         }
     };
 
-//    @Autowired
+    public static StorageDictionaryDb INST = new StorageDictionaryDb().init();
+
+    //    @Autowired
     MapDBFactory mapDBFactory = new MapDBFactoryImpl();
 
     private DB storagekeysDb;
     private HTreeMap<ByteArrayWrapper, StorageDictionary> contracts;
 
+    private StorageDictionaryDb() {
+    }
+
     @PostConstruct
-    public StorageDictionaryDb init() {
+    StorageDictionaryDb init() {
         storagekeysDb = mapDBFactory.createTransactionalDB("metadata/keydictionary");
         contracts = storagekeysDb.hashMapCreate("contracts")
                 .valueSerializer(SERIALIZER)
