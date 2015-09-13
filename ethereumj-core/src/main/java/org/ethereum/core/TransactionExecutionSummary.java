@@ -18,6 +18,7 @@ public class TransactionExecutionSummary {
     private BigInteger gasPrice = BigInteger.ZERO;
     private BigInteger gasLimit = BigInteger.ZERO;
     private BigInteger gasUsed = BigInteger.ZERO;
+    private BigInteger gasLeftover = BigInteger.ZERO;
     private BigInteger gasRefund = BigInteger.ZERO;
 
     private List<DataWord> deletedAccounts = emptyList();
@@ -33,15 +34,15 @@ public class TransactionExecutionSummary {
     }
 
     public BigInteger getFee() {
-        return calcCost(gasUsed);
+        return calcCost(gasLimit.subtract(gasLeftover.add(gasRefund)));
     }
 
     public BigInteger getRefund() {
         return calcCost(gasRefund);
     }
 
-    public BigInteger getGasUsed() {
-        return gasUsed;
+    public BigInteger getLeftover() {
+        return calcCost(gasLeftover);
     }
 
     public BigInteger getGasPrice() {
@@ -50,6 +51,14 @@ public class TransactionExecutionSummary {
 
     public BigInteger getGasLimit() {
         return gasLimit;
+    }
+
+    public BigInteger getGasUsed() {
+        return gasUsed;
+    }
+
+    public BigInteger getGasLeftover() {
+        return gasLeftover;
     }
 
     public BigInteger getValue() {
@@ -90,9 +99,13 @@ public class TransactionExecutionSummary {
             summary.value = toBI(transaction.getValue());
         }
 
-
         public Builder gasUsed(BigInteger gasUsed) {
             summary.gasUsed = gasUsed;
+            return this;
+        }
+
+        public Builder gasLeftover(BigInteger gasLeftover) {
+            summary.gasLeftover = gasLeftover;
             return this;
         }
 

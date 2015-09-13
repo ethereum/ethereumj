@@ -277,15 +277,15 @@ public class TransactionExecutor {
 
         cacheTrack.commit();
 
-        TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx);
+        TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx)
+                .gasLeftover(toBI(m_endGas));
 
         if (result != null) {
             // Accumulate refunds for suicides
             result.addFutureRefund(result.getDeleteAccounts().size() * GasCost.SUICIDE_REFUND);
             long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
-            m_endGas += gasRefund;
-
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
+
             summaryBuilder
                     .gasUsed(toBI(result.getGasUsed()))
                     .gasRefund(toBI(gasRefund))
@@ -297,7 +297,7 @@ public class TransactionExecutor {
         TransactionExecutionSummary summary = summaryBuilder.build();
 
         // Refund for gas leftover
-        track.addBalance(tx.getSender(), summary.getRefund());
+        track.addBalance(tx.getSender(), summary.getLeftover().add(summary.getRefund()));
         logger.info("Pay total refund to sender: [{}], refund val: [{}]", Hex.toHexString(tx.getSender()), summary.getRefund());
 
         // Transfer fees to miner
