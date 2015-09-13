@@ -86,11 +86,11 @@ public class BIUtil {
     }
 
     public static boolean isCovers(BigInteger covers, BigInteger value){
-        return covers.compareTo(value) > -1;
+        return !isNotCovers(covers, value);
     }
 
     public static boolean isNotCovers(BigInteger covers, BigInteger value){
-        return !(covers.compareTo(value) > -1);
+        return covers.compareTo(value) < 0;
     }
 
 

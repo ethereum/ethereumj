@@ -8,6 +8,7 @@ import org.ethereum.vm.DataWord;
 
 import static org.apache.commons.lang3.ArrayUtils.getLength;
 import static org.apache.commons.lang3.ArrayUtils.isEmpty;
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 public class InternalTransaction extends Transaction {
 
@@ -18,14 +19,14 @@ public class InternalTransaction extends Transaction {
     private String note;
 
     public InternalTransaction(byte[] parentHash, int deep, int index, byte[] nonce, DataWord gasPrice, DataWord gasLimit,
-                               byte[] senderAddress, byte[] receiveAddress, byte[] value, byte[] data, String note) {
+                               byte[] sendAddress, byte[] receiveAddress, byte[] value, byte[] data, String note) {
 
-        super(nonce, getData(gasPrice), getData(gasLimit), receiveAddress, value, data);
+        super(nonce, getData(gasPrice), getData(gasLimit), receiveAddress, nullToEmpty(value), nullToEmpty(data));
 
         this.parentHash = parentHash;
         this.deep = deep;
         this.index = index;
-        this.sendAddress = senderAddress;
+        this.sendAddress = nullToEmpty(sendAddress);
         this.note = note;
     }
 

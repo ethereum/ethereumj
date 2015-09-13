@@ -125,6 +125,12 @@ public class ProgramResult {
         getInternalTransactions().addAll(internalTransactions);
     }
 
+    public void rejectInternalTransactions() {
+        for (InternalTransaction internalTx : getInternalTransactions()) {
+            internalTx.reject();
+        }
+    }
+
     public void addFutureRefund(long gasValue) {
         futureRefund += gasValue;
     }

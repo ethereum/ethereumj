@@ -108,27 +108,6 @@ public class Program {
         return result;
     }
 
-    public InternalTransaction addCallInternalTx(DataWord gasLimit, byte[] senderAddress, BigInteger value, byte[] data) {
-        return addInternalTx(null, gasLimit, senderAddress, null, value, data, "call");
-    }
-
-    public InternalTransaction addCreateInternalTx(byte[] nonce, DataWord gasLimit, byte[] senderAddress, BigInteger value, byte[] data) {
-        return addInternalTx(nonce, gasLimit, senderAddress, EMPTY_BYTE_ARRAY, value, data, "create");
-    }
-
-    public InternalTransaction addSuicideInternalTx(byte[] senderAddress, byte[] receiveAddress, BigInteger value) {
-        return addInternalTx(null, null, senderAddress, receiveAddress, value, EMPTY_BYTE_ARRAY, "suicide");
-    }
-
-    private void rejectInternalTransactions() {
-        if (transaction != null && transaction instanceof InternalTransaction) {
-            ((InternalTransaction) transaction).reject();
-        }
-        for (InternalTransaction internalTransaction : getResult().getInternalTransactions()) {
-            internalTransaction.reject();
-        }
-    }
-
     private <T extends ProgramListenerAware> T setupProgramListener(T traceListenerAware) {
         if (programListener.isEmpty()) {
             programListener.addListener(traceListener);
@@ -325,7 +304,7 @@ public class Program {
                     Hex.toHexString(obtainer),
                     balance);
 
-        addSuicideInternalTx(owner, obtainer, balance);
+        addInternalTx(null, null, owner, obtainer, balance, null, "suicide");
 
         transfer(getStorage(), owner, obtainer, balance);
         getResult().addDeleteAccount(this.getOwnerAddress());
@@ -345,8 +324,7 @@ public class Program {
 
         byte[] senderAddress = this.getOwnerAddress().getLast20Bytes();
         BigInteger endowment = value.value();
-        BigInteger senderBalance = getStorage().getBalance(senderAddress);
-        if (senderBalance.compareTo(endowment) < 0) {
+        if (isNotCovers(getStorage().getBalance(senderAddress), endowment)) {
             stackPushZero();
             return;
         }
@@ -358,8 +336,8 @@ public class Program {
             logger.info("creating a new contract inside contract run: [{}]", Hex.toHexString(senderAddress));
 
         //  actual gas subtract
-        DataWord gasLimit = this.getGas();
-        this.spendGas(gasLimit.longValue(), "internal call");
+        DataWord gasLimit = getGas();
+        spendGas(gasLimit.longValue(), "internal call");
 
         // [2] CREATE THE CONTRACT ADDRESS
         byte[] nonce = getStorage().getNonce(senderAddress).toByteArray();
@@ -367,11 +345,10 @@ public class Program {
 
         if (byTestingSuite()) {
             // This keeps track of the contracts created for a test
-            this.getResult().addCallCreate(programCode, EMPTY_BYTE_ARRAY,
+            getResult().addCallCreate(programCode, EMPTY_BYTE_ARRAY,
                     gasLimit.getNoLeadZeroesData(),
                     value.getNoLeadZeroesData());
         }
-
 
         // [3] UPDATE THE NONCE
         // (THIS STAGE IS NOT REVERTED BY ANY EXCEPTION)
@@ -398,17 +375,16 @@ public class Program {
 
 
         // [5] COOK THE INVOKE AND EXECUTE
+        InternalTransaction internalTx = addInternalTx(nonce, getGasLimit(), senderAddress, null, endowment, programCode, "create");
         ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                 this, new DataWord(newAddress), DataWord.ZERO, gasLimit,
                 newBalance, null, track, this.invoke.getBlockStore(), byTestingSuite());
 
         ProgramResult result = ProgramResult.empty();
-
         if (isNotEmpty(programCode)) {
-            InternalTransaction tx = addCreateInternalTx(nonce, programInvoke.getGaslimit(), senderAddress, endowment, programCode);
 
             VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, tx);
+            Program program = new Program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -419,7 +395,9 @@ public class Program {
                         Hex.toHexString(newAddress),
                         result.getException());
 
-                rejectInternalTransactions();
+                internalTx.reject();
+                result.rejectInternalTransactions();
+
                 track.rollback();
                 stackPushZero();
                 return;
@@ -446,7 +424,6 @@ public class Program {
         stackPush(new DataWord(newAddress));
 
         // 5. REFUND THE REMAIN GAS
-
         long refundGas = gasLimit.longValue() - result.getGasUsed();
         if (refundGas > 0) {
             refundGas(refundGas, "remain gas from the internal call");
@@ -490,7 +467,7 @@ public class Program {
         // 2.1 PERFORM THE VALUE (endowment) PART
         BigInteger endowment = msg.getEndowment().value();
         BigInteger senderBalance = track.getBalance(senderAddress);
-        if (senderBalance.compareTo(endowment) < 0) {
+        if (isNotCovers(senderBalance, endowment)) {
             stackPushZero();
             refundGas(msg.getGas().longValue(), "refund gas from message call");
             return;
@@ -512,17 +489,19 @@ public class Program {
             contextBalance = track.addBalance(contextAddress, endowment);
         }
 
-        ProgramResult result = null;
+        // CREATE CALL INTERNAL TRANSACTION
+        InternalTransaction internalTx = addInternalTx(null, getGasLimit(), senderAddress, contextAddress, endowment, programCode, "call");
 
+        ProgramResult result = null;
         if (isNotEmpty(programCode)) {
             ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(
                     this, new DataWord(contextAddress), msg.getEndowment(),
                     msg.getGas(), contextBalance, data, track, this.invoke.getBlockStore(), byTestingSuite());
 
-            InternalTransaction tx = addCallInternalTx(programInvoke.getGaslimit(), senderAddress, endowment, programCode);
+
 
             VM vm = new VM();
-            Program program = new Program(programCode, programInvoke, tx);
+            Program program = new Program(programCode, programInvoke, internalTx);
             vm.play(program);
             result = program.getResult();
 
@@ -534,7 +513,9 @@ public class Program {
                         Hex.toHexString(contextAddress),
                         result.getException());
 
-                rejectInternalTransactions();
+                internalTx.reject();
+                result.rejectInternalTransactions();
+
                 track.rollback();
                 stackPushZero();
                 return;
