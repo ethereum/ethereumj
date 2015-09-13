@@ -5,6 +5,8 @@ import org.ethereum.db.ContractDetails;
 import org.ethereum.db.StorageDictionary;
 import org.ethereum.db.StorageDictionaryDb;
 import org.ethereum.util.Utils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
@@ -16,6 +18,7 @@ import java.util.Map;
  * Created by Anton Nashatyrev on 04.09.2015.
  */
 public class StorageDictionaryHandler {
+    private static final Logger logger = LoggerFactory.getLogger("VM");
 
     static class Entry {
         final DataWord hashValue;
@@ -41,8 +44,9 @@ public class StorageDictionaryHandler {
         try {
             contractAddress = ownerAddress.getNoLeadZeroesData();
             keysPath = StorageDictionaryDb.INST.getOrCreate(contractAddress);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            logger.error("Unexpected exception: ", e);
+            // ignore exception to not halt VM execution
         }
     }
 
@@ -53,16 +57,18 @@ public class StorageDictionaryHandler {
     public void vmSha3Notify(byte[] in, DataWord out) {
         try {
             hashes.put(getMapKey(out.getData()), new Entry(out.clone(), in));
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            logger.error("Unexpected exception: ", e);
+            // ignore exception to not halt VM execution
         }
     }
 
     public void vmSStoreNotify(DataWord key, DataWord value) {
         try {
             storeKeys.put(new ByteArrayWrapper(key.clone().getData()), value.clone());
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            logger.error("Unexpected exception: ", e);
+            // ignore exception to not halt VM execution
         }
     }
 
@@ -159,8 +165,9 @@ public class StorageDictionaryHandler {
     public void vmEndPlayNotify(ContractDetails contractDetails) {
         try {
             dumpKeys(contractDetails);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable e) {
+            logger.error("Unexpected exception: ", e);
+            // ignore exception to not halt VM execution
         }
     }
 }

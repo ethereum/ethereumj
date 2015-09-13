@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.slf4j.Logger;
@@ -583,7 +584,9 @@ public class VM {
                     byte[] encoded = sha3(buffer);
                     DataWord word = new DataWord(encoded);
 
-                    storageDictHandler.vmSha3Notify(buffer, word);
+                    if (storageDictHandler != null) {
+                        storageDictHandler.vmSha3Notify(buffer, word);
+                    }
 
                     if (logger.isInfoEnabled())
                         hint = word.toString();
@@ -921,7 +924,9 @@ public class VM {
                         hint = "[" + program.programAddress.toPrefixString() + "] key: " + addr + " value: " + value;
 
                     program.storageSave(addr, value);
-                    storageDictHandler.vmSStoreNotify(addr, value);
+                    if (storageDictHandler != null) {
+                        storageDictHandler.vmSStoreNotify(addr, value);
+                    }
                     program.step();
                 }
                 break;
@@ -1151,8 +1156,10 @@ public class VM {
 
     public void play(Program program) {
         try {
-            storageDictHandler = new StorageDictionaryHandler(program.getOwnerAddress());
-            storageDictHandler.vmStartPlayNotify();
+            if (SystemProperties.CONFIG.isStorageDictionaryEnabled()) {
+                storageDictHandler = new StorageDictionaryHandler(program.getOwnerAddress());
+                storageDictHandler.vmStartPlayNotify();
+            }
 
             if (program.invokeData.byTestingSuite()) return;
 
@@ -1160,9 +1167,11 @@ public class VM {
                 this.step(program);
             }
 
-            ContractDetails details = program.getResult().getRepository()
-                    .getContractDetails(program.getOwnerAddress().getLast20Bytes());
-            storageDictHandler.vmEndPlayNotify(details);
+            if (storageDictHandler != null) {
+                ContractDetails details = program.getResult().getRepository()
+                        .getContractDetails(program.getOwnerAddress().getLast20Bytes());
+                storageDictHandler.vmEndPlayNotify(details);
+            }
 
         } catch (RuntimeException e) {
             program.setRuntimeFailure(e);
