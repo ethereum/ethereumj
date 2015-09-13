@@ -285,6 +285,7 @@ public class TransactionExecutor {
             result.addFutureRefund(result.getDeleteAccounts().size() * GasCost.SUICIDE_REFUND);
             long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
             byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
+            m_endGas += gasRefund;
 
             summaryBuilder
                     .gasUsed(toBI(result.getGasUsed()))
