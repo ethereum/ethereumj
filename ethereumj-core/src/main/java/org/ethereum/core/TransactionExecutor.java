@@ -282,19 +282,19 @@ public class TransactionExecutor {
         if (result != null) {
             // Accumulate refunds for suicides
             result.addFutureRefund(result.getDeleteAccounts().size() * GasCost.SUICIDE_REFUND);
-            m_endGas += Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
-            byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
+            long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            m_endGas += gasRefund;
 
+            byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
             summaryBuilder
                     .gasUsed(toBI(result.getGasUsed()))
+                    .gasRefund(toBI(gasRefund))
                     .deletedAccounts(result.getDeleteAccounts())
                     .internalTransactions(result.getInternalTransactions())
                     .storageDiff(track.getContractDetails(addr).getStorage());
         }
 
-        TransactionExecutionSummary summary = summaryBuilder
-                .gasLeftover(toBI(m_endGas))
-                .build();
+        TransactionExecutionSummary summary = summaryBuilder.build();
 
         // Refund for gas leftover
         track.addBalance(tx.getSender(), summary.getRefund());
@@ -315,8 +315,8 @@ public class TransactionExecutor {
 
         listener.onTransactionExecuted(summary);
 
-        if (CONFIG.vmTrace()) {
-            String trace = (program == null) ? "{}" : program.getTrace()
+        if (CONFIG.vmTrace() && program != null && result != null) {
+            String trace = program.getTrace()
                     .result(result.getHReturn())
                     .error(result.getException())
                     .toString();

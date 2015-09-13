@@ -18,7 +18,7 @@ public class TransactionExecutionSummary {
     private BigInteger gasPrice = BigInteger.ZERO;
     private BigInteger gasLimit = BigInteger.ZERO;
     private BigInteger gasUsed = BigInteger.ZERO;
-    private BigInteger gasLeftover = BigInteger.ZERO;
+    private BigInteger gasRefund = BigInteger.ZERO;
 
     private List<DataWord> deletedAccounts = emptyList();
     private List<InternalTransaction> internalTransactions = emptyList();
@@ -28,12 +28,16 @@ public class TransactionExecutionSummary {
         return transactionHash;
     }
 
+    private BigInteger calcCost(BigInteger gas) {
+        return gasPrice.multiply(gas);
+    }
+
     public BigInteger getFee() {
-        return gasLimit.subtract(gasLeftover).multiply(gasPrice);
+        return calcCost(gasUsed);
     }
 
     public BigInteger getRefund() {
-        return gasLeftover.multiply(gasPrice);
+        return calcCost(gasRefund);
     }
 
     public BigInteger getGasUsed() {
@@ -64,8 +68,8 @@ public class TransactionExecutionSummary {
         return storageDiff;
     }
 
-    public BigInteger getGasLeftover() {
-        return gasLeftover;
+    public BigInteger getGasRefund() {
+        return gasRefund;
     }
 
     public static Builder builderFor(Transaction transaction) {
@@ -92,8 +96,8 @@ public class TransactionExecutionSummary {
             return this;
         }
 
-        public Builder gasLeftover(BigInteger gasLeftover) {
-            summary.gasLeftover = gasLeftover;
+        public Builder gasRefund(BigInteger gasRefund) {
+            summary.gasRefund = gasRefund;
             return this;
         }
 
