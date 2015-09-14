@@ -24,11 +24,8 @@ public class BlockBodiesMessage extends EthMessage {
         super(encoded);
     }
 
-    public BlockBodiesMessage(List<Block> blockBodies) {
-        this.blockBodies = new ArrayList<>(blockBodies.size());
-        for (Block b : blockBodies) {
-            this.blockBodies.add(b.getEncodedBody());
-        }
+    public BlockBodiesMessage(List<byte[]> blockBodies) {
+        this.blockBodies = blockBodies;
         parsed = true;
     }
 

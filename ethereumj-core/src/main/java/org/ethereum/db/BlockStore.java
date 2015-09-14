@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.hibernate.SessionFactory;
 
 import java.math.BigInteger;
@@ -20,6 +21,10 @@ public interface BlockStore {
     boolean isBlockExist(byte[] hash);
 
     List<byte[]> getListHashesEndWith(byte[] hash, long qty);
+
+    List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty);
+
+    List<Block> getListBlocksEndWith(byte[] hash, long qty);
 
     void saveBlock(Block block, BigInteger cummDifficulty, boolean mainChain);
 

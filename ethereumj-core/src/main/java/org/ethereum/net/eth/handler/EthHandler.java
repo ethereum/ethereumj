@@ -113,9 +113,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             case STATUS:
                 processStatus((StatusMessage) msg, ctx);
                 break;
-            case NEW_BLOCK_HASHES:
-                processNewBlockHashes((NewBlockHashesMessage) msg);
-                break;
             case TRANSACTIONS:
                 processTransactions((TransactionsMessage) msg);
                 break;
@@ -200,8 +197,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
                 ByteUtil.bigIntegerToBytes(totalDifficulty), bestHash, Blockchain.GENESIS_HASH);
         sendMessage(msg);
     }
-
-    abstract protected void processNewBlockHashes(NewBlockHashesMessage msg);
 
     /*
      * The wire gets data for signed transactions and

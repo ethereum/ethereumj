@@ -1,6 +1,7 @@
 package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.slf4j.Logger;
@@ -16,8 +17,8 @@ import java.util.List;
  * @author Mikhail Kalinin
  * @since 04.09.2015
  */
-@Scope("prototype")
 @Component
+@Scope("prototype")
 public class Eth62 extends EthHandler {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
@@ -32,6 +33,9 @@ public class Eth62 extends EthHandler {
         super.channelRead0(ctx, msg);
 
         switch (msg.getCommand()) {
+            case NEW_BLOCK_HASHES:
+                processNewBlockHashes((NewBlockHashes62Message) msg);
+                break;
             case GET_BLOCK_HEADERS:
                 processGetBlockHeaders((GetBlockHeadersMessage) msg);
                 break;
@@ -50,11 +54,6 @@ public class Eth62 extends EthHandler {
     }
 
     @Override
-    protected void processNewBlockHashes(NewBlockHashesMessage msg) {
-
-    }
-
-    @Override
     protected void startHashRetrieving() {
 
     }
@@ -64,8 +63,20 @@ public class Eth62 extends EthHandler {
         return false;
     }
 
-    private void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+    private void processNewBlockHashes(NewBlockHashes62Message msg) {
 
+    }
+
+    private void processGetBlockHeaders(GetBlockHeadersMessage msg) {
+        List<BlockHeader> headers = blockchain.getListOfHeadersStartFrom(
+                msg.getBlockIdentifier(),
+                msg.getSkipBlocks(),
+                msg.getMaxHeaders(),
+                msg.isReverse()
+        );
+
+        BlockHeadersMessage response = new BlockHeadersMessage(headers);
+        sendMessage(response);
     }
 
     private void processBlockHeaders(BlockHeadersMessage msg) {
@@ -73,7 +84,10 @@ public class Eth62 extends EthHandler {
     }
 
     private void processGetBlockBodies(GetBlockBodiesMessage msg) {
+        List<byte[]> bodies = blockchain.getListOfBodiesByHashes(msg.getBlockHashes());
 
+        BlockBodiesMessage response = new BlockBodiesMessage(bodies);
+        sendMessage(response);
     }
 
     private void processBlockBodies(BlockBodiesMessage msg) {

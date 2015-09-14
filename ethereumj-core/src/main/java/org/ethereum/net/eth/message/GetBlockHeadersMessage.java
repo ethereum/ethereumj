@@ -1,5 +1,6 @@
 package org.ethereum.net.eth.message;
 
+import org.ethereum.core.BlockIdentifier;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -115,6 +116,11 @@ public class GetBlockHeadersMessage extends EthMessage {
     public byte[] getBlockHash() {
         if (!parsed) parse();
         return blockHash;
+    }
+
+    public BlockIdentifier getBlockIdentifier() {
+        if (!parsed) parse();
+        return new BlockIdentifier(blockHash, blockNumber);
     }
 
     public int getMaxHeaders() {

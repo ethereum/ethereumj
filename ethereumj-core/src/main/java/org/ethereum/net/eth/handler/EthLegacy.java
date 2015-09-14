@@ -40,6 +40,9 @@ public abstract class EthLegacy extends EthHandler {
         super.channelRead0(ctx, msg);
 
         switch (msg.getCommand()) {
+            case NEW_BLOCK_HASHES:
+                processNewBlockHashes((NewBlockHashesMessage) msg);
+                break;
             case GET_BLOCK_HASHES:
                 processGetBlockHashes((GetBlockHashesMessage) msg);
                 break;
@@ -64,8 +67,7 @@ public abstract class EthLegacy extends EthHandler {
         return sendGetBlocks();
     }
 
-    @Override
-    protected void processNewBlockHashes(NewBlockHashesMessage msg) {
+    private void processNewBlockHashes(NewBlockHashesMessage msg) {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing NEW block hashes, size [{}]",
                 channel.getPeerIdShort(),

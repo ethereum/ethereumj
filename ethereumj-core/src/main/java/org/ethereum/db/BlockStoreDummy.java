@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.crypto.HashUtil;
 import org.hibernate.SessionFactory;
 
@@ -38,6 +39,16 @@ public class BlockStoreDummy implements BlockStore {
 
     @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long qty) {
+        return null;
+    }
+
+    @Override
+    public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+        return null;
+    }
+
+    @Override
+    public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
         return null;
     }
 

@@ -53,4 +53,8 @@ public interface Blockchain {
     public void setExitOn(long exitOn);
 
     boolean isBlockExist(byte[] hash);
+
+    List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse);
+
+    List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes);
 }

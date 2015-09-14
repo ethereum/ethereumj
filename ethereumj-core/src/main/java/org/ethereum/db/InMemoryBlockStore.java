@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.slf4j.Logger;
@@ -75,22 +76,45 @@ public class InMemoryBlockStore implements BlockStore{
     }
 
     @Override
-    public List<byte[]> getListHashesEndWith(byte[] hash, long qty){
+    public List<byte[]> getListHashesEndWith(byte[] hash, long qty) {
+        List<Block> blocks = getListBlocksEndWith(hash, qty);
+        List<byte[]> hashes = new ArrayList<>(blocks.size());
 
+        for (Block b : blocks) {
+            hashes.add(b.getHash());
+        }
+
+        return hashes;
+    }
+
+    @Override
+    public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+        List<Block> blocks = getListBlocksEndWith(hash, qty);
+        List<BlockHeader> headers = new ArrayList<>(blocks.size());
+
+        for (Block b : blocks) {
+            headers.add(b.getHeader());
+        }
+
+        return headers;
+    }
+
+    @Override
+    public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
 
         Block startBlock = hashIndex.get(wrap(hash));
 
         long endIndex = startBlock.getNumber() + qty;
         endIndex = getBestBlock().getNumber() < endIndex ? getBestBlock().getNumber() : endIndex;
 
-        List<byte[]> hashes = new ArrayList<>();
+        List<Block> blocks = new ArrayList<>();
 
         for (long i = startBlock.getNumber();  i <= endIndex; ++i){
             Block block = getChainBlockByNumber(i);
-            hashes.add(block.getHash() );
+            blocks.add(block);
         }
 
-        return hashes;
+        return blocks;
     }
 
     @Override

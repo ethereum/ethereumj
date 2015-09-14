@@ -29,11 +29,8 @@ public class BlockHeadersMessage extends EthMessage {
         super(encoded);
     }
 
-    public BlockHeadersMessage(List<Block> blocks) {
-        this.blockHeaders = new ArrayList<>(blocks.size());
-        for (Block b : blocks) {
-            this.blockHeaders.add(b.getHeader());
-        }
+    public BlockHeadersMessage(List<BlockHeader> headers) {
+        this.blockHeaders = headers;
         parsed = true;
     }
 

@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.hibernate.SessionFactory;
 import org.mapdb.DB;
@@ -282,22 +283,50 @@ public class IndexedBlockStore implements BlockStore{
     @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long number){
 
-        List<byte[]> cachedHashes = new ArrayList<>();
+        List<Block> blocks = getListBlocksEndWith(hash, number);
+        List<byte[]> hashes = new ArrayList<>(blocks.size());
+
+        for (Block b : blocks) {
+            hashes.add(b.getHash());
+        }
+
+        return hashes;
+    }
+
+    @Override
+    public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+
+        List<Block> blocks = getListBlocksEndWith(hash, qty);
+        List<BlockHeader> headers = new ArrayList<>(blocks.size());
+
+        for (Block b : blocks) {
+            headers.add(b.getHeader());
+        }
+
+        return headers;
+    }
+
+    @Override
+    public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
+
+        List<Block> cachedBlocks = new ArrayList<>();
         if (cache != null)
-           cachedHashes = cache.getListHashesEndWith(hash, number);
+            cachedBlocks = cache.getListBlocksEndWith(hash, qty);
 
-        byte[] rlp = blocks.get(hash);
-        if (rlp == null) return cachedHashes;
+        byte[] rlp = this.blocks.get(hash);
+        if (rlp == null) return cachedBlocks;
 
-        for (int i = 0; i < number; ++i){
+        List<Block> blocks = new ArrayList<>((int) qty);
+
+        for (int i = 0; i < qty; ++i){
 
             Block block = new Block(rlp);
-            cachedHashes.add(block.getHash());
-            rlp = blocks.get(block.getParentHash());
+            blocks.add(block);
+            rlp = this.blocks.get(block.getParentHash());
             if (rlp == null) break;
         }
 
-        return cachedHashes;
+        return blocks;
     }
 
     @Override
