@@ -104,6 +104,7 @@ dependencies {
     compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
     compile "org.apache.commons:commons-collections4:4.0"
+    compile "org.apache.commons:commons-lang3:3.4"
     compile "commons-codec:commons-codec:1.10"
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
@@ -188,11 +189,12 @@ artifactory {
 }
 
 artifactoryPublish.onlyIf {
-    (!pullRequest || pullRequest == 'false') &&
-	  project.version.endsWith('-SNAPSHOT')  &&
-	  branchName != null &&
-	  (branchName.startsWith('master') ||
-	   branchName.startsWith('develop'))
+    (branchName != null) &&
+            (!pullRequest || pullRequest == 'false') &&
+            project.version.endsWith('-SNAPSHOT') &&
+            (branchName.startsWith('master') ||
+                    branchName.startsWith('develop') ||
+                    branchName.startsWith('stage'))
 }
 
 bintray {

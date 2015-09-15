@@ -1,4 +1,4 @@
-package org.ethereum.vmtrace;
+package org.ethereum.vm.trace;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import org.ethereum.vm.DataWord;

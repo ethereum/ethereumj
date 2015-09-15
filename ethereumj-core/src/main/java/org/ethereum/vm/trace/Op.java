@@ -1,4 +1,4 @@
-package org.ethereum.vmtrace;
+package org.ethereum.vm.trace;
 
 import org.ethereum.vm.OpCode;
 
