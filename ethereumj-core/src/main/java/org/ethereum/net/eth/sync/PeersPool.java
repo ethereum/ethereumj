@@ -114,6 +114,7 @@ public class PeersPool implements Iterable<Channel> {
 
         synchronized (activePeers) {
             activePeers.remove(peer.getNodeIdWrapper());
+            bannedPeers.remove(peer);
         }
 
         synchronized (disconnectHits) {
@@ -245,8 +246,11 @@ public class PeersPool implements Iterable<Channel> {
     }
 
     private void releaseBans() {
+
+        Set<String> released;
+
         synchronized (bans) {
-            Set<String> released = getTimeoutExceeded(bans);
+            released = getTimeoutExceeded(bans);
 
             synchronized (activePeers) {
                 for (Channel peer : bannedPeers) {
@@ -258,6 +262,10 @@ public class PeersPool implements Iterable<Channel> {
             }
 
             bans.keySet().removeAll(released);
+        }
+
+        synchronized (disconnectHits) {
+            disconnectHits.keySet().removeAll(released);
         }
     }
 
