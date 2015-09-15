@@ -25,6 +25,8 @@ public class TransactionExecutionSummary {
     private List<InternalTransaction> internalTransactions = emptyList();
     private Map<DataWord, DataWord> storageDiff = emptyMap();
 
+    private boolean failed;
+
     public byte[] getTransactionHash() {
         return transactionHash;
     }
@@ -81,6 +83,10 @@ public class TransactionExecutionSummary {
         return gasRefund;
     }
 
+    public boolean isFailed() {
+        return failed;
+    }
+
     public static Builder builderFor(Transaction transaction) {
         return new Builder(transaction);
     }
@@ -126,6 +132,11 @@ public class TransactionExecutionSummary {
 
         public Builder storageDiff(Map<DataWord, DataWord> storageDiff) {
             summary.storageDiff = unmodifiableMap(storageDiff);
+            return this;
+        }
+
+        public Builder markAsFailed() {
+            summary.failed = true;
             return this;
         }
 
