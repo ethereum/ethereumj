@@ -293,6 +293,10 @@ public class TransactionExecutor {
                     .deletedAccounts(result.getDeleteAccounts())
                     .internalTransactions(result.getInternalTransactions())
                     .storageDiff(track.getContractDetails(addr).getStorage());
+
+            if (result.getException() != null) {
+                summaryBuilder.markAsFailed();
+            }
         }
 
         TransactionExecutionSummary summary = summaryBuilder.build();
