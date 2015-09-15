@@ -141,6 +141,11 @@ public class TransactionExecutionSummary {
         }
 
         public TransactionExecutionSummary build() {
+            if (summary.failed) {
+                for (InternalTransaction transaction : summary.internalTransactions) {
+                    transaction.reject();
+                }
+            }
             return summary;
         }
     }
