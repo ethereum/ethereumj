@@ -174,7 +174,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         Block block = getBlockByNumber(endNumber);
 
-        return blockStore.getListHashesEndWith(block.getHash(), qty);
+        List<byte[]> hashes = blockStore.getListHashesEndWith(block.getHash(), qty);
+
+        // asc order of hashes is required in the response
+        Collections.reverse(hashes);
+
+        return hashes;
     }
 
     private byte[] calcTxTrie(List<Transaction> transactions) {
