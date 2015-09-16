@@ -29,6 +29,4 @@ public interface BlockQueue extends DiskStore {
     void clear();
 
     List<byte[]> filterExisting(Collection<byte[]> hashes);
-
-    Set<byte[]> getHashes();
 }
