@@ -40,7 +40,7 @@ public class BlockHashesMessageTest {
         BlockHashesMessage blockHashesMessage = new BlockHashesMessage(blockHashes);
         System.out.println(blockHashesMessage);
 
-        String expected = "f84304a04ee6424d776b3f59affc20bc2de59e67f36e22cc07897ff8df152242c921716ba07d2fe4df0dbbc9011da2b3bf177f0c6b7e71a11c509035c5d751efa5cf9b4817";
+        String expected = "f842a04ee6424d776b3f59affc20bc2de59e67f36e22cc07897ff8df152242c921716ba07d2fe4df0dbbc9011da2b3bf177f0c6b7e71a11c509035c5d751efa5cf9b4817";
         assertEquals(expected, Hex.toHexString(blockHashesMessage.getEncoded()));
 
         assertEquals(EthMessageCodes.BLOCK_HASHES, blockHashesMessage.getCommand());
