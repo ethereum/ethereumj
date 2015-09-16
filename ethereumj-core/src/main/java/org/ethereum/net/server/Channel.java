@@ -230,7 +230,7 @@ public class Channel {
     }
 
     public ByteArrayWrapper getNodeIdWrapper() {
-        return new ByteArrayWrapper(node.getId());
+        return node == null ? null : new ByteArrayWrapper(node.getId());
     }
 
     // ETH sub protocol
