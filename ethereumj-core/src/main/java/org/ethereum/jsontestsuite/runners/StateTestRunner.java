@@ -14,7 +14,7 @@ import org.ethereum.jsontestsuite.validators.LogsValidator;
 import org.ethereum.jsontestsuite.validators.OutputValidator;
 import org.ethereum.jsontestsuite.validators.RepositoryValidator;
 import org.ethereum.vm.LogInfo;
-import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;

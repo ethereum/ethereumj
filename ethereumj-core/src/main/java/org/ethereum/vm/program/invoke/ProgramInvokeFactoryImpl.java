@@ -1,21 +1,22 @@
-package org.ethereum.vm;
+package org.ethereum.vm.program.invoke;
 
 import org.ethereum.core.Block;
-import org.ethereum.core.Transaction;
-import org.ethereum.db.BlockStore;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
+import org.ethereum.db.BlockStore;
 import org.ethereum.util.ByteUtil;
-
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.program.Program;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import org.spongycastle.util.encoders.Hex;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigInteger;
+
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
 
 /**
  * @author Roman Mandeleil
@@ -60,12 +61,12 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         byte[] gas = tx.getGasLimit();
 
         /***        CALLVALUE op      ***/
-        byte[] callValue = tx.getValue() == null ? new byte[]{0} : tx.getValue();
+        byte[] callValue = nullToEmpty(tx.getValue());
 
         /***     CALLDATALOAD  op   ***/
         /***     CALLDATACOPY  op   ***/
         /***     CALLDATASIZE  op   ***/
-        byte[] data = tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY :( tx.getData() == null ? ByteUtil.EMPTY_BYTE_ARRAY : tx.getData() );
+        byte[] data = tx.isContractCreation() ? ByteUtil.EMPTY_BYTE_ARRAY : nullToEmpty(tx.getData());
 
         /***    PREVHASH  op  ***/
         byte[] lastHash = lastBlock.getHash();
@@ -147,7 +148,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         DataWord timestamp = program.getTimestamp();
         DataWord number = program.getNumber();
         DataWord difficulty = program.getDifficulty();
-        DataWord gasLimit = program.getGaslimit();
+        DataWord gasLimit = program.getGasLimit();
 
         if (logger.isInfoEnabled()) {
             logger.info("Internal call: \n" +
@@ -183,7 +184,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
 
         return new ProgramInvokeImpl(address, origin, caller, balance, gasPrice, gas, callValue,
                 data, lastHash, coinbase, timestamp, number, difficulty, gasLimit,
-                repository, program.invokeData.getCallDeep() + 1, blockStore, byTestingSuite);
+                repository, program.getCallDeep() + 1, blockStore, byTestingSuite);
     }
 
     public void setBlockchain(Blockchain blockchain) {

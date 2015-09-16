@@ -10,7 +10,7 @@ import org.ethereum.net.client.PeerClient;
 import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.vm.ProgramResult;
+import org.ethereum.vm.program.ProgramResult;
 
 import java.math.BigInteger;
 import java.net.InetAddress;

@@ -4,6 +4,10 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.listener.EthereumListenerAdapter;
 import org.ethereum.vm.*;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.ProgramResult;
+import org.ethereum.vm.program.invoke.ProgramInvoke;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -11,6 +15,8 @@ import org.spongycastle.util.encoders.Hex;
 import java.math.BigInteger;
 import java.util.List;
 
+import static org.apache.commons.lang3.ArrayUtils.getLength;
+import static org.apache.commons.lang3.ArrayUtils.isEmpty;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.BIUtil.*;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
@@ -100,14 +106,11 @@ public class TransactionExecutor {
             return;
         }
 
-        basicTxCost = GasCost.TRANSACTION + (tx.getData() == null ? 0 :
-                tx.nonZeroDataBytes() * GasCost.TX_NO_ZERO_DATA + tx.zeroDataBytes() * GasCost.TX_ZERO_DATA);
-
-        boolean basicCostCovered = (txGasLimit >= basicTxCost);
-        if (!basicCostCovered) {
+        basicTxCost = tx.transactionCost();
+        if (basicTxCost > txGasLimit) {
 
             if (logger.isWarnEnabled())
-                logger.warn("Too much gas used in this block: Require: {} Got: {}", txGasLimit, basicTxCost);
+                logger.warn("Not enough gas for transaction execution: Require: {} Got: {}", basicTxCost, txGasLimit);
 
 
             // TODO: save reason for failure
@@ -116,9 +119,7 @@ public class TransactionExecutor {
 
         BigInteger reqNonce = track.getNonce(tx.getSender());
         BigInteger txNonce = toBI(tx.getNonce());
-
-        boolean validNonce = (txNonce.compareTo(reqNonce) == 0);
-        if (!validNonce) {
+        if (isNotEqual(reqNonce, txNonce)) {
 
             if (logger.isWarnEnabled())
                 logger.warn("Invalid nonce: required: {} , tx.nonce: {}", reqNonce, txNonce);
@@ -132,8 +133,7 @@ public class TransactionExecutor {
         BigInteger totalCost = toBI(tx.getValue()).add(txGasCost);
         BigInteger senderBalance = track.getBalance(tx.getSender());
 
-        boolean canAfford = isCovers(senderBalance, totalCost);
-        if (!canAfford) {
+        if (!isCovers(senderBalance, totalCost)) {
 
             if (logger.isWarnEnabled())
                 logger.warn("Not enough cash: Require: {}, Sender cash: {}", totalCost, senderBalance);
@@ -160,20 +160,18 @@ public class TransactionExecutor {
                 logger.info("Paying: txGasCost: [{}], gasPrice: [{}], gasLimit: [{}]", txGasCost, toBI(tx.getGasPrice()), txGasLimit);
         }
 
-        if (tx.isContractCreation())
+        if (tx.isContractCreation()) {
             create();
-        else
+        } else {
             call();
+        }
     }
 
     private void call() {
-
         if (!readyToExecute) return;
 
         byte[] targetAddress = tx.getReceiveAddress();
-
-        precompiledContract =
-                PrecompiledContracts.getContractForAddress(new DataWord(targetAddress));
+        precompiledContract = PrecompiledContracts.getContractForAddress(new DataWord(targetAddress));
 
         if (precompiledContract != null) {
 
@@ -197,15 +195,14 @@ public class TransactionExecutor {
         } else {
 
             byte[] code = track.getCode(targetAddress);
-            if (code.length > 0) {
+            if (isEmpty(code)) {
+                m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
+            } else {
                 ProgramInvoke programInvoke =
                         programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
 
                 this.vm = new VM();
-                this.program = new Program(code, programInvoke);
-            } else {
-
-                m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
+                this.program = new Program(code, programInvoke, tx);
             }
         }
 
@@ -214,23 +211,19 @@ public class TransactionExecutor {
     }
 
     private void create() {
-
         byte[] newContractAddress = tx.getContractAddress();
-        if (tx.getData() != null && !(tx.getData().length == 0)) {
-
-            ProgramInvoke programInvoke =
-                    programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
-
-            this.vm = new VM();
-            this.program = new Program(tx.getData(), programInvoke);
-        } else {
+        if (isEmpty(tx.getData())) {
             m_endGas = toBI(tx.getGasLimit()).longValue() - basicTxCost;
             cacheTrack.createAccount(tx.getContractAddress());
+        } else {
+            ProgramInvoke programInvoke = programInvokeFactory.createProgramInvoke(tx, currentBlock, cacheTrack, blockStore);
+
+            this.vm = new VM();
+            this.program = new Program(tx.getData(), programInvoke, tx);
         }
 
         BigInteger endowment = toBI(tx.getValue());
         transfer(cacheTrack, tx.getSender(), newContractAddress, endowment);
-
     }
 
     public void go() {
@@ -252,22 +245,21 @@ public class TransactionExecutor {
 
             if (tx.isContractCreation()) {
 
-                byte[] initCode = EMPTY_BYTE_ARRAY;
-                if (result.getHReturn().length * GasCost.CREATE_DATA <= m_endGas) {
+                int returnDataGasValue = getLength(result.getHReturn()) * GasCost.CREATE_DATA;
+                if (returnDataGasValue <= m_endGas) {
 
-                    BigInteger returnDataGasValue = BigInteger.valueOf(result.getHReturn().length * GasCost.CREATE_DATA);
-                    m_endGas -= returnDataGasValue.longValue();
-                    initCode = result.getHReturn();
-                    cacheTrack.saveCode(tx.getContractAddress(), initCode);
+                    m_endGas -= BigInteger.valueOf(returnDataGasValue).longValue();
+                    cacheTrack.saveCode(tx.getContractAddress(), result.getHReturn());
                 } else {
-                    result.setHReturn(initCode);
+                    result.setHReturn(EMPTY_BYTE_ARRAY);
                 }
             }
 
-            if (result.getException() != null){
-                if (result.getDeleteAccounts() != null) result.getDeleteAccounts().clear();
-                if (result.getLogInfoList() != null) result.getLogInfoList().clear();
-                result.futureRefundGas(0);
+            if (result.getException() != null) {
+                result.getDeleteAccounts().clear();
+                result.getLogInfoList().clear();
+                result.resetFutureRefund();
+
                 throw result.getException();
             }
 
@@ -277,69 +269,71 @@ public class TransactionExecutor {
 //            https://github.com/ethereum/cpp-ethereum/blob/develop/libethereum/Executive.cpp#L241
             cacheTrack.rollback();
             m_endGas = 0;
-        } finally {
-            if (CONFIG.vmTrace()) {
-                String trace = (program == null) ? "{}" : program.getProgramTrace()
-                        .result(result.getHReturn())
-                        .error(result.getException())
-                        .toString();
-
-
-                if (CONFIG.vmTraceCompressed()) {
-                    trace = zipAndEncode(trace);
-                }
-
-                String txHash = toHexString(tx.getHash());
-                saveProgramTraceFile(txHash, trace);
-                listener.onVMTraceCreated(txHash, trace);
-            }
         }
     }
 
-
     public void finalization() {
-        if (!readyToExecute ) return;
+        if (!readyToExecute) return;
 
         cacheTrack.commit();
 
-        // Accumulate refunds for suicides
-        if (result != null)
-            result.futureRefundGas(
-                    GasCost.SUICIDE_REFUND * (result.getDeleteAccounts() == null ? 0 : result.getDeleteAccounts().size()));
+        TransactionExecutionSummary.Builder summaryBuilder = TransactionExecutionSummary.builderFor(tx)
+                .gasLeftover(toBI(m_endGas));
 
+        if (result != null) {
+            // Accumulate refunds for suicides
+            result.addFutureRefund(result.getDeleteAccounts().size() * GasCost.SUICIDE_REFUND);
+            long gasRefund = Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            byte[] addr = tx.isContractCreation() ? tx.getContractAddress() : tx.getReceiveAddress();
+            m_endGas += gasRefund;
 
-        // SSTORE refunds...
-        // must be done before the miner gets the fees.
-        long gasLimit = toBI(tx.getGasLimit()).longValue();
+            summaryBuilder
+                    .gasUsed(toBI(result.getGasUsed()))
+                    .gasRefund(toBI(gasRefund))
+                    .deletedAccounts(result.getDeleteAccounts())
+                    .internalTransactions(result.getInternalTransactions())
+                    .storageDiff(track.getContractDetails(addr).getStorage());
 
-        if (result != null)
-            m_endGas += Math.min(result.getFutureRefund(), result.getGasUsed() / 2);
+            if (result.getException() != null) {
+                summaryBuilder.markAsFailed();
+            }
+        }
 
-        BigInteger endGasBI = toBI(m_endGas);
-        BigInteger gasPrice = toBI(tx.getGasPrice());
-        BigInteger futureRefundVal = endGasBI.multiply(gasPrice);
+        TransactionExecutionSummary summary = summaryBuilder.build();
 
         // Refund for gas leftover
-        track.addBalance(tx.getSender(), futureRefundVal);
-        logger.info("Pay total refund to sender: [{}], refund val: [{}]", Hex.toHexString(tx.getSender()), futureRefundVal);
+        track.addBalance(tx.getSender(), summary.getLeftover().add(summary.getRefund()));
+        logger.info("Pay total refund to sender: [{}], refund val: [{}]", Hex.toHexString(tx.getSender()), summary.getRefund());
 
         // Transfer fees to miner
-        BigInteger feesEarned = toBI(gasLimit).subtract(endGasBI).multiply(gasPrice);
+        track.addBalance(coinbase, summary.getFee());
+        logger.info("Pay fees to miner: [{}], feesEarned: [{}]", Hex.toHexString(coinbase), summary.getFee());
 
-        track.addBalance(coinbase, feesEarned);
-        logger.info("Pay fees to miner: [{}], feesEarned: [{}]", Hex.toHexString(coinbase), feesEarned);
-
-        // Traverse list of suicides
-        if (result.getDeleteAccounts() != null)
+        if (result != null) {
+            logs = result.getLogInfoList();
+            // Traverse list of suicides
             for (DataWord address : result.getDeleteAccounts()) {
                 track.delete(address.getLast20Bytes());
             }
+        }
 
-        if (result != null)
-            logs = result.getLogInfoList();
 
-        if (result.getLogInfoList() != null){
+        listener.onTransactionExecuted(summary);
 
+        if (CONFIG.vmTrace() && program != null && result != null) {
+            String trace = program.getTrace()
+                    .result(result.getHReturn())
+                    .error(result.getException())
+                    .toString();
+
+
+            if (CONFIG.vmTraceCompressed()) {
+                trace = zipAndEncode(trace);
+            }
+
+            String txHash = toHexString(tx.getHash());
+            saveProgramTraceFile(txHash, trace);
+            listener.onVMTraceCreated(txHash, trace);
         }
     }
 
@@ -352,7 +346,10 @@ public class TransactionExecutor {
     public TransactionReceipt getReceipt() {
         return receipt;
     }
-    public List<LogInfo> getVMLogs() { return logs;  }
+
+    public List<LogInfo> getVMLogs() {
+        return logs;
+    }
 
     public ProgramResult getResult() {
         return result;

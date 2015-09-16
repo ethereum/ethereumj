@@ -149,14 +149,14 @@ public class SyncManager {
 
         BigInteger peerTotalDifficulty = peer.getTotalDifficulty();
 
-        if (lowerUsefulDifficulty.compareTo(peerTotalDifficulty) > 0) {
+        if (!isIn20PercentRange(peerTotalDifficulty, lowerUsefulDifficulty)) {
             if(logger.isInfoEnabled()) logger.info(
-                    "Peer {}: its difficulty lower than ours: {} vs {}, skipping",
+                    "Peer {}: difficulty significantly lower than ours: {} vs {}, skipping",
                     Utils.getNodeIdShort(peer.getPeerId()),
                     peerTotalDifficulty.toString(),
                     lowerUsefulDifficulty.toString()
             );
-            // TODO report about lower total difficulty
+            // TODO report low total difficulty
             return;
         }
 

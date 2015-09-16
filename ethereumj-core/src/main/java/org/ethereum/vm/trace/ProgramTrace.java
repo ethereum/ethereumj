@@ -1,20 +1,23 @@
-package org.ethereum.vmtrace;
+package org.ethereum.vm.trace;
 
+import org.ethereum.core.Repository;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.RepositoryTrack;
-import org.ethereum.core.Repository;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.OpCode;
-import org.ethereum.vm.ProgramInvoke;
+import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static java.lang.String.format;
+import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.util.ByteUtil.toHexString;
-import static org.ethereum.vmtrace.Serializers.serializeFieldsOnly;
+import static org.ethereum.vm.trace.Serializers.serializeFieldsOnly;
 
 public class ProgramTrace {
 
@@ -26,6 +29,52 @@ public class ProgramTrace {
     private Map<String, String> initStorage = new HashMap<>();
     private boolean fullStorage;
     private int storageSize;
+
+    public ProgramTrace() {
+        this(null);
+    }
+
+    public ProgramTrace(ProgramInvoke programInvoke) {
+        if (CONFIG.vmTrace() && programInvoke != null) {
+            ContractDetails contractDetails = getContractDetails(programInvoke);
+            if (contractDetails == null) {
+                storageSize = 0;
+                fullStorage = true;
+            } else {
+                storageSize = contractDetails.getStorageSize();
+                if (storageSize <= CONFIG.vmTraceInitStorageLimit()) {
+                    fullStorage = true;
+
+                    String address = toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
+                    for (Map.Entry<DataWord, DataWord> entry : contractDetails.getStorage().entrySet()) {
+                        // TODO: solve NULL key/value storage problem
+                        DataWord key = entry.getKey();
+                        DataWord value = entry.getValue();
+                        if (key == null || value == null) {
+                            LOGGER.info("Null storage key/value: address[{}]" ,address);
+                            continue;
+                        }
+
+                        initStorage.put(key.toString(), value.toString());
+                    }
+
+                    if (!initStorage.isEmpty()) {
+                        LOGGER.info("{} entries loaded to transaction's initStorage", initStorage.size());
+                    }
+                }
+            }
+        }
+    }
+
+    private static ContractDetails getContractDetails(ProgramInvoke programInvoke) {
+        Repository repository = programInvoke.getRepository();
+        if (repository instanceof RepositoryTrack) {
+            repository = ((RepositoryTrack) repository).getOriginRepository();
+        }
+
+        byte[] address = programInvoke.getOwnerAddress().getLast20Bytes();
+        return repository.getContractDetails(address);
+    }
 
     public List<Op> getOps() {
         return ops;
@@ -73,50 +122,6 @@ public class ProgramTrace {
 
     public void setInitStorage(Map<String, String> initStorage) {
         this.initStorage = initStorage;
-    }
-
-    public ProgramTrace initStorage(ProgramInvoke programInvoke) {
-        if (!CONFIG.vmTrace()) return this;
-
-        ContractDetails contractDetails = getContractDetails(programInvoke);
-        if (contractDetails == null) {
-            storageSize = 0;
-            fullStorage = true;
-        } else {
-            storageSize = contractDetails.getStorageSize();
-            if (storageSize <= CONFIG.vmTraceInitStorageLimit()) {
-                fullStorage = true;
-                for (Map.Entry<DataWord, DataWord> entry : contractDetails.getStorage().entrySet()) {
-
-                    // TODO: solve NULL key/value storage problem
-                    String address = toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
-                    if (isNull(entry.getKey(), "key", address) || isNull(entry.getValue(), "value", address)) continue;
-
-                    initStorage.put(entry.getKey().toString(), entry.getValue().toString());
-                }
-
-                if (!initStorage.isEmpty()) {
-                    LOGGER.info("{} entries loaded to transaction's initStorage", initStorage.size());
-                }
-            }
-        }
-
-        return this;
-    }
-
-    private static boolean isNull(DataWord dataWord, Object... args) {
-        LOGGER.info(format("Null storage entry %s: address[%s]", args));
-        return dataWord == null;
-    }
-
-    private static ContractDetails getContractDetails(ProgramInvoke programInvoke) {
-        Repository repository = programInvoke.getRepository();
-        if (repository instanceof RepositoryTrack) {
-            repository = ((RepositoryTrack) repository).getOriginRepository();
-        }
-
-        byte[] address = programInvoke.getOwnerAddress().getLast20Bytes();
-        return repository.getContractDetails(address);
     }
 
     public ProgramTrace result(byte[] result) {
