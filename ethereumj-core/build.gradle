@@ -117,7 +117,7 @@ dependencies {
     compile "com.typesafe:config:1.2.1"
 
 //    compile "org.mapdb:mapdb:1.0.7"
-    compile "org.mapdb:mapdb:2.0-beta2"
+    compile "org.mapdb:mapdb:2.0-beta6"
 
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "log4j:apache-log4j-extras:${log4jVersion}"
