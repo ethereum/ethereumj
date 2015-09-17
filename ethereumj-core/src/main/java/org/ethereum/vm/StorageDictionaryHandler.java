@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.db.StorageDictionary;
@@ -9,6 +10,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -35,22 +39,35 @@ public class StorageDictionaryHandler {
         }
     }
 
+    // hashes for storage indexes can be pre-calculated by the Solidity compiler
+    private static final Map<ByteArrayWrapper, Entry> ConstHashes = new HashMap<>();
+
+    static {
+        DataWord storageIdx = new DataWord();
+        // Let's take 5000 as the max storage index
+        for (int i = 0; i < 5000; i++) {
+            byte[] sha3 = SHA3Helper.sha3(storageIdx.getData());
+            Entry entry = new Entry(new DataWord(sha3), storageIdx.clone().getData());
+            ConstHashes.put(getMapKey(sha3), entry);
+            storageIdx.add(new DataWord(1));
+        }
+    }
+
     byte[] contractAddress;
-    StorageDictionary keysPath;
+
     Map<ByteArrayWrapper, Entry> hashes = new HashMap<>();
     Map<ByteArrayWrapper, DataWord> storeKeys = new HashMap<>();
 
     public StorageDictionaryHandler(DataWord ownerAddress) {
         try {
             contractAddress = ownerAddress.getNoLeadZeroesData();
-            keysPath = StorageDictionaryDb.INST.getOrCreate(contractAddress);
         } catch (Throwable e) {
             logger.error("Unexpected exception: ", e);
             // ignore exception to not halt VM execution
         }
     }
 
-    ByteArrayWrapper getMapKey(byte[] hash) {
+    static ByteArrayWrapper getMapKey(byte[] hash) {
         return new ByteArrayWrapper(Arrays.copyOfRange(hash, 0, 20));
     }
 
@@ -72,8 +89,39 @@ public class StorageDictionaryHandler {
         }
     }
 
-    public StorageDictionary.PathElement[] getKeyOrigin(byte[] key) {
-        Entry entry = hashes.get(getMapKey(key));
+    private Entry findHash(byte[] key) {
+        ByteArrayWrapper mapKey = getMapKey(key);
+        Entry entry = hashes.get(mapKey);
+        if (entry == null) {
+            entry = ConstHashes.get(mapKey);
+        }
+        return entry;
+    }
+
+    public StorageDictionary.PathElement[] getKeyOriginSerpent(byte[] key) {
+        Entry entry = findHash(key);
+        if (entry != null) {
+            if (entry.input.length > 32 && entry.input.length % 32 == 0 &&
+                    Arrays.equals(key, entry.hashValue.getData())) {
+
+                int pathLength = entry.input.length / 32;
+                StorageDictionary.PathElement[] ret = new StorageDictionary.PathElement[pathLength];
+                for (int i = 0; i < ret.length; i++) {
+                    ret[i] = guessPathElement(Arrays.copyOfRange(entry.input, i * 32, (i+1) * 32))[0];
+                    ret[i].type = StorageDictionary.Type.MapKey;
+                }
+                return ret;
+            } else {
+                // not a Serenity contract
+            }
+        }
+        StorageDictionary.PathElement[] storageIndex = guessPathElement(key);
+        storageIndex[0].type = StorageDictionary.Type.StorageIndex;
+        return  storageIndex;
+    }
+
+    public StorageDictionary.PathElement[] getKeyOriginSolidity(byte[] key) {
+        Entry entry = findHash(key);
         if (entry == null) {
             StorageDictionary.PathElement[] storageIndex = guessPathElement(key);
             storageIndex[0].type = StorageDictionary.Type.StorageIndex;
@@ -82,7 +130,7 @@ public class StorageDictionaryHandler {
             byte[] subKey = Arrays.copyOfRange(entry.input, 0, entry.input.length - 32);
             long offset = new BigInteger(key).subtract(new BigInteger(entry.hashValue.clone().getData())).longValue();
             return Utils.mergeArrays(
-                    getKeyOrigin(Arrays.copyOfRange(entry.input, entry.input.length - 32, entry.input.length)),
+                    getKeyOriginSolidity(Arrays.copyOfRange(entry.input, entry.input.length - 32, entry.input.length)),
                     guessPathElement(subKey),
                     new StorageDictionary.PathElement[] {new StorageDictionary.PathElement(StorageDictionary.Type.Offset, (int) offset)});
         }
@@ -130,26 +178,67 @@ public class StorageDictionaryHandler {
         return Hex.toHexString(bytes);
     }
 
-    public void dumpKeys(ContractDetails storage) {
+    private static Map<ByteArrayWrapper, StorageDictionary> seContracts = new HashMap<>();
+
+    public StorageDictionary testDump(StorageDictionaryDb.Layout layout) {
+        StorageDictionary dict = new StorageDictionary();
         for (ByteArrayWrapper key : storeKeys.keySet()) {
-            keysPath.addPath(new DataWord(key.getData()), getKeyOrigin(key.getData()));
+
+            dict.addPath(new DataWord(key.getData()), getKeyOriginSolidity(key.getData()));
         }
-        StorageDictionaryDb.INST.put(contractAddress, keysPath);
+        return dict;
+    }
+
+    public void dumpKeys(ContractDetails storage) {
+
+        StorageDictionary solidityDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Solidity,
+                contractAddress);
+        StorageDictionary serpentDict = StorageDictionaryDb.INST.getOrCreate(StorageDictionaryDb.Layout.Serpent,
+                contractAddress);
+
+        for (ByteArrayWrapper key : storeKeys.keySet()) {
+            solidityDict.addPath(new DataWord(key.getData()), getKeyOriginSolidity(key.getData()));
+            serpentDict.addPath(new DataWord(key.getData()), getKeyOriginSerpent(key.getData()));
+        }
 
         // Uncomment to dump human readable storage with values
-//        File f = new File("json");
-//        f.mkdirs();
-//        f = new File(f, Hex.toHexString(contractAddress) + ".txt");
+//        if (!solidityDict.isValid()) {
+//            File f = new File("json");
+//            f.mkdirs();
+//            f = new File(f, Hex.toHexString(contractAddress) + ".sol.txt");
+//            try {
+//                BufferedWriter w = new BufferedWriter(new FileWriter(f));
+//                String s = solidityDict.dump(storage);
+//                w.write(s);
+//                w.close();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        if (!serpentDict.isValid()) {
+//            File f = new File("json", Hex.toHexString(contractAddress) + ".se.txt");
+//            f.getParentFile().mkdirs();
+//            try {
+//                BufferedWriter w = new BufferedWriter(new FileWriter(f));
+//                String s = serpentDict.dump(storage);
+//                w.write(s);
+//                w.close();
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        File f = new File("json", Hex.toHexString(contractAddress) + ".hash.txt");
+//        f.getParentFile().mkdirs();
 //        try {
-//            BufferedWriter w = new BufferedWriter(new FileWriter(f));
-//            String s = keysPath.dump(storage);
-//            w.write(s);
-//            w.write("\nHashaes:\n");
+//            BufferedWriter w = new BufferedWriter(new FileWriter(f, true));
+//            w.write("\nHashes:\n");
 //            for (Entry entry : hashes.values()) {
 //                w.write(entry + "\n");
 //            }
 //            w.write("\nSSTORE:\n");
-//            for (Map.Entry<Key, DataWord> entry : storeKeys.entrySet()) {
+//            for (Map.Entry<ByteArrayWrapper, DataWord> entry : storeKeys.entrySet()) {
 //                w.write(entry + "\n");
 //            }
 //
@@ -157,6 +246,11 @@ public class StorageDictionaryHandler {
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
+
+        StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Solidity, contractAddress, solidityDict);
+        StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Serpent, contractAddress, serpentDict);
+
+
     }
 
     public void vmStartPlayNotify() {

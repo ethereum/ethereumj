@@ -5,6 +5,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.Math.min;
@@ -81,9 +82,15 @@ public class Util {
     }
 
     public static String repeat(String s, int n) {
-        StringBuilder ret = new StringBuilder();
-        for (int i = 0; i < n; i++) ret.append(s);
-        return ret.toString();
+        if (s.length() == 1) {
+            byte[] bb = new byte[n];
+            Arrays.fill(bb, s.getBytes()[0]);
+            return new String(bb);
+        } else {
+            StringBuilder ret = new StringBuilder();
+            for (int i = 0; i < n; i++) ret.append(s);
+            return ret.toString();
+        }
     }
 
     public static String align(String s, char fillChar, int targetLen, boolean alignRight) {

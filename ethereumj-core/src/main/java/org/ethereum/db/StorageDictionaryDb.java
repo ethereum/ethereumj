@@ -1,17 +1,15 @@
 package org.ethereum.db;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.ethereum.datasource.mapdb.MapDBFactory;
-import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.vm.VMUtils;
 import org.mapdb.DB;
+import org.mapdb.DBMaker;
 import org.mapdb.HTreeMap;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.DataInput;
@@ -21,14 +19,32 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.System.getProperty;
+
 /**
- * DB managing the Contract => StorageDictionary mapping
+ * DB managing the Layout => Contract => StorageDictionary mapping
  *
  * Created by Anton Nashatyrev on 10.09.2015.
  */
 //@Component
 public class StorageDictionaryDb {
     private static final Logger logger = LoggerFactory.getLogger("repository");
+
+    public enum Layout {
+        Solidity("solidity"),
+        Serpent("serpent");
+
+        private String dbName;
+
+        Layout(String dbName) {
+            this.dbName = dbName;
+        }
+
+        public String getDbName() {
+            return dbName;
+        }
+    }
+
     private static final Serializer<StorageDictionary> SERIALIZER = new Serializer<StorageDictionary>() {
         @Override
         public void serialize(DataOutput out, StorageDictionary value) throws IOException {
@@ -44,47 +60,80 @@ public class StorageDictionaryDb {
         }
     };
 
+    private static final Serializer<ByteArrayWrapper> KEY_SERIALIZER = new Serializer<ByteArrayWrapper>() {
+        @Override
+        public void serialize(DataOutput out, ByteArrayWrapper value) throws IOException {
+            BYTE_ARRAY.serialize(out, value.getData());
+        }
+
+        @Override
+        public ByteArrayWrapper deserialize(DataInput in, int available) throws IOException {
+            byte[] bytes = BYTE_ARRAY.deserialize(in, available);
+            return new ByteArrayWrapper(bytes);
+        }
+    };
+
     public static StorageDictionaryDb INST = new StorageDictionaryDb().init();
 
-    //    @Autowired
-    MapDBFactory mapDBFactory = new MapDBFactoryImpl();
-
     private DB storagekeysDb;
-    private HTreeMap<ByteArrayWrapper, StorageDictionary> contracts;
+    Map<Layout, HTreeMap<ByteArrayWrapper, StorageDictionary>> layoutDbs = new HashMap<>();
 
     private StorageDictionaryDb() {
     }
 
     @PostConstruct
     StorageDictionaryDb init() {
-        storagekeysDb = mapDBFactory.createTransactionalDB("metadata/keydictionary");
-        contracts = storagekeysDb.hashMapCreate("contracts")
-                .valueSerializer(SERIALIZER)
-                .makeOrGet();
+        File dbFile = new File(getProperty("user.dir") + "/" + SystemProperties.CONFIG.databaseDir() + "/metadata/storagedict");
+        if (!dbFile.getParentFile().exists()) dbFile.getParentFile().mkdirs();
+        storagekeysDb = DBMaker.fileDB(dbFile)
+                .closeOnJvmShutdown()
+                .make();
+
+//        Timer timer = new Timer();
+//        timer.schedule(new TimerTask() {
+//            @Override
+//            public void run() {
+//                storagekeysDb.commit();
+//            }
+//        }, 1000, 1000);
+
         return this;
     }
 
-    public void close() {
-        storagekeysDb.close();
-    }
-
-    public StorageDictionary get(byte[] contractAddress) {
-        return contracts.get(new ByteArrayWrapper(contractAddress));
-    }
-
-    public StorageDictionary getOrCreate(byte[] contractAddress) {
-        StorageDictionary ret = get(contractAddress);
+    HTreeMap<ByteArrayWrapper, StorageDictionary> getLayoutTable(Layout layout) {
+        HTreeMap<ByteArrayWrapper, StorageDictionary> ret = layoutDbs.get(layout);
         if (ret == null) {
-            ret = new StorageDictionary();
-            put(contractAddress, ret);
+            ret = storagekeysDb.hashMapCreate(layout.getDbName())
+                    .keySerializer(KEY_SERIALIZER)
+                    .valueSerializer(SERIALIZER)
+                    .makeOrGet();
+            layoutDbs.put(layout, ret);
         }
         return ret;
     }
 
-    public void put(byte[] contractAddress, StorageDictionary keys) {
+    public void close() {
+        storagekeysDb.close();
+        layoutDbs.clear();
+    }
+
+    public StorageDictionary get(Layout layout, byte[] contractAddress) {
+        return getLayoutTable(layout).get(new ByteArrayWrapper(contractAddress));
+    }
+
+    public StorageDictionary getOrCreate(Layout layout, byte[] contractAddress) {
+        StorageDictionary ret = get(layout, contractAddress);
+        if (ret == null) {
+            ret = new StorageDictionary();
+            put(layout, contractAddress, ret);
+        }
+        return ret;
+    }
+
+    public void put(Layout layout, byte[] contractAddress, StorageDictionary keys) {
         logger.debug("Update storage dictionary for contract " + Hex.toHexString(contractAddress));
         if (!keys.isValid()) {
-            contracts.put(new ByteArrayWrapper(contractAddress), keys);
+            getLayoutTable(layout).put(new ByteArrayWrapper(contractAddress), keys);
             File f = new File("json");
             f.mkdirs();
             f = new File(f, Hex.toHexString(contractAddress) + ".json");
@@ -97,7 +146,6 @@ public class StorageDictionaryDb {
 
             logger.debug("Storage dictionary changed. Committing to DB: " + Hex.toHexString(contractAddress));
 
-            contracts.put(new ByteArrayWrapper(contractAddress), keys);
             storagekeysDb.commit();
 
             keys.validate();

@@ -63,8 +63,8 @@ public class StorageDictionary {
 
         private DataWord hashKey;
         private final SortedMap<PathElement, PathElement> children = new TreeMap<>();
-        private transient boolean isValid = true;
-        private transient PathElement parent = null;
+        private transient boolean isValid = true;   // 'transient' just a marker here
+        private transient PathElement parent = null;  // 'transient' just a marker here
 
         public PathElement() {
         }
@@ -94,7 +94,7 @@ public class StorageDictionary {
 
             PathElement child = children.get(path[0]);
             if (child == null) {
-                if (children.size() >= 2000) {
+                if (children.size() >= 10000) {
                     // TODO: for a while don't exceed storage threshold
                     return;
                 }
@@ -156,7 +156,11 @@ public class StorageDictionary {
         public int compareTo(PathElement o) {
             if (type != o.type) return type.compareTo(o.type);
             if (type == Type.Offset || type == Type.StorageIndex) {
-                return new BigInteger(key, 16).compareTo(new BigInteger(o.key, 16));
+                try {
+                    return new BigInteger(key, 16).compareTo(new BigInteger(o.key, 16));
+                } catch (NumberFormatException e) {
+                    // fallback to string compare
+                }
             }
             return key.compareTo(o.key);
         }
@@ -188,14 +192,19 @@ public class StorageDictionary {
 
         public String toString(ContractDetails storage, int indent) {
             String s =  (hashKey == null ? Util.repeat(" ", 64) : hashKey) + " : " +
-                    Util.repeat(" ", indent) + this;
+                    Util.repeat("  ", indent) + this;
             if (hashKey != null && storage != null) {
                 DataWord data = storage.get(hashKey);
                 s += " = " + (data == null ? "<null>" : StorageDictionaryHandler.guessValue(data.getData()));
             }
             s += "\n";
+            int limit = 50;
             for (PathElement child : children.values()) {
-                s += child.toString(storage, indent + 2);
+                s += child.toString(storage, indent + 1);
+                if (limit-- <= 0) {
+                    s += "\n             [Total: " + children.size() + " Rest skipped]";
+                    break;
+                }
             }
             return s;
         }
@@ -209,7 +218,7 @@ public class StorageDictionary {
         this.root = root;
     }
 
-    public void addPath(DataWord hashKey, PathElement[] path) {
+    public synchronized void addPath(DataWord hashKey, PathElement[] path) {
         root.add(path, hashKey);
     }
 
@@ -229,7 +238,7 @@ public class StorageDictionary {
         return root.isValid();
     }
 
-    public String serializeToJson() throws JsonProcessingException {
+    public synchronized String serializeToJson() throws JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
         return om.writeValueAsString(root);
     }
