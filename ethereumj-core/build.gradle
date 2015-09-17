@@ -104,6 +104,7 @@ dependencies {
     compile "com.google.code.findbugs:jsr305:3.0.0"
     compile "com.fasterxml.jackson.core:jackson-databind:2.5.1"
     compile "org.apache.commons:commons-collections4:4.0"
+    compile "org.apache.commons:commons-lang3:3.4"
     compile "commons-codec:commons-codec:1.10"
     compile "org.springframework:spring-context:${springVersion}"
     compile "org.springframework:spring-tx:${springVersion}"
@@ -116,7 +117,7 @@ dependencies {
     compile "com.typesafe:config:1.2.1"
 
 //    compile "org.mapdb:mapdb:1.0.7"
-    compile "org.mapdb:mapdb:2.0-beta2"
+    compile "org.mapdb:mapdb:2.0-beta6"
 
     compile "org.slf4j:slf4j-log4j12:${slf4jVersion}"
     compile "log4j:apache-log4j-extras:${log4jVersion}"
@@ -188,11 +189,12 @@ artifactory {
 }
 
 artifactoryPublish.onlyIf {
-    (!pullRequest || pullRequest == 'false') &&
-	  project.version.endsWith('-SNAPSHOT')  &&
-	  branchName != null &&
-	  (branchName.startsWith('master') ||
-	   branchName.startsWith('develop'))
+    (branchName != null) &&
+            (!pullRequest || pullRequest == 'false') &&
+            project.version.endsWith('-SNAPSHOT') &&
+            (branchName.startsWith('master') ||
+                    branchName.startsWith('develop') ||
+                    branchName.startsWith('stage'))
 }
 
 bintray {

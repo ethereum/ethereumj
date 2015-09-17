@@ -3,6 +3,8 @@ package org.ethereum.vm;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.Stack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -83,8 +85,8 @@ public class VM {
 
 
             program.setLastOp(op.val());
-            program.stackRequire(op.require());
-            program.stackMax(op.require(), op.ret()); //Check not exceeding stack limits
+            program.verifyStackSize(op.require());
+            program.verifyStackOverflow(op.require(), op.ret()); //Check not exceeding stack limits
 
             long oldMemSize = program.getMemSize();
             BigInteger newMemSize = BigInteger.ZERO;
@@ -175,7 +177,7 @@ public class VM {
 
                     gasCost = GasCost.CALL;
                     DataWord callGasWord = stack.get(stack.size() - 1);
-                    if (callGasWord.compareTo(program.getGas()) == 1) {
+                    if (callGasWord.compareTo(program.getGas()) > 0) {
                         throw Program.Exception.notEnoughOpGas(op, callGasWord, program.getGas());
                     }
 
@@ -184,7 +186,7 @@ public class VM {
                     DataWord callAddressWord = stack.get(stack.size() - 2);
 
                     //check to see if account does not exist and is not a precompiled contract
-                    if (op != CALLCODE && !program.result.getRepository().isExist(callAddressWord.getLast20Bytes()))
+                    if (op != CALLCODE && !program.getStorage().isExist(callAddressWord.getLast20Bytes()))
                         gasCost += GasCost.NEW_ACCT_CALL;
 
                     //TODO #POC9 Make sure this is converted to BigInteger (256num support)
@@ -807,7 +809,7 @@ public class VM {
                 }
                 break;
                 case GASLIMIT: {
-                    DataWord gaslimit = program.getGaslimit();
+                    DataWord gaslimit = program.getGasLimit();
 
                     if (logger.isInfoEnabled())
                         hint = "gaslimit: " + gaslimit;
@@ -847,7 +849,7 @@ public class VM {
                 case LOG3:
                 case LOG4: {
 
-                    DataWord address = program.programAddress;
+                    DataWord address = program.getOwnerAddress();
 
                     DataWord memStart = stack.pop();
                     DataWord memOffset = stack.pop();
@@ -921,7 +923,7 @@ public class VM {
                     DataWord value = program.stackPop();
 
                     if (logger.isInfoEnabled())
-                        hint = "[" + program.programAddress.toPrefixString() + "] key: " + addr + " value: " + value;
+                        hint = "[" + program.getOwnerAddress().toPrefixString() + "] key: " + addr + " value: " + value;
 
                     program.storageSave(addr, value);
                     if (storageDictHandler != null) {
@@ -933,7 +935,7 @@ public class VM {
                 case JUMP: {
                     DataWord pos = program.stackPop();
                     int nextPC = pos.intValue(); // possible overflow
-                    program.validateJumpDest(nextPC);
+                    program.verifyJumpDest(nextPC);
 
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
@@ -949,7 +951,7 @@ public class VM {
                     if (!cond.isZero()) {
 
                         int nextPC = pos.intValue(); // possible overflow
-                        program.validateJumpDest(nextPC);
+                        program.verifyJumpDest(nextPC);
 
                         if (logger.isInfoEnabled())
                             hint = "~> " + nextPC;
@@ -1050,7 +1052,7 @@ public class VM {
                         logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                                 String.format("%-12s", op.name()),
                                 program.getGas().value(),
-                                program.invokeData.getCallDeep(), hint);
+                                program.getCallDeep(), hint);
 
                     program.createContract(value, inOffset, inSize);
 
@@ -1081,7 +1083,7 @@ public class VM {
                         logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                                 String.format("%-12s", op.name()),
                                 program.getGas().value(),
-                                program.invokeData.getCallDeep(), hint);
+                                program.getCallDeep(), hint);
                     }
 
                     program.memoryExpand(outDataOffs, outDataSize);
@@ -1094,10 +1096,11 @@ public class VM {
                     PrecompiledContracts.PrecompiledContract contract =
                             PrecompiledContracts.getContractForAddress(codeAddress);
 
-                    if (contract != null)
+                    if (contract != null) {
                         program.callToPrecompiledAddress(msg, contract);
-                    else
+                    } else {
                         program.callToAddress(msg);
+                    }
 
                     program.step();
                 }
@@ -1140,7 +1143,7 @@ public class VM {
                 logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                         String.format("%-12s",
                                 op.name()), program.getGas().longValue(),
-                        program.invokeData.getCallDeep(), hint);
+                        program.getCallDeep(), hint);
 
             vmCounter++;
         } catch (RuntimeException e) {
@@ -1161,7 +1164,7 @@ public class VM {
                 storageDictHandler.vmStartPlayNotify();
             }
 
-            if (program.invokeData.byTestingSuite()) return;
+            if (program.byTestingSuite()) return;
 
             while (!program.isStopped()) {
                 this.step(program);
@@ -1189,10 +1192,8 @@ public class VM {
      * @param size number of bytes needed
      * @return offset + size, unless size is 0. In that case memNeeded is also 0.
      */
-    private BigInteger memNeeded(DataWord offset, DataWord size) {
-        if (size.isZero())
-            return BigInteger.ZERO;
-        return offset.value().add(size.value());
+    private static BigInteger memNeeded(DataWord offset, DataWord size) {
+        return size.isZero() ? BigInteger.ZERO : offset.value().add(size.value());
     }
 
     /*
@@ -1210,7 +1211,7 @@ public class VM {
                 case RETURN:
                 case SUICIDE:
 
-                    ContractDetails details = program.getResult().getRepository()
+                    ContractDetails details = program.getStorage()
                             .getContractDetails(program.getOwnerAddress().getLast20Bytes());
                     List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
                     Collections.sort(storageKeys);
@@ -1240,7 +1241,7 @@ public class VM {
                 dumpLogger.trace("{}", memoryString);
 
             dumpLogger.trace("    STORAGE");
-            ContractDetails details = program.getResult().getRepository()
+            ContractDetails details = program.getStorage()
                     .getContractDetails(program.getOwnerAddress().getLast20Bytes());
             List<DataWord> storageKeys = new ArrayList<>(details.getStorage().keySet());
             Collections.sort(storageKeys);
@@ -1251,7 +1252,7 @@ public class VM {
                         details.getStorage().get(key).shortHex());
             }
 
-            int level = program.invokeData.getCallDeep();
+            int level = program.getCallDeep();
             String contract = Hex.toHexString(program.getOwnerAddress().getLast20Bytes());
             String internalSteps = String.format("%4s", Integer.toHexString(program.getPC())).replace(' ', '0').toUpperCase();
             dumpLogger.trace("{} | {} | #{} | {} : {} | {} | -{} | {}x32",

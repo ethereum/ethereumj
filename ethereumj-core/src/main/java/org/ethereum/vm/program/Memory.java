@@ -1,7 +1,8 @@
-package org.ethereum.vm;
+package org.ethereum.vm.program;
 
-import org.ethereum.vmtrace.ProgramTraceListener;
-
+import org.ethereum.vm.DataWord;
+import org.ethereum.vm.program.listener.ProgramListener;
+import org.ethereum.vm.program.listener.ProgramListenerAware;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -9,20 +10,20 @@ import java.util.List;
 import static java.lang.Math.ceil;
 import static java.lang.Math.min;
 import static java.lang.String.format;
-import static org.ethereum.util.ByteUtil.oneByteToHexString;
 import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+import static org.ethereum.util.ByteUtil.oneByteToHexString;
 
-public class Memory implements ProgramTraceListenerAware {
+public class Memory implements ProgramListenerAware {
 
     private static final int CHUNK_SIZE = 1024;
     private static final int WORD_SIZE = 32;
 
     private List<byte[]> chunks = new LinkedList<>();
     private int softSize;
-    private ProgramTraceListener traceListener;
+    private ProgramListener traceListener;
 
     @Override
-    public void setTraceListener(ProgramTraceListener traceListener) {
+    public void setTraceListener(ProgramListener traceListener) {
         this.traceListener = traceListener;
     }
 

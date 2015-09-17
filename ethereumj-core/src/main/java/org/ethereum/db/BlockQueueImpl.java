@@ -33,7 +33,7 @@ public class BlockQueueImpl implements BlockQueue {
 
     private DB db;
     private Map<Long, BlockWrapper> blocks;
-    private Set<byte[]> hashes;
+    private Set<ByteArrayWrapper> hashes;
     private Index index;
 
     private boolean initDone = false;
@@ -59,7 +59,7 @@ public class BlockQueueImpl implements BlockQueue {
                             .valueSerializer(Serializers.BLOCK_WRAPPER)
                             .makeOrGet();
                     hashes = db.hashSetCreate(HASH_SET_NAME)
-                            .serializer(Serializer.BYTE_ARRAY)
+                            .serializer(Serializers.BYTE_ARRAY_WRAPPER)
                             .makeOrGet();
 
                     if(CONFIG.databaseReset()) {
@@ -97,14 +97,14 @@ public class BlockQueueImpl implements BlockQueue {
         awaitInit();
         synchronized (writeMutex) {
             List<Long> numbers = new ArrayList<>(blockList.size());
-            Set<byte[]> newHashes = new HashSet<>();
+            Set<ByteArrayWrapper> newHashes = new HashSet<>();
             for (BlockWrapper b : blockList) {
                 if(!index.contains(b.getNumber()) &&
                    !numbers.contains(b.getNumber())) {
 
                     blocks.put(b.getNumber(), b);
                     numbers.add(b.getNumber());
-                    newHashes.add(b.getHash());
+                    newHashes.add(new ByteArrayWrapper(b.getHash()));
                 }
             }
             hashes.addAll(newHashes);
@@ -128,7 +128,7 @@ public class BlockQueueImpl implements BlockQueue {
                 return;
             }
             blocks.put(block.getNumber(), block);
-            hashes.add(block.getHash());
+            hashes.add(new ByteArrayWrapper(block.getHash()));
 
             takeLock.lock();
             try {
@@ -160,7 +160,7 @@ public class BlockQueueImpl implements BlockQueue {
             blocks.remove(idx);
 
             if (block != null) {
-                hashes.remove(block.getHash());
+                hashes.remove(new ByteArrayWrapper(block.getHash()));
             } else {
                 logger.error("Block for index {} is null", idx);
             }
@@ -224,18 +224,15 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public List<byte[]> filterExisting(final Collection<byte[]> hashList) {
         awaitInit();
-        return CollectionUtils.selectList(hashList, new Functional.Predicate<byte[]>() {
-            @Override
-            public boolean test(byte[] hash) {
-                return !hashes.contains(hash);
-            }
-        });
-    }
 
-    @Override
-    public Set<byte[]> getHashes() {
-        awaitInit();
-        return hashes;
+        List<byte[]> filtered = new ArrayList<>();
+        for (byte[] hash : hashList) {
+            if (!hashes.contains(new ByteArrayWrapper(hash))) {
+                filtered.add(hash);
+            }
+        }
+
+        return filtered;
     }
 
     private void awaitInit() {

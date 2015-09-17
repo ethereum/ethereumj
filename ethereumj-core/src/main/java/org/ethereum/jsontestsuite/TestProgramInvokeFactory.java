@@ -6,10 +6,10 @@ import org.ethereum.db.BlockStore;
 import org.ethereum.core.Repository;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.vm.DataWord;
-import org.ethereum.vm.Program;
-import org.ethereum.vm.ProgramInvoke;
-import org.ethereum.vm.ProgramInvokeFactory;
-import org.ethereum.vm.ProgramInvokeImpl;
+import org.ethereum.vm.program.Program;
+import org.ethereum.vm.program.invoke.ProgramInvoke;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
+import org.ethereum.vm.program.invoke.ProgramInvokeImpl;
 
 import java.math.BigInteger;
 

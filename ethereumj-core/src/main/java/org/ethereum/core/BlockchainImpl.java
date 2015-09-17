@@ -9,8 +9,9 @@ import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.RLP;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.validator.ParentBlockHeaderValidator;
-import org.ethereum.vm.ProgramInvokeFactory;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -110,6 +111,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     long exitOn = Long.MAX_VALUE;
 
     public boolean byTest = false;
+    private boolean fork = false;
 
     public BlockchainImpl() {
     }
@@ -172,7 +174,12 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         Block block = getBlockByNumber(endNumber);
 
-        return blockStore.getListHashesEndWith(block.getHash(), qty);
+        List<byte[]> hashes = blockStore.getListHashesEndWith(block.getHash(), qty);
+
+        // asc order of hashes is required in the response
+        Collections.reverse(hashes);
+
+        return hashes;
     }
 
     private byte[] calcTxTrie(List<Transaction> transactions) {
@@ -197,6 +204,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.bestBlock = blockStore.getBlockByHash(block.getParentHash());
         totalDifficulty = blockStore.getTotalDifficultyForHash(block.getParentHash());
         this.repository = this.repository.getSnapshotTo(this.bestBlock.getStateRoot());
+        this.fork = true;
 
         try {
 
@@ -204,7 +212,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             add(block);
         } catch (Throwable th) {
             th.printStackTrace(); /* todo */
-        }
+        } finally {this.fork = false;}
 
         if (isMoreThan(this.totalDifficulty, savedTD)) {
 
@@ -626,7 +634,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 //                return false;
             }
 
-        blockStore.saveBlock(block, totalDifficulty, true);
+        if (fork)
+            blockStore.saveBlock(block, totalDifficulty, false);
+        else
+            blockStore.saveBlock(block, totalDifficulty, true);
+
+        logger.info("Block saved: number: {}, hash: {}, TD: {}",
+                block.getNumber(), block.getShortHash(), totalDifficulty);
+
         setBestBlock(block);
 
         if (logger.isDebugEnabled())
@@ -673,6 +688,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Override
     public void updateTotalDifficulty(Block block) {
         totalDifficulty = totalDifficulty.add(block.getDifficultyBI());
+        logger.info("TD: updated to {}" , totalDifficulty);
     }
 
     @Override
