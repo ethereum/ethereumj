@@ -118,7 +118,7 @@ public abstract class EthLegacy extends EthHandler {
                         queue.hashStoreSize()
                 );
             } else {
-                queue.logHashQueueSize();
+                queue.logHashesSize();
             }
         }
     }
@@ -191,8 +191,8 @@ public abstract class EthLegacy extends EthHandler {
         returnHashes();
 
         if(!blockList.isEmpty()) {
-            queue.addBlocks(blockList, channel.getNodeId());
-            queue.logHashQueueSize();
+            queue.addAndValidate(blockList, channel.getNodeId());
+            queue.logHashesSize();
         } else {
             changeState(BLOCKS_LACK);
         }

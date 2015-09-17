@@ -239,8 +239,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         // adding block to the queue
         // there will be decided how to
         // connect it to the chain
-        queue.addNewBlock(newBlock, channel.getNodeId());
-        queue.logHashQueueSize();
+        queue.addNew(newBlock, channel.getNodeId());
     }
 
     protected void sendMessage(EthMessage message) {

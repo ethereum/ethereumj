@@ -4,8 +4,6 @@ import org.ethereum.core.*;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.MapDBFactoryImpl;
 import org.ethereum.db.*;
-import org.ethereum.util.CollectionUtils;
-import org.ethereum.util.Functional;
 import org.ethereum.validator.BlockHeaderValidator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +25,7 @@ import static org.ethereum.core.ImportResult.IMPORTED_BEST;
  * Based on these hashes, blocks are added to the queue.
  *
  * @author Roman Mandeleil
+ * @author Mikhail Kalinin
  * @since 27.07.2014
  */
 @Component
@@ -39,6 +38,12 @@ public class SyncQueue {
      * for which this client doesn't have the blocks yet
      */
     private HashStore hashStore;
+
+    /**
+     * Store holding a list of block headers of the heaviest chain on the network,
+     * for which this client doesn't have the blocks yet
+     */
+    private HeaderStore headerStore;
 
     /**
      * Queue with blocks to be validated and added to the blockchain
@@ -63,9 +68,14 @@ public class SyncQueue {
         logger.info("Start loading sync queue");
 
         MapDBFactory mapDBFactory = new MapDBFactoryImpl();
+
         hashStore = new HashStoreImpl();
         ((HashStoreImpl)hashStore).setMapDBFactory(mapDBFactory);
         hashStore.open();
+
+        headerStore = new HeaderStoreImpl();
+        ((HeaderStoreImpl)headerStore).setMapDBFactory(mapDBFactory);
+        headerStore.open();
 
         blockQueue = new BlockQueueImpl();
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
@@ -127,15 +137,16 @@ public class SyncQueue {
     }
 
     /**
-     * Add a list of blocks to the processing queue.
+     * Add a list of blocks to the processing queue. <br>
+     * Runs BlockHeader validation before adding
      *
-     * @param blockList - the blocks received from a peer to be added to the queue
+     * @param blocks the blocks received from a peer to be added to the queue
      * @param nodeId of the remote peer which these blocks are received from
      */
-    public void addBlocks(List<Block> blockList, final byte[] nodeId) {
+    public void addAndValidate(List<Block> blocks, byte[] nodeId) {
 
         // run basic checks
-        for (Block b : blockList) {
+        for (Block b : blocks) {
             if (!isValid(b.getHeader())) {
 
                 if (logger.isDebugEnabled()) {
@@ -147,28 +158,38 @@ public class SyncQueue {
             }
         }
 
-        List<BlockWrapper> wrappers = CollectionUtils.collectList(blockList, new Functional.Function<Block, BlockWrapper>() {
-            @Override
-            public BlockWrapper apply(Block block) {
-                return new BlockWrapper(block, nodeId);
-            }
-        });
+        addList(blocks, nodeId);
+    }
+
+    /**
+     * Adds a list of blocks to the queue
+     *
+     * @param blocks block list received from remote peer and be added to the queue
+     * @param nodeId nodeId of remote peer which these blocks are received from
+     */
+    public void addList(List<Block> blocks, byte[] nodeId) {
+
+        List<BlockWrapper> wrappers = new ArrayList<>(blocks.size());
+        for (Block b : blocks) {
+            wrappers.add(new BlockWrapper(b, nodeId));
+        }
+
         blockQueue.addAll(wrappers);
 
         if (logger.isDebugEnabled()) logger.debug(
                 "Blocks waiting to be proceed:  queue.size: [{}] lastBlock.number: [{}]",
                 blockQueue.size(),
-                blockList.get(blockList.size() - 1).getNumber()
+                blocks.get(blocks.size() - 1).getNumber()
         );
     }
 
     /**
-     * Addi NEW block to the queue
+     * Adds NEW block to the queue
      *
      * @param block new block
      * @param nodeId nodeId of the remote peer which this block is received from
      */
-    public void addNewBlock(Block block, byte[] nodeId) {
+    public void addNew(Block block, byte[] nodeId) {
 
         // run basic checks
         if (!isValid(block.getHeader())) {
@@ -259,8 +280,6 @@ public class SyncQueue {
 
         if (hashes.isEmpty()) return;
 
-        logger.info("Hashes remained uncovered: hashes.size: [{}]", hashes.size());
-
         ListIterator iterator = hashes.listIterator(hashes.size());
         while (iterator.hasPrevious()) {
 
@@ -281,28 +300,68 @@ public class SyncQueue {
         return hashStore.pollBatch(CONFIG.maxBlocksAsk());
     }
 
-    // a bit ugly but really gives
-    // good result
-    public void logHashQueueSize() {
-        logger.info("Block hashes list size: [{}]", hashStore.size());
+    /**
+     * Adds list of headers received from remote host <br>
+     * Runs header validation before addition <br>
+     * It also won't add headers of those blocks which are already presented in the queue
+     *
+     * @param headers list of headers got from remote host
+     * @param nodeId remote host nodeId
+     */
+    public void addAndValidateHeaders(List<BlockHeader> headers, byte[] nodeId) {
+        List<BlockHeader> filtered = blockQueue.filterExistingHeaders(headers);
+
+        for (BlockHeader header : headers) {
+
+            if (!isValid(header)) {
+
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Invalid header RLP: {}", Hex.toHexString(header.getEncoded()));
+                }
+
+                syncManager.reportInvalidBlock(nodeId);
+                return;
+            }
+
+        }
+
+        headerStore.addBatch(headers);
+
+        if (logger.isDebugEnabled())
+            logger.debug("{} headers filtered out, {} added", headers.size() - filtered.size(), filtered.size());
     }
 
     /**
-     * Returns the current number of blocks in the queue
+     * Adds headers previously taken from the store <br>
+     * Doesn't run any validations and checks
      *
-     * @return the current number of blocks in the queue
+     * @param headers list of headers
      */
-    public int size() {
-        return blockQueue.size();
+    public void returnHeaders(List<BlockHeader> headers) {
+        headerStore.addBatch(headers);
     }
 
-    public void clear() {
-        this.hashStore.clear();
-        this.blockQueue.clear();
+    /**
+     * Returns list of headers for blocks required to be downloaded
+     *
+     * @return list of headers
+     */
+    public List<BlockHeader> pollHeaders() {
+        return headerStore.pollBatch(CONFIG.maxBlocksAsk());
+    }
+
+    // a bit ugly but really gives
+    // good result
+    public void logHashesSize() {
+        logger.debug("Hashes list size: [{}]", hashStore.size());
+    }
+
+    public void logHeadersSize() {
+        logger.debug("Headers list size: [{}]", headerStore.size());
     }
 
     public boolean isHashesEmpty() {
-        return hashStore.isEmpty();
+        return hashStore.isEmpty() && headerStore.isEmpty();
     }
 
     public boolean isBlocksEmpty() {
@@ -311,6 +370,7 @@ public class SyncQueue {
 
     public void clearHashes() {
         hashStore.clear();
+        headerStore.clear();
     }
 
     public int hashStoreSize() {

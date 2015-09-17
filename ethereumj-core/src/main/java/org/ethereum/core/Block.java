@@ -158,7 +158,7 @@ public class Block {
 
     public byte[] getHash() {
         if (!parsed) parseRLP();
-        return HashUtil.sha3(this.header.getEncoded());
+        return this.header.getHash();
     }
 
     public byte[] getParentHash() {

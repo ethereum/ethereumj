@@ -1,10 +1,9 @@
 package org.ethereum.db;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
 import org.ethereum.datasource.mapdb.Serializers;
-import org.ethereum.util.CollectionUtils;
-import org.ethereum.util.Functional;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
@@ -213,11 +212,11 @@ public class BlockQueueImpl implements BlockQueue {
     @Override
     public void clear() {
         awaitInit();
-        synchronized(this) {
-            blocks.clear();
-            hashes.clear();
-            index.clear();
-        }
+
+        blocks.clear();
+        hashes.clear();
+        index.clear();
+
         db.commit();
     }
 
@@ -229,6 +228,20 @@ public class BlockQueueImpl implements BlockQueue {
         for (byte[] hash : hashList) {
             if (!hashes.contains(new ByteArrayWrapper(hash))) {
                 filtered.add(hash);
+            }
+        }
+
+        return filtered;
+    }
+
+    @Override
+    public List<BlockHeader> filterExistingHeaders(Collection<BlockHeader> headers) {
+        awaitInit();
+
+        List<BlockHeader> filtered = new ArrayList<>();
+        for (BlockHeader header : headers) {
+            if (!hashes.contains(new ByteArrayWrapper(header.getHash()))) {
+                filtered.add(header);
             }
         }
 
@@ -257,7 +270,7 @@ public class BlockQueueImpl implements BlockQueue {
         this.mapDBFactory = mapDBFactory;
     }
 
-    private interface Index {
+    public interface Index {
 
         void addAll(Collection<Long> nums);
 
@@ -276,7 +289,7 @@ public class BlockQueueImpl implements BlockQueue {
         void clear();
     }
 
-    private class ArrayListIndex implements Index {
+    public static class ArrayListIndex implements Index {
 
         private List<Long> index;
 
