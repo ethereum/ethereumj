@@ -43,8 +43,6 @@ public class SyncManager {
     private static final long MASTER_STUCK_TIMEOUT = secondsToMillis(60);
     private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
 
-    private static final long LARGE_GAP_SIZE = 5;
-
     @Resource
     @Qualifier("syncStates")
     private Map<SyncStateName, SyncState> syncStates;
@@ -198,12 +196,7 @@ public class SyncManager {
         gapBlock = wrapper;
         int gap = gapSize(wrapper);
 
-        if (gap >= LARGE_GAP_SIZE) {
-            changeState(HASH_RETRIEVING);
-        } else {
-            logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
-            queue.addHash(wrapper.getParentHash());
-        }
+        changeState(HASH_RETRIEVING);
     }
 
     void resetGapRecovery() {

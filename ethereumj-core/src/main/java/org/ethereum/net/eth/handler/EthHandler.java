@@ -5,7 +5,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
-import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.sync.SyncQueue;
 import org.ethereum.net.MessageQueue;
@@ -80,16 +79,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      *
      * @see Eth60
      * @see Eth61
+     * @see Eth62
      */
     protected byte[] lastHashToAsk;
     protected int maxHashesAsk;
-
-    /**
-     * Hash list sent in GET_BLOCKS message,
-     * useful if returned BLOCKS msg doesn't cover all sent hashes
-     * or in case when peer is disconnected
-     */
-    protected final List<ByteArrayWrapper> sentHashes = Collections.synchronizedList(new ArrayList<ByteArrayWrapper>());
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 
@@ -311,7 +304,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     @Override
     public void onShutdown() {
         changeState(IDLE);
-        returnHashes();
     }
 
     @Override
@@ -404,20 +396,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     public void setChannel(Channel channel) {
         this.channel = channel;
-    }
-
-    protected void returnHashes() {
-        if(loggerSync.isDebugEnabled()) loggerSync.debug(
-                "Peer {}: return [{}] hashes back to store",
-                channel.getPeerIdShort(),
-                sentHashes.size()
-        );
-
-        synchronized (sentHashes) {
-            queue.returnHashes(sentHashes);
-        }
-
-        sentHashes.clear();
     }
 
     public EthVersion getVersion() {

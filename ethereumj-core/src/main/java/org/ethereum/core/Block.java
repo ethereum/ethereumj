@@ -59,6 +59,9 @@ public class Block {
 
     /* Constructors */
 
+    private Block() {
+    }
+
     public Block(byte[] rawData) {
         logger.debug("new from [" + Hex.toHexString(rawData) + "]");
         this.rlpEncoded = rawData;
@@ -343,12 +346,16 @@ public class Block {
     }
 
 
-    private void parseTxs(byte[] expectedRoot, RLPList txTransactions) {
+    private boolean parseTxs(byte[] expectedRoot, RLPList txTransactions) {
 
         parseTxs(txTransactions);
         String calculatedRoot = Hex.toHexString(txsState.getRootHash());
-        if (!calculatedRoot.equals(Hex.toHexString(expectedRoot)))
+        if (!calculatedRoot.equals(Hex.toHexString(expectedRoot))) {
             logger.error("Transactions trie root validation failed for block #{}", this.header.getNumber());
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -426,4 +433,51 @@ public class Block {
         return Hex.toHexString(getHash()).substring(0, 6);
     }
 
+    public static class Builder {
+
+        private BlockHeader header;
+        private byte[] body;
+
+        public Builder withHeader(BlockHeader header) {
+            this.header = header;
+            return this;
+        }
+
+        public Builder withBody(byte[] body) {
+            this.body = body;
+            return this;
+        }
+
+        public Block create() {
+            if (header == null || body == null) {
+                return null;
+            }
+
+            Block block = new Block();
+            block.header = header;
+
+            RLPList items = RLP.decode2(body);
+
+            RLPList transactions = (RLPList) items.get(0);
+            RLPList uncles = (RLPList) items.get(1);
+
+            if (!block.parseTxs(header.getTxTrieRoot(), transactions)) {
+                return null;
+            }
+
+            byte[] unclesHash = HashUtil.sha3(uncles.getRLPData());
+            if (!java.util.Arrays.equals(header.getUnclesHash(), unclesHash)) {
+                return null;
+            }
+
+            for (RLPElement rawUncle : uncles) {
+
+                RLPList uncleHeader = (RLPList) rawUncle;
+                BlockHeader blockData = new BlockHeader(uncleHeader);
+                block.uncleList.add(blockData);
+            }
+
+            return block;
+        }
+    }
 }

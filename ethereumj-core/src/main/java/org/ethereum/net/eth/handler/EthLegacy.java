@@ -30,6 +30,13 @@ public abstract class EthLegacy extends EthHandler {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
+    /**
+     * Hash list sent in GET_BLOCKS message,
+     * useful if returned BLOCKS msg doesn't cover all sent hashes
+     * or in case when peer is disconnected
+     */
+    private final List<ByteArrayWrapper> sentHashes = Collections.synchronizedList(new ArrayList<ByteArrayWrapper>());
+
     protected EthLegacy(EthVersion version) {
         super(version);
     }
@@ -58,6 +65,12 @@ public abstract class EthLegacy extends EthHandler {
             default:
                 break;
         }
+    }
+
+    @Override
+    public void onShutdown() {
+        super.onShutdown();
+        returnHashes();
     }
 
     abstract protected void processBlockHashes(List<byte[]> received);
@@ -144,7 +157,7 @@ public abstract class EthLegacy extends EthHandler {
         // will return less blocks than requested.
         List<byte[]> hashes = queue.pollHashes();
         if (hashes.isEmpty()) {
-            if(logger.isInfoEnabled()) logger.info(
+            if(logger.isInfoEnabled()) logger.trace(
                     "Peer {}: no more hashes in queue, idle",
                     channel.getPeerIdShort()
             );
@@ -213,4 +226,17 @@ public abstract class EthLegacy extends EthHandler {
         sendMessage(msg);
     }
 
+    private void returnHashes() {
+        if(logger.isDebugEnabled()) logger.debug(
+                "Peer {}: return [{}] hashes back to store",
+                channel.getPeerIdShort(),
+                sentHashes.size()
+        );
+
+        synchronized (sentHashes) {
+            queue.returnHashes(sentHashes);
+        }
+
+        sentHashes.clear();
+    }
 }

@@ -248,6 +248,11 @@ public class BlockQueueImpl implements BlockQueue {
         return filtered;
     }
 
+    @Override
+    public boolean isBlockExist(byte[] hash) {
+        return hashes.contains(new ByteArrayWrapper(hash));
+    }
+
     private void awaitInit() {
         initLock.lock();
         try {

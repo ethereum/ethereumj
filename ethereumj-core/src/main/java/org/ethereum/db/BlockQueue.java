@@ -32,4 +32,6 @@ public interface BlockQueue extends DiskStore {
     List<byte[]> filterExisting(Collection<byte[]> hashes);
 
     List<BlockHeader> filterExistingHeaders(Collection<BlockHeader> headers);
+
+    boolean isBlockExist(byte[] hash);
 }

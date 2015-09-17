@@ -377,6 +377,10 @@ public class SyncQueue {
         return hashStore.size();
     }
 
+    public int headerStoreSize() {
+        return headerStore.size();
+    }
+
     /**
      * Checks whether BlockQueue contains solid blocks or not. <br>
      * Block is assumed to be solid in two cases:
@@ -392,6 +396,17 @@ public class SyncQueue {
     public boolean hasSolidBlocks() {
         BlockWrapper wrapper = blockQueue.peek();
         return wrapper != null && wrapper.isSolidBlock();
+    }
+
+    /**
+     * Checks if block exists in the queue
+     *
+     * @param hash block hash
+     *
+     * @return true if block exists, false otherwise
+     */
+    public boolean isBlockExist(byte[] hash) {
+        return blockQueue.isBlockExist(hash);
     }
 
     /**
