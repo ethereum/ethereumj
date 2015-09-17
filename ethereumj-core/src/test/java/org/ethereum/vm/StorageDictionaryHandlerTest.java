@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.db.StorageDictionaryDb;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -34,9 +35,9 @@ public class StorageDictionaryHandlerTest {
                 new DataWord(Hex.decode("0000000000000000000000000d82cd113dc35ddda93f38166cd5cde8b88e36a1")));
         sk.vmEndPlayNotify(null);
 
-        System.out.println(sk.hashes.values());
-
-        System.out.println(sk.keysPath.dump());
+//        System.out.println(sk.hashes.values());
+//
+//        System.out.println(sk.keysPath.dump());
     }
 
     @Test
@@ -55,6 +56,6 @@ public class StorageDictionaryHandlerTest {
                 new DataWord(Hex.decode("3137326142713267314b38327174626745755876384b63443342453531346258")));
         sk.vmEndPlayNotify(null);
 
-        System.out.println(sk.keysPath.dump());
+//        System.out.println(sk.keysPath.dump());
     }
 }

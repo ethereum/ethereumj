@@ -1171,7 +1171,7 @@ public class VM {
             }
 
             if (storageDictHandler != null) {
-                ContractDetails details = program.getResult().getRepository()
+                ContractDetails details = program.getStorage()
                         .getContractDetails(program.getOwnerAddress().getLast20Bytes());
                 storageDictHandler.vmEndPlayNotify(details);
             }

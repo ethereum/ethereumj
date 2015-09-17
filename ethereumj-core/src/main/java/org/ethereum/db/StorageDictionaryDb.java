@@ -16,6 +16,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -55,7 +56,7 @@ public class StorageDictionaryDb {
         @Override
         public StorageDictionary deserialize(DataInput in, int available) throws IOException {
             byte[] bytes = BYTE_ARRAY.deserialize(in, available);
-            String json = VMUtils.decompress(bytes);
+            String json = new String(VMUtils.decompress(bytes), StandardCharsets.UTF_8);
             return StorageDictionary.deserializeFromJson(json);
         }
     };

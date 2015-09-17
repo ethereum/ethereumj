@@ -83,7 +83,8 @@ public class StorageDictionary {
             if (path.length == 0) {
                 if (this.hashKey != null) {
                     if (!this.hashKey.equals(key)) {
-                        throw new RuntimeException("Shouldn't happen: different keys");
+                        // throw new RuntimeException("Shouldn't happen: different keys");
+                        // actually may happen to non-Solidity contracts, so just ignore
                     }
                 } else {
                     this.hashKey = key;
