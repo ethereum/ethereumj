@@ -50,9 +50,10 @@ public class StorageDictionary {
 
     public enum Type {
         Root,
-        StorageIndex,
-        Offset,//  the same as ArrayIndex,
-        MapKey
+        StorageIndex,  // top-level Contract field index
+        Offset,   // Either Offset in struct, or index in static array or both combined
+        ArrayIndex,  // dynamic array index
+        MapKey   // the key of the 'mapping'
     }
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -156,7 +157,7 @@ public class StorageDictionary {
         @Override
         public int compareTo(PathElement o) {
             if (type != o.type) return type.compareTo(o.type);
-            if (type == Type.Offset || type == Type.StorageIndex) {
+            if (type == Type.Offset || type == Type.StorageIndex || type == Type.ArrayIndex) {
                 try {
                     return new BigInteger(key, 16).compareTo(new BigInteger(o.key, 16));
                 } catch (NumberFormatException e) {
@@ -187,24 +188,36 @@ public class StorageDictionary {
         public String toString() {
             if (type == Type.Root) return "ROOT";
             if (type == Type.StorageIndex) return "." + key;
+            if (type == Type.Offset) return "+" + key;
             if (type == Type.MapKey) return "('" + key + "')";
             return "[" + key + "]";
         }
 
-        public String toString(ContractDetails storage, int indent) {
-            String s =  (hashKey == null ? Util.repeat(" ", 64) : hashKey) + " : " +
-                    Util.repeat("  ", indent) + this;
+        public String toString(ContractDetails storage, int indent, boolean collapseChild) {
+            String s = "";
+            if (!collapseChild) {
+                s = (hashKey == null ? Util.repeat(" ", 64) : hashKey) + " : " +
+                        Util.repeat("  ", indent) + this;
+            }
+
             if (hashKey != null && storage != null) {
                 DataWord data = storage.get(hashKey);
                 s += " = " + (data == null ? "<null>" : StorageDictionaryHandler.guessValue(data.getData()));
             }
-            s += "\n";
-            int limit = 50;
-            for (PathElement child : children.values()) {
-                s += child.toString(storage, indent + 1);
-                if (limit-- <= 0) {
-                    s += "\n             [Total: " + children.size() + " Rest skipped]";
-                    break;
+
+            SortedMap<PathElement, PathElement> children = this.children;
+            if (this.children.size() == 1 && this.children.values().iterator().next().type == Type.Offset) {
+                // the only child with offset +0
+                s += this.children.values().iterator().next().toString(storage, indent, true);
+            } else {
+                s += "\n";
+                int limit = 50;
+                for (PathElement child : children.values()) {
+                    s += child.toString(storage, indent + 1, false);
+                    if (limit-- <= 0) {
+                        s += "\n             [Total: " + children.size() + " Rest skipped]";
+                        break;
+                    }
                 }
             }
             return s;
@@ -224,7 +237,7 @@ public class StorageDictionary {
     }
 
     public String dump(ContractDetails storage) {
-        return root.toString(storage, 0);
+        return root.toString(storage, 0, false);
     }
 
     public String dump() {

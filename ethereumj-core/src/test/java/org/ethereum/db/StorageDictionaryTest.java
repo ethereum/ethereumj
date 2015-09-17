@@ -51,7 +51,7 @@ public class StorageDictionaryTest {
         System.out.println(s);
 
         StorageDictionary.PathElement root = om.readValue(s, StorageDictionary.PathElement.class);
-        System.out.println(root.toString(null, 0));
+        System.out.println(root.toString(null, 0, false));
     }
 
     @Test

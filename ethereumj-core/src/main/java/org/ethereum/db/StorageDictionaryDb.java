@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static java.lang.System.getProperty;
 
@@ -135,15 +137,6 @@ public class StorageDictionaryDb {
         logger.debug("Update storage dictionary for contract " + Hex.toHexString(contractAddress));
         if (!keys.isValid()) {
             getLayoutTable(layout).put(new ByteArrayWrapper(contractAddress), keys);
-            File f = new File("json");
-            f.mkdirs();
-            f = new File(f, Hex.toHexString(contractAddress) + ".json");
-            ObjectMapper om = new ObjectMapper();
-            try {
-                om.writerWithDefaultPrettyPrinter().writeValue(f, keys.root);
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
 
             logger.debug("Storage dictionary changed. Committing to DB: " + Hex.toHexString(contractAddress));
 

@@ -127,12 +127,13 @@ public class StorageDictionaryHandler {
             storageIndex[0].type = StorageDictionary.Type.StorageIndex;
             return  storageIndex;
         } else {
-            byte[] subKey = Arrays.copyOfRange(entry.input, 0, entry.input.length - 32);
+            byte[] subKey = Arrays.copyOfRange(entry.input, 0, entry.input.length - 32); // subkey.length == 0 for dyn arrays
             long offset = new BigInteger(key).subtract(new BigInteger(entry.hashValue.clone().getData())).longValue();
             return Utils.mergeArrays(
                     getKeyOriginSolidity(Arrays.copyOfRange(entry.input, entry.input.length - 32, entry.input.length)),
                     guessPathElement(subKey),
-                    new StorageDictionary.PathElement[] {new StorageDictionary.PathElement(StorageDictionary.Type.Offset, (int) offset)});
+                    new StorageDictionary.PathElement[] {new StorageDictionary.PathElement
+                            (subKey.length == 0 ? StorageDictionary.Type.ArrayIndex : StorageDictionary.Type.Offset, (int) offset)});
         }
     }
 
