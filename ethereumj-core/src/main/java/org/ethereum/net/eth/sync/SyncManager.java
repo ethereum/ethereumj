@@ -181,6 +181,13 @@ public class SyncManager {
     }
 
     public void onDisconnect(Channel peer) {
+
+        // if master peer has been disconnected
+        // we need to process data it sent
+        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
+            changeState(BLOCK_RETRIEVING);
+        }
+
         pool.onDisconnect(peer);
     }
 

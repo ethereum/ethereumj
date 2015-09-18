@@ -38,11 +38,15 @@ public class HashRetrievingState extends AbstractSyncState {
         }
 
         if (master != null) {
-            // if master is stuck ban it and try to start a new one
+            // if master is stuck ban it and process data it sent
             if(syncManager.isPeerStuck(master)) {
                 syncManager.pool.ban(master);
                 logger.info("Master peer {}: banned due to stuck timeout exceeding", master.getPeerIdShort());
-                master = null;
+
+                // let's see what do we have
+                // before proceed with HASH_RETRIEVING
+                syncManager.changeState(BLOCK_RETRIEVING);
+                return;
             }
         }
 
