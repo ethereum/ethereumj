@@ -38,18 +38,30 @@ public class HashRetrievingState extends AbstractSyncState {
         }
 
         if (master != null) {
-            // if master is stuck ban it and try to start a new one
+            // if master is stuck ban it and process data it sent
             if(syncManager.isPeerStuck(master)) {
-                master.changeSyncState(IDLE);
                 syncManager.pool.ban(master);
                 logger.info("Master peer {}: banned due to stuck timeout exceeding", master.getPeerIdShort());
-                master = null;
+
+                // let's see what do we have
+                // before proceed with HASH_RETRIEVING
+                syncManager.changeState(BLOCK_RETRIEVING);
+                return;
             }
         }
 
         if (master == null) {
             logger.trace("HASH_RETRIEVING is in progress, starting master peer");
-            master = syncManager.pool.getBest();
+
+            // recovering gap with gap block peer
+            if (syncManager.getGapBlock() != null) {
+                master = syncManager.pool.getByNodeId(syncManager.getGapBlock().getNodeId());
+            }
+
+            if (master == null) {
+                master = syncManager.pool.getBest();
+            }
+
             if (master == null) {
                 return;
             }

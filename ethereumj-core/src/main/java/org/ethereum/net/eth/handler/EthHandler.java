@@ -82,7 +82,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * @see Eth62
      */
     protected byte[] lastHashToAsk;
-    protected int maxHashesAsk;
+    protected int maxHashesAsk = CONFIG.maxHashesAsk();
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 

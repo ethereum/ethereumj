@@ -49,7 +49,7 @@ public class Eth61 extends EthLegacy {
      * and trying to jump back to canonical chain
      */
     // TODO: we need to handle bad peers somehow, cause it may revert us to the very beginning
-    private boolean forkCovered = false;
+    private boolean commonAncestorFound = false;
 
     public Eth61() {
         super(V61);
@@ -71,7 +71,7 @@ public class Eth61 extends EthLegacy {
             return;
         }
 
-        if (!forkCovered) {
+        if (!commonAncestorFound) {
             maintainForkCoverage(received);
             return;
         }
@@ -85,7 +85,7 @@ public class Eth61 extends EthLegacy {
                 return;
             }
 
-        long blockNumber = lastAskedNumber + min(received.size(), maxHashesAsk);
+        long blockNumber = lastAskedNumber + received.size();
         sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);
     }
 
@@ -116,7 +116,7 @@ public class Eth61 extends EthLegacy {
     @Override
     protected void startHashRetrieving() {
 
-        forkCovered = true;
+        commonAncestorFound = true;
         long bestNumber = blockchain.getBestBlock().getNumber();
 
         if (bestNumber > 0) {
@@ -140,9 +140,9 @@ public class Eth61 extends EthLegacy {
 
     private void startForkCoverage() {
 
-        forkCovered = false;
+        commonAncestorFound = false;
 
-        logger.trace("Peer {}: check if our chain is on the fork", channel.getPeerIdShort());
+        logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
 
         long bestNumber = blockchain.getBestBlock().getNumber();
         long blockNumber = max(1, bestNumber - FORK_COVER_BATCH_SIZE);
@@ -161,17 +161,26 @@ public class Eth61 extends EthLegacy {
             while (it.hasPrevious()) {
                 byte[] hash = it.previous();
                 if (blockchain.isBlockExist(hash)) {
-                    forkCovered = true;
+                    commonAncestorFound = true;
                     Block block = blockchain.getBlockByHash(hash);
                     blockNumber = block.getNumber() + 1;
+
+                    logger.trace(
+                            "Peer {}: common ancestor found: block.number {}, block.hash {}",
+                            channel.getPeerIdShort(),
+                            block.getNumber(),
+                            block.getShortHash()
+                    );
+
+                    break;
                 }
             }
 
         } else {
-            forkCovered = true;
+            commonAncestorFound = true;
         }
 
-        if (forkCovered) {
+        if (commonAncestorFound) {
 
             // start hash sync
             sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);
@@ -179,7 +188,7 @@ public class Eth61 extends EthLegacy {
         } else {
 
             // continue fork coverage
-            logger.trace("Peer {}: fork is not covered yet");
+            logger.trace("Peer {}: common ancestor is not found yet", channel.getPeerIdShort());
             sendGetBlockHashesByNumber(blockNumber, FORK_COVER_BATCH_SIZE);
 
         }

@@ -17,6 +17,7 @@ import java.util.List;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
+import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -119,7 +120,19 @@ public abstract class EthLegacy extends EthHandler {
         }
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
-        syncStats.addHashes(receivedHashes.size());
+
+        // if we are near to the end of peer's chain
+        // and peer doesn't have blocks we're required in
+        // then just stop hash retrieving,
+        //
+        // otherwise it will be banned by SyncManager
+        // cause we've caught an empty response
+        if (receivedHashes.isEmpty() && blockchain.isBlockExist(bestHash)) {
+            changeState(DONE_HASH_RETRIEVING);
+        } else {
+            syncStats.addHashes(receivedHashes.size());
+            processBlockHashes(receivedHashes);
+        }
 
         processBlockHashes(receivedHashes);
 
@@ -204,6 +217,14 @@ public abstract class EthLegacy extends EthHandler {
         returnHashes();
 
         if(!blockList.isEmpty()) {
+
+            // update TD and best hash
+            for (Block block : blockList)
+                if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
+                    bestHash = block.getHash();
+                    channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
+                }
+
             queue.addAndValidate(blockList, channel.getNodeId());
             queue.logHashesSize();
         } else {

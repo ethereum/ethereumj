@@ -40,7 +40,7 @@ public class SyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private static final long WORKER_TIMEOUT = secondsToMillis(1);
-    private static final long MASTER_STUCK_TIMEOUT = secondsToMillis(60);
+    private static final long PEER_STUCK_TIMEOUT = secondsToMillis(60);
     private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
 
     @Resource
@@ -179,6 +179,13 @@ public class SyncManager {
     }
 
     public void onDisconnect(Channel peer) {
+
+        // if master peer has been disconnected
+        // we need to process data it sent
+        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
+            changeState(BLOCK_RETRIEVING);
+        }
+
         pool.onDisconnect(peer);
     }
 
@@ -197,6 +204,10 @@ public class SyncManager {
         int gap = gapSize(wrapper);
 
         changeState(HASH_RETRIEVING);
+    }
+
+    public BlockWrapper getGapBlock() {
+        return gapBlock;
     }
 
     void resetGapRecovery() {
@@ -236,7 +247,6 @@ public class SyncManager {
 
         logger.info("Peer {}: received invalid block, drop it", peer.getPeerIdShort());
 
-        peer.changeSyncState(IDLE);
         pool.ban(peer);
 
         // TODO decrease peer's reputation
@@ -300,7 +310,7 @@ public class SyncManager {
     boolean isPeerStuck(Channel peer) {
         SyncStatistics stats = peer.getSyncStats();
 
-        return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
+        return stats.millisSinceLastUpdate() > PEER_STUCK_TIMEOUT
                 || stats.getEmptyResponsesCount() > 0;
     }
 
@@ -308,11 +318,8 @@ public class SyncManager {
         pool.changeState(IDLE);
 
         if (gapBlock != null) {
-            int gap = gapSize(gapBlock);
-            master.setMaxHashesAsk(gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : gap);
             master.setLastHashToAsk(gapBlock.getParentHash());
         } else {
-            master.setMaxHashesAsk(CONFIG.maxHashesAsk());
             master.setLastHashToAsk(master.getBestKnownHash());
             queue.clearHashes();
         }
