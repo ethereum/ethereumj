@@ -27,6 +27,7 @@ import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -242,8 +243,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             return;
         }
 
-        this.bestHash = hashes.get(hashes.size() - 1);
-
         queue.addNewBlockHashes(hashes);
     }
 
@@ -391,6 +390,14 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         returnHashes();
 
         if(!blockList.isEmpty()) {
+
+            // update TD and best hash
+            for (Block block : blockList)
+                if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
+                    bestHash = block.getHash();
+                    channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
+                }
+
             queue.addBlocks(blockList, channel.getNodeId());
             queue.logHashQueueSize();
         } else {
