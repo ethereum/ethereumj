@@ -11,7 +11,6 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -244,7 +243,6 @@ public class SyncManager {
 
         logger.info("Peer {}: received invalid block, drop it", peer.getPeerIdShort());
 
-        peer.changeSyncState(IDLE);
         pool.ban(peer);
 
         // TODO decrease peer's reputation

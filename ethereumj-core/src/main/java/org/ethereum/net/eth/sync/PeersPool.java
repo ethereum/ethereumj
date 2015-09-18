@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.ethereum.net.eth.sync.SyncStateName.IDLE;
 import static org.ethereum.util.TimeUtils.*;
 
 /**
@@ -155,6 +156,9 @@ public class PeersPool implements Iterable<Channel> {
     }
 
     public void ban(Channel peer) {
+
+        peer.changeSyncState(IDLE);
+
         synchronized (activePeers) {
             if (activePeers.containsKey(peer.getNodeIdWrapper())) {
                 activePeers.remove(peer.getNodeIdWrapper());
