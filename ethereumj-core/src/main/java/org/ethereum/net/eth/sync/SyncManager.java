@@ -314,11 +314,8 @@ public class SyncManager {
         pool.changeState(IDLE);
 
         if (gapBlock != null) {
-            int gap = gapSize(gapBlock);
-            master.setMaxHashesAsk(gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : gap);
             master.setLastHashToAsk(gapBlock.getParentHash());
         } else {
-            master.setMaxHashesAsk(CONFIG.maxHashesAsk());
             master.setLastHashToAsk(master.getBestKnownHash());
             queue.clearHashes();
         }

@@ -85,7 +85,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * @see Eth61
      */
     protected byte[] lastHashToAsk;
-    protected int maxHashesAsk;
+    protected int maxHashesAsk = CONFIG.maxHashesAsk();
 
     /**
      * Hash list sent in GET_BLOCKS message,
