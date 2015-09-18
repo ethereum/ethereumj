@@ -404,10 +404,15 @@ public class SyncManager {
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                pool.logActivePeers();
-                pool.logBannedPeers();
-                logger.info("\n");
-                logger.info("State {}\n", state);
+                try {
+                    pool.logActivePeers();
+                    pool.logBannedPeers();
+                    logger.info("\n");
+                    logger.info("State {}\n", state);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    logger.error("Exception in log worker", t);
+                }
             }
         }, 0, 30, TimeUnit.SECONDS);
     }
