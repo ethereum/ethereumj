@@ -70,6 +70,9 @@ public class PeersPool implements Iterable<Channel> {
         synchronized (pendingConnections) {
             pendingConnections.remove(peer.getPeerId());
         }
+        synchronized (bans) {
+            bans.remove(peer.getPeerId());
+        }
 
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
     }
