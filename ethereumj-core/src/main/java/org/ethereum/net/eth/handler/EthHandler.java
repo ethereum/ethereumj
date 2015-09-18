@@ -243,6 +243,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             return;
         }
 
+        bestHash = hashes.get(hashes.size() - 1);
+
         queue.addNewBlockHashes(hashes);
     }
 
@@ -305,9 +307,19 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
-        syncStats.addHashes(receivedHashes.size());
 
-        processBlockHashes(receivedHashes);
+        // if we are near to the end of peer's chain
+        // and peer doesn't have blocks we're required in
+        // then just stop hash retrieving,
+        //
+        // otherwise it will be banned by SyncManager
+        // cause we've caught an empty response
+        if (receivedHashes.isEmpty() && blockchain.isBlockExist(bestHash)) {
+            changeState(DONE_HASH_RETRIEVING);
+        } else {
+            syncStats.addHashes(receivedHashes.size());
+            processBlockHashes(receivedHashes);
+        }
 
         if (loggerSync.isInfoEnabled()) {
             if (syncState == DONE_HASH_RETRIEVING) {
