@@ -305,9 +305,13 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
-        syncStats.addHashes(receivedHashes.size());
 
-        processBlockHashes(receivedHashes);
+        if (receivedHashes.isEmpty()) {
+            changeState(DONE_HASH_RETRIEVING);
+        } else {
+            syncStats.addHashes(receivedHashes.size());
+            processBlockHashes(receivedHashes);
+        }
 
         if (loggerSync.isInfoEnabled()) {
             if (syncState == DONE_HASH_RETRIEVING) {
