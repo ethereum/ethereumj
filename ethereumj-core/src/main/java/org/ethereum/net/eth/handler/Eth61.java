@@ -73,7 +73,7 @@ public class Eth61 extends EthHandler {
                 return;
             }
 
-        long blockNumber = lastAskedNumber + min(received.size(), maxHashesAsk);
+        long blockNumber = lastAskedNumber + received.size();
         sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);
     }
 
