@@ -213,6 +213,10 @@ public class SyncManager {
         }
     }
 
+    public BlockWrapper getGapBlock() {
+        return gapBlock;
+    }
+
     void resetGapRecovery() {
         this.gapBlock = null;
     }
