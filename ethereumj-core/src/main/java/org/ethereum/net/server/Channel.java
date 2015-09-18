@@ -302,4 +302,20 @@ public class Channel {
     public EthVersion getEthVersion() {
         return eth.getVersion();
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Channel channel = (Channel) o;
+
+        return !(node != null ? !node.equals(channel.node) : channel.node != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return node != null ? node.hashCode() : 0;
+    }
 }

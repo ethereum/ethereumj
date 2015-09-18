@@ -67,6 +67,7 @@ public class PeersPool implements Iterable<Channel> {
     public void add(Channel peer) {
         synchronized (activePeers) {
             activePeers.put(peer.getNodeIdWrapper(), peer);
+            bannedPeers.remove(peer);
         }
         synchronized (pendingConnections) {
             pendingConnections.remove(peer.getPeerId());
