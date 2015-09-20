@@ -43,7 +43,7 @@ public class SyncManager {
     private static final long PEER_STUCK_TIMEOUT = secondsToMillis(60);
     private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
 
-    private static final long LARGE_GAP_SIZE = 5;
+    private static final long LARGE_GAP_SIZE = 3;
 
     @Resource
     @Qualifier("syncStates")
