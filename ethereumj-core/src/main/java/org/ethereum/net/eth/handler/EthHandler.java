@@ -74,6 +74,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     private int blocksLackHits = 0;
 
     protected SyncStateName syncState = IDLE;
+    protected boolean syncDone = false;
     protected boolean processTransactions = true;
 
     protected byte[] bestHash;
@@ -308,13 +309,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
 
-        // if we are near to the end of peer's chain
-        // and peer doesn't have blocks we're required in
-        // then just stop hash retrieving,
-        //
-        // otherwise it will be banned by SyncManager
-        // cause we've caught an empty response
-        if (receivedHashes.isEmpty() && blockchain.isBlockExist(bestHash)) {
+        // treat empty hashes response as end of hash sync
+        // only if main sync done
+        if (receivedHashes.isEmpty() && syncDone) {
             changeState(DONE_HASH_RETRIEVING);
         } else {
             syncStats.addHashes(receivedHashes.size());
@@ -590,6 +587,16 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         return syncStats;
     }
 
+    @Override
+    public EthVersion getVersion() {
+        return version;
+    }
+
+    @Override
+    public void onSyncDone() {
+        syncDone = true;
+    }
+
     public StatusMessage getHandshakeStatusMessage() {
         return channel.getNodeStatistics().getEthLastInboundStatusMsg();
     }
@@ -618,10 +625,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         sentHashes.clear();
-    }
-
-    public EthVersion getVersion() {
-        return version;
     }
 
     enum EthState {
