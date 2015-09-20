@@ -74,7 +74,7 @@ public class BlockHeader {
     private byte[] nonce;
 
     public BlockHeader(byte[] encoded) {
-        this(RLP.decode2(encoded));
+        this((RLPList) RLP.decode2(encoded).get(0));
     }
 
     public BlockHeader(RLPList rlpHeader) {

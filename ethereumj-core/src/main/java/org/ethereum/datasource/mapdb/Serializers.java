@@ -18,7 +18,7 @@ import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
  */
 public class Serializers {
 
-    public static final Serializer<BlockHeader> BLOCK_HEADER_SERIALIZER = new Serializer<BlockHeader>() {
+    public static final Serializer<BlockHeader> BLOCK_HEADER = new Serializer<BlockHeader>() {
 
         @Override
         public void serialize(DataOutput out, BlockHeader header) throws IOException {

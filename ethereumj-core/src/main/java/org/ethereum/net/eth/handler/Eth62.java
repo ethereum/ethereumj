@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
 
@@ -36,8 +37,8 @@ public class Eth62 extends EthHandler {
      */
     protected final List<BlockHeader> sentHeaders = Collections.synchronizedList(new ArrayList<BlockHeader>());
 
-    public Eth62(EthVersion version) {
-        super(version);
+    public Eth62() {
+        super(V62);
     }
 
     @Override

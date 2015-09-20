@@ -2,6 +2,7 @@ package org.ethereum.db;
 
 import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.mapdb.MapDBFactory;
+import org.ethereum.datasource.mapdb.Serializers;
 import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
@@ -45,7 +46,7 @@ public class HeaderStoreImpl implements HeaderStore {
                     db = mapDBFactory.createTransactionalDB(dbName());
                     headers = db.hashMapCreate(STORE_NAME)
                             .keySerializer(Serializer.LONG)
-                            .valueSerializer(Serializer.BYTE_ARRAY)
+                            .valueSerializer(Serializers.BLOCK_HEADER)
                             .makeOrGet();
 
                     if(CONFIG.databaseReset()) {

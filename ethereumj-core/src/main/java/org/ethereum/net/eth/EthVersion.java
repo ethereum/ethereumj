@@ -16,7 +16,7 @@ public enum EthVersion {
     V62((byte) 62);
 
     public static final byte LOWER = V60.getCode();
-    public static final byte UPPER = V61.getCode();
+    public static final byte UPPER = V62.getCode();
 
     private byte code;
 

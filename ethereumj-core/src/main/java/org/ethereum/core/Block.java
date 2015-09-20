@@ -455,8 +455,9 @@ public class Block {
 
             Block block = new Block();
             block.header = header;
+            block.parsed = true;
 
-            RLPList items = RLP.decode2(body);
+            RLPList items = (RLPList) RLP.decode2(body).get(0);
 
             RLPList transactions = (RLPList) items.get(0);
             RLPList uncles = (RLPList) items.get(1);

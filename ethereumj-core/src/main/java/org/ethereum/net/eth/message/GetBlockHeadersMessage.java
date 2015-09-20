@@ -162,6 +162,6 @@ public class GetBlockHeadersMessage extends EthMessage {
                 " blockHash=" + ByteUtil.toHexString(blockHash) +
                 " maxHeaders=" + maxHeaders +
                 " skipBlocks=" + skipBlocks +
-                " revers=" + reverse + "]";
+                " reverse=" + reverse + "]";
     }
 }
