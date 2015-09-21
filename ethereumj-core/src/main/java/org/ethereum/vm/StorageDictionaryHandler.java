@@ -211,7 +211,7 @@ public class StorageDictionaryHandler {
                 f = new File(f, Hex.toHexString(contractAddress) + ".sol.txt");
                 try {
                     BufferedWriter w = new BufferedWriter(new FileWriter(f));
-                    String s = solidityDict.dump(storage);
+                    String s = solidityDict.compactAndFilter(null).dump(storage);
                     w.write(s);
                     w.close();
                 } catch (Exception e) {
