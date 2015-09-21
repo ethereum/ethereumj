@@ -214,14 +214,24 @@ public abstract class EthLegacy extends EthHandler {
 
         if(!blockList.isEmpty()) {
 
-            // update TD and best hash
-            for (Block block : blockList)
+            List<Block> regularBlocks = new ArrayList<>(blockList.size());
+
+            for (Block block : blockList) {
+
+                // update TD and best hash
                 if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
                     bestHash = block.getHash();
                     channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
                 }
 
-            queue.addAndValidate(blockList, channel.getNodeId());
+                if (block.getNumber() < newBlockLowerNumber) {
+                    regularBlocks.add(block);
+                } else {
+                    queue.addNew(block, channel.getNodeId());
+                }
+            }
+
+            queue.addAndValidate(regularBlocks, channel.getNodeId());
             queue.logHashesSize();
         } else {
             changeState(BLOCKS_LACK);

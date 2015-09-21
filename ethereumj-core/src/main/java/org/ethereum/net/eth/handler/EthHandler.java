@@ -87,6 +87,12 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected final SyncStatistics syncStats = new SyncStatistics();
 
+    /**
+     * The number above which blocks are treated as NEW,
+     * filled by data gained from NewBlockHashes and NewBlock messages
+     */
+    protected long newBlockLowerNumber = Long.MAX_VALUE;
+
     protected EthHandler(EthVersion version) {
         this.version = version;
     }
@@ -234,6 +240,10 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         // there will be decided how to
         // connect it to the chain
         queue.addNew(newBlock, channel.getNodeId());
+
+        if (newBlockLowerNumber == Long.MAX_VALUE) {
+            newBlockLowerNumber = newBlock.getNumber();
+        }
     }
 
     protected void sendMessage(EthMessage message) {
