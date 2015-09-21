@@ -6,35 +6,19 @@ import org.ethereum.vm.DataWord;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mapdb.HTreeMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Map;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /**
  * Created by Anton Nashatyrev on 10.09.2015.
  */
 public class StorageDictionaryTest {
-
-    enum E {A, B}
-    public static class T {
-        public E e;
-    }
-    @Test
-    public void jsonTest() throws IOException {
-        T t = new T();
-        t.e = E.A;
-
-        ObjectMapper om = new ObjectMapper();
-        String s = om.writerWithDefaultPrettyPrinter().writeValueAsString(t);
-
-        System.out.println(s);
-
-        T t1 = om.readValue(s, T.class);
-        System.out.println(t1);
-    }
+    private static final Logger logger = LoggerFactory.getLogger("test");
 
     @Test
     public void simpleTest() throws Exception {
@@ -43,15 +27,15 @@ public class StorageDictionaryTest {
         kp.addPath(new DataWord("1112"), createPath("a/b1"));
         kp.addPath(new DataWord("1113"), createPath("a/b1/c2"));
         kp.addPath(new DataWord("1114"), createPath("a/b2/c1"));
-        System.out.println(kp.dump());
+        logger.info(kp.dump());
 
         ObjectMapper om = new ObjectMapper();
         String s = om.writerWithDefaultPrettyPrinter().writeValueAsString(kp.root);
 
-        System.out.println(s);
+        logger.info(s);
 
         StorageDictionary.PathElement root = om.readValue(s, StorageDictionary.PathElement.class);
-        System.out.println(root.toString(null, 0, false));
+        logger.info(root.toString(null, 0));
     }
 
     @Test
@@ -61,7 +45,7 @@ public class StorageDictionaryTest {
         kp.addPath(new DataWord("1112"), createPath("a/b1"));
         kp.addPath(new DataWord("1113"), createPath("a/b1/c2"));
         kp.addPath(new DataWord("1114"), createPath("a/b2/c1"));
-        System.out.println(kp.dump());
+        logger.info(kp.dump());
 
         StorageDictionaryDb db = StorageDictionaryDb.INST;
 //        StorageDictionaryDb db = new StorageDictionaryDb();
@@ -89,11 +73,101 @@ public class StorageDictionaryTest {
 
         StorageDictionary kp1 = db.get(StorageDictionaryDb.Layout.Solidity, contractAddr);
 
-        System.out.println(kp1.dump());
+        logger.info(kp1.dump());
 
         Assert.assertEquals(kp.root, kp1.root);
         db.close();
         db.init();
+    }
+
+    @Test
+    public void compactTest() {
+        {
+            StorageDictionary.PathElement field1 = new StorageDictionary.PathElement(StorageDictionary.Type.StorageIndex, 0);
+
+            StorageDictionary.PathElement key1 = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, 111);
+            StorageDictionary.PathElement key2 = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, 222);
+
+            StorageDictionary.PathElement val11 = new StorageDictionary.PathElement(StorageDictionary.Type.Offset, 0);
+            StorageDictionary.PathElement val12 = new StorageDictionary.PathElement(StorageDictionary.Type.Offset, 0);
+
+            StorageDictionary d = new StorageDictionary();
+            d.addPath(new DataWord(0x7000), new StorageDictionary.PathElement[]{
+                    field1, key1, val11});
+            d.addPath(new DataWord(0x7001), new StorageDictionary.PathElement[]{field1, key2, val12});
+
+            logger.info("\n" + d.root.toString(null, 0));
+            logger.info("\n" + d.root.toString(null, 0));
+
+            List<StorageDictionary.PathElement> childrenCompacted = d.compactAndFilter(null).getByPath("0").getChildren();
+            Assert.assertEquals(childrenCompacted.get(0).getHashKey(), val11.getHashKey());
+            Assert.assertEquals(childrenCompacted.get(1).getHashKey(), val12.getHashKey());
+            Assert.assertNull(childrenCompacted.get(0).getChildren());
+        }
+
+        {
+            StorageDictionary.PathElement field1 = new StorageDictionary.PathElement(StorageDictionary.Type.StorageIndex, 0);
+
+            StorageDictionary.PathElement key1 = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, 111);
+            StorageDictionary.PathElement key2 = new StorageDictionary.PathElement(StorageDictionary.Type.MapKey, 222);
+
+            StorageDictionary.PathElement val11 = new StorageDictionary.PathElement(StorageDictionary.Type.Offset, 0);
+            StorageDictionary.PathElement val12 = new StorageDictionary.PathElement(StorageDictionary.Type.Offset, 0);
+            StorageDictionary.PathElement val2 = new StorageDictionary.PathElement(StorageDictionary.Type.Offset, 1);
+
+            StorageDictionary d = new StorageDictionary();
+            d.addPath(new DataWord(0x7000), new StorageDictionary.PathElement[]{field1, key1, val11});
+            d.addPath(new DataWord(0x7001), new StorageDictionary.PathElement[]{field1, key2, val2});
+
+            logger.info("\n" + d.root.toString(null, 0));
+            logger.info("\n" + d.root.toString(null, 0));
+
+            Assert.assertNotNull(d.getByPath("0", "111", "0"));
+            Assert.assertNotNull(d.getByPath("0", "222", "1"));
+        }
+
+    }
+
+    @Test
+    public void compactFilterTest() throws Exception {
+        StorageDictionary dict = StorageDictionary.deserializeFromJson(getClass().getResourceAsStream("/db/StorageDictionaryTest_1.json"));
+        logger.info("Raw dictionary:\n" + dict.dump());
+        StorageDictionary dictNoFilter = dict.compactAndFilter(null);
+        logger.info("Compacted dictionary:\n" + dictNoFilter.dump());
+        StorageDictionary.PathElement root = dictNoFilter.getByPath();
+
+        List<StorageDictionary.PathElement> children = root.getChildren(2, 2);
+        Assert.assertEquals(2, children.size());
+        Assert.assertEquals("258", children.get(0).key);
+        Assert.assertEquals("259", children.get(1).key);
+
+        children = root.getChildren(2, 100);
+        Assert.assertEquals(6, children.size());
+
+        Set<DataWord> filter = createHashKeys("00", "01", "000111", "000113", "000114", "000302", "000303", "000304",
+                "000305", "0105", "0107");
+        StorageDictionary dictFilter = dict.compactAndFilter(filter);
+        logger.info("Compacted and filtered dictionary:\n" + dictFilter.dump());
+
+        children = dictFilter.getByPath().getChildren(0, 100);
+        Assert.assertEquals(6, children.size());
+
+        children = dictFilter.getByPath("258").getChildren(1, 100);
+        Assert.assertEquals(2, children.size());
+        Assert.assertEquals("key3", children.get(0).key);
+        Assert.assertNull(children.get(0).getChildren());
+
+        for (StorageDictionary.PathElement child : children) {
+            logger.info("" + child);
+        }
+    }
+
+    static Set<DataWord> createHashKeys(String ... ss) {
+        Set<DataWord> ret = new HashSet<>();
+        for (String s : ss) {
+            ret.add(new DataWord(s));
+        }
+        return ret;
     }
 
 //    @Test
@@ -102,25 +176,21 @@ public class StorageDictionaryTest {
         HTreeMap<ByteArrayWrapper, StorageDictionary> table = db.getLayoutTable(StorageDictionaryDb.Layout.Solidity);
 
 //        StorageDictionary priceFeedContract = table.get(new ByteArrayWrapper(Hex.decode("672e330b81a6d6c4fb2a7cad28b3f2295efaab77")));
-//        System.out.println("priceFeedContract:\n" + priceFeedContract.dump());
+//        logger.info("priceFeedContract:\n" + priceFeedContract.dump());
 
 
-        System.out.println("# of contracts: " + table.size());
+        logger.info("# of contracts: " + table.size());
         for (Map.Entry<ByteArrayWrapper, StorageDictionary> e : table.entrySet()) {
             System.out.printf("======= " + e.getKey() + ":\n" + e.getValue().dump() + "\n");
         }
 
+        StorageDictionary d = db.getOrCreate(StorageDictionaryDb.Layout.Solidity, Hex.decode("de0b295669a9fd93d5f28d9ec85e40f4cb697bae"));
+        System.out.println(d.dump());
+        System.out.println(d.serializeToJson());
+
 //        StorageDictionary kp = new StorageDictionary();
 //        kp.addPath(new DataWord("1111"), createPath("a/b1/c1"));
 //        db.put(StorageDictionaryDb.Layout.Solidity, Hex.decode("abcdef"), kp);
-    }
-
-//    @Test
-    public void cantDeleteCheck() {
-        File f = new File("D:\\ws\\ethereumj\\database\\metadata\\storagedict.wal.0");
-        System.out.println(f.canRead());
-        System.out.println(f.canWrite());
-        System.out.println(f.delete());
     }
 
 //    @Test
@@ -130,7 +200,7 @@ public class StorageDictionaryTest {
         kp.addPath(new DataWord("1112"), createPath("a/b1"));
         kp.addPath(new DataWord("1113"), createPath("a/b1/c2"));
         kp.addPath(new DataWord("1114"), createPath("a/b2/c1"));
-        System.out.println(kp.dump());
+        logger.info(kp.dump());
 
         StorageDictionaryDb db = StorageDictionaryDb.INST;
 //        StorageDictionaryDb db = new StorageDictionaryDb();

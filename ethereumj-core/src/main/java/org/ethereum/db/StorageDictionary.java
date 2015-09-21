@@ -1,10 +1,13 @@
 package org.ethereum.db;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.ethereum.net.swarm.Util;
+import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.StorageDictionaryHandler;
 import org.spongycastle.util.encoders.Hex;
@@ -12,6 +15,9 @@ import org.spongycastle.util.encoders.Hex;
 import java.io.*;
 import java.math.BigInteger;
 import java.util.*;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 /**
  * Keep the information for mapping of the contract storage hashKeys into a meaningful structures
@@ -56,16 +62,29 @@ public class StorageDictionary {
         MapKey   // the key of the 'mapping'
     }
 
+    /**
+     * Class represents a tree element
+     * All leaf elements represent the actual store slots and thus have a hashKey
+     * Non-leaf elements (such as dynamic arrays) can also have a hashKey since e.g. the
+     * array length (in Solidity) is stored in the slot which represents an array
+     */
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE,
+            fieldVisibility = JsonAutoDetect.Visibility.NONE,
+            isGetterVisibility = JsonAutoDetect.Visibility.NONE)
     public static class PathElement implements Comparable<PathElement> {
 
+        @JsonProperty
         public Type type;
+        @JsonProperty
         public String key;
-
         private DataWord hashKey;
-        private final SortedMap<PathElement, PathElement> children = new TreeMap<>();
+        private SortedMap<PathElement, PathElement> children = new TreeMap<>();
+
         private transient boolean isValid = true;   // 'transient' just a marker here
         private transient PathElement parent = null;  // 'transient' just a marker here
+        private transient Boolean canCompact = null;
+        private transient List<PathElement> compactedChildren = null;
 
         public PathElement() {
         }
@@ -111,6 +130,8 @@ public class StorageDictionary {
 
         private void invalidate() {
             isValid = false;
+            canCompact = null;
+            compactedChildren = null;
             if (type != Type.Root) {
                 parent.invalidate();
             }
@@ -123,23 +144,126 @@ public class StorageDictionary {
             }
         }
 
-        @JsonIgnore
         public boolean isValid() {
             return isValid;
         }
 
+        @JsonProperty
         public String getHashKey() {
             return hashKey == null ? null : Hex.toHexString(hashKey.getData());
         }
 
+        @JsonProperty
         public void setHashKey(String hashKey) {
             this.hashKey = hashKey == null ? null : new DataWord(Hex.decode(hashKey));
         }
 
+        @JsonProperty
         public List<PathElement> getChildren() {
             return children.isEmpty() ? null : new ArrayList<>(children.values());
         }
 
+        /**
+         * Create a filtered and compacted copy of the element and its successors.
+         * Filtered means only the elements (and their predecessors) with hashKeys
+         * specified by the 'filter' remain
+         * Compacted means that the elements which have children with only a single
+         * child with type Offset and key '0' can be compacted: the meaningful
+         * children are removed from the hierarchy.
+         * E.g. the following subtree:
+         * <pre>
+         *     .1
+         *       ('aaa')
+         *          +0
+         *            [0]
+         *            [1]
+         *       ('bbb)
+         *          +0
+         *            [0]
+         * </pre>
+         * would be compacted to
+         * <pre>
+         *     .1
+         *       ('aaa')
+         *         [0]
+         *         [1]
+         *       ('bbb)
+         *         [0]
+         * </pre>
+         * The tree is not stored compacted since there is no guarantee that the
+         * '+0' elements are not actually the structures (static arrays) which
+         * other elements are just never assigned and will not be assigned in future.
+         * I.e. in the previous sample the Solidity declaration can be both
+         * 'mapping(int => int[])'  or 'mapping(int => int[2][])'
+         * In the first case the compaction is appropriate while in the second
+         * we shouldn't normally compact the tree (while it's ok for representation purpose)
+         *
+         * @param filter 'null' if not filter applied or a set of hashKeys to be left in
+         *               the tree
+         * @return  Compacted and filtered copy of the subtree
+         */
+        public PathElement copyCompactedFiltered(Set<DataWord> filter) {
+            PathElement copy = new PathElement();
+            copy.type = type;
+            copy.key = key;
+            copy.hashKey = hashKey == null ? null : hashKey.clone();
+            copy.parent = parent;
+            List<PathElement> children = getChildrenCompacted();
+            List<PathElement> filteredChildren = new ArrayList<>();
+            for (PathElement child : children) {
+                PathElement pe = child.copyCompactedFiltered(filter);
+                if (pe != null) filteredChildren.add(pe);
+            }
+            if (filteredChildren.isEmpty() && (hashKey == null ||
+                    (filter != null && !filter.contains(hashKey)))) return null;
+
+            copy.setChildren(filteredChildren);
+            return copy;
+        }
+
+        private List<PathElement> getChildrenCompacted() {
+            if (!canCompact()) return getChildren();
+            if (compactedChildren == null) {
+                compactedChildren = new ArrayList<>();
+                for (PathElement child : children.values()) {
+                    PathElement compChild = new PathElement();
+                    PathElement grandChild = child.children.values().iterator().next();
+                    compChild.type = child.type;
+                    compChild.key = child.key;
+                    compChild.hashKey = grandChild.hashKey;
+                    compChild.children = grandChild.children;
+                    compChild.parent = this;
+                    compactedChildren.add(compChild);
+                }
+            }
+            return compactedChildren;
+        }
+
+        private boolean canCompact() {
+            if (canCompact == null) {
+                canCompact = true;
+                for (PathElement child : children.values()) {
+                    if (child.children.size() != 1) {
+                        canCompact = false;
+                        break;
+                    }
+
+                    PathElement grandchild = child.children.values().iterator().next();
+                    if (grandchild.type != Type.Offset || !"0".equals(grandchild.key)) {
+                        canCompact = false;
+                        break;
+                    }
+                }
+            }
+            return canCompact;
+        }
+
+        public List<PathElement> getChildren(int from, int maxLen) {
+            List<PathElement> children = getChildren();
+            return children.subList(min(from, children.size()), min(from + maxLen, children.size()));
+        }
+
+        @JsonProperty
         public void setChildren(List<PathElement> children) {
             for (PathElement child : children) {
                 this.children.put(child, child);
@@ -152,6 +276,20 @@ public class StorageDictionary {
                 ret += element.count();
             }
             return ret;
+        }
+
+        public String[] getFullPath() {
+            if (type == Type.Root) return new String[0];
+            return Utils.mergeArrays(parent.getFullPath(), new String[] {key});
+        }
+
+        public String getContentType() {
+            List<PathElement> children = getChildren();
+            if (children == null || children.size() == 0) return "";
+            if (children.get(0).type == Type.MapKey) return "mapping";
+            if (children.get(0).type == Type.ArrayIndex) return "array";
+            if (children.get(0).type == Type.Offset) return "struct";
+            return "";
         }
 
         @Override
@@ -193,29 +331,21 @@ public class StorageDictionary {
             return "[" + key + "]";
         }
 
-        public String toString(ContractDetails storage, int indent, boolean collapseChild) {
-            String s = "";
-            if (!collapseChild) {
-                s = (hashKey == null ? Util.repeat(" ", 64) : hashKey) + " : " +
-                        Util.repeat("  ", indent) + this;
-            }
-
+        public String toString(ContractDetails storage, int indent) {
+            String s =  (hashKey == null ? Util.repeat(" ", 64) : hashKey) + " : " +
+                    Util.repeat("  ", indent) + this;
             if (hashKey != null && storage != null) {
                 DataWord data = storage.get(hashKey);
                 s += " = " + (data == null ? "<null>" : StorageDictionaryHandler.guessValue(data.getData()));
             }
-
-            SortedMap<PathElement, PathElement> children = this.children;
-            if (this.children.size() == 1 && this.children.values().iterator().next().type == Type.Offset) {
-                // the only child with offset +0
-                s += this.children.values().iterator().next().toString(storage, indent, true);
-            } else {
-                s += "\n";
-                int limit = 50;
-                for (PathElement child : children.values()) {
-                    s += child.toString(storage, indent + 1, false);
+            s += "\n";
+            int limit = 50;
+            List<PathElement> list = getChildren();
+            if (list != null) {
+                for (PathElement child : list) {
+                    s += child.toString(storage, indent + 1);
                     if (limit-- <= 0) {
-                        s += "\n             [Total: " + children.size() + " Rest skipped]";
+                        s += "\n             [Total: " + children.size() + " Rest skipped]\n";
                         break;
                     }
                 }
@@ -236,8 +366,34 @@ public class StorageDictionary {
         root.add(path, hashKey);
     }
 
+    /**
+     * Returns the tree element by its keys path
+     */
+    public synchronized PathElement getByPath(String ... path) {
+        PathElement ret = root;
+        for (String pe : path) {
+            PathElement prev = ret;
+            for (PathElement c : ret.getChildren()) {
+                if (pe.equals(c.key)) {
+                    ret = c;
+                    break;
+                }
+            }
+            if (prev == ret) return null;
+        }
+        return ret;
+    }
+
+    /**
+     * Creates compacted and filtered copy of the dictionary
+     * (see {@link org.ethereum.db.StorageDictionary.PathElement#compactAndFilter(Set)} for details)
+     */
+    public synchronized StorageDictionary compactAndFilter(Set<DataWord> hashFilter) {
+        return new StorageDictionary(root.copyCompactedFiltered(hashFilter));
+    }
+
     public String dump(ContractDetails storage) {
-        return root.toString(storage, 0, false);
+        return root.toString(storage, 0);
     }
 
     public String dump() {
@@ -255,6 +411,13 @@ public class StorageDictionary {
     public synchronized String serializeToJson() throws JsonProcessingException {
         ObjectMapper om = new ObjectMapper();
         return om.writeValueAsString(root);
+    }
+
+    public static StorageDictionary deserializeFromJson(InputStream json) throws IOException {
+        ObjectMapper om = new ObjectMapper();
+        StorageDictionary.PathElement root = om.readValue(json, StorageDictionary.PathElement.class);
+        installRoots(root);
+        return new StorageDictionary(root);
     }
 
     public static StorageDictionary deserializeFromJson(String json) throws IOException {

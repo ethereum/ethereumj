@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.SHA3Helper;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.db.ContractDetails;
@@ -202,56 +203,56 @@ public class StorageDictionaryHandler {
             serpentDict.addPath(new DataWord(key.getData()), getKeyOriginSerpent(key.getData()));
         }
 
-        // Uncomment to dump human readable storage with values
-//        if (!solidityDict.isValid()) {
-//            File f = new File("json");
-//            f.mkdirs();
-//            f = new File(f, Hex.toHexString(contractAddress) + ".sol.txt");
-//            try {
-//                BufferedWriter w = new BufferedWriter(new FileWriter(f));
-//                String s = solidityDict.dump(storage);
-//                w.write(s);
-//                w.close();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        if (!serpentDict.isValid()) {
-//            File f = new File("json", Hex.toHexString(contractAddress) + ".se.txt");
-//            f.getParentFile().mkdirs();
-//            try {
-//                BufferedWriter w = new BufferedWriter(new FileWriter(f));
-//                String s = serpentDict.dump(storage);
-//                w.write(s);
-//                w.close();
-//            } catch (Exception e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        File f = new File("json", Hex.toHexString(contractAddress) + ".hash.txt");
-//        f.getParentFile().mkdirs();
-//        try {
-//            BufferedWriter w = new BufferedWriter(new FileWriter(f, true));
-//            w.write("\nHashes:\n");
-//            for (Entry entry : hashes.values()) {
-//                w.write(entry + "\n");
-//            }
-//            w.write("\nSSTORE:\n");
-//            for (Map.Entry<ByteArrayWrapper, DataWord> entry : storeKeys.entrySet()) {
-//                w.write(entry + "\n");
-//            }
-//
-//            w.close();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        if (SystemProperties.CONFIG.getConfig().hasPath("vm.structured.storage.dictionary.dump")) {
+            // for debug purposes only
+            if (!solidityDict.isValid()) {
+                File f = new File("json");
+                f.mkdirs();
+                f = new File(f, Hex.toHexString(contractAddress) + ".sol.txt");
+                try {
+                    BufferedWriter w = new BufferedWriter(new FileWriter(f));
+                    String s = solidityDict.dump(storage);
+                    w.write(s);
+                    w.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            if (!serpentDict.isValid()) {
+                File f = new File("json", Hex.toHexString(contractAddress) + ".se.txt");
+                f.getParentFile().mkdirs();
+                try {
+                    BufferedWriter w = new BufferedWriter(new FileWriter(f));
+                    String s = serpentDict.dump(storage);
+                    w.write(s);
+                    w.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            File f = new File("json", Hex.toHexString(contractAddress) + ".hash.txt");
+            f.getParentFile().mkdirs();
+            try {
+                BufferedWriter w = new BufferedWriter(new FileWriter(f, true));
+                w.write("\nHashes:\n");
+                for (Entry entry : hashes.values()) {
+                    w.write(entry + "\n");
+                }
+                w.write("\nSSTORE:\n");
+                for (Map.Entry<ByteArrayWrapper, DataWord> entry : storeKeys.entrySet()) {
+                    w.write(entry + "\n");
+                }
+
+                w.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
 
         StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Solidity, contractAddress, solidityDict);
         StorageDictionaryDb.INST.put(StorageDictionaryDb.Layout.Serpent, contractAddress, serpentDict);
-
-
     }
 
     public void vmStartPlayNotify() {
