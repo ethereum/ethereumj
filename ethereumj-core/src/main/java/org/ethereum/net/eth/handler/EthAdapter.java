@@ -108,4 +108,8 @@ public class EthAdapter implements Eth {
     public EthVersion getVersion() {
         return fromCode(UPPER);
     }
+
+    @Override
+    public void onSyncDone() {
+    }
 }

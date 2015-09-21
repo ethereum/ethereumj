@@ -69,6 +69,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     private int blocksLackHits = 0;
 
     protected SyncStateName syncState = IDLE;
+    protected boolean syncDone = false;
     protected boolean processTransactions = true;
 
     protected byte[] bestHash;
@@ -382,6 +383,16 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         return syncStats;
     }
 
+    @Override
+    public EthVersion getVersion() {
+        return version;
+    }
+
+    @Override
+    public void onSyncDone() {
+        syncDone = true;
+    }
+
     public StatusMessage getHandshakeStatusMessage() {
         return channel.getNodeStatistics().getEthLastInboundStatusMsg();
     }
@@ -396,10 +407,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     public void setChannel(Channel channel) {
         this.channel = channel;
-    }
-
-    public EthVersion getVersion() {
-        return version;
     }
 
     enum EthState {

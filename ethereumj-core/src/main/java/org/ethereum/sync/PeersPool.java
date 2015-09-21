@@ -117,6 +117,10 @@ public class PeersPool implements Iterable<Channel> {
                 peer.getPeerIdShort()
         );
 
+        if (peer.getNodeId() == null) {
+            return;
+        }
+
         synchronized (activePeers) {
             activePeers.remove(peer.getNodeIdWrapper());
             bannedPeers.remove(peer);

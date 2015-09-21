@@ -214,6 +214,7 @@ public class Channel {
 
     public void onSyncDone() {
         eth.enableTransactions();
+        eth.onSyncDone();
     }
 
     public boolean isDiscoveryMode() {

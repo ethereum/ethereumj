@@ -121,13 +121,9 @@ public abstract class EthLegacy extends EthHandler {
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
 
-        // if we are near to the end of peer's chain
-        // and peer doesn't have blocks we're required in
-        // then just stop hash retrieving,
-        //
-        // otherwise it will be banned by SyncManager
-        // cause we've caught an empty response
-        if (receivedHashes.isEmpty() && blockchain.isBlockExist(bestHash)) {
+        // treat empty hashes response as end of hash sync
+        // only if main sync done
+        if (receivedHashes.isEmpty() && syncDone) {
             changeState(DONE_HASH_RETRIEVING);
         } else {
             syncStats.addHashes(receivedHashes.size());

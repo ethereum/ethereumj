@@ -118,4 +118,9 @@ public interface Eth {
      * @return protocol version
      */
     EthVersion getVersion();
+
+    /**
+     * Fires inner logic related to main sync done event
+     */
+    void onSyncDone();
 }
