@@ -90,7 +90,9 @@ public class GetBlockHeadersMessage extends EthMessage {
         byte[] blockBytes = paramsList.get(0).getRLPData();
 
         // it might be either a hash or number
-        if (blockBytes.length == DEFAULT_SIZE_BYTES) {
+        if (blockBytes == null) {
+            this.blockNumber = 0;
+        } else if (blockBytes.length == DEFAULT_SIZE_BYTES) {
             this.blockHash = blockBytes;
         } else {
             this.blockNumber = byteArrayToLong(blockBytes);
