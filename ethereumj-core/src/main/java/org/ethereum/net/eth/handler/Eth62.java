@@ -81,9 +81,6 @@ public class Eth62 extends EthHandler {
     @Override
     protected void startHashRetrieving() {
         startForkCoverage();
-
-        long bestNumber = blockchain.getBestBlock().getNumber();
-        sendGetBlockHeaders(bestNumber + 1, maxHashesAsk);
     }
 
     @Override
@@ -154,7 +151,7 @@ public class Eth62 extends EthHandler {
                 return;
             }
 
-            if (!commonAncestorFound) {
+            if (syncState == HASH_RETRIEVING && !commonAncestorFound) {
                 maintainForkCoverage(received);
                 return;
             }
@@ -175,7 +172,6 @@ public class Eth62 extends EthHandler {
         }
 
         if (syncState == HASH_RETRIEVING) {
-
             long lastNumber = received.get(received.size() - 1).getNumber();
             sendGetBlockHeaders(lastNumber + 1, maxHashesAsk);
 
@@ -274,7 +270,7 @@ public class Eth62 extends EthHandler {
                 "Peer {}: send GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
                 channel.getPeerIdShort(),
                 blockNumber,
-                maxHashesAsk
+                maxBlocksAsk
         );
 
         GetBlockHeadersMessage msg = new GetBlockHeadersMessage(blockNumber, maxBlocksAsk);
