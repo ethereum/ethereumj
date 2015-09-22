@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
+import static java.lang.Math.max;
 import static org.ethereum.net.eth.EthVersion.V62;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
@@ -30,12 +31,16 @@ public class Eth62 extends EthHandler {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
+    private static final int FORK_COVER_BATCH_SIZE = 512;
+
     /**
      * Header list sent in GET_BLOC_BODIES message,
      * useful if returned BLOCKS msg doesn't cover all sent hashes
      * or in case when peer is disconnected
      */
     private final List<BlockHeader> sentHeaders = Collections.synchronizedList(new ArrayList<BlockHeader>());
+
+    private boolean commonAncestorFound = false;
 
     public Eth62() {
         super(V62);
@@ -75,6 +80,8 @@ public class Eth62 extends EthHandler {
 
     @Override
     protected void startHashRetrieving() {
+        startForkCoverage();
+
         long bestNumber = blockchain.getBestBlock().getNumber();
         sendGetBlockHeaders(bestNumber + 1, maxHashesAsk);
     }
@@ -147,6 +154,11 @@ public class Eth62 extends EthHandler {
             syncStats.addHashes(received.size());
 
             if (received.isEmpty()) {
+                return;
+            }
+
+            if (!commonAncestorFound) {
+                maintainForkCoverage(received);
                 return;
             }
 
@@ -318,5 +330,59 @@ public class Eth62 extends EthHandler {
         }
 
         sentHeaders.clear();
+    }
+
+    /************************
+     *     Fork Coverage     *
+     *************************/
+
+
+    private void startForkCoverage() {
+
+        commonAncestorFound = false;
+
+        logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
+
+        long bestNumber = blockchain.getBestBlock().getNumber();
+        long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
+        sendGetBlockHeaders(blockNumber, FORK_COVER_BATCH_SIZE);
+    }
+
+    private void maintainForkCoverage(List<BlockHeader> received) {
+
+        long blockNumber = max(0, received.get(0).getNumber() - FORK_COVER_BATCH_SIZE);
+
+        // start downloading hashes from blockNumber of the block with known hash
+        ListIterator<BlockHeader> it = received.listIterator(received.size());
+        while (it.hasPrevious()) {
+            BlockHeader header = it.previous();
+            if (blockchain.isBlockExist(header.getHash())) {
+                commonAncestorFound = true;
+                blockNumber = header.getNumber() + 1;
+
+                logger.trace(
+                        "Peer {}: common ancestor found: block.number {}, block.hash {}",
+                        channel.getPeerIdShort(),
+                        header.getNumber(),
+                        Hex.toHexString(header.getHash())
+                );
+
+                break;
+            }
+        }
+
+
+        if (commonAncestorFound) {
+
+            // start header sync
+            sendGetBlockHeaders(blockNumber, maxHashesAsk);
+
+        } else {
+
+            // continue fork coverage
+            logger.trace("Peer {}: common ancestor is not found yet", channel.getPeerIdShort());
+            sendGetBlockHeaders(blockNumber, FORK_COVER_BATCH_SIZE);
+
+        }
     }
 }
