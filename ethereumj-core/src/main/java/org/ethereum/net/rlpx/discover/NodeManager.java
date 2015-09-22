@@ -281,6 +281,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
      *     </ul>
      *
      *
+     * @param protocolVersion required Eth version
      * @param usedIds collections of ids which are excluded from results
      * @param lowerDifficulty nodes having TD lower than this value are sorted out
      * @param limit max size of returning list
@@ -288,6 +289,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
      * @return list of nodes with highest difficulty, ordered by TD in desc order
      */
     public List<NodeHandler> getBestEthNodes(
+            final byte protocolVersion,
             final Set<String> usedIds,
             final BigInteger lowerDifficulty,
             int limit
@@ -295,7 +297,10 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
         return getNodes(new Functional.Predicate<NodeHandler>() {
             @Override
             public boolean test(NodeHandler handler) {
-                if (handler.getNodeStatistics().getEthTotalDifficulty() == null) {
+                if (handler.getNodeStatistics().getEthLastInboundStatusMsg() == null) {
+                    return false;
+                }
+                if (handler.getNodeStatistics().getEthLastInboundStatusMsg().getProtocolVersion() != protocolVersion) {
                     return false;
                 }
                 if (usedIds.contains(handler.getNode().getHexId())) {

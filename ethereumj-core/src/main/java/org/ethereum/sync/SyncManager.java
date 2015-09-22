@@ -145,6 +145,7 @@ public class SyncManager {
         }
 
         if (peer.getEthVersion() != version) {
+            logger.info("{}: incompatible version, skipping", peer);
             return;
         }
 
@@ -438,9 +439,9 @@ public class SyncManager {
 
         Set<String> nodesInUse = pool.nodesInUse();
 
-        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
+        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(version.getCode(), nodesInUse, lowerUsefulDifficulty, lackSize);
         if (pool.isEmpty() && newNodes.isEmpty()) {
-            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
+            newNodes = nodeManager.getBestEthNodes(version.getCode(), nodesInUse, BigInteger.ZERO, lackSize);
         }
 
         if (logger.isTraceEnabled()) {

@@ -322,4 +322,9 @@ public class Channel {
     public int hashCode() {
         return node != null ? node.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return "Peer " + getPeerIdShort();
+    }
 }
