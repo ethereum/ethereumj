@@ -31,7 +31,7 @@ public class Eth62 extends EthHandler {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
-    private static final int FORK_COVER_BATCH_SIZE = 512;
+    private static final int FORK_COVER_BATCH_SIZE = 192;
 
     /**
      * Header list sent in GET_BLOC_BODIES message,
