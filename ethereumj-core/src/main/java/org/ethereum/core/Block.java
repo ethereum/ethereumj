@@ -429,6 +429,8 @@ public class Block {
     }
 
     private List<byte[]> getBodyElements() {
+        if (!parsed) parseRLP();
+
         byte[] transactions = getTransactionsEncoded();
         byte[] uncles = getUnclesEncoded();
 
