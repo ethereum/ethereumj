@@ -108,19 +108,16 @@ public class Eth62 extends EthHandler {
         this.bestHash = identifiers.get(identifiers.size() - 1).getHash();
 
         for (BlockIdentifier identifier : identifiers) {
-
             if (newBlockLowerNumber == Long.MAX_VALUE) {
                 newBlockLowerNumber = identifier.getNumber();
             }
+        }
 
-            if (!queue.isBlockExist(identifier.getHash())
-                && !blockchain.isBlockExist(identifier.getHash())) {
-
-                long lastBlockNumber = identifiers.get(identifiers.size() - 1).getNumber();
-                int maxBlocksAsk = (int) (lastBlockNumber - identifier.getNumber() + 1);
-                sendGetBlockHeaders(identifier.getNumber(), maxBlocksAsk);
-                return;
-            }
+        if (syncState != HASH_RETRIEVING) {
+            long firstBlockNumber = identifiers.get(0).getNumber();
+            long lastBlockNumber = identifiers.get(identifiers.size() - 1).getNumber();
+            int maxBlocksAsk = (int) (lastBlockNumber - firstBlockNumber + 1);
+            sendGetBlockHeaders(firstBlockNumber, maxBlocksAsk);
         }
     }
 
