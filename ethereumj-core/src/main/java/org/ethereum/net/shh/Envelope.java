@@ -42,6 +42,11 @@ public class Envelope extends ShhMessage {
             parse();
         }
 
+        if (this.data == null) {
+            // empty envelope
+            return null;
+        }
+
         byte[] data = this.data;
         int sent = this.expire - this.ttl;
         int flags = data[0] < 0 ? (data[0] & 0xFF) : data[0];
