@@ -9,6 +9,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
@@ -76,14 +77,20 @@ public class Eth61 extends EthLegacy {
             return;
         }
 
-        queue.addHashesLast(received);
+        List<byte[]> adding = new ArrayList<>(received.size());
+        for(byte[] hash : received) {
 
-        for(byte[] hash : received)
+            adding.add(hash);
+
             if (Arrays.equals(hash, lastHashToAsk)) {
                 changeState(DONE_HASH_RETRIEVING);
                 logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), Hex.toHexString(lastHashToAsk));
+
+                queue.addHashesLast(adding);
+
                 return;
             }
+        }
 
         long blockNumber = lastAskedNumber + received.size();
         sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);

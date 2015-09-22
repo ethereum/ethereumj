@@ -94,6 +94,12 @@ public class Eth62 extends EthHandler {
 
         List<BlockIdentifier> identifiers = msg.getBlockIdentifiers();
 
+        if (identifiers.isEmpty()) {
+            return;
+        }
+
+        this.bestHash = identifiers.get(identifiers.size() - 1).getHash();
+
         for (BlockIdentifier identifier : identifiers) {
 
             if (newBlockLowerNumber == Long.MAX_VALUE) {
@@ -132,31 +138,42 @@ public class Eth62 extends EthHandler {
         );
 
         List<BlockHeader> received = msg.getBlockHeaders();
-        syncStats.addHashes(received.size());
 
-        if (received.isEmpty()) {
-            return;
-        }
+        // treat empty headers response as end of hash sync
+        // only if main sync done
+        if (received.isEmpty() && (syncDone || blockchain.isBlockExist(bestHash))) {
+            changeState(DONE_HASH_RETRIEVING);
+        } else {
+            syncStats.addHashes(received.size());
 
-        queue.addAndValidateHeaders(received, channel.getNodeId());
-
-        if (syncState != HASH_RETRIEVING) {
-            return;
-        }
-
-        for(BlockHeader header : received)
-            if (Arrays.equals(header.getHash(), lastHashToAsk)) {
-                changeState(DONE_HASH_RETRIEVING);
-                logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), Hex.toHexString(lastHashToAsk));
+            if (received.isEmpty()) {
+                return;
             }
 
-        if (syncState != DONE_HASH_RETRIEVING) {
+            List<BlockHeader> adding = new ArrayList<>(received.size());
+            for(BlockHeader header : received) {
+
+                adding.add(header);
+
+                if (Arrays.equals(header.getHash(), lastHashToAsk)) {
+                    changeState(DONE_HASH_RETRIEVING);
+                    logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), Hex.toHexString(lastHashToAsk));
+                    break;
+                }
+            }
+
+            queue.addAndValidateHeaders(adding, channel.getNodeId());
+        }
+
+        if (syncState == HASH_RETRIEVING) {
 
             long lastNumber = received.get(received.size() - 1).getNumber();
             sendGetBlockHeaders(lastNumber + 1, maxHashesAsk);
 
             queue.logHeadersSize();
-        } else {
+        }
+
+        if (syncState == DONE_HASH_RETRIEVING) {
             logger.info(
                     "Peer {}: header sync completed, [{}] headers in queue",
                     channel.getPeerIdShort(),

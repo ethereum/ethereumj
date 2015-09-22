@@ -123,7 +123,7 @@ public abstract class EthLegacy extends EthHandler {
 
         // treat empty hashes response as end of hash sync
         // only if main sync done
-        if (receivedHashes.isEmpty() && syncDone) {
+        if (receivedHashes.isEmpty() && (syncDone || blockchain.isBlockExist(bestHash))) {
             changeState(DONE_HASH_RETRIEVING);
         } else {
             syncStats.addHashes(receivedHashes.size());
