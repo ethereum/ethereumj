@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -26,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.net.eth.EthVersion.fromCode;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.TimeUtils.secondsToMillis;
@@ -63,6 +65,8 @@ public class SyncManager {
     private BigInteger highestKnownDifficulty = BigInteger.ZERO;
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
+
+    private EthVersion version = fromCode(CONFIG.syncVersion());
 
     @Autowired
     Blockchain blockchain;
@@ -137,6 +141,10 @@ public class SyncManager {
 
     public void addPeer(Channel peer) {
         if (!CONFIG.isSyncEnabled()) {
+            return;
+        }
+
+        if (peer.getEthVersion() != version) {
             return;
         }
 

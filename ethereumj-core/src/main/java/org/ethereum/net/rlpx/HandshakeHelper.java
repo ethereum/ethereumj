@@ -1,13 +1,12 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.util.CollectionUtils;
-import org.ethereum.util.Functional;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Mikhail Kalinin
@@ -19,30 +18,39 @@ public class HandshakeHelper {
         List<Capability> configCaps = Capability.getConfigCapabilities();
         List<Capability> supported = new ArrayList<>();
 
-        Capability eth = null;
+        List<Capability> eths = new ArrayList<>();
 
         for (Capability cap : hello.getCapabilities()) {
             if (configCaps.contains(cap)) {
-
                 if (cap.isEth()) {
-
-                    // we need to pick up the most recent Eth version from the list of supported ones
-                    if (EthVersion.isSupported(cap.getVersion())) {
-                        if (eth == null || eth.getVersion() < cap.getVersion()) {
-                            eth = cap;
-                        }
-                    }
-
+                    eths.add(cap);
                 } else {
                     supported.add(cap);
                 }
             }
         }
 
-        if (eth != null) {
-            supported.add(eth);
+        if (eths.isEmpty()) {
+            return supported;
         }
 
+        // we need to pick up Eth version used by sync
+        // or the most recent one
+        // if sync version isn't supported by remote peer
+        Capability highestEth = null;
+        for (Capability eth : eths) {
+
+            if (eth.getVersion() == CONFIG.syncVersion()) {
+                supported.add(eth);
+                return supported;
+            }
+
+            if (highestEth == null || highestEth.getVersion() < eth.getVersion()) {
+                highestEth = eth;
+            }
+        }
+
+        supported.add(highestEth);
         return supported;
     }
 

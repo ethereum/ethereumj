@@ -337,6 +337,11 @@ public class SystemProperties {
     }
 
     @ValidateMe
+    public int syncVersion() {
+        return config.getInt("sync.version");
+    }
+
+    @ValidateMe
     public String projectVersion() {
         return projectVersion;
     }

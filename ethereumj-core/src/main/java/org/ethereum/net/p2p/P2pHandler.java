@@ -5,8 +5,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
@@ -15,13 +13,11 @@ import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.HandshakeHelper;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
-import org.ethereum.net.shh.ShhMessageCodes;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 import org.ethereum.net.swarm.bzz.BzzHandler;
-import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +28,6 @@ import org.springframework.stereotype.Component;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -215,8 +210,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             List<Capability> capInCommon = HandshakeHelper.getSupportedCapabilities(msg);
             channel.initMessageCodes(capInCommon);
             for (Capability capability : capInCommon) {
-                if (capability.getName().equals(Capability.ETH) &&
-                    EthVersion.isSupported(capability.getVersion())) {
+                if (capability.getName().equals(Capability.ETH)) {
 
                     // Activate EthHandler for this peer
                     channel.activateEth(ctx, fromCode(capability.getVersion()));
