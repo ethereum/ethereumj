@@ -210,7 +210,6 @@ public class SyncManager {
         );
 
         gapBlock = wrapper;
-        int gap = gapSize(wrapper);
 
         changeState(HASH_RETRIEVING);
     }
@@ -391,7 +390,10 @@ public class SyncManager {
                 new Functional.Predicate<NodeStatistics>() {
                     @Override
                     public boolean test(NodeStatistics nodeStatistics) {
-                        if (nodeStatistics.getEthTotalDifficulty() == null) {
+                        if (nodeStatistics.getEthLastInboundStatusMsg() == null) {
+                            return false;
+                        }
+                        if (nodeStatistics.getEthLastInboundStatusMsg().getProtocolVersion() != version.getCode()) {
                             return false;
                         }
                         return !isIn20PercentRange(highestKnownDifficulty, nodeStatistics.getEthTotalDifficulty());
