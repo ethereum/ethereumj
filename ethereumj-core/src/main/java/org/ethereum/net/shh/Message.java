@@ -2,6 +2,8 @@ package org.ethereum.net.shh;
 
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.spongycastle.util.BigIntegers;
 
 import org.spongycastle.math.ec.ECPoint;
@@ -19,6 +21,7 @@ import static org.ethereum.util.ByteUtil.merge;
  * @author by Konstantin Shabalin
  */
 public class Message extends ShhMessage {
+    private final static Logger logger = LoggerFactory.getLogger("net");
 
     private byte flags;
     private byte[] signature;
@@ -129,11 +132,12 @@ public class Message extends ShhMessage {
     public boolean decrypt(ECKey privateKey) {
         try {
             payload = ECIESCoder.decrypt(privateKey.getPrivKey(), payload);
+            // TODO: verify signature
             this.decrypted = false;
             setTo(privateKey.decompress().getPubKey());
             return true;
         } catch (Exception e) {
-            System.out.println("The message payload isn't encrypted or something is wrong");
+            logger.info("Wrong identity or the message payload isn't encrypted");
         } catch (Throwable e) {
 
         }
