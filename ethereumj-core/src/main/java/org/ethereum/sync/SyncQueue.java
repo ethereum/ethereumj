@@ -169,6 +169,10 @@ public class SyncQueue {
      */
     public void addList(List<Block> blocks, byte[] nodeId) {
 
+        if (blocks.isEmpty()) {
+            return;
+        }
+
         List<BlockWrapper> wrappers = new ArrayList<>(blocks.size());
         for (Block b : blocks) {
             wrappers.add(new BlockWrapper(b, nodeId));
