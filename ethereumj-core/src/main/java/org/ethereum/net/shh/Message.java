@@ -151,8 +151,8 @@ public class Message extends ShhMessage {
         ECKey.ECDSASignature signature = privateKey.sign(forSig);
 
         this.signature =
-                merge(BigIntegers.asUnsignedByteArray(signature.r),
-                        BigIntegers.asUnsignedByteArray(signature.s), new byte[]{signature.v});
+                merge(BigIntegers.asUnsignedByteArray(32, signature.r),
+                        BigIntegers.asUnsignedByteArray(32, signature.s), new byte[]{signature.v});
     }
 
     public ECKey recover() {
