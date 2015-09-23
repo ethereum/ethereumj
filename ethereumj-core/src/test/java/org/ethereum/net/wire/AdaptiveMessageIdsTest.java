@@ -99,7 +99,7 @@ public class AdaptiveMessageIdsTest {
     public void test4() {
 
         List<Capability> capabilities = Arrays.asList(
-                new Capability(Capability.ETH, EthVersion.UPPER),
+                new Capability(Capability.ETH, EthVersion.V61.getCode()),
                 new Capability(Capability.SHH, ShhHandler.VERSION));
 
         messageCodesResolver.init(capabilities);
@@ -126,7 +126,7 @@ public class AdaptiveMessageIdsTest {
 
         List<Capability> capabilities = Arrays.asList(
                 new Capability(Capability.SHH, ShhHandler.VERSION),
-                new Capability(Capability.ETH, EthVersion.UPPER));
+                new Capability(Capability.ETH, EthVersion.V61.getCode()));
 
         messageCodesResolver.init(capabilities);
 
