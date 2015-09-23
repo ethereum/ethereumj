@@ -19,6 +19,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.eth.message.EthMessageCodes.GET_BLOCK_HASHES_BY_NUMBER;
 import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
+import static org.ethereum.sync.SyncStateName.HASH_RETRIEVING;
 
 /**
  * Eth V61
@@ -85,11 +86,13 @@ public class Eth61 extends EthLegacy {
             if (Arrays.equals(hash, lastHashToAsk)) {
                 changeState(DONE_HASH_RETRIEVING);
                 logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), Hex.toHexString(lastHashToAsk));
-
-                queue.addHashesLast(adding);
-
-                return;
             }
+        }
+
+        queue.addHashesLast(adding);
+
+        if (syncState == DONE_HASH_RETRIEVING) {
+            return;
         }
 
         long blockNumber = lastAskedNumber + received.size();
