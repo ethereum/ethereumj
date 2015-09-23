@@ -34,7 +34,7 @@ public class Transaction {
 
     private static final Logger logger = LoggerFactory.getLogger(Transaction.class);
     private static final BigInteger DEFAULT_GAS_PRICE = new BigInteger("10000000000000");
-    private static final BigInteger DEFAULT_BALANCE_GAS = new BigInteger("500");
+    private static final BigInteger DEFAULT_BALANCE_GAS = new BigInteger("21000");
 
     /* SHA3 hash of the RLP encoded transaction */
     private byte[] hash;
