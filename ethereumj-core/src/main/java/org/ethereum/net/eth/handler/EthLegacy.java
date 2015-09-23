@@ -130,8 +130,6 @@ public abstract class EthLegacy extends EthHandler {
             processBlockHashes(receivedHashes);
         }
 
-        processBlockHashes(receivedHashes);
-
         if (logger.isInfoEnabled()) {
             if (syncState == DONE_HASH_RETRIEVING) {
                 logger.info(
