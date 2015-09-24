@@ -153,5 +153,14 @@ public interface Ethereum {
 
     BlockLoader getBlockLoader();
 
+    /**
+     * Calculates a 'reasonable' Gas price based on statistics of the latest transaction's Gas prices
+     * Normally the price returned should be sufficient to execute a transaction since ~25% of the latest
+     * transactions were executed at this or lower price.
+     * If the transaction is wanted to be executed promptly with higher chances the returned price might
+     * be increased at some ratio (e.g. * 1.2)
+     */
+    long getGasPrice();
+
     void exitOn(long number);
 }

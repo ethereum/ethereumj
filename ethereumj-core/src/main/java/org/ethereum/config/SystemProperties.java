@@ -507,6 +507,10 @@ public class SystemProperties {
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}
 
     @ValidateMe
+    public boolean isStorageDictionaryEnabled() { return config.getBoolean("vm.structured.storage.dictionary.enabled");}
+
+
+    @ValidateMe
     public String genesisInfo() {
 
         if (genesisInfo == null)

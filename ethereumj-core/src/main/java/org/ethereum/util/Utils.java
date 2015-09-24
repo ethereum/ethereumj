@@ -3,6 +3,7 @@ package org.ethereum.util;
 import org.spongycastle.util.encoders.DecoderException;
 import org.spongycastle.util.encoders.Hex;
 
+import java.lang.reflect.Array;
 import java.math.BigInteger;
 
 import java.net.URL;
@@ -144,5 +145,19 @@ public class Utils {
 
     public static long toUnixTime(long javaTime) {
         return javaTime / 1000;
+    }
+
+    public static <T> T[] mergeArrays(T[] ... arr) {
+        int size = 0;
+        for (T[] ts : arr) {
+            size += ts.length;
+        }
+        T[] ret = (T[]) Array.newInstance(arr[0].getClass().getComponentType(), size);
+        int off = 0;
+        for (T[] ts : arr) {
+            System.arraycopy(ts, 0, ret, off, ts.length);
+            off += ts.length;
+        }
+        return ret;
     }
 }
