@@ -248,9 +248,9 @@ public class PeersPool implements Iterable<Channel> {
                 logger.info("============");
                 for (Map.Entry<String, Long> e : bans.entrySet()) {
                     logger.info(
-                            "Peer {} | {} minutes ago",
+                            "Peer {} | {} seconds ago",
                             Utils.getNodeIdShort(e.getKey()),
-                            millisToMinutes(System.currentTimeMillis() - (e.getValue() - DEFAULT_BAN_TIMEOUT))
+                            millisToSeconds(System.currentTimeMillis() - (e.getValue() - DEFAULT_BAN_TIMEOUT))
                     );
                 }
             }
