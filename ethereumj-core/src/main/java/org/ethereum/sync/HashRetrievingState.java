@@ -22,6 +22,9 @@ public class HashRetrievingState extends AbstractSyncState {
 
     @Override
     public void doMaintain() {
+
+        super.doMaintain();
+
         Channel master = null;
         for (Channel peer : syncManager.pool) {
             // if hash retrieving is done all we need to do is just change state and quit

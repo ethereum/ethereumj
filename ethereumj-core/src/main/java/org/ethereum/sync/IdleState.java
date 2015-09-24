@@ -14,11 +14,16 @@ public class IdleState extends AbstractSyncState {
 
     @Override
     public void doOnTransition() {
+
+        super.doOnTransition();
+
         syncManager.pool.changeState(IDLE);
     }
 
     @Override
     public void doMaintain() {
+
+        super.doMaintain();
 
         if (!syncManager.queue.isHashesEmpty()) {
 
