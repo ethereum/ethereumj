@@ -14,6 +14,7 @@ import org.ethereum.vm.program.ProgramResult;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -149,7 +150,15 @@ public interface Ethereum {
 
     ChannelManager getChannelManager();
 
-    Set<Transaction> getPendingTransactions();
+    /**
+     * @return - currently pending transactions received from the net
+     */
+    Set<Transaction> getWireTransactions();
+
+    /**
+     * @return - currently pending transactions sent to the net
+     */
+    List<Transaction> getPendingStateTransactions();
 
     BlockLoader getBlockLoader();
 

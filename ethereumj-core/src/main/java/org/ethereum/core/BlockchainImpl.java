@@ -81,7 +81,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Resource
     @Qualifier("pendingStateTransactions")
-    private final Set<Transaction> pendingStateTransactions = new HashSet<>();
+    private final List<Transaction> pendingStateTransactions = new ArrayList<>();
 
     @Autowired
     private Repository repository;
@@ -130,6 +130,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         this.wallet = wallet;
         this.adminInfo = adminInfo;
         this.listener = listener;
+        this.pendingState = repository.startTracking();
     }
 
     @Override
@@ -275,13 +276,18 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
             add(block);
-            applyPendingState();
+
+            calcPendingState();
+
             return IMPORTED_BEST;
         } else {
 
             if (blockStore.isBlockExist(block.getParentHash())) {
                 recordBlock(block);
                 ImportResult result = tryConnectAndFork(block);
+
+                if (result == IMPORTED_BEST) calcPendingState();
+
                 return result;
             }
 
@@ -784,7 +790,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     }
 
     @Override
-    public Set<Transaction> getPendingTransactions() {
+    public Set<Transaction> getWireTransactions() {
         Set<Transaction> transactions = new HashSet<>();
         for (PendingTransaction tx : wireTransactions) {
             transactions.add(tx.getTransaction());
@@ -819,7 +825,21 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     @Override
     public void addPendingStateTransaction(Transaction tx) {
-        pendingStateTransactions.add(tx);
+
+        synchronized (pendingStateTransactions) {
+            pendingStateTransactions.add(tx);
+            executeOnPendingState(tx);
+        }
+    }
+
+    @Override
+    public List<Transaction> getPendingStateTransactions() {
+        return pendingStateTransactions;
+    }
+
+    @Override
+    public Repository getPendingState() {
+        return pendingState;
     }
 
     private void clearPendingStateTransactions(List<Transaction> received) {
@@ -832,21 +852,28 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
-    private void applyPendingState() {
-        pendingState = repository.startTracking();
+    private void calcPendingState() {
 
-        for (Transaction tx : pendingStateTransactions) {
-            logger.info("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
-
-            TransactionExecutor executor = new TransactionExecutor(
-                    tx, bestBlock.getCoinbase(), pendingState,
-                    blockStore, programInvokeFactory, bestBlock
-            );
-
-            executor.init();
-            executor.execute();
-            executor.go();
-            executor.finalization();
+        synchronized (pendingStateTransactions) {
+            pendingState = repository.startTracking();
+            for (Transaction tx : pendingStateTransactions) {
+                executeOnPendingState(tx);
+            }
         }
+    }
+
+    private void executeOnPendingState(Transaction tx) {
+
+        logger.info("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
+
+        TransactionExecutor executor = new TransactionExecutor(
+                tx, bestBlock.getCoinbase(), pendingState,
+                blockStore, programInvokeFactory, bestBlock
+        );
+
+        executor.init();
+        executor.execute();
+        executor.go();
+        executor.finalization();
     }
 }

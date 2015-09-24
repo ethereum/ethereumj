@@ -77,8 +77,8 @@ public class CommonConfig {
     }
 
     @Bean
-    public Set<Transaction> pendingStateTransactions() {
-        return Collections.synchronizedSet(new HashSet<Transaction>());
+    public List<Transaction> pendingStateTransactions() {
+        return Collections.synchronizedList(new ArrayList<Transaction>());
     }
 
     @Bean
