@@ -4,7 +4,6 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -27,7 +26,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.net.eth.EthVersion.fromCode;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.TimeUtils.secondsToMillis;
@@ -65,8 +63,6 @@ public class SyncManager {
     private BigInteger highestKnownDifficulty = BigInteger.ZERO;
 
     private ScheduledExecutorService worker = Executors.newSingleThreadScheduledExecutor();
-
-    private EthVersion version = fromCode(CONFIG.syncVersion());
 
     @Autowired
     Blockchain blockchain;
@@ -141,11 +137,6 @@ public class SyncManager {
 
     public void addPeer(Channel peer) {
         if (!CONFIG.isSyncEnabled()) {
-            return;
-        }
-
-        if (peer.getEthVersion() != version) {
-            logger.info("{}: incompatible version, skipping", peer);
             return;
         }
 
@@ -390,10 +381,7 @@ public class SyncManager {
                 new Functional.Predicate<NodeStatistics>() {
                     @Override
                     public boolean test(NodeStatistics nodeStatistics) {
-                        if (nodeStatistics.getEthLastInboundStatusMsg() == null) {
-                            return false;
-                        }
-                        if (nodeStatistics.getEthLastInboundStatusMsg().getProtocolVersion() != version.getCode()) {
+                        if (nodeStatistics.getEthTotalDifficulty() == null) {
                             return false;
                         }
                         return !isIn20PercentRange(highestKnownDifficulty, nodeStatistics.getEthTotalDifficulty());
@@ -441,9 +429,9 @@ public class SyncManager {
 
         Set<String> nodesInUse = pool.nodesInUse();
 
-        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(version.getCode(), nodesInUse, lowerUsefulDifficulty, lackSize);
+        List<NodeHandler> newNodes = nodeManager.getBestEthNodes(nodesInUse, lowerUsefulDifficulty, lackSize);
         if (pool.isEmpty() && newNodes.isEmpty()) {
-            newNodes = nodeManager.getBestEthNodes(version.getCode(), nodesInUse, BigInteger.ZERO, lackSize);
+            newNodes = nodeManager.getBestEthNodes(nodesInUse, BigInteger.ZERO, lackSize);
         }
 
         if (logger.isTraceEnabled()) {

@@ -336,8 +336,10 @@ public class SystemProperties {
         return config.getInt("sync.peer.count");
     }
 
-    @ValidateMe
-    public int syncVersion() {
+    public Integer syncVersion() {
+        if (!config.hasPath("sync.version")) {
+            return null;
+        }
         return config.getInt("sync.version");
     }
 

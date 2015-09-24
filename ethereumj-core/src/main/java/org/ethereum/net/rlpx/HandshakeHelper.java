@@ -34,23 +34,16 @@ public class HandshakeHelper {
             return supported;
         }
 
-        // we need to pick up Eth version used by sync
-        // or the most recent one
-        // if sync version isn't supported by remote peer
-        Capability highestEth = null;
+        // we need to pick up
+        // the most recent Eth version
+        Capability highest = null;
         for (Capability eth : eths) {
-
-            if (eth.getVersion() == CONFIG.syncVersion()) {
-                supported.add(eth);
-                return supported;
-            }
-
-            if (highestEth == null || highestEth.getVersion() < eth.getVersion()) {
-                highestEth = eth;
+            if (highest == null || highest.getVersion() < eth.getVersion()) {
+                highest = eth;
             }
         }
 
-        supported.add(highestEth);
+        supported.add(highest);
         return supported;
     }
 
