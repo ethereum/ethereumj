@@ -11,7 +11,6 @@ import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.validator.ParentBlockHeaderValidator;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -77,8 +76,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
     @Resource
-    @Qualifier("pendingTransactions")
-    private final Set<PendingTransaction> pendingTransactions = new HashSet<>();
+    @Qualifier("wireTransactions")
+    private final Set<PendingTransaction> wireTransactions = new HashSet<>();
 
     @Autowired
     private Repository repository;
@@ -350,7 +349,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         wallet.removeTransactions(block.getTransactionsList());
 
         // Clear pending transaction from the mem
-        clearPendingTransactions(block.getTransactionsList());
+        clearWireTransactions(block.getTransactionsList());
 
         // Clear outdated pending transactions
         clearOutdatedTransactions(block.getNumber());
@@ -363,8 +362,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         List<PendingTransaction> outdated = new ArrayList<>();
         List<Transaction> transactions = new ArrayList<>();
 
-        synchronized (pendingTransactions) {
-            for (PendingTransaction tx : pendingTransactions) {
+        synchronized (wireTransactions) {
+            for (PendingTransaction tx : wireTransactions) {
                 if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold()) {
                     outdated.add(tx);
                     transactions.add(tx.getTransaction());
@@ -383,7 +382,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
                         Hex.toHexString(tx.getHash())
                 );
 
-        pendingTransactions.removeAll(outdated);
+        wireTransactions.removeAll(outdated);
         wallet.removeTransactions(transactions);
     }
 
@@ -735,7 +734,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     }
 
-    public void addPendingTransactions(Set<Transaction> transactions) {
+    public void addWireTransactions(Set<Transaction> transactions) {
         logger.info("Pending transaction list added: size: [{}]", transactions.size());
 
         if (listener != null)
@@ -752,26 +751,26 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
                 BigInteger currNonce = repository.getAccountState(tx.getSender()).getNonce();
                 if (currNonce.equals(txNonce))
-                    pendingTransactions.add(new PendingTransaction(tx, number));
+                    wireTransactions.add(new PendingTransaction(tx, number));
             } else {
 
                 if (txNonce.equals(ZERO))
-                    pendingTransactions.add(new PendingTransaction(tx, number));
+                    wireTransactions.add(new PendingTransaction(tx, number));
             }
         }
     }
 
-    public void clearPendingTransactions(List<Transaction> receivedTransactions) {
+    public void clearWireTransactions(List<Transaction> receivedTransactions) {
 
         for (Transaction tx : receivedTransactions) {
             logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
-            pendingTransactions.remove(new PendingTransaction(tx));
+            wireTransactions.remove(new PendingTransaction(tx));
         }
     }
 
     public Set<Transaction> getPendingTransactions() {
         Set<Transaction> transactions = new HashSet<>();
-        for (PendingTransaction tx : pendingTransactions) {
+        for (PendingTransaction tx : wireTransactions) {
             transactions.add(tx.getTransaction());
         }
         return transactions;

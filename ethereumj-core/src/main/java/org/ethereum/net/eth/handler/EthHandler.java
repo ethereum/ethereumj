@@ -266,7 +266,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         Set<Transaction> txSet = msg.getTransactions();
-        blockchain.addPendingTransactions(txSet);
+        blockchain.addWireTransactions(txSet);
 
         for (Transaction tx : txSet) {
             worldManager.getWallet().addTransaction(tx);

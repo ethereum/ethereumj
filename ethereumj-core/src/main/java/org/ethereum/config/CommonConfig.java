@@ -61,17 +61,17 @@ public class CommonConfig {
     }
 
     @Bean
-    public Set<PendingTransaction> pendingTransactions() {
+    public Set<PendingTransaction> wireTransactions() {
         String storage = "Redis";
         try {
             if (redisConnection.isAvailable()) {
-                return redisConnection.createPendingTransactionSet("pendingTransactions");
+                return redisConnection.createPendingTransactionSet("wireTransactions");
             }
 
             storage = "In memory";
             return Collections.synchronizedSet(new HashSet<PendingTransaction>());
         } finally {
-            logger.info(storage + " 'pendingTransactions' storage created.");
+            logger.info(storage + " 'wireTransactions' storage created.");
         }
     }
 
