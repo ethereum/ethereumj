@@ -263,6 +263,11 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public org.ethereum.facade.Repository getRepository() {
+        return worldManager.getRepository();
+    }
+
+    @Override
+    public org.ethereum.facade.Repository getPendingState() {
         return (org.ethereum.facade.Repository) worldManager.getBlockchain().getPendingState();
     }
 

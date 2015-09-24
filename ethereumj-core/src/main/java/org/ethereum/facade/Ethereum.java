@@ -140,6 +140,11 @@ public interface Ethereum {
      */
     Repository getRepository();
 
+    /**
+     * @return - pending state repository
+     */
+    Repository getPendingState();
+
 
     public void init();
 //  2.   // is blockchain still loading - if buffer is not empty
