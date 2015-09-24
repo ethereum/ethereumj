@@ -848,7 +848,5 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             executor.go();
             executor.finalization();
         }
-
-        pendingState.commit();
     }
 }
