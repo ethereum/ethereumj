@@ -2,6 +2,7 @@ package org.ethereum.config;
 
 import org.ethereum.core.PendingTransaction;
 import org.ethereum.core.Repository;
+import org.ethereum.core.Transaction;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.ethereum.datasource.LevelDbDataSource;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -73,6 +74,11 @@ public class CommonConfig {
         } finally {
             logger.info(storage + " 'wireTransactions' storage created.");
         }
+    }
+
+    @Bean
+    public Set<Transaction> pendingStateTransactions() {
+        return Collections.synchronizedSet(new HashSet<Transaction>());
     }
 
     @Bean

@@ -53,4 +53,6 @@ public interface Blockchain {
     public void setExitOn(long exitOn);
 
     boolean isBlockExist(byte[] hash);
+
+    void addPendingStateTransaction(Transaction tx);
 }

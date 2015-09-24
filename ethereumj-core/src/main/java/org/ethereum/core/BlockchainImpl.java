@@ -79,9 +79,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     @Qualifier("wireTransactions")
     private final Set<PendingTransaction> wireTransactions = new HashSet<>();
 
+    @Resource
+    @Qualifier("pendingStateTransactions")
+    private final Set<Transaction> pendingStateTransactions = new HashSet<>();
+
     @Autowired
     private Repository repository;
     private Repository track;
+    private Repository pendingState;
 
     @Autowired
     private BlockStore blockStore;
@@ -270,6 +275,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
             add(block);
+            applyPendingState();
             return IMPORTED_BEST;
         } else {
 
@@ -348,11 +354,14 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // Remove all wallet transactions as they already approved by the net
         wallet.removeTransactions(block.getTransactionsList());
 
-        // Clear pending transaction from the mem
+        // Clear wire transaction from the mem
         clearWireTransactions(block.getTransactionsList());
 
-        // Clear outdated pending transactions
+        // Clear outdated wire transactions
         clearOutdatedTransactions(block.getNumber());
+
+        // Clear pending state transactions
+        clearPendingStateTransactions(block.getTransactionsList());
 
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
@@ -377,7 +386,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (logger.isInfoEnabled())
             for (PendingTransaction tx : outdated)
                 logger.info(
-                        "Clear outdated pending transaction, block.number: [{}] hash: [{}]",
+                        "Clear outdated wire transaction, block.number: [{}] hash: [{}]",
                         tx.getBlockNumber(),
                         Hex.toHexString(tx.getHash())
                 );
@@ -734,8 +743,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     }
 
+    @Override
     public void addWireTransactions(Set<Transaction> transactions) {
-        logger.info("Pending transaction list added: size: [{}]", transactions.size());
+        logger.info("Wire transaction list added: size: [{}]", transactions.size());
 
         if (listener != null)
             listener.onPendingTransactionsReceived(transactions);
@@ -760,14 +770,20 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         }
     }
 
+    @Override
     public void clearWireTransactions(List<Transaction> receivedTransactions) {
 
         for (Transaction tx : receivedTransactions) {
-            logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
-            wireTransactions.remove(new PendingTransaction(tx));
+            PendingTransaction pend = new PendingTransaction(tx);
+
+            if (logger.isInfoEnabled() && wireTransactions.contains(pend))
+                logger.info("Clear wire transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+
+            wireTransactions.remove(pend);
         }
     }
 
+    @Override
     public Set<Transaction> getPendingTransactions() {
         Set<Transaction> transactions = new HashSet<>();
         for (PendingTransaction tx : wireTransactions) {
@@ -799,5 +815,40 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public boolean isBlockExist(byte[] hash) {
         return blockStore.isBlockExist(hash);
+    }
+
+    @Override
+    public void addPendingStateTransaction(Transaction tx) {
+        pendingStateTransactions.add(tx);
+    }
+
+    private void clearPendingStateTransactions(List<Transaction> received) {
+
+        for (Transaction tx : received) {
+            if (logger.isInfoEnabled() && pendingStateTransactions.contains(tx))
+                logger.info("Clear pending state transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
+
+            pendingStateTransactions.remove(tx);
+        }
+    }
+
+    private void applyPendingState() {
+        pendingState = repository.startTracking();
+
+        for (Transaction tx : pendingStateTransactions) {
+            logger.info("Apply pending state tx: {}", Hex.toHexString(tx.getHash()));
+
+            TransactionExecutor executor = new TransactionExecutor(
+                    tx, bestBlock.getCoinbase(), pendingState,
+                    blockStore, programInvokeFactory, bestBlock
+            );
+
+            executor.init();
+            executor.execute();
+            executor.go();
+            executor.finalization();
+        }
+
+        pendingState.commit();
     }
 }
