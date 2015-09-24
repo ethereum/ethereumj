@@ -36,6 +36,9 @@ public class WorldManager {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     @Autowired
+    private EthereumListener listener;
+
+    @Autowired
     private Blockchain blockchain;
 
     @Autowired
@@ -58,10 +61,6 @@ public class WorldManager {
 
     @Autowired
     private AdminInfo adminInfo;
-
-
-    @Autowired
-    private EthereumListener listener;
 
     @Autowired
     private NodeManager nodeManager;

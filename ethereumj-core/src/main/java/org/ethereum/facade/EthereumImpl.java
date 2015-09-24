@@ -3,6 +3,7 @@ package org.ethereum.facade;
 import org.ethereum.core.*;
 import org.ethereum.core.Repository;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.listener.GasPriceTracker;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.manager.BlockLoader;
 import org.ethereum.manager.WorldManager;
@@ -14,8 +15,8 @@ import org.ethereum.net.server.PeerServer;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.util.ByteUtil;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.vm.program.ProgramResult;
+import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -64,6 +65,8 @@ public class EthereumImpl implements Ethereum {
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
 
+    private GasPriceTracker gasPriceTracker = new GasPriceTracker();
+
     public EthereumImpl() {
         System.out.println();
     }
@@ -79,6 +82,7 @@ public class EthereumImpl implements Ethereum {
                     }
             );
         }
+        addListener(gasPriceTracker);
     }
 
     /**
@@ -295,6 +299,11 @@ public class EthereumImpl implements Ethereum {
     @Override
     public BlockLoader getBlockLoader(){
         return  blockLoader;
+    }
+
+    @Override
+    public long getGasPrice() {
+        return gasPriceTracker.getGasPrice();
     }
 
     @Override

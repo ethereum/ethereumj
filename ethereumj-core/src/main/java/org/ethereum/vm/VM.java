@@ -1,5 +1,6 @@
 package org.ethereum.vm;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.program.Program;
@@ -67,6 +68,8 @@ public class VM {
 
     /* Keeps track of the number of steps performed in this VM */
     private int vmCounter = 0;
+
+    public StorageDictionaryHandler storageDictHandler;
 
     public void step(Program program) {
 
@@ -583,6 +586,10 @@ public class VM {
                     byte[] encoded = sha3(buffer);
                     DataWord word = new DataWord(encoded);
 
+                    if (storageDictHandler != null) {
+                        storageDictHandler.vmSha3Notify(buffer, word);
+                    }
+
                     if (logger.isInfoEnabled())
                         hint = word.toString();
 
@@ -919,6 +926,9 @@ public class VM {
                         hint = "[" + program.getOwnerAddress().toPrefixString() + "] key: " + addr + " value: " + value;
 
                     program.storageSave(addr, value);
+                    if (storageDictHandler != null) {
+                        storageDictHandler.vmSStoreNotify(addr, value);
+                    }
                     program.step();
                 }
                 break;
@@ -1149,11 +1159,21 @@ public class VM {
 
     public void play(Program program) {
         try {
+            if (SystemProperties.CONFIG.isStorageDictionaryEnabled()) {
+                storageDictHandler = new StorageDictionaryHandler(program.getOwnerAddress());
+                storageDictHandler.vmStartPlayNotify();
+            }
 
             if (program.byTestingSuite()) return;
 
             while (!program.isStopped()) {
                 this.step(program);
+            }
+
+            if (storageDictHandler != null) {
+                ContractDetails details = program.getStorage()
+                        .getContractDetails(program.getOwnerAddress().getLast20Bytes());
+                storageDictHandler.vmEndPlayNotify(details);
             }
 
         } catch (RuntimeException e) {
