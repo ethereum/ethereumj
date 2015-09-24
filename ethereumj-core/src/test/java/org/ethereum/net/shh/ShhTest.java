@@ -1,5 +1,6 @@
 package org.ethereum.net.shh;
 
+import junit.framework.Assert;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
@@ -29,9 +30,9 @@ public class ShhTest {
 
     @Test /* Tests whether a message can be wrapped without any identity or encryption. */
     public void test1() {
-        Message sent = new Message(payload);
+        WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(null, null, topics, ttl);
-        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
+        ShhEnvelopeMessage e = sent.wrap(Options.DEFAULT_POW, options);
 
         RLPList rlpList = RLP.decode2(e.getEncoded());
         RLPList.recursivePrint(rlpList);
@@ -41,7 +42,7 @@ public class ShhTest {
         assertEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
         assertTrue(sent.getSignature() == null);
 
-        Message received = e.open(null);
+        WhisperMessage received = e.open(null);
 
         ECKey recovered = received.recover();
         assertTrue(recovered == null);
@@ -49,15 +50,15 @@ public class ShhTest {
 
     @Test /* Tests whether a message can be signed, and wrapped in plain-text. */
     public void test2() {
-        Message sent = new Message(payload);
+        WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(privKey, null, topics, ttl);
-        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
+        ShhEnvelopeMessage e = sent.wrap(Options.DEFAULT_POW, options);
 
         assertEquals(Hex.toHexString(e.getData()), Hex.toHexString(sent.getBytes()));
         assertEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
         assertTrue(sent.getSignature() != null);
 
-        Message received = e.open(null);
+        WhisperMessage received = e.open(null);
         ECKey recovered = received.recover();
 
         assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.decompress().getPubKey()));
@@ -65,15 +66,15 @@ public class ShhTest {
 
     @Test /* Tests whether a message can be encrypted and decrypted using an anonymous sender (i.e. no signature).*/
     public void test3() {
-        Message sent = new Message(payload);
+        WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(null, pubKey, topics, ttl);
-        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
+        ShhEnvelopeMessage e = sent.wrap(Options.DEFAULT_POW, options);
 
         assertEquals(Hex.toHexString(e.getData()), Hex.toHexString(sent.getBytes()));
         assertNotEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
         assertTrue(sent.getSignature() == null);
 
-        Message received = e.open(null);
+        WhisperMessage received = e.open(null);
 
         assertEquals(Hex.toHexString(sent.getBytes()), Hex.toHexString(received.getBytes()));
 
@@ -83,15 +84,15 @@ public class ShhTest {
 
     @Test /* Tests whether a message can be properly signed and encrypted. */
     public void test4() {
-        Message sent = new Message(payload);
+        WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(privKey, pubKey, topics, ttl);
-        Envelope e = sent.wrap(Options.DEFAULT_POW, options);
+        ShhEnvelopeMessage e = sent.wrap(Options.DEFAULT_POW, options);
 
         assertEquals(Hex.toHexString(e.getData()), Hex.toHexString(sent.getBytes()));
         assertNotEquals(Hex.toHexString(sent.getPayload()), Hex.toHexString(payload));
         assertTrue(sent.getSignature() != null);
 
-        Message received = e.open(privKey);
+        WhisperMessage received = e.open(privKey);
         ECKey recovered = received.recover();
         sent.decrypt(privKey);
 
@@ -100,5 +101,33 @@ public class ShhTest {
         assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.decompress().getPubKey()));
     }
 
+    @Test
+    public void test5() {
+        ECKey fromKey = ECKey.fromPrivate(Hex.decode("ba43d10d069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8")).decompress();
+        ECKey toKey = ECKey.fromPrivate(Hex.decode("00000000069f0c41a8914849c1abeeac2a681b21ae9b60a6a2362c06e6eb1bc8")).decompress();
+//        System.out.println("Sending from: " + Hex.toHexString(fromKey.getPubKey()) + "\n to: " + Hex.toHexString(toKey.getPubKey()));
+        byte[] bytes = post(fromKey, Hex.toHexString(toKey.getPubKey()), new String[]{"myTopic"}, "Hello all!", 1, 1);
 
+        ShhEnvelopeMessage envelope = new ShhEnvelopeMessage(bytes);
+        WhisperMessage msg = envelope.open(toKey);
+//        System.out.println("Received: " + envelope + "\n   " + msg);
+        assertEquals("Hello all!", new String(msg.getPayload()));
+    }
+
+    public byte[] post(ECKey fromKey, String to, String[] topics, String payload, int ttl, int pow) {
+
+        Topic[] topicList = Topic.createTopics(topics);
+
+        WhisperMessage m = new WhisperMessage(payload.getBytes());
+
+        Options options = new Options(
+                fromKey,
+                to == null ? null : Hex.decode(to),
+                topicList,
+                ttl
+        );
+
+        ShhEnvelopeMessage e = m.wrap(pow, options);
+        return e.getEncoded();
+    }
 }
