@@ -15,7 +15,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
 /**
  * @author by Konstantin Shabalin
  */
-public class Envelope extends ShhMessage {
+public class ShhEnvelopeMessage extends ShhMessage {
 
     private int expire;
     private int ttl;
@@ -25,19 +25,20 @@ public class Envelope extends ShhMessage {
 
     private int nonce = 0;
 
-    public Envelope(byte[] encoded) {
+    public ShhEnvelopeMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public Envelope(int ttl, Topic[] topics, Message msg) {
+    public ShhEnvelopeMessage(int ttl, Topic[] topics, WhisperMessage msg) {
         this.expire = (int)(System.currentTimeMillis()/1000 + ttl);
         this.ttl = ttl;
         this.topics = topics;
         this.data = msg.getBytes();
         this.nonce = 0;
+        parsed = true;
     }
 
-    public Message open(ECKey privKey) {
+    public WhisperMessage open(ECKey privKey) {
         if (!parsed) {
             parse();
         }
@@ -51,17 +52,17 @@ public class Envelope extends ShhMessage {
         int sent = this.expire - this.ttl;
         int flags = data[0] < 0 ? (data[0] & 0xFF) : data[0];
 
-        Message m = new Message(data[0], sent, this.ttl, hash());
+        WhisperMessage m = new WhisperMessage(data[0], sent, this.ttl, hash());
 
-        if ((flags & Message.SIGNATURE_FLAG) == Message.SIGNATURE_FLAG) {
-            if (data.length < Message.SIGNATURE_LENGTH) {
+        if ((flags & WhisperMessage.SIGNATURE_FLAG) == WhisperMessage.SIGNATURE_FLAG) {
+            if (data.length < WhisperMessage.SIGNATURE_LENGTH) {
                 throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
             }
-            byte[] signature = new byte[Message.SIGNATURE_LENGTH];
-            System.arraycopy(data, 1, signature, 0, Message.SIGNATURE_LENGTH);
+            byte[] signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
+            System.arraycopy(data, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
             m.setSignature(signature);
-            byte[] payload = new byte[data.length - Message.SIGNATURE_LENGTH - 1];
-            System.arraycopy(data, Message.SIGNATURE_LENGTH + 1, payload, 0, payload.length);
+            byte[] payload = new byte[data.length - WhisperMessage.SIGNATURE_LENGTH - 1];
+            System.arraycopy(data, WhisperMessage.SIGNATURE_LENGTH + 1, payload, 0, payload.length);
             m.setPayload(payload);
         } else {
             byte[] payload = new byte[data.length - 1];

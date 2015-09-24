@@ -1,6 +1,5 @@
 package org.ethereum.net.shh;
 
-import org.ethereum.crypto.ECKey;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 
@@ -23,11 +22,8 @@ import org.springframework.stereotype.Component;
 @Scope("prototype")
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
 
-    public final static byte VERSION = 2;
+    public final static byte VERSION = 3;
     private MessageQueue msgQueue = null;
-    private ECKey privKey;
-
-    private Whisper whisper;
 
     private boolean active = false;
 
@@ -36,15 +32,14 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     @Autowired
     WorldManager worldManager;
 
+    @Autowired
+    private Whisper whisper;
+
     public ShhHandler() {
     }
 
     public ShhHandler(MessageQueue msgQueue) {
         this.msgQueue = msgQueue;
-    }
-
-    public void setPrivKey(ECKey privKey) {
-        this.privKey = privKey;
     }
 
     @Override
@@ -62,15 +57,13 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
                 worldManager.getListener().trace("[Recv: " + msg + "]");
                 break;
             case MESSAGE:
-                whisper.processEnvelope((Envelope) msg);
+                whisper.processEnvelope((ShhEnvelopeMessage) msg, this);
                 break;
-            case ADD_FILTER:
-                break;
-            case REMOVE_FILTER:
-                break;
-            case PACKET_COUNT:
+            case FILTER:
+                whisper.setBloomFilter((ShhFilterMessage) msg, this);
                 break;
             default:
+                logger.error("Unknown SHH message type: " + msg.getCommand());
                 break;
         }
     }
@@ -85,28 +78,31 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     @Override
     public void handlerRemoved(ChannelHandlerContext ctx) throws Exception {
         active = false;
+        whisper.removePeer(this);
         logger.debug("handlerRemoved: ... ");
     }
 
     public void activate() {
         logger.info("SHH protocol activated");
         worldManager.getListener().trace("SHH protocol activated");
-        whisper = new Whisper(msgQueue);
+//        whisper = new Whisper(msgQueue);
+        whisper.addPeer(this);
         sendStatus();
         this.active = true;
     }
 
     private void sendStatus() {
         byte protocolVersion = ShhHandler.VERSION;
-        StatusMessage msg = new StatusMessage(protocolVersion);
+        ShhStatusMessage msg = new ShhStatusMessage(protocolVersion);
+        sendMessage(msg);
+    }
+
+    void sendMessage(ShhMessage msg) {
         msgQueue.sendMessage(msg);
     }
 
-    private void processEnvelop(Envelope envelope) {
-        if (!envelope.isEmpty()) {
-            Message m = envelope.open(privKey);
-            logger.info("ShhHandler invoke: [{}]", m);
-        }
+    public Whisper getWhisper() {
+        return whisper;
     }
 
     public boolean isActive() {

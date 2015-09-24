@@ -16,7 +16,7 @@ public class Filter {
     }
 
 
-    public Filter(Message m, Topic[] topics) {
+    public Filter(WhisperMessage m, Topic[] topics) {
         this.to = m.getTo();
         this.from = m.getPubKey();
         this.filterTopics = new TopicMatcher(topics);

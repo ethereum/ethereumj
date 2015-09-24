@@ -20,7 +20,7 @@ import static org.ethereum.util.ByteUtil.merge;
 /**
  * @author by Konstantin Shabalin
  */
-public class Message extends ShhMessage {
+public class WhisperMessage extends ShhMessage {
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private byte flags;
@@ -42,7 +42,7 @@ public class Message extends ShhMessage {
 //        super(encoded);
 //    }
 
-    public Message(byte[] payload) {
+    public WhisperMessage(byte[] payload) {
         super(null);
         Random r = new Random();
         byte[] randByte = new byte[1];
@@ -59,7 +59,7 @@ public class Message extends ShhMessage {
         this.decrypted = false;
     }
 
-    public Message(byte flags, int sent, int ttl, byte[] envelopeHash) {
+    public WhisperMessage(byte flags, int sent, int ttl, byte[] envelopeHash) {
         this.flags = flags;
         this.sent = sent;
         this.ttl = ttl;
@@ -67,7 +67,7 @@ public class Message extends ShhMessage {
         this.decrypted = false;
     }
 
-    public Envelope wrap(long pow, Options options) {
+    public ShhEnvelopeMessage wrap(long pow, Options options) {
         //check ttl is not null
         if (options.getPrivateKey() != null) {
             sign(options.getPrivateKey());
@@ -77,7 +77,7 @@ public class Message extends ShhMessage {
             encrypt(options.getToPublicKey());
         }
 
-        Envelope e = new Envelope(options.getTtl(), options.getTopics(), this);
+        ShhEnvelopeMessage e = new ShhEnvelopeMessage(options.getTtl(), options.getTopics(), this);
         e.seal(pow);
         return e;
     }
@@ -132,7 +132,6 @@ public class Message extends ShhMessage {
     public boolean decrypt(ECKey privateKey) {
         try {
             payload = ECIESCoder.decrypt(privateKey.getPrivKey(), payload);
-            // TODO: verify signature
             this.decrypted = false;
             setTo(privateKey.decompress().getPubKey());
             return true;
@@ -155,7 +154,7 @@ public class Message extends ShhMessage {
                         BigIntegers.asUnsignedByteArray(32, signature.s), new byte[]{signature.v});
     }
 
-    public ECKey recover() {
+    public ECKey.ECDSASignature decodeSignature() {
         if (signature == null) {
             return null;
         }
@@ -170,7 +169,13 @@ public class Message extends ShhMessage {
         System.arraycopy(signature, 0, r, 0, 32);
         System.arraycopy(signature, 32, s, 0, 32);
 
-        ECKey.ECDSASignature signature = ECKey.ECDSASignature.fromComponents(r, s, v);
+        return ECKey.ECDSASignature.fromComponents(r, s, v);
+    }
+
+    public ECKey recover() {
+        ECKey.ECDSASignature signature = decodeSignature();
+        if (signature == null) return null;
+
         byte[] msgHash = hash();
 
         ECKey outKey = null;
@@ -191,7 +196,7 @@ public class Message extends ShhMessage {
         return null;
     }
 
-    private byte[] hash() {
+    public byte[] hash() {
         return sha3(merge(new byte[]{flags}, payload));
     }
 

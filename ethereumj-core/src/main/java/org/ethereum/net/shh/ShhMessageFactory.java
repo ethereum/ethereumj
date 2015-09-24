@@ -15,12 +15,11 @@ public class ShhMessageFactory implements MessageFactory {
         ShhMessageCodes receivedCommand = ShhMessageCodes.fromByte(code);
         switch (receivedCommand) {
             case STATUS:
-                return new StatusMessage(encoded);
+                return new ShhStatusMessage(encoded);
             case MESSAGE:
-                return new Envelope(encoded);
-            case ADD_FILTER:
-            case REMOVE_FILTER:
-            case PACKET_COUNT:
+                return new ShhEnvelopeMessage(encoded);
+            case FILTER:
+                return new ShhFilterMessage(encoded);
             default:
                 throw new IllegalArgumentException("No such message");
         }
