@@ -1,6 +1,7 @@
 package org.ethereum.net.shh;
 
 import org.ethereum.crypto.ECKey;
+import org.spongycastle.util.encoders.Hex;
 import org.springframework.stereotype.Component;
 
 /**
@@ -8,6 +9,10 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public abstract class Whisper {
+
+    public abstract void addIdentity(ECKey key);
+
+    public abstract ECKey newIdentity();
 
     public abstract void watch(MessageWatcher f);
 

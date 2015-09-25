@@ -32,22 +32,17 @@ public class WhisperImpl extends Whisper {
 
     @Override
     public void send(ECKey from, String to, byte[] payload, Topic[] topicList, int ttl, int workToProve) {
-        WhisperMessage m = new WhisperMessage(payload);
-
-        ECKey key = null;
-
-        Options options = new Options(
-                key,
-                Hex.decode(to),
-                topicList,
-                ttl
-        );
-
-        ShhEnvelopeMessage e = m.wrap(workToProve, options);
+        WhisperMessage m = new WhisperMessage()
+                .setFrom(from)
+                .setTo(to == null ? null : Hex.decode(to))
+                .setPayload(payload)
+                .setTopics(topicList)
+                .setTtl(ttl)
+                .setNonce(workToProve);
 
         logger.info("Sending Whisper message: " + m);
 
-        addMessage(m, e, null);
+        addMessage(m, null);
     }
 
     public void post(String from, String to, String[] topics, String payload, int ttl, int pow) {
@@ -65,34 +60,19 @@ public class WhisperImpl extends Whisper {
     }
 
     public void processEnvelope(ShhEnvelopeMessage e, ShhHandler shhHandler) {
-        WhisperMessage m = open(e);
-        if (m == null) {
-            return;
-        }
-
-        logger.info("New Whisper message: " + m);
-        addMessage(m, e, shhHandler);
-    }
-
-    private WhisperMessage open(ShhEnvelopeMessage e) {
-
-        WhisperMessage m;
-
-        for (ECKey key : identities.values()) {
-            m = e.open(key);
-            if (m != null) {
-                return m;
+        for (WhisperMessage message : e.getMessages()) {
+            boolean ok = false;
+            for (ECKey key : identities.values()) {
+                if (ok = message.decrypt(key)) break;
             }
-        }
 
-        m = e.open(null);
-
-        return m;
-    }
-
-    void sendMessage(ShhEnvelopeMessage e) {
-        for (ShhHandler activePeer : activePeers) {
-            activePeer.sendEnvelope(e);
+            if (!ok) {
+                // the message might be either not-encrypted or encrypted but we have no receivers
+                // now way to know so just assuming that the message is broadcast and not encrypted
+                message.setEncrypted(false);
+            }
+            logger.info("New Whisper message: " + message);
+            addMessage(message, shhHandler);
         }
     }
 
@@ -129,33 +109,35 @@ public class WhisperImpl extends Whisper {
     // Processing both messages:
     // own outgoing messages (shhHandler == null)
     // and inbound messages from peers
-    private void addMessage(WhisperMessage m, ShhEnvelopeMessage e, ShhHandler inboundPeer) {
+    private void addMessage(WhisperMessage m, ShhHandler inboundPeer) {
         if (!known.containsKey(m)) {
             known.put(m, null);
             if (inboundPeer != null) {
-                matchMessage(m, e.getTopics());
+                matchMessage(m);
             }
 
             for (ShhHandler peer : activePeers) {
                 if (peer != inboundPeer) {
-                    peer.sendEnvelope(e);
+                    peer.sendEnvelope(new ShhEnvelopeMessage(m));
                 }
             }
         }
     }
 
-    private void matchMessage(WhisperMessage m, Topic[] topics) {
+    private void matchMessage(WhisperMessage m) {
         for (MessageWatcher f : filters) {
-            if (f.match(m.getTo(), m.getPubKey(), topics)) {
+            if (f.match(m.getTo(), m.getFrom(), m.getTopics())) {
                 f.newMessage(m);
             }
         }
     }
 
+    @Override
     public void addIdentity(ECKey key) {
         identities.put(Hex.toHexString(key.getPubKey()), key);
     }
 
+    @Override
     public ECKey newIdentity() {
         ECKey key = new ECKey().decompress();
         identities.put(Hex.toHexString(key.getPubKey()), key);

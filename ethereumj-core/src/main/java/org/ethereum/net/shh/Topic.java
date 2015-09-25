@@ -1,5 +1,7 @@
 package org.ethereum.net.shh;
 
+import org.spongycastle.util.encoders.Hex;
+
 import java.util.Arrays;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -31,7 +33,7 @@ public class Topic {
         return topic;
     }
 
-    public static Topic[] createTopics(String[] topicsString) {
+    public static Topic[] createTopics(String ... topicsString) {
         Topic[] topics = new Topic[topicsString.length];
         for (int i = 0; i < topicsString.length; i++) {
             topics[i] = new Topic(topicsString[i]);
@@ -45,5 +47,10 @@ public class Topic {
         if (obj == this) return true;
         if (!(obj instanceof Topic))return false;
         return Arrays.equals(this.topic, ((Topic) obj).getBytes());
+    }
+
+    @Override
+    public String toString() {
+        return Hex.toHexString(topic);
     }
 }
