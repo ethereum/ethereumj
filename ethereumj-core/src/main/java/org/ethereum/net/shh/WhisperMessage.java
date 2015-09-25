@@ -11,6 +11,7 @@ import org.spongycastle.util.encoders.Hex;
 
 import java.nio.charset.Charset;
 import java.security.SignatureException;
+import java.util.Arrays;
 import java.util.Random;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -213,6 +214,19 @@ public class WhisperMessage extends ShhMessage {
     @Override
     public Class<?> getAnswerMessage() {
         return null;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        WhisperMessage that = (WhisperMessage) o;
+        return Arrays.equals(hash(), that.hash());
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(hash());
     }
 
     @Override

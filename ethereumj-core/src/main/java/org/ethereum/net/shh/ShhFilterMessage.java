@@ -11,25 +11,29 @@ import static org.ethereum.net.shh.ShhMessageCodes.FILTER;
  */
 public class ShhFilterMessage extends ShhMessage {
 
-    private ByteArrayWrapper bloomFilterHash;
+    private byte[] bloomFilter;
+
+    private ShhFilterMessage() {
+    }
 
     public ShhFilterMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public ShhFilterMessage(ByteArrayWrapper bloomFilterHash) {
-        this.bloomFilterHash = bloomFilterHash;
-        this.parsed = true;
+    static ShhFilterMessage createFromFilter(byte[] bloomFilter) {
+        ShhFilterMessage ret = new ShhFilterMessage();
+        ret.bloomFilter = bloomFilter;
+        return ret;
     }
 
     private void encode() {
-        byte[] protocolVersion = RLP.encodeElement(this.bloomFilterHash.getData());
+        byte[] protocolVersion = RLP.encodeElement(this.bloomFilter);
         this.encoded = RLP.encodeList(protocolVersion);
     }
 
     private void parse() {
         RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
-        this.bloomFilterHash = new ByteArrayWrapper(paramsList.get(0).getRLPData());
+        this.bloomFilter = paramsList.get(0).getRLPData();
         parsed = true;
     }
 
@@ -37,6 +41,10 @@ public class ShhFilterMessage extends ShhMessage {
     public byte[] getEncoded() {
         if (encoded == null) encode();
         return encoded;
+    }
+
+    public byte[] getBloomFilter() {
+        return bloomFilter;
     }
 
     @Override
@@ -53,7 +61,7 @@ public class ShhFilterMessage extends ShhMessage {
     public String toString() {
         if (!parsed) parse();
         return "[" + this.getCommand().name() +
-            " hash=" + bloomFilterHash + "]";
+            " hash=" + bloomFilter + "]";
     }
 
 }

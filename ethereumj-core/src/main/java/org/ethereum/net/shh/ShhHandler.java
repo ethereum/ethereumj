@@ -21,19 +21,18 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("prototype")
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
-
-    public final static byte VERSION = 3;
-    private MessageQueue msgQueue = null;
-
-    private boolean active = false;
-
     private final static Logger logger = LoggerFactory.getLogger("net");
+    public final static byte VERSION = 3;
+
+    private MessageQueue msgQueue = null;
+    private boolean active = false;
+    private BloomFilter peerBloomFilter = BloomFilter.createAll();
 
     @Autowired
-    WorldManager worldManager;
+    private WorldManager worldManager;
 
     @Autowired
-    private Whisper whisper;
+    private WhisperImpl whisper;
 
     public ShhHandler() {
     }
@@ -60,12 +59,16 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
                 whisper.processEnvelope((ShhEnvelopeMessage) msg, this);
                 break;
             case FILTER:
-                whisper.setBloomFilter((ShhFilterMessage) msg, this);
+                setBloomFilter((ShhFilterMessage) msg);
                 break;
             default:
                 logger.error("Unknown SHH message type: " + msg.getCommand());
                 break;
         }
+    }
+
+    private void setBloomFilter(ShhFilterMessage msg) {
+        peerBloomFilter = new BloomFilter(msg.getBloomFilter());
     }
 
     @Override
@@ -85,9 +88,9 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     public void activate() {
         logger.info("SHH protocol activated");
         worldManager.getListener().trace("SHH protocol activated");
-//        whisper = new Whisper(msgQueue);
         whisper.addPeer(this);
         sendStatus();
+        sendHostBloom();
         this.active = true;
     }
 
@@ -97,12 +100,24 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
         sendMessage(msg);
     }
 
-    void sendMessage(ShhMessage msg) {
-        msgQueue.sendMessage(msg);
+    void sendHostBloom() {
+        ShhFilterMessage msg = new ShhFilterMessage(whisper.hostBloomFilter.toBytes());
+        sendMessage(msg);
     }
 
-    public Whisper getWhisper() {
-        return whisper;
+    void sendEnvelope(ShhEnvelopeMessage env) {
+        sendMessage(env);
+//        Topic[] topics = env.getTopics();
+//        for (Topic topic : topics) {
+//            if (peerBloomFilter.hasTopic(topic)) {
+//                sendMessage(env);
+//                break;
+//            }
+//        }
+    }
+
+    void sendMessage(ShhMessage msg) {
+        msgQueue.sendMessage(msg);
     }
 
     public boolean isActive() {
