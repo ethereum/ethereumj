@@ -593,7 +593,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 //                stateLogger.error("DO ROLLBACK !!!");
                 adminInfo.lostConsensus();
 
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
+                System.out.println("CONFLICT: BLOCK #" + block.getNumber());
                 System.exit(1);
                 // in case of rollback hard move the root
 //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
@@ -732,5 +732,9 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public void setPendingState(PendingState pendingState) {
         this.pendingState = pendingState;
+    }
+
+    public PendingState getPendingState() {
+        return pendingState;
     }
 }
