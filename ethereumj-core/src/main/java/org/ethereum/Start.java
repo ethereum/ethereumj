@@ -19,21 +19,16 @@ public class Start {
 
     public static void main(String args[]) throws IOException, URISyntaxException {
         CLIInterface.call(args);
+
+        if (!CONFIG.blocksLoader().equals("")) {
+            CONFIG.setSyncEnabled(false);
+            CONFIG.setDiscoveryEnabled(false);
+        }
+
         Ethereum ethereum = EthereumFactory.createEthereum();
 
-        if (CONFIG.blocksLoader().equals("")) {
-            if (CONFIG.peerActive().size() > 0) {
-/*
-                Node node = CONFIG.peerActive().get(0);
-                ethereum.connect(
-                        node.getHost(),
-                        node.getPort(),
-                        Hex.toHexString(node.getId()));
-*/
-            }
-        } else {
+        if (!CONFIG.blocksLoader().equals(""))
             ethereum.getBlockLoader().loadBlocks();
-        }
     }
 
 }
