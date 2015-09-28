@@ -201,10 +201,6 @@ public class Channel {
         return eth.hasStatusPassed();
     }
 
-    public boolean isUseful() {
-        return eth.hasStatusSucceeded();
-    }
-
     public void onDisconnect() {
         eth.onShutdown();
     }

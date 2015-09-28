@@ -221,7 +221,7 @@ public class StorageDictionary {
             return copy;
         }
 
-        private List<PathElement> getChildrenCompacted() {
+        public List<PathElement> getChildrenCompacted() {
             if (!canCompact()) return getChildren();
             if (compactedChildren == null) {
                 compactedChildren = new ArrayList<>();
