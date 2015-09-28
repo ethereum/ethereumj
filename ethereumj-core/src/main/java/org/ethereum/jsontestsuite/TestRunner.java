@@ -1,13 +1,9 @@
 package org.ethereum.jsontestsuite;
 
-import org.ethereum.core.Block;
-import org.ethereum.core.BlockchainImpl;
-import org.ethereum.core.ImportResult;
-import org.ethereum.core.Wallet;
+import org.ethereum.core.*;
 
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.*;
-import org.ethereum.core.Repository;
 import org.ethereum.jsontestsuite.builder.BlockBuilder;
 import org.ethereum.jsontestsuite.builder.RepositoryBuilder;
 import org.ethereum.jsontestsuite.model.BlockTck;
@@ -17,6 +13,7 @@ import org.ethereum.listener.CompositeEthereumListener;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.AdminInfo;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.validator.DependentBlockHeaderRuleAdapter;
 import org.ethereum.vm.*;
 import org.ethereum.vm.program.Program;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
@@ -80,13 +77,20 @@ public class TestRunner {
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
+        PendingStateImpl pendingState = new PendingStateImpl(listener, repository, blockStore, programInvokeFactory);
+        pendingState.init();
+
         BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
         blockchain.byTest = true;
 
         blockchain.setBestBlock(genesis);
         blockchain.setTotalDifficulty(genesis.getCumulativeDifficulty());
+        blockchain.setParentHeaderValidator(new DependentBlockHeaderRuleAdapter());
         blockchain.setProgramInvokeFactory(programInvokeFactory);
         programInvokeFactory.setBlockchain(blockchain);
+
+        blockchain.setPendingState(pendingState);
+        pendingState.setBlockchain(blockchain);
 
         /* 2 */ // Create block traffic list
         List<Block> blockTraffic = new ArrayList<>();

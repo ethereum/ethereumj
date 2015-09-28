@@ -268,7 +268,7 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public org.ethereum.facade.Repository getPendingState() {
-        return (org.ethereum.facade.Repository) worldManager.getBlockchain().getPendingState();
+        return (org.ethereum.facade.Repository) worldManager.getPendingState().getRepository();
     }
 
     @Override
@@ -293,12 +293,12 @@ public class EthereumImpl implements Ethereum {
 
     @Override
     public Set<Transaction> getWireTransactions() {
-        return getBlockchain().getWireTransactions();
+        return worldManager.getPendingState().getWireTransactions();
     }
 
     @Override
     public List<Transaction> getPendingStateTransactions() {
-        return getBlockchain().getPendingStateTransactions();
+        return worldManager.getPendingState().getPendingTransactions();
     }
 
     @Override

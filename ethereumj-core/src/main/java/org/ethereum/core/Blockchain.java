@@ -46,17 +46,7 @@ public interface Blockchain {
 
     public List<Block> getGarbage();
 
-    public Set<Transaction> getWireTransactions();
-    public void addWireTransactions(Set<Transaction> transactions);
-    public void clearWireTransactions(List<Transaction> receivedTransactions);
-
     public void setExitOn(long exitOn);
 
     boolean isBlockExist(byte[] hash);
-
-    void addPendingStateTransaction(Transaction tx);
-
-    List<Transaction> getPendingStateTransactions();
-
-    Repository getPendingState();
 }

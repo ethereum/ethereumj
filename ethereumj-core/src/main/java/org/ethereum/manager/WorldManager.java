@@ -68,6 +68,9 @@ public class WorldManager {
     @Autowired
     private SyncManager syncManager;
 
+    @Autowired
+    private PendingState pendingState;
+
     @PostConstruct
     public void init() {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
@@ -81,6 +84,7 @@ public class WorldManager {
 
         // must be initialized after blockchain is loaded
         syncManager.init();
+        pendingState.init();
     }
 
     public void addListener(EthereumListener listener) {
@@ -136,6 +140,10 @@ public class WorldManager {
 
     public BlockStore getBlockStore() {
         return blockStore;
+    }
+
+    public PendingState getPendingState() {
+        return pendingState;
     }
 
     public void loadBlockchain() {

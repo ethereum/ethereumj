@@ -32,17 +32,7 @@ public interface Blockchain {
     BigInteger getTotalDifficulty();
 
     /**
-     * @return - currently pending transactions received from the net
-     */
-    Set<Transaction> getWireTransactions();
-
-    /**
      * @return - last added block from blockchain
      */
     Block getBestBlock();
-
-    /**
-     * @return - currently pending transactions sent to the net
-     */
-    List<Transaction> getPendingStateTransactions();
 }

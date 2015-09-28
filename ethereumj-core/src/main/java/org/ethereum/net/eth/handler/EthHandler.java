@@ -2,10 +2,7 @@ package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import org.ethereum.core.Block;
-import org.ethereum.core.Blockchain;
-import org.ethereum.core.Genesis;
-import org.ethereum.core.Transaction;
+import org.ethereum.core.*;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.eth.sync.SyncQueue;
@@ -60,6 +57,9 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     @Autowired
     protected WorldManager worldManager;
+
+    @Autowired
+    protected PendingState pendingState;
 
     protected Channel channel;
 
@@ -266,7 +266,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         Set<Transaction> txSet = msg.getTransactions();
-        blockchain.addWireTransactions(txSet);
+        pendingState.addWireTransactions(txSet);
 
         for (Transaction tx : txSet) {
             worldManager.getWallet().addTransaction(tx);
