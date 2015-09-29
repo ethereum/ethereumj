@@ -38,12 +38,13 @@ public class ProgramTrace {
 
     public ProgramTrace(ProgramInvoke programInvoke) {
         if (CONFIG.vmTrace() && programInvoke != null) {
+            contractAddress = Hex.toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
+
             ContractDetails contractDetails = getContractDetails(programInvoke);
             if (contractDetails == null) {
                 storageSize = 0;
                 fullStorage = true;
             } else {
-                contractAddress = Hex.toHexString(contractDetails.getAddress());
                 storageSize = contractDetails.getStorageSize();
                 if (storageSize <= CONFIG.vmTraceInitStorageLimit()) {
                     fullStorage = true;
