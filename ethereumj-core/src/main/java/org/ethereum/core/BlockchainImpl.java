@@ -869,6 +869,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
         for (byte[] hash : hashes) {
             Block block = blockStore.getBlockByHash(hash);
+            if (block == null) break;
             bodies.add(block.getEncodedBody());
         }
 
