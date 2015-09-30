@@ -413,12 +413,14 @@ public class SyncManager {
         List<Channel> removed = new ArrayList<>();
         for (Channel peer : pool) {
             if (peer.hasBlocksLack()) {
-                logger.info("Peer {}: has no more blocks, removing", Utils.getNodeIdShort(peer.getPeerId()));
+                logger.info("{}: has no more blocks, ban", peer);
                 removed.add(peer);
                 updateLowerUsefulDifficulty(peer.getTotalDifficulty());
             }
         }
-        pool.removeAll(removed);
+        for (Channel peer : removed) {
+            pool.ban(peer);
+        }
     }
 
     private void fillUpPeersPool() {
