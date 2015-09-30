@@ -205,7 +205,6 @@ public class Channel {
     }
 
     public void onDisconnect() {
-        eth.onShutdown();
     }
 
     public void onSyncDone() {
