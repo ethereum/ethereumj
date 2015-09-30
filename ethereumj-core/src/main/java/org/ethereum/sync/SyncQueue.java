@@ -81,6 +81,10 @@ public class SyncQueue {
         ((BlockQueueImpl)blockQueue).setMapDBFactory(mapDBFactory);
         blockQueue.open();
 
+        if (!CONFIG.isSyncEnabled()) {
+            return;
+        }
+
         Runnable queueProducer = new Runnable(){
 
             @Override
