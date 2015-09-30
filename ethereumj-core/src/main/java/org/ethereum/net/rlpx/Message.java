@@ -21,7 +21,7 @@ public abstract class Message {
 
     public static Message decode(byte[] wire) {
 
-        if (wire.length < 98) throw new Error("Bad message");
+        if (wire.length < 98) throw new RuntimeException("Bad message");
 
         byte[] mdc = new byte[32];
         System.arraycopy(wire, 0, mdc, 0, 32);
@@ -39,14 +39,14 @@ public abstract class Message {
 
         int check = FastByteComparisons.compareTo(mdc, 0, mdc.length, mdcCheck, 0, mdcCheck.length);
 
-        if (check != 0) throw new Error("MDC check failed");
+        if (check != 0) throw new RuntimeException("MDC check failed");
 
         Message msg;
         if (type[0] == 1) msg = new PingMessage();
         else if (type[0] == 2) msg = new PongMessage();
         else if (type[0] == 3) msg = new FindNodeMessage();
         else if (type[0] == 4) msg = new NeighborsMessage();
-        else throw new Error("Unknown RLPx message");
+        else throw new RuntimeException("Unknown RLPx message: " + type[0]);
 
         msg.mdc = mdc;
         msg.signature = signature;

@@ -158,6 +158,10 @@ public class RLPTest {
         byte[] expected5 = {(byte) 0x82, (byte) 0x4E, (byte) 0xEA};
         data = RLP.encodeShort((short) 20202);
         assertArrayEquals(expected5, data);
+
+        byte[] expected6 = {(byte) 0x82, (byte) 0x9D, (byte) 0x0A};
+        data = RLP.encodeShort((short) 40202);
+        assertArrayEquals(expected6, data);
     }
 
     @Test
@@ -188,13 +192,18 @@ public class RLPTest {
         data = RLP.encodeInt(65536);
         assertArrayEquals(expected6, data);
 
-        byte[] expected7 = {(byte) 0x80};
+        byte[] expected7 = {(byte) 0x84, (byte) 0x80, (byte) 0x00, (byte) 0x00, (byte) 0x00};
         data = RLP.encodeInt(Integer.MIN_VALUE);
         assertArrayEquals(expected7, data);
 
         byte[] expected8 = {(byte) 0x84, (byte) 0x7F, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
         data = RLP.encodeInt(Integer.MAX_VALUE);
         assertArrayEquals(expected8, data);
+
+        byte[] expected9 = {(byte) 0x84, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF};
+        data = RLP.encodeInt(0xFFFFFFFF);
+        assertArrayEquals(expected9, data);
+
     }
 
     @Test
@@ -1089,5 +1098,4 @@ public class RLPTest {
         assertEquals("bzz", bzz);
         assertEquals(0x00, bzz_00);
     }
-
 }
