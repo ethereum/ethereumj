@@ -17,6 +17,7 @@ public class WhisperImpl extends Whisper {
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private Set<MessageWatcher> filters = new HashSet<>();
+    private List<Topic> knownTopics = new ArrayList<>();
 
     private Map<WhisperMessage, ?> known = new LRUMap<>(1024); // essentially Set
 
@@ -38,7 +39,7 @@ public class WhisperImpl extends Whisper {
                 .setPayload(payload)
                 .setTopics(topicList)
                 .setTtl(ttl)
-                .setNonce(workToProve);
+                .setWorkToProve(workToProve);
 
         logger.info("Sending Whisper message: " + m);
 
@@ -61,16 +62,7 @@ public class WhisperImpl extends Whisper {
 
     public void processEnvelope(ShhEnvelopeMessage e, ShhHandler shhHandler) {
         for (WhisperMessage message : e.getMessages()) {
-            boolean ok = false;
-            for (ECKey key : identities.values()) {
-                if (ok = message.decrypt(key)) break;
-            }
-
-            if (!ok) {
-                // the message might be either not-encrypted or encrypted but we have no receivers
-                // now way to know so just assuming that the message is broadcast and not encrypted
-                message.setEncrypted(false);
-            }
+            message.decrypt(identities.values(), knownTopics);
             logger.info("New Whisper message: " + message);
             addMessage(message, shhHandler);
         }
@@ -88,6 +80,7 @@ public class WhisperImpl extends Whisper {
         filters.add(f);
         for (Topic topic : f.getTopics()) {
             hostBloomFilter.addTopic(topic);
+            knownTopics.add(topic);
         }
         notifyBloomFilterChanged();
     }

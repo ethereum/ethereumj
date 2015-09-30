@@ -6,7 +6,7 @@ import java.util.Arrays;
 public abstract class MessageWatcher {
     private byte[] to;
     private byte[] from;
-    private Topic[] topics;
+    private Topic[] topics = new Topic[0];
 
     public MessageWatcher() {
     }

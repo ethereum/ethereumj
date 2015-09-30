@@ -18,6 +18,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class ShhTest {
 
+/*
     private byte[] payload = "Hello whisper!".getBytes();
     private ECKey privKey = ECKey.fromPrivate(BigInteger.TEN);
     private byte[] pubKey = privKey.decompress().getPubKey();
@@ -28,7 +29,9 @@ public class ShhTest {
             new Topic("topic 3")};
 
 
-    @Test /* Tests whether a message can be wrapped without any identity or encryption. */
+    @Test */
+/* Tests whether a message can be wrapped without any identity or encryption. *//*
+
     public void test1() {
         WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(null, null, topics, ttl);
@@ -48,7 +51,9 @@ public class ShhTest {
         assertTrue(recovered == null);
     }
 
-    @Test /* Tests whether a message can be signed, and wrapped in plain-text. */
+    @Test */
+/* Tests whether a message can be signed, and wrapped in plain-text. *//*
+
     public void test2() {
         WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(privKey, null, topics, ttl);
@@ -64,7 +69,9 @@ public class ShhTest {
         assertEquals(Hex.toHexString(pubKey), Hex.toHexString(recovered.decompress().getPubKey()));
     }
 
-    @Test /* Tests whether a message can be encrypted and decrypted using an anonymous sender (i.e. no signature).*/
+    @Test */
+/* Tests whether a message can be encrypted and decrypted using an anonymous sender (i.e. no signature).*//*
+
     public void test3() {
         WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(null, pubKey, topics, ttl);
@@ -82,7 +89,9 @@ public class ShhTest {
         assertTrue(recovered == null);
     }
 
-    @Test /* Tests whether a message can be properly signed and encrypted. */
+    @Test */
+/* Tests whether a message can be properly signed and encrypted. *//*
+
     public void test4() {
         WhisperMessage sent = new WhisperMessage(payload);
         Options options = new Options(privKey, pubKey, topics, ttl);
@@ -130,4 +139,5 @@ public class ShhTest {
         ShhEnvelopeMessage e = m.wrap(pow, options);
         return e.getEncoded();
     }
+*/
 }

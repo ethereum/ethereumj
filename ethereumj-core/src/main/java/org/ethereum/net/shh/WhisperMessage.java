@@ -5,16 +5,21 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SignatureException;
 import java.util.*;
 
 import static org.ethereum.crypto.HashUtil.sha3;
+import static org.ethereum.net.swarm.Util.rlpDecodeInt;
 import static org.ethereum.util.ByteUtil.merge;
+import static org.ethereum.util.ByteUtil.xor;
 
 /**
  * Created by Anton Nashatyrev on 25.09.2015.
@@ -25,7 +30,7 @@ public class WhisperMessage extends ShhMessage {
     public static final int SIGNATURE_FLAG = 128;
     public static final int SIGNATURE_LENGTH = 65;
 
-    private Topic[] topics;
+    private Topic[] topics = new Topic[0];
     private byte[] payload;
     private byte flags;
     private byte[] signature;
@@ -34,13 +39,15 @@ public class WhisperMessage extends ShhMessage {
 
     private int expire;
     private int ttl;
-    private int nonce;
+    int nonce = 0;
 
     private boolean encrypted = false;
+    private long pow = 0;
+    private byte[] messageBytes;
 
     public WhisperMessage() {
         setTtl(50);
-        nonce = 50;
+        setWorkToProve(50);
     }
 
     public WhisperMessage(byte[] encoded) {
@@ -65,12 +72,12 @@ public class WhisperMessage extends ShhMessage {
         return ttl;
     }
 
-    public int getNonce() {
-        return nonce;
+    public long getPow() {
+        return pow;
     }
 
     public byte[] getFrom() {
-        return from.getPubKey();
+        return from == null ? null : from.getPubKey();
     }
 
     public byte[] getTo() {
@@ -81,7 +88,7 @@ public class WhisperMessage extends ShhMessage {
 
     private void parse() {
         if (!parsed) {
-            RLPList paramsList = RLP.decode2(encoded);
+            RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
             this.expire = ByteUtil.byteArrayToInt(paramsList.get(0).getRLPData());
             this.ttl = ByteUtil.byteArrayToInt(paramsList.get(1).getRLPData());
 
@@ -93,33 +100,78 @@ public class WhisperMessage extends ShhMessage {
             this.topics = new Topic[topics.size()];
             topics.toArray(this.topics);
 
-            byte[] data = paramsList.get(3).getRLPData();
-            this.nonce = ByteUtil.byteArrayToInt(paramsList.get(4).getRLPData());
-            flags = data[0];
+            messageBytes = paramsList.get(3).getRLPData();
+            this.nonce = rlpDecodeInt(paramsList.get(4));
+            payload = messageBytes;
+//            flags = messageBytes[0];
+//
+//            if ((flags & WhisperMessage.SIGNATURE_FLAG) != 0) {
+//                if (messageBytes.length < WhisperMessage.SIGNATURE_LENGTH) {
+//                    throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
+//                }
+//                signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
+//                System.arraycopy(messageBytes, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
+//                payload = new byte[messageBytes.length - WhisperMessage.SIGNATURE_LENGTH - 1];
+//                System.arraycopy(messageBytes, WhisperMessage.SIGNATURE_LENGTH + 1, payload, 0, payload.length);
+//                from = recover().decompress();
+//            } else {
+//                payload = new byte[messageBytes.length - 1];
+//                System.arraycopy(messageBytes, 1, payload, 0, payload.length);
+//            }
 
-            if ((flags & WhisperMessage.SIGNATURE_FLAG) != 0) {
-                if (data.length < WhisperMessage.SIGNATURE_LENGTH) {
-                    throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
-                }
-                signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
-                System.arraycopy(data, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
-                payload = new byte[data.length - WhisperMessage.SIGNATURE_LENGTH - 1];
-                System.arraycopy(data, WhisperMessage.SIGNATURE_LENGTH + 1, payload, 0, payload.length);
-                from = recover().decompress();
-            } else {
-                payload = new byte[data.length - 1];
-                System.arraycopy(data, 1, payload, 0, payload.length);
-            }
+            pow = workProved();
 
             this.parsed = true;
         }
     }
 
-    public void setEncrypted(boolean encrypted) {
+    void setEncrypted(boolean encrypted) {
         this.encrypted = encrypted;
     }
 
-    public boolean decrypt(ECKey privateKey) {
+    private boolean checkSignature() {
+        flags = messageBytes[0];
+
+        if ((flags & WhisperMessage.SIGNATURE_FLAG) != 0) {
+            if (messageBytes.length < WhisperMessage.SIGNATURE_LENGTH) {
+                throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
+            }
+            signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
+            System.arraycopy(messageBytes, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
+            payload = new byte[messageBytes.length - WhisperMessage.SIGNATURE_LENGTH - 1];
+            System.arraycopy(messageBytes, WhisperMessage.SIGNATURE_LENGTH + 1, payload, 0, payload.length);
+            from = recover().decompress();
+        } else {
+            payload = new byte[messageBytes.length - 1];
+            System.arraycopy(messageBytes, 1, payload, 0, payload.length);
+        }
+        // TODO: check signature
+        return true;
+    }
+
+    public boolean decrypt(Collection<ECKey> identities, Collection<Topic> knownTopics) {
+        boolean ok = false;
+        for (ECKey key : identities) {
+            ok = decrypt(key);
+            if (ok) break;
+        }
+
+        if (!ok) {
+        // decrypting as broadcast
+            ok = openBroadcastMessage(knownTopics);
+        }
+
+        if (ok) {
+            return checkSignature();
+        }
+
+        // the message might be either not-encrypted or encrypted but we have no receivers
+        // now way to know so just assuming that the message is broadcast and not encrypted
+//        setEncrypted(false);
+        return false;
+    }
+
+    private boolean decrypt(ECKey privateKey) {
         try {
             payload = ECIESCoder.decrypt(privateKey.getPrivKey(), payload);
             to = privateKey.decompress().getPubKey();
@@ -129,6 +181,31 @@ public class WhisperMessage extends ShhMessage {
             logger.info("Wrong identity or the message payload isn't encrypted");
         } catch (Throwable e) {
 
+        }
+        return false;
+    }
+
+    private boolean openBroadcastMessage(Collection<Topic> knownTopics) {
+        for (Topic kTopic : knownTopics) {
+            for (int i = 0; i < topics.length; i++) {
+                if (kTopic.equals(topics[i])) {
+
+                    byte[] encryptedKey = Arrays.copyOfRange(payload, i * 2 * 32, i * 2 * 32 + 32);
+                    byte[] salt = Arrays.copyOfRange(payload, (i * 2 + 1) * 32, (i * 2 + 2) * 32);
+                    byte[] cipherText = Arrays.copyOfRange(payload, (topics.length * 2) * 32, payload.length);
+                    byte[] gamma = sha3(xor(kTopic.getFullTopic(), salt));
+                    ECKey key = ECKey.fromPrivate(xor(gamma, encryptedKey));
+                    try {
+                        payload = ECIESCoder.decrypt(key.getPrivKey(), cipherText);
+                    } catch (Exception e) {
+                        logger.warn("Error decrypting message with known topic: " + kTopic);
+                        // the abridged topic clash can potentially happen, so just continue with other topics
+                        continue;
+                    }
+                    encrypted = false;
+                    return true;
+                }
+            }
         }
         return false;
     }
@@ -161,7 +238,8 @@ public class WhisperMessage extends ShhMessage {
         try {
             outKey = ECKey.signatureToKey(msgHash, signature.toBase64());
         } catch (SignatureException e) {
-            e.printStackTrace();
+            logger.warn("Exception recovering signature: ", e);
+            throw new RuntimeException(e);
         }
 
         return outKey;
@@ -169,6 +247,13 @@ public class WhisperMessage extends ShhMessage {
 
     public byte[] hash() {
         return sha3(merge(new byte[]{flags}, payload));
+    }
+
+    private int workProved() {
+        byte[] d = new byte[64];
+        System.arraycopy(sha3(encode(false)), 0, d, 0, 32);
+        ByteBuffer.wrap(d).putInt(32, nonce);
+        return getFirstBitSet(sha3(d));
     }
 
     /***********   Encode routines   ************/
@@ -190,6 +275,7 @@ public class WhisperMessage extends ShhMessage {
 
     /**
      * If set the message will be encrypted with the receiver public key
+     * If not the message will be encrypted as broadcast with Topics
      * @param to public key
      */
     public WhisperMessage setTo(byte[] to) {
@@ -212,64 +298,71 @@ public class WhisperMessage extends ShhMessage {
         return this;
     }
 
-    public WhisperMessage setNonce(int nonce) {
-        this.nonce = nonce;
+    public WhisperMessage setWorkToProve(long ms) {
+        this.pow = ms;
         return this;
     }
 
     @Override
     public byte[] getEncoded() {
         if (encoded == null) {
-            if (from != null) {
-                sign();
-            }
-            if (to != null) {
-                encrypt();
-            }
-            byte[] msgBytes = getBytes();
-
-            byte[] expire = RLP.encode(this.expire);
-            byte[] ttl = RLP.encode(this.ttl);
-
-            List<byte[]> topics = new Vector<>();
-            for (Topic t : this.topics) {
-                topics.add(RLP.encodeElement(t.getBytes()));
-            }
-            byte[][] topicsArray = topics.toArray(new byte[topics.size()][]);
-            byte[] encodedTopics = RLP.encodeList(topicsArray);
-
-            byte[] data = RLP.encodeElement(msgBytes);
-
-            // TODO: add POW
-
-            byte[] nonce = RLP.encodeInt(this.nonce);
-
-            this.encoded = RLP.encodeList(expire, ttl, encodedTopics, data, nonce);
+            byte[] withoutNonce = encode(false);
+            nonce = seal(withoutNonce, pow);
+            encoded = encode(true);
         }
         return encoded;
     }
 
-    public void seal(long pow) {
+    private byte[] getMessageBytes() {
+        if (messageBytes == null) {
+            if (from != null) {
+                sign();
+            }
+
+            encrypt();
+            messageBytes = getBytes();
+        }
+        return messageBytes;
+    }
+
+    public byte[] encode(boolean withNonce) {
+        byte[] expire = RLP.encode(this.expire);
+        byte[] ttl = RLP.encode(this.ttl);
+
+        List<byte[]> topics = new Vector<>();
+        for (Topic t : this.topics) {
+            topics.add(RLP.encodeElement(t.getBytes()));
+        }
+        byte[][] topicsArray = topics.toArray(new byte[topics.size()][]);
+        byte[] encodedTopics = RLP.encodeList(topicsArray);
+
+        byte[] data = RLP.encodeElement(getMessageBytes());
+
+        byte[] nonce = RLP.encodeInt(this.nonce);
+
+        return withNonce ? RLP.encodeList(expire, ttl, encodedTopics, data, nonce) :
+                RLP.encodeList(expire, ttl, encodedTopics, data);
+    }
+
+    private int seal(byte[] encoded, long pow) {
+        int ret = 0;
         byte[] d = new byte[64];
-//        encode();
-        byte[] rlp = this.encoded;
-        int l = rlp.length < 32 ? rlp.length : 32;
-        System.arraycopy(rlp, 0, d, 0, l);
+        ByteBuffer byteBuffer = ByteBuffer.wrap(d);
+        System.arraycopy(sha3(encoded), 0, d, 0, 32);
 
         long then = System.currentTimeMillis() + pow;
-
+        int nonce = 0;
         for (int bestBit = 0; System.currentTimeMillis() < then;) {
-            for (int i = 0, nonce = 0; i < 1024; ++i, ++nonce) {
-                byte[] nonceBytes = intToByteArray(nonce);
-                System.arraycopy(nonceBytes, 0, d, 60, nonceBytes.length);
+            for (int i = 0; i < 1024; ++i, ++nonce) {
+                byteBuffer.putInt(32, nonce);
                 int fbs = getFirstBitSet(sha3(d));
                 if (fbs > bestBit) {
-                    this.nonce = nonce;
+                    ret = nonce;
                     bestBit = fbs;
                 }
             }
         }
-        this.encoded = null;
+        return ret;
     }
 
     private int getFirstBitSet(byte[] bytes) {
@@ -282,15 +375,6 @@ public class WhisperMessage extends ShhMessage {
         return 0;
     }
 
-    private byte[] intToByteArray(int value) {
-        return new byte[] {
-                (byte)(value >>> 24),
-                (byte)(value >>> 16),
-                (byte)(value >>> 8),
-                (byte)value};
-    }
-
-
     public byte[] getBytes() {
         if (signature != null) {
             return merge(new byte[]{flags}, signature, payload);
@@ -301,12 +385,32 @@ public class WhisperMessage extends ShhMessage {
 
     private void encrypt() {
         try {
-            ECKey key = ECKey.fromPublicOnly(to);
-            ECPoint pubKeyPoint = key.getPubKeyPoint();
-            payload = ECIESCoder.encrypt(pubKeyPoint, payload);
+            if (to != null) {
+                ECKey key = ECKey.fromPublicOnly(to);
+                ECPoint pubKeyPoint = key.getPubKeyPoint();
+                payload = ECIESCoder.encrypt(pubKeyPoint, payload);
+            } else if (topics.length > 0){
+                // encrypting as broadcast message
+                byte[] topicKeys = new byte[topics.length * 64];
+                ECKey key = new ECKey();
+                Random rnd = new Random();
+                byte[] salt = new byte[32];
+                for (int i = 0; i < topics.length; i++) {
+                    rnd.nextBytes(salt);
+                    byte[] gamma = sha3(xor(topics[i].getFullTopic(), salt));
+                    byte[] encodedKey = xor(gamma, key.getPrivKeyBytes());
+                    System.arraycopy(encodedKey, 0, topicKeys, i * 64, 32);
+                    System.arraycopy(salt, 0, topicKeys, i * 64 + 32, 32);
+                }
+                ECPoint pubKeyPoint = key.getPubKeyPoint();
+                payload = ByteUtil.merge(topicKeys, ECIESCoder.encrypt(pubKeyPoint, payload));
+            } else {
+                logger.debug("No 'to' or topics for outbound message. Will not be encrypted.");
+            }
         } catch (Exception e) {
             logger.error("Unexpected error while encrypting: ", e);
         }
+        encrypted = true;
     }
 
     private void sign() {

@@ -2,6 +2,7 @@ package org.ethereum.net.shh;
 
 import org.spongycastle.util.encoders.Hex;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 
 import static org.ethereum.crypto.HashUtil.sha3;
@@ -10,26 +11,26 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * @author by Konstantin Shabalin
  */
 public class Topic {
-
-
-    private byte[] topic = new byte[4];
+    private byte[] fullTopic;
+    private byte[] abrigedTopic = new byte[4];
 
     public Topic(byte[] data) {
-        this.topic = data;
+        this.abrigedTopic = data;
     }
 
     public Topic(String data) {
-        this.topic = buildTopic(data.getBytes());
+        fullTopic = sha3(data.getBytes(StandardCharsets.UTF_8));
+        this.abrigedTopic = buildAbrigedTopic(fullTopic);
     }
 
     public byte[] getBytes() {
-        return topic;
+        return abrigedTopic;
     }
 
-    private byte[] buildTopic(byte[] data) {
-        byte[] hash = sha3(data);
+    private byte[] buildAbrigedTopic(byte[] data) {
+//        byte[] hash = sha3(data);
         byte[] topic = new byte[4];
-        System.arraycopy(hash, 0, topic, 0, 4);
+        System.arraycopy(data, 0, topic, 0, 4);
         return topic;
     }
 
@@ -41,16 +42,24 @@ public class Topic {
         return topics;
     }
 
+    public byte[] getAbrigedTopic() {
+        return abrigedTopic;
+    }
+
+    public byte[] getFullTopic() {
+        return fullTopic;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (obj == null) return false;
         if (obj == this) return true;
         if (!(obj instanceof Topic))return false;
-        return Arrays.equals(this.topic, ((Topic) obj).getBytes());
+        return Arrays.equals(this.abrigedTopic, ((Topic) obj).getBytes());
     }
 
     @Override
     public String toString() {
-        return Hex.toHexString(topic);
+        return Hex.toHexString(abrigedTopic);
     }
 }

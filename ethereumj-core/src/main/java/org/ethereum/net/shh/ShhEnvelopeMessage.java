@@ -8,6 +8,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static org.ethereum.net.shh.ShhMessageCodes.MESSAGE;
+
 /**
  * Created by Anton Nashatyrev on 25.09.2015.
  */
@@ -30,11 +32,16 @@ public class ShhEnvelopeMessage extends ShhMessage {
         parsed = true;
     }
 
+    @Override
+    public ShhMessageCodes getCommand() {
+        return MESSAGE;
+    }
+
     public void addMessage(WhisperMessage msg) {
         messages.add(msg);
     }
 
-    private void parse() {
+    public void parse() {
         if (!parsed) {
             RLPList paramsList = (RLPList) RLP.decode2(encoded).get(0);
 
