@@ -11,7 +11,6 @@ import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.RLP;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.ethereum.validator.ParentBlockHeaderValidator;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -816,13 +815,17 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             blockNumber = block.getNumber();
         }
 
-        byte[] startHash = getStartHash(blockNumber, skip, limit, reverse);
+        long bestNumber = bestBlock.getNumber();
+
+        int qty = getQty(blockNumber, bestNumber, limit);
+
+        byte[] startHash = getStartHash(blockNumber, skip, qty, reverse);
 
         if (startHash == null) {
             return Collections.emptyList();
         }
 
-        List<BlockHeader> headers = blockStore.getListHeadersEndWith(startHash, limit);
+        List<BlockHeader> headers = blockStore.getListHeadersEndWith(startHash, qty);
 
         // blocks come with falling numbers
         if (!reverse) {
@@ -832,17 +835,22 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         return headers;
     }
 
+    private int getQty(long blockNumber, long bestNumber, int limit) {
+
+        if (blockNumber + limit - 1 > bestNumber) {
+            return (int) (bestNumber - blockNumber + 1);
+        } else {
+            return limit;
+        }
+    }
+
     private byte[] getStartHash(long blockNumber, int skip, int qty, boolean reverse) {
-        long bestNumber = bestBlock.getNumber();
+
         long startNumber;
 
         if (reverse) {
             startNumber = blockNumber - skip;
         } else {
-            if (blockNumber + qty - 1 > bestNumber) {
-                qty = (int) (bestNumber - blockNumber + 1);
-            }
-
             startNumber = blockNumber + skip + qty - 1;
         }
 
