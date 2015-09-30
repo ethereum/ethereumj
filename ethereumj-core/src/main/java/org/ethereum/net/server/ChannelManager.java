@@ -6,7 +6,6 @@ import org.ethereum.manager.WorldManager;
 
 import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
-import org.ethereum.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,17 +59,17 @@ public class ChannelManager {
     private void processNewPeers() {
         List<Channel> processed = new ArrayList<>();
         for(Channel peer : newPeers) {
+
             if(peer.isProtocolsInitialized()) {
-                if(peer.isUseful()) {
-                    processUseful(peer);
-                }
+                process(peer);
                 processed.add(peer);
             }
+
         }
         newPeers.removeAll(processed);
     }
 
-    private void processUseful(Channel peer) {
+    private void process(Channel peer) {
         if(peer.hasEthStatusSucceeded()) {
             // prohibit transactions processing until main sync is done
             if (!syncManager.isSyncDone()) {
