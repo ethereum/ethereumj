@@ -309,16 +309,33 @@ public class IndexedBlockStore implements BlockStore{
     @Override
     public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
 
-        List<Block> cachedBlocks = new ArrayList<>();
-        if (cache != null)
-            cachedBlocks = cache.getListBlocksEndWith(hash, qty);
+        if (cache == null)
+            return getListBlocksEndWithInner(hash, qty);
+
+        List<Block> cachedBlocks = cache.getListBlocksEndWith(hash, qty);
+
+        if (cachedBlocks.size() == qty) return cachedBlocks;
+
+        if (cachedBlocks.isEmpty())
+            return getListBlocksEndWithInner(hash, qty);
+
+        Block latestCached = cachedBlocks.get(cachedBlocks.size() - 1);
+
+        List<Block> notCachedBlocks = getListBlocksEndWithInner(latestCached.getParentHash(), qty - cachedBlocks.size());
+        cachedBlocks.addAll(notCachedBlocks);
+
+        return cachedBlocks;
+    }
+
+    private List<Block> getListBlocksEndWithInner(byte[] hash, long qty) {
 
         byte[] rlp = this.blocks.get(hash);
-        if (rlp == null) return cachedBlocks;
+
+        if (rlp == null) return new ArrayList<>();
 
         List<Block> blocks = new ArrayList<>((int) qty);
 
-        for (int i = 0; i < qty; ++i){
+        for (int i = 0; i < qty; ++i) {
 
             Block block = new Block(rlp);
             blocks.add(block);
