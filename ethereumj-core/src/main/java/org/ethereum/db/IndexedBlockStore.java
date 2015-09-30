@@ -76,7 +76,13 @@ public class IndexedBlockStore implements BlockStore{
             blocks.put(hash, cache.blocks.get(hash));
         }
 
-        index.putAll( cache.index );
+        for (Map.Entry<Long, List<BlockInfo>> e : cache.index.entrySet()) {
+            Long number = e.getKey();
+            List<BlockInfo> infos = e.getValue();
+
+            if (index.containsKey(number)) infos.addAll(index.get(number));
+            index.put(number, infos);
+        }
 
         cache.blocks.close();
         cache.index.clear();

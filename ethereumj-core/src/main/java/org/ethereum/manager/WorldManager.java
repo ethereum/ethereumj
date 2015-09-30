@@ -21,8 +21,10 @@ import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 /**
  * WorldManager is a singleton containing references to different parts of the system.
@@ -185,7 +187,11 @@ public class WorldManager {
         } else {
 
             // Update world state to latest loaded block from db
-            this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
+            // if state is not generated from empty premine list
+            // todo this is just a workaround, move EMPTY_TRIE_HASH logic to Trie implementation
+            if (!Arrays.equals(blockchain.getBestBlock().getStateRoot(), EMPTY_TRIE_HASH)) {
+                this.repository.syncToRoot(blockchain.getBestBlock().getStateRoot());
+            }
         }
 
 /* todo: return it when there is no state conflicts on the chain

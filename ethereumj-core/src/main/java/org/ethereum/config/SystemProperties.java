@@ -74,6 +74,9 @@ public class SystemProperties {
     private String bindIp = null;
     private String externalIp = null;
 
+    private Boolean syncEnabled = null;
+    private Boolean discoveryEnabled = null;
+
     private SystemProperties() {
         try {
             Config testConfig = ConfigFactory.load("test-ethereumj.conf");
@@ -167,7 +170,11 @@ public class SystemProperties {
 
     @ValidateMe
     public boolean peerDiscovery() {
-        return config.getBoolean("peer.discovery.enabled");
+        return discoveryEnabled == null ? config.getBoolean("peer.discovery.enabled") : discoveryEnabled;
+    }
+
+    public void setDiscoveryEnabled(Boolean discoveryEnabled) {
+        this.discoveryEnabled = discoveryEnabled;
     }
 
     @ValidateMe
@@ -501,7 +508,13 @@ public class SystemProperties {
     }
 
     @ValidateMe
-    public boolean isSyncEnabled() { return config.getBoolean("sync.enabled");}
+    public boolean isSyncEnabled() {
+        return this.syncEnabled == null ? config.getBoolean("sync.enabled") : syncEnabled;
+    }
+
+    public void setSyncEnabled(Boolean syncEnabled) {
+        this.syncEnabled = syncEnabled;
+    }
 
     @ValidateMe
     public boolean isPublicHomeNode() { return config.getBoolean("peer.discovery.public.home.node");}

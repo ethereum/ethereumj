@@ -362,15 +362,16 @@ public class Transaction {
         return tx.hashCode() == this.hashCode();
     }
 
-    public static Transaction createDefault(String to, BigInteger ammount, BigInteger nonce){
-
-        return new Transaction(BigIntegers.asUnsignedByteArray(nonce),
-                BigIntegers.asUnsignedByteArray(DEFAULT_GAS_PRICE),
-                BigIntegers.asUnsignedByteArray(DEFAULT_BALANCE_GAS),
-                Hex.decode(to),
-                BigIntegers.asUnsignedByteArray(ammount),
-                null);
+    public static Transaction createDefault(String to, BigInteger amount, BigInteger nonce){
+        return create(to, amount, nonce, DEFAULT_GAS_PRICE, DEFAULT_BALANCE_GAS);
     }
 
-
+    public static Transaction create(String to, BigInteger amount, BigInteger nonce, BigInteger gasPrice, BigInteger gasLimit){
+        return new Transaction(BigIntegers.asUnsignedByteArray(nonce),
+                BigIntegers.asUnsignedByteArray(gasPrice),
+                BigIntegers.asUnsignedByteArray(gasLimit),
+                Hex.decode(to),
+                BigIntegers.asUnsignedByteArray(amount),
+                null);
+    }
 }
