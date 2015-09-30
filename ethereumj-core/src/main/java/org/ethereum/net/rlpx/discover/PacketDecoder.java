@@ -8,6 +8,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.net.rlpx.Message;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.List;
 
@@ -19,8 +20,12 @@ public class PacketDecoder extends MessageToMessageDecoder<DatagramPacket> {
         ByteBuf buf = packet.content();
         byte[] encoded = new byte[buf.readableBytes()];
         buf.readBytes(encoded);
-        Message msg = Message.decode(encoded);
-        DiscoveryEvent event = new DiscoveryEvent(msg, packet.sender());
-        out.add(event);
+        try {
+            Message msg = Message.decode(encoded);
+            DiscoveryEvent event = new DiscoveryEvent(msg, packet.sender());
+            out.add(event);
+        } catch (Exception e) {
+            throw new RuntimeException("Exception processing inbound message from " + ctx.channel().remoteAddress() + ": " + Hex.toHexString(encoded), e);
+        }
     }
 }
