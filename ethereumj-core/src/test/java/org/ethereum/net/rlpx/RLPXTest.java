@@ -112,7 +112,7 @@ public class RLPXTest {
     }
 
 
-    @Test(expected = Error.class)// failure on MDC
+    @Test(expected = Exception.class)// failure on MDC
     public void test5() {
 
         byte[] id = sha3("+++".getBytes(Charset.forName("UTF-8")));
