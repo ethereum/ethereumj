@@ -99,12 +99,6 @@ public class ChannelManager {
     }
 
     public void add(Channel peer) {
-
-        if (newPeers.contains(peer)) {
-            peer.disconnect(DUPLICATE_PEER);
-            return;
-        }
-
         newPeers.add(peer);
     }
 
