@@ -121,9 +121,16 @@ public class PeersPool implements Iterable<Channel> {
             return;
         }
 
+        boolean existed;
         synchronized (activePeers) {
-            activePeers.values().remove(peer);
+            existed = activePeers.values().remove(peer);
             bannedPeers.remove(peer);
+        }
+
+        // do not count disconnects for nodeId
+        // if exact peer is not an active one
+        if (!existed) {
+            return;
         }
 
         synchronized (disconnectHits) {
