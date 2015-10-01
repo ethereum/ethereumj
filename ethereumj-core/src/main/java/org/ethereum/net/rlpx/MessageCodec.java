@@ -114,7 +114,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         Message msg = createMessage((byte) frame.getType(), payload);
 
         if (loggerNet.isInfoEnabled())
-            loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
+            loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg);
 
         EthereumListener listener = worldManager.getListener();
         listener.onRecvMessage(msg);
@@ -130,7 +130,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         worldManager.getListener().trace(output);
 
         if (loggerNet.isInfoEnabled())
-            loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
+            loggerNet.info("To: \t{} \tSend: \t{}", channel, msg);
 
         byte[] encoded = msg.getEncoded();
 
@@ -204,7 +204,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 } else {
                     DisconnectMessage message = new DisconnectMessage(payload);
                     if (loggerNet.isInfoEnabled())
-                        loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), message);
+                        loggerNet.info("From: \t{} \tRecv: \t{}", channel, message);
                     channel.getNodeStatistics().nodeDisconnectedRemote(message.getReason());
                 }
             }

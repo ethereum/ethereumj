@@ -237,6 +237,10 @@ public class Channel {
         msgQueue.disconnect(reason);
     }
 
+    public InetSocketAddress getInetSocketAddress() {
+        return inetSocketAddress;
+    }
+
     // ETH sub protocol
 
     public boolean hasEthStatusSucceeded() {
@@ -328,6 +332,6 @@ public class Channel {
 
     @Override
     public String toString() {
-        return "Peer " + getPeerIdShort();
+        return String.format("%s | %s", getPeerIdShort(), inetSocketAddress);
     }
 }
