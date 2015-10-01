@@ -5,12 +5,10 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
 import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.encoders.Hex;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.security.SignatureException;
@@ -103,21 +101,6 @@ public class WhisperMessage extends ShhMessage {
             messageBytes = paramsList.get(3).getRLPData();
             this.nonce = rlpDecodeInt(paramsList.get(4));
             payload = messageBytes;
-//            flags = messageBytes[0];
-//
-//            if ((flags & WhisperMessage.SIGNATURE_FLAG) != 0) {
-//                if (messageBytes.length < WhisperMessage.SIGNATURE_LENGTH) {
-//                    throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
-//                }
-//                signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
-//                System.arraycopy(messageBytes, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
-//                payload = new byte[messageBytes.length - WhisperMessage.SIGNATURE_LENGTH - 1];
-//                System.arraycopy(messageBytes, WhisperMessage.SIGNATURE_LENGTH + 1, payload, 0, payload.length);
-//                from = recover().decompress();
-//            } else {
-//                payload = new byte[messageBytes.length - 1];
-//                System.arraycopy(messageBytes, 1, payload, 0, payload.length);
-//            }
 
             pow = workProved();
 
@@ -125,28 +108,28 @@ public class WhisperMessage extends ShhMessage {
         }
     }
 
-    void setEncrypted(boolean encrypted) {
-        this.encrypted = encrypted;
-    }
-
-    private boolean checkSignature() {
-        flags = messageBytes[0];
+    private boolean parseAndCheckSignature() {
+        flags = payload[0];
 
         if ((flags & WhisperMessage.SIGNATURE_FLAG) != 0) {
-            if (messageBytes.length < WhisperMessage.SIGNATURE_LENGTH) {
+            if (payload.length < WhisperMessage.SIGNATURE_LENGTH) {
                 throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
             }
             signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
-            System.arraycopy(messageBytes, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
-            payload = new byte[messageBytes.length - WhisperMessage.SIGNATURE_LENGTH - 1];
-            System.arraycopy(messageBytes, WhisperMessage.SIGNATURE_LENGTH + 1, payload, 0, payload.length);
+            System.arraycopy(payload, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
+            byte[] msg = new byte[payload.length - WhisperMessage.SIGNATURE_LENGTH - 1];
+            System.arraycopy(payload, WhisperMessage.SIGNATURE_LENGTH + 1, msg, 0, msg.length);
+            payload = msg;
             from = recover().decompress();
+
+            // TODO: check signature
+            return true;
         } else {
-            payload = new byte[messageBytes.length - 1];
-            System.arraycopy(messageBytes, 1, payload, 0, payload.length);
+            byte[] msg = new byte[payload.length - 1];
+            System.arraycopy(payload, 1, msg, 0, msg.length);
+            payload = msg;
+            return true;
         }
-        // TODO: check signature
-        return true;
     }
 
     public boolean decrypt(Collection<ECKey> identities, Collection<Topic> knownTopics) {
@@ -162,8 +145,7 @@ public class WhisperMessage extends ShhMessage {
         }
 
         if (ok) {
-            // TODO
-//            return checkSignature();
+            return parseAndCheckSignature();
         }
 
         // the message might be either not-encrypted or encrypted but we have no receivers
@@ -175,8 +157,6 @@ public class WhisperMessage extends ShhMessage {
     private boolean decrypt(ECKey privateKey) {
         try {
             payload = ECIESCoder.decryptSimple(privateKey.getPrivKey(), payload);
-            flags = payload[0];
-            payload = Arrays.copyOfRange(payload, 1, payload.length);
             to = privateKey.decompress().getPubKey();
             encrypted = false;
             return true;
@@ -309,23 +289,17 @@ public class WhisperMessage extends ShhMessage {
     @Override
     public byte[] getEncoded() {
         if (encoded == null) {
+            if (from != null) {
+                sign();
+            }
+            payload = getBytes();
+            encrypt();
+
             byte[] withoutNonce = encode(false);
             nonce = seal(withoutNonce, pow);
             encoded = encode(true);
         }
         return encoded;
-    }
-
-    private byte[] getMessageBytes() {
-        if (messageBytes == null) {
-            if (from != null) {
-                sign();
-            }
-
-            encrypt();
-            messageBytes = getBytes();
-        }
-        return messageBytes;
     }
 
     public byte[] encode(boolean withNonce) {
@@ -339,7 +313,7 @@ public class WhisperMessage extends ShhMessage {
         byte[][] topicsArray = topics.toArray(new byte[topics.size()][]);
         byte[] encodedTopics = RLP.encodeList(topicsArray);
 
-        byte[] data = RLP.encodeElement(getMessageBytes());
+        byte[] data = RLP.encodeElement(payload);
 
         byte[] nonce = RLP.encodeInt(this.nonce);
 
