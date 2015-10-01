@@ -162,7 +162,8 @@ public class WhisperMessage extends ShhMessage {
         }
 
         if (ok) {
-            return checkSignature();
+            // TODO
+//            return checkSignature();
         }
 
         // the message might be either not-encrypted or encrypted but we have no receivers
@@ -173,12 +174,14 @@ public class WhisperMessage extends ShhMessage {
 
     private boolean decrypt(ECKey privateKey) {
         try {
-            payload = ECIESCoder.decrypt(privateKey.getPrivKey(), payload);
+            payload = ECIESCoder.decryptSimple(privateKey.getPrivKey(), payload);
+            flags = payload[0];
+            payload = Arrays.copyOfRange(payload, 1, payload.length);
             to = privateKey.decompress().getPubKey();
             encrypted = false;
             return true;
         } catch (Exception e) {
-            logger.info("Wrong identity or the message payload isn't encrypted");
+            logger.debug("Wrong identity or the message payload isn't encrypted");
         } catch (Throwable e) {
 
         }
@@ -196,7 +199,7 @@ public class WhisperMessage extends ShhMessage {
                     byte[] gamma = sha3(xor(kTopic.getFullTopic(), salt));
                     ECKey key = ECKey.fromPrivate(xor(gamma, encryptedKey));
                     try {
-                        payload = ECIESCoder.decrypt(key.getPrivKey(), cipherText);
+                        payload = ECIESCoder.decryptSimple(key.getPrivKey(), cipherText);
                     } catch (Exception e) {
                         logger.warn("Error decrypting message with known topic: " + kTopic);
                         // the abridged topic clash can potentially happen, so just continue with other topics
@@ -388,7 +391,7 @@ public class WhisperMessage extends ShhMessage {
             if (to != null) {
                 ECKey key = ECKey.fromPublicOnly(to);
                 ECPoint pubKeyPoint = key.getPubKeyPoint();
-                payload = ECIESCoder.encrypt(pubKeyPoint, payload);
+                payload = ECIESCoder.encryptSimple(pubKeyPoint, payload);
             } else if (topics.length > 0){
                 // encrypting as broadcast message
                 byte[] topicKeys = new byte[topics.length * 64];
@@ -403,7 +406,7 @@ public class WhisperMessage extends ShhMessage {
                     System.arraycopy(salt, 0, topicKeys, i * 64 + 32, 32);
                 }
                 ECPoint pubKeyPoint = key.getPubKeyPoint();
-                payload = ByteUtil.merge(topicKeys, ECIESCoder.encrypt(pubKeyPoint, payload));
+                payload = ByteUtil.merge(topicKeys, ECIESCoder.encryptSimple(pubKeyPoint, payload));
             } else {
                 logger.debug("No 'to' or topics for outbound message. Will not be encrypted.");
             }

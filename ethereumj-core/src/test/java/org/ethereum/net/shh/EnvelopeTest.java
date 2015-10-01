@@ -89,32 +89,17 @@ public class EnvelopeTest {
 
     @Test
     public void testCpp1() throws Exception {
-//        byte[] env = Hex.decode("f872f870845609a1ba64c0b8660480136e573eb81ac4a664f8f76e4887ba927f791a053ec5ff580b1037a8633320ca70f8ec0cdea59167acaa1debc07bc0a0b3a5b41bdf0cb4346c18ddbbd2cf222f54fed795dde94417d2e57f85a580d87238efc75394ca4a92cfe6eb9debcc3583c26fee8580");
-        byte[] env = Hex.decode("0428a562b1bfdeba62eea54d847ef4745a55edb4d0a02577bc419948666d1181258b7cda5c8e319e819b231e49a92d16517b6677bd698516c5d555eb68053911fb36e397d5db354779a13030fcf79864f7112ef98942bc5b8c2f3015f9661223db05e9a6bdc3");
-        ECKey k = ECKey.fromPrivate(Hex.decode("d3a4a240b107ab443d46187306d0b947ce3d6b6ed95aead8c4941afcebde43d2"));
-//        byte[] d1 = k.decryptAES(env);
-        byte[] decrypt = ECIESCoder.decryptFuck(k.getPrivKey(), env);
-//        byte[] decrypt = ECIESCoder.decrypt(k.getPrivKey(), env);
+        byte[] cipherText1 = Hex.decode("0469e324b8ab4a8e2bf0440548498226c9864d1210248ebf76c3396dd1748f0b04d347728b683993e4061998390c2cc8d6d09611da6df9769ebec888295f9be99e86ddad866f994a494361a5658d2b48d1140d73f71a382a4dc7ee2b0b5487091b0c25a3f0e6");
+        ECKey priv = ECKey.fromPrivate(Hex.decode("d0b043b4c5d657670778242d82d68a29d25d7d711127d17b8e299f156dad361a"));
+        ECKey pub = ECKey.fromPublicOnly(Hex.decode("04bd27a63c91fe3233c5777e6d3d7b39204d398c8f92655947eb5a373d46e1688f022a1632d264725cbc7dc43ee1cfebde42fa0a86d08b55d2acfbb5e9b3b48dc5"));
+        byte[] plain1 = ECIESCoder.decryptSimple(priv.getPrivKey(), cipherText1);
+        byte[] cipherText2 = ECIESCoder.encryptSimple(pub.getPubKeyPoint(), plain1);
 
-        ShhEnvelopeMessage inbound = new ShhEnvelopeMessage(env);
-        WhisperMessage message = inbound.getMessages().get(0);
-        boolean ret = message.decrypt(Collections.singleton(ECKey.fromPrivate(Hex.decode("d3a4a240b107ab443d46187306d0b947ce3d6b6ed95aead8c4941afcebde43d2"))),
-                Collections.EMPTY_LIST);
-        System.out.println(ret);
-    }
-    @Test
-    public void testCpp2() throws Exception {
-        testCpp1();
+//        System.out.println("Cipher1: " + Hex.toHexString(cipherText1));
+//        System.out.println("Cipher2: " + Hex.toHexString(cipherText2));
 
-        ECKey to = ECKey.fromPublicOnly(Hex.decode("04deadbeea2250b3efb9e6268451e74bdbdc5632a1a03a0f5b626f59150ff772ac287e122531b5e8d55ff10cb541bbc8abf5def6bcbfa31cf5923ca3c3d783d312"));
-//        System.out.println("To: " + Hex.toHexString(to.getPrivKeyBytes()));
-        WhisperMessage msg1 = new WhisperMessage()
-                .setPayload("Hello")
-                .setTo(to.getPubKey());
-        ShhEnvelopeMessage envelope = new ShhEnvelopeMessage(msg1);
+        byte[] plain2 = ECIESCoder.decryptSimple(priv.getPrivKey(), cipherText2);
 
-        byte[] bytes = envelope.getEncoded();
-
-        System.out.println(RLPDump.dump(RLP.decode2(bytes), 0));
+        Assert.assertArrayEquals(plain1, plain2);
     }
 }
