@@ -314,13 +314,16 @@ public class Channel {
 
         Channel channel = (Channel) o;
 
+        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
         return !(node != null ? !node.equals(channel.node) : channel.node != null);
 
     }
 
     @Override
     public int hashCode() {
-        return node != null ? node.hashCode() : 0;
+        int result = inetSocketAddress != null ? inetSocketAddress.hashCode() : 0;
+        result = 31 * result + (node != null ? node.hashCode() : 0);
+        return result;
     }
 
     @Override

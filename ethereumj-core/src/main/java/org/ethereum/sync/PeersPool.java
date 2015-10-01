@@ -81,7 +81,7 @@ public class PeersPool implements Iterable<Channel> {
 
     public void remove(Channel peer) {
         synchronized (activePeers) {
-            activePeers.remove(peer.getNodeIdWrapper());
+            activePeers.values().remove(peer);
         }
     }
 
@@ -122,7 +122,7 @@ public class PeersPool implements Iterable<Channel> {
         }
 
         synchronized (activePeers) {
-            activePeers.remove(peer.getNodeIdWrapper());
+            activePeers.values().remove(peer);
             bannedPeers.remove(peer);
         }
 
