@@ -4,6 +4,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.slf4j.Logger;
@@ -19,6 +20,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
+
+import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
 
 /**
  * @author Roman Mandeleil
@@ -87,6 +90,12 @@ public class ChannelManager {
     }
 
     public void add(Channel channel) {
+
+        if (activePeers.contains(channel) || newPeers.contains(channel)) {
+            channel.disconnect(DUPLICATE_PEER);
+            return;
+        }
+
         newPeers.add(channel);
     }
 

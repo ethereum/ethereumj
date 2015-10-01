@@ -16,6 +16,7 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth60MessageFactory;
 import org.ethereum.net.eth.message.Eth61MessageFactory;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
+import org.ethereum.net.message.ReasonCode;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
@@ -230,6 +231,10 @@ public class Channel {
 
     public ByteArrayWrapper getNodeIdWrapper() {
         return node == null ? null : new ByteArrayWrapper(node.getId());
+    }
+
+    public void disconnect(ReasonCode reason) {
+        msgQueue.disconnect(reason);
     }
 
     // ETH sub protocol
