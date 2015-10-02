@@ -418,6 +418,9 @@ public class SyncManager {
                 updateLowerUsefulDifficulty(peer.getTotalDifficulty());
             }
         }
+
+        // todo decrease peers' reputation
+
         for (Channel peer : removed) {
             peer.changeSyncState(IDLE);
         }

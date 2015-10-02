@@ -62,7 +62,7 @@ public class HashRetrievingState extends AbstractSyncState {
             }
 
             if (master == null) {
-                master = syncManager.pool.getBest();
+                master = syncManager.pool.getMaster();
             }
 
             if (master == null) {
