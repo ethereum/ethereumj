@@ -25,7 +25,7 @@ import static org.ethereum.util.ByteUtil.xor;
 public class WhisperMessage extends ShhMessage {
     private final static Logger logger = LoggerFactory.getLogger("net");
 
-    public static final int SIGNATURE_FLAG = 128;
+    public static final int SIGNATURE_FLAG = 1;
     public static final int SIGNATURE_LENGTH = 65;
 
     private Topic[] topics = new Topic[0];
@@ -108,21 +108,20 @@ public class WhisperMessage extends ShhMessage {
         }
     }
 
-    private boolean parseAndCheckSignature() {
+    private boolean processSignature() {
         flags = payload[0];
 
         if ((flags & WhisperMessage.SIGNATURE_FLAG) != 0) {
             if (payload.length < WhisperMessage.SIGNATURE_LENGTH) {
-                throw new Error("Unable to open the envelope. First bit set but len(data) < len(signature)");
+                throw new RuntimeException("Unable to open the envelope. First bit set but len(data) < len(signature)");
             }
             signature = new byte[WhisperMessage.SIGNATURE_LENGTH];
-            System.arraycopy(payload, 1, signature, 0, WhisperMessage.SIGNATURE_LENGTH);
+            System.arraycopy(payload, payload.length - WhisperMessage.SIGNATURE_LENGTH, signature, 0,
+                    WhisperMessage.SIGNATURE_LENGTH);
             byte[] msg = new byte[payload.length - WhisperMessage.SIGNATURE_LENGTH - 1];
-            System.arraycopy(payload, WhisperMessage.SIGNATURE_LENGTH + 1, msg, 0, msg.length);
+            System.arraycopy(payload, 1, msg, 0, msg.length);
             payload = msg;
             from = recover().decompress();
-
-            // TODO: check signature
             return true;
         } else {
             byte[] msg = new byte[payload.length - 1];
@@ -145,7 +144,7 @@ public class WhisperMessage extends ShhMessage {
         }
 
         if (ok) {
-            return parseAndCheckSignature();
+            return processSignature();
         }
 
         // the message might be either not-encrypted or encrypted but we have no receivers
@@ -229,7 +228,7 @@ public class WhisperMessage extends ShhMessage {
     }
 
     public byte[] hash() {
-        return sha3(merge(new byte[]{flags}, payload));
+        return sha3(payload);
     }
 
     private int workProved() {
