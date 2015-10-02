@@ -353,7 +353,7 @@ public class WhisperMessage extends ShhMessage {
 
     public byte[] getBytes() {
         if (signature != null) {
-            return merge(new byte[]{flags}, signature, payload);
+            return merge(new byte[]{flags}, payload, signature);
         } else {
             return merge(new byte[]{flags}, payload);
         }
