@@ -1,5 +1,6 @@
 package org.ethereum.net.shh;
 
+import org.ethereum.util.RLP;
 import org.spongycastle.util.encoders.Hex;
 
 import java.nio.charset.StandardCharsets;
@@ -11,6 +12,7 @@ import static org.ethereum.crypto.HashUtil.sha3;
  * @author by Konstantin Shabalin
  */
 public class Topic {
+    private String originalTopic;
     private byte[] fullTopic;
     private byte[] abrigedTopic = new byte[4];
 
@@ -19,7 +21,8 @@ public class Topic {
     }
 
     public Topic(String data) {
-        fullTopic = sha3(data.getBytes(StandardCharsets.UTF_8));
+        originalTopic = data;
+        fullTopic = sha3(RLP.encode(originalTopic));
         this.abrigedTopic = buildAbrigedTopic(fullTopic);
     }
 
@@ -28,9 +31,9 @@ public class Topic {
     }
 
     private byte[] buildAbrigedTopic(byte[] data) {
-//        byte[] hash = sha3(data);
+        byte[] hash = sha3(data);
         byte[] topic = new byte[4];
-        System.arraycopy(data, 0, topic, 0, 4);
+        System.arraycopy(hash, 0, topic, 0, 4);
         return topic;
     }
 
@@ -60,6 +63,6 @@ public class Topic {
 
     @Override
     public String toString() {
-        return Hex.toHexString(abrigedTopic);
+        return "#" + Hex.toHexString(abrigedTopic) + (originalTopic == null ? "" : "(" + originalTopic + ")");
     }
 }

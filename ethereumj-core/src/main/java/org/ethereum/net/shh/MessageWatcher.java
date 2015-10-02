@@ -33,7 +33,7 @@ public abstract class MessageWatcher {
     }
 
     Topic[] getTopics() {
-        return topics;
+        return topics == null ? new Topic[0] : topics;
     }
 
     boolean match(byte[] to, byte[] from, Topic[] topics) {
