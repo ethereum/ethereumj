@@ -377,8 +377,13 @@ public class SyncQueue {
     }
 
     public void clearHashes() {
-        hashStore.clear();
-        headerStore.clear();
+        if (!hashStore.isEmpty())
+            hashStore.clear();
+    }
+
+    public void clearHeaders() {
+        if (!headerStore.isEmpty())
+            headerStore.clear();
     }
 
     public int hashStoreSize() {

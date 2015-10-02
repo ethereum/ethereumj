@@ -46,6 +46,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.net.eth.EthVersion.V61;
+import static org.ethereum.net.eth.EthVersion.V62;
 
 /**
  * @author Roman Mandeleil
@@ -242,6 +244,17 @@ public class Channel {
     }
 
     // ETH sub protocol
+
+    public boolean isEthCompatible(Channel peer) {
+
+        if (peer == null) return false;
+
+        if (peer.getEthVersion().getCode() >= V62.getCode()) {
+            return this.getEthVersion().getCode() >= V62.getCode();
+        } else {
+            return this.getEthVersion().getCode() < V62.getCode();
+        }
+    }
 
     public boolean hasEthStatusSucceeded() {
         return eth.hasStatusSucceeded();

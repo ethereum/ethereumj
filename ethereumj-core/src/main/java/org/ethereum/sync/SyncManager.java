@@ -166,10 +166,20 @@ public class SyncManager {
                     highestKnownDifficulty.toString()
             );
 
-            // should be synchronized with HASH_RETRIEVING state maintenance
-            // to avoid double master peer initializing
-            synchronized (stateMutex) {
-                startMaster(peer);
+            Channel master = pool.findOne(new Functional.Predicate<Channel>() {
+                @Override
+                public boolean test(Channel peer) {
+                    return peer.isHashRetrieving() || peer.isHashRetrievingDone();
+                }
+            });
+
+            if (master == null || master.isEthCompatible(peer)) {
+
+                // should be synchronized with HASH_RETRIEVING state maintenance
+                // to avoid double master peer initializing
+                synchronized (stateMutex) {
+                    startMaster(peer);
+                }
             }
         }
 
@@ -321,6 +331,7 @@ public class SyncManager {
         } else {
             master.setLastHashToAsk(master.getBestKnownHash());
             queue.clearHashes();
+            queue.clearHeaders();
         }
 
         master.changeSyncState(HASH_RETRIEVING);
@@ -422,7 +433,7 @@ public class SyncManager {
         // todo decrease peers' reputation
 
         for (Channel peer : removed) {
-            peer.changeSyncState(IDLE);
+            pool.ban(peer);
         }
     }
 

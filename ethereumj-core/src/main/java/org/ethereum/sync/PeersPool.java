@@ -259,6 +259,19 @@ public class PeersPool implements Iterable<Channel> {
         }
     }
 
+    @Nullable
+    public Channel findOne(Functional.Predicate<Channel> filter) {
+
+        synchronized (activePeers) {
+            for (Channel peer : activePeers.values()) {
+                if (filter.test(peer))
+                    return peer;
+            }
+        }
+
+        return null;
+    }
+
     public boolean isEmpty() {
         return activePeers.isEmpty();
     }
