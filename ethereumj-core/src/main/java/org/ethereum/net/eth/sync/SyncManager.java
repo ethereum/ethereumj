@@ -11,7 +11,6 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
-import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -41,10 +40,10 @@ public class SyncManager {
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
     private static final long WORKER_TIMEOUT = secondsToMillis(1);
-    private static final long MASTER_STUCK_TIMEOUT = secondsToMillis(60);
+    private static final long PEER_STUCK_TIMEOUT = secondsToMillis(60);
     private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
 
-    private static final long LARGE_GAP_SIZE = 5;
+    private static final long LARGE_GAP_SIZE = 3;
 
     @Resource
     @Qualifier("syncStates")
@@ -182,6 +181,13 @@ public class SyncManager {
     }
 
     public void onDisconnect(Channel peer) {
+
+        // if master peer has been disconnected
+        // we need to process data it sent
+        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
+            changeState(BLOCK_RETRIEVING);
+        }
+
         pool.onDisconnect(peer);
     }
 
@@ -205,6 +211,10 @@ public class SyncManager {
             logger.info("Forcing parent downloading for block.number [{}]", wrapper.getNumber());
             queue.addHash(wrapper.getParentHash());
         }
+    }
+
+    public BlockWrapper getGapBlock() {
+        return gapBlock;
     }
 
     void resetGapRecovery() {
@@ -244,7 +254,6 @@ public class SyncManager {
 
         logger.info("Peer {}: received invalid block, drop it", peer.getPeerIdShort());
 
-        peer.changeSyncState(IDLE);
         pool.ban(peer);
 
         // TODO decrease peer's reputation
@@ -308,7 +317,7 @@ public class SyncManager {
     boolean isPeerStuck(Channel peer) {
         SyncStatistics stats = peer.getSyncStats();
 
-        return stats.millisSinceLastUpdate() > MASTER_STUCK_TIMEOUT
+        return stats.millisSinceLastUpdate() > PEER_STUCK_TIMEOUT
                 || stats.getEmptyResponsesCount() > 0;
     }
 
@@ -316,11 +325,8 @@ public class SyncManager {
         pool.changeState(IDLE);
 
         if (gapBlock != null) {
-            int gap = gapSize(gapBlock);
-            master.setMaxHashesAsk(gap > CONFIG.maxHashesAsk() ? CONFIG.maxHashesAsk() : gap);
             master.setLastHashToAsk(gapBlock.getParentHash());
         } else {
-            master.setMaxHashesAsk(CONFIG.maxHashesAsk());
             master.setLastHashToAsk(master.getBestKnownHash());
             queue.clearHashes();
         }
@@ -398,10 +404,15 @@ public class SyncManager {
         Executors.newSingleThreadScheduledExecutor().scheduleWithFixedDelay(new Runnable() {
             @Override
             public void run() {
-                pool.logActivePeers();
-                pool.logBannedPeers();
-                logger.info("\n");
-                logger.info("State {}\n", state);
+                try {
+                    pool.logActivePeers();
+                    pool.logBannedPeers();
+                    logger.info("\n");
+                    logger.info("State {}\n", state);
+                } catch (Throwable t) {
+                    t.printStackTrace();
+                    logger.error("Exception in log worker", t);
+                }
             }
         }, 0, 30, TimeUnit.SECONDS);
     }

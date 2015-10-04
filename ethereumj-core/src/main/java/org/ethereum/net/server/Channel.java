@@ -201,16 +201,13 @@ public class Channel {
         return eth.hasStatusPassed();
     }
 
-    public boolean isUseful() {
-        return eth.hasStatusSucceeded();
-    }
-
     public void onDisconnect() {
         eth.onShutdown();
     }
 
     public void onSyncDone() {
         eth.enableTransactions();
+        eth.onSyncDone();
     }
 
     public boolean isDiscoveryMode() {
@@ -218,7 +215,7 @@ public class Channel {
     }
 
     public String getPeerId() {
-        return node.getHexId();
+        return node == null ? "<null>" : node.getHexId();
     }
 
     public String getPeerIdShort() {
@@ -226,7 +223,7 @@ public class Channel {
     }
 
     public byte[] getNodeId() {
-        return node.getId();
+        return node == null ? null : node.getId();
     }
 
     public ByteArrayWrapper getNodeIdWrapper() {
@@ -301,5 +298,21 @@ public class Channel {
 
     public EthVersion getEthVersion() {
         return eth.getVersion();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Channel channel = (Channel) o;
+
+        return !(node != null ? !node.equals(channel.node) : channel.node != null);
+
+    }
+
+    @Override
+    public int hashCode() {
+        return node != null ? node.hashCode() : 0;
     }
 }

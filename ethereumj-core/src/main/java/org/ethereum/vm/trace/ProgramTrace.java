@@ -8,6 +8,7 @@ import org.ethereum.vm.OpCode;
 import org.ethereum.vm.program.invoke.ProgramInvoke;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +30,7 @@ public class ProgramTrace {
     private Map<String, String> initStorage = new HashMap<>();
     private boolean fullStorage;
     private int storageSize;
+    private String contractAddress;
 
     public ProgramTrace() {
         this(null);
@@ -36,6 +38,8 @@ public class ProgramTrace {
 
     public ProgramTrace(ProgramInvoke programInvoke) {
         if (CONFIG.vmTrace() && programInvoke != null) {
+            contractAddress = Hex.toHexString(programInvoke.getOwnerAddress().getLast20Bytes());
+
             ContractDetails contractDetails = getContractDetails(programInvoke);
             if (contractDetails == null) {
                 storageSize = 0;
@@ -122,6 +126,14 @@ public class ProgramTrace {
 
     public void setInitStorage(Map<String, String> initStorage) {
         this.initStorage = initStorage;
+    }
+
+    public String getContractAddress() {
+        return contractAddress;
+    }
+
+    public void setContractAddress(String contractAddress) {
+        this.contractAddress = contractAddress;
     }
 
     public ProgramTrace result(byte[] result) {

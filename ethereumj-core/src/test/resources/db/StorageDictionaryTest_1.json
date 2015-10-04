@@ -1,0 +1,219 @@
+{
+  "type": "Root",
+  "key": "0",
+  "children": [
+    {
+      "type": "StorageIndex",
+      "key": "0",
+      "hashKey": "00"
+    },
+    {
+      "type": "StorageIndex",
+      "key": "1",
+      "hashKey": "01"
+    },
+    {
+      "type": "StorageIndex",
+      "key": "258",
+      "children": [
+        {
+          "type": "MapKey",
+          "key": "key1",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "000111"
+            }
+          ]
+        },
+        {
+          "type": "MapKey",
+          "key": "key2",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "000112"
+            }
+          ]
+        },
+        {
+          "type": "MapKey",
+          "key": "key3",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "000113"
+            }
+          ]
+        },
+        {
+          "type": "MapKey",
+          "key": "key4",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "000114"
+            }
+          ]
+        },
+        {
+          "type": "MapKey",
+          "key": "key5",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "000115"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "StorageIndex",
+      "key": "259",
+      "children": [
+        {
+          "type": "MapKey",
+          "key": "142599fd48a53259de6315069ae899882a4354c892113ee0bd5e41f3ad53aa9c",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "84c58db19f7ac32d03d03dff34058ef1651b1f3a524cf443e359f7d864632545"
+            },
+            {
+              "type": "Offset",
+              "key": "1",
+              "hashKey": "84c58db19f7ac32d03d03dff34058ef1651b1f3a524cf443e359f7d864632546"
+            },
+            {
+              "type": "Offset",
+              "key": "2",
+              "hashKey": "84c58db19f7ac32d03d03dff34058ef1651b1f3a524cf443e359f7d864632547"
+            }
+          ]
+        },
+        {
+          "type": "MapKey",
+          "key": "2153b9b2b56bb29c21cf47fe64fd2abdd7171b14cca48560f6f6cf294a1a5c52",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "ffd874e59055f4f3dfa2a72e56b6998ed34dc01ebcf35d9ab673308b9f41fc7f"
+            },
+            {
+              "type": "Offset",
+              "key": "1",
+              "hashKey": "ffd874e59055f4f3dfa2a72e56b6998ed34dc01ebcf35d9ab673308b9f41fc80"
+            },
+            {
+              "type": "Offset",
+              "key": "2",
+              "hashKey": "ffd874e59055f4f3dfa2a72e56b6998ed34dc01ebcf35d9ab673308b9f41fc81"
+            }
+          ]
+        },
+        {
+          "type": "MapKey",
+          "key": "40afd0b139fb833a49d17309a892301bdce47fc413841baf2fc04d5e26095379",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "1d38309dcbea03b88ce80c4971ac07a013f9c3d3d81a0e4fc506ff11d61deae7"
+            },
+            {
+              "type": "Offset",
+              "key": "1",
+              "hashKey": "1d38309dcbea03b88ce80c4971ac07a013f9c3d3d81a0e4fc506ff11d61deae8"
+            },
+            {
+              "type": "Offset",
+              "key": "2",
+              "hashKey": "1d38309dcbea03b88ce80c4971ac07a013f9c3d3d81a0e4fc506ff11d61deae9"
+            }
+          ]
+        },
+        {
+          "type": "MapKey",
+          "key": "4bc4538557c4a034973076478ecaf1d046a91f35eefb1cf67379590fe9736f93",
+          "children": [
+            {
+              "type": "Offset",
+              "key": "0",
+              "hashKey": "922edb26aa415f0d8fc0196728ac7afcf0139204005e7401c77c981c5241084b"
+            },
+            {
+              "type": "Offset",
+              "key": "1",
+              "hashKey": "922edb26aa415f0d8fc0196728ac7afcf0139204005e7401c77c981c5241084c"
+            },
+            {
+              "type": "Offset",
+              "key": "2",
+              "hashKey": "922edb26aa415f0d8fc0196728ac7afcf0139204005e7401c77c981c5241084d"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "StorageIndex",
+      "key": "260",
+      "hashKey": "0000000000000000000000000000000000000000000000000000000000000104",
+      "children": [
+        {
+          "type": "ArrayIndex",
+          "key": "0",
+          "hashKey": "000300"
+        },
+        {
+          "type": "ArrayIndex",
+          "key": "1",
+          "hashKey": "000301"
+        },
+        {
+          "type": "ArrayIndex",
+          "key": "2",
+          "hashKey": "000302"
+        },
+        {
+          "type": "ArrayIndex",
+          "key": "3",
+          "hashKey": "000303"
+        },
+        {
+          "type": "ArrayIndex",
+          "key": "4",
+          "hashKey": "000304"
+        },
+        {
+          "type": "ArrayIndex",
+          "key": "5",
+          "hashKey": "000305"
+        }
+      ]
+    },
+    {
+      "type": "StorageIndex",
+      "key": "261",
+      "hashKey": "0105"
+    },
+    {
+      "type": "StorageIndex",
+      "key": "262",
+      "hashKey": "0106"
+    },
+    {
+      "type": "StorageIndex",
+      "key": "263",
+      "hashKey": "0107"
+    }
+  ]
+}

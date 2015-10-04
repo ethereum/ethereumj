@@ -2,6 +2,8 @@ package org.ethereum.datasource.mapdb;
 
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
+import org.ethereum.db.ByteArrayWrapper;
+import org.ethereum.util.ByteUtil;
 import org.mapdb.Serializer;
 
 import java.io.DataInput;
@@ -13,6 +15,20 @@ import java.io.IOException;
  * @since 09.07.2015
  */
 public class Serializers {
+
+    public static final Serializer<ByteArrayWrapper> BYTE_ARRAY_WRAPPER = new Serializer<ByteArrayWrapper>() {
+        @Override
+        public void serialize(DataOutput out, ByteArrayWrapper wrapper) throws IOException {
+            byte[] bytes = getBytes(wrapper);
+            BYTE_ARRAY.serialize(out, bytes);
+        }
+
+        @Override
+        public ByteArrayWrapper deserialize(DataInput in, int available) throws IOException {
+            byte[] bytes = BYTE_ARRAY.deserialize(in, available);
+            return bytes.length > 0 ? new ByteArrayWrapper(bytes) : null;
+        }
+    };
 
     public static final Serializer<BlockWrapper> BLOCK_WRAPPER = new Serializer<BlockWrapper>()  {
 
@@ -44,11 +60,15 @@ public class Serializers {
         }
     };
 
+    private static byte[] getBytes(ByteArrayWrapper wrapper) {
+        return wrapper == null ? ByteUtil.EMPTY_BYTE_ARRAY : wrapper.getData();
+    }
+
     private static byte[] getBytes(Block block) {
-        return block == null ? new byte[0] : block.getEncoded();
+        return block == null ? ByteUtil.EMPTY_BYTE_ARRAY : block.getEncoded();
     }
 
     private static byte[] getBytes(BlockWrapper wrapper) {
-        return wrapper == null ? new byte[0] : wrapper.getBytes();
+        return wrapper == null ? ByteUtil.EMPTY_BYTE_ARRAY : wrapper.getBytes();
     }
 }

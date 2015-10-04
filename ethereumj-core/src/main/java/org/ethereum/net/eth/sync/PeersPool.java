@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import static org.ethereum.net.eth.sync.SyncStateName.IDLE;
 import static org.ethereum.util.TimeUtils.*;
 
 /**
@@ -66,9 +67,13 @@ public class PeersPool implements Iterable<Channel> {
     public void add(Channel peer) {
         synchronized (activePeers) {
             activePeers.put(peer.getNodeIdWrapper(), peer);
+            bannedPeers.remove(peer);
         }
         synchronized (pendingConnections) {
             pendingConnections.remove(peer.getPeerId());
+        }
+        synchronized (bans) {
+            bans.remove(peer.getPeerId());
         }
 
         logger.info("Peer {}: added to pool", Utils.getNodeIdShort(peer.getPeerId()));
@@ -112,6 +117,10 @@ public class PeersPool implements Iterable<Channel> {
                 peer.getPeerIdShort()
         );
 
+        if (peer.getNodeId() == null) {
+            return;
+        }
+
         synchronized (activePeers) {
             activePeers.remove(peer.getNodeIdWrapper());
             bannedPeers.remove(peer);
@@ -152,6 +161,9 @@ public class PeersPool implements Iterable<Channel> {
     }
 
     public void ban(Channel peer) {
+
+        peer.changeSyncState(IDLE);
+
         synchronized (activePeers) {
             if (activePeers.containsKey(peer.getNodeIdWrapper())) {
                 activePeers.remove(peer.getNodeIdWrapper());

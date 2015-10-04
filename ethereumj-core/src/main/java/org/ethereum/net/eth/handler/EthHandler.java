@@ -27,6 +27,7 @@ import java.util.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.ByteUtil.wrap;
 
 /**
@@ -73,6 +74,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     private int blocksLackHits = 0;
 
     protected SyncStateName syncState = IDLE;
+    protected boolean syncDone = false;
     protected boolean processTransactions = true;
 
     protected byte[] bestHash;
@@ -85,7 +87,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * @see Eth61
      */
     protected byte[] lastHashToAsk;
-    protected int maxHashesAsk;
+    protected int maxHashesAsk = CONFIG.maxHashesAsk();
 
     /**
      * Hash list sent in GET_BLOCKS message,
@@ -242,7 +244,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             return;
         }
 
-        this.bestHash = hashes.get(hashes.size() - 1);
+        bestHash = hashes.get(hashes.size() - 1);
 
         queue.addNewBlockHashes(hashes);
     }
@@ -306,9 +308,15 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         List<byte[]> receivedHashes = blockHashesMessage.getBlockHashes();
-        syncStats.addHashes(receivedHashes.size());
 
-        processBlockHashes(receivedHashes);
+        // treat empty hashes response as end of hash sync
+        // only if main sync done
+        if (receivedHashes.isEmpty() && syncDone) {
+            changeState(DONE_HASH_RETRIEVING);
+        } else {
+            syncStats.addHashes(receivedHashes.size());
+            processBlockHashes(receivedHashes);
+        }
 
         if (loggerSync.isInfoEnabled()) {
             if (syncState == DONE_HASH_RETRIEVING) {
@@ -391,6 +399,14 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         returnHashes();
 
         if(!blockList.isEmpty()) {
+
+            // update TD and best hash
+            for (Block block : blockList)
+                if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
+                    bestHash = block.getHash();
+                    channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
+                }
+
             queue.addBlocks(blockList, channel.getNodeId());
             queue.logHashQueueSize();
         } else {
@@ -571,6 +587,16 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         return syncStats;
     }
 
+    @Override
+    public EthVersion getVersion() {
+        return version;
+    }
+
+    @Override
+    public void onSyncDone() {
+        syncDone = true;
+    }
+
     public StatusMessage getHandshakeStatusMessage() {
         return channel.getNodeStatistics().getEthLastInboundStatusMsg();
     }
@@ -599,10 +625,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         }
 
         sentHashes.clear();
-    }
-
-    public EthVersion getVersion() {
-        return version;
     }
 
     enum EthState {
