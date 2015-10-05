@@ -72,11 +72,19 @@ public class HashRetrievingState extends AbstractSyncState {
         }
 
         // Since Eth V61 it makes sense to download blocks and hashes simultaneously
+
+        final boolean master62 = master.getEthVersion().getCode() >= V62.getCode();
+
         if (master.getEthVersion().getCode() > V60.getCode()) {
             syncManager.pool.changeState(BLOCK_RETRIEVING, new Functional.Predicate<Channel>() {
                 @Override
                 public boolean test(Channel peer) {
-                    return peer.isIdle();
+
+                    if (master62) {
+                        return peer.isIdle() && peer.getEthVersion().getCode() >= V62.getCode();
+                    } else {
+                        return peer.isIdle() && peer.getEthVersion().getCode() < V62.getCode();
+                    }
                 }
             });
         }
