@@ -48,15 +48,15 @@ public class EnvelopeTest {
 
     @Test
     public void testPow1() {
-        ECKey from = new ECKey();
-        ECKey to = new ECKey();
+        ECKey from = new ECKey().decompress();
+        ECKey to = new ECKey().decompress();
         System.out.println("From: " + Hex.toHexString(from.getPrivKeyBytes()));
         System.out.println("To: " + Hex.toHexString(to.getPrivKeyBytes()));
         WhisperMessage msg1 = new WhisperMessage()
                 .setTopics(Topic.createTopics("Topic1", "Topic2"))
                 .setPayload("Hello")
                 .setFrom(from)
-                .setTo(to.getPubKey())
+                .setTo(WhisperImpl.toIdentity(to))
                 .setWorkToProve(1000);
         WhisperMessage msg2 = new WhisperMessage()
                 .setTopics(Topic.createTopics("Topic1", "Topic3"))

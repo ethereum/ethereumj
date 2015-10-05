@@ -1,22 +1,28 @@
 package org.ethereum.net.shh;
 
+import org.ethereum.Start;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.util.RLP;
 import org.junit.Test;
+import org.spongycastle.util.encoders.Hex;
 
+import javax.persistence.Table;
+
+import static org.ethereum.crypto.SHA3Helper.sha3;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class FilterTest {
 
-    byte[] to = new ECKey().decompress().getPubKey();
-    byte[] from = new ECKey().decompress().getPubKey();
+    String to = WhisperImpl.toIdentity(new ECKey().decompress());
+    String from = WhisperImpl.toIdentity(new ECKey().decompress());
     String[] topics = {"topic1", "topic2", "topic3", "topic4"};
 
     class FilterStub extends MessageWatcher {
         public FilterStub() {
         }
 
-        public FilterStub(byte[] to, byte[] from, Topic[] filterTopics) {
+        public FilterStub(String to, String from, Topic[] filterTopics) {
             super(to, from, filterTopics);
         }
 
@@ -47,7 +53,7 @@ public class FilterTest {
     @Test
     public void test4() {
         MessageWatcher matcher = new FilterStub().setFrom(from);
-        assertTrue(matcher.match(null, from,  Topic.createTopics(topics)));
+        assertTrue(matcher.match(null, from, Topic.createTopics(topics)));
     }
 
     @Test

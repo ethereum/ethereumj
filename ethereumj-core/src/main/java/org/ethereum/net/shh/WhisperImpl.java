@@ -4,6 +4,7 @@ package org.ethereum.net.shh;
 import org.apache.commons.collections4.map.LRUMap;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.util.ByteUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -32,10 +33,18 @@ public class WhisperImpl extends Whisper {
     }
 
     @Override
-    public void send(ECKey from, String to, byte[] payload, Topic[] topicList, int ttl, int workToProve) {
+    public void send(String from, String to, byte[] payload, Topic[] topicList, int ttl, int workToProve) {
+        ECKey fromKey = null;
+        if (from != null && !from.isEmpty()) {
+            fromKey = getIdentity(from);
+            if (fromKey == null) {
+                throw new Error(String.format("Unknown identity to send from %s", from));
+            }
+        }
+
         WhisperMessage m = new WhisperMessage()
-                .setFrom(from)
-                .setTo(to == null ? null : Hex.decode(to))
+                .setFrom(fromKey)
+                .setTo(to)
                 .setPayload(payload)
                 .setTopics(topicList)
                 .setTtl(ttl)
@@ -44,20 +53,6 @@ public class WhisperImpl extends Whisper {
         logger.info("Sending Whisper message: " + m);
 
         addMessage(m, null);
-    }
-
-    public void post(String from, String to, String[] topics, String payload, int ttl, int pow) {
-        Topic[] topicList = Topic.createTopics(topics);
-
-        ECKey key = null;
-        if (from != null && !from.isEmpty()) {
-            key = getIdentity(from);
-            if (key == null) {
-                throw new Error(String.format("Unknown identity to send from %s", from));
-            }
-        }
-
-        send(key, to, payload.getBytes(StandardCharsets.UTF_8), topicList, ttl, pow);
     }
 
     public void processEnvelope(ShhEnvelopeMessage e, ShhHandler shhHandler) {
@@ -125,21 +120,30 @@ public class WhisperImpl extends Whisper {
         }
     }
 
-    @Override
-    public void addIdentity(ECKey key) {
-        identities.put(Hex.toHexString(key.getPubKey()), key);
+    public static String toIdentity(ECKey key) {
+        byte[] pubKey = key.getPubKey();
+        return Hex.toHexString(Arrays.copyOfRange(pubKey, 1, pubKey.length));
+    }
+
+    public static ECKey fromIdentityToPub(String identity) {
+        return ECKey.fromPublicOnly(ByteUtil.merge(new byte[] {0x04}, Hex.decode(identity)));
     }
 
     @Override
-    public ECKey newIdentity() {
-        ECKey key = new ECKey().decompress();
-        identities.put(Hex.toHexString(key.getPubKey()), key);
-        return key;
+    public String addIdentity(ECKey key) {
+        String identity = toIdentity(key);
+        identities.put(identity, key);
+        return identity;
     }
 
-    public ECKey getIdentity(String keyHexString) {
-        if (identities.containsKey(keyHexString)) {
-            return identities.get(keyHexString);
+    @Override
+    public String newIdentity() {
+        return addIdentity(new ECKey().decompress());
+    }
+
+    public ECKey getIdentity(String identity) {
+        if (identities.containsKey(identity)) {
+            return identities.get(identity);
         }
 
         return null;

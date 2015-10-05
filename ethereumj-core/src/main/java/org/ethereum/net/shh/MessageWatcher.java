@@ -4,25 +4,25 @@ package org.ethereum.net.shh;
 import java.util.Arrays;
 
 public abstract class MessageWatcher {
-    private byte[] to;
-    private byte[] from;
+    private String to;
+    private String from;
     private Topic[] topics = null;
 
     public MessageWatcher() {
     }
 
-    public MessageWatcher(byte[] to, byte[] from, Topic[] topics) {
+    public MessageWatcher(String to, String from, Topic[] topics) {
         this.to = to;
         this.from = from;
         this.topics = topics;
     }
 
-    public MessageWatcher setTo(byte[] to) {
+    public MessageWatcher setTo(String to) {
         this.to = to;
         return this;
     }
 
-    public MessageWatcher setFrom(byte[] from) {
+    public MessageWatcher setFrom(String from) {
         this.from = from;
         return this;
     }
@@ -32,11 +32,11 @@ public abstract class MessageWatcher {
         return this;
     }
 
-    public byte[] getTo() {
+    public String getTo() {
         return to;
     }
 
-    public byte[] getFrom() {
+    public String getFrom() {
         return from;
     }
 
@@ -44,15 +44,15 @@ public abstract class MessageWatcher {
         return topics == null ? new Topic[0] : topics;
     }
 
-    boolean match(byte[] to, byte[] from, Topic[] topics) {
+    boolean match(String to, String from, Topic[] topics) {
         if (this.to != null) {
-            if (!Arrays.equals(this.to, to)) {
+            if (!this.to.equals(to)) {
                 return false;
             }
         }
 
         if (this.from != null) {
-            if (!Arrays.equals(this.from, from)) {
+            if (!this.from.equals(from)) {
                 return false;
             }
         }

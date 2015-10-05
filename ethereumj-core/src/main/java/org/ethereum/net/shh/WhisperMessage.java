@@ -32,7 +32,7 @@ public class WhisperMessage extends ShhMessage {
     private byte[] payload;
     private byte flags;
     private byte[] signature;
-    private byte[] to;
+    private String to;
     private ECKey from;
 
     private int expire;
@@ -74,11 +74,11 @@ public class WhisperMessage extends ShhMessage {
         return pow;
     }
 
-    public byte[] getFrom() {
-        return from == null ? null : from.getPubKey();
+    public String getFrom() {
+        return from == null ? null : WhisperImpl.toIdentity(from);
     }
 
-    public byte[] getTo() {
+    public String getTo() {
         return to;
     }
 
@@ -156,7 +156,7 @@ public class WhisperMessage extends ShhMessage {
     private boolean decrypt(ECKey privateKey) {
         try {
             payload = ECIESCoder.decryptSimple(privateKey.getPrivKey(), payload);
-            to = privateKey.decompress().getPubKey();
+            to = WhisperImpl.toIdentity(privateKey.decompress());
             encrypted = false;
             return true;
         } catch (Exception e) {
@@ -260,7 +260,7 @@ public class WhisperMessage extends ShhMessage {
      * If not the message will be encrypted as broadcast with Topics
      * @param to public key
      */
-    public WhisperMessage setTo(byte[] to) {
+    public WhisperMessage setTo(String to) {
         this.to = to;
         return this;
     }
@@ -271,6 +271,11 @@ public class WhisperMessage extends ShhMessage {
      */
     public WhisperMessage setFrom(ECKey from) {
         this.from = from;
+        return this;
+    }
+
+    public WhisperMessage setFrom(String from) {
+        this.from = WhisperImpl.fromIdentityToPub(from);
         return this;
     }
 
@@ -362,7 +367,7 @@ public class WhisperMessage extends ShhMessage {
     private void encrypt() {
         try {
             if (to != null) {
-                ECKey key = ECKey.fromPublicOnly(to);
+                ECKey key = WhisperImpl.fromIdentityToPub(to);
                 ECPoint pubKeyPoint = key.getPubKeyPoint();
                 payload = ECIESCoder.encryptSimple(pubKeyPoint, payload);
             } else if (topics.length > 0){
@@ -411,7 +416,7 @@ public class WhisperMessage extends ShhMessage {
         return "WhisperMessage[" +
                 "topics=" + Arrays.toString(topics) +
                 ", payload=" + (encrypted ? "<encrypted " + payload.length + " bytes>" : new String(payload)) +
-                ", to=" + (to == null ? "null" : Hex.toHexString(to).substring(0,16) + "...") +
+                ", to=" + (to == null ? "null" : to.substring(0, 16) + "...") +
                 ", from=" + (from == null ? "null" : Hex.toHexString(from.getPubKey()).substring(0,16) + "...") +
                 ", expire=" + expire +
                 ", ttl=" + ttl +

@@ -51,26 +51,23 @@ public class JsonRpcWhisper extends Whisper {
     }
 
     @Override
-    public void addIdentity(ECKey key) {
+    public String addIdentity(ECKey key) {
         throw new RuntimeException("Not supported by public JSON RPC API");
     }
 
     @Override
-    public ECKey newIdentity() {
+    public String newIdentity() {
         SimpleResponse resp = sendJson(new JsonRpcRequest("shh_newIdentity", null), SimpleResponse.class);
-        String id = resp.result;
-        if (id.startsWith("0x")) id = id.substring(2);
-        return ECKey.fromPublicOnly(Hex.decode("04" + id));
+        return resp.result;
     }
 
     @Override
     public void watch(MessageWatcher f) {
-        String to = f.getTo() == null ? null : Hex.toHexString(f.getTo());
         String[] topics = f.getTopics().length == 0 ? null : new String[f.getTopics().length];
         for (int i = 0; i < f.getTopics().length; i++) {
             topics[i] = f.getTopics()[i].getOriginalTopic();
         }
-        FilterParams params = new FilterParams(to, topics);
+        FilterParams params = new FilterParams(f.getTo(), topics);
         SimpleResponse resp = sendJson(new JsonRpcRequest("shh_newFilter", params), SimpleResponse.class);
         int filterId = Integer.parseInt(resp.result.substring(2), 16);
         watchers.put(filterId, f);
@@ -102,30 +99,23 @@ public class JsonRpcWhisper extends Whisper {
                         from = ECKey.fromPublicOnly(Hex.decode(msg.from.substring(2)));
                     }
                 }
-                byte[] to = null;
-                if (msg.to != null) {
-                    BigInteger i = new BigInteger(msg.to.substring(2), 16);
-                    if (i.bitCount() > 0) {
-                        to = Hex.decode(msg.to.substring(2));
-                    }
-                }
                 WhisperMessage m = new WhisperMessage()
                         .setPayload(decodeString(msg.payload))
                         .setFrom(from)
-                        .setTo(to);
+                        .setTo(msg.to);
                 entry.getValue().newMessage(m);
             }
         }
     }
 
     @Override
-    public void send(ECKey from, String to, byte[] payload, Topic[] topics, int ttl, int workToProve) {
+    public void send(String from, String to, byte[] payload, Topic[] topics, int ttl, int workToProve) {
         String[] topicsS = new String[topics.length];
         for (int i = 0; i < topics.length; i++) {
             topicsS[i] = topics[i].getOriginalTopic();
         }
         SimpleResponse res = sendJson(new JsonRpcRequest("shh_post",
-                new MessageParams(new String(payload), to, from == null ? null : Hex.toHexString(from.getPubKey()),
+                new MessageParams(new String(payload), to, from,
                         topicsS, ttl, workToProve)), SimpleResponse.class);
         if (!"true".equals(res.result)) {
             throw new RuntimeException("Shh post failed: " + res);
@@ -244,8 +234,7 @@ public class JsonRpcWhisper extends Whisper {
         public FilterParams(String to, String[] topics) {
             this.to = to;
             this.topics = topics;
-            this.topics = topics;
-            for (int i = 0; i < this.topics.length; i++) {
+            for (int i = 0; topics != null && i < this.topics.length; i++) {
                 this.topics[i] = encodeString(this.topics[i]);
             }
         }
