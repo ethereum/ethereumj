@@ -3,6 +3,7 @@ package org.ethereum.net.shh;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 import static org.ethereum.net.shh.ShhMessageCodes.FILTER;
 
@@ -18,6 +19,7 @@ public class ShhFilterMessage extends ShhMessage {
 
     public ShhFilterMessage(byte[] encoded) {
         super(encoded);
+        parse();
     }
 
     static ShhFilterMessage createFromFilter(byte[] bloomFilter) {
@@ -61,7 +63,7 @@ public class ShhFilterMessage extends ShhMessage {
     public String toString() {
         if (!parsed) parse();
         return "[" + this.getCommand().name() +
-            " hash=" + bloomFilter + "]";
+            " hash=" + Hex.toHexString(bloomFilter) + "]";
     }
 
 }

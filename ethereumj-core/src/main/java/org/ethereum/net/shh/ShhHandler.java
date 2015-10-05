@@ -21,7 +21,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Scope("prototype")
 public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
-    private final static Logger logger = LoggerFactory.getLogger("net");
+    private final static Logger logger = LoggerFactory.getLogger("net.shh");
     public final static byte VERSION = 3;
 
     private MessageQueue msgQueue = null;
@@ -101,7 +101,7 @@ public class ShhHandler extends SimpleChannelInboundHandler<ShhMessage> {
     }
 
     void sendHostBloom() {
-        ShhFilterMessage msg = new ShhFilterMessage(whisper.hostBloomFilter.toBytes());
+        ShhFilterMessage msg = ShhFilterMessage.createFromFilter(whisper.hostBloomFilter.toBytes());
         sendMessage(msg);
     }
 
