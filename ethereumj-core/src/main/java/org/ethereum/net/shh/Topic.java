@@ -38,6 +38,7 @@ public class Topic {
     }
 
     public static Topic[] createTopics(String ... topicsString) {
+        if (topicsString == null) return new Topic[0];
         Topic[] topics = new Topic[topicsString.length];
         for (int i = 0; i < topicsString.length; i++) {
             topics[i] = new Topic(topicsString[i]);
@@ -51,6 +52,10 @@ public class Topic {
 
     public byte[] getFullTopic() {
         return fullTopic;
+    }
+
+    public String getOriginalTopic() {
+        return originalTopic;
     }
 
     @Override

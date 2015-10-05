@@ -23,7 +23,7 @@ import static org.ethereum.util.ByteUtil.xor;
  * Created by Anton Nashatyrev on 25.09.2015.
  */
 public class WhisperMessage extends ShhMessage {
-    private final static Logger logger = LoggerFactory.getLogger("net");
+    private final static Logger logger = LoggerFactory.getLogger("net.shh");
 
     public static final int SIGNATURE_FLAG = 1;
     public static final int SIGNATURE_LENGTH = 65;
@@ -160,7 +160,7 @@ public class WhisperMessage extends ShhMessage {
             encrypted = false;
             return true;
         } catch (Exception e) {
-            logger.debug("Wrong identity or the message payload isn't encrypted");
+            logger.trace("Message can't be opened with key: " + privateKey.getPubKeyPoint());
         } catch (Throwable e) {
 
         }

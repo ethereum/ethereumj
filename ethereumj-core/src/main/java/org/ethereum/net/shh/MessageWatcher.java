@@ -32,7 +32,15 @@ public abstract class MessageWatcher {
         return this;
     }
 
-    Topic[] getTopics() {
+    public byte[] getTo() {
+        return to;
+    }
+
+    public byte[] getFrom() {
+        return from;
+    }
+
+    public Topic[] getTopics() {
         return topics == null ? new Topic[0] : topics;
     }
 

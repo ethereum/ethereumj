@@ -14,7 +14,7 @@ import java.util.*;
 
 @Component
 public class WhisperImpl extends Whisper {
-    private final static Logger logger = LoggerFactory.getLogger("net");
+    private final static Logger logger = LoggerFactory.getLogger("net.shh");
 
     private Set<MessageWatcher> filters = new HashSet<>();
     private List<Topic> knownTopics = new ArrayList<>();
