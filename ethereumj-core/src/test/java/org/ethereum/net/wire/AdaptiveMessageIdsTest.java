@@ -74,21 +74,17 @@ public class AdaptiveMessageIdsTest {
     @Test
     public void test3() {
 
-        assertEquals(5, ShhMessageCodes.values().length);
+        assertEquals(3, ShhMessageCodes.values().length);
 
         assertEquals(0, ShhMessageCodes.STATUS.asByte());
         assertEquals(1, ShhMessageCodes.MESSAGE.asByte());
-        assertEquals(2, ShhMessageCodes.ADD_FILTER.asByte());
-        assertEquals(3, ShhMessageCodes.REMOVE_FILTER.asByte());
-        assertEquals(4, ShhMessageCodes.PACKET_COUNT.asByte());
+        assertEquals(2, ShhMessageCodes.FILTER.asByte());
 
         messageCodesResolver.setShhOffset(0x20);
 
         assertEquals(0x20 + 0, messageCodesResolver.withShhOffset(ShhMessageCodes.STATUS.asByte()));
         assertEquals(0x20 + 1, messageCodesResolver.withShhOffset(ShhMessageCodes.MESSAGE.asByte()));
-        assertEquals(0x20 + 2, messageCodesResolver.withShhOffset(ShhMessageCodes.ADD_FILTER.asByte()));
-        assertEquals(0x20 + 3, messageCodesResolver.withShhOffset(ShhMessageCodes.REMOVE_FILTER.asByte()));
-        assertEquals(0x20 + 4, messageCodesResolver.withShhOffset(ShhMessageCodes.PACKET_COUNT.asByte()));
+        assertEquals(0x20 + 2, messageCodesResolver.withShhOffset(ShhMessageCodes.FILTER.asByte()));
     }
 
     @Test
@@ -112,9 +108,7 @@ public class AdaptiveMessageIdsTest {
 
         assertEquals(0x19 + 0, messageCodesResolver.withShhOffset(ShhMessageCodes.STATUS.asByte()));
         assertEquals(0x19 + 1, messageCodesResolver.withShhOffset(ShhMessageCodes.MESSAGE.asByte()));
-        assertEquals(0x19 + 2, messageCodesResolver.withShhOffset(ShhMessageCodes.ADD_FILTER.asByte()));
-        assertEquals(0x19 + 3, messageCodesResolver.withShhOffset(ShhMessageCodes.REMOVE_FILTER.asByte()));
-        assertEquals(0x19 + 4, messageCodesResolver.withShhOffset(ShhMessageCodes.PACKET_COUNT.asByte()));
+        assertEquals(0x19 + 2, messageCodesResolver.withShhOffset(ShhMessageCodes.FILTER.asByte()));
     }
 
     @Test // Capabilities should be read in alphabetical order
@@ -138,8 +132,6 @@ public class AdaptiveMessageIdsTest {
 
         assertEquals(0x19 + 0, messageCodesResolver.withShhOffset(ShhMessageCodes.STATUS.asByte()));
         assertEquals(0x19 + 1, messageCodesResolver.withShhOffset(ShhMessageCodes.MESSAGE.asByte()));
-        assertEquals(0x19 + 2, messageCodesResolver.withShhOffset(ShhMessageCodes.ADD_FILTER.asByte()));
-        assertEquals(0x19 + 3, messageCodesResolver.withShhOffset(ShhMessageCodes.REMOVE_FILTER.asByte()));
-        assertEquals(0x19 + 4, messageCodesResolver.withShhOffset(ShhMessageCodes.PACKET_COUNT.asByte()));
+        assertEquals(0x19 + 2, messageCodesResolver.withShhOffset(ShhMessageCodes.FILTER.asByte()));
     }
 }

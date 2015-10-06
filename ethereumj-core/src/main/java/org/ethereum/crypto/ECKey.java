@@ -403,7 +403,7 @@ public class ECKey implements Serializable {
         }
 
         /**
-         *
+         *t
          * @param r
          * @param s
          * @return -
