@@ -126,7 +126,11 @@ public class WhisperImpl extends Whisper {
     }
 
     public static ECKey fromIdentityToPub(String identity) {
-        return ECKey.fromPublicOnly(ByteUtil.merge(new byte[] {0x04}, Hex.decode(identity)));
+        try {
+            return ECKey.fromPublicOnly(ByteUtil.merge(new byte[] {0x04}, Hex.decode(identity)));
+        } catch (Exception e) {
+            throw new RuntimeException("Converting identity '" + identity + "'", e);
+        }
     }
 
     @Override

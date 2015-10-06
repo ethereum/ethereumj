@@ -30,12 +30,6 @@ public abstract class Whisper {
     public void send(String toIdentity, byte[] payload, Topic[] topics, int ttl, int workToProve) {
         send(null, toIdentity, payload, topics, ttl, workToProve);
     }
-//    public void send(String from, byte[] payload, Topic[] topics) {
-//        send(from, null, payload, topics, 50, 50);
-//    }
-//    public void send(String from, byte[] payload, Topic[] topics, int ttl, int workToProve) {
-//        send(from, null, payload, topics, ttl, workToProve);
-//    }
 
     public void send(String fromIdentity, String toIdentity, byte[] payload, Topic[] topics) {
         send(fromIdentity, toIdentity, payload, topics, 50, 50);

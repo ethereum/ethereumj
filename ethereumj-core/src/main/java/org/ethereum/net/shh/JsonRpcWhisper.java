@@ -58,7 +58,7 @@ public class JsonRpcWhisper extends Whisper {
     @Override
     public String newIdentity() {
         SimpleResponse resp = sendJson(new JsonRpcRequest("shh_newIdentity", null), SimpleResponse.class);
-        return resp.result;
+        return del0X(resp.result);
     }
 
     @Override
@@ -67,9 +67,9 @@ public class JsonRpcWhisper extends Whisper {
         for (int i = 0; i < f.getTopics().length; i++) {
             topics[i] = f.getTopics()[i].getOriginalTopic();
         }
-        FilterParams params = new FilterParams(f.getTo(), topics);
+        FilterParams params = new FilterParams(add0X(f.getTo()), topics);
         SimpleResponse resp = sendJson(new JsonRpcRequest("shh_newFilter", params), SimpleResponse.class);
-        int filterId = Integer.parseInt(resp.result.substring(2), 16);
+        int filterId = Integer.parseInt(del0X(resp.result), 16);
         watchers.put(filterId, f);
     }
 
@@ -84,19 +84,19 @@ public class JsonRpcWhisper extends Whisper {
         }
         if (filterId == -1) return;
         sendJson(new JsonRpcRequest("shh_uninstallFilter",
-                "0x" + Integer.toHexString(filterId)), SimpleResponse.class);
+                add0X(Integer.toHexString(filterId))), SimpleResponse.class);
     }
 
     private void pollFilters() {
         for (Map.Entry<Integer, MessageWatcher> entry : watchers.entrySet()) {
             MessagesResponse ret = sendJson(new JsonRpcRequest("shh_getFilterChanges",
-                    "0x" + Integer.toHexString(entry.getKey())), MessagesResponse.class);
+                    add0X(Integer.toHexString(entry.getKey()))), MessagesResponse.class);
             for (MessageParams msg : ret.result) {
                 ECKey from = null;
                 if (msg.from != null) {
-                    BigInteger i = new BigInteger(msg.from.substring(2), 16);
+                    BigInteger i = new BigInteger(del0X(msg.from), 16);
                     if (i.bitCount() > 0) {
-                        from = ECKey.fromPublicOnly(Hex.decode(msg.from.substring(2)));
+                        from = ECKey.fromPublicOnly(Hex.decode(del0X(msg.from)));
                     }
                 }
                 WhisperMessage m = new WhisperMessage()
@@ -115,7 +115,7 @@ public class JsonRpcWhisper extends Whisper {
             topicsS[i] = topics[i].getOriginalTopic();
         }
         SimpleResponse res = sendJson(new JsonRpcRequest("shh_post",
-                new MessageParams(new String(payload), to, from,
+                new MessageParams(new String(payload), add0X(to), add0X(from),
                         topicsS, ttl, workToProve)), SimpleResponse.class);
         if (!"true".equals(res.result)) {
             throw new RuntimeException("Shh post failed: " + res);
@@ -171,8 +171,17 @@ public class JsonRpcWhisper extends Whisper {
         }
     }
 
+    static String add0X(String s) {
+        if (s == null) return null;
+        return s.startsWith("0x") ? s : "0x" + s;
+    }
+    static String del0X(String s) {
+        if (s == null) return null;
+        return s.startsWith("0x") ? s.substring(2) : s;
+    }
+
     static String encodeString(String s) {
-        return "0x" + Hex.toHexString(s.getBytes());
+        return s == null ? null : "0x" + Hex.toHexString(s.getBytes());
     }
 
     static String decodeString(String s) {
@@ -227,6 +236,7 @@ public class JsonRpcWhisper extends Whisper {
         }
     }
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class FilterParams {
         public String to;
         public String[] topics;
