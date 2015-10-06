@@ -75,6 +75,8 @@ public class EnvelopeTest {
                 Arrays.asList(Topic.createTopics("Topic2", "Topic3")));
         Assert.assertTrue(b);
         Assert.assertEquals("Hello", new String(inMsg1.getPayload()));
+        Assert.assertEquals(msg1.getTo(), inMsg1.getTo());
+        Assert.assertEquals(msg1.getFrom(), inMsg1.getFrom());
 //        System.out.println(msg1.nonce + ": " + inMsg1.nonce + ", " + inMsg1.getPow());
         Assert.assertTrue(inMsg1.getPow() > 10);
 
