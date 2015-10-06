@@ -400,9 +400,15 @@ public class WhisperMessage extends ShhMessage {
 
         ECKey.ECDSASignature signature = from.sign(forSig);
 
+        byte v;
+
+        if (signature.v == 27) v = 0;
+        else if (signature.v == 28) v = 1;
+        else throw new RuntimeException("Invalid signature: " + signature);
+
         this.signature =
                 merge(BigIntegers.asUnsignedByteArray(32, signature.r),
-                        BigIntegers.asUnsignedByteArray(32, signature.s), new byte[]{signature.v});
+                        BigIntegers.asUnsignedByteArray(32, signature.s), new byte[]{v});
     }
 
 
