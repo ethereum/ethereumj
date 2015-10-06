@@ -4,8 +4,8 @@ import org.ethereum.core.Repository;
 import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
-import org.ethereum.net.swarm.Util;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
@@ -815,7 +815,7 @@ public class Program {
         while (index < code.length) {
             final byte opCode = code[index];
             OpCode op = OpCode.code(opCode);
-            sb.append(Util.align("" + Integer.toHexString(index) + ":", ' ', 8, false));
+            sb.append(Utils.align("" + Integer.toHexString(index) + ":", ' ', 8, false));
 
             if (op == null) {
                 sb.append("<UNKNOWN>: " + (0xFF & opCode) + "\n");

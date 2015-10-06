@@ -1,7 +1,6 @@
 package org.ethereum.util;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.net.swarm.Util;
 import org.junit.Test;
 import org.spongycastle.util.encoders.Hex;
 
@@ -25,13 +24,13 @@ public class RLPDump {
     public static String dump(RLPElement el, int indent) {
         String ret = "";
         if (el instanceof RLPList) {
-            ret = Util.repeat("  ", indent) + "[\n";
+            ret = Utils.repeat("  ", indent) + "[\n";
             for (RLPElement element : ((RLPList) el)) {
                 ret += dump(element, indent + 1);
             }
-            ret += Util.repeat("  ", indent) + "]\n";
+            ret += Utils.repeat("  ", indent) + "]\n";
         } else {
-            ret += Util.repeat("  ", indent) +
+            ret += Utils.repeat("  ", indent) +
                     (el.getRLPData() == null ? "<null>" : Hex.toHexString(el.getRLPData())) + "\n";
         }
         return ret;
