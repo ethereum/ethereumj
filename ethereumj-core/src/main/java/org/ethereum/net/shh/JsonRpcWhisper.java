@@ -87,22 +87,30 @@ public class JsonRpcWhisper extends Whisper {
                 add0X(Integer.toHexString(filterId))), SimpleResponse.class);
     }
 
+    private String fromAddress(String s) {
+        if (s == null) return null;
+        s = del0X(s);
+        BigInteger i = new BigInteger(s, 16);
+        if (i.bitCount() > 0) {
+            return s;
+        }
+        return null;
+    }
+
     private void pollFilters() {
         for (Map.Entry<Integer, MessageWatcher> entry : watchers.entrySet()) {
             MessagesResponse ret = sendJson(new JsonRpcRequest("shh_getFilterChanges",
                     add0X(Integer.toHexString(entry.getKey()))), MessagesResponse.class);
             for (MessageParams msg : ret.result) {
-                ECKey from = null;
-                if (msg.from != null) {
-                    BigInteger i = new BigInteger(del0X(msg.from), 16);
-                    if (i.bitCount() > 0) {
-                        from = ECKey.fromPublicOnly(Hex.decode(del0X(msg.from)));
-                    }
+                Topic[] topics = msg.topics == null ? null : new Topic[msg.topics.length];
+                for (int i = 0; topics != null && i < topics.length; i++) {
+                    topics[i] = new Topic(Hex.decode(del0X(msg.topics[i])));
                 }
                 WhisperMessage m = new WhisperMessage()
                         .setPayload(decodeString(msg.payload))
-                        .setFrom(from)
-                        .setTo(msg.to);
+                        .setFrom(fromAddress(msg.from))
+                        .setTo(fromAddress(msg.to))
+                        .setTopics(topics);
                 entry.getValue().newMessage(m);
             }
         }

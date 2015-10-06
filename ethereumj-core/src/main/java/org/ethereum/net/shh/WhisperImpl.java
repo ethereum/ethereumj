@@ -29,7 +29,6 @@ public class WhisperImpl extends Whisper {
     BloomFilter hostBloomFilter = BloomFilter.createAll();
 
     public WhisperImpl() {
-        addIdentity(SystemProperties.CONFIG.getMyKey());
     }
 
     @Override
@@ -127,7 +126,8 @@ public class WhisperImpl extends Whisper {
 
     public static ECKey fromIdentityToPub(String identity) {
         try {
-            return ECKey.fromPublicOnly(ByteUtil.merge(new byte[] {0x04}, Hex.decode(identity)));
+            return identity == null ? null :
+                    ECKey.fromPublicOnly(ByteUtil.merge(new byte[] {0x04}, Hex.decode(identity)));
         } catch (Exception e) {
             throw new RuntimeException("Converting identity '" + identity + "'", e);
         }
