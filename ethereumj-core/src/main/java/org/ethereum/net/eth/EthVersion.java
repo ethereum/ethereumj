@@ -53,4 +53,12 @@ public enum EthVersion {
         return supported;
     }
 
+    public boolean isCompatible(EthVersion version) {
+
+        if (version.getCode() >= V62.getCode()) {
+            return this.getCode() >= V62.getCode();
+        } else {
+            return this.getCode() < V62.getCode();
+        }
+    }
 }

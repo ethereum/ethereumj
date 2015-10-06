@@ -246,14 +246,7 @@ public class Channel {
     // ETH sub protocol
 
     public boolean isEthCompatible(Channel peer) {
-
-        if (peer == null) return false;
-
-        if (peer.getEthVersion().getCode() >= V62.getCode()) {
-            return this.getEthVersion().getCode() >= V62.getCode();
-        } else {
-            return this.getEthVersion().getCode() < V62.getCode();
-        }
+        return peer != null && peer.getEthVersion().isCompatible(getEthVersion());
     }
 
     public boolean hasEthStatusSucceeded() {

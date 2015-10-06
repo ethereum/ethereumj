@@ -5,7 +5,6 @@ import org.ethereum.facade.Ethereum;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
-import org.ethereum.util.BIUtil;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -89,12 +88,6 @@ public class PeersPool implements Iterable<Channel> {
     public void remove(Channel peer) {
         synchronized (activePeers) {
             activePeers.values().remove(peer);
-        }
-    }
-
-    public void removeAll(Collection<Channel> removed) {
-        synchronized (activePeers) {
-            activePeers.values().removeAll(removed);
         }
     }
 
@@ -249,14 +242,36 @@ public class PeersPool implements Iterable<Channel> {
         }
     }
 
-    public void changeState(SyncStateName newState, Functional.Predicate<Channel> filter) {
+    public void changeStateForIdles(SyncStateName newState, EthVersion compatibleVersion) {
+
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {
-                if (filter.test(peer)) {
+                if (peer.isIdle() && peer.getEthVersion().isCompatible(compatibleVersion))
                     peer.changeSyncState(newState);
-                }
             }
         }
+    }
+
+    public void changeStateForIdles(SyncStateName newState) {
+
+        synchronized (activePeers) {
+            for (Channel peer : activePeers.values()) {
+                if (peer.isIdle())
+                    peer.changeSyncState(newState);
+            }
+        }
+    }
+
+    public boolean hasCompatible(EthVersion version) {
+
+        synchronized (activePeers) {
+            for (Channel peer : activePeers.values()) {
+                if (peer.getEthVersion().isCompatible(version))
+                    return true;
+            }
+        }
+
+        return false;
     }
 
     @Nullable

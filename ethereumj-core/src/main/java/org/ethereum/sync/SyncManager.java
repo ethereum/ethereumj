@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
 import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.DiscoverListener;
 import org.ethereum.net.rlpx.discover.NodeHandler;
@@ -26,6 +27,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
 import static org.ethereum.util.TimeUtils.secondsToMillis;
@@ -48,6 +50,11 @@ public class SyncManager {
     private Map<SyncStateName, SyncState> syncStates;
     private SyncState state;
     private final Object stateMutex = new Object();
+
+    /**
+     * master peer version
+     */
+    EthVersion masterVersion = V62;
 
     /**
      * block which gap recovery is running for
@@ -101,6 +108,8 @@ public class SyncManager {
 
                 // set IDLE state at the beginning
                 state = syncStates.get(IDLE);
+
+                masterVersion = initialMasterVersion();
 
                 updateDifficulties();
 
@@ -279,6 +288,12 @@ public class SyncManager {
             return false;
         }
 
+        // no peers compatible with latest master left, we're stuck
+        if (!pool.hasCompatible(masterVersion)) {
+            logger.trace("No peers compatible with {}, recover the gap", masterVersion);
+            return true;
+        }
+
         // gap for this block is being recovered
         if (block.equals(gapBlock) && !state.is(IDLE)) {
             logger.trace("Gap recovery is already in progress for block.number [{}]", gapBlock.getNumber());
@@ -286,7 +301,8 @@ public class SyncManager {
         }
 
         // ALL blocks are downloaded, we definitely have a gap
-        if (queue.isHashesEmpty()) {
+        if (!hasBlockHashes()) {
+            logger.trace("No hashes/headers left, recover the gap", masterVersion);
             return true;
         }
 
@@ -326,6 +342,8 @@ public class SyncManager {
     void startMaster(Channel master) {
         pool.changeState(IDLE);
 
+        masterVersion = master.getEthVersion();
+
         if (gapBlock != null) {
             master.setLastHashToAsk(gapBlock.getParentHash());
         } else {
@@ -343,6 +361,14 @@ public class SyncManager {
                 Hex.toHexString(master.getLastHashToAsk()),
                 master.getMaxHashesAsk()
         );
+    }
+
+    boolean hasBlockHashes() {
+        if (masterVersion.isCompatible(V62)) {
+            return !queue.isHeadersEmpty();
+        } else {
+            return !queue.isHashesEmpty();
+        }
     }
 
     private void updateDifficulties() {
@@ -368,6 +394,14 @@ public class SyncManager {
             return BLOCK_RETRIEVING;
         } else {
             return HASH_RETRIEVING;
+        }
+    }
+
+    private EthVersion initialMasterVersion() {
+        if (!queue.isHeadersEmpty() || queue.isHashesEmpty()) {
+            return V62;
+        } else {
+            return V61;
         }
     }
 

@@ -69,6 +69,9 @@ public class Eth61 extends EthLegacy {
 
     @Override
     protected void processBlockHashes(List<byte[]> received) {
+
+        // todo check if remote peer responds with same hashes on different GET_BLOCK_HASHES
+
         if (received.isEmpty()) {
             return;
         }

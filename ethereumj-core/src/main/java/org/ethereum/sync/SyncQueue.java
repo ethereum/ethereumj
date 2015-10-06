@@ -369,7 +369,11 @@ public class SyncQueue {
     }
 
     public boolean isHashesEmpty() {
-        return hashStore.isEmpty() && headerStore.isEmpty();
+        return hashStore.isEmpty();
+    }
+
+    public boolean isHeadersEmpty() {
+        return headerStore.isEmpty();
     }
 
     public boolean isBlocksEmpty() {

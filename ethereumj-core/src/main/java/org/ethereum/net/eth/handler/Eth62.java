@@ -132,6 +132,8 @@ public class Eth62 extends EthHandler {
 
     private void processBlockHeaders(BlockHeadersMessage msg) {
 
+        // todo check if remote peer responds with same headers on different GET_BLOCK_HEADERS
+
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing BlockHeaders, size [{}]",
                 channel.getPeerIdShort(),
