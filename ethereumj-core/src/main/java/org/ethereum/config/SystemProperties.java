@@ -79,22 +79,25 @@ public class SystemProperties {
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
             logger.info("Config (" + (referenceConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): default properties from resource 'ethereumj.conf'");
-            Config testConfig = ConfigFactory.parseResources("test-ethereumj.conf");
-            logger.info("Config (" + (testConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-ethereumj.conf'");
             Config userConfig = ConfigFactory.parseResources("user.conf");
             logger.info("Config (" + (userConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from resource 'user.conf'");
             File userDirFile = new File(System.getProperty("user.dir"), "/config/ethereumj.conf");
             Config userDirConfig = ConfigFactory.parseFile(userDirFile);
             logger.info("Config (" + (userDirConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from file '" + userDirFile + "'");
+            Config testConfig = ConfigFactory.parseResources("test-ethereumj.conf");
+            logger.info("Config (" + (testConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-ethereumj.conf'");
+            Config testUserConfig = ConfigFactory.parseResources("test-user.conf");
+            logger.info("Config (" + (testUserConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): test properties from resource 'test-user.conf'");
             String file = System.getProperty("ethereumj.conf.file");
             Config cmdLineConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
                     ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
             config = javaSystemProperties
                     .withFallback(cmdLineConfig)
+                    .withFallback(testUserConfig)
+                    .withFallback(testConfig)
                     .withFallback(userConfig)
                     .withFallback(userDirConfig)
-                    .withFallback(testConfig)
                     .withFallback(referenceConfig);
             validateConfig();
 
