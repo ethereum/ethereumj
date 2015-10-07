@@ -26,7 +26,9 @@ import static java.util.Arrays.asList;
 
 @Configuration
 @EnableTransactionManagement
-@ComponentScan(basePackages = "org.ethereum")
+@ComponentScan(
+        basePackages = "org.ethereum",
+        excludeFilters = @ComponentScan.Filter(NoAutoscan.class))
 public class CommonConfig {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
