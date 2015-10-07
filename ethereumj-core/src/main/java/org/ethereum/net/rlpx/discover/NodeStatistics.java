@@ -5,7 +5,11 @@ import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.swarm.Statter;
 import org.ethereum.util.ByteUtil;
+import org.mapdb.Serializer;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +39,19 @@ public class NodeStatistics {
 
     static class Persistent  implements Serializable {
         private static final long serialVersionUID = -1246930309060559921L;
+        static final Serializer<Persistent> MapDBSerializer = new Serializer<Persistent>() {
+            @Override
+            public void serialize(DataOutput out, Persistent value) throws IOException {
+                out.writeInt(value.reputation);
+            }
+
+            @Override
+            public Persistent deserialize(DataInput in, int available) throws IOException {
+                Persistent persistent = new Persistent();
+                persistent.reputation = in.readInt();
+                return persistent;
+            }
+        };
         int reputation;
     }
 

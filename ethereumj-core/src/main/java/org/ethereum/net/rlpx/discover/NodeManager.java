@@ -140,7 +140,10 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 logger.info("Resetting DB Node statistics...");
                 db.delete("nodeStats");
             }
-            nodeStatsDB = db.hashMap("nodeStats");
+            nodeStatsDB = db.hashMapCreate("nodeStats")
+                    .keySerializer(Node.MapDBSerializer)
+                    .valueSerializer(NodeStatistics.Persistent.MapDBSerializer)
+                    .makeOrGet();
 
             List<Map.Entry<Node, NodeStatistics.Persistent>> sorted = new ArrayList<>(nodeStatsDB.entrySet());
             Collections.sort(sorted, new Comparator<Map.Entry<Node, NodeStatistics.Persistent>>() {
