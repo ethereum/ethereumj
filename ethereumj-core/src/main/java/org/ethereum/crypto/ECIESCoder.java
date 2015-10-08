@@ -2,14 +2,20 @@ package org.ethereum.crypto;
 
 import com.google.common.base.Throwables;
 import org.ethereum.ConcatKDFBytesGenerator;
-import org.spongycastle.crypto.*;
+import org.spongycastle.crypto.AsymmetricCipherKeyPair;
+import org.spongycastle.crypto.BufferedBlockCipher;
+import org.spongycastle.crypto.InvalidCipherTextException;
+import org.spongycastle.crypto.KeyGenerationParameters;
 import org.spongycastle.crypto.agreement.ECDHBasicAgreement;
+import org.spongycastle.crypto.digests.SHA1Digest;
 import org.spongycastle.crypto.digests.SHA256Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.generators.ECKeyPairGenerator;
+import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
 import org.spongycastle.crypto.macs.HMac;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.*;
+import org.spongycastle.crypto.parsers.ECIESPublicKeyParser;
 import org.spongycastle.math.ec.ECPoint;
 
 import java.io.ByteArrayInputStream;
@@ -68,6 +74,35 @@ public class ECIESCoder {
         return iesEngine.processBlock(cipher, 0, cipher.length);
     }
 
+    /**
+     *  Encryption equivalent to the Crypto++ default ECIES<ECP> settings:
+     *
+     *  DL_KeyAgreementAlgorithm:        DL_KeyAgreementAlgorithm_DH<struct ECPPoint,struct EnumToType<enum CofactorMultiplicationOption,0> >
+     *  DL_KeyDerivationAlgorithm:       DL_KeyDerivationAlgorithm_P1363<struct ECPPoint,0,class P1363_KDF2<class SHA1> >
+     *  DL_SymmetricEncryptionAlgorithm: DL_EncryptionAlgorithm_Xor<class HMAC<class SHA1>,0>
+     *  DL_PrivateKey:                   DL_Key<ECPPoint>
+     *  DL_PrivateKey_EC<class ECP>
+     *
+     *  Used for Whisper V3
+     */
+    public static byte[] decryptSimple(BigInteger privKey, byte[] cipher) throws IOException, InvalidCipherTextException {
+        EthereumIESEngine iesEngine = new EthereumIESEngine(
+                new ECDHBasicAgreement(),
+                new MGF1BytesGeneratorExt(new SHA1Digest(), 1),
+                new HMac(new SHA1Digest()),
+                new SHA1Digest(),
+                null);
+
+        IESParameters p = new IESParameters(null, null, KEY_SIZE);
+        ParametersWithIV parametersWithIV = new ParametersWithIV(p, new byte[0]);
+
+        iesEngine.setHashMacKey(false);
+
+        iesEngine.init(new ECPrivateKeyParameters(privKey, CURVE), parametersWithIV,
+                new ECIESPublicKeyParser(ECKey.CURVE));
+
+        return iesEngine.processBlock(cipher, 0, cipher.length);
+    }
 
     public static byte[] encrypt(ECPoint toPub, byte[] plaintext) {
 
@@ -106,6 +141,57 @@ public class ECIESCoder {
         } catch (IOException e) {
             throw Throwables.propagate(e);
         }
+    }
+
+    /**
+     *  Encryption equivalent to the Crypto++ default ECIES<ECP> settings:
+     *
+     *  DL_KeyAgreementAlgorithm:        DL_KeyAgreementAlgorithm_DH<struct ECPPoint,struct EnumToType<enum CofactorMultiplicationOption,0> >
+     *  DL_KeyDerivationAlgorithm:       DL_KeyDerivationAlgorithm_P1363<struct ECPPoint,0,class P1363_KDF2<class SHA1> >
+     *  DL_SymmetricEncryptionAlgorithm: DL_EncryptionAlgorithm_Xor<class HMAC<class SHA1>,0>
+     *  DL_PrivateKey:                   DL_Key<ECPPoint>
+     *  DL_PrivateKey_EC<class ECP>
+     *
+     *  Used for Whisper V3
+     */
+    public static byte[] encryptSimple(ECPoint pub, byte[] plaintext) throws IOException, InvalidCipherTextException {
+        EthereumIESEngine iesEngine = new EthereumIESEngine(
+                new ECDHBasicAgreement(),
+                new MGF1BytesGeneratorExt(new SHA1Digest(), 1),
+                new HMac(new SHA1Digest()),
+                new SHA1Digest(),
+                null);
+
+        IESParameters p = new IESParameters(null, null, KEY_SIZE);
+        ParametersWithIV parametersWithIV = new ParametersWithIV(p, new byte[0]);
+
+        iesEngine.setHashMacKey(false);
+
+        ECKeyPairGenerator eGen = new ECKeyPairGenerator();
+        SecureRandom random = new SecureRandom();
+        KeyGenerationParameters gParam = new ECKeyGenerationParameters(CURVE, random);
+        eGen.init(gParam);
+
+//        AsymmetricCipherKeyPairGenerator testGen = new AsymmetricCipherKeyPairGenerator() {
+//            ECKey priv = ECKey.fromPrivate(Hex.decode("d0b043b4c5d657670778242d82d68a29d25d7d711127d17b8e299f156dad361a"));
+//
+//            @Override
+//            public void init(KeyGenerationParameters keyGenerationParameters) {
+//            }
+//
+//            @Override
+//            public AsymmetricCipherKeyPair generateKeyPair() {
+//                return new AsymmetricCipherKeyPair(new ECPublicKeyParameters(priv.getPubKeyPoint(), CURVE),
+//                        new ECPrivateKeyParameters(priv.getPrivKey(), CURVE));
+//            }
+//        };
+
+        EphemeralKeyPairGenerator ephemeralKeyPairGenerator =
+                new EphemeralKeyPairGenerator(/*testGen*/eGen, new ECIESPublicKeyEncoder());
+
+        iesEngine.init(new ECPublicKeyParameters(pub, CURVE), parametersWithIV, ephemeralKeyPairGenerator);
+
+        return iesEngine.processBlock(plaintext, 0, plaintext.length);
     }
 
 

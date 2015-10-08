@@ -1,12 +1,10 @@
 package org.ethereum.db;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.ethereum.net.swarm.Util;
 import org.ethereum.util.Utils;
 import org.ethereum.vm.DataWord;
 import org.ethereum.vm.StorageDictionaryHandler;
@@ -332,8 +330,8 @@ public class StorageDictionary {
         }
 
         public String toString(ContractDetails storage, int indent) {
-            String s =  (hashKey == null ? Util.repeat(" ", 64) : hashKey) + " : " +
-                    Util.repeat("  ", indent) + this;
+            String s =  (hashKey == null ? Utils.repeat(" ", 64) : hashKey) + " : " +
+                    Utils.repeat("  ", indent) + this;
             if (hashKey != null && storage != null) {
                 DataWord data = storage.get(hashKey);
                 s += " = " + (data == null ? "<null>" : StorageDictionaryHandler.guessValue(data.getData()));

@@ -27,6 +27,9 @@ public class EthereumFactory {
     public static ApplicationContext context = null;
 
     public static Ethereum createEthereum() {
+        return createEthereum((Class) null);
+    }
+    public static Ethereum createEthereum(Class userSpringConfig) {
 
         logger.info("Running {},  core version: {}-{}", CONFIG.genesisInfo(), CONFIG.projectVersion(), CONFIG.projectVersionModifier());
         BuildInfo.printInfo();
@@ -36,10 +39,11 @@ public class EthereumFactory {
             logger.info("Database reset done");
         }
 
-        return createEthereum(DefaultConfig.class);
+        return userSpringConfig == null ? createEthereum(new Class[] {DefaultConfig.class}) :
+                createEthereum(userSpringConfig, DefaultConfig.class);
     }
 
-    public static Ethereum createEthereum(Class clazz) {
+    public static Ethereum createEthereum(Class ... springConfigs) {
 
         if (logger.isInfoEnabled()) {
             StringBuilder versions = new StringBuilder();
@@ -52,7 +56,7 @@ public class EthereumFactory {
         logger.info("capability shh version: [{}]", ShhHandler.VERSION);
         logger.info("capability bzz version: [{}]", BzzHandler.VERSION);
 
-        context = new AnnotationConfigApplicationContext(clazz);
+        context = new AnnotationConfigApplicationContext(springConfigs);
         return context.getBean(Ethereum.class);
     }
 

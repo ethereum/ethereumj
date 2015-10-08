@@ -3,9 +3,9 @@ package org.ethereum.net.swarm;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
+import org.ethereum.util.Utils;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import static java.lang.Math.min;
@@ -81,25 +81,6 @@ public class Util {
         return s1.substring(0, pos);
     }
 
-    public static String repeat(String s, int n) {
-        if (s.length() == 1) {
-            byte[] bb = new byte[n];
-            Arrays.fill(bb, s.getBytes()[0]);
-            return new String(bb);
-        } else {
-            StringBuilder ret = new StringBuilder();
-            for (int i = 0; i < n; i++) ret.append(s);
-            return ret.toString();
-        }
-    }
-
-    public static String align(String s, char fillChar, int targetLen, boolean alignRight) {
-        if (targetLen <= s.length()) return s;
-        String alignString = repeat("" + fillChar, targetLen - s.length());
-        return alignRight ? alignString + s : s + alignString;
-
-    }
-
     public static String ipBytesToString(byte[] ipAddr) {
         StringBuilder sip = new StringBuilder();
         for (int i = 0; i < ipAddr.length; i++) {
@@ -113,7 +94,7 @@ public class Util {
     }
 
     private static <P extends StringTrie.TrieNode<P>> String dumpTree(P n, int indent) {
-        String ret = Util.repeat("  ", indent) + "[" + n.path + "] " + n + "\n";
+        String ret = Utils.repeat("  ", indent) + "[" + n.path + "] " + n + "\n";
         for (P c: n.getChildren()) {
             ret += dumpTree(c, indent + 1);
         }

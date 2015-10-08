@@ -1,124 +1,39 @@
 package org.ethereum.net.shh;
 
-
 import org.ethereum.crypto.ECKey;
-import org.ethereum.net.MessageQueue;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.stereotype.Component;
 
-import java.util.*;
+/**
+ * Created by Anton Nashatyrev on 25.09.2015.
+ */
+@Component
+public abstract class Whisper {
 
-public class Whisper {
+    public abstract String addIdentity(ECKey key);
 
-    private MessageQueue msgQueue = null;
+    public abstract String newIdentity();
 
-    private Set<Filter> filters = new HashSet<>();
+    public abstract void watch(MessageWatcher f);
 
-    private Set<Message> messages = new HashSet<>();
-    private Set<Message> known = new HashSet<>();
+    public abstract void unwatch(MessageWatcher f);
 
-    private Map<String, ECKey> identities = new HashMap<>();
-
-    public Whisper(MessageQueue messageQueue) {
-        this.msgQueue = messageQueue;
+    public void send(byte[] payload, Topic[] topics) {
+        send(null, null, payload, topics, 50, 50);
+    }
+    public void send(byte[] payload, Topic[] topics, int ttl, int workToProve) {
+        send(null, null, payload, topics, ttl, workToProve);
+    }
+    public void send(String toIdentity, byte[] payload, Topic[] topics) {
+        send(null, toIdentity, payload, topics, 50, 50);
+    }
+    public void send(String toIdentity, byte[] payload, Topic[] topics, int ttl, int workToProve) {
+        send(null, toIdentity, payload, topics, ttl, workToProve);
     }
 
-    public void post(String from, String to, String[] topics, String payload, int ttl, int pow) {
-
-        Topic[] topicList = Topic.createTopics(topics);
-
-        Message m = new Message(payload.getBytes());
-
-        ECKey key = null;
-
-        if (from != null && !from.isEmpty()) {
-            key = getIdentity(from);
-            if (key == null) {
-                throw new Error(String.format("Unknown identity to send from %s", from));
-            }
-        }
-
-        Options options = new Options(
-                key,
-                Hex.decode(to),
-                topicList,
-                ttl
-        );
-
-        Envelope e = m.wrap(pow, options);
-
-        addMessage(m, e.getTopics());
-        msgQueue.sendMessage(e);
+    public void send(String fromIdentity, String toIdentity, byte[] payload, Topic[] topics) {
+        send(fromIdentity, toIdentity, payload, topics, 50, 50);
     }
 
-    public void processEnvelope(Envelope e) {
-        Message m = open(e);
-        if (m == null) {
-            return;
-        }
-        addMessage(m, e.getTopics());
-    }
-
-    private Message open(Envelope e) {
-
-        Message m;
-
-        for (ECKey key : identities.values()) {
-            m = e.open(key);
-            if (m != null) {
-                return m;
-            }
-        }
-
-        m = e.open(null);
-
-        return m;
-    }
-
-    public void watch(Filter f) {
-        filters.add(f);
-    }
-
-    public void unwatch(Filter f) {
-        filters.remove(f);
-    }
-
-    private void addMessage(Message m, Topic[] topics) {
-        known.add(m);
-        matchMessage(m, topics);
-    }
-
-    public Filter createFilter(byte[] to, byte[] from, Topic[] topics) {
-        TopicMatcher topicMatcher = new TopicMatcher(topics);
-        Filter f = new Filter(to, from, topicMatcher);
-        return f;
-    }
-
-    private void matchMessage(Message m, Topic[] topics) {
-        Filter msgFilter = createFilter(m.getTo(), m.getPubKey(), topics);
-        for (Filter f : filters) {
-            if (f.match(msgFilter)) {
-                f.trigger();
-            }
-        }
-    }
-
-    public ECKey newIdentity() {
-        ECKey key = new ECKey().decompress();
-        identities.put(Hex.toHexString(key.getPubKey()), key);
-        return key;
-    }
-
-    public ECKey getIdentity(String keyHexString) {
-        if (identities.containsKey(keyHexString)) {
-            return identities.get(keyHexString);
-        }
-
-        return null;
-    }
-
-    public List<Message> getAllKnownMessages() {
-        List<Message> messageList = new ArrayList<>();
-        messageList.addAll(known);
-        return messageList;
-    }
- }
+    public abstract void send(String fromIdentity, String toIdentity, byte[] payload, Topic[] topics, int ttl, int workToProve);
+}

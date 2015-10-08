@@ -6,6 +6,7 @@ import org.ethereum.net.swarm.bzz.BzzProtocol;
 import org.ethereum.net.swarm.bzz.PeerAddress;
 import org.ethereum.util.ByteUtil;
 import org.ethereum.util.Functional;
+import org.ethereum.util.Utils;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -389,7 +390,7 @@ public class BzzProtocolTest {
     }
 
     private String hex(int i ) {
-        return "0x" + Util.align(Integer.toHexString(i), '0', 8, true);
+        return "0x" + Utils.align(Integer.toHexString(i), '0', 8, true);
     }
 
     private int getDistance(byte[] k1, byte[] k2) {

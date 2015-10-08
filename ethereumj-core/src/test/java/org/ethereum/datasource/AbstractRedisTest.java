@@ -1,6 +1,7 @@
 package org.ethereum.datasource;
 
 import org.ethereum.config.SystemProperties;
+import org.ethereum.config.NoAutoscan;
 import org.ethereum.datasource.redis.RedisConnection;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.InMemoryBlockStore;
@@ -26,10 +27,12 @@ import static org.junit.Assert.assertFalse;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
+@NoAutoscan
 public abstract class AbstractRedisTest {
 
     @Configuration
     @ComponentScan(basePackages = "org.ethereum")
+    @NoAutoscan
     static class ContextConfiguration extends TestContext {
         static {
             SystemProperties.CONFIG.setDataBaseDir("test_db/" + "RedisAll");

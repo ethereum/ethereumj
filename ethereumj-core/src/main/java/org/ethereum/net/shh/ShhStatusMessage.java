@@ -8,15 +8,15 @@ import static org.ethereum.net.shh.ShhMessageCodes.STATUS;
 /**
  * @author by Konstantin Shabalin
  */
-public class StatusMessage extends ShhMessage {
+public class ShhStatusMessage extends ShhMessage {
 
     private byte protocolVersion;
 
-    public StatusMessage(byte[] encoded) {
+    public ShhStatusMessage(byte[] encoded) {
         super(encoded);
     }
 
-    public StatusMessage(byte protocolVersion) {
+    public ShhStatusMessage(byte protocolVersion) {
         this.protocolVersion = protocolVersion;
         this.parsed = true;
     }

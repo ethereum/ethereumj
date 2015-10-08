@@ -392,6 +392,32 @@ public class ByteUtil {
         return Math.min(1, (dataByte & (1 << (posBit))));
     }
 
+    public static byte[] and(byte[] b1, byte[] b2) {
+        if (b1.length != b2.length) throw new RuntimeException("Array sizes differ");
+        byte[] ret = new byte[b1.length];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = (byte) (b1[i] & b2[i]);
+        }
+        return ret;
+    }
+
+    public static byte[] or(byte[] b1, byte[] b2) {
+        if (b1.length != b2.length) throw new RuntimeException("Array sizes differ");
+        byte[] ret = new byte[b1.length];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = (byte) (b1[i] | b2[i]);
+        }
+        return ret;
+    }
+
+    public static byte[] xor(byte[] b1, byte[] b2) {
+        if (b1.length != b2.length) throw new RuntimeException("Array sizes differ");
+        byte[] ret = new byte[b1.length];
+        for (int i = 0; i < ret.length; i++) {
+            ret[i] = (byte) (b1[i] ^ b2[i]);
+        }
+        return ret;
+    }
 
     /**
      * @param arrays - arrays to merge

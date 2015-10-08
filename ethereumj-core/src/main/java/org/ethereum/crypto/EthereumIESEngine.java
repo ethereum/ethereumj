@@ -6,12 +6,7 @@ import java.math.BigInteger;
 
 import org.spongycastle.crypto.*;
 import org.spongycastle.crypto.generators.EphemeralKeyPairGenerator;
-import org.spongycastle.crypto.params.AsymmetricKeyParameter;
-import org.spongycastle.crypto.params.IESParameters;
-import org.spongycastle.crypto.params.IESWithCipherParameters;
-import org.spongycastle.crypto.params.KDFParameters;
-import org.spongycastle.crypto.params.KeyParameter;
-import org.spongycastle.crypto.params.ParametersWithIV;
+import org.spongycastle.crypto.params.*;
 import org.spongycastle.util.Arrays;
 import org.spongycastle.util.BigIntegers;
 import org.spongycastle.util.Pack;
@@ -41,6 +36,7 @@ public class EthereumIESEngine
     private EphemeralKeyPairGenerator keyPairGenerator;
     private KeyParser keyParser;
     private byte[] IV;
+    boolean hashK2 = true;
 
     /**
      * set up for use with stream mode, where the key derivation function
@@ -64,6 +60,10 @@ public class EthereumIESEngine
         this.cipher = cipher;
     }
 
+
+    public void setHashMacKey(boolean hashK2) {
+        this.hashK2 = hashK2;
+    }
 
     /**
      * Initialise the encryptor.
@@ -162,12 +162,12 @@ public class EthereumIESEngine
 
             kdf.generateBytes(K, 0, K.length);
 
-            if (V.length != 0)
-            {
-                System.arraycopy(K, 0, K2, 0, K2.length);
-                System.arraycopy(K, K2.length, K1, 0, K1.length);
-            }
-            else
+//            if (V.length != 0)
+//            {
+//                System.arraycopy(K, 0, K2, 0, K2.length);
+//                System.arraycopy(K, K2.length, K1, 0, K1.length);
+//            }
+//            else
             {
                 System.arraycopy(K, 0, K1, 0, K1.length);
                 System.arraycopy(K, inLen, K2, 0, K2.length);
@@ -210,20 +210,19 @@ public class EthereumIESEngine
 
         // Convert the length of the encoding vector into a byte array.
         byte[] P2 = param.getEncodingV();
-        byte[] L2 = new byte[4];
-        if (V.length != 0 && P2 != null)
-        {
-            Pack.intToBigEndian(P2.length * 8, L2, 0);
-        }
-
 
         // Apply the MAC.
         byte[] T = new byte[mac.getMacSize()];
 
-        byte[] K2a = new byte[hash.getDigestSize()];
-        hash.reset();
-        hash.update(K2, 0, K2.length);
-        hash.doFinal(K2a, 0);
+        byte[] K2a;
+        if (hashK2) {
+            K2a = new byte[hash.getDigestSize()];
+            hash.reset();
+            hash.update(K2, 0, K2.length);
+            hash.doFinal(K2a, 0);
+        } else {
+            K2a = K2;
+        }
         mac.init(new KeyParameter(K2a));
         mac.update(IV, 0, IV.length);
         mac.update(C, 0, C.length);
@@ -231,12 +230,13 @@ public class EthereumIESEngine
         {
             mac.update(P2, 0, P2.length);
         }
-        if (V.length != 0)
-        {
+        if (V.length != 0 && P2 != null) {
+            byte[] L2 = new byte[4];
+            Pack.intToBigEndian(P2.length * 8, L2, 0);
             mac.update(L2, 0, L2.length);
         }
-        mac.doFinal(T, 0);
 
+        mac.doFinal(T, 0);
 
         // Output the triple (V,C,T).
         byte[] Output = new byte[V.length + len + T.length];
@@ -270,12 +270,12 @@ public class EthereumIESEngine
 
             kdf.generateBytes(K, 0, K.length);
 
-            if (V.length != 0)
-            {
-                System.arraycopy(K, 0, K2, 0, K2.length);
-                System.arraycopy(K, K2.length, K1, 0, K1.length);
-            }
-            else
+//            if (V.length != 0)
+//            {
+//                System.arraycopy(K, 0, K2, 0, K2.length);
+//                System.arraycopy(K, K2.length, K1, 0, K1.length);
+//            }
+//            else
             {
                 System.arraycopy(K, 0, K1, 0, K1.length);
                 System.arraycopy(K, K1.length, K2, 0, K2.length);
@@ -319,22 +319,21 @@ public class EthereumIESEngine
 
         // Convert the length of the encoding vector into a byte array.
         byte[] P2 = param.getEncodingV();
-        byte[] L2 = new byte[4];
-        if (V.length != 0 && P2 != null)
-        {
-            Pack.intToBigEndian(P2.length * 8, L2, 0);
-        }
-
 
         // Verify the MAC.
         int end = inOff + inLen;
         byte[] T1 = Arrays.copyOfRange(in_enc, end - mac.getMacSize(), end);
 
         byte[] T2 = new byte[T1.length];
-        byte[] K2a = new byte[hash.getDigestSize()];
-        hash.reset();
-        hash.update(K2, 0, K2.length);
-        hash.doFinal(K2a, 0);
+        byte[] K2a;
+        if (hashK2) {
+            K2a = new byte[hash.getDigestSize()];
+            hash.reset();
+            hash.update(K2, 0, K2.length);
+            hash.doFinal(K2a, 0);
+        } else {
+            K2a = K2;
+        }
         mac.init(new KeyParameter(K2a));
         mac.update(IV, 0, IV.length);
         mac.update(in_enc, inOff + V.length, inLen - V.length - T2.length);
@@ -343,8 +342,10 @@ public class EthereumIESEngine
         {
             mac.update(P2, 0, P2.length);
         }
-        if (V.length != 0)
-        {
+
+        if (V.length != 0 && P2 != null) {
+            byte[] L2 = new byte[4];
+            Pack.intToBigEndian(P2.length * 8, L2, 0);
             mac.update(L2, 0, L2.length);
         }
         mac.doFinal(T2, 0);
@@ -415,7 +416,12 @@ public class EthereumIESEngine
         }
 
         // Initialise the KDF.
-        KDFParameters kdfParam = new KDFParameters(VZ, param.getDerivationV());
+        DerivationParameters kdfParam;
+        if (kdf instanceof MGF1BytesGeneratorExt) {
+            kdfParam = new MGFParameters(VZ);
+        } else {
+            kdfParam = new KDFParameters(VZ, param.getDerivationV());
+        }
         kdf.init(kdfParam);
 
         return forEncryption

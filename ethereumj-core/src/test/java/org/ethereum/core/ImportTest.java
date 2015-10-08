@@ -2,14 +2,12 @@ package org.ethereum.core;
 
 
 import org.ethereum.TestContext;
-import org.ethereum.config.SystemProperties;
+import org.ethereum.config.NoAutoscan;
 import org.ethereum.datasource.HashMapDB;
 import org.ethereum.db.BlockStore;
 import org.ethereum.db.IndexedBlockStore;
 import org.ethereum.manager.WorldManager;
-import org.ethereum.util.FileUtil;
 import org.hibernate.SessionFactory;
-import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -21,8 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.annotation.DirtiesContext.ClassMode;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.AnnotationConfigContextLoader;
@@ -41,12 +37,14 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(loader = AnnotationConfigContextLoader.class)
+@NoAutoscan
 public class ImportTest {
 
     private static final Logger logger = LoggerFactory.getLogger("test");
 
     @Configuration
     @ComponentScan(basePackages = "org.ethereum")
+    @NoAutoscan
     static class ContextConfiguration extends TestContext {
 
         @Bean

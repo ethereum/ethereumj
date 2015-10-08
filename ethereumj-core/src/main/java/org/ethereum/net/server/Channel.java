@@ -110,7 +110,6 @@ public class Channel {
         messageCodec.setP2pMessageFactory(new P2pMessageFactory());
 
         shhHandler.setMsgQueue(msgQueue);
-        shhHandler.setPrivKey(CONFIG.getMyKey());
         messageCodec.setShhMessageFactory(new ShhMessageFactory());
 
         bzzHandler.setMsgQueue(msgQueue);

@@ -28,17 +28,7 @@ public enum ShhMessageCodes {
     /**
      * [+0x02]
      */
-    ADD_FILTER(0x02),
-
-    /**
-     * [+0x03]
-     */
-    REMOVE_FILTER(0x03),
-
-    /**
-     * [+0x04]
-     */
-    PACKET_COUNT(0x04);
+    FILTER(0x02);
 
     private final int cmd;
 
@@ -59,7 +49,7 @@ public enum ShhMessageCodes {
     }
 
     public static boolean inRange(byte code) {
-        return code >= STATUS.asByte() && code <= PACKET_COUNT.asByte();
+        return code >= STATUS.asByte() && code <= FILTER.asByte();
     }
 
     public byte asByte() {
