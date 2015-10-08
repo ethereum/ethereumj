@@ -283,7 +283,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             }
         }
         if (newState == BLOCKS_LACK) {
-            if(++blocksLackHits < BLOCKS_LACK_MAX_HITS) {
+            if (syncDone || ++blocksLackHits < BLOCKS_LACK_MAX_HITS) {
                 return;
             }
             blocksLackHits = 0; // reset
