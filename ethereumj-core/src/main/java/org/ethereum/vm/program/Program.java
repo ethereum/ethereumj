@@ -5,6 +5,7 @@ import org.ethereum.core.Transaction;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.ContractDetails;
 import org.ethereum.util.ByteUtil;
+import org.ethereum.util.Utils;
 import org.ethereum.vm.*;
 import org.ethereum.vm.MessageCall.MsgType;
 import org.ethereum.vm.PrecompiledContracts.PrecompiledContract;
@@ -807,33 +808,76 @@ public class Program {
         }
     }
 
-    public static String stringify(byte[] code, int index, String result) {
-        if (isEmpty(code)) {
-            return result;
+    public static String stringifyMultiline(byte[] code) {
+        int index = 0;
+        StringBuilder sb = new StringBuilder();
+
+        while (index < code.length) {
+            final byte opCode = code[index];
+            OpCode op = OpCode.code(opCode);
+            sb.append(Utils.align("" + Integer.toHexString(index) + ":", ' ', 8, false));
+
+            if (op == null) {
+                sb.append("<UNKNOWN>: " + (0xFF & opCode) + "\n");
+                index ++;
+                continue;
+            }
+
+            if (op.name().startsWith("PUSH")) {
+                sb.append(' ' + op.name() + ' ');
+
+                int nPush = op.val() - OpCode.PUSH1.val() + 1;
+                byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
+                BigInteger bi = new BigInteger(1, data);
+                sb.append("0x" + bi.toString(16));
+                if (bi.bitLength() <= 32) {
+                    sb.append(" (" + new BigInteger(1, data).toString() + ") ");
+                }
+
+                index += nPush + 1;
+            } else {
+                sb.append(' ' + op.name());
+                index++;
+            }
+            sb.append('\n');
         }
 
-        final byte opCode = code[index];
-        OpCode op = OpCode.code(opCode);
-        if (op == null) {
-            throw Program.Exception.invalidOpCode(opCode);
-        }
-
-        final byte[] continuedCode;
-        if (op.name().startsWith("PUSH")) {
-            result += ' ' + op.name() + ' ';
-
-            int nPush = op.val() - OpCode.PUSH1.val() + 1;
-            byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
-            result += new BigInteger(1, data).toString() + ' ';
-
-            continuedCode = Arrays.copyOfRange(code, index + nPush + 1, code.length);
-        } else {
-            result += ' ' + op.name();
-            continuedCode = Arrays.copyOfRange(code, index + 1, code.length);
-        }
-
-        return stringify(continuedCode, 0, result);
+        return sb.toString();
     }
+
+    public static String stringify(byte[] code) {
+        int index = 0;
+        StringBuilder sb = new StringBuilder();
+
+        while (index < code.length) {
+            final byte opCode = code[index];
+            OpCode op = OpCode.code(opCode);
+
+            if (op == null) {
+                sb.append(" <UNKNOWN>: " + (0xFF & opCode) + " ");
+                index ++;
+                continue;
+            }
+
+            if (op.name().startsWith("PUSH")) {
+                sb.append(' ' + op.name() + ' ');
+
+                int nPush = op.val() - OpCode.PUSH1.val() + 1;
+                byte[] data = Arrays.copyOfRange(code, index + 1, index + nPush + 1);
+                BigInteger bi = new BigInteger(1, data);
+                sb.append("0x" + bi.toString(16) + " ");
+
+                index += nPush + 1;
+            } else {
+                sb.append(' ' + op.name());
+                index++;
+            }
+        }
+
+        return sb.toString();
+    }
+
+
 
     public void addListener(ProgramOutListener listener) {
         this.listener = listener;
