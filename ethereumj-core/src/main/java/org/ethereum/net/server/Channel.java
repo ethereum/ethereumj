@@ -15,8 +15,10 @@ import org.ethereum.net.eth.handler.EthHandlerFactory;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.Eth60MessageFactory;
 import org.ethereum.net.eth.message.Eth61MessageFactory;
-import org.ethereum.net.eth.sync.SyncStateName;
-import org.ethereum.net.eth.sync.SyncStatistics;
+import org.ethereum.net.eth.message.Eth62MessageFactory;
+import org.ethereum.net.message.ReasonCode;
+import org.ethereum.sync.SyncStateName;
+import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
@@ -44,6 +46,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
+import static org.ethereum.net.eth.EthVersion.V61;
+import static org.ethereum.net.eth.EthVersion.V62;
 
 /**
  * @author Roman Mandeleil
@@ -142,6 +146,7 @@ public class Channel {
     public void activateEth(ChannelHandlerContext ctx, EthVersion version) {
         EthHandler handler = ethHandlerFactory.create(version);
         MessageFactory messageFactory = createEthMessageFactory(version);
+        messageCodec.setEthVersion(version);
         messageCodec.setEthMessageFactory(messageFactory);
 
         logger.info("Eth{} [ address = {} | id = {} ]", handler.getVersion(), inetSocketAddress, getPeerIdShort());
@@ -161,6 +166,7 @@ public class Channel {
         switch (version) {
             case V60:   return new Eth60MessageFactory();
             case V61:   return new Eth61MessageFactory();
+            case V62:   return new Eth62MessageFactory();
             default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
         }
     }
@@ -201,7 +207,6 @@ public class Channel {
     }
 
     public void onDisconnect() {
-        eth.onShutdown();
     }
 
     public void onSyncDone() {
@@ -229,7 +234,19 @@ public class Channel {
         return node == null ? null : new ByteArrayWrapper(node.getId());
     }
 
+    public void disconnect(ReasonCode reason) {
+        msgQueue.disconnect(reason);
+    }
+
+    public InetSocketAddress getInetSocketAddress() {
+        return inetSocketAddress;
+    }
+
     // ETH sub protocol
+
+    public boolean isEthCompatible(Channel peer) {
+        return peer != null && peer.getEthVersion().isCompatible(getEthVersion());
+    }
 
     public boolean hasEthStatusSucceeded() {
         return eth.hasStatusSucceeded();
@@ -306,12 +323,20 @@ public class Channel {
 
         Channel channel = (Channel) o;
 
+        if (inetSocketAddress != null ? !inetSocketAddress.equals(channel.inetSocketAddress) : channel.inetSocketAddress != null) return false;
         return !(node != null ? !node.equals(channel.node) : channel.node != null);
 
     }
 
     @Override
     public int hashCode() {
-        return node != null ? node.hashCode() : 0;
+        int result = inetSocketAddress != null ? inetSocketAddress.hashCode() : 0;
+        result = 31 * result + (node != null ? node.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s | %s", getPeerIdShort(), inetSocketAddress);
     }
 }

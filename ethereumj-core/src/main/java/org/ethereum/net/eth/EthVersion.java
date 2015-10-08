@@ -12,10 +12,11 @@ import java.util.List;
 public enum EthVersion {
 
     V60((byte) 60),
-    V61((byte) 61);
+    V61((byte) 61),
+    V62((byte) 62);
 
     public static final byte LOWER = V60.getCode();
-    public static final byte UPPER = V61.getCode();
+    public static final byte UPPER = V62.getCode();
 
     private byte code;
 
@@ -52,4 +53,12 @@ public enum EthVersion {
         return supported;
     }
 
+    public boolean isCompatible(EthVersion version) {
+
+        if (version.getCode() >= V62.getCode()) {
+            return this.getCode() >= V62.getCode();
+        } else {
+            return this.getCode() < V62.getCode();
+        }
+    }
 }

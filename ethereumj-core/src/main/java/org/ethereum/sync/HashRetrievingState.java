@@ -1,4 +1,4 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.Functional;
@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.sync.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
@@ -22,6 +22,9 @@ public class HashRetrievingState extends AbstractSyncState {
 
     @Override
     public void doMaintain() {
+
+        super.doMaintain();
+
         Channel master = null;
         for (Channel peer : syncManager.pool) {
             // if hash retrieving is done all we need to do is just change state and quit
@@ -59,7 +62,7 @@ public class HashRetrievingState extends AbstractSyncState {
             }
 
             if (master == null) {
-                master = syncManager.pool.getBest();
+                master = syncManager.pool.getMaster();
             }
 
             if (master == null) {
@@ -70,12 +73,7 @@ public class HashRetrievingState extends AbstractSyncState {
 
         // Since Eth V61 it makes sense to download blocks and hashes simultaneously
         if (master.getEthVersion().getCode() > V60.getCode()) {
-            syncManager.pool.changeState(BLOCK_RETRIEVING, new Functional.Predicate<Channel>() {
-                @Override
-                public boolean test(Channel peer) {
-                    return peer.isIdle();
-                }
-            });
+            syncManager.pool.changeStateForIdles(BLOCK_RETRIEVING, syncManager.masterVersion);
         }
     }
 }

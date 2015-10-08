@@ -1,6 +1,7 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
-import static org.ethereum.net.eth.sync.SyncStateName.*;
+import static org.ethereum.net.eth.EthVersion.*;
+import static org.ethereum.sync.SyncStateName.*;
 
 /**
  * @author Mikhail Kalinin
@@ -14,13 +15,19 @@ public class IdleState extends AbstractSyncState {
 
     @Override
     public void doOnTransition() {
+
+        super.doOnTransition();
+
         syncManager.pool.changeState(IDLE);
     }
 
     @Override
     public void doMaintain() {
 
-        if (!syncManager.queue.isHashesEmpty()) {
+        super.doMaintain();
+
+        if ((!syncManager.queue.isHashesEmpty()  && syncManager.pool.hasCompatible(V61)) ||
+            (!syncManager.queue.isHeadersEmpty() && syncManager.pool.hasCompatible(V62))) {
 
             // there are new hashes in the store
             // it's time to download blocks

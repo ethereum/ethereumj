@@ -22,7 +22,10 @@ public class BestNumberRule extends DependentBlockHeaderRule {
         long diff = header.getNumber() - bestHeader.getNumber();
 
         if (diff > -1 * BEST_NUMBER_DIFF_LIMIT) {
-            errors.add("(header.getNumber() - bestHeader.getNumber()) <= BEST_NUMBER_DIFF_LIMIT");
+            errors.add(String.format(
+                    "#%d: (header.getNumber() - bestHeader.getNumber()) <= BEST_NUMBER_DIFF_LIMIT",
+                    header.getNumber()
+            ));
             return false;
         }
 

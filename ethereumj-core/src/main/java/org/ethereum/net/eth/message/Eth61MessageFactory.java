@@ -3,6 +3,8 @@ package org.ethereum.net.eth.message;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 
+import static org.ethereum.net.eth.EthVersion.*;
+
 /**
  * Eth V60 message factory
  *
@@ -14,7 +16,7 @@ public class Eth61MessageFactory implements MessageFactory {
     @Override
     public Message create(byte code, byte[] encoded) {
 
-        EthMessageCodes receivedCommand = EthMessageCodes.fromByte(code);
+        EthMessageCodes receivedCommand = EthMessageCodes.fromByte(code, V61);
         switch (receivedCommand) {
             case STATUS:
                 return new StatusMessage(encoded);

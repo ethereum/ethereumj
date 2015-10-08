@@ -73,7 +73,7 @@ public class GetBlockHashesByNumberMessage extends EthMessage {
     }
 
     @Override
-    public Class<?> getAnswerMessage() {
+    public Class<BlockHashesMessage> getAnswerMessage() {
         return BlockHashesMessage.class;
     }
 

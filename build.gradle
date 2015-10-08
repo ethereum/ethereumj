@@ -2,6 +2,12 @@ wrapper.gradleVersion = '2.2.1'
 
 allprojects {
     apply plugin: 'eclipse'
+    if (JavaVersion.current().isJava8Compatible()) {
+        //Disable lint of javadoc until someone fixes all the html
+        tasks.withType(Javadoc) {
+          options.addStringOption('Xdoclint:none', '-quiet')
+      }
+    }
 }
 
 subprojects {

@@ -30,7 +30,6 @@ public enum BzzMessageCodes {
      */
     PEERS(0x03);
 
-    static byte OFFSET = 0;
     private int cmd;
 
     private static final Map<Integer, BzzMessageCodes> intToTypeMap = new HashMap<>();
@@ -51,10 +50,6 @@ public enum BzzMessageCodes {
 
     public static boolean inRange(byte code) {
         return code >= STATUS.asByte() && code <= PEERS.asByte();
-    }
-
-    public static void setOffset(byte offset) {
-        BzzMessageCodes.OFFSET = offset;
     }
 
     public byte asByte() {

@@ -14,7 +14,7 @@ public class Constants {
     public static int GAS_LIMIT_BOUND_DIVISOR = 1024;
     public static BigInteger MINIMUM_DIFFICULTY = BigInteger.valueOf(131072);
     public static BigInteger DIFFICULTY_BOUND_DIVISOR = BigInteger.valueOf(2048);
-    public static int DURATION_LIMIT = CONFIG.isFrontier() ? 13 : 8;;
+    public static int DURATION_LIMIT = CONFIG.isFrontier() ? 13 : 8;
     public static int EXP_DIFFICULTY_PERIOD = 100000;
 
     public static int UNCLE_GENERATION_LIMIT = 7;

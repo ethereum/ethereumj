@@ -16,7 +16,7 @@ public class ParentNumberRule extends DependentBlockHeaderRule {
         errors.clear();
 
         if (header.getNumber() != (parent.getNumber() + 1)) {
-            errors.add("block number is not parentBlock number + 1");
+            errors.add(String.format("#%d: block number is not parentBlock number + 1", header.getNumber()));
             return false;
         }
 

@@ -1,7 +1,8 @@
-package org.ethereum.net.eth.sync;
+package org.ethereum.sync;
 
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.Channel;
 import org.ethereum.util.Functional;
@@ -17,7 +18,10 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.net.eth.sync.SyncStateName.IDLE;
+import static org.ethereum.net.eth.EthVersion.V62;
+import static org.ethereum.sync.SyncStateName.IDLE;
+import static org.ethereum.util.BIUtil.isIn20PercentRange;
+import static org.ethereum.util.BIUtil.isMoreThan;
 import static org.ethereum.util.TimeUtils.*;
 
 /**
@@ -39,8 +43,10 @@ public class PeersPool implements Iterable<Channel> {
     private static final long WORKER_TIMEOUT = 3; // 3 seconds
 
     private static final int DISCONNECT_HITS_THRESHOLD = 5;
-    private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(30);
+    private static final long DEFAULT_BAN_TIMEOUT = minutesToMillis(1);
     private static final long CONNECTION_TIMEOUT = secondsToMillis(30);
+
+    private static final int MIN_PEERS_COUNT = 3;
 
     private final Map<ByteArrayWrapper, Channel> activePeers = new HashMap<>();
     private final Set<Channel> bannedPeers = new HashSet<>();
@@ -81,28 +87,53 @@ public class PeersPool implements Iterable<Channel> {
 
     public void remove(Channel peer) {
         synchronized (activePeers) {
-            activePeers.remove(peer.getNodeIdWrapper());
-        }
-    }
-
-    public void removeAll(Collection<Channel> removed) {
-        synchronized (activePeers) {
-            activePeers.values().removeAll(removed);
+            activePeers.values().remove(peer);
         }
     }
 
     @Nullable
-    public Channel getBest() {
+    public Channel getMaster() {
+
         synchronized (activePeers) {
+
             if (activePeers.isEmpty()) {
                 return null;
             }
-            return Collections.max(activePeers.values(), new Comparator<Channel>() {
-                @Override
-                public int compare(Channel p1, Channel p2) {
-                    return p1.getTotalDifficulty().compareTo(p2.getTotalDifficulty());
+
+            Channel best61 = null;
+            Channel best62 = null;
+            int count62 = 0;
+            int count61 = 0;
+
+            for (Channel peer : activePeers.values()) {
+
+                if (peer.getEthVersion().getCode() >= V62.getCode()) {
+
+                    if (best62 == null || isMoreThan(peer.getTotalDifficulty(), best62.getTotalDifficulty())) {
+                        best62 = peer;
+                    }
+                    count62++;
+                } else {
+
+                    if (best61 == null || isMoreThan(peer.getTotalDifficulty(), best61.getTotalDifficulty())) {
+                        best61 = peer;
+                    }
+                    count61++;
                 }
-            });
+
+            }
+
+            if (best61 == null) return best62;
+            if (best62 == null) return best61;
+
+            if (count62 >= MIN_PEERS_COUNT) return best62;
+            if (count61 >= MIN_PEERS_COUNT) return best61;
+
+            if (isIn20PercentRange(best62.getTotalDifficulty(), best61.getTotalDifficulty())) {
+                return best62;
+            } else {
+                return best61;
+            }
         }
     }
 
@@ -121,9 +152,16 @@ public class PeersPool implements Iterable<Channel> {
             return;
         }
 
+        boolean existed;
         synchronized (activePeers) {
-            activePeers.remove(peer.getNodeIdWrapper());
+            existed = activePeers.values().remove(peer);
             bannedPeers.remove(peer);
+        }
+
+        // do not count disconnects for nodeId
+        // if exact peer is not an active one
+        if (!existed) {
+            return;
         }
 
         synchronized (disconnectHits) {
@@ -204,14 +242,49 @@ public class PeersPool implements Iterable<Channel> {
         }
     }
 
-    public void changeState(SyncStateName newState, Functional.Predicate<Channel> filter) {
+    public void changeStateForIdles(SyncStateName newState, EthVersion compatibleVersion) {
+
         synchronized (activePeers) {
             for (Channel peer : activePeers.values()) {
-                if (filter.test(peer)) {
+                if (peer.isIdle() && peer.getEthVersion().isCompatible(compatibleVersion))
                     peer.changeSyncState(newState);
-                }
             }
         }
+    }
+
+    public void changeStateForIdles(SyncStateName newState) {
+
+        synchronized (activePeers) {
+            for (Channel peer : activePeers.values()) {
+                if (peer.isIdle())
+                    peer.changeSyncState(newState);
+            }
+        }
+    }
+
+    public boolean hasCompatible(EthVersion version) {
+
+        synchronized (activePeers) {
+            for (Channel peer : activePeers.values()) {
+                if (peer.getEthVersion().isCompatible(version))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Nullable
+    public Channel findOne(Functional.Predicate<Channel> filter) {
+
+        synchronized (activePeers) {
+            for (Channel peer : activePeers.values()) {
+                if (filter.test(peer))
+                    return peer;
+            }
+        }
+
+        return null;
     }
 
     public boolean isEmpty() {
@@ -248,9 +321,9 @@ public class PeersPool implements Iterable<Channel> {
                 logger.info("============");
                 for (Map.Entry<String, Long> e : bans.entrySet()) {
                     logger.info(
-                            "Peer {} | {} minutes ago",
+                            "Peer {} | {} seconds ago",
                             Utils.getNodeIdShort(e.getKey()),
-                            millisToMinutes(System.currentTimeMillis() - (e.getValue() - DEFAULT_BAN_TIMEOUT))
+                            millisToSeconds(System.currentTimeMillis() - (e.getValue() - DEFAULT_BAN_TIMEOUT))
                     );
                 }
             }

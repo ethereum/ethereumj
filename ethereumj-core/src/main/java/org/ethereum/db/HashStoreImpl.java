@@ -46,13 +46,14 @@ public class HashStoreImpl implements HashStore {
                             .keySerializer(Serializer.LONG)
                             .valueSerializer(Serializer.BYTE_ARRAY)
                             .makeOrGet();
-                    index = new ArrayList<>(hashes.keySet());
-                    sortIndex();
 
                     if(CONFIG.databaseReset()) {
                         hashes.clear();
                         db.commit();
                     }
+
+                    index = new ArrayList<>(hashes.keySet());
+                    sortIndex();
 
                     initDone = true;
                     init.signalAll();

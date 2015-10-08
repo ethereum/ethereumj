@@ -3,35 +3,33 @@ package org.ethereum.net.eth.message;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
 
-import static org.ethereum.net.eth.EthVersion.*;
+import static org.ethereum.net.eth.EthVersion.V62;
 
 /**
- * Eth V60 message factory
- *
  * @author Mikhail Kalinin
- * @since 20.08.2015
+ * @since 04.09.2015
  */
-public class Eth60MessageFactory implements MessageFactory {
+public class Eth62MessageFactory implements MessageFactory {
 
     @Override
     public Message create(byte code, byte[] encoded) {
 
-        EthMessageCodes receivedCommand = EthMessageCodes.fromByte(code, V60);
+        EthMessageCodes receivedCommand = EthMessageCodes.fromByte(code, V62);
         switch (receivedCommand) {
             case STATUS:
                 return new StatusMessage(encoded);
             case NEW_BLOCK_HASHES:
-                return new NewBlockHashesMessage(encoded);
+                return new NewBlockHashes62Message(encoded);
             case TRANSACTIONS:
                 return new TransactionsMessage(encoded);
-            case GET_BLOCK_HASHES:
-                return new GetBlockHashesMessage(encoded);
-            case BLOCK_HASHES:
-                return new BlockHashesMessage(encoded);
-            case GET_BLOCKS:
-                return new GetBlocksMessage(encoded);
-            case BLOCKS:
-                return new BlocksMessage(encoded);
+            case GET_BLOCK_HEADERS:
+                return new GetBlockHeadersMessage(encoded);
+            case BLOCK_HEADERS:
+                return new BlockHeadersMessage(encoded);
+            case GET_BLOCK_BODIES:
+                return new GetBlockBodiesMessage(encoded);
+            case BLOCK_BODIES:
+                return new BlockBodiesMessage(encoded);
             case NEW_BLOCK:
                 return new NewBlockMessage(encoded);
             default:

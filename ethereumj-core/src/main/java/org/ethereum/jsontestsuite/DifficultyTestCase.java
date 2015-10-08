@@ -5,13 +5,13 @@ import org.ethereum.core.BlockHeader;
 
 import java.math.BigInteger;
 
+import static org.ethereum.util.ByteUtil.EMPTY_BYTE_ARRAY;
+
 /**
  * @author Mikhail Kalinin
  * @since 02.09.2015
  */
 public class DifficultyTestCase {
-
-    private static final byte[] EMPTY_ARRAY = new byte[0];
 
     @JsonIgnore
     private String name;
@@ -73,20 +73,20 @@ public class DifficultyTestCase {
 
     public BlockHeader getCurrent() {
         return new BlockHeader(
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 Long.valueOf(currentBlockNumber), 0, 0,
                 Long.valueOf(currentTimestamp),
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
         );
     }
 
     public BlockHeader getParent() {
         return new BlockHeader(
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY,
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY,
                 new BigInteger(parentDifficulty).toByteArray(),
                 Long.valueOf(currentBlockNumber) - 1, 0, 0,
                 Long.valueOf(parentTimestamp),
-                EMPTY_ARRAY, EMPTY_ARRAY, EMPTY_ARRAY
+                EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY, EMPTY_BYTE_ARRAY
         );
     }
 

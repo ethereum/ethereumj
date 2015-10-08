@@ -24,7 +24,7 @@ public class DifficultyRule extends DependentBlockHeaderRule {
 
         if (!isEqual(difficulty, calcDifficulty)) {
 
-            errors.add("difficulty != calcDifficulty");
+            errors.add(String.format("#%d: difficulty != calcDifficulty", header.getNumber()));
             return false;
         }
 

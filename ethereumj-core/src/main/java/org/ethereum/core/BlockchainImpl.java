@@ -737,4 +737,79 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     public PendingState getPendingState() {
         return pendingState;
     }
+
+    @Override
+    public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+        long blockNumber = identifier.getNumber();
+
+        if (identifier.getHash() != null) {
+            Block block = getBlockByHash(identifier.getHash());
+
+            if (block == null) {
+                return Collections.emptyList();
+            }
+
+            blockNumber = block.getNumber();
+        }
+
+        long bestNumber = bestBlock.getNumber();
+
+        int qty = getQty(blockNumber, bestNumber, limit);
+
+        byte[] startHash = getStartHash(blockNumber, skip, qty, reverse);
+
+        if (startHash == null) {
+            return Collections.emptyList();
+        }
+
+        List<BlockHeader> headers = blockStore.getListHeadersEndWith(startHash, qty);
+
+        // blocks come with falling numbers
+        if (!reverse) {
+            Collections.reverse(headers);
+        }
+
+        return headers;
+    }
+
+    private int getQty(long blockNumber, long bestNumber, int limit) {
+
+        if (blockNumber + limit - 1 > bestNumber) {
+            return (int) (bestNumber - blockNumber + 1);
+        } else {
+            return limit;
+        }
+    }
+
+    private byte[] getStartHash(long blockNumber, int skip, int qty, boolean reverse) {
+
+        long startNumber;
+
+        if (reverse) {
+            startNumber = blockNumber - skip;
+        } else {
+            startNumber = blockNumber + skip + qty - 1;
+        }
+
+        Block block = getBlockByNumber(startNumber);
+
+        if (block == null) {
+            return null;
+        }
+
+        return block.getHash();
+    }
+
+    @Override
+    public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
+        List<byte[]> bodies = new ArrayList<>(hashes.size());
+
+        for (byte[] hash : hashes) {
+            Block block = blockStore.getBlockByHash(hash);
+            if (block == null) break;
+            bodies.add(block.getEncodedBody());
+        }
+
+        return bodies;
+    }
 }
