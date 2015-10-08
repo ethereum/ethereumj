@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
 
 import java.util.Collection;
@@ -29,4 +30,8 @@ public interface BlockQueue extends DiskStore {
     void clear();
 
     List<byte[]> filterExisting(Collection<byte[]> hashes);
+
+    List<BlockHeader> filterExistingHeaders(Collection<BlockHeader> headers);
+
+    boolean isBlockExist(byte[] hash);
 }

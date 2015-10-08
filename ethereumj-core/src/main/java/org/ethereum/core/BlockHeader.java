@@ -73,6 +73,10 @@ public class BlockHeader {
      * of computation has been carried out on this block */
     private byte[] nonce;
 
+    public BlockHeader(byte[] encoded) {
+        this((RLPList) RLP.decode2(encoded).get(0));
+    }
+
     public BlockHeader(RLPList rlpHeader) {
 
         this.parentHash = rlpHeader.get(0).getRLPData();
@@ -238,6 +242,10 @@ public class BlockHeader {
 
     public void setNonce(byte[] nonce) {
         this.nonce = nonce;
+    }
+
+    public byte[] getHash() {
+        return HashUtil.sha3(getEncoded());
     }
 
     public byte[] getEncoded() {

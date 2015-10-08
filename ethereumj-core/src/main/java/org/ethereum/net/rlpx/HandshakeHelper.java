@@ -1,13 +1,12 @@
 package org.ethereum.net.rlpx;
 
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.p2p.HelloMessage;
-import org.ethereum.util.CollectionUtils;
-import org.ethereum.util.Functional;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * @author Mikhail Kalinin
@@ -19,30 +18,32 @@ public class HandshakeHelper {
         List<Capability> configCaps = Capability.getConfigCapabilities();
         List<Capability> supported = new ArrayList<>();
 
-        Capability eth = null;
+        List<Capability> eths = new ArrayList<>();
 
         for (Capability cap : hello.getCapabilities()) {
             if (configCaps.contains(cap)) {
-
                 if (cap.isEth()) {
-
-                    // we need to pick up the most recent Eth version from the list of supported ones
-                    if (EthVersion.isSupported(cap.getVersion())) {
-                        if (eth == null || eth.getVersion() < cap.getVersion()) {
-                            eth = cap;
-                        }
-                    }
-
+                    eths.add(cap);
                 } else {
                     supported.add(cap);
                 }
             }
         }
 
-        if (eth != null) {
-            supported.add(eth);
+        if (eths.isEmpty()) {
+            return supported;
         }
 
+        // we need to pick up
+        // the most recent Eth version
+        Capability highest = null;
+        for (Capability eth : eths) {
+            if (highest == null || highest.getVersion() < eth.getVersion()) {
+                highest = eth;
+            }
+        }
+
+        supported.add(highest);
         return supported;
     }
 

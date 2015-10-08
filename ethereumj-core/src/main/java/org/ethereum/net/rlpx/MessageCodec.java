@@ -10,6 +10,7 @@ import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
@@ -62,6 +63,8 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     private MessageFactory shhMessageFactory;
     private MessageFactory bzzMessageFactory;
 
+    private EthVersion ethVersion;
+
     public InitiateHandler getInitiator() {
         return initiator;
     }
@@ -111,7 +114,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         Message msg = createMessage((byte) frame.getType(), payload);
 
         if (loggerNet.isInfoEnabled())
-            loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), msg);
+            loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg);
 
         EthereumListener listener = worldManager.getListener();
         listener.onRecvMessage(msg);
@@ -127,7 +130,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         worldManager.getListener().trace(output);
 
         if (loggerNet.isInfoEnabled())
-            loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), msg);
+            loggerNet.info("To: \t{} \tSend: \t{}", channel, msg);
 
         byte[] encoded = msg.getEncoded();
 
@@ -201,7 +204,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
                 } else {
                     DisconnectMessage message = new DisconnectMessage(payload);
                     if (loggerNet.isInfoEnabled())
-                        loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), message);
+                        loggerNet.info("From: \t{} \tRecv: \t{}", channel, message);
                     channel.getNodeStatistics().nodeDisconnectedRemote(message.getReason());
                 }
             }
@@ -309,7 +312,7 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         }
 
         resolved = messageCodesResolver.resolveEth(code);
-        if (ethMessageFactory != null && EthMessageCodes.inRange(resolved)) {
+        if (ethMessageFactory != null && EthMessageCodes.inRange(resolved, ethVersion)) {
             return ethMessageFactory.create(resolved, payload);
         }
 
@@ -323,12 +326,16 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
             return bzzMessageFactory.create(resolved, payload);
         }
 
-        throw new IllegalArgumentException("No such message: " + code + " [" + Hex.encode(payload) + "]");
+        throw new IllegalArgumentException("No such message: " + code + " [" + Hex.toHexString(payload) + "]");
     }
 
     public void setRemoteId(String remoteId, Channel channel){
         this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
+    }
+
+    public void setEthVersion(EthVersion ethVersion) {
+        this.ethVersion = ethVersion;
     }
 
     /**

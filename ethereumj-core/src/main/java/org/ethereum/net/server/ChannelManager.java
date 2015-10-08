@@ -1,10 +1,11 @@
 package org.ethereum.net.server;
 
 import org.ethereum.core.Transaction;
+import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.facade.Ethereum;
 import org.ethereum.manager.WorldManager;
 
-import org.ethereum.net.eth.sync.SyncManager;
+import org.ethereum.sync.SyncManager;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
+import static org.ethereum.net.message.ReasonCode.DUPLICATE_PEER;
+
 /**
  * @author Roman Mandeleil
  * @since 11.11.2014
@@ -30,7 +33,7 @@ public class ChannelManager {
     private static final Logger logger = LoggerFactory.getLogger("net");
 
     private List<Channel> newPeers = new CopyOnWriteArrayList<>();
-    private List<Channel> activePeers = new CopyOnWriteArrayList<>();
+    private final Map<ByteArrayWrapper, Channel> activePeers = Collections.synchronizedMap(new HashMap<ByteArrayWrapper, Channel>());
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
 
@@ -61,11 +64,18 @@ public class ChannelManager {
         for(Channel peer : newPeers) {
 
             if(peer.isProtocolsInitialized()) {
-                process(peer);
+
+                if (!activePeers.containsKey(peer.getNodeIdWrapper())) {
+                    process(peer);
+                } else {
+                    peer.disconnect(DUPLICATE_PEER);
+                }
+
                 processed.add(peer);
             }
 
         }
+
         newPeers.removeAll(processed);
     }
 
@@ -76,31 +86,35 @@ public class ChannelManager {
                 peer.prohibitTransactionProcessing();
             }
             syncManager.addPeer(peer);
-            activePeers.add(peer);
+            activePeers.put(peer.getNodeIdWrapper(), peer);
         }
     }
 
     public void sendTransaction(Transaction tx) {
-        for (Channel channel : activePeers) {
-            channel.sendTransaction(tx);
+
+        synchronized (activePeers) {
+            for (Channel channel : activePeers.values())
+                channel.sendTransaction(tx);
         }
     }
 
-    public void add(Channel channel) {
-        newPeers.add(channel);
+    public void add(Channel peer) {
+        newPeers.add(peer);
     }
 
     public void notifyDisconnect(Channel channel) {
         logger.debug("Peer {}: notifies about disconnect", channel.getPeerIdShort());
         channel.onDisconnect();
         syncManager.onDisconnect(channel);
-        activePeers.remove(channel);
+        activePeers.values().remove(channel);
         newPeers.remove(channel);
     }
 
     public void onSyncDone() {
-        for (Channel channel : activePeers) {
-            channel.onSyncDone();
+
+        synchronized (activePeers) {
+            for (Channel channel : activePeers.values())
+                channel.onSyncDone();
         }
     }
 }

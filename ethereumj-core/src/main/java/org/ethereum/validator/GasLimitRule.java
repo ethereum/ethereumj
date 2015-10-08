@@ -21,7 +21,7 @@ public class GasLimitRule extends BlockHeaderRule {
         errors.clear();
 
         if (header.getGasLimit() < MIN_GAS_LIMIT) {
-            errors.add("header.getGasLimit() < MIN_GAS_LIMIT");
+            errors.add(String.format("#%d: header.getGasLimit() < MIN_GAS_LIMIT", header.getNumber()));
             return false;
         }
 

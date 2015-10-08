@@ -9,17 +9,14 @@ import org.ethereum.trie.Trie;
 import org.ethereum.trie.TrieImpl;
 import org.ethereum.util.AdvancedDeviceUtils;
 import org.ethereum.util.RLP;
-import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
-import org.ethereum.validator.ParentBlockHeaderValidator;
+import org.ethereum.validator.DependentBlockHeaderRule;
 import org.ethereum.vm.program.invoke.ProgramInvokeFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -35,7 +32,6 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.core.Denomination.SZABO;
 import static org.ethereum.core.ImportResult.*;
 import static org.ethereum.util.BIUtil.isMoreThan;
-import static org.ethereum.util.BIUtil.toBI;
 
 /**
  * The Ethereum blockchain is in many ways similar to the Bitcoin blockchain,
@@ -76,10 +72,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     // to avoid using minGasPrice=0 from Genesis for the wallet
     private static final long INITIAL_MIN_GAS_PRICE = 10 * SZABO.longValue();
 
-    @Resource
-    @Qualifier("pendingTransactions")
-    private final Set<PendingTransaction> pendingTransactions = new HashSet<>();
-
     @Autowired
     private Repository repository;
     private Repository track;
@@ -103,7 +95,10 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     private AdminInfo adminInfo;
 
     @Autowired
-    private ParentBlockHeaderValidator parentHeaderValidator;
+    private DependentBlockHeaderRule parentHeaderValidator;
+
+    @Autowired
+    private PendingState pendingState;
 
     private List<Chain> altChains = new ArrayList<>();
     private List<Block> garbage = new ArrayList<>();
@@ -271,12 +266,18 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         if (bestBlock.isParentOf(block)) {
             recordBlock(block);
             add(block);
+
+            pendingState.processBest(block);
+
             return IMPORTED_BEST;
         } else {
 
             if (blockStore.isBlockExist(block.getParentHash())) {
                 recordBlock(block);
                 ImportResult result = tryConnectAndFork(block);
+
+                if (result == IMPORTED_BEST) pendingState.processBest(block);
+
                 return result;
             }
 
@@ -340,7 +341,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         storeBlock(block, receipts);
 
 
-        if (needFlush(block)) {
+        if (!byTest && needFlush(block)) {
             repository.flush();
             blockStore.flush();
             System.gc();
@@ -349,42 +350,8 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
         // Remove all wallet transactions as they already approved by the net
         wallet.removeTransactions(block.getTransactionsList());
 
-        // Clear pending transaction from the mem
-        clearPendingTransactions(block.getTransactionsList());
-
-        // Clear outdated pending transactions
-        clearOutdatedTransactions(block.getNumber());
-
         listener.trace(String.format("Block chain size: [ %d ]", this.getSize()));
         listener.onBlock(block, receipts);
-    }
-
-    private void clearOutdatedTransactions(final long blockNumber) {
-        List<PendingTransaction> outdated = new ArrayList<>();
-        List<Transaction> transactions = new ArrayList<>();
-
-        synchronized (pendingTransactions) {
-            for (PendingTransaction tx : pendingTransactions) {
-                if (blockNumber - tx.getBlockNumber() > CONFIG.txOutdatedThreshold()) {
-                    outdated.add(tx);
-                    transactions.add(tx.getTransaction());
-                }
-            }
-        }
-
-        if (outdated.isEmpty())
-            return;
-
-        if (logger.isInfoEnabled())
-            for (PendingTransaction tx : outdated)
-                logger.info(
-                        "Clear outdated pending transaction, block.number: [{}] hash: [{}]",
-                        tx.getBlockNumber(),
-                        Hex.toHexString(tx.getHash())
-                );
-
-        pendingTransactions.removeAll(outdated);
-        wallet.removeTransactions(transactions);
     }
 
     private boolean needFlush(Block block) {
@@ -626,7 +593,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 //                stateLogger.error("DO ROLLBACK !!!");
                 adminInfo.lostConsensus();
 
-                System.out.println("CONFLICT: BLOCK #" + block.getNumber() );
+                System.out.println("CONFLICT: BLOCK #" + block.getNumber());
                 System.exit(1);
                 // in case of rollback hard move the root
 //                Block parentBlock = blockStore.getBlockByHash(block.getParentHash());
@@ -735,49 +702,6 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     }
 
-    public void addPendingTransactions(Set<Transaction> transactions) {
-        logger.info("Pending transaction list added: size: [{}]", transactions.size());
-
-        if (listener != null)
-            listener.onPendingTransactionsReceived(transactions);
-
-        if (transactions.isEmpty())
-            return;
-
-        long number = bestBlock.getNumber();
-        for (Transaction tx : transactions) {
-
-            BigInteger txNonce = toBI(tx.getNonce());
-            if (repository.isExist(tx.getSender())){
-
-                BigInteger currNonce = repository.getAccountState(tx.getSender()).getNonce();
-                if (currNonce.equals(txNonce))
-                    pendingTransactions.add(new PendingTransaction(tx, number));
-            } else {
-
-                if (txNonce.equals(ZERO))
-                    pendingTransactions.add(new PendingTransaction(tx, number));
-            }
-        }
-    }
-
-    public void clearPendingTransactions(List<Transaction> receivedTransactions) {
-
-        for (Transaction tx : receivedTransactions) {
-            logger.info("Clear transaction, hash: [{}]", Hex.toHexString(tx.getHash()));
-            pendingTransactions.remove(new PendingTransaction(tx));
-        }
-    }
-
-    public Set<Transaction> getPendingTransactions() {
-        Set<Transaction> transactions = new HashSet<>();
-        for (PendingTransaction tx : pendingTransactions) {
-            transactions.add(tx.getTransaction());
-        }
-        return transactions;
-    }
-
-
     public void setRepository(Repository repository) {
         this.repository = repository;
     }
@@ -800,5 +724,92 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
 
     public boolean isBlockExist(byte[] hash) {
         return blockStore.isBlockExist(hash);
+    }
+
+    public void setParentHeaderValidator(DependentBlockHeaderRule parentHeaderValidator) {
+        this.parentHeaderValidator = parentHeaderValidator;
+    }
+
+    public void setPendingState(PendingState pendingState) {
+        this.pendingState = pendingState;
+    }
+
+    public PendingState getPendingState() {
+        return pendingState;
+    }
+
+    @Override
+    public List<BlockHeader> getListOfHeadersStartFrom(BlockIdentifier identifier, int skip, int limit, boolean reverse) {
+        long blockNumber = identifier.getNumber();
+
+        if (identifier.getHash() != null) {
+            Block block = getBlockByHash(identifier.getHash());
+
+            if (block == null) {
+                return Collections.emptyList();
+            }
+
+            blockNumber = block.getNumber();
+        }
+
+        long bestNumber = bestBlock.getNumber();
+
+        int qty = getQty(blockNumber, bestNumber, limit);
+
+        byte[] startHash = getStartHash(blockNumber, skip, qty, reverse);
+
+        if (startHash == null) {
+            return Collections.emptyList();
+        }
+
+        List<BlockHeader> headers = blockStore.getListHeadersEndWith(startHash, qty);
+
+        // blocks come with falling numbers
+        if (!reverse) {
+            Collections.reverse(headers);
+        }
+
+        return headers;
+    }
+
+    private int getQty(long blockNumber, long bestNumber, int limit) {
+
+        if (blockNumber + limit - 1 > bestNumber) {
+            return (int) (bestNumber - blockNumber + 1);
+        } else {
+            return limit;
+        }
+    }
+
+    private byte[] getStartHash(long blockNumber, int skip, int qty, boolean reverse) {
+
+        long startNumber;
+
+        if (reverse) {
+            startNumber = blockNumber - skip;
+        } else {
+            startNumber = blockNumber + skip + qty - 1;
+        }
+
+        Block block = getBlockByNumber(startNumber);
+
+        if (block == null) {
+            return null;
+        }
+
+        return block.getHash();
+    }
+
+    @Override
+    public List<byte[]> getListOfBodiesByHashes(List<byte[]> hashes) {
+        List<byte[]> bodies = new ArrayList<>(hashes.size());
+
+        for (byte[] hash : hashes) {
+            Block block = blockStore.getBlockByHash(hash);
+            if (block == null) break;
+            bodies.add(block.getEncodedBody());
+        }
+
+        return bodies;
     }
 }

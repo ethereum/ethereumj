@@ -1,6 +1,7 @@
 package org.ethereum.db;
 
 import org.ethereum.core.Block;
+import org.ethereum.core.BlockHeader;
 import org.ethereum.datasource.KeyValueDataSource;
 import org.hibernate.SessionFactory;
 import org.mapdb.DB;
@@ -75,7 +76,13 @@ public class IndexedBlockStore implements BlockStore{
             blocks.put(hash, cache.blocks.get(hash));
         }
 
-        index.putAll( cache.index );
+        for (Map.Entry<Long, List<BlockInfo>> e : cache.index.entrySet()) {
+            Long number = e.getKey();
+            List<BlockInfo> infos = e.getValue();
+
+            if (index.containsKey(number)) infos.addAll(index.get(number));
+            index.put(number, infos);
+        }
 
         cache.blocks.close();
         cache.index.clear();
@@ -282,22 +289,67 @@ public class IndexedBlockStore implements BlockStore{
     @Override
     public List<byte[]> getListHashesEndWith(byte[] hash, long number){
 
-        List<byte[]> cachedHashes = new ArrayList<>();
-        if (cache != null)
-           cachedHashes = cache.getListHashesEndWith(hash, number);
+        List<Block> blocks = getListBlocksEndWith(hash, number);
+        List<byte[]> hashes = new ArrayList<>(blocks.size());
 
-        byte[] rlp = blocks.get(hash);
-        if (rlp == null) return cachedHashes;
+        for (Block b : blocks) {
+            hashes.add(b.getHash());
+        }
 
-        for (int i = 0; i < number; ++i){
+        return hashes;
+    }
+
+    @Override
+    public List<BlockHeader> getListHeadersEndWith(byte[] hash, long qty) {
+
+        List<Block> blocks = getListBlocksEndWith(hash, qty);
+        List<BlockHeader> headers = new ArrayList<>(blocks.size());
+
+        for (Block b : blocks) {
+            headers.add(b.getHeader());
+        }
+
+        return headers;
+    }
+
+    @Override
+    public List<Block> getListBlocksEndWith(byte[] hash, long qty) {
+
+        if (cache == null)
+            return getListBlocksEndWithInner(hash, qty);
+
+        List<Block> cachedBlocks = cache.getListBlocksEndWith(hash, qty);
+
+        if (cachedBlocks.size() == qty) return cachedBlocks;
+
+        if (cachedBlocks.isEmpty())
+            return getListBlocksEndWithInner(hash, qty);
+
+        Block latestCached = cachedBlocks.get(cachedBlocks.size() - 1);
+
+        List<Block> notCachedBlocks = getListBlocksEndWithInner(latestCached.getParentHash(), qty - cachedBlocks.size());
+        cachedBlocks.addAll(notCachedBlocks);
+
+        return cachedBlocks;
+    }
+
+    private List<Block> getListBlocksEndWithInner(byte[] hash, long qty) {
+
+        byte[] rlp = this.blocks.get(hash);
+
+        if (rlp == null) return new ArrayList<>();
+
+        List<Block> blocks = new ArrayList<>((int) qty);
+
+        for (int i = 0; i < qty; ++i) {
 
             Block block = new Block(rlp);
-            cachedHashes.add(block.getHash());
-            rlp = blocks.get(block.getParentHash());
+            blocks.add(block);
+            rlp = this.blocks.get(block.getParentHash());
             if (rlp == null) break;
         }
 
-        return cachedHashes;
+        return blocks;
     }
 
     @Override

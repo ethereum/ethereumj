@@ -28,6 +28,7 @@ import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -266,6 +267,11 @@ public class EthereumImpl implements Ethereum {
     }
 
     @Override
+    public org.ethereum.facade.Repository getPendingState() {
+        return (org.ethereum.facade.Repository) worldManager.getPendingState().getRepository();
+    }
+
+    @Override
     public org.ethereum.facade.Repository getSnapshootTo(byte[] root){
 
         Repository repository = (Repository) worldManager.getRepository();
@@ -286,8 +292,13 @@ public class EthereumImpl implements Ethereum {
 
 
     @Override
-    public Set<Transaction> getPendingTransactions() {
-        return getBlockchain().getPendingTransactions();
+    public Set<Transaction> getWireTransactions() {
+        return worldManager.getPendingState().getWireTransactions();
+    }
+
+    @Override
+    public List<Transaction> getPendingStateTransactions() {
+        return worldManager.getPendingState().getPendingTransactions();
     }
 
     @Override

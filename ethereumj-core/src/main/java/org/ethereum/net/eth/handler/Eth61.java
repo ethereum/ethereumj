@@ -1,5 +1,6 @@
 package org.ethereum.net.eth.handler;
 
+import io.netty.channel.ChannelHandlerContext;
 import org.ethereum.core.Block;
 import org.ethereum.net.eth.message.*;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.spongycastle.util.encoders.Hex;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ListIterator;
@@ -15,7 +17,9 @@ import java.util.ListIterator;
 import static java.lang.Math.*;
 import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
-import static org.ethereum.net.eth.sync.SyncStateName.DONE_HASH_RETRIEVING;
+import static org.ethereum.net.eth.message.EthMessageCodes.GET_BLOCK_HASHES_BY_NUMBER;
+import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
+import static org.ethereum.sync.SyncStateName.HASH_RETRIEVING;
 
 /**
  * Eth V61
@@ -25,7 +29,7 @@ import static org.ethereum.net.eth.sync.SyncStateName.DONE_HASH_RETRIEVING;
  */
 @Component
 @Scope("prototype")
-public class Eth61 extends EthHandler {
+public class Eth61 extends EthLegacy {
 
     private static final Logger logger = LoggerFactory.getLogger("sync");
 
@@ -54,7 +58,20 @@ public class Eth61 extends EthHandler {
     }
 
     @Override
+    public void channelRead0(final ChannelHandlerContext ctx, EthMessage msg) throws InterruptedException {
+
+        super.channelRead0(ctx, msg);
+
+        if (msg.getCommand() == GET_BLOCK_HASHES_BY_NUMBER) {
+            processGetBlockHashesByNumber((GetBlockHashesByNumberMessage) msg);
+        }
+    }
+
+    @Override
     protected void processBlockHashes(List<byte[]> received) {
+
+        // todo check if remote peer responds with same hashes on different GET_BLOCK_HASHES
+
         if (received.isEmpty()) {
             return;
         }
@@ -64,14 +81,22 @@ public class Eth61 extends EthHandler {
             return;
         }
 
-        queue.addHashesLast(received);
+        List<byte[]> adding = new ArrayList<>(received.size());
+        for(byte[] hash : received) {
 
-        for(byte[] hash : received)
+            adding.add(hash);
+
             if (Arrays.equals(hash, lastHashToAsk)) {
                 changeState(DONE_HASH_RETRIEVING);
                 logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), Hex.toHexString(lastHashToAsk));
-                return;
             }
+        }
+
+        queue.addHashesLast(adding);
+
+        if (syncState == DONE_HASH_RETRIEVING) {
+            return;
+        }
 
         long blockNumber = lastAskedNumber + received.size();
         sendGetBlockHashesByNumber(blockNumber, maxHashesAsk);
@@ -91,8 +116,7 @@ public class Eth61 extends EthHandler {
         lastAskedNumber = blockNumber;
     }
 
-    @Override
-    protected void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
+    private void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFromBlock(
                 msg.getBlockNumber(),
                 min(msg.getMaxBlocks(), CONFIG.maxHashesAsk())

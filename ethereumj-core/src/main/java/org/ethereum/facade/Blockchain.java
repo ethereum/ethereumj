@@ -4,6 +4,7 @@ import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Set;
 
 public interface Blockchain {
@@ -29,11 +30,6 @@ public interface Blockchain {
      * @return - total difficulty
      */
     BigInteger getTotalDifficulty();
-
-    /**
-     * @return - all currently pending transactions
-     */
-    Set<Transaction> getPendingTransactions();
 
     /**
      * @return - last added block from blockchain

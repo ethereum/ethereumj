@@ -22,7 +22,10 @@ public class ParentGasLimitRule extends DependentBlockHeaderRule {
         if (header.getGasLimit() < parent.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
             header.getGasLimit() > parent.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
 
-            errors.add("gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR");
+            errors.add(String.format(
+                    "#%d: gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR",
+                    header.getNumber()
+            ));
             return false;
         }
 

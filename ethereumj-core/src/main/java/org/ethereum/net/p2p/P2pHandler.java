@@ -5,8 +5,6 @@ import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.MessageQueue;
 import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.eth.message.NewBlockMessage;
 import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
@@ -15,13 +13,11 @@ import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.HandshakeHelper;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
-import org.ethereum.net.shh.ShhMessageCodes;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 import org.ethereum.net.swarm.bzz.BzzHandler;
-import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +28,6 @@ import org.springframework.stereotype.Component;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -75,6 +70,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     private HelloMessage handshakeHelloMessage = null;
     private Set<PeerInfo> lastPeersSent;
+
+    private int ethInbound;
+    private int ethOutbound;
 
     @Autowired
     WorldManager worldManager;
@@ -126,6 +124,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             case DISCONNECT:
                 msgQueue.receivedMessage(msg);
                 channel.getNodeStatistics().nodeDisconnectedRemote(((DisconnectMessage) msg).getReason());
+                processDisconnect((DisconnectMessage) msg);
                 break;
             case PING:
                 msgQueue.receivedMessage(msg);
@@ -174,6 +173,22 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         killTimers();
     }
 
+    private void processDisconnect(DisconnectMessage msg) {
+
+        if (!logger.isInfoEnabled() || msg.getReason() != ReasonCode.USELESS_PEER) {
+            return;
+        }
+
+        if (channel.getNodeStatistics().ethInbound.get() - ethInbound > 1 ||
+            channel.getNodeStatistics().ethOutbound.get() - ethOutbound > 1) {
+
+            // it means that we've been disconnected
+            // after some incorrect action from our peer
+            // need to log this moment
+            logger.info("From: \t{}\t [DISCONNECT reason=BAD_PEER_ACTION]", channel);
+        }
+    }
+
     private void processPeers(ChannelHandlerContext ctx, PeersMessage peersMessage) {
         worldManager.getPeerDiscovery().addPeers(peersMessage.getPeers());
     }
@@ -207,6 +222,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
         channel.getNodeStatistics().setClientId(msg.getClientId());
 
+        this.ethInbound = channel.getNodeStatistics().ethInbound.get();
+        this.ethOutbound = channel.getNodeStatistics().ethOutbound.get();
+
         this.handshakeHelloMessage = msg;
         if (msg.getP2PVersion() != VERSION) {
             disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
@@ -215,8 +233,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             List<Capability> capInCommon = HandshakeHelper.getSupportedCapabilities(msg);
             channel.initMessageCodes(capInCommon);
             for (Capability capability : capInCommon) {
-                if (capability.getName().equals(Capability.ETH) &&
-                    EthVersion.isSupported(capability.getVersion())) {
+                if (capability.getName().equals(Capability.ETH)) {
 
                     // Activate EthHandler for this peer
                     channel.activateEth(ctx, fromCode(capability.getVersion()));
@@ -267,31 +284,6 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public void sendDisconnect() {
         msgQueue.disconnect();
-    }
-
-    public void adaptMessageIds(List<Capability> capabilities) {
-
-        Collections.sort(capabilities);
-        int offset = P2pMessageCodes.USER.asByte() + 1;
-
-        for (Capability capability : capabilities) {
-
-            if (capability.getName().equals(Capability.ETH)) {
-                EthMessageCodes.setOffset((byte)offset);
-                offset += EthMessageCodes.values().length;
-            }
-
-            if (capability.getName().equals(Capability.SHH)) {
-                ShhMessageCodes.setOffset((byte)offset);
-                offset += ShhMessageCodes.values().length;
-            }
-
-            if (capability.getName().equals(Capability.BZZ)) {
-                BzzMessageCodes.setOffset((byte) offset);
-                offset += BzzMessageCodes.values().length + 4;
-                // FIXME: for some reason Go left 4 codes between BZZ and ETH message codes
-            }
-        }
     }
 
     public HelloMessage getHandshakeHelloMessage() {

@@ -14,6 +14,7 @@ import org.ethereum.vm.program.ProgramResult;
 
 import java.math.BigInteger;
 import java.net.InetAddress;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Future;
 
@@ -139,6 +140,11 @@ public interface Ethereum {
      */
     Repository getRepository();
 
+    /**
+     * @return - pending state repository
+     */
+    Repository getPendingState();
+
 
     public void init();
 //  2.   // is blockchain still loading - if buffer is not empty
@@ -149,7 +155,15 @@ public interface Ethereum {
 
     ChannelManager getChannelManager();
 
-    Set<Transaction> getPendingTransactions();
+    /**
+     * @return - currently pending transactions received from the net
+     */
+    Set<Transaction> getWireTransactions();
+
+    /**
+     * @return - currently pending transactions sent to the net
+     */
+    List<Transaction> getPendingStateTransactions();
 
     BlockLoader getBlockLoader();
 

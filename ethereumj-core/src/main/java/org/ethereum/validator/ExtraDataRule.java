@@ -19,7 +19,10 @@ public class ExtraDataRule extends BlockHeaderRule {
         errors.clear();
 
         if (header.getExtraData() != null && header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE) {
-            errors.add("header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE");
+            errors.add(String.format(
+                    "#%d: header.getExtraData().length > MAXIMUM_EXTRA_DATA_SIZE",
+                    header.getNumber()
+            ));
             return false;
         }
 

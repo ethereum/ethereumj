@@ -37,6 +37,16 @@ public class TimeUtils {
     }
 
     /**
+     * Converts millis to seconds
+     *
+     * @param millis time in millis
+     * @return time in seconds
+     */
+    public static long millisToSeconds(long millis) {
+        return Math.round(millis / 1000.0);
+    }
+
+    /**
      * Returns timestamp in the future after some millis passed from now
      *
      * @param millis millis count
