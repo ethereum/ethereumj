@@ -76,7 +76,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected SyncStateName syncState = IDLE;
     protected boolean syncDone = false;
-    protected boolean processTransactions = true;
+    protected boolean processTransactions = false;
 
     protected byte[] bestHash;
 
