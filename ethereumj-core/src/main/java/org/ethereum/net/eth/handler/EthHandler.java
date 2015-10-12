@@ -48,6 +48,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     private final static Logger loggerNet = LoggerFactory.getLogger("net");
     private final static Logger loggerSync = LoggerFactory.getLogger("sync");
 
+    protected static final int MAX_HASHES_TO_SEND = 65536;
+
     @Autowired
     protected Blockchain blockchain;
 
