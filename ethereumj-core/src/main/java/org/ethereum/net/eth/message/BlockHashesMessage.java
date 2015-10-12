@@ -4,6 +4,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +75,22 @@ public class BlockHashesMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
 
-        final String hashListShort = Utils.getHashListShort(blockHashes);
-        return "[" + this.getCommand().name() + hashListShort + "] (" + blockHashes.size() + ")";
+
+        StringBuilder payload = new StringBuilder();
+
+        payload.append("count( ").append(blockHashes.size()).append(" ) ");
+
+        if (logger.isDebugEnabled()) {
+            for (byte[] hash : blockHashes) {
+                payload.append(Hex.toHexString(hash)).append(" | ");
+            }
+            if (!blockHashes.isEmpty()) {
+                payload.delete(payload.length() - 3, payload.length());
+            }
+        } else {
+            payload.append(Utils.getHashListShort(blockHashes));
+        }
+
+        return "[" + getCommand().name() + " " + payload + "]";
     }
 }

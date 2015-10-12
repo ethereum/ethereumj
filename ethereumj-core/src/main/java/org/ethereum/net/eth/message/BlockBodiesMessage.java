@@ -73,10 +73,20 @@ public class BlockBodiesMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
 
-        StringBuilder sb = new StringBuilder();
-        for (byte[] body : this.getBlockBodies()) {
-            sb.append("\n   ").append(Hex.toHexString(body));
+        StringBuilder payload = new StringBuilder();
+
+        payload.append("count( ").append(blockBodies.size()).append(" )");
+
+        if (logger.isDebugEnabled()) {
+            payload.append(" ");
+            for (byte[] body : blockBodies) {
+                payload.append(Hex.toHexString(body)).append(" | ");
+            }
+            if (!blockBodies.isEmpty()) {
+                payload.delete(payload.length() - 3, payload.length());
+            }
         }
-        return "[" + getCommand().name() + " count( " + blockBodies.size() + " )]";
+
+        return "[" + getCommand().name() + " " + payload + "]";
     }
 }

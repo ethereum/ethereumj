@@ -3,6 +3,7 @@ package org.ethereum.net.eth.message;
 import org.ethereum.core.Block;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPList;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,10 +77,21 @@ public class BlocksMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
 
-        StringBuilder sb = new StringBuilder();
-        for (Block blockData : this.getBlocks()) {
-            sb.append("\n   ").append(blockData.toFlatString());
+
+        StringBuilder payload = new StringBuilder();
+
+        payload.append("count( ").append(blocks.size()).append(" )");
+
+        if (logger.isDebugEnabled()) {
+            payload.append(" ");
+            for (Block block : blocks) {
+                payload.append(Hex.toHexString(block.getEncoded())).append(" | ");
+            }
+            if (!blocks.isEmpty()) {
+                payload.delete(payload.length() - 3, payload.length());
+            }
         }
-        return "[" + getCommand().name() + " count( " + blocks.size() + " )]";
+
+        return "[" + getCommand().name() + " " + payload + "]";
     }
 }

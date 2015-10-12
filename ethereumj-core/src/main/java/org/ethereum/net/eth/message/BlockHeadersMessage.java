@@ -6,6 +6,7 @@ import org.ethereum.util.RLP;
 import org.ethereum.util.RLPItem;
 import org.ethereum.util.RLPList;
 import org.ethereum.util.Utils;
+import org.spongycastle.util.encoders.Hex;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -79,6 +80,20 @@ public class BlockHeadersMessage extends EthMessage {
     public String toString() {
         if (!parsed) parse();
 
-        return "[" + this.getCommand().name() + "] (" + blockHeaders.size() + ")";
+        StringBuilder payload = new StringBuilder();
+
+        payload.append("count( ").append(blockHeaders.size()).append(" )");
+
+        if (logger.isDebugEnabled()) {
+            payload.append(" ");
+            for (BlockHeader header : blockHeaders) {
+                payload.append(Hex.toHexString(header.getEncoded())).append(" | ");
+            }
+            if (!blockHeaders.isEmpty()) {
+                payload.delete(payload.length() - 3, payload.length());
+            }
+        }
+
+        return "[" + getCommand().name() + " " + payload + "]";
     }
 }
