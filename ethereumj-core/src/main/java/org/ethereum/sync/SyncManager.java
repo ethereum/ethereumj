@@ -458,7 +458,7 @@ public class SyncManager {
         List<Channel> removed = new ArrayList<>();
         for (Channel peer : pool) {
             if (peer.hasBlocksLack()) {
-                logger.info("Peer {}: has no more blocks, idle", peer.getPeerIdShort());
+                logger.info("Peer {}: has no more blocks, ban", peer.getPeerIdShort());
                 removed.add(peer);
                 updateLowerUsefulDifficulty(peer.getTotalDifficulty());
             }
