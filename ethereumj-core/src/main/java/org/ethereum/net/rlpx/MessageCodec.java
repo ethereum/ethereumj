@@ -24,12 +24,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.lang.Math.min;
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
 
 /**
@@ -41,6 +39,8 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
+
+    private int maxFramePayloadSize = Integer.MAX_VALUE >> 1;
 
     private Channel channel;
     private MessageCodesResolver messageCodesResolver;
@@ -56,6 +56,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(1, 16);
     // LRU avoids OOM on invalid peers
+    AtomicInteger contextIdCounter = new AtomicInteger(1);
 
     @Override
     protected void decode(ChannelHandlerContext ctx, Frame frame, List<Object> out) throws Exception {
@@ -135,13 +136,35 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         if (loggerWire.isDebugEnabled())
             loggerWire.debug("Send: Encoded: {} [{}]", getCode(msg.getCommand()), Hex.toHexString(encoded));
 
-        /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
-        byte code = getCode(msg.getCommand());
-        Frame frame = new Frame(code, msg.getEncoded());
-//        frameCodec.writeFrame(frame, out);
-        out.add(frame);
+        List<Frame> frames = splitMessageToFrames(msg);
+
+        out.addAll(frames);
 
         channel.getNodeStatistics().rlpxOutMessages.add();
+    }
+
+    private List<Frame> splitMessageToFrames(Message msg) {
+        byte code = getCode(msg.getCommand());
+        List<Frame> ret = new ArrayList<>();
+        byte[] bytes = msg.getEncoded();
+        int curPos = 0;
+        while(curPos < bytes.length) {
+            int newPos = min(curPos + maxFramePayloadSize, bytes.length);
+            byte[] frameBytes = curPos == 0 && newPos == bytes.length ? bytes :
+                    Arrays.copyOfRange(bytes, curPos, newPos);
+            ret.add(new Frame(code, frameBytes));
+            curPos = newPos;
+        }
+
+        if (ret.size() > 1) {
+            // frame has been split
+            int contextId = contextIdCounter.getAndIncrement();
+            ret.get(0).totalFrameSize = bytes.length;
+            for (Frame frame : ret) {
+                frame.contextId = contextId;
+            }
+        }
+        return ret;
     }
 
     /* TODO: this dirty hack is here cause we need to use message
