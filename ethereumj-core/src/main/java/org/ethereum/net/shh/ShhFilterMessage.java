@@ -25,6 +25,7 @@ public class ShhFilterMessage extends ShhMessage {
     static ShhFilterMessage createFromFilter(byte[] bloomFilter) {
         ShhFilterMessage ret = new ShhFilterMessage();
         ret.bloomFilter = bloomFilter;
+        ret.parsed = true;
         return ret;
     }
 
