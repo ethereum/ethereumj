@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.ByteToMessageCodec;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
 import org.ethereum.listener.EthereumListener;
@@ -30,11 +31,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.util.List;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
 
 /**
@@ -44,11 +45,14 @@ import static org.ethereum.net.rlpx.FrameCodec.Frame;
 @Scope("prototype")
 public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
 
+    @Autowired
+    SystemProperties config;
+
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
     private FrameCodec frameCodec;
-    private ECKey myKey = CONFIG.getMyKey();
+    private ECKey myKey;
     private byte[] nodeId;
     private byte[] remoteId;
     private EncryptionHandshake handshake;
@@ -75,8 +79,20 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
         }
     }
 
-    @Autowired
-    WorldManager worldManager;
+    public MultiFrameCodec() {
+    }
+
+    // for testing purposes
+    MultiFrameCodec(ECKey myKey, EncryptionHandshake.Secrets secrets) {
+        this.myKey = myKey;
+        nodeId = myKey.getNodeId();
+        frameCodec = new FrameCodec(secrets);
+    }
+
+    @PostConstruct
+    private void init() {
+        myKey = config.getMyKey();
+    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {

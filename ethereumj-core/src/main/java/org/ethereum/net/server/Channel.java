@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelPipeline;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
 import org.ethereum.net.MessageQueue;
@@ -46,7 +47,6 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.V61;
 import static org.ethereum.net.eth.EthVersion.V62;
 
@@ -59,6 +59,9 @@ import static org.ethereum.net.eth.EthVersion.V62;
 public class Channel {
 
     private final static Logger logger = LoggerFactory.getLogger("net");
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     private MessageQueue msgQueue;
@@ -84,6 +87,9 @@ public class Channel {
     @Autowired
     private EthHandlerFactory ethHandlerFactory;
 
+    @Autowired
+    private StaticMessages staticMessages;
+
     private Eth eth = new EthAdapter();
 
     private InetSocketAddress inetSocketAddress;
@@ -96,7 +102,7 @@ public class Channel {
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
 
         pipeline.addLast("readTimeoutHandler",
-                new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
+                new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
         pipeline.addLast("initiator", multiFrameCodec.getInitiator());
         pipeline.addLast("multiFrameCodec", multiFrameCodec);
         pipeline.addLast("messageCodec", messageCodec);
@@ -135,8 +141,8 @@ public class Channel {
 
         // in discovery mode we are supplying fake port along with fake nodeID to not receive
         // incoming connections with fake public key
-        HelloMessage helloMessage = discoveryMode ? StaticMessages.createHelloMessage(nodeId, 9) :
-                StaticMessages.createHelloMessage(nodeId);
+        HelloMessage helloMessage = discoveryMode ? staticMessages.createHelloMessage(nodeId, 9) :
+                staticMessages.createHelloMessage(nodeId);
 
         byte[] payload = helloMessage.getEncoded();
 

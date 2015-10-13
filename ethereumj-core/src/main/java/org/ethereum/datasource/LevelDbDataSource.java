@@ -1,8 +1,12 @@
 package org.ethereum.datasource;
 
+import org.ethereum.config.SystemProperties;
 import org.iq80.leveldb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
@@ -21,9 +25,14 @@ import static org.fusesource.leveldbjni.JniDBFactory.factory;
  * @author Roman Mandeleil
  * @since 18.01.2015
  */
+@Component
+@Scope("prototype")
 public class LevelDbDataSource implements KeyValueDataSource {
 
     private static final Logger logger = LoggerFactory.getLogger("db");
+
+    @Autowired
+    SystemProperties config;
 
     String name;
     DB db;
@@ -53,7 +62,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
 
         try {
             logger.debug("Opening database");
-            Path dbPath = Paths.get(getProperty("user.dir"), CONFIG.databaseDir(), name);
+            Path dbPath = Paths.get(getProperty("user.dir"), config.databaseDir(), name);
             Files.createDirectories(dbPath.getParent());
 
             logger.debug("Initializing new or existing database: '{}'", name);

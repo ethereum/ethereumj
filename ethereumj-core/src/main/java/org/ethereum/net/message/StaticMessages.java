@@ -2,8 +2,11 @@ package org.ethereum.net.message;
 
 import org.ethereum.config.SystemProperties;
 import org.ethereum.net.client.Capability;
+import org.ethereum.net.client.ConfigCapabilities;
 import org.ethereum.net.p2p.*;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 
@@ -14,7 +17,14 @@ import java.util.List;
  * @author Roman Mandeleil
  * @since 13.04.14
  */
+@Component
 public class StaticMessages {
+
+    @Autowired
+    SystemProperties config;
+
+    @Autowired
+    ConfigCapabilities configCapabilities;
 
     public final static PingMessage PING_MESSAGE = new PingMessage();
     public final static PongMessage PONG_MESSAGE = new PongMessage();
@@ -23,27 +33,27 @@ public class StaticMessages {
 
     public static final byte[] SYNC_TOKEN = Hex.decode("22400891");
 
-    public static HelloMessage createHelloMessage(String peerId) {
-        return createHelloMessage(peerId, SystemProperties.CONFIG.listenPort());
+    public HelloMessage createHelloMessage(String peerId) {
+        return createHelloMessage(peerId, config.listenPort());
     }
-    public static HelloMessage createHelloMessage(String peerId, int listenPort) {
+    public HelloMessage createHelloMessage(String peerId, int listenPort) {
 
         String helloAnnouncement = buildHelloAnnouncement();
         byte p2pVersion = P2pHandler.VERSION;
-        List<Capability> capabilities = Capability.getConfigCapabilities();
+        List<Capability> capabilities = configCapabilities.getConfigCapabilities();
 
         return new HelloMessage(p2pVersion, helloAnnouncement,
                 capabilities, listenPort, peerId);
     }
 
-    private static String buildHelloAnnouncement() {
-        String version = SystemProperties.CONFIG.projectVersion();
+    private String buildHelloAnnouncement() {
+        String version = config.projectVersion();
         String system = System.getProperty("os.name");
         if (system.contains(" "))
             system = system.substring(0, system.indexOf(" "));
         if (System.getProperty("java.vm.vendor").contains("Android"))
             system = "Android";
-        String phrase = SystemProperties.CONFIG.helloPhrase();
+        String phrase = config.helloPhrase();
 
         return String.format("Ethereum(J)/v%s/%s/%s/Java", version, phrase, system);
     }

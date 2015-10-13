@@ -32,10 +32,13 @@ public class DefaultConfig {
     @Autowired
     CommonConfig commonConfig;
 
+    @Autowired
+    SystemProperties config;
+
     @Bean
     public BlockStore blockStore(){
 
-        String database = SystemProperties.CONFIG.databaseDir();
+        String database = config.databaseDir();
 
         String blocksIndexFile = database + "/blocks/index";
         File dbFile = new File(blocksIndexFile);
@@ -51,7 +54,8 @@ public class DefaultConfig {
                 .counterEnable()
                 .makeOrGet();
 
-        KeyValueDataSource blocksDB = new LevelDbDataSource("blocks");
+        KeyValueDataSource blocksDB = levelDbDataSource("blocks");
+        blocksDB.setName("blocks");
         blocksDB.init();
 
 
@@ -63,5 +67,12 @@ public class DefaultConfig {
 
 
         return indexedBlockStore;
+    }
+
+    @Bean
+    LevelDbDataSource levelDbDataSource(String name) {
+        LevelDbDataSource ret = new LevelDbDataSource(name);
+        ret.setName(name);
+        return ret;
     }
 }

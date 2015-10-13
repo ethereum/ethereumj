@@ -1,5 +1,6 @@
 package org.ethereum.db;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.BlockHeader;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.datasource.mapdb.MapDBFactory;
@@ -8,6 +9,7 @@ import org.mapdb.DB;
 import org.mapdb.Serializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.locks.Condition;
@@ -20,7 +22,6 @@ import static org.ethereum.config.SystemProperties.CONFIG;
  * @since 09.07.2015
  */
 public class BlockQueueImpl implements BlockQueue {
-
     private final static Logger logger = LoggerFactory.getLogger("blockqueue");
 
     private static final int READ_HITS_COMMIT_THRESHOLD = 1000;
@@ -44,6 +45,9 @@ public class BlockQueueImpl implements BlockQueue {
 
     private final Object writeMutex = new Object();
     private final Object readMutex = new Object();
+
+    @Autowired
+    SystemProperties config;
 
     @Override
     public void open() {

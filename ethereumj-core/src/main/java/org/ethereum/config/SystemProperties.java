@@ -9,6 +9,8 @@ import org.ethereum.net.rlpx.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.stereotype.Component;
 
 import java.io.*;
 import java.lang.annotation.ElementType;
@@ -77,7 +79,19 @@ public class SystemProperties {
     private Boolean syncEnabled = null;
     private Boolean discoveryEnabled = null;
 
-    private SystemProperties() {
+    public SystemProperties() {
+        this((Reader) null);
+    }
+
+    public SystemProperties(File configFile) throws FileNotFoundException {
+        this(new FileReader(configFile));
+    }
+
+    public SystemProperties(String configResource) throws FileNotFoundException {
+        this(new InputStreamReader(ClassLoader.getSystemResourceAsStream(configResource)));
+    }
+
+    private SystemProperties(Reader apiConfigReader) {
         try {
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
@@ -95,7 +109,10 @@ public class SystemProperties {
             Config cmdLineConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
                     ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
+            Config apiConfig = apiConfigReader != null ? ConfigFactory.parseReader(apiConfigReader) : ConfigFactory.empty();
+            logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor: " + apiConfigReader);
             config = javaSystemProperties
+                    .withFallback(apiConfig)
                     .withFallback(cmdLineConfig)
                     .withFallback(testUserConfig)
                     .withFallback(testConfig)

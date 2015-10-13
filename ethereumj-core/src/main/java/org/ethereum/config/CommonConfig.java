@@ -38,6 +38,9 @@ public class CommonConfig {
     private RedisConnection redisConnection;
     @Autowired
     private MapDBFactory mapDBFactory;
+    @Autowired
+    SystemProperties config;
+
 
     @Bean
     Repository repository() {
@@ -47,7 +50,7 @@ public class CommonConfig {
     @Bean
     @Scope("prototype")
     public KeyValueDataSource keyValueDataSource() {
-        String dataSource = CONFIG.getKeyValueDataSource();
+        String dataSource = config.getKeyValueDataSource();
         try {
             if ("redis".equals(dataSource) && redisConnection.isAvailable()) {
                 // Name will be defined before initialization
@@ -98,7 +101,7 @@ public class CommonConfig {
 
         Properties prop = new Properties();
 
-        if (CONFIG.databaseReset())
+        if (config.databaseReset())
             prop.put("hibernate.hbm2ddl.auto", "create-drop");
         else
             prop.put("hibernate.hbm2ddl.auto", "update");
@@ -133,7 +136,7 @@ public class CommonConfig {
 
         String url =
                 String.format("jdbc:h2:./%s/blockchain/blockchain.db;CACHE_SIZE=200000",
-                        SystemProperties.CONFIG.databaseDir());
+                        config.databaseDir());
 
         DriverManagerDataSource ds = new DriverManagerDataSource();
         ds.setDriverClassName("org.h2.Driver");
@@ -168,7 +171,7 @@ public class CommonConfig {
                 new ProofOfWorkRule()
         ));
 
-        if (!CONFIG.isFrontier()) {
+        if (!config.isFrontier()) {
             rules.add(new GasLimitRule());
         }
 
@@ -183,10 +186,15 @@ public class CommonConfig {
                 new DifficultyRule()
         ));
 
-        if (!CONFIG.isFrontier()) {
+        if (!config.isFrontier()) {
             rules.add(new ParentGasLimitRule());
         }
 
         return new ParentBlockHeaderValidator(rules);
+    }
+
+    @Bean
+    public SystemProperties systemProperties() {
+        return SystemProperties.CONFIG;
     }
 }

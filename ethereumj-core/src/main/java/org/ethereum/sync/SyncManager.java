@@ -1,5 +1,6 @@
 package org.ethereum.sync;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockWrapper;
 import org.ethereum.core.Blockchain;
@@ -26,7 +27,6 @@ import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.*;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.util.BIUtil.isIn20PercentRange;
@@ -44,6 +44,9 @@ public class SyncManager {
     private static final long WORKER_TIMEOUT = secondsToMillis(1);
     private static final long PEER_STUCK_TIMEOUT = secondsToMillis(60);
     private static final long GAP_RECOVERY_TIMEOUT = secondsToMillis(2);
+
+    @Autowired
+    SystemProperties config;
 
     @Resource
     @Qualifier("syncStates")
@@ -99,7 +102,7 @@ public class SyncManager {
                 // sync queue
                 queue.init();
 
-                if (!CONFIG.isSyncEnabled()) {
+                if (!config.isSyncEnabled()) {
                     logger.info("Sync Manager: OFF");
                     return;
                 }
@@ -132,7 +135,7 @@ public class SyncManager {
                     }
                 }, WORKER_TIMEOUT, WORKER_TIMEOUT, TimeUnit.MILLISECONDS);
 
-                for (Node node : CONFIG.peerActive()) {
+                for (Node node : config.peerActive()) {
                     pool.connect(node);
                 }
 
@@ -145,7 +148,7 @@ public class SyncManager {
     }
 
     public void addPeer(Channel peer) {
-        if (!CONFIG.isSyncEnabled()) {
+        if (!config.isSyncEnabled()) {
             return;
         }
 
@@ -472,7 +475,7 @@ public class SyncManager {
     }
 
     private void fillUpPeersPool() {
-        int lackSize = CONFIG.syncPeerCount() - pool.activeCount();
+        int lackSize = config.syncPeerCount() - pool.activeCount();
         if(lackSize <= 0) {
             return;
         }

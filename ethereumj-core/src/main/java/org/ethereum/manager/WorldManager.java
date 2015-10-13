@@ -1,5 +1,6 @@
 package org.ethereum.manager;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
@@ -23,7 +24,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 
 /**
@@ -36,6 +36,9 @@ import static org.ethereum.crypto.HashUtil.EMPTY_TRIE_HASH;
 public class WorldManager {
 
     private static final Logger logger = LoggerFactory.getLogger("general");
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     private EthereumListener listener;
@@ -78,7 +81,7 @@ public class WorldManager {
         byte[] cowAddr = HashUtil.sha3("cow".getBytes());
         wallet.importKey(cowAddr);
 
-        String secret = CONFIG.coinbaseSecret();
+        String secret = config.coinbaseSecret();
         byte[] cbAddr = HashUtil.sha3(secret.getBytes());
         wallet.importKey(cbAddr);
 
@@ -150,7 +153,7 @@ public class WorldManager {
 
     public void loadBlockchain() {
 
-        if (!CONFIG.databaseReset())
+        if (!config.databaseReset())
             blockStore.load();
 
         Block bestBlock = blockStore.getBestBlock();
@@ -185,11 +188,11 @@ public class WorldManager {
                     Hex.toHexString(blockchain.getBestBlock().getStateRoot()));
         }
 
-        if (CONFIG.rootHashStart() != null) {
+        if (config.rootHashStart() != null) {
 
             // update world state by dummy hash
-            byte[] rootHash = Hex.decode(CONFIG.rootHashStart());
-            logger.info("Loading root hash from property file: [{}]", CONFIG.rootHashStart());
+            byte[] rootHash = Hex.decode(config.rootHashStart());
+            logger.info("Loading root hash from property file: [{}]", config.rootHashStart());
             this.repository.syncToRoot(rootHash);
 
         } else {

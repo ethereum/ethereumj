@@ -1,5 +1,6 @@
 package org.ethereum.facade;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.*;
 import org.ethereum.core.Repository;
 import org.ethereum.listener.EthereumListener;
@@ -33,8 +34,6 @@ import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 /**
  * @author Roman Mandeleil
  * @since 27.07.2014
@@ -43,6 +42,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class EthereumImpl implements Ethereum {
 
     private static final Logger logger = LoggerFactory.getLogger("facade");
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     WorldManager worldManager;
@@ -73,11 +75,11 @@ public class EthereumImpl implements Ethereum {
 
     @PostConstruct
     public void init() {
-        if (CONFIG.listenPort() > 0) {
+        if (config.listenPort() > 0) {
             Executors.newSingleThreadExecutor().submit(
                     new Runnable() {
                         public void run() {
-                            peerServer.start(CONFIG.listenPort());
+                            peerServer.start(config.listenPort());
                         }
                     }
             );

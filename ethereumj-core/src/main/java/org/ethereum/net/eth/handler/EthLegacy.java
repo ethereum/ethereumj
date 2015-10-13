@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.sync.SyncStateName.*;
 import static org.ethereum.sync.SyncStateName.BLOCK_RETRIEVING;
 import static org.ethereum.util.BIUtil.isMoreThan;
@@ -101,7 +100,7 @@ public abstract class EthLegacy extends EthHandler {
     private void processGetBlockHashes(GetBlockHashesMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFrom(
                 msg.getBestHash(),
-                Math.max(msg.getMaxBlocks(), CONFIG.maxHashesAsk())
+                Math.max(msg.getMaxBlocks(), config.maxHashesAsk())
         );
 
         BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);

@@ -1,14 +1,5 @@
 package org.ethereum.net.client;
 
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.shh.ShhHandler;
-import org.ethereum.net.swarm.bzz.BzzHandler;
-
-import java.util.*;
-
-import static org.ethereum.config.SystemProperties.CONFIG;
-import static org.ethereum.net.eth.EthVersion.fromCode;
-
 /**
  * The protocols and versions of those protocols that this peer support
  */
@@ -18,36 +9,6 @@ public class Capability implements Comparable<Capability> {
     public final static String ETH = "eth";
     public final static String SHH = "shh";
     public final static String BZZ = "bzz";
-
-    private static SortedSet<Capability> AllCaps = new TreeSet<>();
-
-    static {
-        if (CONFIG.syncVersion() != null) {
-            EthVersion eth = fromCode(CONFIG.syncVersion());
-            if (eth != null) AllCaps.add(new Capability(ETH, eth.getCode()));
-        } else {
-            for (EthVersion v : EthVersion.supported())
-                AllCaps.add(new Capability(ETH, v.getCode()));
-        }
-
-        AllCaps.add(new Capability(SHH, ShhHandler.VERSION));
-        AllCaps.add(new Capability(BZZ, BzzHandler.VERSION));
-    }
-
-    /**
-     * Gets the capabilities listed in 'peer.capabilities' config property
-     * sorted by their names.
-     */
-    public static List<Capability> getConfigCapabilities() {
-        List<Capability> ret = new ArrayList<>();
-        List<String> caps = CONFIG.peerCapabilities();
-        for (Capability capability : AllCaps) {
-            if (caps.contains(capability.getName())) {
-                ret.add(capability);
-            }
-        }
-        return ret;
-    }
 
     private String name;
     private byte version;

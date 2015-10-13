@@ -1,6 +1,7 @@
 package org.ethereum.manager;
 
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.spongycastle.util.encoders.Hex;
@@ -11,10 +12,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Scanner;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
-
 @Component
 public class BlockLoader {
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     private Blockchain blockchain;
@@ -24,7 +26,7 @@ public class BlockLoader {
 
     public void loadBlocks(){
 
-        String fileSrc = CONFIG.blocksLoader();
+        String fileSrc = config.blocksLoader();
         try {
             FileInputStream inputStream = null;
             inputStream = new FileInputStream(fileSrc);

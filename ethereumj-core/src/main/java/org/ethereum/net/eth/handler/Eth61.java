@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.ListIterator;
 
 import static java.lang.Math.*;
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.eth.EthVersion.*;
 import static org.ethereum.net.eth.message.EthMessageCodes.GET_BLOCK_HASHES_BY_NUMBER;
 import static org.ethereum.sync.SyncStateName.DONE_HASH_RETRIEVING;
@@ -119,7 +118,7 @@ public class Eth61 extends EthLegacy {
     private void processGetBlockHashesByNumber(GetBlockHashesByNumberMessage msg) {
         List<byte[]> hashes = blockchain.getListOfHashesStartFromBlock(
                 msg.getBlockNumber(),
-                min(msg.getMaxBlocks(), CONFIG.maxHashesAsk())
+                min(msg.getMaxBlocks(), config.maxHashesAsk())
         );
 
         BlockHashesMessage msgHashes = new BlockHashesMessage(hashes);

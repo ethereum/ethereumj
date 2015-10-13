@@ -1,5 +1,6 @@
 package org.ethereum.net.client;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.server.EthereumChannelInitializer;
 
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 
 /**
  * This class creates the connection to an remote address using the Netty framework
@@ -34,6 +34,9 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class PeerClient {
 
     private static final Logger logger = LoggerFactory.getLogger("net");
+
+    @Autowired
+    SystemProperties config;
 
     @Autowired
     private ApplicationContext ctx;
@@ -67,7 +70,7 @@ public class PeerClient {
 
             b.option(ChannelOption.SO_KEEPALIVE, true);
             b.option(ChannelOption.MESSAGE_SIZE_ESTIMATOR, DefaultMessageSizeEstimator.DEFAULT);
-            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, CONFIG.peerConnectionTimeout());
+            b.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, config.peerConnectionTimeout());
             b.remoteAddress(host, port);
 
             b.handler(ethereumChannelInitializer);

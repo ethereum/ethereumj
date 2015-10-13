@@ -40,7 +40,8 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
-    private int maxFramePayloadSize = Integer.MAX_VALUE >> 1;
+//    private int maxFramePayloadSize = Integer.MAX_VALUE >> 1;
+    private int maxFramePayloadSize = 16;
 
     private Channel channel;
     private MessageCodesResolver messageCodesResolver;
