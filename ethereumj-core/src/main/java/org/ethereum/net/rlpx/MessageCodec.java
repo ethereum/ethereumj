@@ -102,17 +102,18 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     }
 
     private Message decodeMessage(ChannelHandlerContext ctx, List<Frame> frames) throws IOException {
+        long frameType = frames.get(0).getType();
 
-        if (frames.size() > 1) throw new RuntimeException("Not implemented yet");
-
-        Frame frame = frames.get(0);
-
-        byte[] payload = ByteStreams.toByteArray(frame.getStream());
+        byte[] payload = new byte[frames.size() == 1 ? frames.get(0).getSize() : frames.get(0).totalFrameSize];
+        int pos = 0;
+        for (Frame frame : frames) {
+            pos += ByteStreams.read(frame.getStream(), payload, pos, frame.getSize());
+        }
 
         if (loggerWire.isDebugEnabled())
-            loggerWire.debug("Recv: Encoded: {} [{}]", frame.getType(), Hex.toHexString(payload));
+            loggerWire.debug("Recv: Encoded: {} [{}]", frameType, Hex.toHexString(payload));
 
-        Message msg = createMessage((byte) frame.getType(), payload);
+        Message msg = createMessage((byte) frameType, payload);
 
         if (loggerNet.isInfoEnabled())
             loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg);
