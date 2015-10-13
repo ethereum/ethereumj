@@ -73,7 +73,23 @@ public class GetBlockBodiesMessage extends EthMessage {
     }
 
     public String toString() {
-        final String hashListShort = Utils.getHashListShort(getBlockHashes());
-        return "[" + this.getCommand().name() + hashListShort + "] (" + blockHashes.size() + ")";
+        if (!parsed) parse();
+
+        StringBuilder payload = new StringBuilder();
+
+        payload.append("count( ").append(blockHashes.size()).append(" ) ");
+
+        if (logger.isDebugEnabled()) {
+            for (byte[] hash : blockHashes) {
+                payload.append(Hex.toHexString(hash)).append(" | ");
+            }
+            if (!blockHashes.isEmpty()) {
+                payload.delete(payload.length() - 3, payload.length());
+            }
+        } else {
+            payload.append(Utils.getHashListShort(blockHashes));
+        }
+
+        return "[" + getCommand().name() + " " + payload + "]";
     }
 }
