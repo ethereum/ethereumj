@@ -1,12 +1,9 @@
 package org.ethereum.net.rlpx;
 
 import com.google.common.io.ByteStreams;
-import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.ByteToMessageCodec;
-import org.ethereum.crypto.ECIESCoder;
-import org.ethereum.crypto.ECKey;
+import io.netty.handler.codec.MessageToMessageCodec;
+import org.apache.commons.lang3.tuple.Pair;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.Capability;
@@ -14,27 +11,25 @@ import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
 import org.ethereum.net.message.MessageFactory;
-import org.ethereum.net.p2p.DisconnectMessage;
-import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
-import org.ethereum.net.p2p.P2pMessageFactory;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhMessageCodes;
 import org.ethereum.net.swarm.bzz.BzzMessageCodes;
+import org.ethereum.util.LRUMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.spongycastle.crypto.InvalidCipherTextException;
-import org.spongycastle.math.ec.ECPoint;
 import org.spongycastle.util.encoders.Hex;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.ethereum.config.SystemProperties.CONFIG;
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
 
 /**
@@ -42,69 +37,73 @@ import static org.ethereum.net.rlpx.FrameCodec.Frame;
  */
 @Component
 @Scope("prototype")
-public class MessageCodec extends ByteToMessageCodec<Message> {
+public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
-    private FrameCodec frameCodec;
-    private ECKey myKey = CONFIG.getMyKey();
-    private byte[] nodeId;
-    private byte[] remoteId;
-    private EncryptionHandshake handshake;
-    private byte[] initiatePacket;
     private Channel channel;
     private MessageCodesResolver messageCodesResolver;
-    private boolean isHandshakeDone;
-    private final InitiateHandler initiator = new InitiateHandler();
 
     private MessageFactory p2pMessageFactory;
     private MessageFactory ethMessageFactory;
     private MessageFactory shhMessageFactory;
     private MessageFactory bzzMessageFactory;
-
     private EthVersion ethVersion;
-
-    public InitiateHandler getInitiator() {
-        return initiator;
-    }
-
-    public class InitiateHandler extends ChannelInboundHandlerAdapter {
-        @Override
-        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
-            if (remoteId.length == 64) {
-                channel.setNode(remoteId);
-                initiate(ctx);
-            } else {
-                handshake = new EncryptionHandshake();
-                nodeId = myKey.getNodeId();
-            }
-        }
-    }
 
     @Autowired
     WorldManager worldManager;
 
+    Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(1, 16);
+    // LRU avoids OOM on invalid peers
+
     @Override
-    protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        loggerWire.debug("Received packet bytes: " + in.readableBytes());
-        if (!isHandshakeDone) {
-            loggerWire.debug("Decoding handshake...");
-            decodeHandshake(ctx, in);
-        } else
-            decodeMessage(ctx, in, out);
+    protected void decode(ChannelHandlerContext ctx, Frame frame, List<Object> out) throws Exception {
+        Frame completeFrame = null;
+        if (frame.isChunked()) {
+            Pair<? extends List<Frame>, AtomicInteger> frameParts = incompleteFrames.get(frame.contextId);
+            if (frameParts == null) {
+                if (frame.totalFrameSize < 0) {
+//                    loggerNet.warn("No initial frame received for context-id: " + frame.contextId + ". Discarding this frame as invalid.");
+                    // TODO: refactor this logic (Cpp sends non-chunked frames with context-id)
+                    Message message = decodeMessage(ctx, Collections.singletonList(frame));
+                    out.add(message);
+                    return;
+                } else {
+                    frameParts = Pair.of(new ArrayList<Frame>(), new AtomicInteger(0));
+                    incompleteFrames.put(frame.contextId, frameParts);
+                }
+            } else {
+                if (frame.totalFrameSize >= 0) {
+                    loggerNet.warn("Non-initial chunked frame shouldn't contain totalFrameSize field (context-id: " + frame.contextId + ", totalFrameSize: " + frame.totalFrameSize + "). Discarding this frame and all previous.");
+                    incompleteFrames.remove(frame.contextId);
+                    return;
+                }
+            }
+
+            frameParts.getLeft().add(frame);
+            int curSize = frameParts.getRight().addAndGet(frame.size);
+            if (curSize > frameParts.getLeft().get(0).totalFrameSize) {
+                loggerNet.warn("The total frame chunks size (" + curSize + ") is greater than expected (" + frameParts.getLeft().get(0).totalFrameSize + "). Discarding the frame.");
+                incompleteFrames.remove(frame.contextId);
+                return;
+            }
+            if (curSize == frameParts.getLeft().get(0).totalFrameSize) {
+                Message message = decodeMessage(ctx, frameParts.getLeft());
+                incompleteFrames.remove(frame.contextId);
+                out.add(message);
+            }
+        } else {
+            Message message = decodeMessage(ctx, Collections.singletonList(frame));
+            out.add(message);
+        }
     }
 
-    private void decodeMessage(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws IOException {
-        if (in.readableBytes() == 0) return;
+    private Message decodeMessage(ChannelHandlerContext ctx, List<Frame> frames) throws IOException {
 
-        Frame frame = null;
-        frame = frameCodec.readFrame(in);
+        if (frames.size() > 1) throw new RuntimeException("Not implemented yet");
 
-
-        // Check if a full frame was available.  If not, we'll try later when more bytes come in.
-        if (frame == null) return;
+        Frame frame = frames.get(0);
 
         byte[] payload = ByteStreams.toByteArray(frame.getStream());
 
@@ -119,13 +118,12 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         EthereumListener listener = worldManager.getListener();
         listener.onRecvMessage(msg);
 
-        out.add(msg);
         channel.getNodeStatistics().rlpxInMessages.add();
+        return msg;
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Message msg, ByteBuf out) throws Exception {
-
+    protected void encode(ChannelHandlerContext ctx, Message msg, List<Object> out) throws Exception {
         String output = String.format("To: \t%s \tSend: \t%s", ctx.channel().remoteAddress(), msg);
         worldManager.getListener().trace(output);
 
@@ -140,143 +138,10 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
         /*  HERE WE ACTUALLY USING THE SECRET ENCODING */
         byte code = getCode(msg.getCommand());
         Frame frame = new Frame(code, msg.getEncoded());
-        frameCodec.writeFrame(frame, out);
+//        frameCodec.writeFrame(frame, out);
+        out.add(frame);
 
         channel.getNodeStatistics().rlpxOutMessages.add();
-    }
-
-
-    public void initiate(ChannelHandlerContext ctx) throws Exception {
-
-        loggerNet.info("RLPX protocol activated");
-
-        nodeId = myKey.getNodeId();
-
-        byte[] remotePublicBytes = new byte[remoteId.length + 1];
-        System.arraycopy(remoteId, 0, remotePublicBytes, 1, remoteId.length);
-        remotePublicBytes[0] = 0x04; // uncompressed
-        ECPoint remotePublic = ECKey.fromPublicOnly(remotePublicBytes).getPubKeyPoint();
-        handshake = new EncryptionHandshake(remotePublic);
-        AuthInitiateMessage initiateMessage = handshake.createAuthInitiate(null, myKey);
-        initiatePacket = handshake.encryptAuthMessage(initiateMessage);
-
-        final ByteBuf byteBufMsg = ctx.alloc().buffer(initiatePacket.length);
-        byteBufMsg.writeBytes(initiatePacket);
-        ctx.writeAndFlush(byteBufMsg).sync();
-
-        channel.getNodeStatistics().rlpxAuthMessagesSent.add();
-
-        if (loggerNet.isInfoEnabled())
-            loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), initiateMessage);
-    }
-
-    // consume handshake, producing no resulting message to upper layers
-    private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
-
-        if (handshake.isInitiator()) {
-            if (frameCodec == null) {
-                byte[] responsePacket = new byte[AuthResponseMessage.getLength() + ECIESCoder.getOverhead()];
-                if (!buffer.isReadable(responsePacket.length))
-                    return;
-                buffer.readBytes(responsePacket);
-
-                AuthResponseMessage response = this.handshake.handleAuthResponse(myKey, initiatePacket, responsePacket);
-                if (loggerNet.isInfoEnabled())
-                    loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), response);
-
-                EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();
-                this.frameCodec = new FrameCodec(secrets);
-
-                loggerNet.info("auth exchange done");
-                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
-            } else {
-                loggerWire.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
-                Frame frame = frameCodec.readFrame(buffer);
-                if (frame == null)
-                    return;
-                byte[] payload = ByteStreams.toByteArray(frame.getStream());
-                if (frame.getType() == P2pMessageCodes.HELLO.asByte()) {
-                    HelloMessage helloMessage = new HelloMessage(payload);
-                    if (loggerNet.isInfoEnabled())
-                        loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
-                    isHandshakeDone = true;
-                    this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
-                } else {
-                    DisconnectMessage message = new DisconnectMessage(payload);
-                    if (loggerNet.isInfoEnabled())
-                        loggerNet.info("From: \t{} \tRecv: \t{}", channel, message);
-                    channel.getNodeStatistics().nodeDisconnectedRemote(message.getReason());
-                }
-            }
-        } else {
-            loggerWire.debug("Not initiator.");
-            if (frameCodec == null) {
-                loggerWire.debug("FrameCodec == null");
-                byte[] authInitPacket = new byte[AuthInitiateMessage.getLength() + ECIESCoder.getOverhead()];
-                if (!buffer.isReadable(authInitPacket.length))
-                    return;
-                buffer.readBytes(authInitPacket);
-
-                this.handshake = new EncryptionHandshake();
-
-                AuthInitiateMessage initiateMessage;
-                try {
-                    initiateMessage = handshake.decryptAuthInitiate(authInitPacket, myKey);
-                } catch (InvalidCipherTextException ce) {
-                    loggerNet.warn("Can't decrypt AuthInitiateMessage from " + ctx.channel().remoteAddress() +
-                            ". Most likely the remote peer used wrong public key (NodeID) to encrypt message.");
-                    return;
-                }
-
-                loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), initiateMessage);
-
-                AuthResponseMessage response = handshake.makeAuthInitiate(initiateMessage, myKey);
-
-                loggerNet.info("To: \t{} \tSend: \t{}", ctx.channel().remoteAddress(), response);
-
-                byte[] responsePacket = handshake.encryptAuthReponse(response);
-                handshake.agreeSecret(authInitPacket, responsePacket);
-
-                EncryptionHandshake.Secrets secrets = this.handshake.getSecrets();
-                this.frameCodec = new FrameCodec(secrets);
-
-                ECPoint remotePubKey = this.handshake.getRemotePublicKey();
-
-                byte[] compressed = remotePubKey.getEncoded();
-
-                this.remoteId = new byte[compressed.length - 1];
-                System.arraycopy(compressed, 1, this.remoteId, 0, this.remoteId.length);
-                channel.setNode(remoteId);
-
-                final ByteBuf byteBufMsg = ctx.alloc().buffer(responsePacket.length);
-                byteBufMsg.writeBytes(responsePacket);
-                ctx.writeAndFlush(byteBufMsg).sync();
-            } else {
-                Frame frame = frameCodec.readFrame(buffer);
-                if (frame == null)
-                    return;
-                Message message = new P2pMessageFactory().create((byte) frame.getType(),
-                        ByteStreams.toByteArray(frame.getStream()));
-                loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), message);
-
-                if (frame.getType() == P2pMessageCodes.DISCONNECT.asByte()) {
-                    loggerNet.info("Active remote peer disconnected right after handshake.");
-                    return;
-                }
-
-                if (frame.getType() != P2pMessageCodes.HELLO.asByte()) {
-                    throw new RuntimeException("The message type is not HELLO or DISCONNECT: " + message);
-                }
-
-                HelloMessage helloMessage = (HelloMessage) message;
-
-                // Secret authentication finish here
-                isHandshakeDone = true;
-                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
-                this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
-            }
-        }
-        channel.getNodeStatistics().rlpxInHello.add();
     }
 
     /* TODO: this dirty hack is here cause we need to use message
@@ -330,24 +195,11 @@ public class MessageCodec extends ByteToMessageCodec<Message> {
     }
 
     public void setRemoteId(String remoteId, Channel channel){
-        this.remoteId = Hex.decode(remoteId);
         this.channel = channel;
     }
 
     public void setEthVersion(EthVersion ethVersion) {
         this.ethVersion = ethVersion;
-    }
-
-    /**
-     * Generate random Key (and thus NodeID) per channel for 'anonymous'
-     * connection (e.g. for peer discovery)
-     */
-    public void generateTempKey() {
-        myKey = new ECKey().decompress();
-    }
-
-    public byte[] getRemoteId() {
-        return remoteId;
     }
 
     @Override

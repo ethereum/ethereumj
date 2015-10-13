@@ -17,6 +17,7 @@ import org.ethereum.net.eth.message.Eth60MessageFactory;
 import org.ethereum.net.eth.message.Eth61MessageFactory;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.message.ReasonCode;
+import org.ethereum.net.rlpx.MultiFrameCodec;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
@@ -75,6 +76,9 @@ public class Channel {
     private MessageCodec messageCodec;
 
     @Autowired
+    private MultiFrameCodec multiFrameCodec;
+
+    @Autowired
     private NodeManager nodeManager;
 
     @Autowired
@@ -93,7 +97,8 @@ public class Channel {
 
         pipeline.addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-        pipeline.addLast("initiator", messageCodec.getInitiator());
+        pipeline.addLast("initiator", multiFrameCodec.getInitiator());
+        pipeline.addLast("multiFrameCodec", multiFrameCodec);
         pipeline.addLast("messageCodec", messageCodec);
 
         this.discoveryMode = discoveryMode;
@@ -101,10 +106,11 @@ public class Channel {
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
             // unexpected disconnect
-            messageCodec.generateTempKey();
+            multiFrameCodec.generateTempKey();
         }
 
         messageCodec.setRemoteId(remoteId, this);
+        multiFrameCodec.setRemoteId(remoteId, this);
 
         p2pHandler.setMsgQueue(msgQueue);
         messageCodec.setP2pMessageFactory(new P2pMessageFactory());

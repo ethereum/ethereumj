@@ -103,7 +103,7 @@ public class DiscoveryChannel {
 
                             ch.pipeline().addLast("readTimeoutHandler",
                                     new ReadTimeoutHandler(CONFIG.peerChannelReadTimeout(), TimeUnit.SECONDS));
-                            ch.pipeline().addLast("initiator", decoder.getInitiator());
+//                            ch.pipeline().addLast("initiator", decoder.getInitiator());
                             ch.pipeline().addLast("messageCodec", decoder);
                             ch.pipeline().addLast(Capability.P2P, p2pHandler);
                             ch.pipeline().addLast(Capability.ETH, ethHandler);

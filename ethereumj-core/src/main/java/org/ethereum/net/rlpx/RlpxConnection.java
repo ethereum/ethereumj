@@ -33,7 +33,7 @@ public class RlpxConnection {
     }
 
     public void handleNextMessage() throws IOException {
-        FrameCodec.Frame frame = codec.readFrame(inp);
+        FrameCodec.Frame frame = codec.readFrames(inp).get(0);
         if (handshakeMessage == null) {
             if (frame.type != HandshakeMessage.HANDSHAKE_MESSAGE_TYPE)
                 throw new IOException("expected handshake or disconnect");

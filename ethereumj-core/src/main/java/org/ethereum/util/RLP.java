@@ -3,6 +3,7 @@ package org.ethereum.util;
 import org.ethereum.db.ByteArrayWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
@@ -470,6 +471,11 @@ public class RLP {
         return rlpList;
     }
 
+    public static RLPElement decode2OneItem(byte[] msgData, int startPos) {
+        RLPList rlpList = new RLPList();
+        fullTraverse(msgData, 0, startPos, startPos + 1, 1, rlpList);
+        return rlpList.get(0);
+    }
     /**
      * Get exactly one message payload
      */
@@ -591,7 +597,7 @@ public class RLP {
                 }
             }
         } catch (Exception e) {
-            throw new RuntimeException("RLP wrong encoding", e);
+            throw new RuntimeException("RLP wrong encoding (" + Hex.toHexString(msgData, startPos, endPos - startPos) + ")", e);
         }
     }
 

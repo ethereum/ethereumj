@@ -3,15 +3,24 @@ package org.ethereum.net.rlpx;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.ByteBufOutputStream;
+import org.ethereum.net.swarm.Util;
 import org.ethereum.util.RLP;
+import org.ethereum.util.RLPList;
 import org.spongycastle.crypto.StreamCipher;
 import org.spongycastle.crypto.digests.SHA3Digest;
 import org.spongycastle.crypto.engines.AESFastEngine;
 import org.spongycastle.crypto.modes.SICBlockCipher;
 import org.spongycastle.crypto.params.KeyParameter;
 import org.spongycastle.crypto.params.ParametersWithIV;
+import org.spongycastle.util.encoders.Hex;
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import static org.ethereum.util.RLP.decode2OneItem;
 
 /**
  * Created by devrandom on 2015-04-11.
@@ -23,7 +32,7 @@ public class FrameCodec {
     private final SHA3Digest ingressMac;
     private final byte[] mac;
     boolean isHeadRead;
-    private int totalBodySize;
+    private int totalBodySize; // TODO useless field
 
     public FrameCodec(EncryptionHandshake.Secrets secrets) {
         this.mac = secrets.mac;
@@ -48,6 +57,10 @@ public class FrameCodec {
         int size;
         InputStream payload;
 
+        int totalFrameSize = -1;
+        int contextId = -1;
+
+
         public Frame(long type, int size, InputStream payload) {
             this.type = type;
             this.size = size;
@@ -69,6 +82,10 @@ public class FrameCodec {
         public InputStream getStream() {
             return payload;
         }
+        public boolean isChunked() {
+            return contextId >= 0;
+        }
+
     }
 
     public void writeFrame(Frame frame, ByteBuf buf) throws IOException {
@@ -82,7 +99,13 @@ public class FrameCodec {
         headBuffer[0] = (byte)(totalSize >> 16);
         headBuffer[1] = (byte)(totalSize >> 8);
         headBuffer[2] = (byte)(totalSize);
-        byte[] headerData = RLP.encodeList(RLP.encodeInt(0));
+
+        List<byte[]> headerDataElems = new ArrayList<>();
+        headerDataElems.add(RLP.encodeInt(0));
+        if (frame.contextId >= 0) headerDataElems.add(RLP.encodeInt(frame.contextId));
+        if (frame.totalFrameSize >= 0) headerDataElems.add(RLP.encodeInt(frame.totalFrameSize));
+
+        byte[] headerData = RLP.encodeList(headerDataElems.toArray(new byte[0][]));
         System.arraycopy(headerData, 0, headBuffer, 3, headerData.length);
 
         enc.processBytes(headBuffer, 0, 16, headBuffer, 0);
@@ -117,11 +140,13 @@ public class FrameCodec {
         out.write(macBuffer, 0, 16);
     }
 
-    public Frame readFrame(ByteBuf buf) throws IOException {
-        return readFrame(new ByteBufInputStream(buf));
+    public List<Frame> readFrames(ByteBuf buf) throws IOException {
+        return readFrames(new ByteBufInputStream(buf));
     }
 
-    public Frame readFrame(DataInput inp) throws IOException {
+    public List<Frame> readFrames(DataInput inp) throws IOException {
+        int contextId = -1;
+        int totalFrameSize = -1;
         if (!isHeadRead) {
             byte[] headBuffer = new byte[32];
             try {
@@ -137,6 +162,17 @@ public class FrameCodec {
             totalBodySize = headBuffer[0];
             totalBodySize = (totalBodySize << 8) + (headBuffer[1] & 0xFF);
             totalBodySize = (totalBodySize << 8) + (headBuffer[2] & 0xFF);
+
+            RLPList rlpList = (RLPList) decode2OneItem(headBuffer, 3);
+
+            int protocol = Util.rlpDecodeInt(rlpList.get(0));
+            if (rlpList.size() > 1) {
+                contextId = Util.rlpDecodeInt(rlpList.get(1));
+                if (rlpList.size() > 2) {
+                    totalFrameSize = Util.rlpDecodeInt(rlpList.get(2));
+                }
+            }
+
             isHeadRead = true;
         }
 
@@ -164,7 +200,10 @@ public class FrameCodec {
         updateMac(ingressMac, macBuffer, 0, buffer, frameSize, false);
 
         isHeadRead = false;
-        return new Frame(type, size, payload);
+        Frame frame = new Frame(type, size, payload);
+        frame.contextId = contextId;
+        frame.totalFrameSize = totalFrameSize;
+        return Collections.singletonList(frame);
     }
 
     private byte[] updateMac(SHA3Digest mac, byte[] seed, int offset, byte[] out, int outOffset, boolean egress) throws IOException {
