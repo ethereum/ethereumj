@@ -50,12 +50,6 @@ public class EthereumFactory {
             logger.info("Database reset done");
         }
 
-//        List<Class<?>> springConfigs = new ArrayList<>();
-//        springConfigs.add(DefaultConfig.class);
-//        if (config != SystemProperties.CONFIG) {
-//            springConfigs.add(new SysPropConfig(config));
-//        }
-
         return userSpringConfig == null ? createEthereum(new Class[] {DefaultConfig.class}) :
                 createEthereum(DefaultConfig.class, userSpringConfig);
     }
@@ -76,21 +70,4 @@ public class EthereumFactory {
         context = new AnnotationConfigApplicationContext(springConfigs);
         return context.getBean(Ethereum.class);
     }
-
-
-//    @Configuration
-//    @NoAutoscan
-//    static class SysPropConfig {
-//
-//        SystemProperties systemProperties;
-//
-//        public SysPropConfig(SystemProperties systemProperties) {
-//            this.systemProperties = systemProperties;
-//        }
-//
-//        @Bean
-//        public SystemProperties systemProperties() {
-//            return systemProperties;
-//        }
-//    }
 }
