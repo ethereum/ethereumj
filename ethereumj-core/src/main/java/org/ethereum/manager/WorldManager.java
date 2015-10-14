@@ -38,9 +38,6 @@ public class WorldManager {
     private static final Logger logger = LoggerFactory.getLogger("general");
 
     @Autowired
-    SystemProperties config;
-
-    @Autowired
     private EthereumListener listener;
 
     @Autowired
@@ -75,6 +72,9 @@ public class WorldManager {
 
     @Autowired
     private PendingState pendingState;
+
+    @Autowired
+    SystemProperties config;
 
     @PostConstruct
     public void init() {

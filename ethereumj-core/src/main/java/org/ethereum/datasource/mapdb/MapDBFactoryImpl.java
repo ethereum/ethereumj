@@ -16,10 +16,10 @@ import static java.lang.System.getProperty;
 public class MapDBFactoryImpl implements MapDBFactory {
 
     @Autowired
-    SystemProperties config;
+    private ApplicationContext ctx;
 
     @Autowired
-    private ApplicationContext ctx;
+    SystemProperties config;
 
     @Override
     public KeyValueDataSource createDataSource() {

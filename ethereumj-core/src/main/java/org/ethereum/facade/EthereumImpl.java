@@ -44,9 +44,6 @@ public class EthereumImpl implements Ethereum {
     private static final Logger logger = LoggerFactory.getLogger("facade");
 
     @Autowired
-    SystemProperties config;
-
-    @Autowired
     WorldManager worldManager;
 
     @Autowired
@@ -66,6 +63,9 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
+
+    @Autowired
+    SystemProperties config;
 
     private GasPriceTracker gasPriceTracker = new GasPriceTracker();
 
