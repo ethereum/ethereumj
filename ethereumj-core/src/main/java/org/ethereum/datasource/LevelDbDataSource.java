@@ -32,7 +32,7 @@ public class LevelDbDataSource implements KeyValueDataSource {
     private static final Logger logger = LoggerFactory.getLogger("db");
 
     @Autowired
-    SystemProperties config;
+    SystemProperties config  = SystemProperties.CONFIG; // initialized for standalone test
 
     String name;
     DB db;
