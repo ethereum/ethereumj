@@ -704,17 +704,17 @@ public class RLP {
         }
     }
 
-    public static byte[] encodeByte(short singleByte) {
+    public static byte[] encodeByte(byte singleByte) {
         if ((singleByte & 0xFF) == 0) {
             return new byte[]{(byte) OFFSET_SHORT_ITEM};
         } else if ((singleByte & 0xFF) <= 0x7F) {
-            return new byte[]{(byte) singleByte};
+            return new byte[]{singleByte};
         } else {
-            return new byte[]{(byte) (OFFSET_SHORT_ITEM + 1), (byte) singleByte};
+            return new byte[]{(byte) (OFFSET_SHORT_ITEM + 1), singleByte};
         }
     }
 
-    public static byte[] encodeShort(int singleShort) {
+    public static byte[] encodeShort(short singleShort) {
         if (singleShort <= 0xFF)
             return encodeByte((byte) singleShort);
         else {
@@ -726,9 +726,9 @@ public class RLP {
 
     public static byte[] encodeInt(int singleInt) {
         if (singleInt <= 0xFF)
-            return encodeByte((short) singleInt);
+            return encodeByte((byte) singleInt);
         else if (singleInt <= 0xFFFF)
-            return encodeShort(singleInt);
+            return encodeShort((short) singleInt);
         else if (singleInt <= 0xFFFFFF)
             return new byte[]{(byte) (OFFSET_SHORT_ITEM + 3),
                     (byte) (singleInt >>> 16),
