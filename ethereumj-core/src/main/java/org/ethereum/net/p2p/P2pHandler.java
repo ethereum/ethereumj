@@ -11,7 +11,6 @@ import org.ethereum.net.eth.message.TransactionsMessage;
 import org.ethereum.net.message.ReasonCode;
 import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.peerdiscovery.PeerInfo;
-import org.ethereum.net.rlpx.HandshakeHelper;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.shh.ShhHandler;
 
