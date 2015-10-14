@@ -230,21 +230,6 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         this.maxFramePayloadSize = maxFramePayloadSize;
     }
 
-    @Override
-    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-        if (channel.isDiscoveryMode()) {
-            loggerNet.debug("MessageCodec handling failed", cause);
-        } else {
-            if (cause instanceof IOException) {
-                loggerNet.info("Connection with peer terminated: " + ctx.channel().remoteAddress() + "(" + cause.getMessage() + ")");
-                loggerNet.debug("Connection with peer terminated: " + ctx.channel().remoteAddress(), cause);
-            } else {
-                loggerNet.error("MessageCodec handling failed", cause);
-            }
-        }
-        ctx.close();
-    }
-
     public void initMessageCodes(List<Capability> caps) {
         this.messageCodesResolver = new MessageCodesResolver(caps);
     }
