@@ -235,7 +235,12 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         if (channel.isDiscoveryMode()) {
             loggerNet.debug("MessageCodec handling failed", cause);
         } else {
-            loggerNet.error("MessageCodec handling failed", cause);
+            if (cause instanceof IOException) {
+                loggerNet.info("Connection with peer terminated: " + ctx.channel().remoteAddress() + "(" + cause.getMessage() + ")");
+                loggerNet.debug("Connection with peer terminated: " + ctx.channel().remoteAddress(), cause);
+            } else {
+                loggerNet.error("MessageCodec handling failed", cause);
+            }
         }
         ctx.close();
     }

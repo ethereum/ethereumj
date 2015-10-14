@@ -20,6 +20,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -86,7 +87,12 @@ public class PeerClient {
             if (discoveryMode) {
                 logger.debug("Exception:", e);
             } else {
-                logger.error("Exception:", e);
+                if (e instanceof IOException) {
+                    logger.info("PeerClient: Can't connect to " + host + ":" + port + " (" + e.getMessage() + ")");
+                    logger.debug("PeerClient.connect(" + host + ":" + port + ") exception:", e);
+                } else {
+                    logger.error("Exception:", e);
+                }
             }
         }
     }
