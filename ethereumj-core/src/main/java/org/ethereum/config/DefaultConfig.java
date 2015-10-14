@@ -55,7 +55,6 @@ public class DefaultConfig {
                 .makeOrGet();
 
         KeyValueDataSource blocksDB = levelDbDataSource("blocks");
-        blocksDB.setName("blocks");
         blocksDB.init();
 
 
@@ -70,9 +69,11 @@ public class DefaultConfig {
     }
 
     @Bean
+    LevelDbDataSource levelDbDataSource() {
+        return new LevelDbDataSource();
+    }
+    @Bean
     LevelDbDataSource levelDbDataSource(String name) {
-        LevelDbDataSource ret = new LevelDbDataSource(name);
-        ret.setName(name);
-        return ret;
+        return new LevelDbDataSource(name);
     }
 }
