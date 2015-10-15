@@ -33,7 +33,7 @@ import static java.lang.Math.min;
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
 
 /**
- * The PacketDecoder parses every valid Ethereum packet to a Message object
+ * The Netty codec which encodes/decodes RPLx frames to subprotocol Messages
  */
 @Component
 @Scope("prototype")
@@ -243,7 +243,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         throw new IllegalArgumentException("No such message: " + code + " [" + Hex.toHexString(payload) + "]");
     }
 
-    public void setRemoteId(String remoteId, Channel channel){
+    public void setChannel(Channel channel){
         this.channel = channel;
     }
 

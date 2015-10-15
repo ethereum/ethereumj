@@ -31,11 +31,20 @@ import java.util.List;
 import static org.ethereum.net.rlpx.FrameCodec.Frame;
 
 /**
- * The PacketDecoder parses every valid Ethereum packet to a Message object
+ * The Netty handler which manages initial negotiation with peer
+ * (when either we initiating connection or remote peer initiates)
+ *
+ * The initial handshake includes:
+ * - first AuthInitiate -> AuthResponse messages when peers exchange with secrets
+ * - second P2P Hello messages when P2P protocol and subprotocol capabilities are negotiated
+ *
+ * After the handshake is done this handler reports secrets and other data to the Channel
+ * which installs further handlers depending on the protocol parameters.
+ * This handler is finally removed from the pipeline.
  */
 @Component
 @Scope("prototype")
-public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHandlerAdapter*/ {
+public class HandshakeHandler extends ByteToMessageDecoder {
 
     @Autowired
     SystemProperties config;
@@ -43,7 +52,7 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
-    public FrameCodec frameCodec;
+    private FrameCodec frameCodec;
     private ECKey myKey;
     private byte[] nodeId;
     private byte[] remoteId;
@@ -51,34 +60,8 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
     private byte[] initiatePacket;
     private Channel channel;
     private boolean isHandshakeDone;
-    private final InitiateHandler initiator = new InitiateHandler();
-
-    public InitiateHandler getInitiator() {
-        return initiator;
-    }
-
-    public class InitiateHandler extends ChannelInboundHandlerAdapter {
-        @Override
-        public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
-            if (remoteId.length == 64) {
-                channel.setNode(remoteId);
-                initiate(ctx);
-            } else {
-                handshake = new EncryptionHandshake();
-                nodeId = myKey.getNodeId();
-            }
-        }
-    }
 
     public HandshakeHandler() {
-    }
-
-    // for testing purposes
-    HandshakeHandler(ECKey myKey, EncryptionHandshake.Secrets secrets) {
-        this.myKey = myKey;
-        nodeId = myKey.getNodeId();
-        frameCodec = new FrameCodec(secrets);
     }
 
     @PostConstruct
@@ -86,60 +69,26 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
         myKey = config.getMyKey();
     }
 
-
     @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        if (isHandshakeDone) {
-            loggerWire.debug("=== ctx.fireChannelRead: " + ((ByteBuf) msg).readableBytes());
-            ctx.fireChannelRead(msg);
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        channel.setInetSocketAddress((InetSocketAddress) ctx.channel().remoteAddress());
+        if (remoteId.length == 64) {
+            channel.setNode(remoteId);
+            initiate(ctx);
         } else {
-            super.channelRead(ctx, msg);
-            if (isHandshakeDone) {
-                loggerWire.debug("=== ctx.fireChannelRead: " + ((ByteBuf) msg).readableBytes());
-                ctx.fireChannelRead(msg);
-            }
+            handshake = new EncryptionHandshake();
+            nodeId = myKey.getNodeId();
         }
     }
 
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        loggerWire.debug("Received packet bytes: " + in.readableBytes());
-        if (!isHandshakeDone) {
-            loggerWire.debug("Decoding handshake... (" + in.readableBytes() + " bytes available)");
-            decodeHandshake(ctx, in);
-            loggerWire.debug("Decoded handshake (" + in.readableBytes() + " bytes available)");
-            in.retain();
+        loggerWire.debug("Decoding handshake... (" + in.readableBytes() + " bytes available)");
+        decodeHandshake(ctx, in);
+        if (isHandshakeDone) {
+            loggerWire.debug("Handshake done, removing HandshakeHandler from pipeline.");
+            ctx.pipeline().remove(this);
         }
-//            decodeMessage(ctx, in, out);
     }
-
-    public void decodeMessage(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws IOException {
-        if (in.readableBytes() == 0) return;
-
-        List<Frame> frames = frameCodec.readFrames(in);
-
-
-        // Check if a full frame was available.  If not, we'll try later when more bytes come in.
-        if (frames == null || frames.isEmpty()) return;
-
-        for (int i = 0; i < frames.size(); i++) {
-            Frame frame = frames.get(i);
-
-            if (loggerWire.isDebugEnabled())
-                loggerWire.debug("Recv: Encoded: (" + (i + 1) + " of " + frames.size() + ") " +
-                        frame.getType() + " [size: " + frame.getStream().available() + "]");
-        }
-
-        out.addAll(frames);
-        channel.getNodeStatistics().rlpxInMessages.add();
-    }
-
-    public void encode(ChannelHandlerContext ctx, Frame frame, ByteBuf out) throws Exception {
-
-        frameCodec.writeFrame(frame, out);
-
-        channel.getNodeStatistics().rlpxOutMessages.add();
-    }
-
 
     public void initiate(ChannelHandlerContext ctx) throws Exception {
 
@@ -183,17 +132,6 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
                 this.frameCodec = new FrameCodec(secrets);
 
                 loggerNet.info("auth exchange done");
-//                new Thread(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        try {
-//                            Thread.sleep(500);
-//                            channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
-//                        } catch (Exception e) {
-//                            e.printStackTrace();
-//                        }
-//                    }
-//                }).start();
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), null);
             } else {
                 loggerWire.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
@@ -207,7 +145,7 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
                     if (loggerNet.isInfoEnabled())
                         loggerNet.info("From: \t{} \tRecv: \t{}", ctx.channel().remoteAddress(), helloMessage);
                     isHandshakeDone = true;
-                    this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
+                    this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, helloMessage);
                 } else {
                     DisconnectMessage message = new DisconnectMessage(payload);
                     if (loggerNet.isInfoEnabled())
@@ -282,7 +220,7 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
                 // Secret authentication finish here
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), inboundHelloMessage);
                 isHandshakeDone = true;
-                this.channel.publicRLPxHandshakeFinished(ctx, inboundHelloMessage);
+                this.channel.publicRLPxHandshakeFinished(ctx, frameCodec, inboundHelloMessage);
             }
         }
         channel.getNodeStatistics().rlpxInHello.add();
@@ -308,13 +246,13 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         if (channel.isDiscoveryMode()) {
-            loggerNet.debug("MultiFrameCodec handling failed", cause);
+            loggerNet.debug("Handshake failed: ", cause);
         } else {
             if (cause instanceof IOException) {
-                loggerNet.info("Connection with peer terminated: " + ctx.channel().remoteAddress() + "(" + cause.getMessage() + ")");
-                loggerNet.debug("Connection with peer terminated: " + ctx.channel().remoteAddress(), cause);
+                loggerNet.info("Handshake failed: " + ctx.channel().remoteAddress() + "(" + cause.getMessage() + ")");
+                loggerNet.debug("Handshake failed: " + ctx.channel().remoteAddress(), cause);
             } else {
-                loggerNet.error("MultiFrameCodec handling failed", cause);
+                loggerNet.error("Handshake failed: ", cause);
             }
         }
         ctx.close();

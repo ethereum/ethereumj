@@ -95,15 +95,9 @@ public class Channel {
 
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
 
-//        medianFrameCodec = new MedianFrameCodec(null, this);
-//        medianFrameCodec.multiFrameCodec = multiFrameCodec;
         pipeline.addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
-        pipeline.addLast("initiator", handshakeHandler.getInitiator());
-        pipeline.addLast("multiFrameCodec", handshakeHandler);
-//        pipeline.addLast("medianFrameCodec", medianFrameCodec);
-//        pipeline.addLast("messageCodec", messageCodec);
-//        pipeline.addLast("messageCodec", messageCodec);
+        pipeline.addLast("handshakeHandler", handshakeHandler);
 
         this.discoveryMode = discoveryMode;
 
@@ -113,8 +107,9 @@ public class Channel {
             handshakeHandler.generateTempKey();
         }
 
-        messageCodec.setRemoteId(remoteId, this);
         handshakeHandler.setRemoteId(remoteId, this);
+
+        messageCodec.setChannel(this);
 
         p2pHandler.setMsgQueue(msgQueue);
         messageCodec.setP2pMessageFactory(new P2pMessageFactory());
@@ -126,22 +121,19 @@ public class Channel {
         messageCodec.setBzzMessageFactory(new BzzMessageFactory());
     }
 
-    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, HelloMessage helloRemote) throws IOException, InterruptedException {
+    public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, FrameCodec frameCodec,
+                                            HelloMessage helloRemote) throws IOException, InterruptedException {
 
+        logger.debug("publicRLPxHandshakeFinished with " + ctx.channel().remoteAddress());
         if (P2pHandler.isProtocolVersionSupported(helloRemote.getP2PVersion())) {
 
             if (helloRemote.getP2PVersion() < 5) {
                 messageCodec.setSupportChunkedFrames(false);
             }
 
-            MedianFrameCodec medianFrameCodec = new MedianFrameCodec(handshakeHandler.frameCodec, this);
-            logger.debug("=== publicRLPxHandshakeFinished");
-            ctx.pipeline().addLast("medianFrameCodec", medianFrameCodec);
+            FrameCodecHandler frameCodecHandler = new FrameCodecHandler(frameCodec, this);
+            ctx.pipeline().addLast("medianFrameCodec", frameCodecHandler);
             ctx.pipeline().addLast("messageCodec", messageCodec);
-            //        logger.debug("=== remove(\"multiFrameCodec\")");
-            //        ctx.pipeline().remove("multiFrameCodec");
-            //        logger.debug("=== removed");
-            //        medianFrameCodec.frameCodec = multiFrameCodec.frameCodec;
             ctx.pipeline().addLast(Capability.P2P, p2pHandler);
 
             p2pHandler.setChannel(this);
