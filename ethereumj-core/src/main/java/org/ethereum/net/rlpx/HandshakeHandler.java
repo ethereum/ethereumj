@@ -4,25 +4,16 @@ import com.google.common.io.ByteStreams;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.ByteToMessageCodec;
 import io.netty.handler.codec.ByteToMessageDecoder;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
-import org.ethereum.listener.EthereumListener;
-import org.ethereum.manager.WorldManager;
-import org.ethereum.net.client.Capability;
-import org.ethereum.net.eth.EthVersion;
-import org.ethereum.net.eth.message.EthMessageCodes;
 import org.ethereum.net.message.Message;
-import org.ethereum.net.message.MessageFactory;
 import org.ethereum.net.p2p.DisconnectMessage;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pMessageCodes;
 import org.ethereum.net.p2p.P2pMessageFactory;
 import org.ethereum.net.server.Channel;
-import org.ethereum.net.shh.ShhMessageCodes;
-import org.ethereum.net.swarm.bzz.BzzMessageCodes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.crypto.InvalidCipherTextException;
@@ -203,7 +194,7 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
 //                        }
 //                    }
 //                }).start();
-                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
+                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), null);
             } else {
                 loggerWire.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
                 List<Frame> frames = frameCodec.readFrames(buffer);
@@ -286,12 +277,12 @@ public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHand
                     throw new RuntimeException("The message type is not HELLO or DISCONNECT: " + message);
                 }
 
-                HelloMessage helloMessage = (HelloMessage) message;
+                HelloMessage inboundHelloMessage = (HelloMessage) message;
 
                 // Secret authentication finish here
-                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
+                channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId), inboundHelloMessage);
                 isHandshakeDone = true;
-                this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
+                this.channel.publicRLPxHandshakeFinished(ctx, inboundHelloMessage);
             }
         }
         channel.getNodeStatistics().rlpxInHello.add();

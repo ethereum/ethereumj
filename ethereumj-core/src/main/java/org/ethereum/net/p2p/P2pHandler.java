@@ -56,6 +56,8 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     public final static byte VERSION = 4;
 
+    public final static byte[] SUPPORTED_VERSIONS = {4, 5};
+
     private final static Logger logger = LoggerFactory.getLogger("net");
 
     private static ScheduledExecutorService pingTimer =
@@ -232,7 +234,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.ethOutbound = channel.getNodeStatistics().ethOutbound.get();
 
         this.handshakeHelloMessage = msg;
-        if (msg.getP2PVersion() != VERSION) {
+        if (!isProtocolVersionSupported(msg.getP2PVersion())) {
             disconnect(ReasonCode.INCOMPATIBLE_PROTOCOL);
         }
         else {
@@ -320,6 +322,12 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
         this.channel = channel;
     }
 
+    public static boolean isProtocolVersionSupported(byte ver) {
+        for (byte v : SUPPORTED_VERSIONS) {
+            if (v == ver) return true;
+        }
+        return false;
+    }
 
     public List<Capability> getSupportedCapabilities(HelloMessage hello) {
         List<Capability> configCaps = configCapabilities.getConfigCapabilities();

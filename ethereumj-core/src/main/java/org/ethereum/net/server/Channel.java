@@ -92,7 +92,6 @@ public class Channel {
     private NodeStatistics nodeStatistics;
 
     private boolean discoveryMode;
-    MedianFrameCodec medianFrameCodec;
 
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
 
@@ -128,27 +127,42 @@ public class Channel {
     }
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, HelloMessage helloRemote) throws IOException, InterruptedException {
-        logger.debug("=== publicRLPxHandshakeFinished");
-        ctx.pipeline().addLast("medianFrameCodec", new MedianFrameCodec(handshakeHandler.frameCodec, this));
-        ctx.pipeline().addLast("messageCodec", messageCodec);
-//        logger.debug("=== remove(\"multiFrameCodec\")");
-//        ctx.pipeline().remove("multiFrameCodec");
-//        logger.debug("=== removed");
-//        medianFrameCodec.frameCodec = multiFrameCodec.frameCodec;
-        ctx.pipeline().addLast(Capability.P2P, p2pHandler);
 
-        p2pHandler.setChannel(this);
-        p2pHandler.setHandshake(helloRemote, ctx);
+        if (P2pHandler.isProtocolVersionSupported(helloRemote.getP2PVersion())) {
 
-        getNodeStatistics().rlpxHandshake.add();
+            if (helloRemote.getP2PVersion() < 5) {
+                messageCodec.setSupportChunkedFrames(false);
+            }
+
+            MedianFrameCodec medianFrameCodec = new MedianFrameCodec(handshakeHandler.frameCodec, this);
+            logger.debug("=== publicRLPxHandshakeFinished");
+            ctx.pipeline().addLast("medianFrameCodec", medianFrameCodec);
+            ctx.pipeline().addLast("messageCodec", messageCodec);
+            //        logger.debug("=== remove(\"multiFrameCodec\")");
+            //        ctx.pipeline().remove("multiFrameCodec");
+            //        logger.debug("=== removed");
+            //        medianFrameCodec.frameCodec = multiFrameCodec.frameCodec;
+            ctx.pipeline().addLast(Capability.P2P, p2pHandler);
+
+            p2pHandler.setChannel(this);
+            p2pHandler.setHandshake(helloRemote, ctx);
+
+            getNodeStatistics().rlpxHandshake.add();
+        }
     }
 
-    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId) throws IOException, InterruptedException {
+    public void sendHelloMessage(ChannelHandlerContext ctx, FrameCodec frameCodec, String nodeId,
+                                 HelloMessage inboundHelloMessage) throws IOException, InterruptedException {
 
         // in discovery mode we are supplying fake port along with fake nodeID to not receive
         // incoming connections with fake public key
         HelloMessage helloMessage = discoveryMode ? staticMessages.createHelloMessage(nodeId, 9) :
                 staticMessages.createHelloMessage(nodeId);
+
+        if (inboundHelloMessage != null && P2pHandler.isProtocolVersionSupported(inboundHelloMessage.getP2PVersion())) {
+            // the p2p version can be downgraded if requested by peer and supported by us
+            helloMessage.setP2pVersion(inboundHelloMessage.getP2PVersion());
+        }
 
         byte[] payload = helloMessage.getEncoded();
 

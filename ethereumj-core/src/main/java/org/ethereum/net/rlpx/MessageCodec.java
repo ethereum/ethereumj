@@ -4,6 +4,7 @@ import com.google.common.io.ByteStreams;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageCodec;
 import org.apache.commons.lang3.tuple.Pair;
+import org.ethereum.config.SystemProperties;
 import org.ethereum.listener.EthereumListener;
 import org.ethereum.manager.WorldManager;
 import org.ethereum.net.client.Capability;
@@ -23,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +42,9 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
-    private int maxFramePayloadSize = Integer.MAX_VALUE >> 1;
+    public static final int NO_FRAMING = Integer.MAX_VALUE >> 1;
+
+    private int maxFramePayloadSize = NO_FRAMING;
 
     private Channel channel;
     private MessageCodesResolver messageCodesResolver;
@@ -54,14 +58,28 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
     @Autowired
     WorldManager worldManager;
 
+    @Autowired
+    SystemProperties config;
+
+    private boolean supportChunkedFrames = true;
+
     Map<Integer, Pair<? extends List<Frame>, AtomicInteger>> incompleteFrames = new LRUMap<>(1, 16);
     // LRU avoids OOM on invalid peers
     AtomicInteger contextIdCounter = new AtomicInteger(1);
+
+    @PostConstruct
+    private void init() {
+        setMaxFramePayloadSize(config.rlpxMaxFrameSize());
+    }
 
     @Override
     protected void decode(ChannelHandlerContext ctx, Frame frame, List<Object> out) throws Exception {
         Frame completeFrame = null;
         if (frame.isChunked()) {
+            if (!supportChunkedFrames && frame.totalFrameSize > 0) {
+                throw new RuntimeException("Faming is not supported in this configuration.");
+            }
+
             Pair<? extends List<Frame>, AtomicInteger> frameParts = incompleteFrames.get(frame.contextId);
             if (frameParts == null) {
                 if (frame.totalFrameSize < 0) {
@@ -168,9 +186,16 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         return ret;
     }
 
+    public void setSupportChunkedFrames(boolean supportChunkedFrames) {
+        this.supportChunkedFrames = supportChunkedFrames;
+        if (!supportChunkedFrames) {
+            setMaxFramePayloadSize(NO_FRAMING);
+        }
+    }
+
     /* TODO: this dirty hack is here cause we need to use message
-       TODO: adaptive id on high message abstraction level,
-       TODO: need a solution here*/
+           TODO: adaptive id on high message abstraction level,
+           TODO: need a solution here*/
     private byte getCode(Enum msgCommand){
         byte code = 0;
 

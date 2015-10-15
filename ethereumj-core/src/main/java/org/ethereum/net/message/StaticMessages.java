@@ -39,7 +39,7 @@ public class StaticMessages {
     public HelloMessage createHelloMessage(String peerId, int listenPort) {
 
         String helloAnnouncement = buildHelloAnnouncement();
-        byte p2pVersion = P2pHandler.VERSION;
+        byte p2pVersion = (byte) config.defaultP2PVersion();
         List<Capability> capabilities = configCapabilities.getConfigCapabilities();
 
         return new HelloMessage(p2pVersion, helloAnnouncement,
