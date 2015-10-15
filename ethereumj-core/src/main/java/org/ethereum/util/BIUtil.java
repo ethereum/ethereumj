@@ -109,14 +109,7 @@ public class BIUtil {
         if (isMoreThan(first, second)) return true;
 
         BigInteger gap = second.subtract(first);
-        BigInteger onePercent = first.divide(BigInteger.valueOf(100));
-        BigInteger ratio = gap.divide(onePercent);
-
-        if (ratio.doubleValue() <= 20){
-            return true;
-        }
-
-        return false;
+        return !isMoreThan(gap.multiply(BigInteger.valueOf(5)), first);
     }
 
     public static BigInteger max(BigInteger first, BigInteger second) {
