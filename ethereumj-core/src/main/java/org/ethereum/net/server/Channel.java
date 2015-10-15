@@ -18,7 +18,7 @@ import org.ethereum.net.eth.message.Eth60MessageFactory;
 import org.ethereum.net.eth.message.Eth61MessageFactory;
 import org.ethereum.net.eth.message.Eth62MessageFactory;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.rlpx.MultiFrameCodec;
+import org.ethereum.net.rlpx.*;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.MessageFactory;
@@ -26,14 +26,11 @@ import org.ethereum.net.message.StaticMessages;
 import org.ethereum.net.p2p.HelloMessage;
 import org.ethereum.net.p2p.P2pHandler;
 import org.ethereum.net.p2p.P2pMessageFactory;
-import org.ethereum.net.rlpx.FrameCodec;
-import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.shh.ShhHandler;
 import org.ethereum.net.shh.ShhMessageFactory;
 import org.ethereum.net.swarm.bzz.BzzHandler;
-import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.swarm.bzz.BzzMessageFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +43,6 @@ import java.math.BigInteger;
 import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-
-import static org.ethereum.net.eth.EthVersion.V61;
-import static org.ethereum.net.eth.EthVersion.V62;
 
 /**
  * @author Roman Mandeleil
@@ -79,7 +73,7 @@ public class Channel {
     private MessageCodec messageCodec;
 
     @Autowired
-    private MultiFrameCodec multiFrameCodec;
+    private HandshakeHandler handshakeHandler;
 
     @Autowired
     private NodeManager nodeManager;
@@ -98,25 +92,30 @@ public class Channel {
     private NodeStatistics nodeStatistics;
 
     private boolean discoveryMode;
+    MedianFrameCodec medianFrameCodec;
 
     public void init(ChannelPipeline pipeline, String remoteId, boolean discoveryMode) {
 
+//        medianFrameCodec = new MedianFrameCodec(null, this);
+//        medianFrameCodec.multiFrameCodec = multiFrameCodec;
         pipeline.addLast("readTimeoutHandler",
                 new ReadTimeoutHandler(config.peerChannelReadTimeout(), TimeUnit.SECONDS));
-        pipeline.addLast("initiator", multiFrameCodec.getInitiator());
-        pipeline.addLast("multiFrameCodec", multiFrameCodec);
-        pipeline.addLast("messageCodec", messageCodec);
+        pipeline.addLast("initiator", handshakeHandler.getInitiator());
+        pipeline.addLast("multiFrameCodec", handshakeHandler);
+//        pipeline.addLast("medianFrameCodec", medianFrameCodec);
+//        pipeline.addLast("messageCodec", messageCodec);
+//        pipeline.addLast("messageCodec", messageCodec);
 
         this.discoveryMode = discoveryMode;
 
         if (discoveryMode) {
             // temporary key/nodeId to not accidentally smear our reputation with
             // unexpected disconnect
-            multiFrameCodec.generateTempKey();
+            handshakeHandler.generateTempKey();
         }
 
         messageCodec.setRemoteId(remoteId, this);
-        multiFrameCodec.setRemoteId(remoteId, this);
+        handshakeHandler.setRemoteId(remoteId, this);
 
         p2pHandler.setMsgQueue(msgQueue);
         messageCodec.setP2pMessageFactory(new P2pMessageFactory());
@@ -129,6 +128,13 @@ public class Channel {
     }
 
     public void publicRLPxHandshakeFinished(ChannelHandlerContext ctx, HelloMessage helloRemote) throws IOException, InterruptedException {
+        logger.debug("=== publicRLPxHandshakeFinished");
+        ctx.pipeline().addLast("medianFrameCodec", new MedianFrameCodec(handshakeHandler.frameCodec, this));
+        ctx.pipeline().addLast("messageCodec", messageCodec);
+//        logger.debug("=== remove(\"multiFrameCodec\")");
+//        ctx.pipeline().remove("multiFrameCodec");
+//        logger.debug("=== removed");
+//        medianFrameCodec.frameCodec = multiFrameCodec.frameCodec;
         ctx.pipeline().addLast(Capability.P2P, p2pHandler);
 
         p2pHandler.setChannel(this);

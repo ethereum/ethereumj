@@ -5,6 +5,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 import io.netty.handler.codec.ByteToMessageCodec;
+import io.netty.handler.codec.ByteToMessageDecoder;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.ECIESCoder;
 import org.ethereum.crypto.ECKey;
@@ -43,7 +44,7 @@ import static org.ethereum.net.rlpx.FrameCodec.Frame;
  */
 @Component
 @Scope("prototype")
-public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
+public class HandshakeHandler extends ByteToMessageDecoder  /*ChannelInboundHandlerAdapter*/ {
 
     @Autowired
     SystemProperties config;
@@ -51,7 +52,7 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
     private static final Logger loggerWire = LoggerFactory.getLogger("wire");
     private static final Logger loggerNet = LoggerFactory.getLogger("net");
 
-    private FrameCodec frameCodec;
+    public FrameCodec frameCodec;
     private ECKey myKey;
     private byte[] nodeId;
     private byte[] remoteId;
@@ -79,11 +80,11 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
         }
     }
 
-    public MultiFrameCodec() {
+    public HandshakeHandler() {
     }
 
     // for testing purposes
-    MultiFrameCodec(ECKey myKey, EncryptionHandshake.Secrets secrets) {
+    HandshakeHandler(ECKey myKey, EncryptionHandshake.Secrets secrets) {
         this.myKey = myKey;
         nodeId = myKey.getNodeId();
         frameCodec = new FrameCodec(secrets);
@@ -94,17 +95,33 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
         myKey = config.getMyKey();
     }
 
+
     @Override
+    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        if (isHandshakeDone) {
+            loggerWire.debug("=== ctx.fireChannelRead: " + ((ByteBuf) msg).readableBytes());
+            ctx.fireChannelRead(msg);
+        } else {
+            super.channelRead(ctx, msg);
+            if (isHandshakeDone) {
+                loggerWire.debug("=== ctx.fireChannelRead: " + ((ByteBuf) msg).readableBytes());
+                ctx.fireChannelRead(msg);
+            }
+        }
+    }
+
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
         loggerWire.debug("Received packet bytes: " + in.readableBytes());
         if (!isHandshakeDone) {
-            loggerWire.debug("Decoding handshake...");
+            loggerWire.debug("Decoding handshake... (" + in.readableBytes() + " bytes available)");
             decodeHandshake(ctx, in);
-        } else
-            decodeMessage(ctx, in, out);
+            loggerWire.debug("Decoded handshake (" + in.readableBytes() + " bytes available)");
+            in.retain();
+        }
+//            decodeMessage(ctx, in, out);
     }
 
-    private void decodeMessage(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws IOException {
+    public void decodeMessage(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws IOException {
         if (in.readableBytes() == 0) return;
 
         List<Frame> frames = frameCodec.readFrames(in);
@@ -122,11 +139,10 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
         }
 
         out.addAll(frames);
-//        channel.getNodeStatistics().rlpxInMessages.add();
+        channel.getNodeStatistics().rlpxInMessages.add();
     }
 
-    @Override
-    protected void encode(ChannelHandlerContext ctx, Frame frame, ByteBuf out) throws Exception {
+    public void encode(ChannelHandlerContext ctx, Frame frame, ByteBuf out) throws Exception {
 
         frameCodec.writeFrame(frame, out);
 
@@ -159,7 +175,7 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
     }
 
     // consume handshake, producing no resulting message to upper layers
-    private void decodeHandshake(ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
+    private void decodeHandshake(final ChannelHandlerContext ctx, ByteBuf buffer) throws Exception {
 
         if (handshake.isInitiator()) {
             if (frameCodec == null) {
@@ -176,6 +192,17 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
                 this.frameCodec = new FrameCodec(secrets);
 
                 loggerNet.info("auth exchange done");
+//                new Thread(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        try {
+//                            Thread.sleep(500);
+//                            channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
+//                        } catch (Exception e) {
+//                            e.printStackTrace();
+//                        }
+//                    }
+//                }).start();
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
             } else {
                 loggerWire.info("MessageCodec: Buffer bytes: " + buffer.readableBytes());
@@ -262,8 +289,8 @@ public class MultiFrameCodec extends ByteToMessageCodec<Frame> {
                 HelloMessage helloMessage = (HelloMessage) message;
 
                 // Secret authentication finish here
-                isHandshakeDone = true;
                 channel.sendHelloMessage(ctx, frameCodec, Hex.toHexString(nodeId));
+                isHandshakeDone = true;
                 this.channel.publicRLPxHandshakeFinished(ctx, helloMessage);
             }
         }
