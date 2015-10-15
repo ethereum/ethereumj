@@ -5,6 +5,8 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigRenderOptions;
 import org.ethereum.crypto.ECKey;
+import org.ethereum.net.p2p.P2pHandler;
+import org.ethereum.net.rlpx.MessageCodec;
 import org.ethereum.net.rlpx.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -230,6 +232,17 @@ public class SystemProperties {
     public int peerConnectionTimeout() {
         return config.getInt("peer.connection.timeout") * 1000;
     }
+
+    @ValidateMe
+    public int defaultP2PVersion() {
+        return config.hasPath("peer.p2p.version") ? config.getInt("peer.p2p.version") : P2pHandler.VERSION;
+    }
+
+    @ValidateMe
+    public int rlpxMaxFrameSize() {
+        return config.hasPath("peer.p2p.framing.maxSize") ? config.getInt("peer.p2p.framing.maxSize") : MessageCodec.NO_FRAMING;
+    }
+
 
     @ValidateMe
     public int transactionApproveTimeout() {
