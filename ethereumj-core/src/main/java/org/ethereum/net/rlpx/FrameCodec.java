@@ -32,7 +32,10 @@ public class FrameCodec {
     private final SHA3Digest ingressMac;
     private final byte[] mac;
     boolean isHeadRead;
-    private int totalBodySize; // TODO useless field
+    private int totalBodySize;
+    private int contextId = -1;
+    private int totalFrameSize = -1;
+    private int protocol;
 
     public FrameCodec(EncryptionHandshake.Secrets secrets) {
         this.mac = secrets.mac;
@@ -145,8 +148,6 @@ public class FrameCodec {
     }
 
     public List<Frame> readFrames(DataInput inp) throws IOException {
-        int contextId = -1;
-        int totalFrameSize = -1;
         if (!isHeadRead) {
             byte[] headBuffer = new byte[32];
             try {
@@ -165,7 +166,9 @@ public class FrameCodec {
 
             RLPList rlpList = (RLPList) decode2OneItem(headBuffer, 3);
 
-            int protocol = Util.rlpDecodeInt(rlpList.get(0));
+            protocol = Util.rlpDecodeInt(rlpList.get(0));
+            contextId = -1;
+            totalFrameSize = -1;
             if (rlpList.size() > 1) {
                 contextId = Util.rlpDecodeInt(rlpList.get(1));
                 if (rlpList.size() > 2) {
