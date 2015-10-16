@@ -102,6 +102,10 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
 
             frameParts.getLeft().add(frame);
             int curSize = frameParts.getRight().addAndGet(frame.size);
+
+            if (loggerWire.isDebugEnabled())
+                loggerWire.debug("Recv: Chunked (" + curSize + " of " + frameParts.getLeft().get(0).totalFrameSize + ") [size: " + frame.getSize() + "]");
+
             if (curSize > frameParts.getLeft().get(0).totalFrameSize) {
                 loggerNet.warn("The total frame chunks size (" + curSize + ") is greater than expected (" + frameParts.getLeft().get(0).totalFrameSize + "). Discarding the frame.");
                 incompleteFrames.remove(frame.contextId);
@@ -133,7 +137,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
         Message msg = createMessage((byte) frameType, payload);
 
         if (loggerNet.isInfoEnabled())
-            loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg);
+            loggerNet.info("From: \t{} \tRecv: \t{}", channel, msg.toString());
 
         EthereumListener listener = worldManager.getListener();
         listener.onRecvMessage(msg);
@@ -179,6 +183,7 @@ public class MessageCodec extends MessageToMessageCodec<Frame, Message> {
             // frame has been split
             int contextId = contextIdCounter.getAndIncrement();
             ret.get(0).totalFrameSize = bytes.length;
+            loggerWire.debug("Message (size " + bytes.length + ") split to " + ret.size() + " frames. Context-id: " + contextId);
             for (Frame frame : ret) {
                 frame.contextId = contextId;
             }
