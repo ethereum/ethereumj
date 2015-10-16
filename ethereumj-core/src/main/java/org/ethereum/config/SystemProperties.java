@@ -82,18 +82,18 @@ public class SystemProperties {
     private Boolean discoveryEnabled = null;
 
     public SystemProperties() {
-        this((Reader) null);
+        this(ConfigFactory.empty());
     }
 
-    public SystemProperties(File configFile) throws FileNotFoundException {
-        this(new FileReader(configFile));
+    public SystemProperties(File configFile) {
+        this(ConfigFactory.parseFile(configFile));
     }
 
-    public SystemProperties(String configResource) throws FileNotFoundException {
-        this(new InputStreamReader(ClassLoader.getSystemResourceAsStream(configResource)));
+    public SystemProperties(String configResource) {
+        this(ConfigFactory.parseResources(configResource));
     }
 
-    private SystemProperties(Reader apiConfigReader) {
+    public SystemProperties(Config apiConfig) {
         try {
             Config javaSystemProperties = ConfigFactory.load("no-such-resource-only-system-props");
             Config referenceConfig = ConfigFactory.parseResources("ethereumj.conf");
@@ -111,8 +111,7 @@ public class SystemProperties {
             Config cmdLineConfig = file != null ? ConfigFactory.parseFile(new File(file)) :
                     ConfigFactory.empty();
             logger.info("Config (" + (cmdLineConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): user properties from -Dethereumj.conf.file file '" + file + "'");
-            Config apiConfig = apiConfigReader != null ? ConfigFactory.parseReader(apiConfigReader) : ConfigFactory.empty();
-            logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor: " + apiConfigReader);
+            logger.info("Config (" + (apiConfig.entrySet().size() > 0 ? " yes " : " no  ") + "): config passed via constructor");
             config = javaSystemProperties
                     .withFallback(apiConfig)
                     .withFallback(cmdLineConfig)
@@ -197,6 +196,13 @@ public class SystemProperties {
                 throw new RuntimeException("Error validating config method: " + method, e);
             }
         }
+    }
+
+    public <T> T getProperty(String propName, T defaultValue) {
+        if (!config.hasPath(propName)) return defaultValue;
+        String string = config.getString(propName);
+        if (string.trim().isEmpty()) return defaultValue;
+        return (T) config.getAnyRef(propName);
     }
 
     @ValidateMe

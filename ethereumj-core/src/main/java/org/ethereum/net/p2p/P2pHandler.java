@@ -1,5 +1,6 @@
 package org.ethereum.net.p2p;
 
+import org.ethereum.config.SystemProperties;
 import org.ethereum.core.Block;
 import org.ethereum.core.Transaction;
 import org.ethereum.manager.WorldManager;
@@ -82,6 +83,9 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
 
     @Autowired
     ConfigCapabilities configCapabilities;
+
+    @Autowired
+    SystemProperties config;
 
     private Channel channel;
     private ScheduledFuture<?> pingTask;
@@ -305,7 +309,7 @@ public class P2pHandler extends SimpleChannelInboundHandler<P2pMessage> {
             public void run() {
                 msgQueue.sendMessage(PING_MESSAGE);
             }
-        }, 2, 5, TimeUnit.SECONDS);
+        }, 2, config.getProperty("peer.p2p.pingInterval", 5), TimeUnit.SECONDS);
     }
 
     public void killTimers() {
