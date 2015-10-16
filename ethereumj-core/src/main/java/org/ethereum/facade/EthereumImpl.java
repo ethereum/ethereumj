@@ -13,6 +13,7 @@ import org.ethereum.net.peerdiscovery.PeerInfo;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.server.ChannelManager;
 import org.ethereum.net.server.PeerServer;
+import org.ethereum.net.shh.Whisper;
 import org.ethereum.net.submit.TransactionExecutor;
 import org.ethereum.net.submit.TransactionTask;
 import org.ethereum.util.ByteUtil;
@@ -63,6 +64,9 @@ public class EthereumImpl implements Ethereum {
 
     @Autowired
     ProgramInvokeFactory programInvokeFactory;
+
+    @Autowired
+    Whisper whisper;
 
     @Autowired
     SystemProperties config;
@@ -306,6 +310,11 @@ public class EthereumImpl implements Ethereum {
     @Override
     public BlockLoader getBlockLoader(){
         return  blockLoader;
+    }
+
+    @Override
+    public Whisper getWhisper() {
+        return whisper;
     }
 
     @Override
