@@ -241,7 +241,7 @@ public class WhisperMessage extends ShhMessage {
     /***********   Encode routines   ************/
 
     public WhisperMessage setTopics(Topic ... topics) {
-        this.topics = topics;
+        this.topics = topics != null ? topics : new Topic[0];
         return this;
     }
 
