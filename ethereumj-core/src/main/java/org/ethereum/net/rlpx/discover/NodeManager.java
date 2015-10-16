@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -37,7 +38,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
 
     // to avoid checking for null
     private static NodeStatistics DUMMY_STAT = new NodeStatistics(new Node(new byte[0], "dummy.node", 0));
-    private static final boolean PERSIST = SystemProperties.CONFIG.peerDiscoveryPersist();
+    private boolean PERSIST;
 
     private static final long LISTENER_REFRESH_RATE = 1000;
     private static final long DB_COMMIT_RATE = 10000;
@@ -52,6 +53,9 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     @Autowired
     WorldManager worldManager;
 
+    @Autowired
+    SystemProperties config = SystemProperties.CONFIG;
+
     Functional.Consumer<DiscoveryEvent> messageSender;
 
     NodeTable table;
@@ -63,7 +67,7 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     // option to handle inbounds only from known peers (i.e. which were discovered by ourselves)
     boolean inboundOnlyFromKnownNodes = true;
 
-    private boolean discoveryEnabled = SystemProperties.CONFIG.peerDiscovery();
+    private boolean discoveryEnabled;
 
     private Map<DiscoverListener, ListenerHandler> listeners = new IdentityHashMap<>();
 
@@ -72,9 +76,22 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
     private boolean inited = false;
 
     public NodeManager() {
-        key = CONFIG.getMyKey();
-        homeNode = new Node(CONFIG.nodeId(), CONFIG.externalIp(), CONFIG.listenPort());
-        table = new NodeTable(homeNode, CONFIG.isPublicHomeNode());
+    }
+
+//    public NodeManager(NodeTable table, ECKey key) {
+//        this.table = table;
+//        homeNode = table.getNode();
+//        this.key = key;
+//    }
+
+    @PostConstruct
+    void init() {
+        PERSIST = config.peerDiscoveryPersist();
+        discoveryEnabled = config.peerDiscovery();
+
+        key = config.getMyKey();
+        homeNode = new Node(config.nodeId(), config.externalIp(), config.listenPort());
+        table = new NodeTable(homeNode, config.isPublicHomeNode());
 
         Timer timer = new Timer();
         timer.scheduleAtFixedRate(new TimerTask() {
@@ -83,12 +100,6 @@ public class NodeManager implements Functional.Consumer<DiscoveryEvent>{
                 logger.trace("Statistics:\n {}", dumpAllStatistics());
             }
         }, 1 * 1000, 10 * 1000);
-    }
-
-    public NodeManager(NodeTable table, ECKey key) {
-        this.table = table;
-        homeNode = table.getNode();
-        this.key = key;
     }
 
     void setBootNodes(List<Node> bootNodes) {
