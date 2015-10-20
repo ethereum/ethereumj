@@ -81,9 +81,8 @@ public class ChannelManager {
 
     private void process(Channel peer) {
         if(peer.hasEthStatusSucceeded()) {
-            // prohibit transactions processing until main sync is done
-            if (!syncManager.isSyncDone()) {
-                peer.prohibitTransactionProcessing();
+            if (syncManager.isSyncDone()) {
+                peer.onSyncDone();
             }
             syncManager.addPeer(peer);
             activePeers.put(peer.getNodeIdWrapper(), peer);

@@ -345,7 +345,7 @@ public class SyncManager {
         masterVersion = master.getEthVersion();
 
         if (gapBlock != null) {
-            master.setLastHashToAsk(gapBlock.getParentHash());
+            master.setLastHashToAsk(gapBlock.getHash());
         } else {
             master.setLastHashToAsk(master.getBestKnownHash());
             queue.clearHashes();
