@@ -206,7 +206,7 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
             // FIXME: adding block with no option for flush
             add(block);
         } catch (Throwable th) {
-            th.printStackTrace(); /* todo */
+            logger.error("Unexpected error: ", th);
         } finally {this.fork = false;}
 
         if (isMoreThan(this.totalDifficulty, savedTD)) {
