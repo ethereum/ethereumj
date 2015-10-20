@@ -65,8 +65,8 @@ public class RepositoryImpl implements Repository , org.ethereum.facade.Reposito
 
     private boolean isSnapshot = false;
 
-    @Autowired
-    SystemProperties config;
+//    @Autowired  TODO autowire
+    SystemProperties config = SystemProperties.CONFIG;
 
     public RepositoryImpl() {
 
