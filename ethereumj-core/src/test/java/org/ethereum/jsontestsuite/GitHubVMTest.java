@@ -32,9 +32,6 @@ public class GitHubVMTest {
     public void testArithmeticFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
         // TODO: these are excluded due to bad wrapping behavior in ADDMOD/DataWord.add
-        excluded.add("addmod1_overflowDiff");
-        excluded.add("addmod1_overflow3");
-        excluded.add("addmodBigIntCast");
         String json = JSONReader.loadJSONFromCommit("VMTests/vmArithmeticTest.json", shacommit);
         //String json = JSONReader.getTestBlobForTreeSha(shacommit, "vmArithmeticTest.json");
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
