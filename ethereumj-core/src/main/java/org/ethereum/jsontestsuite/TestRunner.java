@@ -223,7 +223,7 @@ public class TestRunner {
                 if (vmDidThrowAnEception) {
                     String output =
                             String.format("VM threw an unexpected exception: " + e.toString());
-                    logger.info(output);
+                    logger.info(output, e);
                     results.add(output);
                     return results;
                 }
