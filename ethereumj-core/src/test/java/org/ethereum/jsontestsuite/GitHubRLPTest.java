@@ -54,10 +54,6 @@ public class GitHubRLPTest {
         logger.info("    Testing RLP decoding...");
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("emptystring");
-        excluded.add("mediumint4");
-        excluded.add("mediumint5");
-        excluded.add("bigint");
 
         for (String key : TEST_SUITE.keySet()) {
             if ( excluded.contains(key)) {
