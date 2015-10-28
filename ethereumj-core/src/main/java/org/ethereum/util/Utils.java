@@ -13,6 +13,7 @@ import java.security.SecureRandom;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -159,5 +160,23 @@ public class Utils {
             off += ts.length;
         }
         return ret;
+    }
+
+    public static String align(String s, char fillChar, int targetLen, boolean alignRight) {
+        if (targetLen <= s.length()) return s;
+        String alignString = repeat("" + fillChar, targetLen - s.length());
+        return alignRight ? alignString + s : s + alignString;
+
+    }
+    public static String repeat(String s, int n) {
+        if (s.length() == 1) {
+            byte[] bb = new byte[n];
+            Arrays.fill(bb, s.getBytes()[0]);
+            return new String(bb);
+        } else {
+            StringBuilder ret = new StringBuilder();
+            for (int i = 0; i < n; i++) ret.append(s);
+            return ret.toString();
+        }
     }
 }
