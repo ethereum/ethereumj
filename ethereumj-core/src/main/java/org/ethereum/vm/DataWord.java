@@ -282,6 +282,7 @@ public class DataWord implements Comparable<DataWord> {
         if (word1.data[0] != 0 || data[0] != 0) {
             // overflow possible: slower path
             this.mod(word2);
+            word1 = word1.clone();
             word1.mod(word2);
         }
         this.add(word1);
