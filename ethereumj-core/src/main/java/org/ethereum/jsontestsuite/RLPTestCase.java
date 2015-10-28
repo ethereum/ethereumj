@@ -5,7 +5,6 @@ import org.ethereum.util.ByteUtil;
 import org.ethereum.util.RLP;
 import org.ethereum.util.RLPElement;
 import org.ethereum.util.RLPList;
-import org.json.simple.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
@@ -84,13 +83,13 @@ public class RLPTestCase {
     }
 
     public void checkRLPAgainstJson(RLPElement element, Object in) {
-        if (in instanceof JSONArray) {
-            Object[] array = ((JSONArray) in).toArray();
+        if (in instanceof List) {
+            Object[] array = ((List) in).toArray();
             RLPList list = (RLPList) element;
             for (int i = 0; i < array.length; i++) {
                 checkRLPAgainstJson(list.get(i), array[i]);
             }
-        } else if (in instanceof Long) {
+        } else if (in instanceof Number) {
             int computed = ByteUtil.byteArrayToInt(element.getRLPData());
             this.computed.add(Integer.toString(computed));
             this.expected.add(in.toString());
@@ -111,6 +110,8 @@ public class RLPTestCase {
                 this.expected.add(expected);
                 this.computed.add(s);
             }
+        } else {
+            throw new RuntimeException("Unexpected type: " + in.getClass());
         }
     }
 }
