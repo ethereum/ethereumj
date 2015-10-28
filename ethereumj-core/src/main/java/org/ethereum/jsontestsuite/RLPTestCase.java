@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
@@ -99,15 +100,13 @@ public class RLPTestCase {
             if (s.contains("#")) {
                 s = s.substring(1);
                 BigInteger expected = new BigInteger(s);
-                byte[] payload = Hex.decode(element.getRLPData());
-                BigInteger computed = RLP.decodeBigInteger(payload, 0);
+                byte[] payload = element.getRLPData();
+                BigInteger computed = new BigInteger(1, payload);
                 this.computed.add(computed.toString());
                 this.expected.add(expected.toString());
             } else {
-                String expected = null;
-                try {
-                    expected = new String(element.getRLPData(), "UTF-8");
-                } catch (Exception e) {}
+                String expected = new String(element.getRLPData() != null ? element.getRLPData() :
+                        new byte[0], StandardCharsets.UTF_8);
                 this.expected.add(expected);
                 this.computed.add(s);
             }
