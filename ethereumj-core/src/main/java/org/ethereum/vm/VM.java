@@ -934,8 +934,7 @@ public class VM {
                 break;
                 case JUMP: {
                     DataWord pos = program.stackPop();
-                    int nextPC = pos.intValue(); // possible overflow
-                    program.verifyJumpDest(nextPC);
+                    int nextPC = program.verifyJumpDest(pos);
 
                     if (logger.isInfoEnabled())
                         hint = "~> " + nextPC;
@@ -949,9 +948,7 @@ public class VM {
                     DataWord cond = program.stackPop();
 
                     if (!cond.isZero()) {
-
-                        int nextPC = pos.intValue(); // possible overflow
-                        program.verifyJumpDest(nextPC);
+                        int nextPC = program.verifyJumpDest(pos);
 
                         if (logger.isInfoEnabled())
                             hint = "~> " + nextPC;

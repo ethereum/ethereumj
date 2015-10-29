@@ -893,11 +893,11 @@ public class Program {
         }
 
         public OpCode getCurOpcode() {
-            return OpCode.code(code[pc]);
+            return pc < code.length ? OpCode.code(code[pc]) : null;
         }
 
         public boolean isPush() {
-            return getCurOpcode().name().startsWith("PUSH");
+            return getCurOpcode() != null ? getCurOpcode().name().startsWith("PUSH") : false;
         }
 
         public byte[] getCurOpcodeArg() {
@@ -990,10 +990,15 @@ public class Program {
         this.listener = listener;
     }
 
-    public void verifyJumpDest(int nextPC) {
-        if (!jumpdest.contains(nextPC)) {
-            throw Program.Exception.badJumpDestination(nextPC);
+    public int verifyJumpDest(DataWord nextPC) {
+        if (nextPC.bytesOccupied() > 4) {
+            throw Program.Exception.badJumpDestination(-1);
         }
+        int ret = nextPC.intValue();
+        if (!jumpdest.contains(ret)) {
+            throw Program.Exception.badJumpDestination(ret);
+        }
+        return ret;
     }
 
     public void callToPrecompiledAddress(MessageCall msg, PrecompiledContract contract) {
