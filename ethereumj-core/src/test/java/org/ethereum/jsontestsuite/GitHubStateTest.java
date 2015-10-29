@@ -18,7 +18,7 @@ import static org.ethereum.jsontestsuite.JSONReader.getFileNamesForTreeSha;
 public class GitHubStateTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "28bc05a2e2b60b8d99bc99313047c239d53aa298";
+    public String shacommit = "25912e023e7cf25c33ed6dff078df0c941f2c7d6";
 
 
     @Ignore

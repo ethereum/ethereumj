@@ -23,6 +23,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class GitHubBasicTest {
 
     private static final Logger logger = LoggerFactory.getLogger("TCK-Test");
+    String shacommit = "25912e023e7cf25c33ed6dff078df0c941f2c7d6";
 
     @Before
     public void setup() {
@@ -35,7 +36,6 @@ public class GitHubBasicTest {
     @Test
     public void runDifficultyTest() throws IOException, ParseException {
 
-        String shacommit = "b814f9fb484889bda407f2b9349983f211b77753";
         String json = JSONReader.loadJSONFromCommit("BasicTests/difficulty.json", shacommit);
 
         DifficultyTestSuite testSuite = new DifficultyTestSuite(json);

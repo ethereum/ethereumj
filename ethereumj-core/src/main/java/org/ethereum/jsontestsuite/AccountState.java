@@ -41,14 +41,14 @@ public class AccountState {
 
         JSONObject store = (JSONObject) accountState.get("storage");
 
-        this.balance = new BigInteger(balance).toByteArray();
+        this.balance = TestCase.toBigInt(balance).toByteArray();
 
         if (code != null && code.length() > 2)
             this.code = Hex.decode(code.substring(2));
         else
             this.code = ByteUtil.EMPTY_BYTE_ARRAY;
 
-        this.nonce = new BigInteger(nonce).toByteArray();
+        this.nonce = TestCase.toBigInt(nonce).toByteArray();
 
         int size = store.keySet().size();
         Object[] keys = store.keySet().toArray();

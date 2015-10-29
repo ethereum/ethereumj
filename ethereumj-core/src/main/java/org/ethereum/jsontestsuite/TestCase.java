@@ -78,7 +78,7 @@ public class TestCase {
             String gasString = "0";
             if (testCaseJSONObj.containsKey("gas"))
                 gasString = testCaseJSONObj.get("gas").toString();
-            this.gas = BigIntegers.asUnsignedByteArray(new BigInteger(gasString));
+            this.gas = BigIntegers.asUnsignedByteArray(toBigInt(gasString));
 
             String outString = null;
             if (testCaseJSONObj.containsKey("out"))
@@ -119,7 +119,17 @@ public class TestCase {
               this.exec = new Exec(execJSON);
 
         } catch (Throwable e) {
+            e.printStackTrace();
             throw new ParseException(0, e);
+        }
+    }
+
+    static BigInteger toBigInt(String s) {
+        if (s.startsWith("0x")) {
+            if (s.equals("0x")) return new BigInteger("0");
+            return new BigInteger(s.substring(2), 16);
+        } else {
+            return new BigInteger(s);
         }
     }
 

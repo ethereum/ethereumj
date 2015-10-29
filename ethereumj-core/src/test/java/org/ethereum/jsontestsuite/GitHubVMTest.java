@@ -18,7 +18,7 @@ public class GitHubVMTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
     //Last known good commit: 5af1002b96f34cd2c9252c1a6636826d47411ccd
-    public String shacommit = "5af1002b96f34cd2c9252c1a6636826d47411ccd";
+    public String shacommit = "25912e023e7cf25c33ed6dff078df0c941f2c7d6";
 
     //@Ignore
     @Test
