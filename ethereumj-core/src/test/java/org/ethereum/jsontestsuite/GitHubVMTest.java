@@ -66,6 +66,11 @@ public class GitHubVMTest {
     @Test // testing full suite
     public void testIOandFlowOperationsFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
+        excluded.add("jumpToUint64maxPlus1");
+        excluded.add("jumpiToUint64maxPlus1");
+        excluded.add("mstore_mload0");
+        excluded.add("jumpToUintmaxPlus1");
+        excluded.add("jumpiToUintmaxPlus1");
         String json = JSONReader.loadJSONFromCommit("VMTests/vmIOandFlowOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonVMTest(json, excluded);
     }
