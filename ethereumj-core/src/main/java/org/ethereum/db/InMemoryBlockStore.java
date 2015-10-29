@@ -20,7 +20,7 @@ import static org.ethereum.util.ByteUtil.wrap;
  * Created on: 29/01/2015 20:43
  */
 
-public class InMemoryBlockStore implements BlockStore{
+public class InMemoryBlockStore extends AbstractBlockstore{
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 

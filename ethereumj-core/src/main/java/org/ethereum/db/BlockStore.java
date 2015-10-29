@@ -14,6 +14,13 @@ public interface BlockStore {
 
     byte[] getBlockHashByNumber(long blockNumber);
 
+    /**
+     * Gets the block hash by its index.
+     * When more than one block with the specified index exists (forks)
+     * the select the block which is ancestor of the branchBlockHash
+     */
+    byte[] getBlockHashByNumber(long blockNumber, byte[] branchBlockHash);
+
     Block getChainBlockByNumber(long blockNumber);
 
     Block getBlockByHash(byte[] hash);

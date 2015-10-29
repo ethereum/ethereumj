@@ -605,8 +605,8 @@ public class Program {
 
     public DataWord getBlockHash(int index) {
         return index < this.getNumber().longValue() && index >= Math.max(256, this.getNumber().intValue()) - 256 ?
-                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index)) :
-                DataWord.ZERO;
+                new DataWord(this.invoke.getBlockStore().getBlockHashByNumber(index, getPrevHash().getData())) :
+                DataWord.ZERO.clone();
     }
 
     public DataWord getBalance(DataWord address) {

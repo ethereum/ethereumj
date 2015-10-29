@@ -19,7 +19,7 @@ import static java.math.BigInteger.ZERO;
 import static org.ethereum.crypto.HashUtil.shortHash;
 import static org.spongycastle.util.Arrays.areEqual;
 
-public class IndexedBlockStore implements BlockStore{
+public class IndexedBlockStore extends AbstractBlockstore{
 
     private static final Logger logger = LoggerFactory.getLogger("general");
 
