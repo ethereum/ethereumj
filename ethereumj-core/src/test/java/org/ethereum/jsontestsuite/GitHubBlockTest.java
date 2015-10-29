@@ -17,7 +17,7 @@ import static org.ethereum.config.SystemProperties.CONFIG;
 public class GitHubBlockTest {
 
     //SHACOMMIT of tested commit, ethereum/tests.git
-    public String shacommit = "bd07ab22cdc811bd553ef199a8585a0eb1862b28";
+    public String shacommit = "25912e023e7cf25c33ed6dff078df0c941f2c7d6";
 
     @Test
     public void runSingleTest() throws ParseException, IOException {
@@ -34,7 +34,7 @@ public class GitHubBlockTest {
     public void runBCInvalidHeaderTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcInvalidHeaderTest.json", shacommit);
-        GitHubJSONTestSuite.runGitHubJsonBlockTest(json,excluded);
+        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
 
@@ -132,5 +132,11 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-
+    @Test
+    public void runBCMultiChainTest() throws ParseException, IOException {
+        String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcMultiChainTest.json", shacommit);
+        Set<String> excluded = new HashSet<>();
+        excluded.add("ChainAtoChainBCallContractFormA");
+        GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
+    }
 }

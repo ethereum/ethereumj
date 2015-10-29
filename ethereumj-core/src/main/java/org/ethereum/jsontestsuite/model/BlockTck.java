@@ -9,6 +9,7 @@ public class BlockTck {
     List<BlockHeaderTck> uncleHeaders;
     String rlp;
     String blocknumber;
+    String chainname;
 
     public BlockTck() {
     }
@@ -19,6 +20,14 @@ public class BlockTck {
 
     public void setBlocknumber(String blocknumber) {
         this.blocknumber = blocknumber;
+    }
+
+    public String getChainname() {
+        return chainname;
+    }
+
+    public void setChainname(String chainname) {
+        this.chainname = chainname;
     }
 
     public BlockHeaderTck getBlockHeader() {
