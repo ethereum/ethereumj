@@ -47,8 +47,8 @@ public class IndexedBlockStore extends AbstractBlockstore{
         Block bestBlock = getChainBlockByNumber(maxLevel);
         if (bestBlock != null) return  bestBlock;
 
-        // That can scenario can happen
-        // if there is fork branch that is
+        // That scenario can happen
+        // if there is a fork branch that is
         // higher than main branch but has
         // less TD than the main branch TD
         while (bestBlock == null){
