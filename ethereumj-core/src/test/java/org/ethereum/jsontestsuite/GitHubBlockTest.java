@@ -136,7 +136,6 @@ public class GitHubBlockTest {
     public void runBCMultiChainTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcMultiChainTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-        excluded.add("ChainAtoChainBCallContractFormA");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 }
