@@ -1,5 +1,6 @@
 package org.ethereum.jsontestsuite;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.core.Block;
 import org.ethereum.core.BlockchainImpl;
 import org.ethereum.core.ImportResult;
@@ -80,7 +81,8 @@ public class TestRunner {
         EthereumListener listener = new CompositeEthereumListener();
         ProgramInvokeFactoryImpl programInvokeFactory = new ProgramInvokeFactoryImpl();
 
-        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener);
+        BlockchainImpl blockchain = new BlockchainImpl(blockStore, repository, wallet, adminInfo, listener,
+                new CommonConfig().parentHeaderValidator());
         blockchain.byTest = true;
 
         blockchain.setBestBlock(genesis);

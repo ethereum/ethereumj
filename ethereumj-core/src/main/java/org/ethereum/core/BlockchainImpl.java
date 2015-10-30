@@ -1,5 +1,6 @@
 package org.ethereum.core;
 
+import org.ethereum.config.CommonConfig;
 import org.ethereum.config.SystemProperties;
 import org.ethereum.crypto.HashUtil;
 import org.ethereum.db.BlockStore;
@@ -120,12 +121,13 @@ public class BlockchainImpl implements Blockchain, org.ethereum.facade.Blockchai
     //todo: autowire over constructor
     public BlockchainImpl(BlockStore blockStore, Repository repository,
                           Wallet wallet, AdminInfo adminInfo,
-                          EthereumListener listener) {
+                          EthereumListener listener, ParentBlockHeaderValidator parentHeaderValidator) {
         this.blockStore = blockStore;
         this.repository = repository;
         this.wallet = wallet;
         this.adminInfo = adminInfo;
         this.listener = listener;
+        this.parentHeaderValidator = parentHeaderValidator;
     }
 
     @Override
