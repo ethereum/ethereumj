@@ -720,12 +720,12 @@ public class VM {
                         fullCode = program.getCodeAt(address);
                     }
 
-                    int memOffset = program.stackPop().intValue();
-                    int codeOffset = program.stackPop().intValue();
-                    int lengthData = program.stackPop().intValue();
+                    int memOffset = program.stackPop().intValueSafe();
+                    int codeOffset = program.stackPop().intValueSafe();
+                    int lengthData = program.stackPop().intValueSafe();
 
                     int sizeToBeCopied =
-                            codeOffset + lengthData > fullCode.length ?
+                            (long) codeOffset + lengthData > fullCode.length ?
                                     (fullCode.length < codeOffset ? 0 : fullCode.length - codeOffset)
                                     : lengthData;
 
@@ -1144,7 +1144,7 @@ public class VM {
 
             vmCounter++;
         } catch (RuntimeException e) {
-            logger.warn("VM halted: [{}]", e.toString());
+            logger.warn("VM halted: [{}]", e);
             program.spendAllGas();
             program.resetFutureRefund();
             program.stop();
@@ -1161,7 +1161,7 @@ public class VM {
                 storageDictHandler.vmStartPlayNotify();
             }
 
-            if (program.byTestingSuite()) return;
+//            if (program.byTestingSuite()) return;
 
             while (!program.isStopped()) {
                 this.step(program);

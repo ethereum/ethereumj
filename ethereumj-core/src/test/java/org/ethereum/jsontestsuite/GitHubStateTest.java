@@ -78,9 +78,9 @@ public class GitHubStateTest {
     @Test
     public void stMemoryStressTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("mload32bitBound_return2");//FIXME memorySave must support long
-        excluded.add("mload32bitBound_return"); //FIXME memorySave must support long
-        excluded.add("mload32bitBound_Msize"); //FIXME memoryChunk must support long
+        excluded.add("mload32bitBound_return2");// The test extends memory to 4Gb which can't be handled with Java arrays
+        excluded.add("mload32bitBound_return"); // The test extends memory to 4Gb which can't be handled with Java arrays
+        excluded.add("mload32bitBound_Msize"); // The test extends memory to 4Gb which can't be handled with Java arrays
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryStressTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -89,7 +89,6 @@ public class GitHubStateTest {
     public void stMemoryTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("StateTests/stMemoryTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-        excluded.add("codecopy_dejavu2");  // FIXME: codeOffset has to be bigint inorder for CODECOPY to work correct in that test
 
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
