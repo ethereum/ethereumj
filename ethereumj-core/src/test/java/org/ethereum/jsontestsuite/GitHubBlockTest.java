@@ -23,7 +23,6 @@ public class GitHubBlockTest {
     public void runSingleTest() throws ParseException, IOException {
         CONFIG.setGenesisInfo("frontier.json");
 
-        String shacommit = "24ca9b5f195ccfa38d1bbcc7795529e2569ab5e6";
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcValidBlockTest.json", shacommit);
         GitHubJSONTestSuite.runGitHubJsonSingleBlockTest(json, "RecallSuicidedContractInOneBlock");
     }
@@ -42,7 +41,6 @@ public class GitHubBlockTest {
     public void runBCInvalidRLPTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcInvalidRLPTest.json", shacommit);
-        excluded.add("BLOCK_gasLimit_GivenAsList");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
@@ -76,7 +74,6 @@ public class GitHubBlockTest {
 
         CONFIG.setGenesisInfo("frontier.json");
 
-        String shacommit = "24ca9b5f195ccfa38d1bbcc7795529e2569ab5e6";
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcValidBlockTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
@@ -86,8 +83,6 @@ public class GitHubBlockTest {
     public void runBCBlockGasLimitTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcBlockGasLimitTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-        excluded.add("SuicideTransaction");
-        excluded.add("GasUsedHigherThanBlockGasLimitButNotWithRefundsSuicideFirst");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
@@ -118,9 +113,6 @@ public class GitHubBlockTest {
     public void runBCTotalDifficultyTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcTotalDifficultyTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
-        excluded.add("uncleBlockAtBlock3AfterBlock3");
-        excluded.add("lotsOfLeafs");
-        excluded.add("sideChainWithMoreTransactions");
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
