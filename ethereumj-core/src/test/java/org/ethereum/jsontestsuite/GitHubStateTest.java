@@ -128,8 +128,6 @@ public class GitHubStateTest {
     @Test
     public void stSpecialTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("JUMPDEST_AttackwithJump"); //   (!!!) FIXME fix them as soon as possible
-        excluded.add("JUMPDEST_Attack"); //  (!!!) FIXME fix them as soon as possible
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stSpecialTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
