@@ -15,6 +15,7 @@ public class BlockTestCase {
     private Map<String, AccountTck> pre;
     private Map<String, AccountTck> postState;
     private String lastblockhash;
+    private int noBlockChainHistory;
 
     public BlockTestCase() {
     }
@@ -61,6 +62,14 @@ public class BlockTestCase {
 
     public void setPostState(Map<String, AccountTck> postState) {
         this.postState = postState;
+    }
+
+    public int getNoBlockChainHistory() {
+        return noBlockChainHistory;
+    }
+
+    public void setNoBlockChainHistory(int noBlockChainHistory) {
+        this.noBlockChainHistory = noBlockChainHistory;
     }
 
     @Override
