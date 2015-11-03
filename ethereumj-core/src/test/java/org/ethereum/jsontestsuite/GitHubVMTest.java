@@ -52,7 +52,6 @@ public class GitHubVMTest {
     @Test // testing full suite
     public void testEnvironmentalInfoFromGitHub() throws ParseException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("env1");
         excluded.add("calldatacopy_DataIndexTooHigh");
         excluded.add("calldatacopy_DataIndexTooHigh2");
         excluded.add("calldatacopy_DataIndexTooHigh_return");

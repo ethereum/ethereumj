@@ -19,8 +19,8 @@ public class ParentGasLimitRule extends DependentBlockHeaderRule {
 
         errors.clear();
 
-        if (header.getGasLimit() < parent.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
-            header.getGasLimit() > parent.getGasLimit() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
+        if (header.getGasLimitLong() < parent.getGasLimitLong() * (GAS_LIMIT_BOUND_DIVISOR - 1) / GAS_LIMIT_BOUND_DIVISOR ||
+            header.getGasLimitLong() > parent.getGasLimitLong() * (GAS_LIMIT_BOUND_DIVISOR + 1) / GAS_LIMIT_BOUND_DIVISOR) {
 
             errors.add("gas limit exceeds parentBlock.getGasLimit() (+-) GAS_LIMIT_BOUND_DIVISOR");
             return false;

@@ -46,12 +46,6 @@ public class BlockBuilder {
 
     public static Block build(Env env){
 
-
-        // TODO: it can be removed in the future when block will be adapted to 32 bytes range gas limit
-        long gasLimit = byteArrayToLong(env.getCurrentGasLimit());
-        if (exitLong(toBI(env.getCurrentGasLimit())))
-            gasLimit = Long.MAX_VALUE;
-
         Block block = new Block(
                 ByteUtil.EMPTY_BYTE_ARRAY,
                 ByteUtil.EMPTY_BYTE_ARRAY,
@@ -60,7 +54,7 @@ public class BlockBuilder {
                 env.getCurrentDifficulty(),
 
                 byteArrayToLong(env.getCurrentNumber()),
-                gasLimit,
+                env.getCurrentGasLimit(),
                 0L,
                 byteArrayToLong(env.getCurrentTimestamp()),
                 new byte[32],

@@ -17,7 +17,7 @@ public class GasValueRule extends BlockHeaderRule {
 
         errors.clear();
 
-        if (header.getGasLimit() < header.getGasUsed()) {
+        if (header.getGasLimitLong() < header.getGasUsed()) {
             errors.add("header.getGasLimit() < header.getGasUsed()");
             return false;
         }

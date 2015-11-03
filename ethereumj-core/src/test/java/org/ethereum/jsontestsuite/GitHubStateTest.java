@@ -41,8 +41,6 @@ public class GitHubStateTest {
     public void stCallCreateCallCodeTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("createJS_ExampleContract"); //FIXME Bug on CPP testrunner, storage/SSTORE
-        excluded.add("CallRecursiveBombPreCall"); // FIXME gas not BI limit
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -97,7 +95,6 @@ public class GitHubStateTest {
     @Test
     public void stSolidityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("TestBlockAndTransactionProperties"); //TODO proper BigInt block support needed
         String json = JSONReader.loadJSONFromCommit("StateTests/stSolidityTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -135,7 +132,6 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws IOException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("Call10"); //FIXME gaslimit as biginteger
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -144,10 +140,6 @@ public class GitHubStateTest {
     public void stTransactionTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
-        BigInteger i1 = new BigInteger("0100000000000000000000000000000000000000000000000000", 16);
-        BigInteger i2 = new BigInteger("0a00000000000000", 16);
-        System.out.println(i1.multiply(i2));
-        excluded.add("OverflowGasRequire");    //FIXME wont work until we use gaslimit as long
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }

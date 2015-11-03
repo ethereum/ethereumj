@@ -71,7 +71,7 @@ public class Block {
                 header.getLogsBloom(),
                 header.getDifficulty(),
                 header.getNumber(),
-                header.getGasLimit(),
+                header.getGasLimitInt256(),
                 header.getGasUsed(),
                 header.getTimestamp(),
                 header.getExtraData(),
@@ -85,7 +85,7 @@ public class Block {
     }
 
     public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-                 byte[] difficulty, long number, long gasLimit,
+                 byte[] difficulty, long number, byte[] gasLimit,
                  long gasUsed, long timestamp, byte[] extraData,
                  byte[] mixHash, byte[] nonce, byte[] receiptsRoot,
                  byte[] transactionsRoot, byte[] stateRoot,
@@ -105,7 +105,7 @@ public class Block {
 
 
     public Block(byte[] parentHash, byte[] unclesHash, byte[] coinbase, byte[] logsBloom,
-                 byte[] difficulty, long number, long gasLimit,
+                 byte[] difficulty, long number, byte[] gasLimit,
                  long gasUsed, long timestamp,
                  byte[] extraData, byte[] mixHash, byte[] nonce,
                  List<Transaction> transactionsList, List<BlockHeader> uncleList) {
@@ -231,9 +231,14 @@ public class Block {
         return this.header.getNumber();
     }
 
-    public long getGasLimit() {
+    public long getGasLimitLong() {
         if (!parsed) parseRLP();
-        return this.header.getGasLimit();
+        return this.header.getGasLimitLong();
+    }
+
+    public byte[] getGasLimitInt256() {
+        if (!parsed) parseRLP();
+        return this.header.getGasLimitInt256();
     }
 
     public long getGasUsed() {

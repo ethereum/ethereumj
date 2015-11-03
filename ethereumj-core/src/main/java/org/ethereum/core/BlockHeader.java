@@ -59,7 +59,8 @@ public class BlockHeader {
      * The genesis block has a number of zero */
     private long number;
     /* A scalar value equal to the current limit of gas expenditure per block */
-    private long gasLimit;
+//    private long gasLimit;
+    private byte[] gasLimitInt256;
     /* A scalar value equal to the total gas used in transactions in this block */
     private long gasUsed;
 
@@ -98,7 +99,8 @@ public class BlockHeader {
 
         this.number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
 
-        this.gasLimit = glBytes == null ? 0 : (new BigInteger(1, glBytes)).longValue();
+//        this.gasLimit = glBytes == null ? 0 : (new BigInteger(1, glBytes)).longValue();
+        this.gasLimitInt256 = glBytes == null ? new byte[] {0} : (new BigInteger(1, glBytes)).toByteArray();
         this.gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
         this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
 
@@ -109,7 +111,7 @@ public class BlockHeader {
 
     public BlockHeader(byte[] parentHash, byte[] unclesHash, byte[] coinbase,
                        byte[] logsBloom, byte[] difficulty, long number,
-                       long gasLimit, long gasUsed, long timestamp,
+                       byte[] gasLimit, long gasUsed, long timestamp,
                        byte[] extraData, byte[] mixHash, byte[] nonce) {
         this.parentHash = parentHash;
         this.unclesHash = unclesHash;
@@ -117,7 +119,8 @@ public class BlockHeader {
         this.logsBloom = logsBloom;
         this.difficulty = difficulty;
         this.number = number;
-        this.gasLimit = gasLimit;
+        this.gasLimitInt256 = gasLimit;
+//        this.gasLimit = new BigInteger(gasLimit).longValue();
         this.gasUsed = gasUsed;
         this.timestamp = timestamp;
         this.extraData = extraData;
@@ -208,12 +211,29 @@ public class BlockHeader {
         this.number = number;
     }
 
-    public long getGasLimit() {
-        return gasLimit;
+//    public long getGasLimit() {
+//        return new BigInteger(1, getGasLimitInt256()).longValue();
+//    }
+//
+//    public void setGasLimit(long gasLimit) {
+////        this.gasLimit = gasLimit;
+//        setGasLimitInt256(BigInteger.valueOf(gasLimit).toByteArray());
+//    }
+    public long getGasLimitLong() {
+        return new BigInteger(1, getGasLimitInt256()).longValue();
     }
 
-    public void setGasLimit(long gasLimit) {
-        this.gasLimit = gasLimit;
+    public void setGasLimitLong(long gasLimit) {
+//        this.gasLimit = gasLimit;
+        setGasLimitInt256(BigInteger.valueOf(gasLimit).toByteArray());
+    }
+
+    public byte[] getGasLimitInt256() {
+        return gasLimitInt256;
+    }
+
+    public void setGasLimitInt256(byte[] gasLimitInt256) {
+        this.gasLimitInt256 = gasLimitInt256;
     }
 
     public long getGasUsed() {
@@ -265,7 +285,8 @@ public class BlockHeader {
         byte[] logsBloom = RLP.encodeElement(this.logsBloom);
         byte[] difficulty = RLP.encodeElement(this.difficulty);
         byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
-        byte[] gasLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.gasLimit));
+//        byte[] gasLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.gasLimit));
+        byte[] gasLimit = RLP.encodeElement(this.gasLimitInt256);
         byte[] gasUsed = RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
 
@@ -342,7 +363,8 @@ public class BlockHeader {
         toStringBuff.append("  receiptsTrieHash=").append(toHexString(receiptTrieRoot)).append(suffix);
         toStringBuff.append("  difficulty=").append(toHexString(difficulty)).append(suffix);
         toStringBuff.append("  number=").append(number).append(suffix);
-        toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
+//        toStringBuff.append("  gasLimit=").append(gasLimit).append(suffix);
+        toStringBuff.append("  gasLimitInt256=").append(toHexString(gasLimitInt256)).append(suffix);
         toStringBuff.append("  gasUsed=").append(gasUsed).append(suffix);
         toStringBuff.append("  timestamp=").append(timestamp).append(" (").append(Utils.longToDateTime(timestamp)).append(")").append(suffix);
         toStringBuff.append("  extraData=").append(toHexString(extraData)).append(suffix);

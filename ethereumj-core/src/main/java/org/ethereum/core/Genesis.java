@@ -49,7 +49,7 @@ public class Genesis extends Block {
                    long gasUsed, long timestamp,
                    byte[] extraData, byte[] mixHash, byte[] nonce){
         super(parentHash, unclesHash, coinbase, logsBloom, difficulty,
-                number, gasLimit, gasUsed, timestamp, extraData,
+                number, BigInteger.valueOf(gasLimit).toByteArray(), gasUsed, timestamp, extraData,
                 mixHash, nonce, null, null);
     }
 

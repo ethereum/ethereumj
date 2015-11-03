@@ -132,12 +132,12 @@ public class BlockHeaderValidator {
             outputSummary.add(output);
         }
 
-        if (orig.getGasLimit() != valid.getGasLimit()) {
+        if (orig.getGasLimitLong() != valid.getGasLimitLong()) {
 
             String output =
                     String.format("wrong block.gasLimit: \n expected: %d \n got: %d",
-                            valid.getGasLimit(),
-                            orig.getGasLimit()
+                            valid.getGasLimitLong(),
+                            orig.getGasLimitLong()
                     );
 
             outputSummary.add(output);
