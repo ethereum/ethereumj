@@ -12,7 +12,6 @@ import java.util.HashSet;
 
 import static org.ethereum.config.SystemProperties.CONFIG;
 
-@Ignore
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GitHubBlockTest {
 
@@ -44,7 +43,6 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
     @Test
     public void runBCRPCAPITest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -60,7 +58,6 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
     @Test
      public void runBCUncleTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -68,7 +65,6 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
     @Test
     public void runBCValidBlockTest() throws ParseException, IOException {
 
@@ -86,7 +82,7 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
+    @Ignore // No more such test in repo
     @Test
     public void runBCBruncleTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcBruncleTest.json", shacommit);
@@ -94,7 +90,6 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
     @Test
     public void runBCForkBlockTest() throws ParseException, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcForkBlockTest.json", shacommit);
@@ -116,9 +111,8 @@ public class GitHubBlockTest {
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
     }
 
-    @Ignore
     @Test
-    public void runBCWalletTest() throws ParseException, IOException {
+    public void runBCWalletTest() throws Exception, IOException {
         String json = JSONReader.loadJSONFromCommit("BlockchainTests/bcWalletTest.json", shacommit);
         Set<String> excluded = new HashSet<>();
         GitHubJSONTestSuite.runGitHubJsonBlockTest(json, excluded);
