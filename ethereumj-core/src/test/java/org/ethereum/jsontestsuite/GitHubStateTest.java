@@ -7,6 +7,7 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -41,11 +42,6 @@ public class GitHubStateTest {
 
         Set<String> excluded = new HashSet<>();
         excluded.add("createJS_ExampleContract"); //FIXME Bug on CPP testrunner, storage/SSTORE
-        excluded.add("Callcode1024OOG");
-        excluded.add("Call1024OOG");
-        excluded.add("callcodeWithHighValue");
-        excluded.add("callWithHighValue");
-        excluded.add("Call1024PreCalls");
         excluded.add("CallRecursiveBombPreCall"); // FIXME gas not BI limit
         String json = JSONReader.loadJSONFromCommit("StateTests/stCallCreateCallCodeTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
@@ -67,9 +63,7 @@ public class GitHubStateTest {
 
     @Test
     public void stPreCompiledContracts() throws ParseException, IOException {
-
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallEcrecoverPointAtInfinity");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stPreCompiledContracts.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
@@ -93,7 +87,6 @@ public class GitHubStateTest {
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
 
-    @Ignore
     @Test
     public void stQuadraticComplexityTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
@@ -119,7 +112,6 @@ public class GitHubStateTest {
     @Test
     public void stRefundTest() throws ParseException, IOException {
         Set<String> excluded = new HashSet<>();
-        excluded.add("refund_multiple_internal_call_plus_suicide");
 
         String json = JSONReader.loadJSONFromCommit("StateTests/stRefundTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
@@ -143,11 +135,7 @@ public class GitHubStateTest {
     public void stSystemOperationsTest() throws IOException {
 
         Set<String> excluded = new HashSet<>();
-        excluded.add("CallRecursiveBomb0_OOG_atMaxCallDepth"); //FIXME hitting VM limits
         excluded.add("Call10"); //FIXME gaslimit as biginteger
-        excluded.add("createNameRegistratorZeroMem2"); // FIXME: Heap ???
-
-        excluded.add("suicideSendEtherPostDeath"); // FIXME: find the correct algo
         String json = JSONReader.loadJSONFromCommit("StateTests/stSystemOperationsTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
@@ -156,9 +144,10 @@ public class GitHubStateTest {
     public void stTransactionTest() throws ParseException, IOException {
 
         Set<String> excluded = new HashSet<>();
+        BigInteger i1 = new BigInteger("0100000000000000000000000000000000000000000000000000", 16);
+        BigInteger i2 = new BigInteger("0a00000000000000", 16);
+        System.out.println(i1.multiply(i2));
         excluded.add("OverflowGasRequire");    //FIXME wont work until we use gaslimit as long
-        excluded.add("EmptyTransaction2"); // Buggy testcase
-        excluded.add("TransactionSendingToEmpty");
         String json = JSONReader.loadJSONFromCommit("StateTests/stTransactionTest.json", shacommit);
         GitHubJSONTestSuite.runStateTest(json, excluded);
     }
