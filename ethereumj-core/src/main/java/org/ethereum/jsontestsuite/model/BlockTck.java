@@ -10,6 +10,7 @@ public class BlockTck {
     String rlp;
     String blocknumber;
     String chainname;
+    boolean reverted;
 
     public BlockTck() {
     }
@@ -62,6 +63,13 @@ public class BlockTck {
         this.uncleHeaders = uncleHeaders;
     }
 
+    public boolean isReverted() {
+        return reverted;
+    }
+
+    public void setReverted(boolean reverted) {
+        this.reverted = reverted;
+    }
 
     @Override
     public String toString() {
