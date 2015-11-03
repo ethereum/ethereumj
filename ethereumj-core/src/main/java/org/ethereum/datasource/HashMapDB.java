@@ -13,7 +13,7 @@ import static org.ethereum.util.ByteUtil.wrap;
 public class HashMapDB implements KeyValueDataSource {
 
     Map<ByteArrayWrapper, byte[]> storage = new HashMap<>();
-
+    private boolean clearOnClose = true;
 
     @Override
     public void delete(byte[] arg0) throws DBException {
@@ -77,8 +77,15 @@ public class HashMapDB implements KeyValueDataSource {
         }
     }
 
+    public HashMapDB setClearOnClose(boolean clearOnClose) {
+        this.clearOnClose = clearOnClose;
+        return this;
+    }
+
     @Override
     public void close() {
-        this.storage.clear();
+        if (clearOnClose) {
+            this.storage.clear();
+        }
     }
 }
