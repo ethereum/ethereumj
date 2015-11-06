@@ -1063,7 +1063,7 @@ public class VM {
                     DataWord value = program.stackPop();
 
                     if( !value.isZero()) {
-                        gas = new DataWord(gas.intValue() + GasCost.STIPEND_CALL);
+                        gas.add(new DataWord(GasCost.STIPEND_CALL));
                     }
 
                     DataWord inDataOffs = program.stackPop();
@@ -1139,7 +1139,7 @@ public class VM {
                     && !op.equals(CREATE))
                 logger.info(logString, String.format("%5s", "[" + program.getPC() + "]"),
                         String.format("%-12s",
-                                op.name()), program.getGas().longValue(),
+                                op.name()), program.getGas().value(),
                         program.getCallDeep(), hint);
 
             vmCounter++;
