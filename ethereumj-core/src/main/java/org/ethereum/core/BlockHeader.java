@@ -99,8 +99,7 @@ public class BlockHeader {
 
         this.number = nrBytes == null ? 0 : (new BigInteger(1, nrBytes)).longValue();
 
-//        this.gasLimit = glBytes == null ? 0 : (new BigInteger(1, glBytes)).longValue();
-        this.gasLimitInt256 = glBytes == null ? new byte[] {0} : (new BigInteger(1, glBytes)).toByteArray();
+        this.gasLimitInt256 = glBytes;
         this.gasUsed = guBytes == null ? 0 : (new BigInteger(1, guBytes)).longValue();
         this.timestamp = tsBytes == null ? 0 : (new BigInteger(1, tsBytes)).longValue();
 
@@ -268,7 +267,6 @@ public class BlockHeader {
         byte[] logsBloom = RLP.encodeElement(this.logsBloom);
         byte[] difficulty = RLP.encodeElement(this.difficulty);
         byte[] number = RLP.encodeBigInteger(BigInteger.valueOf(this.number));
-//        byte[] gasLimit = RLP.encodeBigInteger(BigInteger.valueOf(this.gasLimit));
         byte[] gasLimit = RLP.encodeElement(this.gasLimitInt256);
         byte[] gasUsed = RLP.encodeBigInteger(BigInteger.valueOf(this.gasUsed));
         byte[] timestamp = RLP.encodeBigInteger(BigInteger.valueOf(this.timestamp));
