@@ -94,11 +94,9 @@ public class TransactionExecutor {
             return;
         }
 
-//        long txGasLimit = toBI(tx.getGasLimit()).longValue();
         BigInteger txGasLimit = new BigInteger(1, tx.getGasLimit());
         BigInteger curBlockGasLimit = new BigInteger(1, currentBlock.getGasLimit());
 
-//        boolean cumulativeGasReached = (gasUsedInTheBlock + txGasLimit > currentBlock.getGasLimit());
         boolean cumulativeGasReached = txGasLimit.add(BigInteger.valueOf(gasUsedInTheBlock)).compareTo(curBlockGasLimit) > 0;
         if (cumulativeGasReached) {
 
@@ -155,7 +153,6 @@ public class TransactionExecutor {
         if (!localCall) {
             track.increaseNonce(tx.getSender());
 
-//            long txGasLimit = toBI(tx.getGasLimit()).longValue();
             BigInteger txGasLimit = toBI(tx.getGasLimit());
             BigInteger txGasCost = toBI(tx.getGasPrice()).multiply(txGasLimit);
             track.addBalance(tx.getSender(), txGasCost.negate());
@@ -251,7 +248,6 @@ public class TransactionExecutor {
             if (tx.isContractCreation()) {
 
                 int returnDataGasValue = getLength(result.getHReturn()) * GasCost.CREATE_DATA;
-//                if (returnDataGasValue <= m_endGas) {
                 if (m_endGas.compareTo(BigInteger.valueOf(returnDataGasValue)) >= 0) {
 
                     m_endGas = m_endGas.subtract(BigInteger.valueOf(returnDataGasValue));
