@@ -96,7 +96,7 @@ public class TransactionExecutor {
 
 //        long txGasLimit = toBI(tx.getGasLimit()).longValue();
         BigInteger txGasLimit = new BigInteger(1, tx.getGasLimit());
-        BigInteger curBlockGasLimit = new BigInteger(1, currentBlock.getGasLimitInt256());
+        BigInteger curBlockGasLimit = new BigInteger(1, currentBlock.getGasLimit());
 
 //        boolean cumulativeGasReached = (gasUsedInTheBlock + txGasLimit > currentBlock.getGasLimit());
         boolean cumulativeGasReached = txGasLimit.add(BigInteger.valueOf(gasUsedInTheBlock)).compareTo(curBlockGasLimit) > 0;

@@ -211,28 +211,20 @@ public class BlockHeader {
         this.number = number;
     }
 
-//    public long getGasLimit() {
-//        return new BigInteger(1, getGasLimitInt256()).longValue();
-//    }
-//
-//    public void setGasLimit(long gasLimit) {
-////        this.gasLimit = gasLimit;
-//        setGasLimitInt256(BigInteger.valueOf(gasLimit).toByteArray());
-//    }
     public long getGasLimitLong() {
-        return new BigInteger(1, getGasLimitInt256()).longValue();
+        return new BigInteger(1, getGasLimit()).longValue();
     }
 
     public void setGasLimitLong(long gasLimit) {
 //        this.gasLimit = gasLimit;
-        setGasLimitInt256(BigInteger.valueOf(gasLimit).toByteArray());
+        setGasLimit(BigInteger.valueOf(gasLimit).toByteArray());
     }
 
-    public byte[] getGasLimitInt256() {
+    public byte[] getGasLimit() {
         return gasLimitInt256;
     }
 
-    public void setGasLimitInt256(byte[] gasLimitInt256) {
+    public void setGasLimit(byte[] gasLimitInt256) {
         this.gasLimitInt256 = gasLimitInt256;
     }
 

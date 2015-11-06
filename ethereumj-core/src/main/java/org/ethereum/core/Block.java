@@ -71,7 +71,7 @@ public class Block {
                 header.getLogsBloom(),
                 header.getDifficulty(),
                 header.getNumber(),
-                header.getGasLimitInt256(),
+                header.getGasLimit(),
                 header.getGasUsed(),
                 header.getTimestamp(),
                 header.getExtraData(),
@@ -236,9 +236,9 @@ public class Block {
         return this.header.getGasLimitLong();
     }
 
-    public byte[] getGasLimitInt256() {
+    public byte[] getGasLimit() {
         if (!parsed) parseRLP();
-        return this.header.getGasLimitInt256();
+        return this.header.getGasLimit();
     }
 
     public long getGasUsed() {
