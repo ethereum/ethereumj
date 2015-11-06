@@ -211,15 +211,6 @@ public class BlockHeader {
         this.number = number;
     }
 
-    public long getGasLimitLong() {
-        return new BigInteger(1, getGasLimit()).longValue();
-    }
-
-    public void setGasLimitLong(long gasLimit) {
-//        this.gasLimit = gasLimit;
-        setGasLimit(BigInteger.valueOf(gasLimit).toByteArray());
-    }
-
     public byte[] getGasLimit() {
         return gasLimitInt256;
     }

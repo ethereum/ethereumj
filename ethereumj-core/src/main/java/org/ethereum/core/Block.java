@@ -231,11 +231,6 @@ public class Block {
         return this.header.getNumber();
     }
 
-    public long getGasLimitLong() {
-        if (!parsed) parseRLP();
-        return this.header.getGasLimitLong();
-    }
-
     public byte[] getGasLimit() {
         if (!parsed) parseRLP();
         return this.header.getGasLimit();

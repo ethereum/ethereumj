@@ -103,7 +103,7 @@ public class TransactionExecutor {
         if (cumulativeGasReached) {
 
             if (logger.isWarnEnabled())
-                logger.warn("Too much gas used in this block: Require: {} Got: {}", currentBlock.getGasLimitLong() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue());
+                logger.warn("Too much gas used in this block: Require: {} Got: {}", new BigInteger(1, currentBlock.getGasLimit()).longValue() - toBI(tx.getGasLimit()).longValue(), toBI(tx.getGasLimit()).longValue());
 
             // TODO: save reason for failure
             return;

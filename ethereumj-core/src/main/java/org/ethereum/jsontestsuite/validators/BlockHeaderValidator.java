@@ -3,6 +3,7 @@ package org.ethereum.jsontestsuite.validators;
 import org.ethereum.core.BlockHeader;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 import static org.ethereum.util.ByteUtil.toHexString;
@@ -132,12 +133,12 @@ public class BlockHeaderValidator {
             outputSummary.add(output);
         }
 
-        if (orig.getGasLimitLong() != valid.getGasLimitLong()) {
+        if (!new BigInteger(1, orig.getGasLimit()).equals(new BigInteger(1, valid.getGasLimit()))) {
 
             String output =
                     String.format("wrong block.gasLimit: \n expected: %d \n got: %d",
-                            valid.getGasLimitLong(),
-                            orig.getGasLimitLong()
+                            new BigInteger(1, valid.getGasLimit()),
+                            new BigInteger(1, orig.getGasLimit())
                     );
 
             outputSummary.add(output);
