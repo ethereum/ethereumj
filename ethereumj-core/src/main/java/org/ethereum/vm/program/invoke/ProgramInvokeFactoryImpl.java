@@ -84,7 +84,7 @@ public class ProgramInvokeFactoryImpl implements ProgramInvokeFactory {
         byte[] difficulty = block.getDifficulty();
 
         /*** GASLIMIT op ***/
-        long gaslimit = new BigInteger(1, block.getGasLimit()).longValue();
+        byte[] gaslimit = block.getGasLimit();
 
         if (logger.isInfoEnabled()) {
             logger.info("Top level call: \n" +

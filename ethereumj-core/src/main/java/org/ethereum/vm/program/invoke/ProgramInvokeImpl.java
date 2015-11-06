@@ -71,7 +71,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
-                             long gaslimit,
+                             byte[] gaslimit,
                              Repository repository, BlockStore blockStore, boolean byTestingSuite) {
         this(address, origin, caller, balance, gasPrice, gas, callValue, msgData, lastHash, coinbase,
                 timestamp, number, difficulty, gaslimit, repository, blockStore);
@@ -82,7 +82,7 @@ public class ProgramInvokeImpl implements ProgramInvoke {
     public ProgramInvokeImpl(byte[] address, byte[] origin, byte[] caller, byte[] balance,
                              byte[] gasPrice, byte[] gas, byte[] callValue, byte[] msgData,
                              byte[] lastHash, byte[] coinbase, long timestamp, long number, byte[] difficulty,
-                             long gaslimit,
+                             byte[] gaslimit,
                              Repository repository, BlockStore blockStore) {
 
         // Transaction env

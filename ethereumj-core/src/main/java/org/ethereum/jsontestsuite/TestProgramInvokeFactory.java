@@ -87,7 +87,7 @@ public class TestProgramInvokeFactory implements ProgramInvokeFactory {
         byte[] difficulty = env.getCurrentDifficulty();
 
         /*** GASLIMIT op ***/
-        long gaslimit = ByteUtil.byteArrayToLong(env.getCurrentGasLimit());
+        byte[] gaslimit = env.getCurrentGasLimit();
 
         return new ProgramInvokeImpl(address, origin, caller, balance,
                 gasPrice, gas, callValue, data, lastHash, coinbase,
