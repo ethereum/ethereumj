@@ -1,6 +1,6 @@
 package org.ethereum.net.client;
 
-import org.ethereum.manager.WorldManager;
+import org.ethereum.listener.EthereumListener;
 import org.ethereum.net.server.EthereumChannelInitializer;
 
 import io.netty.bootstrap.Bootstrap;
@@ -39,7 +39,7 @@ public class PeerClient {
     private ApplicationContext ctx;
 
     @Autowired
-    WorldManager worldManager;
+    EthereumListener ethereumListener;
 
     private static EventLoopGroup workerGroup = new NioEventLoopGroup(0, new ThreadFactory() {
         AtomicInteger cnt = new AtomicInteger(0);
@@ -55,7 +55,7 @@ public class PeerClient {
     }
 
     public void connect(String host, int port, String remoteId, boolean discoveryMode) {
-        worldManager.getListener().trace("Connecting to: " + host + ":" + port);
+        ethereumListener.trace("Connecting to: " + host + ":" + port);
 
         EthereumChannelInitializer ethereumChannelInitializer = ctx.getBean(EthereumChannelInitializer.class, remoteId);
         ethereumChannelInitializer.setPeerDiscoveryMode(discoveryMode);

@@ -2,11 +2,8 @@ package org.ethereum.net.server;
 
 import org.ethereum.core.Transaction;
 import org.ethereum.db.ByteArrayWrapper;
-import org.ethereum.facade.Ethereum;
-import org.ethereum.manager.WorldManager;
 
 import org.ethereum.sync.SyncManager;
-import org.ethereum.net.rlpx.discover.NodeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,17 +34,9 @@ public class ChannelManager {
 
     private ScheduledExecutorService mainWorker = Executors.newSingleThreadScheduledExecutor();
 
-    @Autowired
-    WorldManager worldManager;
 
     @Autowired
     SyncManager syncManager;
-
-    @Autowired
-    NodeManager nodeManager;
-
-    @Autowired
-    Ethereum ethereum;
 
     @PostConstruct
     public void init() {

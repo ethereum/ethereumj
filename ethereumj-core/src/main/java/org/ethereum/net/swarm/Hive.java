@@ -1,9 +1,9 @@
 package org.ethereum.net.swarm;
 
+import org.ethereum.manager.WorldManager;
 import org.ethereum.net.rlpx.Node;
 import org.ethereum.net.rlpx.discover.table.NodeEntry;
 import org.ethereum.net.rlpx.discover.table.NodeTable;
-import org.ethereum.net.swarm.bzz.BzzHandler;
 import org.ethereum.net.swarm.bzz.BzzPeersMessage;
 import org.ethereum.net.swarm.bzz.BzzProtocol;
 import org.ethereum.net.swarm.bzz.PeerAddress;
@@ -11,6 +11,7 @@ import org.hibernate.internal.util.collections.IdentitySet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 
@@ -27,6 +28,9 @@ public class Hive {
     protected NodeTable nodeTable;
 
     private Map<Node, BzzProtocol> connectedPeers = new IdentityHashMap<>();
+
+    @Autowired
+    WorldManager worldManager;
 
     public Hive(PeerAddress thisAddress) {
         this.thisAddress = thisAddress;
@@ -82,7 +86,7 @@ public class Hive {
                 if (--maxCount == 0) break;
             } else {
                 LOG.info("Hive connects to node " + node);
-                NetStore.getInstance().worldManager.getActivePeer().connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
+                worldManager.getActivePeer().connect(node.getHost(), node.getPort(), Hex.toHexString(node.getId()));
             }
         }
         return ret;

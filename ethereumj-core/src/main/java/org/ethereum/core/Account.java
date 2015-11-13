@@ -1,7 +1,6 @@
 package org.ethereum.core;
 
 import org.ethereum.crypto.ECKey;
-import org.ethereum.manager.WorldManager;
 import org.ethereum.util.Utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +28,7 @@ public class Account {
             Collections.synchronizedSet(new HashSet<Transaction>());
 
     @Autowired
-    WorldManager worldManager;
+    Repository repository;
 
     public Account() {
     }
@@ -45,13 +44,12 @@ public class Account {
     }
 
     public BigInteger getNonce() {
-        return worldManager.getRepository().getNonce(getAddress());
+        return repository.getNonce(getAddress());
     }
 
     public BigInteger getBalance() {
 
-        BigInteger balance =
-                worldManager.getRepository().getBalance(this.getAddress());
+        BigInteger balance = repository.getBalance(this.getAddress());
 
         synchronized (getPendingTransactions()) {
             if (!getPendingTransactions().isEmpty()) {
