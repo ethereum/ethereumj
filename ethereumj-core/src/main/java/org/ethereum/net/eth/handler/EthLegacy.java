@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.spongycastle.util.encoders.Hex;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -85,7 +86,7 @@ public abstract class EthLegacy extends EthHandler {
     private void processNewBlockHashes(NewBlockHashesMessage msg) {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing NEW block hashes, size [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 msg.getBlockHashes().size()
         );
 
@@ -112,7 +113,7 @@ public abstract class EthLegacy extends EthHandler {
     protected void dispatchBlockHashes(BlockHashesMessage blockHashesMessage) {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing block hashes, size [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 blockHashesMessage.getBlockHashes().size()
         );
 
@@ -135,7 +136,7 @@ public abstract class EthLegacy extends EthHandler {
             if (syncState == DONE_HASH_RETRIEVING) {
                 logger.info(
                         "Peer {}: hashes sync completed, [{}] hashes in queue",
-                        channel.getPeerIdShort(),
+                        getPeerIdShort(),
                         queue.hashStoreSize()
                 );
             } else {
@@ -167,7 +168,7 @@ public abstract class EthLegacy extends EthHandler {
         if (hashes.isEmpty()) {
             if(logger.isInfoEnabled()) logger.trace(
                     "Peer {}: no more hashes in queue, idle",
-                    channel.getPeerIdShort()
+                    getPeerIdShort()
             );
             changeState(IDLE);
             return false;
@@ -179,7 +180,7 @@ public abstract class EthLegacy extends EthHandler {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get blocks, hashes.count [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 sentHashes.size()
         );
 
@@ -194,7 +195,7 @@ public abstract class EthLegacy extends EthHandler {
     private void processBlocks(BlocksMessage blocksMessage) {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: process blocks, size [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 blocksMessage.getBlocks().size()
         );
 
@@ -218,19 +219,21 @@ public abstract class EthLegacy extends EthHandler {
             for (Block block : blockList) {
 
                 // update TD and best hash
-                if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
+                // TODO: store and check totalDifficulty from NodeStatistics
+                if (isMoreThan(block.getDifficultyBI(), totalDifficulty)) {
                     bestHash = block.getHash();
-                    channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
+                    totalDifficulty = block.getDifficultyBI();
+                    //channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
                 }
 
                 if (block.getNumber() < newBlockLowerNumber) {
                     regularBlocks.add(block);
                 } else {
-                    queue.addNew(block, channel.getNodeId());
+                    queue.addNew(block, getNodeId());
                 }
             }
 
-            queue.addAndValidate(regularBlocks, channel.getNodeId());
+            queue.addAndValidate(regularBlocks, getNodeId());
             queue.logHashesSize();
         } else {
             changeState(BLOCKS_LACK);
@@ -244,7 +247,7 @@ public abstract class EthLegacy extends EthHandler {
     protected void sendGetBlockHashes() {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get block hashes, hash [{}], maxHashesAsk [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 Hex.toHexString(lastHashToAsk),
                 maxHashesAsk
         );
@@ -255,7 +258,7 @@ public abstract class EthLegacy extends EthHandler {
     private void returnHashes() {
         if(logger.isDebugEnabled()) logger.debug(
                 "Peer {}: return [{}] hashes back to store",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 sentHashes.size()
         );
 

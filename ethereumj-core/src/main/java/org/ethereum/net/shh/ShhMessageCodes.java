@@ -2,6 +2,7 @@ package org.ethereum.net.shh;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A list of commands for the Whisper network protocol.
@@ -13,7 +14,7 @@ import java.util.Map;
  */
 public enum ShhMessageCodes {
 
-    /* Whisper Protocol */
+    /* Whisper ProtocolHandler */
 
     /**
      * [+0x00]
@@ -32,7 +33,7 @@ public enum ShhMessageCodes {
 
     private final int cmd;
 
-    private static final Map<Integer, ShhMessageCodes> intToTypeMap = new HashMap<>();
+    private static final TreeMap<Integer, ShhMessageCodes> intToTypeMap = new TreeMap<>();
 
     static {
         for (ShhMessageCodes type : ShhMessageCodes.values()) {
@@ -51,6 +52,8 @@ public enum ShhMessageCodes {
     public static boolean inRange(byte code) {
         return code >= STATUS.asByte() && code <= FILTER.asByte();
     }
+
+    public static int max() { return intToTypeMap.lastKey(); }
 
     public byte asByte() {
         return (byte) (cmd);

@@ -2,6 +2,7 @@ package org.ethereum.net.p2p;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * A list of commands for the Ethereum network protocol.
@@ -66,7 +67,7 @@ public enum P2pMessageCodes {
 
     private final int cmd;
 
-    private static final Map<Integer, P2pMessageCodes> intToTypeMap = new HashMap<>();
+    private static final TreeMap<Integer, P2pMessageCodes> intToTypeMap = new TreeMap<>();
 
     static {
         for (P2pMessageCodes type : P2pMessageCodes.values()) {
@@ -83,8 +84,10 @@ public enum P2pMessageCodes {
     }
 
     public static boolean inRange(byte code) {
-        return code >= HELLO.asByte() && code <= USER.asByte();
+        return code >= HELLO.asByte() && code <= max();
     }
+
+    public static int max() { return intToTypeMap.lastKey(); }
 
     public byte asByte() {
         return (byte) (cmd);

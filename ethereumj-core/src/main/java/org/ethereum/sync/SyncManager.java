@@ -12,6 +12,7 @@ import org.ethereum.net.rlpx.discover.NodeManager;
 import org.ethereum.net.rlpx.discover.NodeStatistics;
 import org.ethereum.net.server.Channel;
 import org.ethereum.net.server.ChannelManager;
+import org.ethereum.net.server.ChannelManagerListener;
 import org.ethereum.util.Functional;
 import org.ethereum.util.Utils;
 import org.slf4j.Logger;
@@ -37,7 +38,7 @@ import static org.ethereum.util.TimeUtils.secondsToMillis;
  * @since 14.07.2015
  */
 @Component
-public class SyncManager {
+public class SyncManager implements SyncQueueListener, ChannelManagerListener {
 
     private final static Logger logger = LoggerFactory.getLogger("sync");
 
@@ -91,6 +92,8 @@ public class SyncManager {
 
     public void init() {
 
+        queue.setQueueListener(this);
+
         // make it asynchronously
         new Thread(new Runnable() {
             @Override
@@ -140,8 +143,14 @@ public class SyncManager {
                     startLogWorker();
                 }
 
+                addChannelManagerListener();
             }
         }).start();
+    }
+
+    private void addChannelManagerListener() {
+
+        channelManager.setChannelManagerListener(this);
     }
 
     public void addPeer(Channel peer) {
@@ -197,33 +206,6 @@ public class SyncManager {
         pool.add(peer);
     }
 
-    public void onDisconnect(Channel peer) {
-
-        // if master peer has been disconnected
-        // we need to process data it sent
-        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
-            changeState(BLOCK_RETRIEVING);
-        }
-
-        pool.onDisconnect(peer);
-    }
-
-    public void tryGapRecovery(BlockWrapper wrapper) {
-        if (!isGapRecoveryAllowed(wrapper)) {
-            return;
-        }
-
-        if (logger.isDebugEnabled()) logger.debug(
-                "Recovering gap: best.number [{}] vs block.number [{}]",
-                blockchain.getBestBlock().getNumber(),
-                wrapper.getNumber()
-        );
-
-        gapBlock = wrapper;
-
-        changeState(HASH_RETRIEVING);
-    }
-
     public BlockWrapper getGapBlock() {
         return gapBlock;
     }
@@ -232,30 +214,8 @@ public class SyncManager {
         this.gapBlock = null;
     }
 
-    public void notifyNewBlockImported(BlockWrapper wrapper) {
-        if (syncDone) {
-            return;
-        }
-
-        if (!wrapper.isSolidBlock()) {
-            syncDone = true;
-            onSyncDone();
-
-            logger.debug("NEW block.number [{}] imported", wrapper.getNumber());
-        } else if (logger.isInfoEnabled()) {
-            logger.debug(
-                    "NEW block.number [{}] block.minsSinceReceiving [{}] exceeds import time limit, continue sync",
-                    wrapper.getNumber(),
-                    wrapper.timeSinceReceiving() / 1000 / 60
-            );
-        }
-    }
-
-    public boolean isSyncDone() {
-        return syncDone;
-    }
-
-    public void reportInvalidBlock(byte[] nodeId) {
+    @Override
+    public void onInvalidBlock(byte[] nodeId) {
 
         Channel peer = pool.getByNodeId(nodeId);
 
@@ -268,7 +228,70 @@ public class SyncManager {
         pool.ban(peer);
 
         // TODO decrease peer's reputation
+    }
 
+    @Override
+    public void onNoParentBlock(BlockWrapper blockWrapper) {
+
+        if (!isGapRecoveryAllowed(blockWrapper)) {
+            return;
+        }
+
+        if (logger.isDebugEnabled()) logger.debug(
+                "Recovering gap: best.number [{}] vs block.number [{}]",
+                blockchain.getBestBlock().getNumber(),
+                blockWrapper.getNumber()
+        );
+
+        gapBlock = blockWrapper;
+
+        changeState(HASH_RETRIEVING);
+    }
+
+    @Override
+    public void onNewBlockImported(BlockWrapper blockWrapper) {
+
+        if (syncDone) {
+            return;
+        }
+
+        if (!blockWrapper.isSolidBlock()) {
+            syncDone = true;
+            onSyncDone();
+
+            logger.debug("NEW block.number [{}] imported", blockWrapper.getNumber());
+        } else if (logger.isInfoEnabled()) {
+            logger.debug(
+                    "NEW block.number [{}] block.minsSinceReceiving [{}] exceeds import time limit, continue sync",
+                    blockWrapper.getNumber(),
+                    blockWrapper.timeSinceReceiving() / 1000 / 60
+            );
+        }
+    }
+
+    @Override
+    public void onNewPeerChannel(Channel peer) {
+
+        if (isSyncDone()) {
+            peer.onSyncDone();
+        }
+        addPeer(peer);
+    }
+
+    @Override
+    public void onPeerChannelDisconnected(Channel peer) {
+
+        // if master peer has been disconnected
+        // we need to process data it sent
+        if (peer.isHashRetrieving() || peer.isHashRetrievingDone()) {
+            changeState(BLOCK_RETRIEVING);
+        }
+
+        pool.onDisconnect(peer);
+    }
+
+    public boolean isSyncDone() {
+        return syncDone;
     }
 
     private int gapSize(BlockWrapper block) {

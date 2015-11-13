@@ -88,7 +88,7 @@ public class Eth61 extends EthLegacy {
 
             if (Arrays.equals(hash, lastHashToAsk)) {
                 changeState(DONE_HASH_RETRIEVING);
-                logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), Hex.toHexString(lastHashToAsk));
+                logger.trace("Peer {}: got terminal hash [{}]", getPeerIdShort(), Hex.toHexString(lastHashToAsk));
             }
         }
 
@@ -105,7 +105,7 @@ public class Eth61 extends EthLegacy {
     private void sendGetBlockHashesByNumber(long blockNumber, int maxHashesAsk) {
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send get block hashes by number, blockNumber [{}], maxHashesAsk [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 blockNumber,
                 maxHashesAsk
         );
@@ -155,7 +155,7 @@ public class Eth61 extends EthLegacy {
 
         commonAncestorFound = false;
 
-        logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
+        logger.trace("Peer {}: start looking for common ancestor", getPeerIdShort());
 
         long bestNumber = blockchain.getBestBlock().getNumber();
         long blockNumber = max(1, bestNumber - FORK_COVER_BATCH_SIZE);
@@ -180,7 +180,7 @@ public class Eth61 extends EthLegacy {
 
                     logger.trace(
                             "Peer {}: common ancestor found: block.number {}, block.hash {}",
-                            channel.getPeerIdShort(),
+                            getPeerIdShort(),
                             block.getNumber(),
                             block.getShortHash()
                     );
@@ -201,7 +201,7 @@ public class Eth61 extends EthLegacy {
         } else {
 
             // continue fork coverage
-            logger.trace("Peer {}: common ancestor is not found yet", channel.getPeerIdShort());
+            logger.trace("Peer {}: common ancestor is not found yet", getPeerIdShort());
             sendGetBlockHashesByNumber(blockNumber, FORK_COVER_BATCH_SIZE);
 
         }

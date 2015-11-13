@@ -31,8 +31,10 @@ public class EncryptionHandshake {
     private byte[] initiatorNonce;
     private byte[] responderNonce;
     private Secrets secrets;
+    private ECKey myKey;
 
-    public EncryptionHandshake(ECPoint remotePublicKey) {
+    public EncryptionHandshake(ECKey myKey, ECPoint remotePublicKey) {
+        this.myKey = myKey;
         this.remotePublicKey = remotePublicKey;
         ephemeralKey = new ECKey(random);
         initiatorNonce = new byte[NONCE_SIZE];
@@ -40,7 +42,8 @@ public class EncryptionHandshake {
         isInitiator = true;
     }
 
-    public EncryptionHandshake() {
+    public EncryptionHandshake(ECKey myKey) {
+        this.myKey = myKey;
         ephemeralKey = new ECKey(random);
         responderNonce = new byte[NONCE_SIZE];
         random.nextBytes(responderNonce);
@@ -51,14 +54,13 @@ public class EncryptionHandshake {
      * Create a handshake auth message
      *
      * @param token previous token if we had a previous session
-     * @param key our private key
      */
-    public AuthInitiateMessage createAuthInitiate(@Nullable byte[] token, ECKey key) {
+    public AuthInitiateMessage createAuthInitiate(@Nullable byte[] token) {
         AuthInitiateMessage message = new AuthInitiateMessage();
         boolean isToken;
         if (token == null) {
             isToken = false;
-            BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
+            BigInteger secretScalar = remotePublicKey.multiply(myKey.getPrivKey()).normalize().getXCoord().toBigInteger();
             token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
         } else {
             isToken = true;
@@ -69,7 +71,7 @@ public class EncryptionHandshake {
         message.signature = ephemeralKey.sign(signed);
         message.isTokenUsed = isToken;
         message.ephemeralPublicHash = sha3(ephemeralKey.getPubKeyPoint().getEncoded(false), 1, 64);
-        message.publicKey = key.getPubKeyPoint();
+        message.publicKey = myKey.getPubKeyPoint();
         message.nonce = initiatorNonce;
         return message;
     }
@@ -91,7 +93,7 @@ public class EncryptionHandshake {
         return ECIESCoder.encrypt(remotePublicKey, message.encode());
     }
 
-    public AuthResponseMessage decryptAuthResponse(byte[] ciphertext, ECKey myKey) {
+    public AuthResponseMessage decryptAuthResponse(byte[] ciphertext) {
         try {
             byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
             return AuthResponseMessage.decode(plaintext);
@@ -100,9 +102,12 @@ public class EncryptionHandshake {
         }
     }
 
-    public AuthInitiateMessage decryptAuthInitiate(byte[] ciphertext, ECKey myKey) throws InvalidCipherTextException {
+    public AuthInitiateMessage decryptAuthInitiate(byte[] ciphertext, ECKey key) throws InvalidCipherTextException {
         try {
-            byte[] plaintext = ECIESCoder.decrypt(myKey.getPrivKey(), ciphertext);
+            if (key == null) {
+                key = myKey;
+            }
+            byte[] plaintext = ECIESCoder.decrypt(key.getPrivKey(), ciphertext);
             return AuthInitiateMessage.decode(plaintext);
         } catch (InvalidCipherTextException e) {
             throw e;
@@ -111,8 +116,8 @@ public class EncryptionHandshake {
         }
     }
 
-    public AuthResponseMessage handleAuthResponse(ECKey myKey, byte[] initiatePacket, byte[] responsePacket) {
-        AuthResponseMessage response = decryptAuthResponse(responsePacket, myKey);
+    public AuthResponseMessage handleAuthResponse(byte[] initiatePacket, byte[] responsePacket) {
+        AuthResponseMessage response = decryptAuthResponse(responsePacket);
         remoteEphemeralKey = response.ephemeralPublicKey;
         responderNonce = response.nonce;
         agreeSecret(initiatePacket, responsePacket);
@@ -168,6 +173,9 @@ public class EncryptionHandshake {
     AuthResponseMessage makeAuthInitiate(AuthInitiateMessage initiate, ECKey key) {
         initiatorNonce = initiate.nonce;
         remotePublicKey = initiate.publicKey;
+        if (key == null) {
+            key = myKey;
+        }
         BigInteger secretScalar = remotePublicKey.multiply(key.getPrivKey()).normalize().getXCoord().toBigInteger();
         byte[] token = ByteUtil.bigIntegerToBytes(secretScalar, NONCE_SIZE);
         byte[] signed = xor(token, initiatorNonce);

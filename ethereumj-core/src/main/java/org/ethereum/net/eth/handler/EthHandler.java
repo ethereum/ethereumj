@@ -1,23 +1,20 @@
 package org.ethereum.net.eth.handler;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.SimpleChannelInboundHandler;
 import org.ethereum.core.*;
 import org.ethereum.core.Block;
 import org.ethereum.core.Blockchain;
 import org.ethereum.core.Transaction;
-import org.ethereum.manager.WorldManager;
+import org.ethereum.listener.EthereumListener;
+import org.ethereum.net.ProtocolHandler;
+import org.ethereum.net.message.MessageFactory;
 import org.ethereum.sync.SyncQueue;
-import org.ethereum.net.MessageQueue;
 import org.ethereum.net.eth.EthVersion;
 import org.ethereum.net.eth.message.*;
 import org.ethereum.sync.SyncStateName;
 import org.ethereum.sync.SyncStatistics;
 import org.ethereum.net.message.ReasonCode;
-import org.ethereum.net.server.Channel;
 import org.ethereum.util.ByteUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.math.BigInteger;
@@ -43,10 +40,7 @@ import static org.ethereum.sync.SyncStateName.*;
  * <li>GET_BLOCK_HASHES_BY_NUMBER       :   Request list of know block hashes starting from the block</li>
  * </ul>
  */
-public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage> implements Eth {
-
-    private final static Logger loggerNet = LoggerFactory.getLogger("net");
-    private final static Logger loggerSync = LoggerFactory.getLogger("sync");
+public abstract class EthHandler extends ProtocolHandler<EthMessage> implements Eth {
 
     protected static final int MAX_HASHES_TO_SEND = 65536;
 
@@ -57,14 +51,13 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected SyncQueue queue;
 
     @Autowired
-    protected WorldManager worldManager;
+    protected EthereumListener ethereumListener;
+
+    @Autowired
+    protected Wallet wallet;
 
     @Autowired
     protected PendingState pendingState;
-
-    protected Channel channel;
-
-    private MessageQueue msgQueue = null;
 
     protected EthVersion version;
     protected EthState ethState = EthState.INIT;
@@ -79,6 +72,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     protected boolean processTransactions = false;
 
     protected byte[] bestHash;
+
+    protected BigInteger totalDifficulty = BigInteger.ZERO;
 
     /**
      * Last block hash to be asked from the peer,
@@ -101,6 +96,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
     protected EthHandler(EthVersion version) {
         this.version = version;
+        messageFactory = createEthMessageFactory(version);
     }
 
     @Override
@@ -109,11 +105,11 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         if (EthMessageCodes.inRange(msg.getCommand().asByte(), version))
             loggerNet.trace("EthHandler invoke: [{}]", msg.getCommand());
 
-        worldManager.getListener().trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
+        ethereumListener.trace(String.format("EthHandler invoke: [%s]", msg.getCommand()));
 
-        channel.getNodeStatistics().ethInbound.add();
+        onMessageReceived(msg);
 
-        msgQueue.receivedMessage(msg);
+        messageQueue.receivedMessage(msg);
 
         switch (msg.getCommand()) {
             case STATUS:
@@ -142,15 +138,50 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         onShutdown();
     }
 
-    public void activate() {
+    @Override
+    public boolean hasCommand(Enum msgCommand) {
+
+        return msgCommand instanceof EthMessageCodes;
+    }
+
+    @Override
+    public byte getCommandCode(Enum msgCommand) {
+
+        return ((EthMessageCodes) msgCommand).asByte();
+    }
+
+    @Override
+    public byte getMaxCommandCode() {
+
+        return (byte)EthMessageCodes.max(version);
+    }
+
+    @Override
+    public boolean hasCommandCode(byte code) {
+
+        return EthMessageCodes.inRange(code, version);
+    }
+
+    @Override
+    public void activate(String name) {
+        super.activate(name);
         loggerNet.info("ETH protocol activated");
-        worldManager.getListener().trace("ETH protocol activated");
+        ethereumListener.trace("ETH protocol activated");
         sendStatus();
     }
 
+    private MessageFactory createEthMessageFactory(EthVersion version) {
+        switch (version) {
+            case V60:   return new Eth60MessageFactory();
+            case V61:   return new Eth61MessageFactory();
+            case V62:   return new Eth62MessageFactory();
+            default:    throw new IllegalArgumentException("Eth " + version + " is not supported");
+        }
+    }
+
     protected void disconnect(ReasonCode reason) {
-        msgQueue.disconnect(reason);
-        channel.getNodeStatistics().nodeDisconnectedLocal(reason);
+        messageQueue.disconnect(reason);
+        onLocalDisconnect(reason);
     }
 
     /**
@@ -160,8 +191,6 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
      * @param ctx the ChannelHandlerContext
      */
     private void processStatus(StatusMessage msg, ChannelHandlerContext ctx) throws InterruptedException {
-        channel.getNodeStatistics().ethHandshake(msg);
-        worldManager.getListener().onEthStatusUpdated(channel.getNode(), msg);
 
         try {
             if (!Arrays.equals(msg.getGenesisHash(), Blockchain.GENESIS_HASH)
@@ -223,7 +252,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         pendingState.addWireTransactions(txSet);
 
         for (Transaction tx : txSet) {
-            worldManager.getWallet().addTransaction(tx);
+            wallet.addTransaction(tx);
         }
     }
 
@@ -238,13 +267,12 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         loggerSync.info("New block received: block.index [{}]", newBlock.getNumber());
 
-        channel.getNodeStatistics().setEthTotalDifficulty(newBlockMessage.getDifficultyAsBigInt());
         bestHash = newBlock.getHash();
 
         // adding block to the queue
         // there will be decided how to
         // connect it to the chain
-        queue.addNew(newBlock, channel.getNodeId());
+        queue.addNew(newBlock, getNodeId());
 
         if (newBlockLowerNumber == Long.MAX_VALUE) {
             newBlockLowerNumber = newBlock.getNumber();
@@ -252,8 +280,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
     }
 
     protected void sendMessage(EthMessage message) {
-        msgQueue.sendMessage(message);
-        channel.getNodeStatistics().ethOutbound.add();
+        messageQueue.sendMessage(message);
+        onMessageSent(message);
     }
 
     abstract protected void startHashRetrieving();
@@ -268,7 +296,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
 
         loggerSync.trace(
                 "Peer {}: changing state from {} to {}",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 syncState,
                 newState
         );
@@ -332,7 +360,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             case BLOCK_RETRIEVING: loggerSync.info(
                     "Peer {}: [ {}, state {}, blocks count {} ]",
                     version,
-                    channel.getPeerIdShort(),
+                    getPeerIdShort(),
                     syncState,
                     syncStats.getBlocksCount()
             );
@@ -340,7 +368,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             case HASH_RETRIEVING: loggerSync.info(
                     "Peer {}: [ {}, state {}, hashes count {} ]",
                     version,
-                    channel.getPeerIdShort(),
+                    getPeerIdShort(),
                     syncState,
                     syncStats.getHashesCount()
             );
@@ -348,7 +376,7 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
             default: loggerSync.info(
                     "Peer {}: [ {}, state {} ]",
                     version,
-                    channel.getPeerIdShort(),
+                    getPeerIdShort(),
                     syncState
             );
         }
@@ -409,20 +437,8 @@ public abstract class EthHandler extends SimpleChannelInboundHandler<EthMessage>
         syncDone = true;
     }
 
-    public StatusMessage getHandshakeStatusMessage() {
-        return channel.getNodeStatistics().getEthLastInboundStatusMsg();
-    }
-
-    public void setMsgQueue(MessageQueue msgQueue) {
-        this.msgQueue = msgQueue;
-    }
-
     public void setPeerDiscoveryMode(boolean peerDiscoveryMode) {
         this.peerDiscoveryMode = peerDiscoveryMode;
-    }
-
-    public void setChannel(Channel channel) {
-        this.channel = channel;
     }
 
     enum EthState {

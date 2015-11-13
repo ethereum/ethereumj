@@ -50,11 +50,10 @@ public class SyncQueue {
      */
     private BlockQueue blockQueue;
 
-    @Autowired
-    private Blockchain blockchain;
+    private SyncQueueListener syncQueueListener;
 
     @Autowired
-    private SyncManager syncManager;
+    private Blockchain blockchain;
 
     @Autowired
     private BlockHeaderValidator headerValidator;
@@ -97,6 +96,11 @@ public class SyncQueue {
         t.start();
     }
 
+    public void setQueueListener(SyncQueueListener syncQueueListener) {
+
+        this.syncQueueListener = syncQueueListener;
+    }
+
     /**
      * Processing the queue adding blocks to the chain.
      */
@@ -114,13 +118,13 @@ public class SyncQueue {
                 if (importResult == NO_PARENT) {
                     logger.info("No parent on the chain for block.number: {} block.hash: {}", wrapper.getNumber(), wrapper.getBlock().getShortHash());
                     wrapper.importFailed();
-                    syncManager.tryGapRecovery(wrapper);
+                    syncQueueListener.onNoParentBlock(wrapper);
                     blockQueue.add(wrapper);
                     sleep(2000);
                 }
 
                 if (wrapper.isNewBlock() && importResult.isSuccessful())
-                    syncManager.notifyNewBlockImported(wrapper);
+                    syncQueueListener.onNewBlockImported(wrapper);
 
                 if (importResult == IMPORTED_BEST)
                     logger.info("Success importing BEST: block.number: {}, block.hash: {}, tx.size: {} ",
@@ -157,7 +161,7 @@ public class SyncQueue {
                     logger.debug("Invalid block RLP: {}", Hex.toHexString(b.getEncoded()));
                 }
 
-                syncManager.reportInvalidBlock(nodeId);
+                syncQueueListener.onInvalidBlock(nodeId);
                 return;
             }
         }
@@ -201,7 +205,7 @@ public class SyncQueue {
 
         // run basic checks
         if (!isValid(block.getHeader())) {
-            syncManager.reportInvalidBlock(nodeId);
+            syncQueueListener.onInvalidBlock(nodeId);
             return;
         }
 
@@ -327,7 +331,7 @@ public class SyncQueue {
                     logger.debug("Invalid header RLP: {}", Hex.toHexString(header.getEncoded()));
                 }
 
-                syncManager.reportInvalidBlock(nodeId);
+                syncQueueListener.onInvalidBlock(nodeId);
                 return;
             }
 

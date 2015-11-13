@@ -2,6 +2,7 @@ package org.ethereum.net.swarm.bzz;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public enum BzzMessageCodes {
 
@@ -32,7 +33,7 @@ public enum BzzMessageCodes {
 
     private int cmd;
 
-    private static final Map<Integer, BzzMessageCodes> intToTypeMap = new HashMap<>();
+    private static final TreeMap<Integer, BzzMessageCodes> intToTypeMap = new TreeMap<>();
 
     static {
         for (BzzMessageCodes type : BzzMessageCodes.values()) {
@@ -49,8 +50,10 @@ public enum BzzMessageCodes {
     }
 
     public static boolean inRange(byte code) {
-        return code >= STATUS.asByte() && code <= PEERS.asByte();
+        return code >= STATUS.asByte() && code <= max();
     }
+
+    public static int max() { return intToTypeMap.lastKey(); }
 
     public byte asByte() {
         return (byte) (cmd);

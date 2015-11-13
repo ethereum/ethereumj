@@ -93,7 +93,7 @@ public class Eth62 extends EthHandler {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing NewBlockHashes, size [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 msg.getBlockIdentifiers().size()
         );
 
@@ -137,7 +137,7 @@ public class Eth62 extends EthHandler {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: processing BlockHeaders, size [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 msg.getBlockHeaders().size()
         );
 
@@ -166,12 +166,12 @@ public class Eth62 extends EthHandler {
 
                 if (Arrays.equals(header.getHash(), lastHashToAsk)) {
                     changeState(DONE_HASH_RETRIEVING);
-                    logger.trace("Peer {}: got terminal hash [{}]", channel.getPeerIdShort(), Hex.toHexString(lastHashToAsk));
+                    logger.trace("Peer {}: got terminal hash [{}]", getPeerIdShort(), Hex.toHexString(lastHashToAsk));
                     break;
                 }
             }
 
-            queue.addAndValidateHeaders(adding, channel.getNodeId());
+            queue.addAndValidateHeaders(adding, getNodeId());
         }
 
         if (syncState == HASH_RETRIEVING) {
@@ -184,7 +184,7 @@ public class Eth62 extends EthHandler {
         if (syncState == DONE_HASH_RETRIEVING) {
             logger.info(
                     "Peer {}: header sync completed, [{}] headers in queue",
-                    channel.getPeerIdShort(),
+                    getPeerIdShort(),
                     queue.headerStoreSize()
             );
         }
@@ -201,7 +201,7 @@ public class Eth62 extends EthHandler {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: process BlockBodies, size [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 msg.getBlockBodies().size()
         );
 
@@ -244,19 +244,21 @@ public class Eth62 extends EthHandler {
             for (Block block : blocks) {
 
                 // update TD and best hash
-                if (isMoreThan(block.getDifficultyBI(), channel.getTotalDifficulty())) {
+                // TODO: store and check totalDifficulty from NodeStatistics
+                if (isMoreThan(block.getDifficultyBI(), totalDifficulty)) {
                     bestHash = block.getHash();
-                    channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
+                    totalDifficulty = block.getDifficultyBI();
+                    //channel.getNodeStatistics().setEthTotalDifficulty(block.getDifficultyBI());
                 }
 
                 if (block.getNumber() < newBlockLowerNumber) {
                     regularBlocks.add(block);
                 } else {
-                    queue.addNew(block, channel.getNodeId());
+                    queue.addNew(block, getNodeId());
                 }
             }
 
-            queue.addList(regularBlocks, channel.getNodeId());
+            queue.addList(regularBlocks, getNodeId());
             queue.logHeadersSize();
         } else {
             changeState(BLOCKS_LACK);
@@ -271,7 +273,7 @@ public class Eth62 extends EthHandler {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send GetBlockHeaders, blockNumber [{}], maxBlocksAsk [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 blockNumber,
                 maxBlocksAsk
         );
@@ -287,7 +289,7 @@ public class Eth62 extends EthHandler {
         if (headers.isEmpty()) {
             if(logger.isInfoEnabled()) logger.trace(
                     "Peer {}: no more headers in queue, idle",
-                    channel.getPeerIdShort()
+                    getPeerIdShort()
             );
             changeState(IDLE);
             return false;
@@ -298,7 +300,7 @@ public class Eth62 extends EthHandler {
 
         if(logger.isTraceEnabled()) logger.trace(
                 "Peer {}: send GetBlockBodies, hashes.count [{}]",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 sentHeaders.size()
         );
 
@@ -317,7 +319,7 @@ public class Eth62 extends EthHandler {
     private void returnHeaders() {
         if(logger.isDebugEnabled()) logger.debug(
                 "Peer {}: return [{}] headers back to store",
-                channel.getPeerIdShort(),
+                getPeerIdShort(),
                 sentHeaders.size()
         );
 
@@ -337,7 +339,7 @@ public class Eth62 extends EthHandler {
 
         commonAncestorFound = false;
 
-        logger.trace("Peer {}: start looking for common ancestor", channel.getPeerIdShort());
+        logger.trace("Peer {}: start looking for common ancestor", getPeerIdShort());
 
         long bestNumber = blockchain.getBestBlock().getNumber();
         long blockNumber = max(0, bestNumber - FORK_COVER_BATCH_SIZE);
@@ -358,7 +360,7 @@ public class Eth62 extends EthHandler {
 
                 logger.trace(
                         "Peer {}: common ancestor found: block.number {}, block.hash {}",
-                        channel.getPeerIdShort(),
+                        getPeerIdShort(),
                         header.getNumber(),
                         Hex.toHexString(header.getHash())
                 );
@@ -376,7 +378,7 @@ public class Eth62 extends EthHandler {
         } else {
 
             // continue fork coverage
-            logger.trace("Peer {}: common ancestor is not found yet", channel.getPeerIdShort());
+            logger.trace("Peer {}: common ancestor is not found yet", getPeerIdShort());
             sendGetBlockHeaders(blockNumber, FORK_COVER_BATCH_SIZE);
 
         }
